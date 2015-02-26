@@ -1,0 +1,125 @@
+#!/usr/bin/env python
+# -*- python -*-
+
+import os.path
+import sys
+from collections import OrderedDict
+__targets__ = OrderedDict()
+
+def rule(fn):
+    def wrapped(name, deps=None, **kwargs):
+        result = {'name': name, 'deps': deps, 'kind': fn.func_name}
+        result.update(fn(**kwargs))
+        if name not in __targets__:
+            __targets__[name] = []
+        __targets__[name].append(result)
+        return result
+    return wrapped
+
+__rule_handlers__ = {}
+def rule_handler(rule_name):
+    def decorator(fn):
+        __rule_handlers__[rule_name] = fn
+        return fn
+    return decorator
+
+def target_name(rule):
+    if isinstance(rule, str):
+        return rule
+    if rule['kind'] == 'library':
+        return 'lib{}.so'.format(rule['name'])
+    elif rule['kind'] == 'compile':
+        return '{}.o'.format(rule['name'])
+    else:
+        return rule['name']
+
+def write_makefile_rule(target, deps, commands, phony=False):
+    if phony:
+        print '.PHONY: {}'.format(target)
+    print '{}:'.format(target),
+    if deps:
+        print ' '.join((target_name(i) for i in deps)),
+    print
+    if commands:
+        print '\t' + '\n\t'.join(commands)
+    print
+
+def write_makefile():
+    for i in __targets__.itervalues():
+        for rule in i:
+            __rule_handlers__[rule['kind']](rule)
+
+@rule
+def compile(file):
+    return {'files': [file]}
+
+def compile_all(files):
+    return [compile(os.path.splitext(f)[0], file=f) for f in files]
+
+@rule
+def executable(files):
+    return {'files': compile_all(files)}
+
+@rule
+def library(files):
+    return {'files': compile_all(files)}
+
+@rule
+def target():
+    return {'phony': True}
+
+@rule
+def command(cmd):
+    return {'cmd': cmd, 'phony': True}
+
+
+__seen_compile_rules__ = set()
+
+@rule_handler('compile')
+def __emit_compile__(rule):
+    ext = os.path.splitext(rule['files'][0])[1]
+    if ext not in __seen_compile_rules__:
+        __seen_compile_rules__.add(ext)
+        write_makefile_rule(
+            '%.o',
+            ['%{}'.format(ext)],
+            ['g++ -c $< -o $@']
+        )
+
+@rule_handler('executable')
+def __emit_executable__(rule):
+    write_makefile_rule(
+        target_name(rule),
+        rule['files'],
+        ['g++ $^ -o $@']
+    )
+
+@rule_handler('library')
+def __emit_executable__(rule):
+    write_makefile_rule(
+        target_name(rule),
+        rule['files'],
+        ['g++ -shared $^ -o $@']
+    )
+
+@rule_handler('target')
+def __emit_target__(rule):
+    write_makefile_rule(
+        target_name(rule),
+        rule['deps'],
+        None,
+        phony=True
+    )
+
+@rule_handler('command')
+def __emit_command__(rule):
+    write_makefile_rule(
+        target_name(rule),
+        rule['deps'],
+        rule['cmd'],
+        phony=True
+    )
+
+if __name__ == '__main__':
+    execfile(sys.argv[1])
+    write_makefile()
