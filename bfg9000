@@ -71,10 +71,12 @@ def compile_all(files):
 
 @rule
 def executable(files, libs=None):
+    # XXX: Allow pre-built objects?
     return {'files': compile_all(files), 'libs': libs or []}
 
 @rule
 def library(files, libs=None):
+    # XXX: Allow pre-built objects?
     return {'files': compile_all(files), 'libs': libs or []}
 
 @rule
@@ -88,8 +90,17 @@ def command(cmd):
 
 __seen_compile_rules__ = set()
 
-def filter_rules(iterable):
-    return filter(lambda i: isinstance(i, Rule), iterable)
+__var_table__ = set()
+def __unique_var_name__(name):
+    if name in __var_table__:
+        i = 2
+        fmt = name + '_{}'
+        while True:
+            name = fmt.format(i)
+            if name not in __var_table__:
+                break
+    __var_table__.add(name)
+    return name
 
 @rule_handler('compile')
 def __emit_compile__(rule):
@@ -108,29 +119,34 @@ def __emit_compile__(rule):
         )
     print '-include {}.d'.format(base)
 
-@rule_handler('executable')
-def __emit_executable__(rule):
+def __emit_link__(rule, var_prefix, command_template):
+    if len(rule.attrs['files']) > 0:
+        var_name = __unique_var_name__(
+            '{}{}_OBJS'.format(var_prefix, rule.name.upper())
+        )
+        print '{} := {}'.format(var_name, ' '.join(
+            (target_name(i) for i in rule.attrs['files'])
+        ))
+        files = '$({})'.format(var_name)
+    else:
+        files = target_name(rule.attrs['files'][0])
+
     write_makefile_rule(
         target_name(rule),
-        rule.deps + filter_rules(rule.attrs['files']) +
-            filter_rules(rule.attrs['libs']),
-        ['g++ {files}{libs} -o $@'.format(
-            files=' '.join((target_name(i) for i in rule.attrs['files'])),
+        rule.deps + [files] + filter_rules(rule.attrs['libs']),
+        [command_template.format(
+            files=files,
             libs=''.join((' -l' + lib_link_name(i) for i in rule.attrs['libs']))
         )]
     )
 
-@rule_handler('library')
+@rule_handler('executable')
 def __emit_executable__(rule):
-    write_makefile_rule(
-        target_name(rule),
-        rule.deps + filter_rules(rule.attrs['files']) +
-            filter_rules(rule.attrs['libs']),
-        ['g++ -shared {files}{libs} -o $@'.format(
-            files=' '.join((target_name(i) for i in rule.attrs['files'])),
-            libs=''.join((' -l' + lib_link_name(i) for i in rule.attrs['libs']))
-        )]
-    )
+    __emit_link__(rule, '', 'g++ {files}{libs} -o $@')
+
+@rule_handler('library')
+def __emit_library__(rule):
+    __emit_link__(rule, 'LIB', 'g++ -shared {files}{libs} -o $@')
 
 @rule_handler('target')
 def __emit_target__(rule):
