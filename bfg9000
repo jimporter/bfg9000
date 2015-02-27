@@ -1,10 +1,26 @@
 #!/usr/bin/env python
 # -*- python -*-
 
+import fnmatch
+import os
 import os.path
+import re
 import sys
 from collections import OrderedDict
 __targets__ = OrderedDict()
+
+def find(base='.', name='*', type=None):
+    results = []
+    for path, dirs, files in os.walk(base):
+        if type != 'f':
+            results.extend((
+                os.path.join(path, i) for i in fnmatch.filter(dirs, name)
+            ))
+        if type != 'd':
+            results.extend((
+                os.path.join(path, i) for i in fnmatch.filter(files, name)
+            ))
+    return results
 
 class Rule(object):
     def __init__(self, kind, name, deps, attrs):
@@ -87,6 +103,8 @@ def target():
 def command(cmd):
     return {'cmd': cmd, 'phony': True}
 
+def filter_rules(iterable):
+    return filter(lambda i: isinstance(i, Rule), iterable)
 
 __seen_compile_rules__ = set()
 
@@ -99,6 +117,7 @@ def __unique_var_name__(name):
             name = fmt.format(i)
             if name not in __var_table__:
                 break
+            i += 1
     __var_table__.add(name)
     return name
 
@@ -110,7 +129,7 @@ def __emit_compile__(rule):
         write_makefile_rule(
             '%.o',
             ['%' + ext],
-            ["$(eval TEMP := $(shell mktemp $(TMPDIR)/$(*F)-XXXXXX.d))",
+            ["$(eval TEMP := $(shell mktemp $(TMPDIR)/$(notdir $*)-XXXXXX.d))",
              "g++ -MMD -MF $(TEMP) -c $< -o $@",
              "@sed -e 's|.*:|$*.o:|' < $(TEMP) > $*.d",
              "@sed -e 's/.*://' -e 's/\\$$//' < $(TEMP) | fmt -1 | \\",
@@ -120,9 +139,9 @@ def __emit_compile__(rule):
     print '-include {}.d'.format(base)
 
 def __emit_link__(rule, var_prefix, command_template):
-    if len(rule.attrs['files']) > 0:
+    if len(rule.attrs['files']) > 1:
         var_name = __unique_var_name__(
-            '{}{}_OBJS'.format(var_prefix, rule.name.upper())
+            '{}{}_OBJS'.format(var_prefix, re.sub('/', '_', rule.name.upper()))
         )
         print '{} := {}'.format(var_name, ' '.join(
             (target_name(i) for i in rule.attrs['files'])

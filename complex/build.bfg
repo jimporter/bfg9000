@@ -3,7 +3,15 @@
 #test_dirs = [...]
 #tests = [...]
 
-
+import glob
+os.chdir('../mettle')
+non_test_dirs = ['test/test_data', 'test/windows']
+test_dirs = filter(lambda x: x not in non_test_dirs,
+                   find('test', '*', type='d'))
+all_tests = [
+    os.path.splitext(i)[0] for i in
+    sum((glob.glob(os.path.join(d, '*.cpp')) for d in test_dirs), [])
+]
 
 
 libmettle = library(
@@ -12,8 +20,6 @@ libmettle = library(
     libs=['boost_iostreams', 'boost_program_options']
 )
 mettle = executable('mettle', files=['mettle.cpp'], libs=[libmettle])
-
-all_tests = ['test_foo', 'test_bar']
 
 tests = target('tests', [executable(i, files=[i+'.cpp']) for i in all_tests])
 
