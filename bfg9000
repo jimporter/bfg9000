@@ -6,10 +6,16 @@ import sys
 from collections import OrderedDict
 __targets__ = OrderedDict()
 
+class Rule(object):
+    def __init__(self, kind, name, deps, attrs):
+        self.kind = kind
+        self.name = name
+        self.deps = deps
+        self.attrs = attrs
+
 def rule(fn):
     def wrapped(name, deps=None, **kwargs):
-        result = {'name': name, 'deps': deps, 'kind': fn.func_name}
-        result.update(fn(**kwargs))
+        result = Rule(fn.func_name, name, deps or [], fn(**kwargs))
         if name not in __targets__:
             __targets__[name] = []
         __targets__[name].append(result)
@@ -24,14 +30,15 @@ def rule_handler(rule_name):
     return decorator
 
 def target_name(rule):
-    if isinstance(rule, str):
-        return rule
-    if rule['kind'] == 'library':
-        return 'lib{}.so'.format(rule['name'])
-    elif rule['kind'] == 'compile':
-        return '{}.o'.format(rule['name'])
+    if isinstance(rule, Rule):
+        if rule.kind == 'library':
+            return 'lib{}.so'.format(rule.name)
+        elif rule.kind == 'compile':
+            return '{}.o'.format(rule.name)
+        else:
+            return rule.name
     else:
-        return rule['name']
+        return rule
 
 def write_makefile_rule(target, deps, commands, phony=False):
     if phony:
@@ -47,7 +54,7 @@ def write_makefile_rule(target, deps, commands, phony=False):
 def write_makefile():
     for i in __targets__.itervalues():
         for rule in i:
-            __rule_handlers__[rule['kind']](rule)
+            __rule_handlers__[rule.kind](rule)
 
 @rule
 def compile(file):
@@ -57,12 +64,12 @@ def compile_all(files):
     return [compile(os.path.splitext(f)[0], file=f) for f in files]
 
 @rule
-def executable(files):
-    return {'files': compile_all(files)}
+def executable(files, libs=None):
+    return {'files': compile_all(files), 'libs': libs or []}
 
 @rule
-def library(files):
-    return {'files': compile_all(files)}
+def library(files, libs=None):
+    return {'files': compile_all(files), 'libs': libs or []}
 
 @rule
 def target():
@@ -77,7 +84,7 @@ __seen_compile_rules__ = set()
 
 @rule_handler('compile')
 def __emit_compile__(rule):
-    ext = os.path.splitext(rule['files'][0])[1]
+    ext = os.path.splitext(rule.attrs['files'][0])[1]
     if ext not in __seen_compile_rules__:
         __seen_compile_rules__.add(ext)
         write_makefile_rule(
@@ -90,23 +97,29 @@ def __emit_compile__(rule):
 def __emit_executable__(rule):
     write_makefile_rule(
         target_name(rule),
-        rule['files'],
-        ['g++ $^ -o $@']
+        rule.deps + rule.attrs['files'] + rule.attrs['libs'],
+        ['g++ {files}{libs} -o $@'.format(
+            files=' '.join((target_name(i) for i in rule.attrs['files'])),
+            libs=''.join((' -l' + i.name for i in rule.attrs['libs']))
+        )]
     )
 
 @rule_handler('library')
 def __emit_executable__(rule):
     write_makefile_rule(
         target_name(rule),
-        rule['files'],
-        ['g++ -shared $^ -o $@']
+        rule.deps + rule.attrs['files'] + rule.attrs['libs'],
+        ['g++ -shared {files}{libs} -o $@'.format(
+            files=' '.join((target_name(i) for i in rule.attrs['files'])),
+            libs=''.join((' -l' + i.name for i in rule.attrs['libs']))
+        )]
     )
 
 @rule_handler('target')
 def __emit_target__(rule):
     write_makefile_rule(
         target_name(rule),
-        rule['deps'],
+        rule.deps,
         None,
         phony=True
     )
@@ -115,8 +128,8 @@ def __emit_target__(rule):
 def __emit_command__(rule):
     write_makefile_rule(
         target_name(rule),
-        rule['deps'],
-        rule['cmd'],
+        rule.deps,
+        rule.attrs['cmd'],
         phony=True
     )
 
