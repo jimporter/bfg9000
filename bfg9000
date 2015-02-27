@@ -62,21 +62,21 @@ def lib_link_name(rule):
     else:
         return rule
 
-def write_makefile_rule(target, deps, commands, phony=False):
+def write_makefile_rule(out, target, deps, commands, phony=False):
     if phony:
-        print '.PHONY: {}'.format(target)
-    print '{}:'.format(target),
-    if deps:
-        print ' '.join((target_name(i) for i in deps)),
-    print
-    if commands:
-        print '\t' + '\n\t'.join(commands)
-    print
+        out.write('.PHONY: {}\n'.format(target))
+    out.write('{target}:{deps}\n'.format(
+        target=target,
+        deps=''.join((' ' +target_name(i) for i in deps))
+    ))
+    for cmd in commands:
+        out.write('\t{}\n'.format(cmd))
+    out.write('\n')
 
-def write_makefile():
+def write_makefile(out):
     for i in __targets__.itervalues():
         for rule in i:
-            __rule_handlers__[rule.kind](rule)
+            __rule_handlers__[rule.kind](out, rule)
 
 @rule
 def compile(file):
@@ -110,6 +110,7 @@ __seen_compile_rules__ = set()
 
 __var_table__ = set()
 def __unique_var_name__(name):
+    name = re.sub('/', '_', name)
     if name in __var_table__:
         i = 2
         fmt = name + '_{}'
@@ -122,11 +123,12 @@ def __unique_var_name__(name):
     return name
 
 @rule_handler('compile')
-def __emit_compile__(rule):
+def __emit_compile__(out, rule):
     base, ext = os.path.splitext(rule.attrs['file'])
     if ext not in __seen_compile_rules__:
         __seen_compile_rules__.add(ext)
         write_makefile_rule(
+            out,
             '%.o',
             ['%' + ext],
             ["$(eval TEMP := $(shell mktemp $(TMPDIR)/$(notdir $*)-XXXXXX.d))",
@@ -136,21 +138,22 @@ def __emit_compile__(rule):
              "  sed -e 's/^ *//' -e 's/$$/:/' >> $*.d",
              "@rm -f $(TEMP)"]
         )
-    print '-include {}.d'.format(base)
+    out.write('-include {}.d\n'.format(base))
 
-def __emit_link__(rule, var_prefix, command_template):
-    if len(rule.attrs['files']) > 1:
+def __emit_link__(out, rule, var_prefix, command_template):
+    if len(rule.attrs['files']) > 0:
         var_name = __unique_var_name__(
-            '{}{}_OBJS'.format(var_prefix, re.sub('/', '_', rule.name.upper()))
+            '{}{}_OBJS'.format(var_prefix, rule.name.upper())
         )
-        print '{} := {}'.format(var_name, ' '.join(
+        out.write('{} := {}\n'.format(var_name, ' '.join(
             (target_name(i) for i in rule.attrs['files'])
-        ))
+        )))
         files = '$({})'.format(var_name)
     else:
         files = target_name(rule.attrs['files'][0])
 
     write_makefile_rule(
+        out,
         target_name(rule),
         rule.deps + [files] + filter_rules(rule.attrs['libs']),
         [command_template.format(
@@ -160,31 +163,22 @@ def __emit_link__(rule, var_prefix, command_template):
     )
 
 @rule_handler('executable')
-def __emit_executable__(rule):
-    __emit_link__(rule, '', 'g++ {files}{libs} -o $@')
+def __emit_executable__(out, rule):
+    __emit_link__(out, rule, '', 'g++ {files}{libs} -o $@')
 
 @rule_handler('library')
-def __emit_library__(rule):
-    __emit_link__(rule, 'LIB', 'g++ -shared {files}{libs} -o $@')
+def __emit_library__(out, rule):
+    __emit_link__(out, rule, 'LIB', 'g++ -shared {files}{libs} -o $@')
 
 @rule_handler('target')
-def __emit_target__(rule):
-    write_makefile_rule(
-        target_name(rule),
-        rule.deps,
-        None,
-        phony=True
-    )
+def __emit_target__(out, rule):
+    write_makefile_rule(out, target_name(rule), rule.deps, [], phony=True)
 
 @rule_handler('command')
-def __emit_command__(rule):
-    write_makefile_rule(
-        target_name(rule),
-        rule.deps,
-        rule.attrs['cmd'],
-        phony=True
-    )
+def __emit_command__(out, rule):
+    write_makefile_rule(out, target_name(rule), rule.deps, rule.attrs['cmd'],
+                        phony=True)
 
 if __name__ == '__main__':
     execfile(sys.argv[1])
-    write_makefile()
+    write_makefile(sys.stdout)
