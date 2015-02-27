@@ -6,8 +6,12 @@
 
 
 
-libmettle = library('mettle', files=['libmettle.cpp'])
-mettle = executable('mettle', libs=[libmettle], files=['mettle.cpp'])
+libmettle = library(
+    'mettle',
+    files=['libmettle.cpp', 'log/verbose.cpp'],
+    libs=['boost_iostreams', 'boost_program_options']
+)
+mettle = executable('mettle', files=['mettle.cpp'], libs=[libmettle])
 
 all_tests = ['test_foo', 'test_bar']
 

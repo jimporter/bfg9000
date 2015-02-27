@@ -40,6 +40,12 @@ def target_name(rule):
     else:
         return rule
 
+def lib_link_name(rule):
+    if isinstance(rule, Rule):
+        return rule.name
+    else:
+        return rule
+
 def write_makefile_rule(target, deps, commands, phony=False):
     if phony:
         print '.PHONY: {}'.format(target)
@@ -58,7 +64,7 @@ def write_makefile():
 
 @rule
 def compile(file):
-    return {'files': [file]}
+    return {'file': file}
 
 def compile_all(files):
     return [compile(os.path.splitext(f)[0], file=f) for f in files]
@@ -82,25 +88,35 @@ def command(cmd):
 
 __seen_compile_rules__ = set()
 
+def filter_rules(iterable):
+    return filter(lambda i: isinstance(i, Rule), iterable)
+
 @rule_handler('compile')
 def __emit_compile__(rule):
-    ext = os.path.splitext(rule.attrs['files'][0])[1]
+    base, ext = os.path.splitext(rule.attrs['file'])
     if ext not in __seen_compile_rules__:
         __seen_compile_rules__.add(ext)
         write_makefile_rule(
             '%.o',
-            ['%{}'.format(ext)],
-            ['g++ -c $< -o $@']
+            ['%' + ext],
+            ["$(eval TEMP := $(shell mktemp $(TMPDIR)/bfg-XXXXXX.d))",
+             "g++ -MMD -MF $(TEMP) -c $< -o $@",
+             "@sed -e 's|.*:|$*.o:|' < $(TEMP) > $*.d",
+             "@sed -e 's/.*://' -e 's/\\$$//' < $(TEMP) | fmt -1 | \\",
+             "  sed -e 's/^ *//' -e 's/$$/:/' >> $*.d",
+             "@rm -f $(TEMP)"]
         )
+    print '-include {}.d'.format(base)
 
 @rule_handler('executable')
 def __emit_executable__(rule):
     write_makefile_rule(
         target_name(rule),
-        rule.deps + rule.attrs['files'] + rule.attrs['libs'],
+        rule.deps + filter_rules(rule.attrs['files']) +
+            filter_rules(rule.attrs['libs']),
         ['g++ {files}{libs} -o $@'.format(
             files=' '.join((target_name(i) for i in rule.attrs['files'])),
-            libs=''.join((' -l' + i.name for i in rule.attrs['libs']))
+            libs=''.join((' -l' + lib_link_name(i) for i in rule.attrs['libs']))
         )]
     )
 
@@ -108,10 +124,11 @@ def __emit_executable__(rule):
 def __emit_executable__(rule):
     write_makefile_rule(
         target_name(rule),
-        rule.deps + rule.attrs['files'] + rule.attrs['libs'],
+        rule.deps + filter_rules(rule.attrs['files']) +
+            filter_rules(rule.attrs['libs']),
         ['g++ -shared {files}{libs} -o $@'.format(
             files=' '.join((target_name(i) for i in rule.attrs['files'])),
-            libs=''.join((' -l' + i.name for i in rule.attrs['libs']))
+            libs=''.join((' -l' + lib_link_name(i) for i in rule.attrs['libs']))
         )]
     )
 
