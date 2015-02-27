@@ -99,7 +99,7 @@ def __emit_compile__(rule):
         write_makefile_rule(
             '%.o',
             ['%' + ext],
-            ["$(eval TEMP := $(shell mktemp $(TMPDIR)/bfg-XXXXXX.d))",
+            ["$(eval TEMP := $(shell mktemp $(TMPDIR)/$(*F)-XXXXXX.d))",
              "g++ -MMD -MF $(TEMP) -c $< -o $@",
              "@sed -e 's|.*:|$*.o:|' < $(TEMP) > $*.d",
              "@sed -e 's/.*://' -e 's/\\$$//' < $(TEMP) | fmt -1 | \\",
