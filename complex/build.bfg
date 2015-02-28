@@ -1,8 +1,5 @@
 # -*- python -*-
 
-#test_dirs = [...]
-#tests = [...]
-
 import glob
 import os
 
