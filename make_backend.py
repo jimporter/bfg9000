@@ -3,6 +3,7 @@ import re
 
 from linux_platform import *
 from rule import filter_rules
+from languages import ext2lang
 
 __rule_handlers__ = {}
 def rule_handler(rule_name):
@@ -44,22 +45,30 @@ def unique_var_name(name):
 
 __seen_compile_rules__ = set()
 
-
+lang2compile = {
+    'c':   {'cmd': 'gcc -MMD -MF $*.d -c $< -o $@', 'depfile': True},
+    'c++': {'cmd': 'g++ -MMD -MF $*.d -c $< -o $@', 'depfile': True}
+}
 
 @rule_handler('compile')
 def emit_compile(out, rule):
     base, ext = os.path.splitext(rule.attrs['file'])
-    if ext not in __seen_compile_rules__:
-        __seen_compile_rules__.add(ext)
-        write_makefile_rule(
-            out,
-            '%.o',
-            ['%' + ext],
-            ["g++ -MMD -MF $*.d -c $< -o $@",
-             "@sed -e 's/.*://' -e 's/\\$$//' < $*.d | fmt -1 | \\"
-             "  sed -e 's/^ *//' -e 's/$$/:/' >> $*.d"]
-        )
-    out.write('-include {}.d\n'.format(base))
+    c = lang2compile[rule.attrs['lang']]
+    recipe = [c['cmd']]
+    if c['depfile']:
+        recipe.extend([
+            "@sed -e 's/.*://' -e 's/\\$$//' < $*.d | fmt -1 | \\",
+            "  sed -e 's/^ *//' -e 's/$$/:/' >> $*.d"
+        ])
+    if ext2lang[ext] == rule.attrs['lang']:
+        if ext not in __seen_compile_rules__:
+            __seen_compile_rules__.add(ext)
+            write_makefile_rule(out, '%.o', ['%' + ext], recipe)
+    else:
+        write_makefile_rule(out, base + '.o', [rule.attrs['file']], recipe)
+
+    if c['depfile']:
+        out.write('-include {}.d\n'.format(base))
 
 def emit_link(out, rule, var_prefix, command_template):
     if len(rule.attrs['files']) > 0:
