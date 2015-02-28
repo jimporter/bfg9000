@@ -44,6 +44,8 @@ def unique_var_name(name):
 
 __seen_compile_rules__ = set()
 
+
+
 @rule_handler('compile')
 def emit_compile(out, rule):
     base, ext = os.path.splitext(rule.attrs['file'])
@@ -53,12 +55,9 @@ def emit_compile(out, rule):
             out,
             '%.o',
             ['%' + ext],
-            ["$(eval TEMP := $(shell mktemp $(TMPDIR)/$(notdir $*)-XXXXXX.d))",
-             "g++ -MMD -MF $(TEMP) -c $< -o $@",
-             "@sed -e 's|.*:|$*.o:|' < $(TEMP) > $*.d",
-             "@sed -e 's/.*://' -e 's/\\$$//' < $(TEMP) | fmt -1 | \\",
-             "  sed -e 's/^ *//' -e 's/$$/:/' >> $*.d",
-             "@rm -f $(TEMP)"]
+            ["g++ -MMD -MF $*.d -c $< -o $@",
+             "@sed -e 's/.*://' -e 's/\\$$//' < $*.d | fmt -1 | \\"
+             "  sed -e 's/^ *//' -e 's/$$/:/' >> $*.d"]
         )
     out.write('-include {}.d\n'.format(base))
 
