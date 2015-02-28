@@ -4,6 +4,8 @@
 #tests = [...]
 
 import glob
+import os
+
 os.chdir('../mettle')
 non_test_dirs = ['test/test_data', 'test/windows']
 test_dirs = filter(lambda x: x not in non_test_dirs,
