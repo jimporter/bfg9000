@@ -10,7 +10,7 @@ import builtin_rules
 import make_backend
 import utils
 
-builddir = sys.argv[1]
+builddir = os.path.abspath(sys.argv[1])
 bfgfile = 'build.bfg'
 
 execfile(os.path.join(builddir, bfgfile), builtins.all_builtins)

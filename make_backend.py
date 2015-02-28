@@ -45,16 +45,11 @@ def unique_var_name(name):
 
 __seen_compile_rules__ = set()
 
-lang2compile = {
-    'c':   {'cmd': 'gcc -MMD -MF $*.d -c $< -o $@', 'depfile': True},
-    'c++': {'cmd': 'g++ -MMD -MF $*.d -c $< -o $@', 'depfile': True}
-}
-
 @rule_handler('compile')
 def emit_compile(out, rule):
     base, ext = os.path.splitext(rule.attrs['file'])
     c = lang2compile[rule.attrs['lang']]
-    recipe = [c['cmd']]
+    recipe = [c['cmd'].format(input='$<', output='$@', dep='$*.d')]
     if c['depfile']:
         recipe.extend([
             "@sed -e 's/.*://' -e 's/\\$$//' < $*.d | fmt -1 | \\",
@@ -70,8 +65,14 @@ def emit_compile(out, rule):
     if c['depfile']:
         out.write('-include {}.d\n'.format(base))
 
+def space(s):
+    if len(s):
+        return ' ' + s
+    else:
+        return s
+
 def emit_link(out, rule, var_prefix, command_template):
-    if len(rule.attrs['files']) > 0:
+    if len(rule.attrs['files']) > 1:
         var_name = unique_var_name(
             '{}{}_OBJS'.format(var_prefix, rule.name.upper())
         )
@@ -87,18 +88,25 @@ def emit_link(out, rule, var_prefix, command_template):
         target_name(rule),
         rule.deps + [files] + filter_rules(rule.attrs['libs']),
         [command_template.format(
-            files=files,
-            libs=''.join((' -l' + lib_link_name(i) for i in rule.attrs['libs']))
+            input=files,
+            libs=space(link_libs(rule.attrs['libs'])),
+            output='$@'
         )]
     )
 
+def lang(iterable):
+    if any((i.attrs['lang'] == 'c++' for i in iterable)):
+        return 'c++'
+    else:
+        return 'c'
+
 @rule_handler('executable')
 def emit_executable(out, rule):
-    emit_link(out, rule, '', 'g++ {files}{libs} -o $@')
+    emit_link(out, rule, '', lang2exe[lang(rule.attrs['files'])]['cmd'])
 
 @rule_handler('library')
 def emit_library(out, rule):
-    emit_link(out, rule, 'LIB', 'g++ -shared {files}{libs} -o $@')
+    emit_link(out, rule, 'LIB', lang2so[lang(rule.attrs['files'])]['cmd'])
 
 @rule_handler('target')
 def emit_target(out, rule):
