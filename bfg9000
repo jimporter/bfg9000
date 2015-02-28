@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- python -*-
 
+import os.path
 import sys
 
 import builtins
@@ -9,5 +10,8 @@ import builtin_rules
 import make_backend
 import utils
 
-execfile(sys.argv[1], builtins.all_builtins)
-make_backend.write_makefile(sys.stdout, rule.all_targets)
+builddir = sys.argv[1]
+bfgfile = 'build.bfg'
+
+execfile(os.path.join(builddir, bfgfile), builtins.all_builtins)
+make_backend.write_makefile(builddir, rule.all_targets)

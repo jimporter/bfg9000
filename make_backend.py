@@ -22,10 +22,11 @@ def write_makefile_rule(out, target, deps, commands, phony=False):
         out.write('\t{}\n'.format(cmd))
     out.write('\n')
 
-def write_makefile(out, targets):
-    for i in targets.itervalues():
-        for rule in i:
-            __rule_handlers__[rule.kind](out, rule)
+def write_makefile(path, targets):
+    with open(os.path.join(path, 'Makefile'), 'w') as out:
+        for i in targets.itervalues():
+            for rule in i:
+                __rule_handlers__[rule.kind](out, rule)
 
 __var_table__ = set()
 def unique_var_name(name):
