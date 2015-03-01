@@ -1,6 +1,4 @@
-from collections import OrderedDict
-
-all_targets = OrderedDict()
+all_targets = []
 
 class Rule(object):
     def __init__(self, kind, name, deps, attrs):
@@ -12,9 +10,7 @@ class Rule(object):
 def rule(fn):
     def wrapped(name, deps=None, **kwargs):
         result = Rule(fn.func_name, name, deps or [], fn(**kwargs))
-        if name not in all_targets:
-            all_targets[name] = []
-        all_targets[name].append(result)
+        all_targets.append(result)
         return result
     wrapped.func_name = fn.func_name
     return wrapped

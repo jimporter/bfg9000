@@ -7,11 +7,11 @@ import sys
 import builtins
 import rule
 import builtin_rules
-import backends.make
+import backends.make as backend
 import utils
 
 builddir = os.path.abspath(sys.argv[1])
 bfgfile = 'build.bfg'
 
 execfile(os.path.join(builddir, bfgfile), builtins.all_builtins)
-backends.make.write_makefile(builddir, rule.all_targets)
+backend.write(builddir, rule.all_targets)

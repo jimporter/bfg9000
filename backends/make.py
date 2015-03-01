@@ -12,7 +12,12 @@ def rule_handler(rule_name):
         return fn
     return decorator
 
-def write_makefile_rule(out, target, deps, commands, phony=False):
+def write(path, targets):
+    with open(os.path.join(path, 'Makefile'), 'w') as out:
+        for t in targets:
+            __rule_handlers__[t.kind](out, t)
+
+def write_rule(out, target, deps, commands, phony=False):
     if phony:
         out.write('.PHONY: {}\n'.format(target))
     out.write('{target}:{deps}\n'.format(
@@ -22,12 +27,6 @@ def write_makefile_rule(out, target, deps, commands, phony=False):
     for cmd in commands:
         out.write('\t{}\n'.format(cmd))
     out.write('\n')
-
-def write_makefile(path, targets):
-    with open(os.path.join(path, 'Makefile'), 'w') as out:
-        for i in targets.itervalues():
-            for rule in i:
-                __rule_handlers__[rule.kind](out, rule)
 
 __var_table__ = set()
 def unique_var_name(name):
@@ -59,9 +58,9 @@ def emit_compile(out, rule):
     if ext2lang[ext] == rule.attrs['lang']:
         if ext not in __seen_compile_rules__:
             __seen_compile_rules__.add(ext)
-            write_makefile_rule(out, '%.o', ['%' + ext], recipe)
+            write_rule(out, '%.o', ['%' + ext], recipe)
     else:
-        write_makefile_rule(out, base + '.o', [rule.attrs['file']], recipe)
+        write_rule(out, base + '.o', [rule.attrs['file']], recipe)
 
     out.write('-include {}.d\n'.format(base))
 
@@ -83,7 +82,7 @@ def emit_link(out, rule, mode, var_prefix):
     else:
         files = cc_toolchain.target_name(rule.attrs['files'][0])
 
-    write_makefile_rule(
+    write_rule(
         out,
         cc_toolchain.target_name(rule),
         rule.deps + [files] + filter_rules(rule.attrs['libs']),
@@ -103,10 +102,10 @@ def emit_library(out, rule):
 
 @rule_handler('target')
 def emit_target(out, rule):
-    write_makefile_rule(out, cc_toolchain.target_name(rule), rule.deps, [],
-                        phony=True)
+    write_rule(out, cc_toolchain.target_name(rule), rule.deps, [],
+               phony=True)
 
 @rule_handler('command')
 def emit_command(out, rule):
-    write_makefile_rule(out, cc_toolchain.target_name(rule), rule.deps,
-                        rule.attrs['cmd'], phony=True)
+    write_rule(out, cc_toolchain.target_name(rule), rule.deps,
+               rule.attrs['cmd'], phony=True)
