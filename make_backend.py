@@ -1,7 +1,7 @@
 import os
 import re
 
-from linux_platform import *
+import cc_toolchain
 from rule import filter_rules
 from languages import ext2lang
 
@@ -17,7 +17,7 @@ def write_makefile_rule(out, target, deps, commands, phony=False):
         out.write('.PHONY: {}\n'.format(target))
     out.write('{target}:{deps}\n'.format(
         target=target,
-        deps=''.join((' ' +target_name(i) for i in deps))
+        deps=''.join((' ' + cc_toolchain.target_name(i) for i in deps))
     ))
     for cmd in commands:
         out.write('\t{}\n'.format(cmd))
@@ -48,13 +48,14 @@ __seen_compile_rules__ = set()
 @rule_handler('compile')
 def emit_compile(out, rule):
     base, ext = os.path.splitext(rule.attrs['file'])
-    c = lang2compile[rule.attrs['lang']]
-    recipe = [c['cmd'].format(input='$<', output='$@', dep='$*.d')]
-    if c['depfile']:
-        recipe.extend([
-            "@sed -e 's/.*://' -e 's/\\$$//' < $*.d | fmt -1 | \\",
-            "  sed -e 's/^ *//' -e 's/$$/:/' >> $*.d"
-        ])
+    recipe = [
+        cc_toolchain.compile_command(
+            lang=rule.attrs['lang'], input='$<', output='$@', dep='$*.d'
+        ),
+        "@sed -e 's/.*://' -e 's/\\$$//' < $*.d | fmt -1 | \\",
+        "  sed -e 's/^ *//' -e 's/$$/:/' >> $*.d"
+    ]
+
     if ext2lang[ext] == rule.attrs['lang']:
         if ext not in __seen_compile_rules__:
             __seen_compile_rules__.add(ext)
@@ -62,37 +63,7 @@ def emit_compile(out, rule):
     else:
         write_makefile_rule(out, base + '.o', [rule.attrs['file']], recipe)
 
-    if c['depfile']:
-        out.write('-include {}.d\n'.format(base))
-
-def space(s):
-    if len(s):
-        return ' ' + s
-    else:
-        return s
-
-def emit_link(out, rule, var_prefix, command_template):
-    if len(rule.attrs['files']) > 1:
-        var_name = unique_var_name(
-            '{}{}_OBJS'.format(var_prefix, rule.name.upper())
-        )
-        out.write('{} := {}\n'.format(var_name, ' '.join(
-            (target_name(i) for i in rule.attrs['files'])
-        )))
-        files = '$({})'.format(var_name)
-    else:
-        files = target_name(rule.attrs['files'][0])
-
-    write_makefile_rule(
-        out,
-        target_name(rule),
-        rule.deps + [files] + filter_rules(rule.attrs['libs']),
-        [command_template.format(
-            input=files,
-            libs=space(link_libs(rule.attrs['libs'])),
-            output='$@'
-        )]
-    )
+    out.write('-include {}.d\n'.format(base))
 
 def lang(iterable):
     if any((i.attrs['lang'] == 'c++' for i in iterable)):
@@ -100,19 +71,42 @@ def lang(iterable):
     else:
         return 'c'
 
+def emit_link(out, rule, mode, var_prefix):
+    if len(rule.attrs['files']) > 1:
+        var_name = unique_var_name(
+            '{}{}_OBJS'.format(var_prefix, rule.name.upper())
+        )
+        out.write('{} := {}\n'.format(var_name, ' '.join(
+            (cc_toolchain.target_name(i) for i in rule.attrs['files'])
+        )))
+        files = '$({})'.format(var_name)
+    else:
+        files = cc_toolchain.target_name(rule.attrs['files'][0])
+
+    write_makefile_rule(
+        out,
+        cc_toolchain.target_name(rule),
+        rule.deps + [files] + filter_rules(rule.attrs['libs']),
+        [cc_toolchain.link_command(
+            lang=lang(rule.attrs['files']), mode=mode, input=files,
+            libs=rule.attrs['libs'], output='$@'
+        )]
+    )
+
 @rule_handler('executable')
 def emit_executable(out, rule):
-    emit_link(out, rule, '', lang2exe[lang(rule.attrs['files'])]['cmd'])
+    emit_link(out, rule, 'executable', '')
 
 @rule_handler('library')
 def emit_library(out, rule):
-    emit_link(out, rule, 'LIB', lang2so[lang(rule.attrs['files'])]['cmd'])
+    emit_link(out, rule, 'library', 'LIB')
 
 @rule_handler('target')
 def emit_target(out, rule):
-    write_makefile_rule(out, target_name(rule), rule.deps, [], phony=True)
+    write_makefile_rule(out, cc_toolchain.target_name(rule), rule.deps, [],
+                        phony=True)
 
 @rule_handler('command')
 def emit_command(out, rule):
-    write_makefile_rule(out, target_name(rule), rule.deps, rule.attrs['cmd'],
-                        phony=True)
+    write_makefile_rule(out, cc_toolchain.target_name(rule), rule.deps,
+                        rule.attrs['cmd'], phony=True)
