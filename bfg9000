@@ -7,11 +7,15 @@ import sys
 import builtins
 import rule
 import builtin_rules
-import backends.make as backend
 import utils
 
 builddir = os.path.abspath(sys.argv[1])
 bfgfile = 'build.bfg'
+
+if len(sys.argv) > 2 and sys.argv[2] == 'ninja':
+    import backends.ninja as backend
+else:
+    import backends.make as backend
 
 execfile(os.path.join(builddir, bfgfile), builtins.all_builtins)
 backend.write(builddir, rule.all_targets)

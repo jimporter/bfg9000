@@ -3,6 +3,8 @@ import os
 
 from builtins import builtin
 
+__all_searches__ = []
+
 @builtin
 def find(base='.', name='*', type=None):
     results = []
@@ -15,4 +17,7 @@ def find(base='.', name='*', type=None):
             results.extend((
                 os.path.join(path, i) for i in fnmatch.filter(files, name)
             ))
+    __all_searches__.append({
+        'base': base, 'name': name, 'type': type, 'results': results
+    })
     return results

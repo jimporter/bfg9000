@@ -18,20 +18,28 @@ def lib_link_name(rule):
     else:
         return rule
 
+def link_libs(iterable):
+    return ' '.join(('-l' + lib_link_name(i) for i in iterable))
+
 def compile_command(lang, input, output, dep):
     return '{cmd} -MMD -MF {dep} -c {input} -o {output}'.format(
         cmd='g++' if lang == 'c++' else 'gcc',
         input=input, output=output, dep=dep
     )
 
-def link_command(lang, mode, input, libs, output):
+def link_command(lang, mode, input, libs, output, prevars=None, postvars=None):
     # TODO: support static libraries
     cmd = 'g++' if lang == 'c++' else 'gcc'
     if mode == 'library':
         cmd += ' -shared'
-    return '{cmd} {input}{libs} -o {output}'.format(
-        cmd=cmd,
-        input=input,
-        libs=''.join((' -l' + lib_link_name(i) for i in libs)),
-        output=output
-    )
+
+    result = cmd
+    if prevars:
+        result += ' ' + prevars
+    result += ' ' + input
+    if libs:
+        result += ' ' + link_libs(libs)
+    if postvars:
+        result += ' ' + postvars
+    result += ' -o ' + output
+    return result
