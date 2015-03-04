@@ -44,8 +44,8 @@ def unique_var_name(name):
 
 __seen_compile_rules__ = set()
 
-@rule_handler('compile')
-def emit_compile(out, rule):
+@rule_handler('object_file')
+def emit_object_file(out, rule):
     base, ext = os.path.splitext(rule.attrs['file'])
     recipe = [
         cc_toolchain.compile_command(
