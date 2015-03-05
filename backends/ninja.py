@@ -11,6 +11,11 @@ def rule_handler(rule_name):
         return fn
     return decorator
 
+def rule_name(name):
+    if name == 'c++':
+        return 'cxx'
+    return name
+
 class NinjaWriter(object):
     def __init__(self):
         self._rules = OrderedDict()
@@ -26,7 +31,7 @@ class NinjaWriter(object):
             raise RuntimeError('rule "{}" already exists'.format(name))
         out = cStringIO.StringIO()
         out.write('rule {}\n'.format(name))
-        out.write('  command = {}\n'.format(command))
+        self._write_variable(out, 'command', command, 1)
         if depfile:
             self._write_variable(out, 'depfile', depfile, 1)
         self._rules[name] = out.getvalue()
@@ -61,7 +66,7 @@ def write(path, targets):
 
 @rule_handler('object_file')
 def __emit_object_file__(writer, rule):
-    rulename = 'cxx' # TODO
+    rulename = rule_name(rule.attrs['lang'])
     if not writer.has_rule(rulename):
         writer.rule(rulename, cc_toolchain.compile_command(
             lang=rule.attrs['lang'], input='$in', output='$out',
@@ -92,7 +97,7 @@ def __emit_executable__(writer, rule):
 
 @rule_handler('library')
 def __emit_library__(writer, rule):
-    __emit_link__(writer, rule, 'link')
+    __emit_link__(writer, rule, 'linklib')
 
 @rule_handler('target')
 def __emit_target__(writer, rule):
