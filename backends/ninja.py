@@ -93,17 +93,17 @@ def cmd_var(writer, lang):
 
 @rule_handler('object_file')
 def emit_object_file(writer, rule):
-    cmd = cmd_var(writer, rule.attrs['lang'])
-    rulename = rule_name(rule.attrs['lang'])
+    cmd = cmd_var(writer, rule['lang'])
+    rulename = rule_name(rule['lang'])
     if not writer.has_rule(rulename):
         writer.rule(name=rulename, command=cc_toolchain.compile_command(
             cmd=use_var(cmd), input='$in', output='$out', dep='$out.d'
         ), depfile='$out.d')
     writer.build(output=cc_toolchain.target_name(rule), rule=rulename,
-                 inputs=[rule.attrs['file']])
+                 inputs=[rule['file']])
 
 def emit_link(writer, rule, rulename):
-    cmd = cmd_var(writer, languages.lang(rule.attrs['files']))
+    cmd = cmd_var(writer, languages.lang(rule['files']))
     if not writer.has_rule(rulename):
         writer.rule(name=rulename, command=cc_toolchain.link_command(
             cmd=use_var(cmd), mode=rule.kind, input='$in',
@@ -111,11 +111,11 @@ def emit_link(writer, rule, rulename):
         ))
 
     variables = {}
-    if rule.attrs['libs']:
-        variables['libs'] = cc_toolchain.link_libs(rule.attrs['libs'])
+    if rule['libs']:
+        variables['libs'] = cc_toolchain.link_libs(rule['libs'])
     writer.build(
         output=cc_toolchain.target_name(rule), rule=rulename,
-        inputs=(cc_toolchain.target_name(i) for i in rule.attrs['files']),
+        inputs=(cc_toolchain.target_name(i) for i in rule['files']),
         variables=variables
     )
 
@@ -141,5 +141,5 @@ def emit_command(writer, rule):
         writer.build(
             output=rule.name, rule='command',
             inputs=(cc_toolchain.target_name(i) for i in rule.deps),
-            variables={'cmd': ' && '.join(rule.attrs['cmd'])}
+            variables={'cmd': ' && '.join(rule['cmd'])}
         )

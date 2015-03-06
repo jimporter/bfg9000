@@ -4,7 +4,7 @@ ext2lang = {
 }
 
 def lang(iterable):
-    if any((i.attrs['lang'] == 'c++' for i in iterable)):
+    if any((i['lang'] == 'c++' for i in iterable)):
         return 'c++'
     else:
         return 'c'

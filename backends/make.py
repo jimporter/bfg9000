@@ -120,7 +120,7 @@ __seen_compile_rules__ = set() # TODO: put this somewhere else (on the writer?)
 
 @rule_handler('object_file')
 def emit_object_file(writer, rule):
-    base, ext = os.path.splitext(rule.attrs['file'])
+    base, ext = os.path.splitext(rule['file'])
 
     def compile_recipe(lang):
         return [
@@ -132,38 +132,38 @@ def emit_object_file(writer, rule):
             "  sed -e 's/^ *//' -e 's/$$/:/' >> $*.d"
         ]
 
-    if ext2lang[ext] == rule.attrs['lang']:
+    if ext2lang[ext] == rule['lang']:
         if ext not in __seen_compile_rules__:
             __seen_compile_rules__.add(ext)
             writer.rule(target='%.o', deps=['%' + ext],
-                        recipe=compile_recipe(rule.attrs['lang']))
+                        recipe=compile_recipe(rule['lang']))
     else:
-        writer.rule(target=base + '.o', deps=[rule.attrs['file'].name],
-                    recipe=compile_recipe(rule.attrs['lang']))
+        writer.rule(target=base + '.o', deps=[rule['file'].name],
+                    recipe=compile_recipe(rule['lang']))
 
     writer.include(base + '.d')
 
 def emit_link(writer, rule, var_prefix):
     variables = {}
-    if len(rule.attrs['files']) > 1:
+    if len(rule['files']) > 1:
         var_name = writer.unique_var_name('{}{}_OBJS'.format(
             var_prefix, rule.name.upper()
         ))
         variables[var_name] = ' '.join(
-            (cc_toolchain.target_name(i) for i in rule.attrs['files'])
+            (cc_toolchain.target_name(i) for i in rule['files'])
         )
         files = use_var(var_name)
     else:
-        files = cc_toolchain.target_name(rule.attrs['files'][0])
+        files = cc_toolchain.target_name(rule['files'][0])
 
-    cmd = cmd_var(writer, lang(rule.attrs['files']))
+    cmd = cmd_var(writer, lang(rule['files']))
     writer.rule(
         target=cc_toolchain.target_name(rule),
         deps=(cc_toolchain.target_name(i) for i in
-              rule.deps + [files] + filter_rules(rule.attrs['libs'])),
+              rule.deps + [files] + filter_rules(rule['libs'])),
         recipe=[cc_toolchain.link_command(
             cmd=use_var(cmd), mode=rule.kind, input=files,
-            libs=rule.attrs['libs'], output='$@'
+            libs=rule['libs'], output='$@'
         )],
         variables=variables
     )
@@ -190,6 +190,6 @@ def emit_command(writer, rule):
     writer.rule(
         target=cc_toolchain.target_name(rule),
         deps=(cc_toolchain.target_name(i) for i in rule.deps),
-        recipe=rule.attrs['cmd'],
+        recipe=rule['cmd'],
         phony=True
     )

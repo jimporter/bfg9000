@@ -5,7 +5,13 @@ class Rule(object):
         self.kind = kind
         self.name = name
         self.deps = deps
-        self.attrs = attrs
+        self._attrs = attrs
+
+    def __getitem__(self, key):
+        return self._attrs[key]
+
+    def __contains__(self, key):
+        return key in self._attrs[key]
 
 def rule(fn):
     def wrapped(name, deps=None, **kwargs):
