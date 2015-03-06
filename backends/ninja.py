@@ -1,8 +1,10 @@
-import cc_toolchain
 import cStringIO
 import os
 import sys
 from collections import OrderedDict
+
+import cc_toolchain
+import languages
 
 __rule_handlers__ = {}
 def rule_handler(rule_name):
@@ -16,8 +18,12 @@ def rule_name(name):
         return 'cxx'
     return name
 
+def use_var(name):
+    return '${}'.format(name)
+
 class NinjaWriter(object):
     def __init__(self):
+        self._variables = OrderedDict()
         self._rules = OrderedDict()
         self._builds = []
 
@@ -25,6 +31,16 @@ class NinjaWriter(object):
         out.write('{indent}{name} = {value}\n'.format(
             indent='  ' * indent, name=name, value=value
         ))
+
+    def variable(self, name, value):
+        if self.has_variable(name):
+            raise RuntimeError('variable "{}" already exists'.format(name))
+        out = cStringIO.StringIO()
+        self._write_variable(out, name, value)
+        self._variables[name] = out.getvalue()
+
+    def has_variable(self, name):
+        return name in self._variables
 
     def rule(self, name, command, depfile=None):
         if self.has_rule(name):
@@ -50,6 +66,11 @@ class NinjaWriter(object):
         self._builds.append(out.getvalue())
 
     def write(self, out):
+        for v in self._variables.itervalues():
+            out.write(v)
+        if self._variables:
+            out.write('\n')
+
         for r in self._rules.itervalues():
             out.write(r)
             out.write('\n')
@@ -64,52 +85,61 @@ def write(path, targets):
     with open(os.path.join(path, 'build.ninja'), 'w') as out:
         writer.write(out)
 
+def cmd_var(writer, lang):
+    var = rule_name(lang).upper()
+    if not writer.has_variable(var):
+        writer.variable(var, cc_toolchain.command_name(lang))
+    return var
+
 @rule_handler('object_file')
-def __emit_object_file__(writer, rule):
+def emit_object_file(writer, rule):
+    cmd = cmd_var(writer, rule.attrs['lang'])
     rulename = rule_name(rule.attrs['lang'])
     if not writer.has_rule(rulename):
-        writer.rule(rulename, cc_toolchain.compile_command(
-            lang=rule.attrs['lang'], input='$in', output='$out',
-            dep='$out.d'
+        writer.rule(name=rulename, command=cc_toolchain.compile_command(
+            cmd=use_var(cmd), input='$in', output='$out', dep='$out.d'
         ), depfile='$out.d')
-    writer.build(cc_toolchain.target_name(rule), 'cxx',
-                 [rule.attrs['file']])
+    writer.build(output=cc_toolchain.target_name(rule), rule=rulename,
+                 inputs=[rule.attrs['file']])
 
-def __emit_link__(writer, rule, rulename):
+def emit_link(writer, rule, rulename):
+    cmd = cmd_var(writer, languages.lang(rule.attrs['files']))
     if not writer.has_rule(rulename):
-        writer.rule(rulename, cc_toolchain.link_command(
-            lang='c++', mode=rule.kind, input='$in', libs=None,
-            postvars='$libs', output='$out'
+        writer.rule(name=rulename, command=cc_toolchain.link_command(
+            cmd=use_var(cmd), mode=rule.kind, input='$in',
+            libs=None, postvars='$libs', output='$out'
         ))
 
     variables = {}
     if rule.attrs['libs']:
         variables['libs'] = cc_toolchain.link_libs(rule.attrs['libs'])
     writer.build(
-        cc_toolchain.target_name(rule), rulename,
-        (cc_toolchain.target_name(i) for i in rule.attrs['files']),
+        output=cc_toolchain.target_name(rule), rule=rulename,
+        inputs=(cc_toolchain.target_name(i) for i in rule.attrs['files']),
         variables=variables
     )
 
 @rule_handler('executable')
-def __emit_executable__(writer, rule):
-    __emit_link__(writer, rule, 'link')
+def emit_executable(writer, rule):
+    emit_link(writer, rule, 'link')
 
 @rule_handler('library')
-def __emit_library__(writer, rule):
-    __emit_link__(writer, rule, 'linklib')
+def emit_library(writer, rule):
+    emit_link(writer, rule, 'linklib')
 
 @rule_handler('target')
-def __emit_target__(writer, rule):
+def emit_target(writer, rule):
     writer.build(
-        cc_toolchain.target_name(rule), 'phony',
-        (cc_toolchain.target_name(i) for i in rule.deps)
+        output=cc_toolchain.target_name(rule), rule='phony',
+        inputs=(cc_toolchain.target_name(i) for i in rule.deps)
     )
 
 @rule_handler('command')
-def __emit_command__(writer, rule):
+def emit_command(writer, rule):
     if not writer.has_rule('command'):
-        writer.rule('command', '$cmd')
-        writer.build(rule.name, 'command', variables={
-            'cmd': ' && '.join(rule.attrs['cmd'])
-        })
+        writer.rule(name='command', command='$cmd')
+        writer.build(
+            output=rule.name, rule='command',
+            inputs=(cc_toolchain.target_name(i) for i in rule.deps),
+            variables={'cmd': ' && '.join(rule.attrs['cmd'])}
+        )

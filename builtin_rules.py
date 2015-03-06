@@ -30,9 +30,9 @@ def library(files, libs=None, lang=None):
 @builtin
 @rule.rule
 def target():
-    return {'phony': True}
+    return {}
 
 @builtin
 @rule.rule
 def command(cmd):
-    return {'cmd': cmd, 'phony': True}
+    return {'cmd': cmd}
