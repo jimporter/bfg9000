@@ -135,10 +135,11 @@ def emit_object_file(writer, rule):
     if ext2lang[ext] == rule['lang']:
         if ext not in __seen_compile_rules__:
             __seen_compile_rules__.add(ext)
-            writer.rule(target='%.o', deps=['%' + ext],
-                        recipe=compile_recipe(rule['lang']))
+            writer.rule(target=cc_toolchain.target_name('%', 'object_file'),
+                        deps=['%' + ext], recipe=compile_recipe(rule['lang']))
     else:
-        writer.rule(target=base + '.o', deps=[rule['file'].name],
+        writer.rule(target=cc_toolchain.target_name(base, 'object_file'),
+                    deps=[rule['file'].name],
                     recipe=compile_recipe(rule['lang']))
 
     writer.include(base + '.d')
