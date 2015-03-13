@@ -2,9 +2,10 @@ import cStringIO
 import os
 import re
 from collections import OrderedDict
+from itertools import chain
 
 import cc_toolchain
-from rule import filter_rules
+import node
 from languages import ext2lang, lang
 
 __rule_handlers__ = {}
@@ -120,7 +121,7 @@ __seen_compile_rules__ = set() # TODO: put this somewhere else (on the writer?)
 
 @rule_handler('object_file')
 def emit_object_file(writer, rule):
-    base, ext = os.path.splitext(rule['file'])
+    base, ext = os.path.splitext(cc_toolchain.target_name(rule['file']))
 
     def compile_recipe(lang):
         return [
@@ -135,8 +136,10 @@ def emit_object_file(writer, rule):
     if ext2lang[ext] == rule['lang']:
         if ext not in __seen_compile_rules__:
             __seen_compile_rules__.add(ext)
-            writer.rule(target=cc_toolchain.target_name('%', 'object_file'),
-                        deps=['%' + ext], recipe=compile_recipe(rule['lang']))
+            writer.rule(
+                target=cc_toolchain.target_name('%', 'object_file'),
+                deps=['%' + ext], recipe=compile_recipe(rule['lang'])
+            )
     else:
         writer.rule(target=cc_toolchain.target_name(base, 'object_file'),
                     deps=[rule['file'].name],
@@ -153,15 +156,16 @@ def emit_link(writer, rule, var_prefix):
         variables[var_name] = ' '.join(
             (cc_toolchain.target_name(i) for i in rule['files'])
         )
-        files = use_var(var_name)
+        files = [use_var(var_name)]
     else:
-        files = cc_toolchain.target_name(rule['files'][0])
+        files = [cc_toolchain.target_name(rule['files'][0])]
 
     cmd = cmd_var(writer, lang(rule['files']))
     writer.rule(
         target=cc_toolchain.target_name(rule),
-        deps=(cc_toolchain.target_name(i) for i in
-              rule.deps + [files] + filter_rules(rule['libs'])),
+        deps=chain(files, (cc_toolchain.target_name(i) for i in
+                           chain(rule.deps, rule['libs'])
+                           if i.kind != 'external_library')),
         recipe=[cc_toolchain.link_command(
             cmd=use_var(cmd), mode=rule.kind, input=files,
             libs=rule['libs'], output='$@'

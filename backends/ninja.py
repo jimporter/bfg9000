@@ -2,6 +2,7 @@ import cStringIO
 import os
 import sys
 from collections import OrderedDict
+from itertools import chain
 
 import cc_toolchain
 import languages
@@ -55,10 +56,15 @@ class NinjaWriter(object):
     def has_rule(self, name):
         return name in self._rules
 
-    def build(self, output, rule, inputs=None, variables=None):
+    def build(self, output, rule, inputs=None, implicit=None, variables=None):
+        full_rule = [[rule], inputs]
+        if implicit:
+            full_rule.append(['|'])
+            full_rule.append(implicit)
+
         out = cStringIO.StringIO()
-        out.write('build {output}: {rule} {inputs}\n'.format(
-            output=output, rule=rule, inputs=' '.join(inputs or [])
+        out.write('build {output}: {rule}\n'.format(
+            output=output, rule=' '.join(chain(*full_rule))
         ))
         if variables:
             for k, v in variables.iteritems():
@@ -100,13 +106,13 @@ def emit_object_file(writer, rule):
             cmd=use_var(cmd), input='$in', output='$out', dep='$out.d'
         ), depfile='$out.d')
     writer.build(output=cc_toolchain.target_name(rule), rule=rulename,
-                 inputs=[rule['file']])
+                 inputs=[cc_toolchain.target_name(rule['file'])])
 
 def emit_link(writer, rule, rulename):
     cmd = cmd_var(writer, languages.lang(rule['files']))
     if not writer.has_rule(rulename):
         writer.rule(name=rulename, command=cc_toolchain.link_command(
-            cmd=use_var(cmd), mode=rule.kind, input='$in',
+            cmd=use_var(cmd), mode=rule.kind, input=['$in'],
             libs=None, postvars='$libs', output='$out'
         ))
 
@@ -116,6 +122,8 @@ def emit_link(writer, rule, rulename):
     writer.build(
         output=cc_toolchain.target_name(rule), rule=rulename,
         inputs=(cc_toolchain.target_name(i) for i in rule['files']),
+        implicit=(cc_toolchain.target_name(i) for i in rule['libs']
+                  if i.kind != 'external_library'),
         variables=variables
     )
 
