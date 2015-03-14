@@ -57,15 +57,21 @@ class NinjaWriter(object):
         return name in self._rules
 
     def build(self, output, rule, inputs=None, implicit=None, variables=None):
-        full_rule = [[rule], inputs]
-        if implicit:
-            full_rule.append(['|'])
-            full_rule.append(implicit)
-
         out = cStringIO.StringIO()
-        out.write('build {output}: {rule}\n'.format(
-            output=output, rule=' '.join(chain(*full_rule))
-        ))
+        out.write('build {output}: {rule}'.format(output=output, rule=rule))
+
+        for i in inputs or []:
+            out.write(' ' + i)
+
+        first = True
+        for i in implicit or []:
+            if first:
+                first = False
+                out.write(' |')
+            out.write(' ' + i)
+
+        out.write('\n')
+
         if variables:
             for k, v in variables.iteritems():
                 self._write_variable(out, k, v, 1)
