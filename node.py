@@ -1,5 +1,5 @@
 class Node(object):
-    def __init__(self, name, kind, deps, attrs):
+    def __init__(self, name, kind, deps=[], attrs={}):
         self.name = name
         self.kind = kind
         self.deps = deps

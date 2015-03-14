@@ -137,11 +137,11 @@ def emit_object_file(writer, rule):
         if ext not in __seen_compile_rules__:
             __seen_compile_rules__.add(ext)
             writer.rule(
-                target=cc_toolchain.target_name('%', 'object_file'),
+                target=cc_toolchain.target_name(node.Node('%', 'object_file')),
                 deps=['%' + ext], recipe=compile_recipe(rule['lang'])
             )
     else:
-        writer.rule(target=cc_toolchain.target_name(base, 'object_file'),
+        writer.rule(target=cc_toolchain.target_name(rule),
                     deps=[rule['file'].name],
                     recipe=compile_recipe(rule['lang']))
 
@@ -149,25 +149,32 @@ def emit_object_file(writer, rule):
 
 def emit_link(writer, rule, var_prefix):
     variables = {}
-    if len(rule['files']) > 1:
-        var_name = writer.unique_var_name('{}{}_OBJS'.format(
-            var_prefix, rule.name.upper()
-        ))
-        variables[var_name] = ' '.join(
-            (cc_toolchain.target_name(i) for i in rule['files'])
-        )
-        files = [use_var(var_name)]
+    lib_deps = [i for i in rule['libs'] if i.kind != 'external_library']
+
+    if len(rule.deps) == 0 and len(lib_deps) == 0:
+        inputs = ['$^']
+        deps = [cc_toolchain.target_name(i) for i in rule['files']]
     else:
-        files = [cc_toolchain.target_name(rule['files'][0])]
+        if len(rule['files']) > 1:
+            var_name = writer.unique_var_name('{}{}_OBJS'.format(
+                var_prefix, rule.name.upper()
+            ))
+            variables[var_name] = ' '.join(
+                (cc_toolchain.target_name(i) for i in rule['files'])
+            )
+            inputs = [use_var(var_name)]
+        else:
+            inputs = [cc_toolchain.target_name(rule['files'][0])]
+
+        deps = chain(inputs, (cc_toolchain.target_name(i) for i in
+                              chain(rule.deps, lib_deps)))
 
     cmd = cmd_var(writer, lang(rule['files']))
     writer.rule(
         target=cc_toolchain.target_name(rule),
-        deps=chain(files, (cc_toolchain.target_name(i) for i in
-                           chain(rule.deps, rule['libs'])
-                           if i.kind != 'external_library')),
+        deps=deps,
         recipe=[cc_toolchain.link_command(
-            cmd=use_var(cmd), mode=rule.kind, input=files,
+            cmd=use_var(cmd), mode=rule.kind, input=inputs,
             libs=rule['libs'], output='$@'
         )],
         variables=variables
