@@ -95,13 +95,13 @@ class MakeWriter(object):
         if self._variables:
             out.write('\n')
 
+        for r in self._rules:
+            out.write(r)
+
         for i in self._includes:
             out.write(i)
         if self._includes:
             out.write('\n')
-
-        for r in self._rules:
-            out.write(r)
 
 
 def write(path, targets):
@@ -145,7 +145,7 @@ def emit_object_file(writer, rule):
                     deps=[rule['file'].name],
                     recipe=compile_recipe(rule['lang']))
 
-    writer.include(base + '.d')
+    writer.include(base + '.d', True)
 
 def emit_link(writer, rule, var_prefix):
     variables = {}
