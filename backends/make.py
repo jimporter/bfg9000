@@ -25,45 +25,30 @@ def use_var(name):
 
 class MakeWriter(object):
     def __init__(self):
-        self._var_table = set()
-        self._variables = []
+        self._variables = OrderedDict()
+        self._private_variables = OrderedDict()
         self._includes = []
         self._rules = []
 
     def escape_var_name(self, name):
         return re.sub('/', '_', name)
 
-    def unique_var_name(self, name):
+    def variable(self, name, value, private=False):
+        v = self._private_variables if private else self._variables
         name = self.escape_var_name(name)
-        if name in self._var_table:
-            i = 2
-            fmt = name + '_{}'
-            while True:
-                name = fmt.format(i)
-                if name not in self._var_table:
-                    break
-                i += 1
-            self._var_table.add(name)
+        if name in v:
+            raise RuntimeError('variable "{}" already exists'.format(name))
+
+        v[name] = value
         return name
 
-    def variable(self, name, value, make_unique=False):
-        if make_unique:
-            name = self.unique_var_name(name)
-        else:
-            name = self.escape_var_name(name)
-            if self.has_variable(name):
-                raise RuntimeError('variable "{}" already exists'.format(name))
+    def has_variable(self, name, private=False):
+        v = self._private_variables if private else self._variables
+        return self.escape_var_name(name) in v
 
-        out = cStringIO.StringIO()
-        self._write_variable(out, name, value)
-        self._var_table.add(name)
-        self._variables.append(out.getvalue())
-        return name
-
-    def has_variable(self, name):
-        return name in self._var_table
-
-    def _write_variable(self, out, name, value):
+    def _write_variable(self, out, name, value, target=None):
+        if target:
+            out.write('{}: '.format(target))
         out.write('{name} := {value}\n'.format(
             name=name, value=value
         ))
@@ -76,13 +61,13 @@ class MakeWriter(object):
     def rule(self, target, deps, recipe, variables=None, phony=False):
         out = cStringIO.StringIO()
         if variables:
-            for k, v in variables.iteritems():
-                self._write_variable(out, k, v)
+            for name, value in variables.iteritems():
+                self._write_variable(out, name, value, target=target)
         if phony:
             out.write('.PHONY: {}\n'.format(target))
         out.write('{target}:{deps}\n'.format(
             target=target,
-            deps=''.join((' ' + i for i in deps))
+            deps=''.join(' ' + i for i in deps)
         ))
         for cmd in recipe:
             out.write('\t{}\n'.format(cmd))
@@ -90,9 +75,14 @@ class MakeWriter(object):
         self._rules.append(out.getvalue())
 
     def write(self, out):
-        for v in self._variables:
-            out.write(v)
+        for name, value in self._variables.iteritems():
+            self._write_variable(out, name, value)
         if self._variables:
+            out.write('\n')
+
+        for name, value in self._private_variables.iteritems():
+            self._write_variable(out, name, value, target='%')
+        if self._private_variables:
             out.write('\n')
 
         for r in self._rules:
@@ -100,8 +90,6 @@ class MakeWriter(object):
 
         for i in self._includes:
             out.write(i)
-        if self._includes:
-            out.write('\n')
 
 
 def write(path, targets):
@@ -156,9 +144,9 @@ def emit_link(writer, rule, var_prefix):
         deps = [cc_toolchain.target_name(i) for i in rule['files']]
     else:
         if len(rule['files']) > 1:
-            var_name = writer.unique_var_name('{}{}_OBJS'.format(
-                var_prefix, rule.name.upper()
-            ))
+            var_name = 'OBJS'
+            if not writer.has_variable(var_name, private=True):
+                writer.variable(var_name, '', private=True)
             variables[var_name] = ' '.join(
                 (cc_toolchain.target_name(i) for i in rule['files'])
             )
