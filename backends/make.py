@@ -190,8 +190,8 @@ def emit_executable(writer, rule):
 def emit_library(writer, rule):
     emit_link(writer, rule, 'LIB')
 
-@rule_handler('target')
-def emit_target(writer, rule):
+@rule_handler('alias')
+def emit_alias(writer, rule):
     writer.rule(
         target=cc_toolchain.target_name(rule),
         deps=(cc_toolchain.target_name(i) for i in rule.deps),

@@ -41,7 +41,7 @@ def library(files, libs=None, lang=None, compile_options=None,
 
 @builtin
 @node.rule
-def target():
+def alias():
     return {}
 
 @builtin
