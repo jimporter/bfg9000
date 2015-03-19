@@ -16,9 +16,11 @@ all_tests = [
 libmettle = library(
     'mettle',
     files=['libmettle.cpp', 'log/verbose.cpp'],
-    libs=['boost_iostreams', 'boost_program_options']
+    libs=['boost_iostreams', 'boost_program_options'],
+    compile_options='-fPIC'
 )
-mettle = executable('mettle', files=['mettle.cpp'], libs=[libmettle])
+mettle = executable('mettle', files=['mettle.cpp', 'log_pipe.cpp'],
+                    libs=[libmettle])
 
 tests = target('tests', [executable(i, files=[i+'.cpp']) for i in all_tests])
 

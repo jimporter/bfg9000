@@ -25,26 +25,10 @@ def use_var(name):
 
 class MakeWriter(object):
     def __init__(self):
-        self._variables = OrderedDict()
-        self._private_variables = OrderedDict()
+        self._global_variables = OrderedDict()
+        self._target_variables = OrderedDict()
         self._includes = []
         self._rules = []
-
-    def escape_var_name(self, name):
-        return re.sub('/', '_', name)
-
-    def variable(self, name, value, private=False):
-        v = self._private_variables if private else self._variables
-        name = self.escape_var_name(name)
-        if name in v:
-            raise RuntimeError('variable "{}" already exists'.format(name))
-
-        v[name] = value
-        return name
-
-    def has_variable(self, name, private=False):
-        v = self._private_variables if private else self._variables
-        return self.escape_var_name(name) in v
 
     def _write_variable(self, out, name, value, target=None):
         if target:
@@ -52,6 +36,27 @@ class MakeWriter(object):
         out.write('{name} := {value}\n'.format(
             name=name, value=value
         ))
+
+    def escape_var_name(self, name):
+        return re.sub('/', '_', name)
+
+    def variable(self, name, value, target=None):
+        if self.has_variable(name, target=target):
+            raise RuntimeError('variable "{}" already exists'.format(name))
+
+        name = self.escape_var_name(name)
+        if target:
+            self._target_variables[(target, name)] = value
+        else:
+            self._global_variables[name] = value
+        return name
+
+    def has_variable(self, name, target=None):
+        name = self.escape_var_name(name)
+        if target:
+            return (target, name) in self._target_variables
+        else:
+            return name in self._global_variables
 
     def include(self, name, optional=False):
         self._includes.append('{opt}include {name}\n'.format(
@@ -75,14 +80,14 @@ class MakeWriter(object):
         self._rules.append(out.getvalue())
 
     def write(self, out):
-        for name, value in self._variables.iteritems():
+        for name, value in self._global_variables.iteritems():
             self._write_variable(out, name, value)
-        if self._variables:
+        if self._global_variables:
             out.write('\n')
 
-        for name, value in self._private_variables.iteritems():
-            self._write_variable(out, name, value, target='%')
-        if self._private_variables:
+        for name, value in self._target_variables.iteritems():
+            self._write_variable(out, name[1], value, target=name[0])
+        if self._target_variables:
             out.write('\n')
 
         for r in self._rules:
@@ -115,7 +120,8 @@ def emit_object_file(writer, rule):
         return [
             cc_toolchain.compile_command(
                 cmd=use_var(cmd_var(writer, lang)), input='$<',
-                output='$@', dep='$*.d'
+                output='$@', dep='$*.d',
+                prevars=use_var(rule_name(lang).upper() + 'FLAGS')
             ),
             "@sed -e 's/.*://' -e 's/\\$$//' < $*.d | fmt -1 | \\",
             "  sed -e 's/^ *//' -e 's/$$/:/' >> $*.d"
@@ -133,6 +139,9 @@ def emit_object_file(writer, rule):
                     deps=[rule['file'].name],
                     recipe=compile_recipe(rule['lang']))
 
+    if rule['options']:
+        writer.variable(rule_name(rule['lang']).upper() + 'FLAGS',
+                        rule['options'], cc_toolchain.target_name(rule))
     writer.include(base + '.d', True)
 
 def emit_link(writer, rule, var_prefix):
@@ -145,8 +154,8 @@ def emit_link(writer, rule, var_prefix):
     else:
         if len(rule['files']) > 1:
             var_name = 'OBJS'
-            if not writer.has_variable(var_name, private=True):
-                writer.variable(var_name, '', private=True)
+            if not writer.has_variable(var_name, target='%'):
+                writer.variable(var_name, '', target='%')
             variables[var_name] = ' '.join(
                 (cc_toolchain.target_name(i) for i in rule['files'])
             )
@@ -163,7 +172,8 @@ def emit_link(writer, rule, var_prefix):
         deps=deps,
         recipe=[cc_toolchain.link_command(
             cmd=use_var(cmd), mode=rule.kind, input=inputs,
-            libs=rule['libs'], output='$@'
+            libs=rule['libs'], output='$@', prevars=rule['compile_options'],
+            postvars=rule['link_options']
         )],
         variables=variables
     )

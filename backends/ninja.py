@@ -107,24 +107,41 @@ def cmd_var(writer, lang):
 def emit_object_file(writer, rule):
     cmd = cmd_var(writer, rule['lang'])
     rulename = rule_name(rule['lang'])
+    cflags = '{}flags'.format(rulename)
+
     if not writer.has_rule(rulename):
         writer.rule(name=rulename, command=cc_toolchain.compile_command(
-            cmd=use_var(cmd), input='$in', output='$out', dep='$out.d'
+            cmd=use_var(cmd), input='$in', output='$out', dep='$out.d',
+            prevars='$' + cflags
         ), depfile='$out.d')
+
+    variables = {}
+    if rule['options']:
+        variables[cflags] = rule['options']
+
     writer.build(output=cc_toolchain.target_name(rule), rule=rulename,
-                 inputs=[cc_toolchain.target_name(rule['file'])])
+                 inputs=[cc_toolchain.target_name(rule['file'])],
+                 variables=variables)
 
 def emit_link(writer, rule, rulename):
-    cmd = cmd_var(writer, languages.lang(rule['files']))
+    lang = languages.lang(rule['files'])
+    cmd = cmd_var(writer, lang)
+    cflags = '{}flags'.format(rule_name(lang))
     if not writer.has_rule(rulename):
         writer.rule(name=rulename, command=cc_toolchain.link_command(
             cmd=use_var(cmd), mode=rule.kind, input=['$in'],
-            libs=None, postvars='$libs', output='$out'
+            libs=None, prevars='$' + cflags, postvars='$libs $ldflags',
+            output='$out'
         ))
 
     variables = {}
     if rule['libs']:
         variables['libs'] = cc_toolchain.link_libs(rule['libs'])
+    if rule['compile_options']:
+        variables[cflags] = rule['compile_options']
+    if rule['link_options']:
+        variables['ldflags'] = rule['link_options']
+
     writer.build(
         output=cc_toolchain.target_name(rule), rule=rulename,
         inputs=(cc_toolchain.target_name(i) for i in rule['files']),

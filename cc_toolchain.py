@@ -15,9 +15,6 @@ def target_name_or_str(thing):
     else:
         return str(thing)
 
-#def target_names(iterable, kind=None):
-#    return ' '.join((target_name(i, kind) for i in iterable))
-
 def lib_link_name(node):
     if isinstance(node, Node):
         return node.name
@@ -30,11 +27,17 @@ def link_libs(iterable):
 def command_name(lang):
     return 'g++' if lang == 'c++' else 'gcc'
 
-def compile_command(cmd, input, output, dep):
-    return '{cmd} -MMD -MF {dep} -c {input} -o {output}'.format(
-        cmd=cmd, input=target_name_or_str(input),
-        output=target_name_or_str(output), dep=dep
+def compile_command(cmd, input, output, dep=None, prevars=None):
+    result = cmd
+    if prevars:
+        result += ' ' + prevars
+    if dep:
+        result += ' -MMD -MF ' + dep
+    result += ' -c {input} -o {output}'.format(
+        input=target_name_or_str(input),
+        output=target_name_or_str(output)
     )
+    return result
 
 def link_command(cmd, mode, input, libs, output, prevars=None, postvars=None):
     result = cmd
