@@ -1,7 +1,6 @@
-import cStringIO
 import os
 import re
-from collections import OrderedDict
+from collections import OrderedDict, namedtuple
 from itertools import chain
 
 import cc_toolchain
@@ -23,19 +22,16 @@ def rule_name(name):
 def use_var(name):
     return '$({})'.format(name)
 
+MakeInclude = namedtuple('MakeInclude', ['name', 'optional'])
+MakeRule = namedtuple('MakeRule', ['target', 'deps', 'recipe', 'variables',
+                                   'phony'])
+
 class MakeWriter(object):
     def __init__(self):
         self._global_variables = OrderedDict()
         self._target_variables = OrderedDict()
         self._includes = []
         self._rules = []
-
-    def _write_variable(self, out, name, value, target=None):
-        if target:
-            out.write('{}: '.format(target))
-        out.write('{name} := {value}\n'.format(
-            name=name, value=value
-        ))
 
     def escape_var_name(self, name):
         return re.sub('/', '_', name)
@@ -59,12 +55,19 @@ class MakeWriter(object):
             return name in self._global_variables
 
     def include(self, name, optional=False):
-        self._includes.append('{opt}include {name}\n'.format(
-            name=name, opt='-' if optional else ''
-        ))
+        self._includes.append(MakeInclude(name, optional))
 
     def rule(self, target, deps, recipe, variables=None, phony=False):
-        out = cStringIO.StringIO()
+        self._rules.append(MakeRule(target, deps, recipe, variables, phony))
+
+    def _write_variable(self, out, name, value, target=None):
+        if target:
+            out.write('{}: '.format(target))
+        out.write('{name} := {value}\n'.format(
+            name=name, value=value
+        ))
+
+    def _write_rule(self, out, target, deps, recipe, variables, phony):
         if variables:
             for name, value in variables.iteritems():
                 self._write_variable(out, name, value, target=target)
@@ -76,8 +79,6 @@ class MakeWriter(object):
         ))
         for cmd in recipe:
             out.write('\t{}\n'.format(cmd))
-        out.write('\n')
-        self._rules.append(out.getvalue())
 
     def write(self, out):
         for name, value in self._global_variables.iteritems():
@@ -91,10 +92,13 @@ class MakeWriter(object):
             out.write('\n')
 
         for r in self._rules:
-            out.write(r)
+            self._write_rule(out, *r)
+            out.write('\n')
 
         for i in self._includes:
-            out.write(i)
+            out.write('{opt}include {name}\n'.format(
+                name=i.name, opt='-' if i.optional else ''
+            ))
 
 
 def write(path, targets):
