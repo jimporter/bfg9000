@@ -1,10 +1,17 @@
 from node import Node
+from platform import target_name
 
 def _lib_link_name(node):
     if isinstance(node, Node):
         return node.name
     else:
-        return node
+        return str(node)
+
+def _target_name_or_str(thing):
+    if isinstance(thing, Node):
+        return target_name(thing)
+    else:
+        return str(thing)
 
 class CcCompiler(object):
     def command_name(self, lang):
@@ -20,8 +27,8 @@ class CcCompiler(object):
         if dep:
             result += ' -MMD -MF ' + dep
         result += ' -c {input} -o {output}'.format(
-            input=target_name_or_str(input),
-            output=target_name_or_str(output)
+            input=_target_name_or_str(input),
+            output=_target_name_or_str(output)
         )
         return result
 
@@ -42,18 +49,3 @@ class CcCompiler(object):
 
     def link_libs(self, iterable):
         return ' '.join(('-l' + _lib_link_name(i) for i in iterable))
-
-# This is probably platform-specific, not toolchain-specific.
-def target_name(node):
-    if node.kind == 'library' or node.kind == 'external_library':
-        return 'lib{}.so'.format(node.name)
-    elif node.kind == 'object_file':
-        return '{}.o'.format(node.name)
-    else:
-        return node.name
-
-def target_name_or_str(thing):
-    if isinstance(thing, Node):
-        return target_name(thing)
-    else:
-        return str(thing)

@@ -3,9 +3,10 @@ import re
 from collections import OrderedDict, namedtuple
 from itertools import chain
 
-import toolchains.cc
 import node
+import toolchains.cc
 from languages import ext2lang, lang
+from platform import target_name
 
 cc = toolchains.cc.CcCompiler() # TODO: make this replaceable
 
@@ -131,7 +132,7 @@ __seen_compile_rules__ = set() # TODO: put this somewhere else (on the writer?)
 
 @rule_handler('object_file')
 def emit_object_file(writer, rule):
-    base, ext = os.path.splitext(toolchains.cc.target_name(rule['file']))
+    base, ext = os.path.splitext(target_name(rule['file']))
     cmd = cmd_var(writer, rule['lang'])
     cflags = MakeVariable('{}flags'.format(cmd))
     recipe = [
@@ -147,16 +148,15 @@ def emit_object_file(writer, rule):
         if ext not in __seen_compile_rules__:
             __seen_compile_rules__.add(ext)
             writer.rule(
-                target=toolchains.cc.target_name(node.Node('%', 'object_file')),
+                target=target_name(node.Node('%', 'object_file')),
                 deps=['%' + ext], recipe=recipe
             )
     else:
-        writer.rule(target=toolchains.cc.target_name(rule),
-                    deps=[rule['file'].name], recipe=recipe)
+        writer.rule(target=target_name(rule), deps=[rule['file'].name],
+                    recipe=recipe)
 
     if rule['options']:
-        writer.variable(cflags.use(), rule['options'],
-                        toolchains.cc.target_name(rule))
+        writer.variable(cflags.use(), rule['options'], target_name(rule))
     writer.include(base + '.d', True)
 
 def emit_link(writer, rule, var_prefix):
@@ -165,32 +165,31 @@ def emit_link(writer, rule, var_prefix):
 
     if len(rule.deps) == 0 and len(lib_deps) == 0:
         inputs = ['$^']
-        deps = [toolchains.cc.target_name(i) for i in rule['files']]
+        deps = [target_name(i) for i in rule['files']]
     else:
         if len(rule['files']) > 1:
             var_name = MakeVariable('OBJS')
             if not writer.has_variable(var_name, target='%'):
                 writer.variable(var_name, '', target='%')
             variables[var_name] = ' '.join(
-                (toolchains.cc.target_name(i) for i in rule['files'])
+                (target_name(i) for i in rule['files'])
             )
             inputs = [var_name.use()]
         else:
-            inputs = [toolchains.cc.target_name(rule['files'][0])]
+            inputs = [target_name(rule['files'][0])]
 
-        deps = chain(inputs, (toolchains.cc.target_name(i) for i in
-                              chain(rule.deps, lib_deps)))
+        deps = chain(
+            inputs, (target_name(i) for i in chain(rule.deps, lib_deps))
+        )
 
     cmd = cmd_var(writer, lang(rule['files']))
     writer.rule(
-        target=toolchains.cc.target_name(rule),
-        deps=deps,
+        target=target_name(rule), deps=deps,
         recipe=[cc.link_command(
             cmd=cmd.use(), mode=rule.kind, input=inputs,
             libs=rule['libs'], output='$@', prevars=rule['compile_options'],
             postvars=rule['link_options']
-        )],
-        variables=variables
+        )], variables=variables
     )
 
 @rule_handler('executable')
@@ -204,8 +203,8 @@ def emit_library(writer, rule):
 @rule_handler('alias')
 def emit_alias(writer, rule):
     writer.rule(
-        target=toolchains.cc.target_name(rule),
-        deps=(toolchains.cc.target_name(i) for i in rule.deps),
+        target=target_name(rule),
+        deps=(target_name(i) for i in rule.deps),
         recipe=[],
         phony=True
     )
@@ -213,8 +212,8 @@ def emit_alias(writer, rule):
 @rule_handler('command')
 def emit_command(writer, rule):
     writer.rule(
-        target=toolchains.cc.target_name(rule),
-        deps=(toolchains.cc.target_name(i) for i in rule.deps),
+        target=target_name(rule),
+        deps=(target_name(i) for i in rule.deps),
         recipe=rule['cmd'],
         phony=True
     )

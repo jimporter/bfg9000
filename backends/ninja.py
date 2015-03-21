@@ -6,6 +6,7 @@ from itertools import chain
 
 import toolchains.cc
 import languages
+from platform import target_name
 
 cc = toolchains.cc.CcCompiler() # TODO: make this replaceable
 
@@ -145,8 +146,8 @@ def emit_object_file(writer, rule):
     if rule['options']:
         variables[cflags] = rule['options']
 
-    writer.build(output=toolchains.cc.target_name(rule), rule=rulename,
-                 inputs=[toolchains.cc.target_name(rule['file'])],
+    writer.build(output=target_name(rule), rule=rulename,
+                 inputs=[target_name(rule['file'])],
                  variables=variables)
 
 def emit_link(writer, rule, rulename):
@@ -169,9 +170,9 @@ def emit_link(writer, rule, rulename):
         variables['ldflags'] = rule['link_options']
 
     writer.build(
-        output=toolchains.cc.target_name(rule), rule=rulename,
-        inputs=(toolchains.cc.target_name(i) for i in rule['files']),
-        implicit=(toolchains.cc.target_name(i) for i in rule['libs']
+        output=target_name(rule), rule=rulename,
+        inputs=(target_name(i) for i in rule['files']),
+        implicit=(target_name(i) for i in rule['libs']
                   if i.kind != 'external_library'),
         variables=variables
     )
@@ -187,8 +188,8 @@ def emit_library(writer, rule):
 @rule_handler('alias')
 def emit_alias(writer, rule):
     writer.build(
-        output=toolchains.cc.target_name(rule), rule='phony',
-        inputs=(toolchains.cc.target_name(i) for i in rule.deps)
+        output=target_name(rule), rule='phony',
+        inputs=(target_name(i) for i in rule.deps)
     )
 
 @rule_handler('command')
@@ -197,6 +198,6 @@ def emit_command(writer, rule):
         writer.rule(name='command', command='$cmd')
         writer.build(
             output=rule.name, rule='command',
-            inputs=(toolchains.cc.target_name(i) for i in rule.deps),
+            inputs=(target_name(i) for i in rule.deps),
             variables={'cmd': ' && '.join(rule['cmd'])}
         )
