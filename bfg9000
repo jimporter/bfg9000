@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- python -*-
 
+import argparse
+import importlib
 import os.path
 import sys
 
@@ -9,13 +11,15 @@ import node
 import builtin_rules
 import utils
 
-builddir = os.path.abspath(sys.argv[1])
 bfgfile = 'build.bfg'
 
-if len(sys.argv) > 2 and sys.argv[2] == 'ninja':
-    import backends.ninja as backend
-else:
-    import backends.make as backend
+parser = argparse.ArgumentParser()
+parser.add_argument('builddir', help='build directory')
+parser.add_argument('--backend', help='backend', default='make')
+args = parser.parse_args()
+
+backend = importlib.import_module('backends.{}'.format(args.backend))
+builddir = os.path.abspath(args.builddir)
 
 execfile(os.path.join(builddir, bfgfile), builtins.all_builtins)
 backend.write(builddir, node.all_targets)
