@@ -8,9 +8,3 @@ def lang(iterable):
         return 'c++'
     else:
         return 'c'
-
-def escaped_lang(lang):
-    if lang == 'c++':
-        return 'cxx'
-    else:
-        return lang

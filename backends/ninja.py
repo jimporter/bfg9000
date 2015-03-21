@@ -4,8 +4,10 @@ import sys
 from collections import OrderedDict, namedtuple
 from itertools import chain
 
-import cc_toolchain
+import toolchains.cc
 import languages
+
+cc = toolchains.cc.CcCompiler() # TODO: make this replaceable
 
 __rule_handlers__ = {}
 def rule_handler(rule_name):
@@ -121,19 +123,20 @@ def write(path, targets):
         writer.write(out)
 
 def cmd_var(writer, lang):
-    var = NinjaVariable(languages.escaped_lang(lang))
+    cmd, varname = cc.command_name(lang)
+    var = NinjaVariable(varname)
     if not writer.has_variable(var):
-        writer.variable(var, cc_toolchain.command_name(lang))
+        writer.variable(var, cmd)
     return var
 
 @rule_handler('object_file')
 def emit_object_file(writer, rule):
     cmd = cmd_var(writer, rule['lang'])
-    rulename = languages.escaped_lang(rule['lang'])
-    cflags = NinjaVariable('{}flags'.format(rulename))
+    rulename = str(cmd)
+    cflags = NinjaVariable('{}flags'.format(cmd))
 
     if not writer.has_rule(rulename):
-        writer.rule(name=rulename, command=cc_toolchain.compile_command(
+        writer.rule(name=rulename, command=cc.compile_command(
             cmd=cmd.use(), input='$in', output='$out', dep='$out.d',
             prevars=cflags.use()
         ), depfile='$out.d')
@@ -142,16 +145,16 @@ def emit_object_file(writer, rule):
     if rule['options']:
         variables[cflags] = rule['options']
 
-    writer.build(output=cc_toolchain.target_name(rule), rule=rulename,
-                 inputs=[cc_toolchain.target_name(rule['file'])],
+    writer.build(output=toolchains.cc.target_name(rule), rule=rulename,
+                 inputs=[toolchains.cc.target_name(rule['file'])],
                  variables=variables)
 
 def emit_link(writer, rule, rulename):
     lang = languages.lang(rule['files'])
     cmd = cmd_var(writer, lang)
-    cflags = NinjaVariable('{}flags'.format(languages.escaped_lang(lang)))
+    cflags = NinjaVariable('{}flags'.format(cmd))
     if not writer.has_rule(rulename):
-        writer.rule(name=rulename, command=cc_toolchain.link_command(
+        writer.rule(name=rulename, command=cc.link_command(
             cmd=cmd.use(), mode=rule.kind, input=['$in'],
             libs=None, prevars=cflags.use(), postvars='$libs $ldflags',
             output='$out'
@@ -159,16 +162,16 @@ def emit_link(writer, rule, rulename):
 
     variables = {}
     if rule['libs']:
-        variables['libs'] = cc_toolchain.link_libs(rule['libs'])
+        variables['libs'] = cc.link_libs(rule['libs'])
     if rule['compile_options']:
         variables[cflags] = rule['compile_options']
     if rule['link_options']:
         variables['ldflags'] = rule['link_options']
 
     writer.build(
-        output=cc_toolchain.target_name(rule), rule=rulename,
-        inputs=(cc_toolchain.target_name(i) for i in rule['files']),
-        implicit=(cc_toolchain.target_name(i) for i in rule['libs']
+        output=toolchains.cc.target_name(rule), rule=rulename,
+        inputs=(toolchains.cc.target_name(i) for i in rule['files']),
+        implicit=(toolchains.cc.target_name(i) for i in rule['libs']
                   if i.kind != 'external_library'),
         variables=variables
     )
@@ -184,8 +187,8 @@ def emit_library(writer, rule):
 @rule_handler('alias')
 def emit_alias(writer, rule):
     writer.build(
-        output=cc_toolchain.target_name(rule), rule='phony',
-        inputs=(cc_toolchain.target_name(i) for i in rule.deps)
+        output=toolchains.cc.target_name(rule), rule='phony',
+        inputs=(toolchains.cc.target_name(i) for i in rule.deps)
     )
 
 @rule_handler('command')
@@ -194,6 +197,6 @@ def emit_command(writer, rule):
         writer.rule(name='command', command='$cmd')
         writer.build(
             output=rule.name, rule='command',
-            inputs=(cc_toolchain.target_name(i) for i in rule.deps),
+            inputs=(toolchains.cc.target_name(i) for i in rule.deps),
             variables={'cmd': ' && '.join(rule['cmd'])}
         )

@@ -3,9 +3,11 @@ import re
 from collections import OrderedDict, namedtuple
 from itertools import chain
 
-import cc_toolchain
+import toolchains.cc
 import node
-from languages import ext2lang, lang, escaped_lang
+from languages import ext2lang, lang
+
+cc = toolchains.cc.CcCompiler() # TODO: make this replaceable
 
 __rule_handlers__ = {}
 def rule_handler(rule_name):
@@ -119,44 +121,42 @@ def write(path, targets):
         writer.write(out)
 
 def cmd_var(writer, lang):
-    var = MakeVariable(escaped_lang(lang))
+    cmd, varname = cc.command_name(lang)
+    var = MakeVariable(varname)
     if not writer.has_variable(var):
-        writer.variable(var, cc_toolchain.command_name(lang))
+        writer.variable(var, cmd)
     return var
 
 __seen_compile_rules__ = set() # TODO: put this somewhere else (on the writer?)
 
 @rule_handler('object_file')
 def emit_object_file(writer, rule):
-    base, ext = os.path.splitext(cc_toolchain.target_name(rule['file']))
-    def flags(lang):
-        return MakeVariable(escaped_lang(lang) + 'flags')
-
-    def compile_recipe(lang):
-        return [
-            cc_toolchain.compile_command(
-                cmd=cmd_var(writer, lang).use(), input='$<', output='$@',
-                dep='$*.d', prevars=flags(lang).use()
-            ),
-            "@sed -e 's/.*://' -e 's/\\$$//' < $*.d | fmt -1 | \\",
-            "  sed -e 's/^ *//' -e 's/$$/:/' >> $*.d"
-        ]
+    base, ext = os.path.splitext(toolchains.cc.target_name(rule['file']))
+    cmd = cmd_var(writer, rule['lang'])
+    cflags = MakeVariable('{}flags'.format(cmd))
+    recipe = [
+        cc.compile_command(
+            cmd=cmd.use(), input='$<', output='$@',
+            dep='$*.d', prevars=cflags.use()
+        ),
+        "@sed -e 's/.*://' -e 's/\\$$//' < $*.d | fmt -1 | \\",
+        "  sed -e 's/^ *//' -e 's/$$/:/' >> $*.d"
+    ]
 
     if ext2lang[ext] == rule['lang']:
         if ext not in __seen_compile_rules__:
             __seen_compile_rules__.add(ext)
             writer.rule(
-                target=cc_toolchain.target_name(node.Node('%', 'object_file')),
-                deps=['%' + ext], recipe=compile_recipe(rule['lang'])
+                target=toolchains.cc.target_name(node.Node('%', 'object_file')),
+                deps=['%' + ext], recipe=recipe
             )
     else:
-        writer.rule(target=cc_toolchain.target_name(rule),
-                    deps=[rule['file'].name],
-                    recipe=compile_recipe(rule['lang']))
+        writer.rule(target=toolchains.cc.target_name(rule),
+                    deps=[rule['file'].name], recipe=recipe)
 
     if rule['options']:
-        writer.variable(flags(rule['lang']).use(), rule['options'],
-                        cc_toolchain.target_name(rule))
+        writer.variable(cflags.use(), rule['options'],
+                        toolchains.cc.target_name(rule))
     writer.include(base + '.d', True)
 
 def emit_link(writer, rule, var_prefix):
@@ -165,27 +165,27 @@ def emit_link(writer, rule, var_prefix):
 
     if len(rule.deps) == 0 and len(lib_deps) == 0:
         inputs = ['$^']
-        deps = [cc_toolchain.target_name(i) for i in rule['files']]
+        deps = [toolchains.cc.target_name(i) for i in rule['files']]
     else:
         if len(rule['files']) > 1:
             var_name = MakeVariable('OBJS')
             if not writer.has_variable(var_name, target='%'):
                 writer.variable(var_name, '', target='%')
             variables[var_name] = ' '.join(
-                (cc_toolchain.target_name(i) for i in rule['files'])
+                (toolchains.cc.target_name(i) for i in rule['files'])
             )
             inputs = [var_name.use()]
         else:
-            inputs = [cc_toolchain.target_name(rule['files'][0])]
+            inputs = [toolchains.cc.target_name(rule['files'][0])]
 
-        deps = chain(inputs, (cc_toolchain.target_name(i) for i in
+        deps = chain(inputs, (toolchains.cc.target_name(i) for i in
                               chain(rule.deps, lib_deps)))
 
     cmd = cmd_var(writer, lang(rule['files']))
     writer.rule(
-        target=cc_toolchain.target_name(rule),
+        target=toolchains.cc.target_name(rule),
         deps=deps,
-        recipe=[cc_toolchain.link_command(
+        recipe=[cc.link_command(
             cmd=cmd.use(), mode=rule.kind, input=inputs,
             libs=rule['libs'], output='$@', prevars=rule['compile_options'],
             postvars=rule['link_options']
@@ -204,8 +204,8 @@ def emit_library(writer, rule):
 @rule_handler('alias')
 def emit_alias(writer, rule):
     writer.rule(
-        target=cc_toolchain.target_name(rule),
-        deps=(cc_toolchain.target_name(i) for i in rule.deps),
+        target=toolchains.cc.target_name(rule),
+        deps=(toolchains.cc.target_name(i) for i in rule.deps),
         recipe=[],
         phony=True
     )
@@ -213,8 +213,8 @@ def emit_alias(writer, rule):
 @rule_handler('command')
 def emit_command(writer, rule):
     writer.rule(
-        target=cc_toolchain.target_name(rule),
-        deps=(cc_toolchain.target_name(i) for i in rule.deps),
+        target=toolchains.cc.target_name(rule),
+        deps=(toolchains.cc.target_name(i) for i in rule.deps),
         recipe=rule['cmd'],
         phony=True
     )
