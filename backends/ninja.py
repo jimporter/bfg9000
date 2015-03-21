@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 from collections import OrderedDict, namedtuple
 from itertools import chain
@@ -13,17 +14,27 @@ def rule_handler(rule_name):
         return fn
     return decorator
 
-def rule_name(name):
-    if name == 'c++':
-        return 'cxx'
-    return name
-
-def use_var(name):
-    return '${}'.format(name)
-
 NinjaRule = namedtuple('NinjaRule', ['command', 'depfile'])
 NinjaBuild = namedtuple('NinjaBuild', ['rule', 'inputs', 'implicit',
                                        'variables'])
+class NinjaVariable(object):
+    def __init__(self, name):
+        self.name = re.sub('/', '_', name)
+
+    def use(self):
+        return '${}'.format(self.name)
+
+    def __str__(self):
+        return self.name
+
+    def __hash__(self):
+        return hash(self.name)
+
+    def __eq__(self, rhs):
+        return self.name == rhs.name
+
+    def __ne__(self, rhs):
+        return self.name != rhs.name
 
 class NinjaWriter(object):
     def __init__(self):
@@ -32,11 +43,15 @@ class NinjaWriter(object):
         self._builds = OrderedDict()
 
     def variable(self, name, value):
+        if not isinstance(name, NinjaVariable):
+            name = NinjaVariable(name)
         if self.has_variable(name):
             raise RuntimeError('variable "{}" already exists'.format(name))
         self._variables[name] = value
 
     def has_variable(self, name):
+        if not isinstance(name, NinjaVariable):
+            name = NinjaVariable(name)
         return name in self._variables
 
     def rule(self, name, command, depfile=None):
@@ -106,7 +121,7 @@ def write(path, targets):
         writer.write(out)
 
 def cmd_var(writer, lang):
-    var = rule_name(lang).upper()
+    var = NinjaVariable(languages.escaped_lang(lang))
     if not writer.has_variable(var):
         writer.variable(var, cc_toolchain.command_name(lang))
     return var
@@ -114,13 +129,13 @@ def cmd_var(writer, lang):
 @rule_handler('object_file')
 def emit_object_file(writer, rule):
     cmd = cmd_var(writer, rule['lang'])
-    rulename = rule_name(rule['lang'])
-    cflags = '{}flags'.format(rulename)
+    rulename = languages.escaped_lang(rule['lang'])
+    cflags = NinjaVariable('{}flags'.format(rulename))
 
     if not writer.has_rule(rulename):
         writer.rule(name=rulename, command=cc_toolchain.compile_command(
-            cmd=use_var(cmd), input='$in', output='$out', dep='$out.d',
-            prevars='$' + cflags
+            cmd=cmd.use(), input='$in', output='$out', dep='$out.d',
+            prevars=cflags.use()
         ), depfile='$out.d')
 
     variables = {}
@@ -134,11 +149,11 @@ def emit_object_file(writer, rule):
 def emit_link(writer, rule, rulename):
     lang = languages.lang(rule['files'])
     cmd = cmd_var(writer, lang)
-    cflags = '{}flags'.format(rule_name(lang))
+    cflags = NinjaVariable('{}flags'.format(languages.escaped_lang(lang)))
     if not writer.has_rule(rulename):
         writer.rule(name=rulename, command=cc_toolchain.link_command(
-            cmd=use_var(cmd), mode=rule.kind, input=['$in'],
-            libs=None, prevars='$' + cflags, postvars='$libs $ldflags',
+            cmd=cmd.use(), mode=rule.kind, input=['$in'],
+            libs=None, prevars=cflags.use(), postvars='$libs $ldflags',
             output='$out'
         ))
 

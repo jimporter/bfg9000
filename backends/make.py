@@ -5,7 +5,7 @@ from itertools import chain
 
 import cc_toolchain
 import node
-from languages import ext2lang, lang
+from languages import ext2lang, lang, escaped_lang
 
 __rule_handlers__ = {}
 def rule_handler(rule_name):
@@ -14,17 +14,28 @@ def rule_handler(rule_name):
         return fn
     return decorator
 
-def rule_name(name):
-    if name == 'c++':
-        return 'cxx'
-    return name
-
-def use_var(name):
-    return '$({})'.format(name)
-
 MakeInclude = namedtuple('MakeInclude', ['name', 'optional'])
 MakeRule = namedtuple('MakeRule', ['target', 'deps', 'recipe', 'variables',
                                    'phony'])
+
+class MakeVariable(object):
+    def __init__(self, name):
+        self.name = re.sub('/', '_', name).upper()
+
+    def use(self):
+        return '$({})'.format(self.name)
+
+    def __str__(self):
+        return self.name
+
+    def __hash__(self):
+        return hash(self.name)
+
+    def __eq__(self, rhs):
+        return self.name == rhs.name
+
+    def __ne__(self, rhs):
+        return self.name != rhs.name
 
 class MakeWriter(object):
     def __init__(self):
@@ -33,14 +44,12 @@ class MakeWriter(object):
         self._includes = []
         self._rules = []
 
-    def escape_var_name(self, name):
-        return re.sub('/', '_', name)
-
     def variable(self, name, value, target=None):
+        if not isinstance(name, MakeVariable):
+            name = MakeVariable(name)
         if self.has_variable(name, target=target):
             raise RuntimeError('variable "{}" already exists'.format(name))
 
-        name = self.escape_var_name(name)
         if target:
             self._target_variables[(target, name)] = value
         else:
@@ -48,7 +57,8 @@ class MakeWriter(object):
         return name
 
     def has_variable(self, name, target=None):
-        name = self.escape_var_name(name)
+        if not isinstance(name, MakeVariable):
+            name = MakeVariable(name)
         if target:
             return (target, name) in self._target_variables
         else:
@@ -109,7 +119,7 @@ def write(path, targets):
         writer.write(out)
 
 def cmd_var(writer, lang):
-    var = rule_name(lang).upper()
+    var = MakeVariable(escaped_lang(lang))
     if not writer.has_variable(var):
         writer.variable(var, cc_toolchain.command_name(lang))
     return var
@@ -119,13 +129,14 @@ __seen_compile_rules__ = set() # TODO: put this somewhere else (on the writer?)
 @rule_handler('object_file')
 def emit_object_file(writer, rule):
     base, ext = os.path.splitext(cc_toolchain.target_name(rule['file']))
+    def flags(lang):
+        return MakeVariable(escaped_lang(lang) + 'flags')
 
     def compile_recipe(lang):
         return [
             cc_toolchain.compile_command(
-                cmd=use_var(cmd_var(writer, lang)), input='$<',
-                output='$@', dep='$*.d',
-                prevars=use_var(rule_name(lang).upper() + 'FLAGS')
+                cmd=cmd_var(writer, lang).use(), input='$<', output='$@',
+                dep='$*.d', prevars=flags(lang).use()
             ),
             "@sed -e 's/.*://' -e 's/\\$$//' < $*.d | fmt -1 | \\",
             "  sed -e 's/^ *//' -e 's/$$/:/' >> $*.d"
@@ -144,8 +155,8 @@ def emit_object_file(writer, rule):
                     recipe=compile_recipe(rule['lang']))
 
     if rule['options']:
-        writer.variable(rule_name(rule['lang']).upper() + 'FLAGS',
-                        rule['options'], cc_toolchain.target_name(rule))
+        writer.variable(flags(rule['lang']).use(), rule['options'],
+                        cc_toolchain.target_name(rule))
     writer.include(base + '.d', True)
 
 def emit_link(writer, rule, var_prefix):
@@ -157,13 +168,13 @@ def emit_link(writer, rule, var_prefix):
         deps = [cc_toolchain.target_name(i) for i in rule['files']]
     else:
         if len(rule['files']) > 1:
-            var_name = 'OBJS'
+            var_name = MakeVariable('OBJS')
             if not writer.has_variable(var_name, target='%'):
                 writer.variable(var_name, '', target='%')
             variables[var_name] = ' '.join(
                 (cc_toolchain.target_name(i) for i in rule['files'])
             )
-            inputs = [use_var(var_name)]
+            inputs = [var_name.use()]
         else:
             inputs = [cc_toolchain.target_name(rule['files'][0])]
 
@@ -175,7 +186,7 @@ def emit_link(writer, rule, var_prefix):
         target=cc_toolchain.target_name(rule),
         deps=deps,
         recipe=[cc_toolchain.link_command(
-            cmd=use_var(cmd), mode=rule.kind, input=inputs,
+            cmd=cmd.use(), mode=rule.kind, input=inputs,
             libs=rule['libs'], output='$@', prevars=rule['compile_options'],
             postvars=rule['link_options']
         )],
