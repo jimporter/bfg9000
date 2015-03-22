@@ -132,8 +132,8 @@ __seen_compile_rules__ = set() # TODO: put this somewhere else (on the writer?)
 
 @rule_handler('object_file')
 def emit_object_file(writer, rule):
-    base, ext = os.path.splitext(target_name(rule['file']))
-    cmd = cmd_var(writer, rule['lang'])
+    base, ext = os.path.splitext(target_name(rule.file))
+    cmd = cmd_var(writer, rule.lang)
     cflags = MakeVariable('{}flags'.format(cmd))
     recipe = [
         cc.compile_command(
@@ -144,51 +144,51 @@ def emit_object_file(writer, rule):
         "  sed -e 's/^ *//' -e 's/$$/:/' >> $*.d"
     ]
 
-    if ext2lang[ext] == rule['lang']:
+    if ext2lang[ext] == rule.lang:
         if ext not in __seen_compile_rules__:
             __seen_compile_rules__.add(ext)
             writer.rule(
-                target=target_name(node.Node('%', 'object_file')),
+                target='%.o', # TODO: make this generic
                 deps=['%' + ext], recipe=recipe
             )
     else:
-        writer.rule(target=target_name(rule), deps=[rule['file'].name],
+        writer.rule(target=target_name(rule), deps=[rule.file.name],
                     recipe=recipe)
 
-    if rule['options']:
-        writer.variable(cflags.use(), rule['options'], target_name(rule))
+    if rule.options:
+        writer.variable(cflags.use(), rule.options, target_name(rule))
     writer.include(base + '.d', True)
 
 def emit_link(writer, rule, var_prefix):
     variables = {}
-    lib_deps = [i for i in rule['libs'] if i.kind != 'external_library']
+    lib_deps = [i for i in rule.libs if i.kind != 'external_library']
 
     if len(rule.deps) == 0 and len(lib_deps) == 0:
         inputs = ['$^']
-        deps = [target_name(i) for i in rule['files']]
+        deps = [target_name(i) for i in rule.files]
     else:
-        if len(rule['files']) > 1:
+        if len(rule.files) > 1:
             var_name = MakeVariable('OBJS')
             if not writer.has_variable(var_name, target='%'):
                 writer.variable(var_name, '', target='%')
             variables[var_name] = ' '.join(
-                (target_name(i) for i in rule['files'])
+                (target_name(i) for i in rule.files)
             )
             inputs = [var_name.use()]
         else:
-            inputs = [target_name(rule['files'][0])]
+            inputs = [target_name(rule.files[0])]
 
         deps = chain(
             inputs, (target_name(i) for i in chain(rule.deps, lib_deps))
         )
 
-    cmd = cmd_var(writer, lang(rule['files']))
+    cmd = cmd_var(writer, lang(rule.files))
     writer.rule(
         target=target_name(rule), deps=deps,
         recipe=[cc.link_command(
             cmd=cmd.use(), mode=rule.kind, input=inputs,
-            libs=rule['libs'], output='$@', prevars=rule['compile_options'],
-            postvars=rule['link_options']
+            libs=rule.libs, output='$@', prevars=rule.compile_options,
+            postvars=rule.link_options
         )], variables=variables
     )
 
@@ -214,6 +214,6 @@ def emit_command(writer, rule):
     writer.rule(
         target=target_name(rule),
         deps=(target_name(i) for i in rule.deps),
-        recipe=rule['cmd'],
+        recipe=rule.cmd,
         phony=True
     )

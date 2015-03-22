@@ -132,7 +132,7 @@ def cmd_var(writer, lang):
 
 @rule_handler('object_file')
 def emit_object_file(writer, rule):
-    cmd = cmd_var(writer, rule['lang'])
+    cmd = cmd_var(writer, rule.file.lang)
     rulename = str(cmd)
     cflags = NinjaVariable('{}flags'.format(cmd))
 
@@ -143,15 +143,15 @@ def emit_object_file(writer, rule):
         ), depfile='$out.d')
 
     variables = {}
-    if rule['options']:
-        variables[cflags] = rule['options']
+    if rule.options:
+        variables[cflags] = rule.options
 
     writer.build(output=target_name(rule), rule=rulename,
-                 inputs=[target_name(rule['file'])],
+                 inputs=[target_name(rule.file)],
                  variables=variables)
 
 def emit_link(writer, rule, rulename):
-    lang = languages.lang(rule['files'])
+    lang = languages.lang(rule.files)
     cmd = cmd_var(writer, lang)
     cflags = NinjaVariable('{}flags'.format(cmd))
     if not writer.has_rule(rulename):
@@ -162,17 +162,17 @@ def emit_link(writer, rule, rulename):
         ))
 
     variables = {}
-    if rule['libs']:
-        variables['libs'] = cc.link_libs(rule['libs'])
-    if rule['compile_options']:
-        variables[cflags] = rule['compile_options']
-    if rule['link_options']:
-        variables['ldflags'] = rule['link_options']
+    if rule.libs:
+        variables['libs'] = cc.link_libs(rule.libs)
+    if rule.compile_options:
+        variables[cflags] = rule.compile_options
+    if rule.link_options:
+        variables['ldflags'] = rule.link_options
 
     writer.build(
         output=target_name(rule), rule=rulename,
-        inputs=(target_name(i) for i in rule['files']),
-        implicit=(target_name(i) for i in rule['libs']
+        inputs=(target_name(i) for i in rule.files),
+        implicit=(target_name(i) for i in rule.libs
                   if i.kind != 'external_library'),
         variables=variables
     )
@@ -189,7 +189,7 @@ def emit_library(writer, rule):
 def emit_alias(writer, rule):
     writer.build(
         output=target_name(rule), rule='phony',
-        inputs=(target_name(i) for i in rule.deps)
+        inputs=[target_name(i) for i in rule.deps]
     )
 
 @rule_handler('command')
@@ -199,5 +199,5 @@ def emit_command(writer, rule):
         writer.build(
             output=rule.name, rule='command',
             inputs=(target_name(i) for i in rule.deps),
-            variables={'cmd': ' && '.join(rule['cmd'])}
+            variables={'cmd': ' && '.join(rule.cmd)}
         )

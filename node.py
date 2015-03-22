@@ -1,32 +1,19 @@
 class Node(object):
-    def __init__(self, name, kind, deps=[], attrs={}):
+    def __init__(self, name, deps=None):
         self.name = name
-        self.kind = kind
-        self.deps = deps
-        self._attrs = attrs
+        self.deps = [blah(i, Node, dependency) for i in deps or []]
 
-    def __getitem__(self, key):
-        return self._attrs[key]
+class dependency(Node):
+    def __init__(self, name):
+        Node.__init__(self, name)
+        self.kind = 'dependency'
 
-    def __contains__(self, key):
-        return key in self._attrs[key]
+def blah(x, valid_type, creator=None, **kwargs):
+    if isinstance(x, valid_type):
+        return x
+    elif creator:
+        return creator(x)
+    else:
+        return valid_type(x, **kwargs)
 
 all_targets = []
-
-def rule(fn):
-    def wrapped(name, deps=None, **kwargs):
-        result = Node(name, fn.func_name,
-                      nodeify_list(deps or [], 'dependency'), fn(**kwargs))
-        all_targets.append(result)
-        return result
-    wrapped.func_name = fn.func_name
-    return wrapped
-
-def nodeify(thing, kind):
-    if isinstance(thing, Node):
-        # Check if `kind` matches?
-        return thing
-    return Node(thing, kind, [], {})
-
-def nodeify_list(iterable, kind):
-    return [nodeify(i, kind) for i in iterable]
