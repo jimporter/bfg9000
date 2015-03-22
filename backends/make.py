@@ -5,7 +5,7 @@ from itertools import chain
 
 import toolchains.cc
 from builtin_rules import ObjectFile
-from languages import ext2lang, lang
+from languages import ext2lang
 from platform import target_name
 
 cc = toolchains.cc.CcCompiler() # TODO: make this replaceable
@@ -188,7 +188,7 @@ def emit_link(writer, rule):
             inputs, (target_name(i) for i in chain(rule.deps, lib_deps))
         )
 
-    cmd = cmd_var(writer, lang(rule.files))
+    cmd = cmd_var(writer, (i.lang for i in rule.files))
     writer.rule(
         target=target_name(rule.target), deps=deps,
         recipe=[cc.link_command(

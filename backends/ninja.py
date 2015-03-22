@@ -5,7 +5,6 @@ from collections import OrderedDict, namedtuple
 from itertools import chain
 
 import toolchains.cc
-import languages
 from platform import target_name
 
 cc = toolchains.cc.CcCompiler() # TODO: make this replaceable
@@ -159,8 +158,7 @@ def emit_link(writer, rule):
         rulename = 'link'
         mode = 'executable'
 
-    lang = languages.lang(rule.files)
-    cmd = cmd_var(writer, lang)
+    cmd = cmd_var(writer, (i.lang for i in rule.files))
     cflags = NinjaVariable('{}flags'.format(cmd))
     if not writer.has_rule(rulename):
         writer.rule(name=rulename, command=cc.link_command(

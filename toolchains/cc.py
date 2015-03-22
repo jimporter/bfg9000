@@ -15,7 +15,12 @@ def _target_name_or_str(thing):
 
 class CcCompiler(object):
     def command_name(self, lang):
-        if lang == 'c++':
+        if not isinstance(lang, basestring):
+            is_cxx = any(i == 'c++' for i in lang)
+        else:
+            is_cxx = lang == 'c++'
+
+        if is_cxx:
             return ('c++', 'cxx')
         else:
             return ('cc', 'cc')
