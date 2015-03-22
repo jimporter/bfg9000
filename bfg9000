@@ -22,4 +22,4 @@ backend = importlib.import_module('backends.{}'.format(args.backend))
 builddir = os.path.abspath(args.builddir)
 
 execfile(os.path.join(builddir, bfgfile), builtins.all_builtins)
-backend.write(builddir, node.all_targets)
+backend.write(builddir, node.all_edges)

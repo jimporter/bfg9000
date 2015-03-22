@@ -4,92 +4,91 @@ from builtins import builtin
 from languages import ext2lang
 import node
 
-@builtin
-class source_file(node.Node):
+class SourceFile(node.Node):
     def __init__(self, name, lang=None):
-        self.name = name
-        self.kind = 'source_file' # TODO: Remove
-        self.lang = ext2lang.get( os.path.splitext(name)[1] )
-        self.deps = []
+        node.Node.__init__(self, name)
+        self.lang = lang
+
+class ObjectFile(node.Node):
+    def __init__(self, name, lang=None):
+        node.Node.__init__(self, name)
+        self.lang = lang
+
+class Executable(node.Node):
+    pass
+
+class Library(node.Node):
+    def __init__(self, name, external=False):
+        node.Node.__init__(self, name)
+        self.external = external
+
+#####
+
+class Compile(node.Edge):
+    def __init__(self, target, file, options=None, deps=None):
+        self.file = file
+        self.options = options
+        node.Edge.__init__(self, target, deps)
+
+class Link(node.Edge):
+    def __init__(self, target, files, libs=None, compile_options=None,
+                 link_options=None, deps=None):
+        self.files = files
+        self.libs = [node.nodeify(i, Library, external=True)
+                     for i in libs or []]
+        self.compile_options = compile_options
+        self.link_options = link_options
+
+        node.Edge.__init__(self, target, deps)
+
+class Alias(node.Edge):
+    pass
+
+class Command(node.Edge):
+    def __init__(self, target, cmd, deps=None):
+        self.cmd = cmd
+        node.Edge.__init__(self, target, deps)
+
+#####
 
 @builtin
-class object_file(node.Node):
-    def __init__(self, name, file, deps=None, options=None, lang=None):
-        self.name = name
-        self.kind = 'object_file' # TODO: Remove
-        self.file = node.blah(file, source_file, lang=lang)
-        self.deps = deps or []
-        self.options = options
-
-        node.all_targets.append(self) # TODO: Put this somewhere common
-
-    @property
-    def lang(self):
-        return self.file.lang
+def object_file(name, file, options=None, lang=None, deps=None):
+    if lang is None:
+        lang = ext2lang.get( os.path.splitext(file)[1] )
+    target = ObjectFile(name, lang)
+    Compile(target, node.nodeify(file, SourceFile, lang=lang), options, deps)
+    return target
 
 @builtin
 def object_files(files, lang=None, options=None):
     return [object_file(os.path.splitext(f)[0], file=f, lang=lang,
                         options=options) for f in files]
 
-class any_library(node.Node):
-    pass
+def _binary(target, files, libs=None, lang=None, compile_options=None,
+           link_options=None, deps=None):
+    Link(target, object_files(files=files, lang=lang, options=compile_options),
+         libs, compile_options, link_options, deps)
 
 @builtin
-class external_library(any_library):
-    def __init__(self, name):
-        self.name = name
-        self.kind = 'external_library' # TODO: Remove
-
-
-def _ensure_library(x):
-    if isinstance(x, library) or isinstance(x, external_library):
-        return x
-    else:
-        return external_library(x)
-
-class binary(node.Node):
-    def __init__(self, name, files, libs=None, lang=None, compile_options=None,
-                 link_options=None, deps=None):
-        self.name = name
-        self.kind = 'binary' # TODO: Remove
-        self.files = object_files(files=files, lang=lang,
-                                  options=compile_options)
-        self.libs = [node.blah(i, any_library, external_library)
-                     for i in libs or []]
-        self.compile_options = compile_options
-        self.link_options = link_options
-        self.deps = deps or []
-
-        node.all_targets.append(self) # TODO: Put this somewhere common
+def executable(name, *args, **kwargs):
+    target = Executable(name)
+    _binary(target, *args, **kwargs)
+    return target
 
 @builtin
-class executable(binary):
-    def __init__(self, *args, **kwargs):
-        binary.__init__(self, *args, **kwargs)
-        self.kind = 'executable' # TODO: Remove
+def library(name, *args, **kwargs):
+    target = Library(name)
+    _binary(target, *args, **kwargs)
+    return target
 
 @builtin
-class library(binary, any_library):
-    def __init__(self, *args, **kwargs):
-        binary.__init__(self, *args, **kwargs)
-        self.kind = 'library' # TODO: Remove
+def alias(name, deps):
+    target = node.Node(name)
+    Alias(target, deps)
+    return target
 
 @builtin
-class alias(node.Node):
-    def __init__(self, name, deps=None):
-        self.name = name
-        self.kind = 'alias' # TODO: Remove
-        self.deps = deps or []
-
-        node.all_targets.append(self) # TODO: Put this somewhere common
-
-@builtin
-class command(node.Node):
-    def __init__(self, name, cmd, deps=None):
-        self.name = name
-        self.kind = 'command' # TODO: Remove
-        self.cmd = cmd
-        self.deps = deps or []
-
-        node.all_targets.append(self) # TODO: Put this somewhere common
+def command(name, cmd, deps=None):
+    target = node.Node(name)
+    Command(target, cmd, deps)
+    return target

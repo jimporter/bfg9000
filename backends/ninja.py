@@ -116,10 +116,10 @@ class NinjaWriter(object):
         for name, build in self._builds.iteritems():
             self._write_build(out, name, *build)
 
-def write(path, targets):
+def write(path, edges):
     writer = NinjaWriter()
-    for rule in targets:
-        __rule_handlers__[rule.kind](writer, rule)
+    for e in edges:
+        __rule_handlers__[type(e).__name__](writer, e)
     with open(os.path.join(path, 'build.ninja'), 'w') as out:
         writer.write(out)
 
@@ -130,7 +130,7 @@ def cmd_var(writer, lang):
         writer.variable(var, cmd)
     return var
 
-@rule_handler('object_file')
+@rule_handler('Compile')
 def emit_object_file(writer, rule):
     cmd = cmd_var(writer, rule.file.lang)
     rulename = str(cmd)
@@ -146,17 +146,25 @@ def emit_object_file(writer, rule):
     if rule.options:
         variables[cflags] = rule.options
 
-    writer.build(output=target_name(rule), rule=rulename,
+    writer.build(output=target_name(rule.target), rule=rulename,
                  inputs=[target_name(rule.file)],
                  variables=variables)
 
-def emit_link(writer, rule, rulename):
+@rule_handler('Link')
+def emit_link(writer, rule):
+    if type(rule.target).__name__ == 'Library':
+        rulename = 'linklib'
+        mode = 'library'
+    else:
+        rulename = 'link'
+        mode = 'executable'
+
     lang = languages.lang(rule.files)
     cmd = cmd_var(writer, lang)
     cflags = NinjaVariable('{}flags'.format(cmd))
     if not writer.has_rule(rulename):
         writer.rule(name=rulename, command=cc.link_command(
-            cmd=cmd.use(), mode=rule.kind, input=['$in'],
+            cmd=cmd.use(), mode=mode, input=['$in'],
             libs=None, prevars=cflags.use(), postvars='$libs $ldflags',
             output='$out'
         ))
@@ -170,34 +178,25 @@ def emit_link(writer, rule, rulename):
         variables['ldflags'] = rule.link_options
 
     writer.build(
-        output=target_name(rule), rule=rulename,
+        output=target_name(rule.target), rule=rulename,
         inputs=(target_name(i) for i in rule.files),
-        implicit=(target_name(i) for i in rule.libs
-                  if i.kind != 'external_library'),
+        implicit=(target_name(i) for i in rule.libs if not i.external),
         variables=variables
     )
 
-@rule_handler('executable')
-def emit_executable(writer, rule):
-    emit_link(writer, rule, 'link')
-
-@rule_handler('library')
-def emit_library(writer, rule):
-    emit_link(writer, rule, 'linklib')
-
-@rule_handler('alias')
+@rule_handler('Alias')
 def emit_alias(writer, rule):
     writer.build(
-        output=target_name(rule), rule='phony',
+        output=target_name(rule.target), rule='phony',
         inputs=[target_name(i) for i in rule.deps]
     )
 
-@rule_handler('command')
+@rule_handler('Command')
 def emit_command(writer, rule):
     if not writer.has_rule('command'):
         writer.rule(name='command', command='$cmd')
         writer.build(
-            output=rule.name, rule='command',
+            output=rule.target.name, rule='command',
             inputs=(target_name(i) for i in rule.deps),
             variables={'cmd': ' && '.join(rule.cmd)}
         )

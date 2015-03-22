@@ -1,10 +1,10 @@
 from node import Node
 
 # TODO: This still needs some improvement to be more flexible
-def target_name(node):
-    if node.kind == 'library' or node.kind == 'external_library':
-        return 'lib{}.so'.format(node.name)
-    elif node.kind == 'object_file':
-        return '{}.o'.format(node.name)
+def target_name(target):
+    if type(target).__name__ == 'Library':
+        return 'lib{}.so'.format(target.name)
+    elif type(target).__name__ == 'ObjectFile':
+        return '{}.o'.format(target.name)
     else:
-        return node.name
+        return target.name

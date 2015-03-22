@@ -3,8 +3,8 @@ import re
 from collections import OrderedDict, namedtuple
 from itertools import chain
 
-import node
 import toolchains.cc
+from builtin_rules import ObjectFile
 from languages import ext2lang, lang
 from platform import target_name
 
@@ -114,10 +114,10 @@ class MakeWriter(object):
             ))
 
 
-def write(path, targets):
+def write(path, edges):
     writer = MakeWriter()
-    for rule in targets:
-        __rule_handlers__[rule.kind](writer, rule)
+    for e in edges:
+        __rule_handlers__[type(e).__name__](writer, e)
     with open(os.path.join(path, 'Makefile'), 'w') as out:
         writer.write(out)
 
@@ -130,10 +130,10 @@ def cmd_var(writer, lang):
 
 __seen_compile_rules__ = set() # TODO: put this somewhere else (on the writer?)
 
-@rule_handler('object_file')
+@rule_handler('Compile')
 def emit_object_file(writer, rule):
     base, ext = os.path.splitext(target_name(rule.file))
-    cmd = cmd_var(writer, rule.lang)
+    cmd = cmd_var(writer, rule.file.lang)
     cflags = MakeVariable('{}flags'.format(cmd))
     recipe = [
         cc.compile_command(
@@ -144,24 +144,30 @@ def emit_object_file(writer, rule):
         "  sed -e 's/^ *//' -e 's/$$/:/' >> $*.d"
     ]
 
-    if ext2lang[ext] == rule.lang:
+    if ext2lang[ext] == rule.file.lang:
         if ext not in __seen_compile_rules__:
             __seen_compile_rules__.add(ext)
             writer.rule(
-                target='%.o', # TODO: make this generic
+                target=target_name(ObjectFile('%')),
                 deps=['%' + ext], recipe=recipe
             )
     else:
-        writer.rule(target=target_name(rule), deps=[rule.file.name],
+        writer.rule(target=target_name(rule), deps=[target_name(rule.file)],
                     recipe=recipe)
 
     if rule.options:
-        writer.variable(cflags.use(), rule.options, target_name(rule))
+        writer.variable(cflags.use(), rule.options, target_name(rule.target))
     writer.include(base + '.d', True)
 
-def emit_link(writer, rule, var_prefix):
+@rule_handler('Link')
+def emit_link(writer, rule):
+    if type(rule.target).__name__ == 'Library':
+        mode = 'library'
+    else:
+        mode = 'executable'
+
     variables = {}
-    lib_deps = [i for i in rule.libs if i.kind != 'external_library']
+    lib_deps = [i for i in rule.libs if not i.external]
 
     if len(rule.deps) == 0 and len(lib_deps) == 0:
         inputs = ['$^']
@@ -184,35 +190,27 @@ def emit_link(writer, rule, var_prefix):
 
     cmd = cmd_var(writer, lang(rule.files))
     writer.rule(
-        target=target_name(rule), deps=deps,
+        target=target_name(rule.target), deps=deps,
         recipe=[cc.link_command(
-            cmd=cmd.use(), mode=rule.kind, input=inputs,
+            cmd=cmd.use(), mode=mode, input=inputs,
             libs=rule.libs, output='$@', prevars=rule.compile_options,
             postvars=rule.link_options
         )], variables=variables
     )
 
-@rule_handler('executable')
-def emit_executable(writer, rule):
-    emit_link(writer, rule, '')
-
-@rule_handler('library')
-def emit_library(writer, rule):
-    emit_link(writer, rule, 'LIB')
-
-@rule_handler('alias')
+@rule_handler('Alias')
 def emit_alias(writer, rule):
     writer.rule(
-        target=target_name(rule),
+        target=target_name(rule.target),
         deps=(target_name(i) for i in rule.deps),
         recipe=[],
         phony=True
     )
 
-@rule_handler('command')
+@rule_handler('Command')
 def emit_command(writer, rule):
     writer.rule(
-        target=target_name(rule),
+        target=target_name(rule.target),
         deps=(target_name(i) for i in rule.deps),
         recipe=rule.cmd,
         phony=True

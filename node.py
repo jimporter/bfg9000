@@ -1,14 +1,14 @@
 class Node(object):
-    def __init__(self, name, deps=None):
-        self.name = name
-        self.deps = [blah(i, Node, dependency) for i in deps or []]
-
-class dependency(Node):
     def __init__(self, name):
-        Node.__init__(self, name)
-        self.kind = 'dependency'
+        self.name = name
 
-def blah(x, valid_type, creator=None, **kwargs):
+class Edge(object):
+    def __init__(self, target, deps=None):
+        self.target = target
+        self.deps = [nodeify(i, Node) for i in deps or []]
+        all_edges.append(self)
+
+def nodeify(x, valid_type, creator=None, **kwargs):
     if isinstance(x, valid_type):
         return x
     elif creator:
@@ -16,4 +16,4 @@ def blah(x, valid_type, creator=None, **kwargs):
     else:
         return valid_type(x, **kwargs)
 
-all_targets = []
+all_edges = []
