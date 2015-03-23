@@ -13,6 +13,7 @@ class ObjectFile(node.Node):
     def __init__(self, name, lang=None):
         node.Node.__init__(self, name)
         self.lang = lang
+        self.in_library = False
 
 class Executable(node.Node):
     pass
@@ -74,7 +75,7 @@ def _binary(target, files, libs=None, lang=None, compile_options=None,
     def make_obj(x):
         return object_file(file=x, options=compile_options, lang=lang)
     objects = [node.nodeify(i, ObjectFile, make_obj) for i in files]
-    Link(target, objects, libs, compile_options, link_options, deps)
+    return Link(target, objects, libs, compile_options, link_options, deps)
 
 @builtin
 def executable(name, *args, **kwargs):
@@ -85,7 +86,9 @@ def executable(name, *args, **kwargs):
 @builtin
 def library(name, *args, **kwargs):
     target = Library(name)
-    _binary(target, *args, **kwargs)
+    rule = _binary(target, *args, **kwargs)
+    for f in rule.files:
+        f.in_library = True
     return target
 
 @builtin

@@ -52,5 +52,8 @@ class CcCompiler(object):
         result += ' -o ' + output
         return result
 
+    def library_flag(self):
+        return '-fPIC'
+
     def link_libs(self, iterable):
         return ' '.join(('-l' + _lib_link_name(i) for i in iterable))

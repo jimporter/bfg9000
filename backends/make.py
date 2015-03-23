@@ -155,8 +155,14 @@ def emit_object_file(writer, rule):
         writer.rule(target=target_name(rule), deps=[target_name(rule.file)],
                     recipe=recipe)
 
+    cflags_value = []
+    if rule.target.in_library:
+        cflags_value.append(cc.library_flag())
     if rule.options:
-        writer.variable(cflags.use(), rule.options, target_name(rule.target))
+        cflags_value.append(rule.options)
+    if cflags_value:
+        writer.variable(cflags.use(), ' '.join(cflags_value),
+                        target_name(rule.target))
     writer.include(base + '.d', True)
 
 @rule_handler('Link')

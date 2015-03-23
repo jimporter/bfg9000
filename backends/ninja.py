@@ -142,8 +142,13 @@ def emit_object_file(writer, rule):
         ), depfile='$out.d')
 
     variables = {}
+    cflags_value = []
+    if rule.target.in_library:
+        cflags_value.append(cc.library_flag())
     if rule.options:
-        variables[cflags] = rule.options
+        cflags_value.append(rule.options)
+    if cflags_value:
+        variables[cflags] = ' '.join(cflags_value)
 
     writer.build(output=target_name(rule.target), rule=rulename,
                  inputs=[target_name(rule.file)],
