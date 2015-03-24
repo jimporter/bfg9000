@@ -1,9 +1,16 @@
 class Node(object):
-    def __init__(self, name):
+    def __init__(self, name, creator=None):
         self.name = name
+        self.creator = creator
+
+    def __repr__(self):
+        return '<{type} {name}>'.format(
+            type=type(self).__name__, name=repr(self.name)
+        )
 
 class Edge(object):
     def __init__(self, target, deps=None):
+        target.creator = self
         self.target = target
         self.deps = [nodeify(i, Node) for i in deps or []]
         all_edges.append(self)
