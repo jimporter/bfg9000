@@ -1,8 +1,16 @@
-from builtin_rules import *
-
+import os
 import uuid
 from lxml import etree
 from lxml.builder import E
+
+from builtin_rules import *
+
+def makedirs(path, mode=0o777, exist_ok=False):
+    try:
+        os.makedirs(path)
+    except OSError as exc:
+        if not exist_ok or exc.errno != errno.EEXIST or not os.path.isdir(path):
+            raise
 
 class SlnElement(object):
     def __init__(self, name, arg=None, value=None):
@@ -104,8 +112,11 @@ class VcxProject(object):
 
     def __init__(self, name, files):
         self.name = name
-        self.path = 'path\\to\\file.vcxproj'
         self.files = files
+
+    @property
+    def path(self):
+        return os.path.join(self.name, '{}.vcxproj'.format(self.name))
 
     @property
     def uuid(self):
@@ -164,5 +175,7 @@ def write(path, edges):
     with open(os.path.join(path, 'project.sln'), 'w') as out:
         write_solution(out, projects)
     for p in projects:
-        with open(os.path.join(path, '{}.vcxproj'.format(p.name)), 'w') as out:
+        projfile = os.path.join(path, p.path)
+        makedirs(os.path.dirname(projfile), exist_ok=True)
+        with open(projfile, 'w') as out:
             p.write(out)
