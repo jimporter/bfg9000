@@ -43,7 +43,7 @@ class MakeVariable(object):
 class MakeWriter(object):
     def __init__(self):
         self._global_variables = OrderedDict()
-        self._target_variables = OrderedDict()
+        self._target_variables = OrderedDict({'%': OrderedDict()})
         self._includes = []
         self._rules = []
 
@@ -54,7 +54,9 @@ class MakeWriter(object):
             raise RuntimeError('variable "{}" already exists'.format(name))
 
         if target:
-            self._target_variables[(target, name)] = value
+            if not target in self._target_variables:
+                self._target_variables[target] = OrderedDict()
+            self._target_variables[target][name] = value
         else:
             self._global_variables[name] = value
         return name
@@ -63,7 +65,8 @@ class MakeWriter(object):
         if not isinstance(name, MakeVariable):
             name = MakeVariable(name)
         if target:
-            return (target, name) in self._target_variables
+            return (target in self._target_variables and
+                    name in self._target_variables[target])
         else:
             return name in self._global_variables
 
@@ -99,8 +102,9 @@ class MakeWriter(object):
         if self._global_variables:
             out.write('\n')
 
-        for name, value in self._target_variables.iteritems():
-            self._write_variable(out, name[1], value, target=name[0])
+        for target, each in self._target_variables.iteritems():
+            for name, value in each.iteritems():
+                self._write_variable(out, name, value, target=target)
         if self._target_variables:
             out.write('\n')
 
@@ -147,11 +151,15 @@ def emit_object_file(writer, rule):
     if ext2lang[ext] == rule.file.lang:
         if ext not in __seen_compile_rules__:
             __seen_compile_rules__.add(ext)
+            if not writer.has_variable(cflags, target='%'):
+                writer.variable(cflags, '', target='%')
             writer.rule(
                 target=target_name(ObjectFile('%')),
                 deps=['%' + ext], recipe=recipe
             )
     else:
+        if not writer.has_variable(cflags, target='%'):
+            writer.variable(cflags, '', target='%')
         writer.rule(target=target_name(rule), deps=[target_name(rule.file)],
                     recipe=recipe)
 
