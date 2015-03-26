@@ -23,7 +23,7 @@ MakeRule = namedtuple('MakeRule', ['target', 'deps', 'recipe', 'variables',
 
 class MakeVariable(object):
     def __init__(self, name):
-        self.name = re.sub('/', '_', name).upper()
+        self.name = re.sub('r[\w:#=]', '_', name).upper()
 
     def use(self):
         return '$({})'.format(self.name)
