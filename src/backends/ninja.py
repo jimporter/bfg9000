@@ -27,7 +27,7 @@ class NinjaVariable(object):
         return '${}'.format(self.name)
 
     def __str__(self):
-        return self.name
+        return self.use()
 
     def __hash__(self):
         return hash(self.name)
@@ -65,23 +65,31 @@ class NinjaWriter(object):
         return name in self._rules
 
     def build(self, output, rule, inputs=None, implicit=None, variables=None):
+        real_variables = {}
+        if variables:
+            for k, v in variables.iteritems():
+                if not isinstance(k, NinjaVariable):
+                    k = NinjaVariable(k)
+                real_variables[k] = v
+
         if self.has_build(output):
             raise RuntimeError('build for "{}" already exists'.format(output))
-        self._builds[output] = NinjaBuild(rule, inputs, implicit, variables)
+        self._builds[output] = NinjaBuild(rule, inputs, implicit,
+                                          real_variables)
 
     def has_build(self, name):
         return name in self._builds
 
     def _write_variable(self, out, name, value, indent=0):
         out.write('{indent}{name} = {value}\n'.format(
-            indent='  ' * indent, name=name, value=value
+            indent='  ' * indent, name=name.name, value=value
         ))
 
     def _write_rule(self, out, name, command, depfile):
         out.write('rule {}\n'.format(name))
-        self._write_variable(out, 'command', command, 1)
+        self._write_variable(out, NinjaVariable('command'), command, 1)
         if depfile:
-            self._write_variable(out, 'depfile', depfile, 1)
+            self._write_variable(out, NinjaVariable('depfile'), depfile, 1)
 
     def _write_build(self, out, name, rule, inputs, implicit, variables):
         out.write('build {output}: {rule}'.format(output=name, rule=rule))
@@ -132,13 +140,13 @@ def cmd_var(writer, lang):
 @rule_handler('Compile')
 def emit_object_file(writer, rule):
     cmd = cmd_var(writer, rule.file.lang)
-    rulename = str(cmd)
-    cflags = NinjaVariable('{}flags'.format(cmd))
+    rulename = cmd.name
+    cflags = NinjaVariable('{}flags'.format(cmd.name))
 
     if not writer.has_rule(rulename):
         writer.rule(name=rulename, command=cc.compile_command(
-            cmd=cmd.use(), input='$in', output='$out', dep='$out.d',
-            prevars=cflags.use()
+            cmd=cmd, input='$in', output='$out', dep='$out.d',
+            prevars=cflags
         ), depfile='$out.d')
 
     variables = {}
@@ -159,26 +167,29 @@ def emit_link(writer, rule):
     cmd = cmd_var(writer, (i.lang for i in rule.files))
 
     if type(rule.target).__name__ == 'Library':
-        rulename = '{}_linklib'.format(cmd)
+        rulename = '{}_linklib'.format(cmd.name)
         mode = 'library'
     else:
-        rulename = '{}_link'.format(cmd)
+        rulename = '{}_link'.format(cmd.name)
         mode = 'executable'
 
-    cflags = NinjaVariable('{}flags'.format(cmd))
+    cflags = NinjaVariable('{}flags'.format(cmd.name))
+    libs_var = NinjaVariable('libs')
+    ldflags = NinjaVariable('ldflags')
+
     if not writer.has_rule(rulename):
         writer.rule(name=rulename, command=cc.link_command(
-            cmd=cmd.use(), mode=mode, input=['$in'], output='$out',
-            prevars=cflags.use(), postvars='$libs $ldflags'
+            cmd=cmd, mode=mode, input='$in', output='$out',
+            prevars=cflags, postvars=[libs_var, ldflags]
         ))
 
     variables = {}
     if rule.libs:
-        variables['libs'] = cc.link_libs(rule.libs)
+        variables[libs_var] = cc.link_libs(rule.libs)
     if rule.compile_options:
         variables[cflags] = rule.compile_options
     if rule.link_options:
-        variables['ldflags'] = rule.link_options
+        variables[ldflags] = rule.link_options
 
     writer.build(
         output=target_name(rule.target), rule=rulename,

@@ -29,7 +29,7 @@ class MakeVariable(object):
         return '$({})'.format(self.name)
 
     def __str__(self):
-        return self.name
+        return self.use()
 
     def __hash__(self):
         return hash(self.name)
@@ -79,18 +79,26 @@ class MakeWriter(object):
         self._includes.append(MakeInclude(name, optional))
 
     def rule(self, target, deps, recipe, variables=None, phony=False):
-        self._rules.append(MakeRule(target, deps, recipe, variables, phony))
+        real_variables = {}
+        if variables:
+            for k, v in variables.iteritems():
+                if not isinstance(k, MakeVariable):
+                    k = MakeVariable(k)
+                real_variables[k] = v
+
+        self._rules.append(MakeRule(target, deps, recipe, real_variables,
+                                    phony))
 
     def _write_variable(self, out, name, value, flavor, target=None):
         operator = ':=' if flavor == 'simple' else '='
         if target:
             out.write('{}: '.format(target))
         out.write('{name} {op} {value}\n'.format(
-            name=name, op=operator, value=value
+            name=name.name, op=operator, value=value
         ))
 
     def _write_define(self, out, name, value):
-        out.write('define {name}\n'.format(name=name))
+        out.write('define {name}\n'.format(name=name.name))
         for i in value:
             out.write(i + '\n')
         out.write('endef\n\n')
@@ -157,8 +165,8 @@ def cmd_var(writer, lang):
 def emit_object_file(writer, rule):
     base, ext = os.path.splitext(target_name(rule.file))
     cmd = cmd_var(writer, rule.file.lang)
-    cflags = MakeVariable('{}FLAGS'.format(cmd))
-    recipename = MakeVariable('RULE_{}'.format(cmd))
+    cflags = MakeVariable('{}FLAGS'.format(cmd.name))
+    recipename = MakeVariable('RULE_{}'.format(cmd.name))
 
     if not writer.has_variable(cflags, target='%'):
         writer.variable(cflags, '', target='%')
@@ -166,8 +174,8 @@ def emit_object_file(writer, rule):
     if not writer.has_variable(recipename):
         writer.variable(recipename, [
             cc.compile_command(
-                cmd=cmd.use(), input='$<', output='$@',
-                dep='$*.d', prevars=cflags.use()
+                cmd=cmd, input='$<', output='$@',
+                dep='$*.d', prevars=cflags
             ),
             "@sed -e 's/.*://' -e 's/\\$$//' < $*.d | fmt -1 | \\",
             "  sed -e 's/^ *//' -e 's/$$/:/' >> $*.d"
@@ -192,13 +200,13 @@ def emit_link(writer, rule):
     cmd = cmd_var(writer, (i.lang for i in rule.files))
 
     if type(rule.target).__name__ == 'Library':
-        recipename = MakeVariable('RULE_{}_LINKLIB'.format(cmd))
+        recipename = MakeVariable('RULE_{}_LINKLIB'.format(cmd.name))
         mode = 'library'
     else:
-        recipename = MakeVariable('RULE_{}_LINK'.format(cmd))
+        recipename = MakeVariable('RULE_{}_LINK'.format(cmd.name))
         mode = 'executable'
 
-    cflags = MakeVariable('{}FLAGS'.format(cmd))
+    cflags = MakeVariable('{}FLAGS'.format(cmd.name))
     if not writer.has_variable(cflags, target='%'):
         writer.variable(cflags, '', target='%')
 
@@ -217,9 +225,8 @@ def emit_link(writer, rule):
     if not writer.has_variable(recipename):
         writer.variable(recipename, [
             cc.link_command(
-                cmd=cmd.use(), mode=mode, input=[objs_var.use()], output='$@',
-                prevars=cflags.use(),
-                postvars=libs_var.use() + ' ' + ldflags.use()
+                cmd=cmd, mode=mode, input=objs_var, output='$@',
+                prevars=cflags, postvars=[libs_var, ldflags]
             )
         ], flavor='define')
 
