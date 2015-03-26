@@ -156,20 +156,20 @@ def emit_object_file(writer, rule):
 
 @rule_handler('Link')
 def emit_link(writer, rule):
+    cmd = cmd_var(writer, (i.lang for i in rule.files))
+
     if type(rule.target).__name__ == 'Library':
-        rulename = 'linklib'
+        rulename = '{}_linklib'.format(cmd)
         mode = 'library'
     else:
-        rulename = 'link'
+        rulename = '{}_link'.format(cmd)
         mode = 'executable'
 
-    cmd = cmd_var(writer, (i.lang for i in rule.files))
     cflags = NinjaVariable('{}flags'.format(cmd))
     if not writer.has_rule(rulename):
         writer.rule(name=rulename, command=cc.link_command(
-            cmd=cmd.use(), mode=mode, input=['$in'],
-            libs=None, prevars=cflags.use(), postvars='$libs $ldflags',
-            output='$out'
+            cmd=cmd.use(), mode=mode, input=['$in'], output='$out',
+            prevars=cflags.use(), postvars='$libs $ldflags'
         ))
 
     variables = {}

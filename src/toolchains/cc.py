@@ -37,7 +37,7 @@ class CcCompiler(object):
         )
         return result
 
-    def link_command(self, cmd, mode, input, libs, output, prevars=None,
+    def link_command(self, cmd, mode, input, output, libs=None, prevars=None,
                      postvars=None):
         result = cmd
         if mode == 'library':
