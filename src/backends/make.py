@@ -19,7 +19,7 @@ def rule_handler(rule_name):
 
 MakeInclude = namedtuple('MakeInclude', ['name', 'optional'])
 MakeRule = namedtuple('MakeRule', ['target', 'deps', 'recipe', 'variables',
-                                   'phony'])
+                                   'target_variables', 'phony'])
 
 class MakeVariable(object):
     def __init__(self, name):
@@ -78,7 +78,8 @@ class MakeWriter(object):
     def include(self, name, optional=False):
         self._includes.append(MakeInclude(name, optional))
 
-    def rule(self, target, deps, recipe, variables=None, phony=False):
+    def rule(self, target, deps, recipe, variables=None, target_variables=None,
+             phony=False):
         real_variables = {}
         if variables:
             for k, v in variables.iteritems():
@@ -87,7 +88,7 @@ class MakeWriter(object):
                 real_variables[k] = v
 
         self._rules.append(MakeRule(target, deps, recipe, real_variables,
-                                    phony))
+                                    target_variables, phony))
 
     def _write_variable(self, out, name, value, flavor, target=None):
         operator = ':=' if flavor == 'simple' else '='
@@ -103,21 +104,26 @@ class MakeWriter(object):
             out.write(i + '\n')
         out.write('endef\n\n')
 
-    def _write_rule(self, out, target, deps, recipe, variables, phony):
-        if variables:
-            for name, value in variables.iteritems():
-                self._write_variable(out, name, value, 'simple', target=target)
-        if phony:
-            out.write('.PHONY: {}\n'.format(target))
+    def _write_rule(self, out, rule):
+        if rule.variables:
+            for name, value in rule.variables.iteritems():
+                self._write_variable(out, name, value, 'simple')
+        if rule.target_variables:
+            for name, value in rule.target_variables.iteritems():
+                self._write_variable(out, name, value, 'simple',
+                                     target=rule.target)
+
+        if rule.phony:
+            out.write('.PHONY: {}\n'.format(rule.target))
         out.write('{target}:{deps}'.format(
-            target=target,
-            deps=''.join(' ' + i for i in deps)
+            target=rule.target,
+            deps=''.join(' ' + i for i in rule.deps)
         ))
 
-        if isinstance(recipe, MakeVariable):
-            out.write(' ; {}'.format(recipe.use()))
+        if isinstance(rule.recipe, MakeVariable):
+            out.write(' ; {}'.format(rule.recipe))
         else:
-            for cmd in recipe:
+            for cmd in rule.recipe:
                 out.write('\n\t{}'.format(cmd))
         out.write('\n\n')
 
@@ -139,7 +145,7 @@ class MakeWriter(object):
             self._write_define(out, name, value)
 
         for r in self._rules:
-            self._write_rule(out, *r)
+            self._write_rule(out, r)
 
         for i in self._includes:
             out.write('{opt}include {name}\n'.format(
@@ -206,6 +212,8 @@ def emit_link(writer, rule):
         recipename = MakeVariable('RULE_{}_LINK'.format(cmd.name))
         mode = 'executable'
 
+    inputs_var = MakeVariable('INPUTS')
+
     cflags = MakeVariable('{}FLAGS'.format(cmd.name))
     if not writer.has_variable(cflags, target='%'):
         writer.variable(cflags, '', target='%')
@@ -214,10 +222,6 @@ def emit_link(writer, rule):
     if not writer.has_variable(ldflags, target='%'):
         writer.variable(ldflags, '', target='%')
 
-    objs_var = MakeVariable('OBJS')
-    if not writer.has_variable(objs_var, target='%'):
-        writer.variable(objs_var, '', target='%')
-
     libs_var = MakeVariable('LIBS')
     if not writer.has_variable(libs_var, target='%'):
         writer.variable(libs_var, '', target='%')
@@ -225,18 +229,17 @@ def emit_link(writer, rule):
     if not writer.has_variable(recipename):
         writer.variable(recipename, [
             cc.link_command(
-                cmd=cmd, mode=mode, input=objs_var, output='$@',
+                cmd=cmd, mode=mode, input=inputs_var, output='$@',
                 prevars=cflags, postvars=[libs_var, ldflags]
             )
         ], flavor='define')
 
     lib_deps = [i for i in rule.libs if not i.external]
     deps = chain(
-        [objs_var.use()], (target_name(i) for i in chain(rule.deps, lib_deps))
+        [inputs_var.use()], (target_name(i) for i in chain(rule.deps, lib_deps))
     )
 
     variables = {}
-    variables[objs_var] = ' '.join(target_name(i) for i in rule.files)
     if rule.libs:
         variables[libs_var] = cc.link_libs(rule.libs)
     if rule.compile_options:
@@ -246,7 +249,9 @@ def emit_link(writer, rule):
 
     writer.rule(
         target=target_name(rule.target), deps=deps,
-        recipe=recipename, variables=variables
+        recipe=recipename,
+        variables={inputs_var: ' '.join(target_name(i) for i in rule.files)},
+        target_variables=variables
     )
 
 @rule_handler('Alias')
