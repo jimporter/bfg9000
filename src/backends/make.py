@@ -208,7 +208,7 @@ def emit_object_file(rule, writer, env):
                 cmd=cmd, input='$<', output='$@',
                 dep='$*.d', prevars=cflags
             ),
-            "@sed -e 's/.*://' -e 's/\\$$//' < $*.d | fmt -1 | \\",
+            "@sed -e 's/.*://' -e 's/\\\\$$//' < $*.d | fmt -1 | \\",
             "  sed -e 's/^ *//' -e 's/$$/:/' >> $*.d"
         ], flavor='define')
 
