@@ -105,6 +105,13 @@ class NinjaWriter(object):
                 out.write(' |')
             out.write(' ' + i)
 
+        first = True
+        for i in build.order_only or []:
+            if first:
+                first = False
+                out.write(' ||')
+            out.write(' ' + i)
+
         out.write('\n')
 
         if build.variables:
