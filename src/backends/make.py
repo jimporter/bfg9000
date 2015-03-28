@@ -212,20 +212,20 @@ def emit_object_file(rule, writer, env):
             "  sed -e 's/^ *//' -e 's/$$/:/' >> $*.d"
         ], flavor='define')
 
+    variables = {}
     cflags_value = []
     if rule.target.in_library:
         cflags_value.append(cc.library_flag())
     if rule.options:
         cflags_value.append(rule.options)
     if cflags_value:
-        writer.variable(cflags.use(), ' '.join(cflags_value),
-                        target=env.target_path(rule.target))
+        variables[cflags] = ' '.join(cflags_value)
 
     directory = os.path.dirname(rule.target.name)
     order_only = [directory] if directory else None
     writer.rule(target=env.target_name(rule.target),
                 deps=[env.target_path(rule.file)], order_only=order_only,
-                recipe=recipename)
+                recipe=recipename, target_variables=variables)
     directory_rule(os.path.dirname(rule.target.name), writer)
 
     writer.include(base + '.d', True)
