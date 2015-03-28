@@ -7,9 +7,10 @@ import os.path
 import sys
 
 import builtins
-import node
 import builtin_rules
+import node
 import utils
+from environment import Environment
 
 bfgfile = 'build.bfg'
 
@@ -19,7 +20,7 @@ parser.add_argument('--backend', help='backend', default='make')
 args = parser.parse_args()
 
 backend = importlib.import_module('backends.{}'.format(args.backend))
-builddir = os.path.abspath(args.builddir)
+env = Environment(srcdir=os.getcwd(), builddir=os.path.abspath(args.builddir))
 
-execfile(os.path.join(builddir, bfgfile), builtins.all_builtins)
-backend.write(builddir, node.all_edges)
+execfile(bfgfile, builtins.all_builtins)
+backend.write(env, node.all_edges)

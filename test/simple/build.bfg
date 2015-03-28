@@ -1,0 +1,5 @@
+# -*- python -*-
+
+simple = executable('simple', files=['simple.cpp'])
+alias('all', [simple])
+command('run', deps=[simple], cmd=['./simple'])

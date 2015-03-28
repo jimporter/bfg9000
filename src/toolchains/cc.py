@@ -1,19 +1,12 @@
 from collections import Iterable
 
 from node import Node
-from platform import target_name
 
 def _lib_link_name(node):
     if isinstance(node, Node):
         return node.name
     else:
         return str(node)
-
-def _target_name_or_str(thing):
-    if isinstance(thing, Node):
-        return target_name(thing)
-    else:
-        return str(thing)
 
 def _listify(thing):
     if thing is None:

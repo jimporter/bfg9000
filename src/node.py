@@ -3,6 +3,10 @@ class Node(object):
         self.name = name
         self.creator = creator
 
+    @property
+    def is_source(self):
+        return self.creator is None
+
     def __repr__(self):
         return '<{type} {name}>'.format(
             type=type(self).__name__, name=repr(self.name)

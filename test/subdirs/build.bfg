@@ -1,0 +1,4 @@
+# -*- python -*-
+
+simple = executable('subdirs', files=['src/subdirs.cpp'])
+alias('all', [simple])

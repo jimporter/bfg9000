@@ -164,7 +164,7 @@ class VcxProject(object):
         out.write(etree.tostring(project, doctype=self._DOCTYPE,
                                  pretty_print=True))
 
-def write(path, edges):
+def write(env, edges):
     projects = []
     for e in edges:
         if isinstance(e, Link):
@@ -172,10 +172,10 @@ def write(path, edges):
                 e.target.name, (i.creator.file.name for i in e.files)
             ))
 
-    with open(os.path.join(path, 'project.sln'), 'w') as out:
+    with open(os.path.join(env.builddir, 'project.sln'), 'w') as out:
         write_solution(out, projects)
     for p in projects:
-        projfile = os.path.join(path, p.path)
+        projfile = os.path.join(env.builddir, p.path)
         makedirs(os.path.dirname(projfile), exist_ok=True)
         with open(projfile, 'w') as out:
             p.write(out)

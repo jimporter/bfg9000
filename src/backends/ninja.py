@@ -5,7 +5,6 @@ from collections import OrderedDict, namedtuple
 from itertools import chain
 
 import toolchains.cc
-from platform import target_name
 
 cc = toolchains.cc.CcCompiler() # TODO: make this replaceable
 
@@ -18,7 +17,7 @@ def rule_handler(rule_name):
 
 NinjaRule = namedtuple('NinjaRule', ['command', 'depfile'])
 NinjaBuild = namedtuple('NinjaBuild', ['rule', 'inputs', 'implicit',
-                                       'variables'])
+                                       'order_only', 'variables'])
 class NinjaVariable(object):
     def __init__(self, name):
         self.name = re.sub('/', '_', name)
@@ -50,6 +49,7 @@ class NinjaWriter(object):
         if self.has_variable(name):
             raise RuntimeError('variable "{}" already exists'.format(name))
         self._variables[name] = value
+        return name
 
     def has_variable(self, name):
         if not isinstance(name, NinjaVariable):
@@ -64,7 +64,8 @@ class NinjaWriter(object):
     def has_rule(self, name):
         return name in self._rules
 
-    def build(self, output, rule, inputs=None, implicit=None, variables=None):
+    def build(self, output, rule, inputs=None, implicit=None, order_only=None,
+              variables=None):
         real_variables = {}
         if variables:
             for k, v in variables.iteritems():
@@ -74,7 +75,7 @@ class NinjaWriter(object):
 
         if self.has_build(output):
             raise RuntimeError('build for "{}" already exists'.format(output))
-        self._builds[output] = NinjaBuild(rule, inputs, implicit,
+        self._builds[output] = NinjaBuild(rule, inputs, implicit, order_only,
                                           real_variables)
 
     def has_build(self, name):
@@ -85,20 +86,20 @@ class NinjaWriter(object):
             indent='  ' * indent, name=name.name, value=value
         ))
 
-    def _write_rule(self, out, name, command, depfile):
+    def _write_rule(self, out, name, rule):
         out.write('rule {}\n'.format(name))
-        self._write_variable(out, NinjaVariable('command'), command, 1)
-        if depfile:
-            self._write_variable(out, NinjaVariable('depfile'), depfile, 1)
+        self._write_variable(out, NinjaVariable('command'), rule.command, 1)
+        if rule.depfile:
+            self._write_variable(out, NinjaVariable('depfile'), rule.depfile, 1)
 
-    def _write_build(self, out, name, rule, inputs, implicit, variables):
-        out.write('build {output}: {rule}'.format(output=name, rule=rule))
+    def _write_build(self, out, name, build):
+        out.write('build {output}: {rule}'.format(output=name, rule=build.rule))
 
-        for i in inputs or []:
+        for i in build.inputs or []:
             out.write(' ' + i)
 
         first = True
-        for i in implicit or []:
+        for i in build.implicit or []:
             if first:
                 first = False
                 out.write(' |')
@@ -106,8 +107,8 @@ class NinjaWriter(object):
 
         out.write('\n')
 
-        if variables:
-            for k, v in variables.iteritems():
+        if build.variables:
+            for k, v in build.variables.iteritems():
                 self._write_variable(out, k, v, 1)
 
     def write(self, out):
@@ -117,17 +118,20 @@ class NinjaWriter(object):
             out.write('\n')
 
         for name, rule in self._rules.iteritems():
-            self._write_rule(out, name, *rule)
+            self._write_rule(out, name, rule)
             out.write('\n')
 
         for name, build in self._builds.iteritems():
-            self._write_build(out, name, *build)
+            self._write_build(out, name, build)
 
-def write(path, edges):
+def write(env, edges):
     writer = NinjaWriter()
+    srcdir_var = writer.variable('srcdir', env.srcdir)
+    env.set_srcdir_var(srcdir_var)
+
     for e in edges:
-        __rule_handlers__[type(e).__name__](writer, e)
-    with open(os.path.join(path, 'build.ninja'), 'w') as out:
+        __rule_handlers__[type(e).__name__](e, writer, env)
+    with open(os.path.join(env.builddir, 'build.ninja'), 'w') as out:
         writer.write(out)
 
 def cmd_var(writer, lang):
@@ -138,7 +142,7 @@ def cmd_var(writer, lang):
     return var
 
 @rule_handler('Compile')
-def emit_object_file(writer, rule):
+def emit_object_file(rule, writer, env):
     cmd = cmd_var(writer, rule.file.lang)
     rulename = cmd.name
     cflags = NinjaVariable('{}flags'.format(cmd.name))
@@ -158,12 +162,12 @@ def emit_object_file(writer, rule):
     if cflags_value:
         variables[cflags] = ' '.join(cflags_value)
 
-    writer.build(output=target_name(rule.target), rule=rulename,
-                 inputs=[target_name(rule.file)],
+    writer.build(output=env.target_name(rule.target), rule=rulename,
+                 inputs=[env.target_path(rule.file)],
                  variables=variables)
 
 @rule_handler('Link')
-def emit_link(writer, rule):
+def emit_link(rule, writer, env):
     cmd = cmd_var(writer, (i.lang for i in rule.files))
 
     if type(rule.target).__name__ == 'Library':
@@ -192,25 +196,25 @@ def emit_link(writer, rule):
         variables[ldflags] = rule.link_options
 
     writer.build(
-        output=target_name(rule.target), rule=rulename,
-        inputs=(target_name(i) for i in rule.files),
-        implicit=(target_name(i) for i in rule.libs if not i.external),
+        output=env.target_name(rule.target), rule=rulename,
+        inputs=(env.target_path(i) for i in rule.files),
+        implicit=(env.target_path(i) for i in rule.libs if not i.external),
         variables=variables
     )
 
 @rule_handler('Alias')
-def emit_alias(writer, rule):
+def emit_alias(rule, writer, env):
     writer.build(
-        output=target_name(rule.target), rule='phony',
-        inputs=[target_name(i) for i in rule.deps]
+        output=env.target_name(rule.target), rule='phony',
+        inputs=[env.target_path(i) for i in rule.deps]
     )
 
 @rule_handler('Command')
-def emit_command(writer, rule):
+def emit_command(rule, writer, env):
     if not writer.has_rule('command'):
         writer.rule(name='command', command='$cmd')
         writer.build(
-            output=rule.target.name, rule='command',
-            inputs=(target_name(i) for i in rule.deps),
+            output=env.target_name(rule.target), rule='command',
+            inputs=(env.target_path(i) for i in rule.deps),
             variables={'cmd': ' && '.join(rule.cmd)}
         )

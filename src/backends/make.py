@@ -6,7 +6,6 @@ from itertools import chain
 import toolchains.cc
 from builtin_rules import ObjectFile
 from languages import ext2lang
-from platform import target_name
 
 cc = toolchains.cc.CcCompiler() # TODO: make this replaceable
 
@@ -18,8 +17,8 @@ def rule_handler(rule_name):
     return decorator
 
 MakeInclude = namedtuple('MakeInclude', ['name', 'optional'])
-MakeRule = namedtuple('MakeRule', ['target', 'deps', 'recipe', 'variables',
-                                   'target_variables', 'phony'])
+MakeRule = namedtuple('MakeRule', ['target', 'deps', 'order_only', 'recipe',
+                                   'variables', 'target_variables', 'phony'])
 
 class MakeVariable(object):
     def __init__(self, name):
@@ -78,8 +77,8 @@ class MakeWriter(object):
     def include(self, name, optional=False):
         self._includes.append(MakeInclude(name, optional))
 
-    def rule(self, target, deps, recipe, variables=None, target_variables=None,
-             phony=False):
+    def rule(self, target, deps=None, order_only=None, recipe=None,
+             variables=None, target_variables=None, phony=False):
         real_variables = {}
         if variables:
             for k, v in variables.iteritems():
@@ -87,8 +86,8 @@ class MakeWriter(object):
                     k = MakeVariable(k)
                 real_variables[k] = v
 
-        self._rules.append(MakeRule(target, deps, recipe, real_variables,
-                                    target_variables, phony))
+        self._rules.append(MakeRule(target, deps, order_only, recipe,
+                                    real_variables, target_variables, phony))
 
     def _write_variable(self, out, name, value, flavor, target=None):
         operator = ':=' if flavor == 'simple' else '='
@@ -117,8 +116,15 @@ class MakeWriter(object):
             out.write('.PHONY: {}\n'.format(rule.target))
         out.write('{target}:{deps}'.format(
             target=rule.target,
-            deps=''.join(' ' + i for i in rule.deps)
+            deps=''.join(' ' + i for i in rule.deps or [])
         ))
+
+        first = True
+        for i in rule.order_only or []:
+            if first:
+                first = False
+                out.write(' |')
+            out.write(' ' + i)
 
         if isinstance(rule.recipe, MakeVariable):
             out.write(' ; {}'.format(rule.recipe))
@@ -153,11 +159,14 @@ class MakeWriter(object):
             ))
 
 
-def write(path, edges):
+def write(env, edges):
     writer = MakeWriter()
+    srcdir_var = writer.variable('SRCDIR', env.srcdir)
+    env.set_srcdir_var(srcdir_var)
+
     for e in edges:
-        __rule_handlers__[type(e).__name__](writer, e)
-    with open(os.path.join(path, 'Makefile'), 'w') as out:
+        __rule_handlers__[type(e).__name__](e, writer, env)
+    with open(os.path.join(env.builddir, 'Makefile'), 'w') as out:
         writer.write(out)
 
 def cmd_var(writer, lang):
@@ -167,9 +176,25 @@ def cmd_var(writer, lang):
         writer.variable(var, cmd)
     return var
 
+_seen_dirs = set() # TODO: Put this on the writer
+def directory_rule(path, writer):
+    if not path or path in _seen_dirs:
+        return
+    _seen_dirs.add(path)
+
+    recipename = MakeVariable('RULE_MKDIR')
+    if not writer.has_variable(recipename):
+        writer.variable(recipename, ['mkdir $@'], flavor='define')
+
+    parent = os.path.dirname(path)
+    order_only = [parent] if parent else None
+    writer.rule(target=path, order_only=order_only, recipe=recipename)
+    if parent:
+        directory_rule(parent, writer)
+
 @rule_handler('Compile')
-def emit_object_file(writer, rule):
-    base, ext = os.path.splitext(target_name(rule.file))
+def emit_object_file(rule, writer, env):
+    base, ext = os.path.splitext(env.target_name(rule.file))
     cmd = cmd_var(writer, rule.file.lang)
     cflags = MakeVariable('{}FLAGS'.format(cmd.name))
     recipename = MakeVariable('RULE_{}'.format(cmd.name))
@@ -194,15 +219,19 @@ def emit_object_file(writer, rule):
         cflags_value.append(rule.options)
     if cflags_value:
         writer.variable(cflags.use(), ' '.join(cflags_value),
-                        target=target_name(rule.target))
+                        target=env.target_path(rule.target))
 
-    writer.rule(target=target_name(rule.target), deps=[target_name(rule.file)],
+    directory = os.path.dirname(rule.target.name)
+    order_only = [directory] if directory else None
+    writer.rule(target=env.target_name(rule.target),
+                deps=[env.target_path(rule.file)], order_only=order_only,
                 recipe=recipename)
+    directory_rule(os.path.dirname(rule.target.name), writer)
 
     writer.include(base + '.d', True)
 
 @rule_handler('Link')
-def emit_link(writer, rule):
+def emit_link(rule, writer, env):
     cmd = cmd_var(writer, (i.lang for i in rule.files))
 
     if type(rule.target).__name__ == 'Library':
@@ -234,10 +263,10 @@ def emit_link(writer, rule):
             )
         ], flavor='define')
 
+    inputs = ' '.join(env.target_path(i) for i in rule.files)
     lib_deps = [i for i in rule.libs if not i.external]
-    deps = chain(
-        [inputs_var.use()], (target_name(i) for i in chain(rule.deps, lib_deps))
-    )
+    deps = chain( [inputs_var.use()],
+                  (env.target_path(i) for i in chain(rule.deps, lib_deps)) )
 
     variables = {}
     if rule.libs:
@@ -248,26 +277,26 @@ def emit_link(writer, rule):
         variables[ldflags] = rule.link_options
 
     writer.rule(
-        target=target_name(rule.target), deps=deps,
-        recipe=recipename,
-        variables={inputs_var: ' '.join(target_name(i) for i in rule.files)},
+        target=env.target_name(rule.target), deps=deps,
+        recipe=recipename, variables={inputs_var: inputs},
         target_variables=variables
     )
+    directory_rule(os.path.dirname(rule.target.name), writer)
 
 @rule_handler('Alias')
-def emit_alias(writer, rule):
+def emit_alias(rule, writer, env):
     writer.rule(
-        target=target_name(rule.target),
-        deps=(target_name(i) for i in rule.deps),
+        target=env.target_name(rule.target),
+        deps=(env.target_path(i) for i in rule.deps),
         recipe=[],
         phony=True
     )
 
 @rule_handler('Command')
-def emit_command(writer, rule):
+def emit_command(rule, writer, env):
     writer.rule(
-        target=target_name(rule.target),
-        deps=(target_name(i) for i in rule.deps),
+        target=env.target_name(rule.target),
+        deps=(env.target_path(i) for i in rule.deps),
         recipe=rule.cmd,
         phony=True
     )
