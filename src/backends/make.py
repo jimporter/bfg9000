@@ -39,6 +39,18 @@ class MakeVariable(object):
     def __ne__(self, rhs):
         return self.name != rhs.name
 
+class MakeCall(object):
+    def __init__(self, name, *args):
+        if not isinstance(name, MakeVariable):
+            name = MakeVariable(name)
+        self.name = name
+        self.args = args
+
+    def __str__(self):
+        return '$(call {})'.format(
+            ','.join(chain([self.name.name], self.args))
+        )
+
 class MakeWriter(object):
     def __init__(self):
         self._global_variables = OrderedDict()
@@ -126,7 +138,8 @@ class MakeWriter(object):
                 out.write(' |')
             out.write(' ' + i)
 
-        if isinstance(rule.recipe, MakeVariable):
+        if (isinstance(rule.recipe, MakeVariable) or
+            isinstance(rule.recipe, MakeCall)):
             out.write(' ; {}'.format(rule.recipe))
         else:
             for cmd in rule.recipe:
@@ -241,8 +254,6 @@ def emit_link(rule, writer, env):
         recipename = MakeVariable('RULE_{}_LINK'.format(cmd.name))
         mode = 'executable'
 
-    inputs_var = MakeVariable('INPUTS')
-
     cflags = MakeVariable('{}FLAGS'.format(cmd.name))
     if not writer.has_variable(cflags, target='%'):
         writer.variable(cflags, '', target='%')
@@ -258,15 +269,13 @@ def emit_link(rule, writer, env):
     if not writer.has_variable(recipename):
         writer.variable(recipename, [
             cc.link_command(
-                cmd=cmd, mode=mode, input=inputs_var, output='$@',
+                cmd=cmd, mode=mode, input='$1', output='$@',
                 prevars=cflags, postvars=[libs_var, ldflags]
             )
         ], flavor='define')
 
-    inputs = ' '.join(env.target_path(i) for i in rule.files)
-    lib_deps = [i for i in rule.libs if not i.external]
-    deps = chain( [inputs_var.use()],
-                  (env.target_path(i) for i in chain(rule.deps, lib_deps)) )
+    lib_deps = (i for i in rule.libs if not i.external)
+    deps = (env.target_path(i) for i in chain(rule.files, rule.deps, lib_deps))
 
     variables = {}
     if rule.libs:
@@ -278,7 +287,7 @@ def emit_link(rule, writer, env):
 
     writer.rule(
         target=env.target_name(rule.target), deps=deps,
-        recipe=recipename, variables={inputs_var: inputs},
+        recipe=MakeCall(recipename, *[env.target_path(i) for i in rule.files]),
         target_variables=variables
     )
     directory_rule(os.path.dirname(rule.target.name), writer)
