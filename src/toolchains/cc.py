@@ -1,10 +1,11 @@
+import os.path
 from collections import Iterable
 
 from node import Node
 
 def _lib_link_name(node):
     if isinstance(node, Node):
-        return node.name
+        return os.path.basename(node.name)
     else:
         return str(node)
 

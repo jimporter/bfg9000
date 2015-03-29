@@ -239,7 +239,7 @@ def emit_object_file(rule, writer, env):
     writer.rule(target=env.target_name(rule.target),
                 deps=[env.target_path(rule.file)], order_only=order_only,
                 recipe=recipename, target_variables=variables)
-    directory_rule(os.path.dirname(rule.target.name), writer)
+    directory_rule(directory, writer)
 
     writer.include(base + '.d', True)
 
@@ -285,12 +285,14 @@ def emit_link(rule, writer, env):
     if rule.link_options:
         variables[ldflags] = rule.link_options
 
+    directory = os.path.dirname(rule.target.name)
+    order_only = [directory] if directory else None
     writer.rule(
-        target=env.target_name(rule.target), deps=deps,
+        target=env.target_name(rule.target), deps=deps, order_only=order_only,
         recipe=MakeCall(recipename, *[env.target_path(i) for i in rule.files]),
         target_variables=variables
     )
-    directory_rule(os.path.dirname(rule.target.name), writer)
+    directory_rule(directory, writer)
 
 @rule_handler('Alias')
 def emit_alias(rule, writer, env):

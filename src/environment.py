@@ -13,7 +13,10 @@ class Environment(object):
     # TODO: This still needs some improvement to be more flexible
     def target_name(self, target):
         if type(target).__name__ == 'Library':
-            return 'lib{}.so'.format(target.name)
+            return os.path.join(
+                os.path.dirname(target.name),
+                'lib{}.so'.format(os.path.basename(target.name))
+            )
         elif type(target).__name__ == 'ObjectFile':
             return '{}.o'.format(target.name)
         else:

@@ -1,4 +1,6 @@
 # -*- python -*-
 
-simple = executable('subdirs', files=['src/subdirs.cpp'])
-alias('all', [simple])
+lib = library('lib/library', files=['src/library.cpp'])
+prog = executable('bin/program', files=['src/program.cpp'], libs=[lib],
+                  link_options='-Llib -Wl,-rpath=lib')
+alias('all', [prog, lib])
