@@ -2,4 +2,4 @@
 
 lib = library('library', files=['library.cpp'])
 prog = executable('program', files=['program.cpp'], libs=[lib])
-alias('all', [prog, lib])
+default(prog, lib)

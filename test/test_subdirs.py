@@ -24,10 +24,10 @@ class TestSubdirs(unittest.TestCase):
         os.chdir(os.path.join(basedir, os.path.join('subdirs')))
         cleandir('build')
         subprocess.check_call([bfg9000, 'build', '--backend', self.backend])
+        os.chdir('build')
 
     def test_all(self):
-        os.chdir('build')
-        subprocess.check_call([self.backend, 'bin/program'])
+        subprocess.check_call([self.backend])
         self.assertEqual(subprocess.check_output(['bin/program']),
                          'hello, library!\n')
 

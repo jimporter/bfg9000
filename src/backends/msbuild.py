@@ -164,9 +164,10 @@ class VcxProject(object):
         out.write(etree.tostring(project, doctype=self._DOCTYPE,
                                  pretty_print=True))
 
-def write(env, edges):
+def write(env, build_inputs):
     projects = []
-    for e in edges:
+    # TODO: Handle default().
+    for e in build_inputs.edges:
         if isinstance(e, Link):
             projects.append(VcxProject(
                 e.target.name, (i.creator.file.name for i in e.files)

@@ -24,10 +24,15 @@ class TestSimple(unittest.TestCase):
         os.chdir(os.path.join(basedir, os.path.join('simple')))
         cleandir('build')
         subprocess.check_call([bfg9000, 'build', '--backend', self.backend])
-
-    def test_all(self):
         os.chdir('build')
+
+    def test_build(self):
         subprocess.check_call([self.backend, 'simple'])
+        self.assertEqual(subprocess.check_output(['./simple']),
+                         'hello, world!\n')
+
+    def test_default(self):
+        subprocess.check_call([self.backend])
         self.assertEqual(subprocess.check_output(['./simple']),
                          'hello, world!\n')
 

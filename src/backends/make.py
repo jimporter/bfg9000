@@ -141,7 +141,7 @@ class MakeWriter(object):
         if (isinstance(rule.recipe, MakeVariable) or
             isinstance(rule.recipe, MakeCall)):
             out.write(' ; {}'.format(rule.recipe))
-        else:
+        elif rule.recipe is not None:
             for cmd in rule.recipe:
                 out.write('\n\t{}'.format(cmd))
         out.write('\n\n')
@@ -172,13 +172,19 @@ class MakeWriter(object):
             ))
 
 
-def write(env, edges):
+def write(env, build_inputs):
     writer = MakeWriter()
     srcdir_var = writer.variable('SRCDIR', env.srcdir)
     env.set_srcdir_var(srcdir_var)
 
-    for e in edges:
+    if build_inputs.default_targets:
+        writer.rule(
+            target='all',
+            deps=(env.target_path(i) for i in build_inputs.default_targets)
+        )
+    for e in build_inputs.edges:
         __rule_handlers__[type(e).__name__](e, writer, env)
+
     with open(os.path.join(env.builddir, 'Makefile'), 'w') as out:
         writer.write(out)
 

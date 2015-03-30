@@ -42,6 +42,7 @@ class NinjaWriter(object):
         self._variables = OrderedDict()
         self._rules = OrderedDict()
         self._builds = OrderedDict()
+        self._defaults = []
 
     def variable(self, name, value):
         if not isinstance(name, NinjaVariable):
@@ -77,6 +78,9 @@ class NinjaWriter(object):
             raise RuntimeError('build for "{}" already exists'.format(output))
         self._builds[output] = NinjaBuild(rule, inputs, implicit, order_only,
                                           real_variables)
+
+    def default(self, paths):
+        self._defaults.extend(paths)
 
     def has_build(self, name):
         return name in self._builds
@@ -131,13 +135,19 @@ class NinjaWriter(object):
         for name, build in self._builds.iteritems():
             self._write_build(out, name, build)
 
-def write(env, edges):
+        if self._defaults:
+            out.write('\ndefault {}\n'.format(' '.join(self._defaults)))
+
+def write(env, build_inputs):
     writer = NinjaWriter()
     srcdir_var = writer.variable('srcdir', env.srcdir)
     env.set_srcdir_var(srcdir_var)
 
-    for e in edges:
+    if build_inputs.default_targets:
+        writer.default(env.target_path(i) for i in build_inputs.default_targets)
+    for e in build_inputs.edges:
         __rule_handlers__[type(e).__name__](e, writer, env)
+
     with open(os.path.join(env.builddir, 'build.ninja'), 'w') as out:
         writer.write(out)
 

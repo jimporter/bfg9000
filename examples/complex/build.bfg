@@ -20,8 +20,7 @@ libmettle = library(
 )
 mettle = executable('mettle', files=['mettle.cpp', 'log_pipe.cpp'],
                     libs=[libmettle], compile_options='-Wall')
+default(mettle, libmettle)
 
 tests = alias('tests', [executable(i, files=[i+'.cpp']) for i in all_tests])
-
-alias('all', [mettle, libmettle])
 command('test', deps=[mettle, tests], cmd=['./mettle ' + ' '.join(all_tests)])

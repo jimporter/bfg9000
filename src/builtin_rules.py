@@ -16,11 +16,12 @@ class ObjectFile(node.Node):
         self.in_library = False
 
 class Executable(node.Node):
-    pass
+    def __init__(self, name):
+        node.Node.__init__(self, name, potential_default=True)
 
 class Library(node.Node):
     def __init__(self, name, external=False):
-        node.Node.__init__(self, name)
+        node.Node.__init__(self, name, potential_default=True)
         self.external = external
 
 #####
@@ -102,3 +103,9 @@ def command(name, cmd, deps=None):
     target = node.Node(name)
     Command(target, cmd, deps)
     return target
+
+#####
+
+@builtin
+def default(*args):
+    node.build_inputs.default_targets.extend(args)

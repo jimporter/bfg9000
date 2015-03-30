@@ -1,7 +1,9 @@
 class Node(object):
-    def __init__(self, name, creator=None):
+    def __init__(self, name, creator=None, potential_default=False):
         self.name = name
         self.creator = creator
+        if potential_default:
+            build_inputs.fallback_default = self
 
     @property
     def is_source(self):
@@ -17,7 +19,7 @@ class Edge(object):
         target.creator = self
         self.target = target
         self.deps = [nodeify(i, Node) for i in deps or []]
-        all_edges.append(self)
+        build_inputs.edges.append(self)
 
 def nodeify(x, valid_type, creator=None, **kwargs):
     if isinstance(x, valid_type):
@@ -27,4 +29,18 @@ def nodeify(x, valid_type, creator=None, **kwargs):
     else:
         return valid_type(x, **kwargs)
 
-all_edges = []
+class BuildInputs(object):
+    def __init__(self):
+        self.edges = []
+        self._default_targets = []
+        self.fallback_default = None
+
+    @property
+    def default_targets(self):
+        return self._default_targets or [self.fallback_default]
+
+    @default_targets.setter
+    def default_targets(self, value):
+        self._default_targets = value
+
+build_inputs = BuildInputs()
