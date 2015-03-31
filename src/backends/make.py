@@ -177,11 +177,10 @@ def write(env, build_inputs):
     srcdir_var = writer.variable('SRCDIR', env.srcdir)
     env.set_srcdir_var(srcdir_var)
 
-    if build_inputs.default_targets:
-        writer.rule(
-            target='all',
-            deps=(env.target_path(i) for i in build_inputs.default_targets)
-        )
+    writer.rule(
+        target='all',
+        deps=(env.target_path(i) for i in build_inputs.default_targets)
+    )
     for e in build_inputs.edges:
         __rule_handlers__[type(e).__name__](e, writer, env)
 

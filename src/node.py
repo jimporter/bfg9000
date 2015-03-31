@@ -37,7 +37,12 @@ class BuildInputs(object):
 
     @property
     def default_targets(self):
-        return self._default_targets or [self.fallback_default]
+        if self._default_targets:
+            return self._default_targets
+        elif self.fallback_default:
+            return [self.fallback_default]
+        else:
+            return []
 
     @default_targets.setter
     def default_targets(self, value):
