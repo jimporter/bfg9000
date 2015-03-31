@@ -36,11 +36,9 @@ class Link(node.Edge):
     def __init__(self, target, files, libs=None, compile_options=None,
                  link_options=None, deps=None):
         self.files = files
-        self.libs = [node.nodeify(i, Library, external=True)
-                     for i in libs or []]
+        self.libs = libs
         self.compile_options = compile_options
         self.link_options = link_options
-
         node.Edge.__init__(self, target, deps)
 
 class Alias(node.Edge):
@@ -59,12 +57,12 @@ def object_file(name=None, file=None, options=None, lang=None, deps=None):
         raise TypeError('"file" argument must not be None')
     if lang is None:
         lang = ext2lang.get( os.path.splitext(file)[1] )
-
     source_file = node.nodeify(file, SourceFile, lang=lang)
+
     if name is None:
             name = os.path.splitext(file)[0]
     target = ObjectFile(name, lang)
-    Compile(target, node.nodeify(file, SourceFile, lang=lang), options, deps)
+    Compile(target, source_file, options, deps)
     return target
 
 @builtin
@@ -72,10 +70,11 @@ def object_files(files, lang=None, options=None):
     return [object_file(file=f, lang=lang, options=options) for f in files]
 
 def _binary(target, files, libs=None, lang=None, compile_options=None,
-           link_options=None, deps=None):
+            link_options=None, deps=None):
     def make_obj(x):
         return object_file(file=x, options=compile_options, lang=lang)
     objects = [node.nodeify(i, ObjectFile, make_obj) for i in files]
+    libs = [node.nodeify(i, Library, external=True) for i in libs or []]
     return Link(target, objects, libs, compile_options, link_options, deps)
 
 @builtin
