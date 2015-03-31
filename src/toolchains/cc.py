@@ -1,4 +1,4 @@
-import os.path
+import os
 from collections import Iterable
 
 from node import Node
@@ -21,6 +21,10 @@ def _strlistify(thing):
     return (str(i) for i in _listify(thing))
 
 class CcCompiler(object):
+    def __init__(self):
+        self._cc_name = os.getenv('CC', 'cc')
+        self._cxx_name = os.getenv('CXX', 'c++')
+
     def command_name(self, lang):
         if not isinstance(lang, basestring):
             is_cxx = any(i == 'c++' for i in lang)
@@ -28,9 +32,9 @@ class CcCompiler(object):
             is_cxx = lang == 'c++'
 
         if is_cxx:
-            return ('c++', 'cxx')
+            return (self._cxx_name, 'cxx')
         else:
-            return ('cc', 'cc')
+            return (self._cc_name, 'cc')
 
     def compile_command(self, cmd, input, output, dep=None, prevars=None,
                         postvars=None):
