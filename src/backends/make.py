@@ -18,7 +18,7 @@ def rule_handler(rule_name):
 
 MakeInclude = namedtuple('MakeInclude', ['name', 'optional'])
 MakeRule = namedtuple('MakeRule', ['target', 'deps', 'order_only', 'recipe',
-                                   'variables', 'target_variables', 'phony'])
+                                   'variables', 'phony'])
 
 class MakeVariable(object):
     def __init__(self, name):
@@ -90,7 +90,7 @@ class MakeWriter(object):
         self._includes.append(MakeInclude(name, optional))
 
     def rule(self, target, deps=None, order_only=None, recipe=None,
-             variables=None, target_variables=None, phony=False):
+             variables=None, phony=False):
         real_variables = {}
         if variables:
             for k, v in variables.iteritems():
@@ -99,7 +99,7 @@ class MakeWriter(object):
                 real_variables[k] = v
 
         self._rules.append(MakeRule(target, deps, order_only, recipe,
-                                    real_variables, target_variables, phony))
+                                    real_variables, phony))
 
     def _write_variable(self, out, name, value, flavor, target=None):
         operator = ':=' if flavor == 'simple' else '='
@@ -118,9 +118,6 @@ class MakeWriter(object):
     def _write_rule(self, out, rule):
         if rule.variables:
             for name, value in rule.variables.iteritems():
-                self._write_variable(out, name, value, 'simple')
-        if rule.target_variables:
-            for name, value in rule.target_variables.iteritems():
                 self._write_variable(out, name, value, 'simple',
                                      target=rule.target)
 
@@ -243,7 +240,7 @@ def emit_object_file(rule, writer, env):
     order_only = [directory] if directory else None
     writer.rule(target=env.target_name(rule.target),
                 deps=[env.target_path(rule.file)], order_only=order_only,
-                recipe=recipename, target_variables=variables)
+                recipe=recipename, variables=variables)
     directory_rule(directory, writer)
 
     writer.include(base + '.d', True)
@@ -295,7 +292,7 @@ def emit_link(rule, writer, env):
     writer.rule(
         target=env.target_name(rule.target), deps=deps, order_only=order_only,
         recipe=MakeCall(recipename, *[env.target_path(i) for i in rule.files]),
-        target_variables=variables
+        variables=variables
     )
     directory_rule(directory, writer)
 
