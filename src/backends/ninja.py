@@ -4,10 +4,6 @@ import sys
 from collections import OrderedDict, namedtuple
 from itertools import chain
 
-import toolchains.cc
-
-cc = toolchains.cc.CcCompiler() # TODO: make this replaceable
-
 __rule_handlers__ = {}
 def rule_handler(rule_name):
     def decorator(fn):
@@ -150,21 +146,21 @@ def write(env, build_inputs):
     with open(os.path.join(env.builddir, 'build.ninja'), 'w') as out:
         writer.write(out)
 
-def cmd_var(writer, lang):
-    cmd, varname = cc.command_name(lang)
-    var = NinjaVariable(varname)
+def cmd_var(compiler, writer):
+    var = NinjaVariable(compiler.safe_name)
     if not writer.has_variable(var):
-        writer.variable(var, cmd)
+        writer.variable(var, compiler.command_name)
     return var
 
 @rule_handler('Compile')
 def emit_object_file(rule, writer, env):
-    cmd = cmd_var(writer, rule.file.lang)
+    compiler = env.compiler(rule.file.lang)
+    cmd = cmd_var(compiler, writer)
     rulename = cmd.name
     cflags = NinjaVariable('{}flags'.format(cmd.name))
 
     if not writer.has_rule(rulename):
-        writer.rule(name=rulename, command=cc.compile_command(
+        writer.rule(name=rulename, command=compiler.compile_command(
             cmd=cmd, input='$in', output='$out', dep='$out.d',
             prevars=cflags
         ), depfile='$out.d')
@@ -172,7 +168,7 @@ def emit_object_file(rule, writer, env):
     variables = {}
     cflags_value = []
     if rule.target.in_library:
-        cflags_value.append(cc.library_flag())
+        cflags_value.append(compiler.library_flag())
     if rule.options:
         cflags_value.append(rule.options)
     if cflags_value:
@@ -184,7 +180,8 @@ def emit_object_file(rule, writer, env):
 
 @rule_handler('Link')
 def emit_link(rule, writer, env):
-    cmd = cmd_var(writer, (i.lang for i in rule.files))
+    compiler = env.compiler(i.lang for i in rule.files)
+    cmd = cmd_var(compiler, writer)
 
     if type(rule.target).__name__ == 'Library':
         rulename = '{}_linklib'.format(cmd.name)
@@ -198,14 +195,14 @@ def emit_link(rule, writer, env):
     ldflags = NinjaVariable('ldflags')
 
     if not writer.has_rule(rulename):
-        writer.rule(name=rulename, command=cc.link_command(
+        writer.rule(name=rulename, command=compiler.link_command(
             cmd=cmd, mode=mode, input='$in', output='$out',
             prevars=cflags, postvars=[libs_var, ldflags]
         ))
 
     variables = {}
     if rule.libs:
-        variables[libs_var] = cc.link_libs(rule.libs)
+        variables[libs_var] = compiler.link_libs(rule.libs)
     if rule.compile_options:
         variables[cflags] = rule.compile_options
     if rule.link_options:

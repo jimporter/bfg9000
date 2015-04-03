@@ -3,11 +3,8 @@ import re
 from collections import OrderedDict, namedtuple
 from itertools import chain
 
-import toolchains.cc
 from builtin_rules import ObjectFile
 from languages import ext2lang
-
-cc = toolchains.cc.CcCompiler() # TODO: make this replaceable
 
 __rule_handlers__ = {}
 def rule_handler(rule_name):
@@ -184,11 +181,10 @@ def write(env, build_inputs):
     with open(os.path.join(env.builddir, 'Makefile'), 'w') as out:
         writer.write(out)
 
-def cmd_var(writer, lang):
-    cmd, varname = cc.command_name(lang)
-    var = MakeVariable(varname)
+def cmd_var(compiler, writer):
+    var = MakeVariable(compiler.safe_name)
     if not writer.has_variable(var):
-        writer.variable(var, cmd)
+        writer.variable(var, compiler.command_name)
     return var
 
 _seen_dirs = set() # TODO: Put this on the writer
@@ -209,8 +205,8 @@ def directory_rule(path, writer):
 
 @rule_handler('Compile')
 def emit_object_file(rule, writer, env):
-    base, ext = os.path.splitext(env.target_name(rule.file))
-    cmd = cmd_var(writer, rule.file.lang)
+    compiler = env.compiler(rule.file.lang)
+    cmd = cmd_var(compiler, writer)
     cflags = MakeVariable('{}FLAGS'.format(cmd.name))
     recipename = MakeVariable('RULE_{}'.format(cmd.name))
 
@@ -219,7 +215,7 @@ def emit_object_file(rule, writer, env):
 
     if not writer.has_variable(recipename):
         writer.variable(recipename, [
-            cc.compile_command(
+            compiler.compile_command(
                 cmd=cmd, input='$<', output='$@',
                 dep='$*.d', prevars=cflags
             ),
@@ -230,7 +226,7 @@ def emit_object_file(rule, writer, env):
     variables = {}
     cflags_value = []
     if rule.target.in_library:
-        cflags_value.append(cc.library_flag())
+        cflags_value.append(compiler.library_flag())
     if rule.options:
         cflags_value.append(rule.options)
     if cflags_value:
@@ -243,11 +239,13 @@ def emit_object_file(rule, writer, env):
                 recipe=recipename, variables=variables)
     directory_rule(directory, writer)
 
+    base = os.path.splitext(env.target_name(rule.file))[0]
     writer.include(base + '.d', True)
 
 @rule_handler('Link')
 def emit_link(rule, writer, env):
-    cmd = cmd_var(writer, (i.lang for i in rule.files))
+    compiler = env.compiler(i.lang for i in rule.files)
+    cmd = cmd_var(compiler, writer)
 
     if type(rule.target).__name__ == 'Library':
         recipename = MakeVariable('RULE_{}_LINKLIB'.format(cmd.name))
@@ -270,7 +268,7 @@ def emit_link(rule, writer, env):
 
     if not writer.has_variable(recipename):
         writer.variable(recipename, [
-            cc.link_command(
+            compiler.link_command(
                 cmd=cmd, mode=mode, input='$1', output='$@',
                 prevars=cflags, postvars=[libs_var, ldflags]
             )
@@ -281,7 +279,7 @@ def emit_link(rule, writer, env):
 
     variables = {}
     if rule.libs:
-        variables[libs_var] = cc.link_libs(rule.libs)
+        variables[libs_var] = compiler.link_libs(rule.libs)
     if rule.compile_options:
         variables[cflags] = rule.compile_options
     if rule.link_options:

@@ -22,19 +22,8 @@ def _strlistify(thing):
 
 class CcCompiler(object):
     def __init__(self):
-        self._cc_name = os.getenv('CC', 'cc')
-        self._cxx_name = os.getenv('CXX', 'c++')
-
-    def command_name(self, lang):
-        if not isinstance(lang, basestring):
-            is_cxx = any(i == 'c++' for i in lang)
-        else:
-            is_cxx = lang == 'c++'
-
-        if is_cxx:
-            return (self._cxx_name, 'cxx')
-        else:
-            return (self._cc_name, 'cc')
+        self.command_name = os.getenv('CC', 'cc')
+        self.safe_name = 'cc'
 
     def compile_command(self, cmd, input, output, dep=None, prevars=None,
                         postvars=None):
@@ -70,3 +59,8 @@ class CcCompiler(object):
 
     def link_libs(self, iterable):
         return ' '.join(('-l' + _lib_link_name(i) for i in iterable))
+
+class CxxCompiler(CcCompiler):
+    def __init__(self):
+        self.command_name = os.getenv('CXX', 'c++')
+        self.safe_name = 'cxx'
