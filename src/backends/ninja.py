@@ -214,7 +214,7 @@ def emit_link(rule, writer, env):
     writer.build(
         output=env.target_name(rule.target), rule=rulename,
         inputs=(env.target_path(i) for i in rule.files),
-        implicit=(env.target_path(i) for i in rule.libs if not i.external),
+        implicit=(env.target_path(i) for i in rule.libs if not i.is_source),
         variables=variables
     )
 

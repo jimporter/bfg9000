@@ -276,7 +276,7 @@ def emit_link(rule, writer, env):
             )
         ], flavor='define')
 
-    lib_deps = (i for i in rule.libs if not i.external)
+    lib_deps = (i for i in rule.libs if not i.is_source)
     deps = (env.target_path(i) for i in chain(rule.files, rule.deps, lib_deps))
 
     variables = {}

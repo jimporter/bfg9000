@@ -22,5 +22,6 @@ args = parser.parse_args()
 backend = importlib.import_module('backends.{}'.format(args.backend))
 env = Environment(srcdir=os.getcwd(), builddir=os.path.abspath(args.builddir))
 
-execfile(bfgfile, builtins.all_builtins)
-backend.write(env, node.build_inputs)
+inputs = node.BuildInputs()
+execfile(bfgfile, builtins.bind(inputs))
+backend.write(env, inputs)

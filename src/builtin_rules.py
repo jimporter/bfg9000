@@ -16,13 +16,10 @@ class ObjectFile(node.Node):
         self.in_library = False
 
 class Executable(node.Node):
-    def __init__(self, name):
-        node.Node.__init__(self, name, potential_default=True)
+    pass
 
 class Library(node.Node):
-    def __init__(self, name, external=False):
-        node.Node.__init__(self, name, potential_default=True)
-        self.external = external
+    pass
 
 #####
 
@@ -52,7 +49,8 @@ class Command(node.Edge):
 #####
 
 @builtin
-def object_file(name=None, file=None, options=None, lang=None, deps=None):
+def object_file(build_inputs, name=None, file=None, options=None, lang=None,
+                deps=None):
     if file is None:
         raise TypeError('"file" argument must not be None')
     if lang is None:
@@ -62,49 +60,55 @@ def object_file(name=None, file=None, options=None, lang=None, deps=None):
     if name is None:
             name = os.path.splitext(file)[0]
     target = ObjectFile(name, lang)
-    Compile(target, source_file, options, deps)
+    build_inputs.add_edge(Compile(target, source_file, options, deps))
     return target
 
 @builtin
-def object_files(files, lang=None, options=None):
-    return [object_file(file=f, lang=lang, options=options) for f in files]
+def object_files(build_inputs, files, lang=None, options=None):
+    return [object_file(build_inputs, file=f, lang=lang, options=options)
+            for f in files]
 
-def _binary(target, files, libs=None, lang=None, compile_options=None,
-            link_options=None, deps=None):
+def _binary(build_inputs, target, files, libs=None, lang=None,
+            compile_options=None, link_options=None, deps=None):
     def make_obj(x):
-        return object_file(file=x, options=compile_options, lang=lang)
+        return object_file(build_inputs, file=x, options=compile_options,
+                           lang=lang)
+
+    build_inputs.fallback_default = target
     objects = [node.nodeify(i, ObjectFile, make_obj) for i in files]
     libs = [node.nodeify(i, Library, external=True) for i in libs or []]
-    return Link(target, objects, libs, compile_options, link_options, deps)
+    link = Link(target, objects, libs, compile_options, link_options, deps)
+    build_inputs.add_edge(link)
+    return link
 
 @builtin
-def executable(name, *args, **kwargs):
+def executable(build_inputs, name, *args, **kwargs):
     target = Executable(name)
-    _binary(target, *args, **kwargs)
+    _binary(build_inputs, target, *args, **kwargs)
     return target
 
 @builtin
-def library(name, *args, **kwargs):
+def library(build_inputs, name, *args, **kwargs):
     target = Library(name)
-    rule = _binary(target, *args, **kwargs)
+    rule = _binary(build_inputs, target, *args, **kwargs)
     for f in rule.files:
         f.in_library = True
     return target
 
 @builtin
-def alias(name, deps):
+def alias(build_inputs, name, deps):
     target = node.Node(name)
-    Alias(target, deps)
+    build_inputs.add_edge(Alias(target, deps))
     return target
 
 @builtin
-def command(name, cmd, deps=None):
+def command(build_inputs, name, cmd, deps=None):
     target = node.Node(name)
-    Command(target, cmd, deps)
+    build_inputs.add_edge(Command(target, cmd, deps))
     return target
 
 #####
 
 @builtin
-def default(*args):
-    node.build_inputs.default_targets.extend(args)
+def default(build_inputs, *args):
+    build_inputs.default_targets.extend(args)
