@@ -165,15 +165,18 @@ class MakeWriter(object):
                 name=i.name, opt='-' if i.optional else ''
             ))
 
+srcdir_var = MakeVariable('SRCDIR')
+def target_path(env, target):
+    name = env.target_name(target)
+    return os.path.join(str(srcdir_var), name) if target.is_source else name
 
 def write(env, build_inputs):
     writer = MakeWriter()
-    srcdir_var = writer.variable('SRCDIR', env.srcdir)
-    env.set_srcdir_var(srcdir_var)
+    writer.variable(srcdir_var, env.srcdir)
 
     writer.rule(
         target='all',
-        deps=(env.target_path(i) for i in build_inputs.default_targets)
+        deps=(target_path(env, i) for i in build_inputs.default_targets)
     )
     for e in build_inputs.edges:
         __rule_handlers__[type(e).__name__](e, writer, env)
@@ -235,7 +238,7 @@ def emit_object_file(rule, writer, env):
     directory = os.path.dirname(rule.target.name)
     order_only = [directory] if directory else None
     writer.rule(target=env.target_name(rule.target),
-                deps=[env.target_path(rule.file)], order_only=order_only,
+                deps=[target_path(env, rule.file)], order_only=order_only,
                 recipe=recipename, variables=variables)
     directory_rule(directory, writer)
 
@@ -275,7 +278,7 @@ def emit_link(rule, writer, env):
         ], flavor='define')
 
     lib_deps = (i for i in rule.libs if not i.is_source)
-    deps = (env.target_path(i) for i in chain(rule.files, rule.deps, lib_deps))
+    deps = (target_path(env, i) for i in chain(rule.files, rule.deps, lib_deps))
 
     variables = {}
     if rule.libs:
@@ -289,7 +292,7 @@ def emit_link(rule, writer, env):
     order_only = [directory] if directory else None
     writer.rule(
         target=env.target_name(rule.target), deps=deps, order_only=order_only,
-        recipe=MakeCall(recipename, *[env.target_path(i) for i in rule.files]),
+        recipe=MakeCall(recipename, *[target_path(env, i) for i in rule.files]),
         variables=variables
     )
     directory_rule(directory, writer)
@@ -298,7 +301,7 @@ def emit_link(rule, writer, env):
 def emit_alias(rule, writer, env):
     writer.rule(
         target=env.target_name(rule.target),
-        deps=(env.target_path(i) for i in rule.deps),
+        deps=(target_path(env, i) for i in rule.deps),
         recipe=[],
         phony=True
     )
@@ -307,7 +310,7 @@ def emit_alias(rule, writer, env):
 def emit_command(rule, writer, env):
     writer.rule(
         target=env.target_name(rule.target),
-        deps=(env.target_path(i) for i in rule.deps),
+        deps=(target_path(env, i) for i in rule.deps),
         recipe=rule.cmd,
         phony=True
     )

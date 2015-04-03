@@ -12,10 +12,6 @@ class Environment(object):
             'c++': toolchains.cc.CxxCompiler(),
         }
 
-    # TODO: This shouldn't be set here, since Environment should be reentrant
-    def set_srcdir_var(self, var):
-        self._srcdir_var = var
-
     def compiler(self, lang):
         if isinstance(lang, basestring):
             return self._compilers[lang]
@@ -37,9 +33,3 @@ class Environment(object):
             return '{}.o'.format(target.name)
         else:
             return target.name
-
-    def target_path(self, target, srcdir=None):
-        if srcdir is None:
-            srcdir = self._srcdir_var or self.srcdir
-        name = self.target_name(target)
-        return os.path.join(str(srcdir), name) if target.is_source else name

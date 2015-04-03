@@ -134,12 +134,16 @@ class NinjaWriter(object):
         if self._defaults:
             out.write('\ndefault {}\n'.format(' '.join(self._defaults)))
 
+srcdir_var = NinjaVariable('srcdir')
+def target_path(env, target):
+    name = env.target_name(target)
+    return os.path.join(str(srcdir_var), name) if target.is_source else name
+
 def write(env, build_inputs):
     writer = NinjaWriter()
-    srcdir_var = writer.variable('srcdir', env.srcdir)
-    env.set_srcdir_var(srcdir_var)
+    writer.variable(srcdir_var, env.srcdir)
 
-    writer.default(env.target_path(i) for i in build_inputs.default_targets)
+    writer.default(target_path(env, i) for i in build_inputs.default_targets)
     for e in build_inputs.edges:
         __rule_handlers__[type(e).__name__](e, writer, env)
 
@@ -175,7 +179,7 @@ def emit_object_file(rule, writer, env):
         variables[cflags] = ' '.join(cflags_value)
 
     writer.build(output=env.target_name(rule.target), rule=rulename,
-                 inputs=[env.target_path(rule.file)],
+                 inputs=[target_path(env, rule.file)],
                  variables=variables)
 
 @rule_handler('Link')
@@ -210,8 +214,8 @@ def emit_link(rule, writer, env):
 
     writer.build(
         output=env.target_name(rule.target), rule=rulename,
-        inputs=(env.target_path(i) for i in rule.files),
-        implicit=(env.target_path(i) for i in rule.libs if not i.is_source),
+        inputs=(target_path(env, i) for i in rule.files),
+        implicit=(target_path(env, i) for i in rule.libs if not i.is_source),
         variables=variables
     )
 
@@ -219,7 +223,7 @@ def emit_link(rule, writer, env):
 def emit_alias(rule, writer, env):
     writer.build(
         output=env.target_name(rule.target), rule='phony',
-        inputs=[env.target_path(i) for i in rule.deps]
+        inputs=[target_path(env, i) for i in rule.deps]
     )
 
 @rule_handler('Command')
@@ -228,6 +232,6 @@ def emit_command(rule, writer, env):
         writer.rule(name='command', command='$cmd')
         writer.build(
             output=env.target_name(rule.target), rule='command',
-            inputs=(env.target_path(i) for i in rule.deps),
+            inputs=(target_path(env, i) for i in rule.deps),
             variables={'cmd': ' && '.join(rule.cmd)}
         )
