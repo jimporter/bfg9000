@@ -1,7 +1,19 @@
 import fnmatch
 import os
+from collections import Iterable
 
 from builtins import builtin
+
+def listify(thing):
+    if thing is None:
+        return []
+    elif isinstance(thing, Iterable) and not isinstance(thing, basestring):
+        return thing
+    else:
+        return [thing]
+
+def strlistify(thing):
+    return (str(i) for i in listify(thing))
 
 @builtin
 def find(build_inputs, base='.', name='*', type=None):

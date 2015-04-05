@@ -1,5 +1,5 @@
 # -*- python -*-
 
-lib = library('library', files=['library.cpp'])
+lib = shared_library('library', files=['library.cpp'])
 prog = executable('program', files=['program.cpp'], libs=[lib])
 default(prog, lib)

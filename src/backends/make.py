@@ -185,7 +185,7 @@ def write(env, build_inputs):
         writer.write(out)
 
 def cmd_var(compiler, writer):
-    var = MakeVariable(compiler.safe_name)
+    var = MakeVariable(compiler.command_var)
     if not writer.has_variable(var):
         writer.variable(var, compiler.command_name)
     return var
@@ -209,18 +209,17 @@ def directory_rule(path, writer):
 @rule_handler('Compile')
 def emit_object_file(rule, writer, env):
     compiler = env.compiler(rule.file.lang)
-    cmd = cmd_var(compiler, writer)
-    cflags = MakeVariable('{}FLAGS'.format(cmd.name))
-    recipename = MakeVariable('RULE_{}'.format(cmd.name))
+    recipename = MakeVariable('RULE_{}'.format(compiler.name))
 
+    cflags = MakeVariable('{}FLAGS'.format(compiler.command_var))
     if not writer.has_variable(cflags, target='%'):
         writer.variable(cflags, '', target='%')
 
     if not writer.has_variable(recipename):
         writer.variable(recipename, [
-            compiler.compile_command(
-                cmd=cmd, input='$<', output='$@',
-                dep='$*.d', prevars=cflags
+            compiler.command(
+                cmd=cmd_var(compiler, writer), input='$<', output='$@',
+                dep='$*.d', pre_args=cflags
             ),
             "@sed -e 's/.*://' -e 's/\\\\$$//' < $*.d | fmt -1 | \\",
             "  sed -e 's/^ *//' -e 's/$$/:/' >> $*.d"
@@ -228,8 +227,8 @@ def emit_object_file(rule, writer, env):
 
     variables = {}
     cflags_value = []
-    if rule.target.in_library:
-        cflags_value.append(compiler.library_flag())
+    if rule.target.in_shared_library:
+        cflags_value.extend(compiler.library_args)
     if rule.options:
         cflags_value.append(rule.options)
     if cflags_value:
@@ -245,19 +244,19 @@ def emit_object_file(rule, writer, env):
     base = os.path.splitext(env.target_name(rule.file))[0]
     writer.include(base + '.d', True)
 
+def link_mode(target):
+    return {
+        'Executable'   : 'executable',
+        'SharedLibrary': 'shared_library',
+        'StaticLibrary': 'static_library',
+    }[type(target).__name__]
+
 @rule_handler('Link')
 def emit_link(rule, writer, env):
-    compiler = env.compiler(i.lang for i in rule.files)
-    cmd = cmd_var(compiler, writer)
+    linker = env.linker((i.lang for i in rule.files), link_mode(rule.target))
+    recipename = MakeVariable('RULE_{}'.format(linker.name))
 
-    if type(rule.target).__name__ == 'Library':
-        recipename = MakeVariable('RULE_{}_LINKLIB'.format(cmd.name))
-        mode = 'library'
-    else:
-        recipename = MakeVariable('RULE_{}_LINK'.format(cmd.name))
-        mode = 'executable'
-
-    cflags = MakeVariable('{}FLAGS'.format(cmd.name))
+    cflags = MakeVariable('{}FLAGS'.format(linker.command_var))
     if not writer.has_variable(cflags, target='%'):
         writer.variable(cflags, '', target='%')
 
@@ -271,20 +270,26 @@ def emit_link(rule, writer, env):
 
     if not writer.has_variable(recipename):
         writer.variable(recipename, [
-            compiler.link_command(
-                cmd=cmd, mode=mode, input='$1', output='$@',
-                prevars=cflags, postvars=[libs_var, ldflags]
+            linker.command(
+                cmd=cmd_var(linker, writer), input='$1', output='$@',
+                pre_args=cflags, post_args=[libs_var, ldflags]
             )
         ], flavor='define')
 
     lib_deps = (i for i in rule.libs if not i.is_source)
     deps = (target_path(env, i) for i in chain(rule.files, rule.deps, lib_deps))
 
-    variables = {}
-    if rule.libs:
-        variables[libs_var] = compiler.link_libs(rule.libs)
+    cflags_value = []
+    if linker.always_args:
+        cflags_value.extend(linker.always_args)
     if rule.compile_options:
-        variables[cflags] = rule.compile_options
+        cflags_value.append(rule.compile_options)
+
+    variables = {}
+    if cflags_value:
+        variables[cflags] = ' '.join(cflags_value)
+    if rule.libs:
+        variables[libs_var] = linker.link_libs(rule.libs)
     if rule.link_options:
         variables[ldflags] = rule.link_options
 

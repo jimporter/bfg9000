@@ -1,6 +1,6 @@
 # -*- python -*-
 
-lib = library('lib/library', files=['src/library.cpp'])
+lib = shared_library('lib/library', files=['src/library.cpp'])
 prog = executable('bin/program', files=['src/program.cpp'], libs=[lib],
                   link_options='-Llib -Wl,-rpath=lib')
 default(prog, lib)

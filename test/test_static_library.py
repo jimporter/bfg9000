@@ -15,13 +15,13 @@ def cleandir(path):
         pass
     os.mkdir(path)
 
-class TestLibrary(unittest.TestCase):
+class TestStaticLibrary(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         unittest.TestCase.__init__(self, *args, **kwargs)
         self.backend = os.getenv('BACKEND', 'make')
 
     def setUp(self):
-        os.chdir(os.path.join(basedir, os.path.join('library')))
+        os.chdir(os.path.join(basedir, os.path.join('static_library')))
         cleandir('build')
         subprocess.check_call([bfg9000, 'build', '--backend', self.backend])
         os.chdir('build')

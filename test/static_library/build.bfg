@@ -1,0 +1,5 @@
+# -*- python -*-
+
+lib = static_library('library', files=['library.cpp'])
+prog = executable('program', files=['program.cpp'], libs=[lib])
+default(prog, lib)

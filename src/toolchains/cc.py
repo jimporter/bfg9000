@@ -1,6 +1,6 @@
 import os
-from collections import Iterable
 
+import utils
 from node import Node
 
 def _lib_link_name(node):
@@ -9,53 +9,53 @@ def _lib_link_name(node):
     else:
         return str(node)
 
-def _listify(thing):
-    if thing is None:
-        return []
-    elif isinstance(thing, Iterable) and not isinstance(thing, basestring):
-        return thing
-    else:
-        return [thing]
-
-def _strlistify(thing):
-    return (str(i) for i in _listify(thing))
-
 class CcCompiler(object):
     def __init__(self):
         self.command_name = os.getenv('CC', 'cc')
-        self.safe_name = 'cc'
+        self.command_var = 'cc'
+        self.name = 'cc'
 
-    def compile_command(self, cmd, input, output, dep=None, prevars=None,
-                        postvars=None):
+    def command(self, cmd, input, output, dep=None, pre_args=None,
+                post_args=None):
         result = str(cmd)
-        if prevars:
-            result += ' ' + ' '.join(_strlistify(prevars))
+        if pre_args:
+            result += ' ' + ' '.join(utils.strlistify(pre_args))
         if dep:
             result += ' -MMD -MF ' + dep
-        if postvars:
-            result += ' ' + ' '.join(_strlistify(postvars))
+        if post_args:
+            result += ' ' + ' '.join(utils.strlistify(post_args))
         result += ' -c {input} -o {output}'.format(
             input=input, output=output
         )
         return result
 
-    def link_command(self, cmd, mode, input, output, libs=None, prevars=None,
-                     postvars=None):
+    @property
+    def library_args(self):
+        return ['-fPIC']
+
+class CcLinker(object):
+    def __init__(self, mode):
+        self.command_name = os.getenv('CC', 'cc')
+        self.command_var = 'cc'
+        self._mode = mode
+        self.name = 'link_cc'
+
+    def command(self, cmd, input, output, libs=None, pre_args=None,
+                post_args=None):
         result = str(cmd)
-        if mode == 'library':
-            result += ' -shared'
-        if prevars:
-            result += ' ' + ' '.join(_strlistify(prevars))
-        result += ' ' + ' '.join(_strlistify(input))
+        if pre_args:
+            result += ' ' + ' '.join(utils.strlistify(pre_args))
+        result += ' ' + ' '.join(utils.strlistify(input))
         if libs:
             result += ' ' + self.link_libs(libs)
-        if postvars:
-            result += ' ' + ' '.join(_strlistify(postvars))
+        if post_args:
+            result += ' ' + ' '.join(utils.strlistify(post_args))
         result += ' -o ' + str(output)
         return result
 
-    def library_flag(self):
-        return '-fPIC'
+    @property
+    def always_args(self):
+        return ['-shared', '-fPIC'] if self._mode == 'shared_library' else []
 
     def link_libs(self, iterable):
         return ' '.join(('-l' + _lib_link_name(i) for i in iterable))
@@ -63,4 +63,12 @@ class CcCompiler(object):
 class CxxCompiler(CcCompiler):
     def __init__(self):
         self.command_name = os.getenv('CXX', 'c++')
-        self.safe_name = 'cxx'
+        self.command_var = 'cxx'
+        self.name = 'cxx'
+
+class CxxLinker(CcLinker):
+    def __init__(self, mode):
+        self.command_name = os.getenv('CXX', 'c++')
+        self.command_var = 'cxx'
+        self._mode = mode
+        self.name = 'link_cxx'

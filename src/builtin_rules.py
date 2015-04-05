@@ -13,12 +13,18 @@ class ObjectFile(node.Node):
     def __init__(self, name, lang=None):
         node.Node.__init__(self, name)
         self.lang = lang
-        self.in_library = False
+        self.in_shared_library = False
 
 class Executable(node.Node):
     pass
 
 class Library(node.Node):
+    pass
+
+class SharedLibrary(Library):
+    pass
+
+class StaticLibrary(Library):
     pass
 
 #####
@@ -88,11 +94,17 @@ def executable(build_inputs, name, *args, **kwargs):
     return target
 
 @builtin
-def library(build_inputs, name, *args, **kwargs):
-    target = Library(name)
+def shared_library(build_inputs, name, *args, **kwargs):
+    target = SharedLibrary(name)
     rule = _binary(build_inputs, target, *args, **kwargs)
     for f in rule.files:
-        f.in_library = True
+        f.in_shared_library = True
+    return target
+
+@builtin
+def static_library(build_inputs, name, *args, **kwargs):
+    target = StaticLibrary(name)
+    _binary(build_inputs, target, *args, **kwargs)
     return target
 
 @builtin

@@ -151,7 +151,7 @@ def write(env, build_inputs):
         writer.write(out)
 
 def cmd_var(compiler, writer):
-    var = NinjaVariable(compiler.safe_name)
+    var = NinjaVariable(compiler.command_var)
     if not writer.has_variable(var):
         writer.variable(var, compiler.command_name)
     return var
@@ -159,61 +159,63 @@ def cmd_var(compiler, writer):
 @rule_handler('Compile')
 def emit_object_file(rule, writer, env):
     compiler = env.compiler(rule.file.lang)
-    cmd = cmd_var(compiler, writer)
-    rulename = cmd.name
-    cflags = NinjaVariable('{}flags'.format(cmd.name))
+    cflags = NinjaVariable('{}flags'.format(compiler.command_var))
 
-    if not writer.has_rule(rulename):
-        writer.rule(name=rulename, command=compiler.compile_command(
-            cmd=cmd, input='$in', output='$out', dep='$out.d',
-            prevars=cflags
+    if not writer.has_rule(compiler.name):
+        writer.rule(name=compiler.name, command=compiler.command(
+            cmd=cmd_var(compiler, writer), input='$in', output='$out',
+            dep='$out.d', pre_args=cflags
         ), depfile='$out.d')
 
     variables = {}
     cflags_value = []
-    if rule.target.in_library:
-        cflags_value.append(compiler.library_flag())
+    if rule.target.in_shared_library:
+        cflags_value.extend(compiler.library_args)
     if rule.options:
         cflags_value.append(rule.options)
     if cflags_value:
         variables[cflags] = ' '.join(cflags_value)
 
-    writer.build(output=env.target_name(rule.target), rule=rulename,
+    writer.build(output=env.target_name(rule.target), rule=compiler.name,
                  inputs=[target_path(env, rule.file)],
                  variables=variables)
 
+def link_mode(target):
+    return {
+        'Executable'   : 'executable',
+        'SharedLibrary': 'shared_library',
+        'StaticLibrary': 'static_library',
+    }[type(target).__name__]
+
 @rule_handler('Link')
 def emit_link(rule, writer, env):
-    compiler = env.compiler(i.lang for i in rule.files)
-    cmd = cmd_var(compiler, writer)
-
-    if type(rule.target).__name__ == 'Library':
-        rulename = '{}_linklib'.format(cmd.name)
-        mode = 'library'
-    else:
-        rulename = '{}_link'.format(cmd.name)
-        mode = 'executable'
-
-    cflags = NinjaVariable('{}flags'.format(cmd.name))
+    linker = env.linker((i.lang for i in rule.files), link_mode(rule.target))
+    cflags = NinjaVariable('{}flags'.format(linker.command_var))
     libs_var = NinjaVariable('libs')
     ldflags = NinjaVariable('ldflags')
 
-    if not writer.has_rule(rulename):
-        writer.rule(name=rulename, command=compiler.link_command(
-            cmd=cmd, mode=mode, input='$in', output='$out',
-            prevars=cflags, postvars=[libs_var, ldflags]
+    if not writer.has_rule(linker.name):
+        writer.rule(name=linker.name, command=linker.command(
+            cmd=cmd_var(linker, writer), input='$in', output='$out',
+            pre_args=cflags, post_args=[libs_var, ldflags]
         ))
 
-    variables = {}
-    if rule.libs:
-        variables[libs_var] = compiler.link_libs(rule.libs)
+    cflags_value = []
+    if linker.always_args:
+        cflags_value.extend(linker.always_args)
     if rule.compile_options:
-        variables[cflags] = rule.compile_options
+        cflags_value.append(rule.compile_options)
+
+    variables = {}
+    if cflags_value:
+        variables[cflags] = ' '.join(cflags_value)
+    if rule.libs:
+        variables[libs_var] = linker.link_libs(rule.libs)
     if rule.link_options:
         variables[ldflags] = rule.link_options
 
     writer.build(
-        output=env.target_name(rule.target), rule=rulename,
+        output=env.target_name(rule.target), rule=linker.name,
         inputs=(target_path(env, i) for i in rule.files),
         implicit=(target_path(env, i) for i in rule.libs if not i.is_source),
         variables=variables
