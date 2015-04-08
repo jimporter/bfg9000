@@ -176,7 +176,7 @@ def write(env, build_inputs):
 
     writer.rule(
         target='all',
-        deps=(target_path(env, i) for i in build_inputs.default_targets)
+        deps=(target_path(env, i) for i in build_inputs.get_default_targets())
     )
     for e in build_inputs.edges:
         __rule_handlers__[type(e).__name__](e, writer, env)

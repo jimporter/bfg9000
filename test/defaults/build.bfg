@@ -1,0 +1,5 @@
+# -*- python -*-
+
+a = executable('a', files=['a.cpp'])
+b = executable('b', files=['b.cpp'])
+default(a, b)

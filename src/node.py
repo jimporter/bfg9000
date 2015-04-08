@@ -29,21 +29,16 @@ def nodeify(x, valid_type, creator=None, **kwargs):
 class BuildInputs(object):
     def __init__(self):
         self.edges = []
-        self._default_targets = []
+        self.default_targets = []
         self.fallback_default = None
 
     def add_edge(self, edge):
         self.edges.append(edge)
 
-    @property
-    def default_targets(self):
-        if self._default_targets:
-            return self._default_targets
+    def get_default_targets(self):
+        if self.default_targets:
+            return self.default_targets
         elif self.fallback_default:
             return [self.fallback_default]
         else:
             return []
-
-    @default_targets.setter
-    def default_targets(self, value):
-        self._default_targets = value

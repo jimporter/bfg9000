@@ -143,7 +143,10 @@ def write(env, build_inputs):
     writer = NinjaWriter()
     writer.variable(srcdir_var, env.srcdir)
 
-    writer.default(target_path(env, i) for i in build_inputs.default_targets)
+    # TODO: should this be an "all" rule and then set the default to "all"?
+    writer.default(
+        target_path(env, i) for i in build_inputs.get_default_targets()
+    )
     for e in build_inputs.edges:
         __rule_handlers__[type(e).__name__](e, writer, env)
 
