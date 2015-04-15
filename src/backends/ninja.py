@@ -165,6 +165,8 @@ def all_rule(default_targets, writer, env):
     )
 
 def install_rule(install_targets, writer, env):
+    if not install_targets:
+        return
     prefix = writer.variable('prefix', env.install_prefix)
     # TODO: Separate variables for installing programs and data files?
     install = writer.variable('install', 'install')
