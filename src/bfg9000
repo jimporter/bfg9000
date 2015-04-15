@@ -17,10 +17,12 @@ bfgfile = 'build.bfg'
 parser = argparse.ArgumentParser()
 parser.add_argument('builddir', help='build directory')
 parser.add_argument('--backend', help='backend', default='make')
+parser.add_argument('--prefix', help='installation prefix', default='/usr')
 args = parser.parse_args()
 
 backend = importlib.import_module('backends.{}'.format(args.backend))
-env = Environment(srcdir=os.getcwd(), builddir=os.path.abspath(args.builddir))
+env = Environment(srcdir=os.getcwd(), builddir=os.path.abspath(args.builddir),
+                  install_prefix=os.path.abspath(args.prefix))
 
 inputs = node.BuildInputs()
 execfile(bfgfile, builtins.bind(inputs))

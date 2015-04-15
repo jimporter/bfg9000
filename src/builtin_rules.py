@@ -16,10 +16,10 @@ class ObjectFile(node.Node):
         self.in_shared_library = False
 
 class Executable(node.Node):
-    pass
+    install_dir = 'bin'
 
 class Library(node.Node):
-    pass
+    install_dir = 'lib'
 
 class SharedLibrary(Library):
     pass
@@ -124,3 +124,9 @@ def command(build_inputs, name, cmd, deps=None):
 @builtin
 def default(build_inputs, *args):
     build_inputs.default_targets.extend(args)
+
+@builtin
+def install(build_inputs, *args):
+    default(build_inputs, *args)
+    for i in args:
+        build_inputs.install_targets.append((i, i.install_dir))

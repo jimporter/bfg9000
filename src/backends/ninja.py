@@ -143,10 +143,8 @@ def write(env, build_inputs):
     writer = NinjaWriter()
     writer.variable(srcdir_var, env.srcdir)
 
-    # TODO: should this be an "all" rule and then set the default to "all"?
-    writer.default(
-        target_path(env, i) for i in build_inputs.get_default_targets()
-    )
+    all_rule(build_inputs.get_default_targets(), writer, env)
+    install_rule(build_inputs.install_targets, writer, env)
     for e in build_inputs.edges:
         __rule_handlers__[type(e).__name__](e, writer, env)
 
@@ -158,6 +156,34 @@ def cmd_var(compiler, writer):
     if not writer.has_variable(var):
         writer.variable(var, compiler.command_name)
     return var
+
+def all_rule(default_targets, writer, env):
+    writer.default(['all'])
+    writer.build(
+        output='all', rule='phony',
+        inputs=(target_path(env, i) for i in default_targets)
+    )
+
+def install_rule(install_targets, writer, env):
+    prefix = writer.variable('prefix', env.install_prefix)
+    # TODO: Separate variables for installing programs and data files?
+    install = writer.variable('install', 'install')
+
+    if not writer.has_rule('command'):
+        writer.rule(name='command', command='$cmd')
+
+    commands = [
+        '{install} -D {source} {dest}'.format(
+            install=install,
+            source=target_path(env, target),
+            dest=os.path.join(str(prefix), directory,
+                              os.path.basename(target_path(env, target)))
+        ) for target, directory in install_targets
+    ]
+    writer.build(
+        output='install', rule='command', implicit=['all'],
+        variables={'cmd': ' && '.join(commands)}
+    )
 
 @rule_handler('Compile')
 def emit_object_file(rule, writer, env):
@@ -235,8 +261,8 @@ def emit_alias(rule, writer, env):
 def emit_command(rule, writer, env):
     if not writer.has_rule('command'):
         writer.rule(name='command', command='$cmd')
-        writer.build(
-            output=env.target_name(rule.target), rule='command',
-            inputs=(target_path(env, i) for i in rule.deps),
-            variables={'cmd': ' && '.join(rule.cmd)}
-        )
+    writer.build(
+        output=env.target_name(rule.target), rule='command',
+        inputs=(target_path(env, i) for i in rule.deps),
+        variables={'cmd': ' && '.join(rule.cmd)}
+    )

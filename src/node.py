@@ -30,6 +30,7 @@ class BuildInputs(object):
     def __init__(self):
         self.edges = []
         self.default_targets = []
+        self.install_targets = []
         self.fallback_default = None
 
     def add_edge(self, edge):

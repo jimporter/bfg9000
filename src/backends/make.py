@@ -19,7 +19,7 @@ MakeRule = namedtuple('MakeRule', ['target', 'deps', 'order_only', 'recipe',
 
 class MakeVariable(object):
     def __init__(self, name):
-        self.name = re.sub('r[\w:#=]', '_', name).upper()
+        self.name = re.sub(r'[\s:#=]', '_', name)
 
     def use(self):
         return '$({})'.format(self.name)
@@ -165,7 +165,7 @@ class MakeWriter(object):
                 name=i.name, opt='-' if i.optional else ''
             ))
 
-srcdir_var = MakeVariable('SRCDIR')
+srcdir_var = MakeVariable('srcdir')
 def target_path(env, target):
     name = env.target_name(target)
     return os.path.join(str(srcdir_var), name) if target.is_source else name
@@ -174,10 +174,8 @@ def write(env, build_inputs):
     writer = MakeWriter()
     writer.variable(srcdir_var, env.srcdir)
 
-    writer.rule(
-        target='all',
-        deps=(target_path(env, i) for i in build_inputs.get_default_targets())
-    )
+    all_rule(build_inputs.get_default_targets(), writer, env)
+    install_rule(build_inputs.install_targets, writer, env)
     for e in build_inputs.edges:
         __rule_handlers__[type(e).__name__](e, writer, env)
 
@@ -185,10 +183,32 @@ def write(env, build_inputs):
         writer.write(out)
 
 def cmd_var(compiler, writer):
-    var = MakeVariable(compiler.command_var)
+    var = MakeVariable(compiler.command_var.upper())
     if not writer.has_variable(var):
         writer.variable(var, compiler.command_name)
     return var
+
+def all_rule(default_targets, writer, env):
+    writer.rule(
+        target='all',
+        deps=(target_path(env, i) for i in default_targets)
+    )
+
+def install_rule(install_targets, writer, env):
+    if not install_targets:
+        return
+    prefix = writer.variable('prefix', env.install_prefix)
+    # TODO: Separate variables for installing programs and data files?
+    install = writer.variable('INSTALL', 'install')
+
+    writer.rule(target='install', deps=['all'], recipe=[
+        '{install} -D {source} {dest}'.format(
+            install=install,
+            source=target_path(env, target),
+            dest=os.path.join(str(prefix), directory,
+                              os.path.basename(target_path(env, target)))
+        ) for target, directory in install_targets
+    ], phony=True)
 
 _seen_dirs = set() # TODO: Put this on the writer
 def directory_rule(path, writer):
@@ -209,9 +229,9 @@ def directory_rule(path, writer):
 @rule_handler('Compile')
 def emit_object_file(rule, writer, env):
     compiler = env.compiler(rule.file.lang)
-    recipename = MakeVariable('RULE_{}'.format(compiler.name))
+    recipename = MakeVariable('RULE_{}'.format(compiler.name.upper()))
 
-    cflags = MakeVariable('{}FLAGS'.format(compiler.command_var))
+    cflags = MakeVariable('{}FLAGS'.format(compiler.command_var.upper()))
     if not writer.has_variable(cflags, target='%'):
         writer.variable(cflags, '', target='%')
 
@@ -254,9 +274,9 @@ def link_mode(target):
 @rule_handler('Link')
 def emit_link(rule, writer, env):
     linker = env.linker((i.lang for i in rule.files), link_mode(rule.target))
-    recipename = MakeVariable('RULE_{}'.format(linker.name))
+    recipename = MakeVariable('RULE_{}'.format(linker.name.upper()))
 
-    cflags = MakeVariable('{}FLAGS'.format(linker.command_var))
+    cflags = MakeVariable('{}FLAGS'.format(linker.command_var.upper()))
     if not writer.has_variable(cflags, target='%'):
         writer.variable(cflags, '', target='%')
 

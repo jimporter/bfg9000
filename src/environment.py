@@ -5,9 +5,11 @@ import toolchains.cc
 from node import Node
 
 class Environment(object):
-    def __init__(self, srcdir, builddir):
+    def __init__(self, srcdir, builddir, install_prefix):
         self.srcdir = srcdir
         self.builddir = builddir
+        self.install_prefix = install_prefix
+
         self._compilers = {
             'c'  : toolchains.cc.CcCompiler(),
             'c++': toolchains.cc.CxxCompiler(),
