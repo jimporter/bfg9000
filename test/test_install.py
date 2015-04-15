@@ -1,38 +1,21 @@
-import shutil
-import unittest
-
-import os
+import os.path
 import subprocess
 
-basedir = os.path.abspath(os.path.dirname(__file__))
-builddir = 'build'
-bfg9000 = os.path.join(basedir, '../src/bfg9000')
+from integration import IntegrationTest, cleandir
 
-def cleandir(path):
-    try:
-        shutil.rmtree(path)
-    except:
-        pass
-    os.mkdir(path)
-
-class TestInstall(unittest.TestCase):
+class TestInstall(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        unittest.TestCase.__init__(self, *args, **kwargs)
-        self.backend = os.getenv('BACKEND', 'make')
+        IntegrationTest.__init__(self, 'install', *args, **kwargs)
+        self.extra_args = ['--prefix', 'dist']
 
     def setUp(self):
-        os.chdir(os.path.join(basedir, 'install'))
-        cleandir('build')
-        cleandir('dist')
-        subprocess.check_call([
-            bfg9000, 'build', '--backend', self.backend, '--prefix', 'dist'
-        ])
-        os.chdir('build')
+        IntegrationTest.setUp(self)
+        cleandir(os.path.join(self.srcdir, 'dist'))
 
     def test_all(self):
         subprocess.check_call([self.backend, 'install'])
         self.assertEqual(subprocess.check_output(
-            [os.path.join(basedir, 'install', 'dist', 'bin', 'program')]
+            [os.path.join(self.srcdir, 'dist', 'bin', 'program')]
         ), 'hello, library!\n')
 
 if __name__ == '__main__':
