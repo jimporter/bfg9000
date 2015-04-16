@@ -9,6 +9,10 @@ class SourceFile(node.Node):
         node.Node.__init__(self, name)
         self.lang = lang
 
+class HeaderFile(node.Node):
+    install_kind = 'data'
+    install_dir = 'include'
+
 class ObjectFile(node.Node):
     def __init__(self, name, lang=None):
         node.Node.__init__(self, name)
@@ -16,9 +20,11 @@ class ObjectFile(node.Node):
         self.in_shared_library = False
 
 class Executable(node.Node):
+    install_kind = 'program'
     install_dir = 'bin'
 
 class Library(node.Node):
+    install_kind = 'program'
     install_dir = 'lib'
 
 class SharedLibrary(Library):
@@ -53,6 +59,10 @@ class Command(node.Edge):
         node.Edge.__init__(self, target, deps)
 
 #####
+
+@builtin
+def header(build_inputs, name):
+    return HeaderFile(name)
 
 @builtin
 def object_file(build_inputs, name=None, file=None, options=None, lang=None,

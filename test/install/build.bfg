@@ -2,4 +2,5 @@
 
 lib = shared_library('library', files=['library.cpp'])
 prog = executable('program', files=['program.cpp'], libs=[lib])
-install(prog, lib)
+hdr = header('library.hpp')
+install(prog, lib, hdr)

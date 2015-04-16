@@ -3,7 +3,6 @@ import re
 from collections import OrderedDict, namedtuple
 from itertools import chain
 
-from builtin_rules import ObjectFile
 from languages import ext2lang
 
 __rule_handlers__ = {}
@@ -198,12 +197,23 @@ def install_rule(install_targets, writer, env):
     if not install_targets:
         return
     prefix = writer.variable('prefix', env.install_prefix)
-    # TODO: Separate variables for installing programs and data files?
+
     install = writer.variable('INSTALL', 'install')
+    def install_cmd(kind):
+        if kind == 'program':
+            install_program = MakeVariable('INSTALL_PROGRAM')
+            if not writer.has_variable(install_program):
+                writer.variable(install_program, install)
+            return install_program
+        else:
+            install_data = MakeVariable('INSTALL_DATA')
+            if not writer.has_variable(install_data):
+                writer.variable(install_data, '{} -m 644'.format(install))
+            return install_data
 
     writer.rule(target='install', deps=['all'], recipe=[
         '{install} -D {source} {dest}'.format(
-            install=install,
+            install=install_cmd(target.install_kind),
             source=target_path(env, target),
             dest=os.path.join(str(prefix), directory,
                               os.path.basename(target_path(env, target)))
