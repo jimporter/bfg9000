@@ -193,13 +193,17 @@ def all_rule(default_targets, writer, env):
         deps=(target_path(env, i) for i in default_targets)
     )
 
+# TODO: Write a better `install` program to simplify this
 def install_rule(install_targets, writer, env):
     if not install_targets:
         return
     prefix = writer.variable('prefix', env.install_prefix)
 
-    install = writer.variable('INSTALL', 'install')
     def install_cmd(kind):
+        install = MakeVariable('INSTALL')
+        if not writer.has_variable(install):
+            writer.variable(install, 'install')
+
         if kind == 'program':
             install_program = MakeVariable('INSTALL_PROGRAM')
             if not writer.has_variable(install_program):
@@ -211,14 +215,22 @@ def install_rule(install_targets, writer, env):
                 writer.variable(install_data, '{} -m 644'.format(install))
             return install_data
 
-    writer.rule(target='install', deps=['all'], recipe=[
+    recipe = [
         '{install} -D {source} {dest}'.format(
-            install=install_cmd(target.install_kind),
-            source=target_path(env, target),
-            dest=os.path.join(str(prefix), directory,
-                              os.path.basename(target_path(env, target)))
-        ) for target, directory in install_targets
-    ], phony=True)
+            install=install_cmd(i.install_kind),
+            source=target_path(env, i),
+            dest=os.path.join(str(prefix), i.install_dir,
+                              os.path.basename(target_path(env, i)))
+        ) for i in install_targets.files
+    ] + [
+        'mkdir -p {dest} && cp -r {source} {dest}'.format(
+            # TODO: Handle directories in the objdir
+            source=os.path.join(str(srcdir_var), i.path, '*'),
+            dest=os.path.join(str(prefix), i.install_dir)
+        ) for i in install_targets.directories
+    ]
+
+    writer.rule(target='install', deps=['all'], recipe=recipe, phony=True)
 
 _seen_dirs = set() # TODO: Put this on the writer
 def directory_rule(path, writer):
@@ -259,6 +271,11 @@ def emit_object_file(rule, writer, env):
     cflags_value = []
     if rule.target.in_shared_library:
         cflags_value.extend(compiler.library_args)
+    if rule.include:
+        # TODO: Handle directories in the objdir
+        cflags_value.append(compiler.include_dirs(
+            os.path.join(str(srcdir_var), i.path) for i in rule.include
+        ))
     if rule.options:
         cflags_value.append(rule.options)
     if cflags_value:

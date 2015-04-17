@@ -33,11 +33,18 @@ class SharedLibrary(Library):
 class StaticLibrary(Library):
     pass
 
+class HeaderDirectory(object):
+    install_dir = 'include'
+
+    def __init__(self, path):
+        self.path = path
+
 #####
 
 class Compile(node.Edge):
-    def __init__(self, target, file, options=None, deps=None):
+    def __init__(self, target, file, include=None, options=None, deps=None):
         self.file = file
+        self.include = include
         self.options = options
         node.Edge.__init__(self, target, deps)
 
@@ -65,8 +72,8 @@ def header(build_inputs, name):
     return HeaderFile(name)
 
 @builtin
-def object_file(build_inputs, name=None, file=None, options=None, lang=None,
-                deps=None):
+def object_file(build_inputs, name=None, file=None, include=None, options=None,
+                lang=None, deps=None):
     if file is None:
         raise TypeError('"file" argument must not be None')
     if lang is None:
@@ -76,19 +83,19 @@ def object_file(build_inputs, name=None, file=None, options=None, lang=None,
     if name is None:
             name = os.path.splitext(file)[0]
     target = ObjectFile(name, lang)
-    build_inputs.add_edge(Compile(target, source_file, options, deps))
+    build_inputs.add_edge(Compile(target, source_file, include, options, deps))
     return target
 
 @builtin
-def object_files(build_inputs, files, lang=None, options=None):
-    return [object_file(build_inputs, file=f, lang=lang, options=options)
-            for f in files]
+def object_files(build_inputs, files, include=None, options=None, lang=None):
+    return [object_file(build_inputs, file=f, include=include, options=options,
+                        lang=lang) for f in files]
 
 def _binary(build_inputs, target, files, libs=None, lang=None,
-            compile_options=None, link_options=None, deps=None):
+            include=None, compile_options=None, link_options=None, deps=None):
     def make_obj(x):
-        return object_file(build_inputs, file=x, options=compile_options,
-                           lang=lang)
+        return object_file(build_inputs, file=x, include=include,
+                           options=compile_options, lang=lang)
 
     build_inputs.fallback_default = target
     objects = [node.nodeify(i, ObjectFile, make_obj) for i in files]
@@ -137,6 +144,13 @@ def default(build_inputs, *args):
 
 @builtin
 def install(build_inputs, *args):
-    default(build_inputs, *args)
     for i in args:
-        build_inputs.install_targets.append((i, i.install_dir))
+        if isinstance(i, HeaderDirectory):
+            build_inputs.install_targets.directories.append(i)
+        else:
+            default(build_inputs, i)
+            build_inputs.install_targets.files.append(i)
+
+@builtin
+def header_directory(build_inputs, directory):
+    return HeaderDirectory(directory)

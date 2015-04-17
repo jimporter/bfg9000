@@ -1,6 +1,8 @@
 # -*- python -*-
 
-lib = shared_library('lib/library', files=['src/library.cpp'])
-prog = executable('bin/program', files=['src/program.cpp'], libs=[lib],
-                  link_options='-Llib -Wl,-rpath=lib')
-default(prog, lib)
+include = header_directory('include')
+lib = shared_library('lib/library', files=['src/library.cpp'],
+                     include=[include])
+prog = executable('bin/program', files=['src/program.cpp'], include=[include],
+                  libs=[lib], link_options='-Llib -Wl,-rpath=lib')
+install(prog, lib, include)

@@ -33,6 +33,9 @@ class CcCompiler(object):
     def library_args(self):
         return ['-fPIC']
 
+    def include_dirs(self, iterable):
+        return ' '.join('-I' + i for i in iterable)
+
 class CcLinker(object):
     def __init__(self, mode):
         self.command_name = os.getenv('CC', 'cc')
@@ -58,7 +61,7 @@ class CcLinker(object):
         return ['-shared', '-fPIC'] if self._mode == 'shared_library' else []
 
     def link_libs(self, iterable):
-        return ' '.join(('-l' + _lib_link_name(i) for i in iterable))
+        return ' '.join('-l' + _lib_link_name(i) for i in iterable)
 
 class CxxCompiler(CcCompiler):
     def __init__(self):

@@ -26,12 +26,20 @@ def nodeify(x, valid_type, creator=None, **kwargs):
     else:
         return valid_type(x, **kwargs)
 
+class InstallInputs(object):
+    def __init__(self):
+        self.files = []
+        self.directories = []
+
+    def __nonzero__(self):
+        return bool(self.files or self.directories)
+
 class BuildInputs(object):
     def __init__(self):
         self.edges = []
         self.default_targets = []
-        self.install_targets = []
         self.fallback_default = None
+        self.install_targets = InstallInputs()
 
     def add_edge(self, edge):
         self.edges.append(edge)

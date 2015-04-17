@@ -164,20 +164,24 @@ def all_rule(default_targets, writer, env):
         inputs=(target_path(env, i) for i in default_targets)
     )
 
+# TODO: Write a better `install` program to simplify this
 def install_rule(install_targets, writer, env):
     if not install_targets:
         return
     prefix = writer.variable('prefix', env.install_prefix)
 
-    install = writer.variable('install', 'install')
     def install_cmd(kind):
+        install = NinjaVariable('install')
+        if not writer.has_variable(install):
+            writer.variable(install, 'install')
+
         if kind == 'program':
-            install_program = NinjaVariable('INSTALL_PROGRAM')
+            install_program = NinjaVariable('install_program')
             if not writer.has_variable(install_program):
                 writer.variable(install_program, install)
             return install_program
         else:
-            install_data = NinjaVariable('INSTALL_DATA')
+            install_data = NinjaVariable('install_data')
             if not writer.has_variable(install_data):
                 writer.variable(install_data, '{} -m 644'.format(install))
             return install_data
@@ -187,12 +191,19 @@ def install_rule(install_targets, writer, env):
 
     commands = [
         '{install} -D {source} {dest}'.format(
-            install=install_cmd(target.install_kind),
-            source=target_path(env, target),
-            dest=os.path.join(str(prefix), directory,
-                              os.path.basename(target_path(env, target)))
-        ) for target, directory in install_targets
+            install=install_cmd(i.install_kind),
+            source=target_path(env, i),
+            dest=os.path.join(str(prefix), i.install_dir,
+                              os.path.basename(target_path(env, i)))
+        ) for i in install_targets.files
+    ] + [
+        'mkdir -p {dest} && cp -r {source} {dest}'.format(
+            # TODO: Handle directories in the objdir
+            source=os.path.join(str(srcdir_var), i.path, '*'),
+            dest=os.path.join(str(prefix), i.install_dir)
+        ) for i in install_targets.directories
     ]
+
     writer.build(
         output='install', rule='command', implicit=['all'],
         variables={'cmd': ' && '.join(commands)}
@@ -213,6 +224,11 @@ def emit_object_file(rule, writer, env):
     cflags_value = []
     if rule.target.in_shared_library:
         cflags_value.extend(compiler.library_args)
+    if rule.include:
+        # TODO: Handle directories in the objdir
+        cflags_value.append(compiler.include_dirs(
+            os.path.join(str(srcdir_var), i.path) for i in rule.include
+        ))
     if rule.options:
         cflags_value.append(rule.options)
     if cflags_value:

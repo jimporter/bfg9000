@@ -14,6 +14,7 @@ class TestInstall(IntegrationTest):
 
     def test_install(self):
         subprocess.check_call([self.backend, 'install'])
+
         self.assertTrue(os.path.exists(os.path.join(
             self.srcdir, 'dist', 'include', 'library.hpp'
         )))
@@ -24,6 +25,7 @@ class TestInstall(IntegrationTest):
         self.assertTrue(os.path.exists(os.path.join(
             self.srcdir, 'dist', 'lib', 'liblibrary.so'
         )))
+
         self.assertEqual(subprocess.check_output(
             [os.path.join(self.srcdir, 'dist', 'bin', 'program')]
         ), 'hello, library!\n')
