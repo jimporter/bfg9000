@@ -1,5 +1,6 @@
 import os
 import subprocess
+import unittest
 
 from integration import IntegrationTest, cleandir
 
