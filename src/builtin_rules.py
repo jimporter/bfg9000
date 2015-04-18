@@ -3,6 +3,7 @@ import os
 from builtins import builtin
 from languages import ext2lang
 import node
+import utils
 
 class SourceFile(node.Node):
     def __init__(self, name, lang=None):
@@ -78,12 +79,13 @@ def object_file(build_inputs, name=None, file=None, include=None, options=None,
         raise TypeError('"file" argument must not be None')
     if lang is None:
         lang = ext2lang.get( os.path.splitext(file)[1] )
-    source_file = node.nodeify(file, SourceFile, lang=lang)
+    source_file = utils.objectify(file, SourceFile, lang=lang)
+    includes = utils.objectify_list(include, HeaderDirectory)
 
     if name is None:
             name = os.path.splitext(file)[0]
     target = ObjectFile(name, lang)
-    build_inputs.add_edge(Compile(target, source_file, include, options, deps))
+    build_inputs.add_edge(Compile(target, source_file, includes, options, deps))
     return target
 
 @builtin
@@ -98,8 +100,8 @@ def _binary(build_inputs, target, files, libs=None, lang=None,
                            options=compile_options, lang=lang)
 
     build_inputs.fallback_default = target
-    objects = [node.nodeify(i, ObjectFile, make_obj) for i in files]
-    libs = [node.nodeify(i, Library, external=True) for i in libs or []]
+    objects = utils.objectify_list(files, ObjectFile, make_obj)
+    libs = utils.objectify_list(libs, Library, external=True)
     link = Link(target, objects, libs, compile_options, link_options, deps)
     build_inputs.add_edge(link)
     return link

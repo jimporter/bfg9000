@@ -13,7 +13,18 @@ def listify(thing):
         return [thing]
 
 def strlistify(thing):
-    return (str(i) for i in listify(thing))
+    return [str(i) for i in listify(thing)]
+
+def objectify(x, valid_type, creator=None, **kwargs):
+    if isinstance(x, valid_type):
+        return x
+    elif creator:
+        return creator(x)
+    else:
+        return valid_type(x, **kwargs)
+
+def objectify_list(iterable, *args, **kwargs):
+    return [objectify(i, *args, **kwargs) for i in listify(iterable)]
 
 @builtin
 def find(build_inputs, base='.', name='*', type=None):
