@@ -1,7 +1,7 @@
 import os
 
 import utils
-from node import Node
+from build_inputs import Node
 
 def _lib_link_name(node):
     if isinstance(node, Node):

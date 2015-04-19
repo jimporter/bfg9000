@@ -8,8 +8,8 @@ import sys
 
 import builtins
 import builtin_rules
-import node
 import utils
+from build_inputs import BuildInputs
 from environment import Environment
 
 bfgfile = 'build.bfg'
@@ -24,6 +24,6 @@ backend = importlib.import_module('backends.{}'.format(args.backend))
 env = Environment(srcdir=os.getcwd(), builddir=os.path.abspath(args.builddir),
                   install_prefix=os.path.abspath(args.prefix))
 
-inputs = node.BuildInputs()
-execfile(bfgfile, builtins.bind(inputs))
-backend.write(env, inputs)
+build = BuildInputs()
+execfile(bfgfile, builtins.bind(build))
+backend.write(env, build)

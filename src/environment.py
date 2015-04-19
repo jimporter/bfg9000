@@ -2,7 +2,6 @@ import os.path
 
 import toolchains.ar
 import toolchains.cc
-from node import Node
 
 class Environment(object):
     def __init__(self, srcdir, builddir, install_prefix):

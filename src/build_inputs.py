@@ -20,6 +20,10 @@ class Edge(object):
         self.target = target
         self.deps = utils.objectify_list(deps, Node)
 
+class Directory(object):
+    def __init__(self, path):
+        self.path = path
+
 class InstallInputs(object):
     def __init__(self):
         self.files = []
