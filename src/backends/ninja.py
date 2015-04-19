@@ -226,7 +226,7 @@ def emit_object_file(rule, writer, env):
         cflags_value.extend(compiler.library_args)
     if rule.include:
         # TODO: Handle directories in the objdir
-        cflags_value.append(compiler.include_dirs(
+        cflags_value.extend(compiler.include_dirs(
             os.path.join(str(srcdir_var), i.path) for i in rule.include
         ))
     if rule.options:
@@ -268,7 +268,7 @@ def emit_link(rule, writer, env):
     if cflags_value:
         variables[cflags] = ' '.join(cflags_value)
     if rule.libs:
-        variables[libs_var] = linker.link_libs(rule.libs)
+        variables[libs_var] = ' '.join(linker.link_libs(rule.libs))
     if rule.link_options:
         variables[ldflags] = rule.link_options
 

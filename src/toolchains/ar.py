@@ -12,10 +12,9 @@ class ArLinker(object):
     # are useless here.
     def command(self, cmd, input, output, libs=None, pre_args=None,
                 post_args=None):
-        result = str(cmd)
-        result += ' crs ' + str(output)
-        result += ' ' + ' '.join(utils.strlistify(input))
-        return result
+        result = [str(cmd), 'crs', str(output)]
+        result.extend(utils.strlistify(input))
+        return ' '.join(result)
 
     @property
     def always_args(self):
