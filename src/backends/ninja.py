@@ -4,10 +4,10 @@ import sys
 from collections import OrderedDict, namedtuple
 from itertools import chain
 
-__rule_handlers__ = {}
+_rule_handlers = {}
 def rule_handler(rule_name):
     def decorator(fn):
-        __rule_handlers__[rule_name] = fn
+        _rule_handlers[rule_name] = fn
         return fn
     return decorator
 
@@ -146,7 +146,7 @@ def write(env, build_inputs):
     all_rule(build_inputs.get_default_targets(), writer, env)
     install_rule(build_inputs.install_targets, writer, env)
     for e in build_inputs.edges:
-        __rule_handlers__[type(e).__name__](e, writer, env)
+        _rule_handlers[type(e).__name__](e, writer, env)
 
     with open(os.path.join(env.builddir, 'build.ninja'), 'w') as out:
         writer.write(out)
