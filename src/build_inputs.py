@@ -14,15 +14,14 @@ class Node(object):
             type=type(self).__name__, name=repr(self.name)
         )
 
+class Directory(Node):
+    pass
+
 class Edge(object):
     def __init__(self, target, deps=None):
         target.creator = self
         self.target = target
         self.deps = utils.objectify_list(deps, Node)
-
-class Directory(object):
-    def __init__(self, path):
-        self.path = path
 
 class InstallInputs(object):
     def __init__(self):

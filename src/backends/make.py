@@ -224,8 +224,7 @@ def install_rule(install_targets, writer, env):
         ) for i in install_targets.files
     ] + [
         'mkdir -p {dest} && cp -r {source} {dest}'.format(
-            # TODO: Handle directories in the objdir
-            source=os.path.join(str(srcdir_var), i.path, '*'),
+            source=os.path.join(target_path(env, i), '*'),
             dest=os.path.join(str(prefix), i.install_dir)
         ) for i in install_targets.directories
     ]
@@ -272,9 +271,8 @@ def emit_object_file(rule, writer, env):
     if rule.target.in_shared_library:
         cflags_value.extend(compiler.library_args)
     if rule.include:
-        # TODO: Handle directories in the objdir
         cflags_value.extend(compiler.include_dirs(
-            os.path.join(str(srcdir_var), i.path) for i in rule.include
+            target_path(env, i) for i in rule.include
         ))
     if rule.options:
         cflags_value.append(rule.options)
