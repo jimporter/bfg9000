@@ -1,13 +1,6 @@
 import os
 
 import utils
-from build_inputs import Node
-
-def _lib_link_name(node):
-    if isinstance(node, Node):
-        return os.path.basename(node.name)
-    else:
-        return str(node)
 
 class CcCompiler(object):
     def __init__(self):
@@ -31,8 +24,8 @@ class CcCompiler(object):
     def library_args(self):
         return ['-fPIC']
 
-    def include_dirs(self, iterable):
-        return ['-I' + i for i in iterable]
+    def include_dir(self, directory):
+        return ['-I' + directory]
 
 class CcLinker(object):
     def __init__(self, mode):
@@ -58,8 +51,8 @@ class CcLinker(object):
     def always_args(self):
         return ['-shared', '-fPIC'] if self._mode == 'shared_library' else []
 
-    def link_libs(self, iterable):
-        return ['-l' + _lib_link_name(i) for i in iterable]
+    def link_lib(self, library):
+        return ['-l' + library]
 
 class CxxCompiler(CcCompiler):
     def __init__(self):

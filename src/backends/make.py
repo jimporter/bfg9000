@@ -271,8 +271,8 @@ def emit_object_file(rule, writer, env):
     if rule.target.in_shared_library:
         cflags_value.extend(compiler.library_args)
     if rule.include:
-        cflags_value.extend(compiler.include_dirs(
-            target_path(env, i) for i in rule.include
+        cflags_value.extend(chain.from_iterable(
+            compiler.include_dir(target_path(env, i)) for i in rule.include
         ))
     if rule.options:
         cflags_value.append(rule.options)
@@ -334,7 +334,9 @@ def emit_link(rule, writer, env):
     if cflags_value:
         variables[cflags] = ' '.join(cflags_value)
     if rule.libs:
-        variables[libs_var] = ' '.join(linker.link_libs(rule.libs))
+        variables[libs_var] = ' '.join(chain.from_iterable(
+            linker.link_lib(os.path.basename(i.name)) for i in rule.libs
+        ))
     if rule.link_options:
         variables[ldflags] = rule.link_options
 
