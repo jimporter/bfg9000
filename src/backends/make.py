@@ -344,7 +344,9 @@ def emit_link(rule, writer, env):
     order_only = [directory] if directory else None
     writer.rule(
         target=env.target_name(rule.target), deps=deps, order_only=order_only,
-        recipe=MakeCall(recipename, *[target_path(env, i) for i in rule.files]),
+        recipe=MakeCall(
+            recipename, ' '.join(target_path(env, i) for i in rule.files)
+        ),
         variables=variables
     )
     directory_rule(directory, writer)
