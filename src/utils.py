@@ -1,5 +1,6 @@
 import fnmatch
 import os
+import shlex
 from collections import Iterable
 
 from builtins import builtin
@@ -11,6 +12,14 @@ def listify(thing):
         return thing
     else:
         return [thing]
+
+def shell_listify(thing):
+    if thing is None:
+        return []
+    elif isinstance(thing, Iterable) and not isinstance(thing, basestring):
+        return thing
+    else:
+        return shlex.split(thing)
 
 def strlistify(thing):
     return [str(i) for i in listify(thing)]

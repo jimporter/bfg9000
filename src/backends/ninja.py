@@ -240,12 +240,11 @@ def emit_object_file(rule, writer, env):
         cflags_value = []
         if rule.target.in_shared_library:
             cflags_value.extend(compiler.library_args)
-        if rule.include:
-            cflags_value.extend(chain.from_iterable(
-                compiler.include_dir(target_path(env, i)) for i in rule.include
-            ))
-        if rule.options:
-            cflags_value.append(rule.options)
+        cflags_value.extend(chain.from_iterable(
+            compiler.include_dir(target_path(env, i)) for i in rule.include
+        ))
+        cflags_value.extend(rule.options)
+
         if cflags_value:
             variables[cflags] = (str(global_cflags) + ' ' +
                                  ' '.join(cflags_value))
@@ -281,8 +280,7 @@ def emit_link(rule, writer, env):
     if cflags:
         cflags_value = []
         cflags_value.extend(linker.mode_args)
-        if rule.compile_options:
-            cflags_value.append(rule.compile_options)
+        cflags_value.extend(rule.compile_options)
 
         if cflags_value:
             variables[cflags] = ' '.join(cflags_value)
@@ -292,8 +290,8 @@ def emit_link(rule, writer, env):
         ldflags_value.extend(chain.from_iterable(
             linker.link_lib(os.path.basename(i.name)) for i in rule.libs
         ))
-        if rule.link_options:
-            ldflags_value.append(rule.link_options)
+        ldflags_value.extend(rule.link_options)
+
         if ldflags_value:
             variables[ldflags] = (str(global_ldflags) + ' ' +
                                   ' '.join(ldflags_value))

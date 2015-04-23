@@ -40,15 +40,15 @@ class HeaderDirectory(build_inputs.Directory):
 #####
 
 class Compile(build_inputs.Edge):
-    def __init__(self, target, file, include=None, options=None, deps=None):
+    def __init__(self, target, file, include, options, deps):
         self.file = file
         self.include = include
         self.options = options
         build_inputs.Edge.__init__(self, target, deps)
 
 class Link(build_inputs.Edge):
-    def __init__(self, target, files, libs=None, compile_options=None,
-                 link_options=None, deps=None):
+    def __init__(self, target, files, libs, compile_options, link_options,
+                 deps):
         self.files = files
         self.libs = libs
         self.compile_options = compile_options
@@ -59,7 +59,7 @@ class Alias(build_inputs.Edge):
     pass
 
 class Command(build_inputs.Edge):
-    def __init__(self, target, cmd, deps=None):
+    def __init__(self, target, cmd, deps):
         self.cmd = cmd
         build_inputs.Edge.__init__(self, target, deps)
 
@@ -82,7 +82,9 @@ def object_file(build, name=None, file=None, include=None, options=None,
     if name is None:
             name = os.path.splitext(file)[0]
     target = ObjectFile(name, lang)
-    build.add_edge(Compile(target, source_file, includes, options, deps))
+    build.add_edge(Compile(
+        target, source_file, includes, utils.shell_listify(options), deps
+    ))
     return target
 
 @builtin
@@ -99,7 +101,8 @@ def _binary(build, target, files, libs=None, lang=None,
     build.fallback_default = target
     objects = utils.objectify_list(files, ObjectFile, make_obj)
     libs = utils.objectify_list(libs, Library, external=True)
-    link = Link(target, objects, libs, compile_options, link_options, deps)
+    link = Link(target, objects, libs, utils.shell_listify(compile_options),
+                utils.shell_listify(link_options), deps)
     build.add_edge(link)
     return link
 
