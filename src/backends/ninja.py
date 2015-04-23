@@ -1,7 +1,7 @@
 import os
 import re
 import sys
-from collections import OrderedDict, namedtuple
+from collections import Iterable, namedtuple, OrderedDict
 from itertools import chain
 
 _rule_handlers = {}
@@ -83,6 +83,8 @@ class NinjaWriter(object):
         return name in self._builds
 
     def _write_variable(self, out, name, value, indent=0):
+        if isinstance(value, Iterable) and not isinstance(value, basestring):
+            value = ' '.join(value)
         out.write('{indent}{name} = {value}\n'.format(
             indent='  ' * indent, name=name.name, value=value
         ))

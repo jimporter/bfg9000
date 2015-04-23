@@ -1,6 +1,6 @@
 import os
 import re
-from collections import OrderedDict, namedtuple
+from collections import Iterable, namedtuple, OrderedDict
 from itertools import chain
 
 from languages import ext2lang
@@ -15,6 +15,12 @@ def rule_handler(rule_name):
 MakeInclude = namedtuple('MakeInclude', ['name', 'optional'])
 MakeRule = namedtuple('MakeRule', ['target', 'deps', 'order_only', 'recipe',
                                    'variables', 'phony'])
+
+def _join_value(value):
+    if isinstance(value, Iterable) and not isinstance(value, basestring):
+        return ' '.join(value)
+    else:
+        return value
 
 class MakeVariable(object):
     def __init__(self, name):
@@ -44,7 +50,9 @@ class MakeCall(object):
 
     def __str__(self):
         return '$(call {})'.format(
-            ','.join(chain([self.name.name], self.args))
+            ','.join(chain(
+                [self.name.name], (_join_value(i) for i in self.args)
+            ))
         )
 
 class MakeWriter(object):
@@ -103,7 +111,7 @@ class MakeWriter(object):
         if target:
             out.write('{}: '.format(target))
         out.write('{name} {op} {value}\n'.format(
-            name=name.name, op=operator, value=value
+            name=name.name, op=operator, value=_join_value(value)
         ))
 
     def _write_define(self, out, name, value):
@@ -194,7 +202,7 @@ def flags_vars(lang, value, writer):
 
     global_flags = MakeVariable('GLOBAL_{}FLAGS'.format(lang.upper()))
     if not writer.has_variable(global_flags):
-        writer.variable(global_flags, ' '.join(value))
+        writer.variable(global_flags, value)
 
     flags = MakeVariable('{}FLAGS'.format(lang.upper()))
     if not writer.has_variable(flags, target='%'):
@@ -291,8 +299,7 @@ def emit_object_file(rule, writer, env):
         cflags_value.extend(rule.options)
 
         if cflags_value:
-            variables[cflags] = (str(global_cflags) + ' ' +
-                                 ' '.join(cflags_value))
+            variables[cflags] = [str(global_cflags)] + cflags_value
 
     directory = os.path.dirname(rule.target.name)
     order_only = [directory] if directory else None
@@ -340,8 +347,7 @@ def emit_link(rule, writer, env):
         cflags_value.extend(rule.compile_options)
 
         if cflags_value:
-            variables[cflags] = (str(global_cflags) + ' ' +
-                                 ' '.join(cflags_value))
+            variables[cflags] = [str(global_cflags)] + cflags_value
 
     if ldflags:
         ldflags_value = []
@@ -351,15 +357,14 @@ def emit_link(rule, writer, env):
         ldflags_value.extend(rule.link_options)
 
         if ldflags_value:
-            variables[ldflags] = (str(global_ldflags) + ' ' +
-                                  ' '.join(ldflags_value))
+            variables[ldflags] = [str(global_ldflags)] + ldflags_value
 
     directory = os.path.dirname(rule.target.name)
     order_only = [directory] if directory else None
     writer.rule(
         target=env.target_name(rule.target), deps=deps, order_only=order_only,
         recipe=MakeCall(
-            recipename, ' '.join(target_path(env, i) for i in rule.files)
+            recipename, (target_path(env, i) for i in rule.files)
         ),
         variables=variables
     )
