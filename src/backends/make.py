@@ -49,6 +49,7 @@ class MakeCall(object):
 
 class MakeWriter(object):
     def __init__(self):
+        # TODO: Sort variables in some useful order
         self._global_variables = OrderedDict()
         self._target_variables = OrderedDict({'%': OrderedDict()})
         self._defines = OrderedDict()
@@ -187,6 +188,20 @@ def cmd_var(compiler, writer):
         writer.variable(var, compiler.command_name)
     return var
 
+def flags_vars(lang, value, writer):
+    if value is None:
+        return None, None
+
+    global_flags = MakeVariable('GLOBAL_{}FLAGS'.format(lang.upper()))
+    if not writer.has_variable(global_flags):
+        writer.variable(global_flags, ' '.join(value))
+
+    flags = MakeVariable('{}FLAGS'.format(lang.upper()))
+    if not writer.has_variable(flags, target='%'):
+        writer.variable(flags, global_flags, target='%')
+
+    return global_flags, flags
+
 def all_rule(default_targets, writer, env):
     writer.rule(
         target='all',
@@ -252,32 +267,33 @@ def emit_object_file(rule, writer, env):
     compiler = env.compiler(rule.file.lang)
     recipename = MakeVariable('RULE_{}'.format(compiler.name.upper()))
 
-    cflags = MakeVariable('{}FLAGS'.format(compiler.command_var.upper()))
-    if not writer.has_variable(cflags, target='%'):
-        writer.variable(cflags, '', target='%')
-
+    global_cflags, cflags = flags_vars(
+        compiler.command_var, compiler.global_args, writer
+    )
     if not writer.has_variable(recipename):
         writer.variable(recipename, [
             compiler.command(
                 cmd=cmd_var(compiler, writer), input='$<', output='$@',
-                dep='$*.d', pre_args=cflags
+                dep='$*.d', args=cflags
             ),
             "@sed -e 's/.*://' -e 's/\\\\$$//' < $*.d | fmt -1 | \\",
             "  sed -e 's/^ *//' -e 's/$$/:/' >> $*.d"
         ], flavor='define')
 
     variables = {}
-    cflags_value = []
-    if rule.target.in_shared_library:
-        cflags_value.extend(compiler.library_args)
-    if rule.include:
+    if cflags:
+        cflags_value = []
+        if rule.target.in_shared_library:
+            cflags_value.extend(compiler.library_args)
         cflags_value.extend(chain.from_iterable(
             compiler.include_dir(target_path(env, i)) for i in rule.include
         ))
-    if rule.options:
-        cflags_value.append(rule.options)
-    if cflags_value:
-        variables[cflags] = ' '.join(cflags_value)
+        if rule.options:
+            cflags_value.append(rule.options)
+
+        if cflags_value:
+            variables[cflags] = (str(global_cflags) + ' ' +
+                                 ' '.join(cflags_value))
 
     directory = os.path.dirname(rule.target.name)
     order_only = [directory] if directory else None
@@ -287,7 +303,7 @@ def emit_object_file(rule, writer, env):
     directory_rule(directory, writer)
 
     base = os.path.splitext(env.target_name(rule.file))[0]
-    writer.include(base + '.d', True)
+    writer.include(base + '.d', optional=True)
 
 def link_mode(target):
     return {
@@ -301,44 +317,45 @@ def emit_link(rule, writer, env):
     linker = env.linker((i.lang for i in rule.files), link_mode(rule.target))
     recipename = MakeVariable('RULE_{}'.format(linker.name.upper()))
 
-    cflags = MakeVariable('{}FLAGS'.format(linker.command_var.upper()))
-    if not writer.has_variable(cflags, target='%'):
-        writer.variable(cflags, '', target='%')
-
-    ldflags = MakeVariable('LDFLAGS')
-    if not writer.has_variable(ldflags, target='%'):
-        writer.variable(ldflags, '', target='%')
-
-    libs_var = MakeVariable('LIBS')
-    if not writer.has_variable(libs_var, target='%'):
-        writer.variable(libs_var, '', target='%')
-
+    global_cflags, cflags = flags_vars(
+        linker.command_var, linker.global_compile_args, writer
+    )
+    global_ldflags, ldflags = flags_vars(
+        linker.link_var, linker.global_link_args, writer
+    )
     if not writer.has_variable(recipename):
         writer.variable(recipename, [
             linker.command(
                 cmd=cmd_var(linker, writer), input='$1', output='$@',
-                pre_args=cflags, post_args=[libs_var, ldflags]
+                compile_args=cflags, link_args=ldflags
             )
         ], flavor='define')
 
     lib_deps = (i for i in rule.libs if not i.is_source)
     deps = (target_path(env, i) for i in chain(rule.files, rule.deps, lib_deps))
 
-    cflags_value = []
-    if linker.always_args:
-        cflags_value.extend(linker.always_args)
-    if rule.compile_options:
-        cflags_value.append(rule.compile_options)
-
     variables = {}
-    if cflags_value:
-        variables[cflags] = ' '.join(cflags_value)
-    if rule.libs:
-        variables[libs_var] = ' '.join(chain.from_iterable(
+    if cflags:
+        cflags_value = []
+        cflags_value.extend(linker.mode_args)
+        if rule.compile_options:
+            cflags_value.append(rule.compile_options)
+
+        if cflags_value:
+            variables[cflags] = (str(global_cflags) + ' ' +
+                                 ' '.join(cflags_value))
+
+    if ldflags:
+        ldflags_value = []
+        ldflags_value.extend(chain.from_iterable(
             linker.link_lib(os.path.basename(i.name)) for i in rule.libs
         ))
-    if rule.link_options:
-        variables[ldflags] = rule.link_options
+        if rule.link_options:
+            ldflags_value.append(rule.link_options)
+
+        if ldflags_value:
+            variables[ldflags] = (str(global_ldflags) + ' ' +
+                                  ' '.join(ldflags_value))
 
     directory = os.path.dirname(rule.target.name)
     order_only = [directory] if directory else None

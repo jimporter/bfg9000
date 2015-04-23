@@ -35,6 +35,7 @@ class NinjaVariable(object):
 
 class NinjaWriter(object):
     def __init__(self):
+        # TODO: Sort variables in some useful order
         self._variables = OrderedDict()
         self._rules = OrderedDict()
         self._builds = OrderedDict()
@@ -157,6 +158,19 @@ def cmd_var(compiler, writer):
         writer.variable(var, compiler.command_name)
     return var
 
+def flags_vars(lang, value, writer):
+    if value is None:
+        return None, None
+
+    global_flags = NinjaVariable('global_{}flags'.format(lang))
+    if not writer.has_variable(global_flags):
+        writer.variable(global_flags, ' '.join(value))
+    flags = NinjaVariable('{}flags'.format(lang))
+    if not writer.has_variable(flags):
+        writer.variable(flags, str(global_flags))
+
+    return global_flags, flags
+
 def all_rule(default_targets, writer, env):
     writer.default(['all'])
     writer.build(
@@ -211,26 +225,30 @@ def install_rule(install_targets, writer, env):
 @rule_handler('Compile')
 def emit_object_file(rule, writer, env):
     compiler = env.compiler(rule.file.lang)
-    cflags = NinjaVariable('{}flags'.format(compiler.command_var))
 
+    global_cflags, cflags = flags_vars(
+        compiler.command_var, compiler.global_args, writer
+    )
     if not writer.has_rule(compiler.name):
         writer.rule(name=compiler.name, command=compiler.command(
             cmd=cmd_var(compiler, writer), input='$in', output='$out',
-            dep='$out.d', pre_args=cflags
+            dep='$out.d', args=cflags
         ), depfile='$out.d')
 
     variables = {}
-    cflags_value = []
-    if rule.target.in_shared_library:
-        cflags_value.extend(compiler.library_args)
-    if rule.include:
-        cflags_value.extend(chain.from_iterable(
-            compiler.include_dir(target_path(env, i)) for i in rule.include
-        ))
-    if rule.options:
-        cflags_value.append(rule.options)
-    if cflags_value:
-        variables[cflags] = ' '.join(cflags_value)
+    if cflags:
+        cflags_value = []
+        if rule.target.in_shared_library:
+            cflags_value.extend(compiler.library_args)
+        if rule.include:
+            cflags_value.extend(chain.from_iterable(
+                compiler.include_dir(target_path(env, i)) for i in rule.include
+            ))
+        if rule.options:
+            cflags_value.append(rule.options)
+        if cflags_value:
+            variables[cflags] = (str(global_cflags) + ' ' +
+                                 ' '.join(cflags_value))
 
     writer.build(output=env.target_name(rule.target), rule=compiler.name,
                  inputs=[target_path(env, rule.file)],
@@ -246,31 +264,39 @@ def link_mode(target):
 @rule_handler('Link')
 def emit_link(rule, writer, env):
     linker = env.linker((i.lang for i in rule.files), link_mode(rule.target))
-    cflags = NinjaVariable('{}flags'.format(linker.command_var))
-    libs_var = NinjaVariable('libs')
-    ldflags = NinjaVariable('ldflags')
 
+    global_cflags, cflags = flags_vars(
+        linker.command_var, linker.global_compile_args, writer
+    )
+    global_ldflags, ldflags = flags_vars(
+        linker.link_var, linker.global_link_args, writer
+    )
     if not writer.has_rule(linker.name):
         writer.rule(name=linker.name, command=linker.command(
             cmd=cmd_var(linker, writer), input='$in', output='$out',
-            pre_args=cflags, post_args=[libs_var, ldflags]
+            compile_args=cflags, link_args=ldflags
         ))
-
-    cflags_value = []
-    if linker.always_args:
-        cflags_value.extend(linker.always_args)
-    if rule.compile_options:
-        cflags_value.append(rule.compile_options)
 
     variables = {}
-    if cflags_value:
-        variables[cflags] = ' '.join(cflags_value)
-    if rule.libs:
-        variables[libs_var] = ' '.join(chain.from_iterable(
+    if cflags:
+        cflags_value = []
+        cflags_value.extend(linker.mode_args)
+        if rule.compile_options:
+            cflags_value.append(rule.compile_options)
+
+        if cflags_value:
+            variables[cflags] = ' '.join(cflags_value)
+
+    if ldflags:
+        ldflags_value = []
+        ldflags_value.extend(chain.from_iterable(
             linker.link_lib(os.path.basename(i.name)) for i in rule.libs
         ))
-    if rule.link_options:
-        variables[ldflags] = rule.link_options
+        if rule.link_options:
+            ldflags_value.append(rule.link_options)
+        if ldflags_value:
+            variables[ldflags] = (str(global_ldflags) + ' ' +
+                                  ' '.join(ldflags_value))
 
     writer.build(
         output=env.target_name(rule.target), rule=linker.name,

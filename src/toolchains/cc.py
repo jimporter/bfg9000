@@ -1,4 +1,5 @@
 import os
+import shlex
 
 import utils
 
@@ -8,16 +9,18 @@ class CcCompiler(object):
         self.command_var = 'cc'
         self.name = 'cc'
 
-    def command(self, cmd, input, output, dep=None, pre_args=None,
-                post_args=None):
+        self.global_args = (
+            shlex.split(os.getenv('CFLAGS', '')) +
+            shlex.split(os.getenv('CPPFLAGS', ''))
+        )
+
+    def command(self, cmd, input, output, dep=None, args=None):
         result = [str(cmd)]
-        if pre_args:
-            result.extend(utils.strlistify(pre_args))
+        result.extend(utils.strlistify(args))
+        result.extend(['-c', str(input)])
         if dep:
             result.extend(['-MMD', '-MF', dep])
-        if post_args:
-            result.extend(utils.strlistify(post_args))
-        result.extend(['-c', str(input), '-o', str(output)])
+        result.extend(['-o', str(output)])
         return ' '.join(result)
 
     @property
@@ -31,24 +34,26 @@ class CcLinker(object):
     def __init__(self, mode):
         self.command_name = os.getenv('CC', 'cc')
         self.command_var = 'cc'
+        self.link_var = 'ld'
         self._mode = mode
         self.name = 'link_cc'
 
-    def command(self, cmd, input, output, libs=None, pre_args=None,
-                post_args=None):
+        self.global_compile_args = (
+            shlex.split(os.getenv('CFLAGS', '')) +
+            shlex.split(os.getenv('CPPFLAGS', ''))
+        )
+        self.global_link_args = shlex.split(os.getenv('LDFLAGS', ''))
+
+    def command(self, cmd, input, output, compile_args=None, link_args=None):
         result = [str(cmd)]
-        if pre_args:
-            result.extend(utils.strlistify(pre_args))
+        result.extend(utils.strlistify(compile_args))
         result.extend(utils.strlistify(input))
-        if libs:
-            result.append(self.link_libs(libs))
-        if post_args:
-            result.extend(utils.strlistify(post_args))
+        result.extend(utils.strlistify(link_args))
         result.extend(['-o', str(output)])
         return ' '.join(result)
 
     @property
-    def always_args(self):
+    def mode_args(self):
         return ['-shared', '-fPIC'] if self._mode == 'shared_library' else []
 
     def link_lib(self, library):
@@ -60,9 +65,21 @@ class CxxCompiler(CcCompiler):
         self.command_var = 'cxx'
         self.name = 'cxx'
 
+        self.global_args = (
+            shlex.split(os.getenv('CXXFLAGS', '')) +
+            shlex.split(os.getenv('CPPFLAGS', ''))
+        )
+
 class CxxLinker(CcLinker):
     def __init__(self, mode):
         self.command_name = os.getenv('CXX', 'c++')
         self.command_var = 'cxx'
+        self.link_var = 'ld'
         self._mode = mode
         self.name = 'link_cxx'
+
+        self.global_compile_args = (
+            shlex.split(os.getenv('CXXFLAGS', '')) +
+            shlex.split(os.getenv('CPPFLAGS', ''))
+        )
+        self.global_link_args = shlex.split(os.getenv('LDFLAGS', ''))
