@@ -18,13 +18,16 @@ class IntegrationTest(unittest.TestCase):
     def __init__(self, srcdir, *args, **kwargs):
         unittest.TestCase.__init__(self, *args, **kwargs)
         self.srcdir = os.path.join(basedir, srcdir)
+        self.builddir = os.path.join(self.srcdir, 'build')
         self.extra_args = []
         self.backend = os.getenv('BACKEND', 'make')
 
     def setUp(self):
         os.chdir(self.srcdir)
-        cleandir('build')
-        subprocess.check_call([bfg9000, 'build', '--backend', self.backend] +
-                              self.extra_args)
-        os.chdir('build')
+        cleandir(self.builddir)
+        subprocess.check_call(
+            [bfg9000, self.builddir, '--backend', self.backend] +
+            self.extra_args
+        )
+        os.chdir(self.builddir)
 

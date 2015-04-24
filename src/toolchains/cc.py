@@ -10,18 +10,18 @@ class CcCompiler(object):
         self.name = 'cc'
 
         self.global_args = (
-            shlex.split(os.getenv('CFLAGS', '')) +
-            shlex.split(os.getenv('CPPFLAGS', ''))
+            shlex.split(os.getenv('CFLAGS', ''), posix=False) +
+            shlex.split(os.getenv('CPPFLAGS', ''), posix=False)
         )
 
     def command(self, cmd, input, output, dep=None, args=None):
-        result = [str(cmd)]
-        result.extend(utils.strlistify(args))
-        result.extend(['-c', str(input)])
+        result = [cmd]
+        result.extend(utils.listify(args))
+        result.extend(['-c', input])
         if dep:
             result.extend(['-MMD', '-MF', dep])
-        result.extend(['-o', str(output)])
-        return ' '.join(result)
+        result.extend(['-o', output])
+        return result
 
     @property
     def library_args(self):
@@ -39,18 +39,19 @@ class CcLinker(object):
         self.name = 'link_cc'
 
         self.global_compile_args = (
-            shlex.split(os.getenv('CFLAGS', '')) +
-            shlex.split(os.getenv('CPPFLAGS', ''))
+            shlex.split(os.getenv('CFLAGS', ''), posix=False) +
+            shlex.split(os.getenv('CPPFLAGS', ''), posix=False)
         )
-        self.global_link_args = shlex.split(os.getenv('LDFLAGS', ''))
+        self.global_link_args = shlex.split(os.getenv('LDFLAGS', ''),
+                                            posix=False)
 
     def command(self, cmd, input, output, compile_args=None, link_args=None):
-        result = [str(cmd)]
-        result.extend(utils.strlistify(compile_args))
-        result.extend(utils.strlistify(input))
-        result.extend(utils.strlistify(link_args))
-        result.extend(['-o', str(output)])
-        return ' '.join(result)
+        result = [cmd]
+        result.extend(utils.listify(compile_args))
+        result.extend(utils.listify(input))
+        result.extend(utils.listify(link_args))
+        result.extend(['-o', output])
+        return result
 
     @property
     def mode_args(self):
@@ -66,8 +67,8 @@ class CxxCompiler(CcCompiler):
         self.name = 'cxx'
 
         self.global_args = (
-            shlex.split(os.getenv('CXXFLAGS', '')) +
-            shlex.split(os.getenv('CPPFLAGS', ''))
+            shlex.split(os.getenv('CXXFLAGS', ''), posix=False) +
+            shlex.split(os.getenv('CPPFLAGS', ''), posix=False)
         )
 
 class CxxLinker(CcLinker):
@@ -79,7 +80,8 @@ class CxxLinker(CcLinker):
         self.name = 'link_cxx'
 
         self.global_compile_args = (
-            shlex.split(os.getenv('CXXFLAGS', '')) +
-            shlex.split(os.getenv('CPPFLAGS', ''))
+            shlex.split(os.getenv('CXXFLAGS', ''), posix=False) +
+            shlex.split(os.getenv('CPPFLAGS', ''), posix=False)
         )
-        self.global_link_args = shlex.split(os.getenv('LDFLAGS', ''))
+        self.global_link_args = shlex.split(os.getenv('LDFLAGS', ''),
+                                            posix=False)

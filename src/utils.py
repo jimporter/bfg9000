@@ -19,10 +19,7 @@ def shell_listify(thing):
     elif isinstance(thing, Iterable) and not isinstance(thing, basestring):
         return thing
     else:
-        return shlex.split(thing)
-
-def strlistify(thing):
-    return [str(i) for i in listify(thing)]
+        return shlex.split(thing, posix=False)
 
 def objectify(x, valid_type, creator=None, **kwargs):
     if isinstance(x, valid_type):

@@ -14,12 +14,43 @@ def rule_handler(rule_name):
 NinjaRule = namedtuple('NinjaRule', ['command', 'depfile'])
 NinjaBuild = namedtuple('NinjaBuild', ['rule', 'inputs', 'implicit',
                                        'order_only', 'variables'])
+class escaped_str(str):
+    @staticmethod
+    def escape(value):
+        if not isinstance(value, basestring):
+            raise TypeError('escape only works on strings')
+        if not isinstance(value, escaped_str):
+            # TODO: Handle other escape chars
+            value = value.replace('$', '$$')
+        return value
+
+    def __str__(self):
+        return self
+
+    def __add__(self, rhs):
+        return escaped_str(str.__add__( self, escaped_str.escape(rhs) ))
+
+    def __radd__(self, lhs):
+        return escaped_str(str.__add__( escaped_str.escape(lhs), self ))
+
+def escape_str(value):
+    return escaped_str.escape(str(value))
+
+def escape_list(value, delim=' '):
+    if isinstance(value, Iterable) and not isinstance(value, basestring):
+        return escaped_str(delim.join(escape_str(i) for i in value if i))
+    else:
+        return escape_str(value)
+
+def path_join(*args):
+    return escape_list(args, delim=os.sep)
+
 class NinjaVariable(object):
     def __init__(self, name):
         self.name = re.sub('/', '_', name)
 
     def use(self):
-        return '${}'.format(self.name)
+        return escaped_str('${}'.format(self.name))
 
     def __str__(self):
         return self.use()
@@ -32,6 +63,14 @@ class NinjaVariable(object):
 
     def __ne__(self, rhs):
         return self.name != rhs.name
+
+    def __add__(self, rhs):
+        return str(self) + rhs
+
+    def __radd__(self, lhs):
+        return lhs + str(self)
+
+var = NinjaVariable
 
 class NinjaWriter(object):
     def __init__(self):
@@ -83,37 +122,38 @@ class NinjaWriter(object):
         return name in self._builds
 
     def _write_variable(self, out, name, value, indent=0):
-        if isinstance(value, Iterable) and not isinstance(value, basestring):
-            value = ' '.join(value)
         out.write('{indent}{name} = {value}\n'.format(
-            indent='  ' * indent, name=name.name, value=value
+            indent='  ' * indent, name=name.name, value=escape_list(value)
         ))
 
     def _write_rule(self, out, name, rule):
-        out.write('rule {}\n'.format(name))
-        self._write_variable(out, NinjaVariable('command'), rule.command, 1)
+        out.write('rule {}\n'.format(escape_str(name)))
+        self._write_variable(out, var('command'), rule.command, 1)
         if rule.depfile:
-            self._write_variable(out, NinjaVariable('depfile'), rule.depfile, 1)
+            self._write_variable(out, var('depfile'), rule.depfile, 1)
 
     def _write_build(self, out, name, build):
-        out.write('build {output}: {rule}'.format(output=name, rule=build.rule))
+        out.write('build {output}: {rule}'.format(
+            output=escape_str(name),
+            rule=escape_str(build.rule)
+        ))
 
         for i in build.inputs or []:
-            out.write(' ' + i)
+            out.write(' ' + escape_str(i))
 
         first = True
         for i in build.implicit or []:
             if first:
                 first = False
                 out.write(' |')
-            out.write(' ' + i)
+            out.write(' ' + escape_str(i))
 
         first = True
         for i in build.order_only or []:
             if first:
                 first = False
                 out.write(' ||')
-            out.write(' ' + i)
+            out.write(' ' + escape_str(i))
 
         out.write('\n')
 
@@ -135,7 +175,9 @@ class NinjaWriter(object):
             self._write_build(out, name, build)
 
         if self._defaults:
-            out.write('\ndefault {}\n'.format(' '.join(self._defaults)))
+            out.write('\ndefault {}\n'.format(' '.join(
+                escape_str(i) for i in self._defaults
+            )))
 
 srcdir_var = NinjaVariable('srcdir')
 def target_path(env, target):
@@ -199,29 +241,32 @@ def install_rule(install_targets, writer, env):
         else:
             install_data = NinjaVariable('install_data')
             if not writer.has_variable(install_data):
-                writer.variable(install_data, '{} -m 644'.format(install))
+                writer.variable(install_data, [install, '-m', '644'])
             return install_data
 
     if not writer.has_rule('command'):
-        writer.rule(name='command', command='$cmd')
+        writer.rule(name='command', command=var('cmd'))
 
-    commands = [
-        '{install} -D {source} {dest}'.format(
-            install=install_cmd(i.install_kind),
-            source=target_path(env, i),
-            dest=os.path.join(str(prefix), i.install_dir,
-                              os.path.basename(target_path(env, i)))
-        ) for i in install_targets.files
-    ] + [
-        'mkdir -p {dest} && cp -r {source} {dest}'.format(
-            source=os.path.join(target_path(env, i), '*'),
-            dest=os.path.join(str(prefix), i.install_dir)
-        ) for i in install_targets.directories
-    ]
+    def install_line(file):
+        src = target_path(env, file)
+        dst = path_join(
+            prefix, file.install_dir, os.path.basename(env.target_name(file))
+        )
+        return [ install_cmd(file.install_kind), '-D', src, dst ]
 
+    def mkdir_line(dir):
+        src = path_join(target_path(env, dir), '*')
+        dst = path_join(prefix, dir.install_dir)
+        return ['mkdir', '-p', dst, '&&', 'cp', '-r', src, dst]
+
+    commands = ([install_line(i) for i in install_targets.files] +
+                [mkdir_line(i) for i in install_targets.directories])
     writer.build(
         output='install', rule='command', implicit=['all'],
-        variables={'cmd': ' && '.join(commands)}
+        # TODO: Improve how variables are defined here
+        variables={'cmd': escaped_str(
+            ' && '.join(escape_list(i) for i in commands)
+        )}
     )
 
 @rule_handler('Compile')
@@ -233,9 +278,9 @@ def emit_object_file(rule, writer, env):
     )
     if not writer.has_rule(compiler.name):
         writer.rule(name=compiler.name, command=compiler.command(
-            cmd=cmd_var(compiler, writer), input='$in', output='$out',
-            dep='$out.d', args=cflags
-        ), depfile='$out.d')
+            cmd=cmd_var(compiler, writer), input=var('in'), output=var('out'),
+            dep=var('out') + '.d', args=cflags
+        ), depfile=var('out') + '.d')
 
     variables = {}
     if cflags:
@@ -248,8 +293,7 @@ def emit_object_file(rule, writer, env):
         cflags_value.extend(rule.options)
 
         if cflags_value:
-            variables[cflags] = (str(global_cflags) + ' ' +
-                                 ' '.join(cflags_value))
+            variables[cflags] = [global_cflags] + cflags_value
 
     writer.build(output=env.target_name(rule.target), rule=compiler.name,
                  inputs=[target_path(env, rule.file)],
@@ -274,7 +318,7 @@ def emit_link(rule, writer, env):
     )
     if not writer.has_rule(linker.name):
         writer.rule(name=linker.name, command=linker.command(
-            cmd=cmd_var(linker, writer), input='$in', output='$out',
+            cmd=cmd_var(linker, writer), input=var('in'), output=var('out'),
             compile_args=cflags, link_args=ldflags
         ))
 
@@ -285,7 +329,7 @@ def emit_link(rule, writer, env):
         cflags_value.extend(rule.compile_options)
 
         if cflags_value:
-            variables[cflags] = ' '.join(cflags_value)
+            variables[cflags] = [global_cflags] + cflags_value
 
     if ldflags:
         ldflags_value = []
@@ -295,8 +339,7 @@ def emit_link(rule, writer, env):
         ldflags_value.extend(rule.link_options)
 
         if ldflags_value:
-            variables[ldflags] = (str(global_ldflags) + ' ' +
-                                  ' '.join(ldflags_value))
+            variables[ldflags] = [global_ldflags] + ldflags_value
 
     writer.build(
         output=env.target_name(rule.target), rule=linker.name,
@@ -315,7 +358,7 @@ def emit_alias(rule, writer, env):
 @rule_handler('Command')
 def emit_command(rule, writer, env):
     if not writer.has_rule('command'):
-        writer.rule(name='command', command='$cmd')
+        writer.rule(name='command', command=var('cmd'))
     writer.build(
         output=env.target_name(rule.target), rule='command',
         inputs=(target_path(env, i) for i in rule.deps),

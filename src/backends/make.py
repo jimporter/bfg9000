@@ -16,18 +16,44 @@ MakeInclude = namedtuple('MakeInclude', ['name', 'optional'])
 MakeRule = namedtuple('MakeRule', ['target', 'deps', 'order_only', 'recipe',
                                    'variables', 'phony'])
 
-def _join_value(value):
-    if isinstance(value, Iterable) and not isinstance(value, basestring):
-        return ' '.join(value)
-    else:
+class escaped_str(str):
+    @staticmethod
+    def escape(value):
+        if not isinstance(value, basestring):
+            raise TypeError('escape only works on strings')
+        if not isinstance(value, escaped_str):
+            # TODO: Handle other escape chars
+            value = value.replace('$', '$$')
         return value
+
+    def __str__(self):
+        return self
+
+    def __add__(self, rhs):
+        return escaped_str(str.__add__( self, escaped_str.escape(rhs) ))
+
+    def __radd__(self, lhs):
+        return escaped_str(str.__add__( escaped_str.escape(lhs), self ))
+
+def escape_str(value):
+    return escaped_str.escape(str(value))
+
+def escape_list(value, delim=' '):
+    if isinstance(value, Iterable) and not isinstance(value, basestring):
+        return escaped_str(delim.join(escape_str(i) for i in value if i))
+    else:
+        return escape_str(value)
+
+def path_join(*args):
+    return escape_list(args, delim=os.sep)
 
 class MakeVariable(object):
     def __init__(self, name):
         self.name = re.sub(r'[\s:#=]', '_', name)
 
     def use(self):
-        return '$({})'.format(self.name)
+        fmt = '${}' if len(self.name) == 1 else '$({})'
+        return escaped_str(fmt.format(self.name))
 
     def __str__(self):
         return self.use()
@@ -41,6 +67,14 @@ class MakeVariable(object):
     def __ne__(self, rhs):
         return self.name != rhs.name
 
+    def __add__(self, rhs):
+        return str(self) + rhs
+
+    def __radd__(self, lhs):
+        return lhs + str(self)
+
+var = MakeVariable
+
 class MakeCall(object):
     def __init__(self, name, *args):
         if not isinstance(name, MakeVariable):
@@ -49,11 +83,11 @@ class MakeCall(object):
         self.args = args
 
     def __str__(self):
-        return '$(call {})'.format(
+        return escaped_str('$(call {})'.format(
             ','.join(chain(
-                [self.name.name], (_join_value(i) for i in self.args)
+                [self.name.name], (escape_list(i) for i in self.args)
             ))
-        )
+        ))
 
 class MakeWriter(object):
     def __init__(self):
@@ -109,15 +143,15 @@ class MakeWriter(object):
     def _write_variable(self, out, name, value, flavor, target=None):
         operator = ':=' if flavor == 'simple' else '='
         if target:
-            out.write('{}: '.format(target))
+            out.write('{}: '.format(escape_str(target)))
         out.write('{name} {op} {value}\n'.format(
-            name=name.name, op=operator, value=_join_value(value)
+            name=name.name, op=operator, value=escape_list(value)
         ))
 
     def _write_define(self, out, name, value):
         out.write('define {name}\n'.format(name=name.name))
         for i in value:
-            out.write(i + '\n')
+            out.write(escape_list(i) + '\n')
         out.write('endef\n\n')
 
     def _write_rule(self, out, rule):
@@ -127,10 +161,10 @@ class MakeWriter(object):
                                      target=rule.target)
 
         if rule.phony:
-            out.write('.PHONY: {}\n'.format(rule.target))
+            out.write('.PHONY: {}\n'.format(escape_str(rule.target)))
         out.write('{target}:{deps}'.format(
-            target=rule.target,
-            deps=''.join(' ' + i for i in rule.deps or [])
+            target=escape_str(rule.target),
+            deps=''.join(' ' + escape_str(i) for i in rule.deps or [])
         ))
 
         first = True
@@ -138,14 +172,14 @@ class MakeWriter(object):
             if first:
                 first = False
                 out.write(' |')
-            out.write(' ' + i)
+            out.write(' ' + escape_str(i))
 
         if (isinstance(rule.recipe, MakeVariable) or
             isinstance(rule.recipe, MakeCall)):
-            out.write(' ; {}'.format(rule.recipe))
+            out.write(' ; {}'.format(escape_str(rule.recipe)))
         elif rule.recipe is not None:
             for cmd in rule.recipe:
-                out.write('\n\t{}'.format(cmd))
+                out.write('\n\t{}'.format(escape_list(cmd)))
         out.write('\n\n')
 
     def write(self, out):
@@ -170,13 +204,13 @@ class MakeWriter(object):
 
         for i in self._includes:
             out.write('{opt}include {name}\n'.format(
-                name=i.name, opt='-' if i.optional else ''
+                name=escape_str(i.name), opt='-' if i.optional else ''
             ))
 
 srcdir_var = MakeVariable('srcdir')
 def target_path(env, target):
     name = env.target_name(target)
-    return os.path.join(str(srcdir_var), name) if target.is_source else name
+    return path_join(srcdir_var, name) if target.is_source else name
 
 def write(env, build_inputs):
     writer = MakeWriter()
@@ -235,23 +269,23 @@ def install_rule(install_targets, writer, env):
         else:
             install_data = MakeVariable('INSTALL_DATA')
             if not writer.has_variable(install_data):
-                writer.variable(install_data, '{} -m 644'.format(install))
+                writer.variable(install_data, [install, '-m', '644'])
             return install_data
 
-    recipe = [
-        '{install} -D {source} {dest}'.format(
-            install=install_cmd(i.install_kind),
-            source=target_path(env, i),
-            dest=os.path.join(str(prefix), i.install_dir,
-                              os.path.basename(target_path(env, i)))
-        ) for i in install_targets.files
-    ] + [
-        'mkdir -p {dest} && cp -r {source} {dest}'.format(
-            source=os.path.join(target_path(env, i), '*'),
-            dest=os.path.join(str(prefix), i.install_dir)
-        ) for i in install_targets.directories
-    ]
+    def install_line(file):
+        src = target_path(env, file)
+        dst = path_join(
+            prefix, file.install_dir, os.path.basename(env.target_name(file))
+        )
+        return [ install_cmd(file.install_kind), '-D', src, dst ]
 
+    def mkdir_line(dir):
+        src = path_join(target_path(env, dir), '*')
+        dst = path_join(prefix, dir.install_dir)
+        return ['mkdir', '-p', dst, '&&', 'cp', '-r', src, dst]
+
+    recipe = ([install_line(i) for i in install_targets.files] +
+              [mkdir_line(i) for i in install_targets.directories])
     writer.rule(target='install', deps=['all'], recipe=recipe, phony=True)
 
 _seen_dirs = set() # TODO: Put this on the writer
@@ -262,7 +296,7 @@ def directory_rule(path, writer):
 
     recipename = MakeVariable('RULE_MKDIR')
     if not writer.has_variable(recipename):
-        writer.variable(recipename, ['mkdir $@'], flavor='define')
+        writer.variable(recipename, [['mkdir', var('@')]], flavor='define')
 
     parent = os.path.dirname(path)
     order_only = [parent] if parent else None
@@ -279,13 +313,15 @@ def emit_object_file(rule, writer, env):
         compiler.command_var, compiler.global_args, writer
     )
     if not writer.has_variable(recipename):
+        esc = escaped_str
         writer.variable(recipename, [
             compiler.command(
-                cmd=cmd_var(compiler, writer), input='$<', output='$@',
-                dep='$*.d', args=cflags
+                cmd=cmd_var(compiler, writer), input=var('<'), output=var('@'),
+                dep=var('*') + '.d', args=cflags
             ),
-            "@sed -e 's/.*://' -e 's/\\\\$$//' < $*.d | fmt -1 | \\",
-            "  sed -e 's/^ *//' -e 's/$$/:/' >> $*.d"
+            # Munge the depfile so that it works a little better...
+            esc("@sed -e 's/.*://' -e 's/\\\\$$//' < $*.d | fmt -1 | \\"),
+            esc("  sed -e 's/^ *//' -e 's/$$/:/' >> $*.d")
         ], flavor='define')
 
     variables = {}
@@ -299,7 +335,7 @@ def emit_object_file(rule, writer, env):
         cflags_value.extend(rule.options)
 
         if cflags_value:
-            variables[cflags] = [str(global_cflags)] + cflags_value
+            variables[cflags] = [global_cflags] + cflags_value
 
     directory = os.path.dirname(rule.target.name)
     order_only = [directory] if directory else None
@@ -332,7 +368,7 @@ def emit_link(rule, writer, env):
     if not writer.has_variable(recipename):
         writer.variable(recipename, [
             linker.command(
-                cmd=cmd_var(linker, writer), input='$1', output='$@',
+                cmd=cmd_var(linker, writer), input=var('1'), output=var('@'),
                 compile_args=cflags, link_args=ldflags
             )
         ], flavor='define')
@@ -347,7 +383,7 @@ def emit_link(rule, writer, env):
         cflags_value.extend(rule.compile_options)
 
         if cflags_value:
-            variables[cflags] = [str(global_cflags)] + cflags_value
+            variables[cflags] = [global_cflags] + cflags_value
 
     if ldflags:
         ldflags_value = []
@@ -357,7 +393,7 @@ def emit_link(rule, writer, env):
         ldflags_value.extend(rule.link_options)
 
         if ldflags_value:
-            variables[ldflags] = [str(global_ldflags)] + ldflags_value
+            variables[ldflags] = [global_ldflags] + ldflags_value
 
     directory = os.path.dirname(rule.target.name)
     order_only = [directory] if directory else None
