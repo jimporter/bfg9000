@@ -47,12 +47,10 @@ class Compile(build_inputs.Edge):
         build_inputs.Edge.__init__(self, target, deps)
 
 class Link(build_inputs.Edge):
-    def __init__(self, target, files, libs, compile_options, link_options,
-                 deps):
+    def __init__(self, target, files, libs, options, deps):
         self.files = files
         self.libs = libs
-        self.compile_options = compile_options
-        self.link_options = link_options
+        self.options = options
         build_inputs.Edge.__init__(self, target, deps)
 
 class Alias(build_inputs.Edge):
@@ -101,8 +99,7 @@ def _binary(build, target, files, libs=None, lang=None,
     build.fallback_default = target
     objects = utils.objectify_list(files, ObjectFile, make_obj)
     libs = utils.objectify_list(libs, Library, external=True)
-    link = Link(target, objects, libs, utils.shell_listify(compile_options),
-                utils.shell_listify(link_options), deps)
+    link = Link(target, objects, libs, utils.shell_listify(link_options), deps)
     build.add_edge(link)
     return link
 

@@ -231,9 +231,6 @@ def cmd_var(compiler, writer):
     return var
 
 def flags_vars(lang, value, writer):
-    if value is None:
-        return None, None
-
     global_flags = MakeVariable('GLOBAL_{}FLAGS'.format(lang.upper()))
     if not writer.has_variable(global_flags):
         writer.variable(global_flags, value)
@@ -325,17 +322,16 @@ def emit_object_file(rule, writer, env):
         ], flavor='define')
 
     variables = {}
-    if cflags:
-        cflags_value = []
-        if rule.target.in_shared_library:
-            cflags_value.extend(compiler.library_args)
-        cflags_value.extend(chain.from_iterable(
-            compiler.include_dir(target_path(env, i)) for i in rule.include
-        ))
-        cflags_value.extend(rule.options)
 
-        if cflags_value:
-            variables[cflags] = [global_cflags] + cflags_value
+    cflags_value = []
+    if rule.target.in_shared_library:
+        cflags_value.extend(compiler.library_args)
+    cflags_value.extend(chain.from_iterable(
+        compiler.include_dir(target_path(env, i)) for i in rule.include
+    ))
+    cflags_value.extend(rule.options)
+    if cflags_value:
+        variables[cflags] = [global_cflags] + cflags_value
 
     directory = os.path.dirname(rule.target.name)
     order_only = [directory] if directory else None
@@ -359,17 +355,17 @@ def emit_link(rule, writer, env):
     linker = env.linker((i.lang for i in rule.files), link_mode(rule.target))
     recipename = MakeVariable('RULE_{}'.format(linker.name.upper()))
 
-    global_cflags, cflags = flags_vars(
-        linker.command_var, linker.global_compile_args, writer
-    )
     global_ldflags, ldflags = flags_vars(
-        linker.link_var, linker.global_link_args, writer
+        linker.link_var, linker.global_args, writer
     )
+    ldlibs = MakeVariable('{}LIBS'.format(linker.link_var.upper()))
     if not writer.has_variable(recipename):
+        if not writer.has_variable(ldlibs, target='%'):
+            writer.variable(ldlibs, '', target='%')
         writer.variable(recipename, [
             linker.command(
                 cmd=cmd_var(linker, writer), input=var('1'), output=var('@'),
-                compile_args=cflags, link_args=ldflags
+                libs=ldlibs, args=ldflags
             )
         ], flavor='define')
 
@@ -377,23 +373,17 @@ def emit_link(rule, writer, env):
     deps = (target_path(env, i) for i in chain(rule.files, rule.deps, lib_deps))
 
     variables = {}
-    if cflags:
-        cflags_value = []
-        cflags_value.extend(linker.mode_args)
-        cflags_value.extend(rule.compile_options)
 
-        if cflags_value:
-            variables[cflags] = [global_cflags] + cflags_value
+    ldflags_value = []
+    ldflags_value.extend(linker.mode_args)
+    ldflags_value.extend(rule.options)
+    if ldflags_value:
+        variables[ldflags] = [global_ldflags] + ldflags_value
 
-    if ldflags:
-        ldflags_value = []
-        ldflags_value.extend(chain.from_iterable(
+    if rule.libs:
+        variables[ldlibs] = list(chain.from_iterable(
             linker.link_lib(os.path.basename(i.name)) for i in rule.libs
         ))
-        ldflags_value.extend(rule.link_options)
-
-        if ldflags_value:
-            variables[ldflags] = [global_ldflags] + ldflags_value
 
     directory = os.path.dirname(rule.target.name)
     order_only = [directory] if directory else None

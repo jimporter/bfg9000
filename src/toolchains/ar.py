@@ -9,14 +9,12 @@ class ArLinker(object):
         self.command_var = 'ar'
         self.link_var = 'ar'
         self.name = 'ar'
-        self.global_compile_args = None
-        self.global_link_args = shlex.split(os.getenv('ARFLAGS', 'cru'),
-                                            posix=False)
+        self.global_args = shlex.split(os.getenv('ARFLAGS', 'cru'), posix=False)
 
-    # TODO: Figure out a way to indicate that compile_args are useless here.
-    def command(self, cmd, input, output, compile_args=None, link_args=None):
+    # TODO: Figure out a way to indicate that libs are useless here.
+    def command(self, cmd, input, output, libs=None, args=None):
         result = [cmd]
-        result.extend(utils.listify(link_args))
+        result.extend(utils.listify(args))
         result.append(output)
         result.extend(utils.listify(input))
         return result

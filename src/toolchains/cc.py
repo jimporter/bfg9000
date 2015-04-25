@@ -38,18 +38,13 @@ class CcLinker(object):
         self._mode = mode
         self.name = 'link_cc'
 
-        self.global_compile_args = (
-            shlex.split(os.getenv('CFLAGS', ''), posix=False) +
-            shlex.split(os.getenv('CPPFLAGS', ''), posix=False)
-        )
-        self.global_link_args = shlex.split(os.getenv('LDFLAGS', ''),
-                                            posix=False)
+        self.global_args = shlex.split(os.getenv('LDFLAGS', ''), posix=False)
 
-    def command(self, cmd, input, output, compile_args=None, link_args=None):
+    def command(self, cmd, input, output, libs=None, args=None):
         result = [cmd]
-        result.extend(utils.listify(compile_args))
+        result.extend(utils.listify(args))
         result.extend(utils.listify(input))
-        result.extend(utils.listify(link_args))
+        result.extend(utils.listify(libs))
         result.extend(['-o', output])
         return result
 
@@ -79,9 +74,4 @@ class CxxLinker(CcLinker):
         self._mode = mode
         self.name = 'link_cxx'
 
-        self.global_compile_args = (
-            shlex.split(os.getenv('CXXFLAGS', ''), posix=False) +
-            shlex.split(os.getenv('CPPFLAGS', ''), posix=False)
-        )
-        self.global_link_args = shlex.split(os.getenv('LDFLAGS', ''),
-                                            posix=False)
+        self.global_args = shlex.split(os.getenv('LDFLAGS', ''), posix=False)
