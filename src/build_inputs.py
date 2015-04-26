@@ -37,6 +37,7 @@ class BuildInputs(object):
         self.default_targets = []
         self.fallback_default = None
         self.install_targets = InstallInputs()
+        self.global_options = {}
 
     def add_edge(self, edge):
         self.edges.append(edge)

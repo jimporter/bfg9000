@@ -219,7 +219,7 @@ def write(env, build_inputs):
     all_rule(build_inputs.get_default_targets(), writer, env)
     install_rule(build_inputs.install_targets, writer, env)
     for e in build_inputs.edges:
-        _rule_handlers[type(e).__name__](e, writer, env)
+        _rule_handlers[type(e).__name__](e, build_inputs, writer, env)
 
     with open(os.path.join(env.builddir, 'Makefile'), 'w') as out:
         writer.write(out)
@@ -302,12 +302,15 @@ def directory_rule(path, writer):
         directory_rule(parent, writer)
 
 @rule_handler('Compile')
-def emit_object_file(rule, writer, env):
-    compiler = env.compiler(rule.file.lang)
+def emit_object_file(rule, build_inputs, writer, env):
+    lang = rule.file.lang
+    compiler = env.compiler(lang)
     recipename = MakeVariable('RULE_{}'.format(compiler.name.upper()))
 
     global_cflags, cflags = flags_vars(
-        compiler.command_var, compiler.global_args, writer
+        compiler.command_var,
+        compiler.global_args + build_inputs.global_options.get(lang, []),
+        writer
     )
     if not writer.has_variable(recipename):
         esc = escaped_str
@@ -351,7 +354,7 @@ def link_mode(target):
     }[type(target).__name__]
 
 @rule_handler('Link')
-def emit_link(rule, writer, env):
+def emit_link(rule, build_inputs, writer, env):
     linker = env.linker((i.lang for i in rule.files), link_mode(rule.target))
     recipename = MakeVariable('RULE_{}'.format(linker.name.upper()))
 
@@ -397,7 +400,7 @@ def emit_link(rule, writer, env):
     directory_rule(directory, writer)
 
 @rule_handler('Alias')
-def emit_alias(rule, writer, env):
+def emit_alias(rule, build_inputs, writer, env):
     writer.rule(
         target=env.target_name(rule.target),
         deps=(target_path(env, i) for i in rule.deps),
@@ -406,7 +409,7 @@ def emit_alias(rule, writer, env):
     )
 
 @rule_handler('Command')
-def emit_command(rule, writer, env):
+def emit_command(rule, build_inputs, writer, env):
     writer.rule(
         target=env.target_name(rule.target),
         deps=(target_path(env, i) for i in rule.deps),

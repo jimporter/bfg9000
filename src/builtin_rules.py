@@ -138,8 +138,8 @@ def command(build, name, cmd, deps=None):
 #####
 
 @builtin
-def default(build_inputs, *args):
-    build_inputs.default_targets.extend(args)
+def default(build, *args):
+    build.default_targets.extend(args)
 
 @builtin
 def install(build, *args):
@@ -153,3 +153,9 @@ def install(build, *args):
 @builtin
 def header_directory(build, directory):
     return HeaderDirectory(directory)
+
+@builtin
+def global_options(build, options, lang):
+    if not lang in build.global_options:
+        build.global_options[lang] = []
+    build.global_options[lang].extend(utils.shell_listify(options))

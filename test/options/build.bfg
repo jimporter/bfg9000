@@ -1,0 +1,5 @@
+# -*- python -*-
+
+global_options('-DPRE=\'"hello"\'', lang='c++')
+executable('program', compile_options='-DPOST=\'"world!"\'',
+           files=['program.cpp'])

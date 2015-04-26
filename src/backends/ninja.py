@@ -191,7 +191,7 @@ def write(env, build_inputs):
     all_rule(build_inputs.get_default_targets(), writer, env)
     install_rule(build_inputs.install_targets, writer, env)
     for e in build_inputs.edges:
-        _rule_handlers[type(e).__name__](e, writer, env)
+        _rule_handlers[type(e).__name__](e, build_inputs, writer, env)
 
     with open(os.path.join(env.builddir, 'build.ninja'), 'w') as out:
         writer.write(out)
@@ -270,11 +270,14 @@ def install_rule(install_targets, writer, env):
     )
 
 @rule_handler('Compile')
-def emit_object_file(rule, writer, env):
-    compiler = env.compiler(rule.file.lang)
+def emit_object_file(rule, build_inputs, writer, env):
+    lang = rule.file.lang
+    compiler = env.compiler(lang)
 
     global_cflags, cflags = flags_vars(
-        compiler.command_var, compiler.global_args, writer
+        compiler.command_var,
+        compiler.global_args + build_inputs.global_options.get(lang, []),
+        writer
     )
     if not writer.has_rule(compiler.name):
         writer.rule(name=compiler.name, command=compiler.command(
@@ -306,7 +309,7 @@ def link_mode(target):
     }[type(target).__name__]
 
 @rule_handler('Link')
-def emit_link(rule, writer, env):
+def emit_link(rule, build_inputs, writer, env):
     linker = env.linker((i.lang for i in rule.files), link_mode(rule.target))
 
     global_ldflags, ldflags = flags_vars(
@@ -341,14 +344,14 @@ def emit_link(rule, writer, env):
     )
 
 @rule_handler('Alias')
-def emit_alias(rule, writer, env):
+def emit_alias(rule, build_inputs, writer, env):
     writer.build(
         output=env.target_name(rule.target), rule='phony',
         inputs=[target_path(env, i) for i in rule.deps]
     )
 
 @rule_handler('Command')
-def emit_command(rule, writer, env):
+def emit_command(rule, build_inputs, writer, env):
     if not writer.has_rule('command'):
         writer.rule(name='command', command=var('cmd'))
     writer.build(
