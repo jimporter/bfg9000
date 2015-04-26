@@ -23,6 +23,10 @@ class CcCompiler(object):
         result.extend(['-o', output])
         return result
 
+    def output_name(self, basename):
+        # TODO: Support other platform naming schemes
+        return basename + '.o'
+
     @property
     def library_args(self):
         return ['-fPIC']
@@ -47,6 +51,13 @@ class CcLinker(object):
         result.extend(utils.listify(libs))
         result.extend(['-o', output])
         return result
+
+    def output_name(self, basename):
+        # TODO: Support other platform naming schemes
+        if self._mode == 'shared_library':
+            return 'lib' + basename + '.so'
+        else:
+            return basename
 
     @property
     def mode_args(self):

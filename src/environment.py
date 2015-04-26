@@ -35,25 +35,9 @@ class Environment(object):
         if isinstance(lang, basestring):
             return self._linkers[mode][lang]
 
+        if not isinstance(lang, set):
+            lang = set(lang)
         # TODO: Be more intelligent about this when we support more languages
-        lang = set(lang)
         if 'c++' in lang:
             return self._linkers[mode]['c++']
         return self._linkers[mode]['c']
-
-    # TODO: This still needs some improvement to be more flexible
-    def target_name(self, target):
-        if type(target).__name__ == 'SharedLibrary':
-            return os.path.join(
-                os.path.dirname(target.name),
-                'lib{}.so'.format(os.path.basename(target.name))
-            )
-        elif type(target).__name__ == 'StaticLibrary':
-            return os.path.join(
-                os.path.dirname(target.name),
-                'lib{}.a'.format(os.path.basename(target.name))
-            )
-        elif type(target).__name__ == 'ObjectFile':
-            return '{}.o'.format(target.name)
-        else:
-            return target.name

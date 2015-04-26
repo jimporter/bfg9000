@@ -19,6 +19,10 @@ class ArLinker(object):
         result.extend(utils.listify(input))
         return result
 
+    def output_name(self, basename):
+        # TODO: Support other platform naming schemes
+        return 'lib' + basename + '.a'
+
     @property
     def mode_args(self):
         return []

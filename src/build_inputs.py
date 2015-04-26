@@ -2,16 +2,19 @@ import utils
 
 class Node(object):
     def __init__(self, name, creator=None):
-        self.name = name
+        self.raw_name = name
         self.creator = creator
 
     @property
     def is_source(self):
         return self.creator is None
 
+    def filename(self, env):
+        return self.raw_name
+
     def __repr__(self):
         return '<{type} {name}>'.format(
-            type=type(self).__name__, name=repr(self.name)
+            type=type(self).__name__, name=repr(self.raw_name)
         )
 
 class Directory(Node):

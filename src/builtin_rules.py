@@ -20,19 +20,43 @@ class ObjectFile(build_inputs.Node):
         self.lang = lang
         self.in_shared_library = False
 
-class Executable(build_inputs.Node):
+    def filename(self, env):
+        base, name = os.path.split(self.raw_name)
+        return os.path.join(base, env.compiler(self.lang).output_name(name))
+
+class Binary(build_inputs.Node):
     install_kind = 'program'
+
+    def __init__(self, name):
+        build_inputs.Node.__init__(self, name)
+        self.langs = None
+
+    def _filename(self, env, mode):
+        base, name = os.path.split(self.raw_name)
+        return os.path.join(
+            base, env.linker(self.langs, mode).output_name(name)
+        )
+
+class Executable(Binary):
     install_dir = 'bin'
 
-class Library(build_inputs.Node):
-    install_kind = 'program'
+    def filename(self, env):
+        return self._filename(env, 'executable')
+
+class Library(Binary):
     install_dir = 'lib'
 
+    @property
+    def lib_name(self):
+        return os.path.basename(self.raw_name)
+
 class SharedLibrary(Library):
-    pass
+    def filename(self, env):
+        return self._filename(env, 'shared_library')
 
 class StaticLibrary(Library):
-    pass
+    def filename(self, env):
+        return self._filename(env, 'static_library')
 
 class HeaderDirectory(build_inputs.Directory):
     install_dir = 'include'
@@ -78,7 +102,7 @@ def object_file(build, name=None, file=None, include=None, options=None,
     includes = utils.objectify_list(include, HeaderDirectory)
 
     if name is None:
-            name = os.path.splitext(file)[0]
+        name = os.path.splitext(file)[0]
     target = ObjectFile(name, lang)
     build.add_edge(Compile(
         target, source_file, includes, utils.shell_listify(options), deps
@@ -96,11 +120,13 @@ def _binary(build, target, files, libs=None, lang=None,
         return object_file(build, file=x, include=include,
                            options=compile_options, lang=lang)
 
-    build.fallback_default = target
     objects = utils.objectify_list(files, ObjectFile, make_obj)
     libs = utils.objectify_list(libs, Library, external=True)
+    target.langs = set(i.lang for i in objects)
+
     link = Link(target, objects, libs, utils.shell_listify(link_options), deps)
     build.add_edge(link)
+    build.fallback_default = target
     return link
 
 @builtin
