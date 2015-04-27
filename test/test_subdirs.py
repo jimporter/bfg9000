@@ -7,8 +7,8 @@ from integration import IntegrationTest, cleandir
 class TestSubdirs(IntegrationTest):
     def __init__(self, *args, **kwargs):
         IntegrationTest.__init__(self, 'subdirs', *args, **kwargs)
-        self.extra_args = ['--prefix', 'dist']
         self.distdir = os.path.join(self.srcdir, 'dist')
+        self.extra_args = ['--prefix', self.distdir]
 
     def setUp(self):
         IntegrationTest.setUp(self)

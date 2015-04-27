@@ -23,10 +23,9 @@ class IntegrationTest(unittest.TestCase):
         self.backend = os.getenv('BACKEND', 'make')
 
     def setUp(self):
-        os.chdir(self.srcdir)
         cleandir(self.builddir)
         subprocess.check_call(
-            [bfg9000, self.builddir, '--backend', self.backend] +
+            [bfg9000, self.srcdir, self.builddir, '--backend', self.backend] +
             self.extra_args
         )
         os.chdir(self.builddir)

@@ -3,7 +3,7 @@
 
 import argparse
 import importlib
-import os.path
+import os
 import sys
 
 import builtins
@@ -13,17 +13,61 @@ from build_inputs import BuildInputs
 from environment import Environment
 
 bfgfile = 'build.bfg'
+envfile = '.bfg_environ'
+
+def is_srcdir(path):
+    return os.path.exists(os.path.join(path, bfgfile))
+
+def validate_directories(args):
+    if not args.srcdir:
+        raise ValueError('at least one of srcdir or builddir must be defined')
+
+    if args.builddir:
+        if not os.path.exists(args.srcdir):
+            raise ValueError('{} does not exist'.format(args.srcdir))
+        if not os.path.isdir(args.srcdir):
+            raise ValueError('{} is not a directory'.format(args.srcdir))
+    else:
+        if os.path.exists(os.path.join(args.srcdir, bfgfile)):
+            args.builddir = '.'
+        else:
+            args.srcdir, args.builddir = '.', args.srcdir
+
+    if os.path.exists(args.builddir):
+        if os.path.samefile(args.srcdir, args.builddir):
+            raise ValueError('source and build directories must be different')
+        if not os.path.isdir(args.builddir):
+            raise ValueError('{} is not a directory'.format(args.builddir))
+
+    if not is_srcdir(args.srcdir):
+        raise ValueError('source directory must contain a build.bfg file')
+    if is_srcdir(args.builddir):
+        raise ValueError(
+            'build directory must not contain a build.bfg file'
+        )
+
+    if not os.path.exists(args.builddir):
+        os.mkdir(args.builddir)
+    args.srcdir = os.path.abspath(args.srcdir)
+    args.builddir = os.path.abspath(args.builddir)
 
 parser = argparse.ArgumentParser()
-parser.add_argument('builddir', help='build directory')
+parser.add_argument('srcdir', nargs='?', help='source directory')
+parser.add_argument('builddir', nargs='?', help='build directory')
 parser.add_argument('--backend', help='backend', default='make')
 parser.add_argument('--prefix', help='installation prefix', default='/usr')
 args = parser.parse_args()
 
+try:
+    validate_directories(args)
+except Exception as e:
+    parser.error(e)
+
 backend = importlib.import_module('backends.{}'.format(args.backend))
-env = Environment(srcdir=os.getcwd(), builddir=os.path.abspath(args.builddir),
+
+env = Environment(srcdir=args.srcdir, builddir=args.builddir,
                   install_prefix=os.path.abspath(args.prefix))
 
 build = BuildInputs()
-execfile(bfgfile, builtins.bind(build))
+execfile(os.path.join(args.srcdir, bfgfile), builtins.bind(build))
 backend.write(env, build)
