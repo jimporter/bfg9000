@@ -165,7 +165,7 @@ def command(build, name, cmd, deps=None):
 
 @builtin
 def default(build, *args):
-    build.default_targets.extend(args)
+    build.default_targets.extend(i for i in args if not i.is_source)
 
 @builtin
 def install(build, *args):

@@ -208,7 +208,10 @@ class MakeWriter(object):
 srcdir_var = MakeVariable('srcdir')
 def target_path(env, target):
     name = target.filename(env)
-    return path_join(srcdir_var, name) if target.is_source else name
+    if target.is_source:
+        return path_join(srcdir_var, name)
+    else:
+        return path_join(getattr(target, 'install_dir', None), name)
 
 def write(env, build_inputs):
     writer = MakeWriter()
@@ -270,9 +273,7 @@ def install_rule(install_targets, writer, env):
 
     def install_line(file):
         src = target_path(env, file)
-        dst = path_join(
-            prefix, file.install_dir, os.path.basename(file.filename(env))
-        )
+        dst = path_join(prefix, file.install_dir, file.filename(env))
         return [ install_cmd(file.install_kind), '-D', src, dst ]
 
     def mkdir_line(dir):
@@ -342,14 +343,14 @@ def emit_object_file(rule, build_inputs, writer, env):
     if cflags_value:
         variables[cflags] = [global_cflags] + cflags_value
 
-    directory = os.path.dirname(rule.target.filename(env))
+    target = target_path(env, rule.target)
+    directory = os.path.dirname(target)
     order_only = [directory] if directory else None
-    writer.rule(target=rule.target.filename(env),
-                deps=[target_path(env, rule.file)], order_only=order_only,
-                recipe=recipename, variables=variables)
+    writer.rule(target=target, deps=[target_path(env, rule.file)],
+                order_only=order_only, recipe=recipename, variables=variables)
     directory_rule(directory, writer)
 
-    base = os.path.splitext(rule.file.filename(env))[0]
+    base = os.path.splitext(target)[0]
     writer.include(base + '.d', optional=True)
 
 # TODO: Remove this
@@ -379,14 +380,23 @@ def emit_link(rule, build_inputs, writer, env):
             )
         ], flavor='define')
 
+    lib_dirs = set(os.path.dirname(target_path(env, i)) for i in rule.libs)
     lib_deps = (i for i in rule.libs if not i.is_source)
     deps = (target_path(env, i) for i in chain(rule.files, rule.deps, lib_deps))
+    target = target_path(env, rule.target)
+    target_dir = os.path.dirname(target)
 
     variables = {}
 
     ldflags_value = []
     ldflags_value.extend(linker.mode_args)
     ldflags_value.extend(rule.options)
+    ldflags_value.extend(chain.from_iterable(
+        linker.lib_dir(i) for i in lib_dirs
+    ))
+    ldflags_value.extend(linker.rpath(
+        os.path.relpath(i, target_dir) for i in lib_dirs
+    ))
     if ldflags_value:
         variables[ldflags] = [global_ldflags] + ldflags_value
 
@@ -395,21 +405,18 @@ def emit_link(rule, build_inputs, writer, env):
             linker.link_lib(i.lib_name) for i in rule.libs
         ))
 
-    directory = os.path.dirname(rule.target.filename(env))
-    order_only = [directory] if directory else None
+    order_only = [target_dir] if target_dir else None
     writer.rule(
-        target=rule.target.filename(env), deps=deps, order_only=order_only,
-        recipe=MakeCall(
+        target=target, deps=deps, order_only=order_only, recipe=MakeCall(
             recipename, (target_path(env, i) for i in rule.files)
-        ),
-        variables=variables
+        ), variables=variables
     )
-    directory_rule(directory, writer)
+    directory_rule(target_dir, writer)
 
 @rule_handler('Alias')
 def emit_alias(rule, build_inputs, writer, env):
     writer.rule(
-        target=rule.target.filename(env),
+        target=target_path(env, rule.target),
         deps=(target_path(env, i) for i in rule.deps),
         recipe=[],
         phony=True
@@ -418,7 +425,7 @@ def emit_alias(rule, build_inputs, writer, env):
 @rule_handler('Command')
 def emit_command(rule, build_inputs, writer, env):
     writer.rule(
-        target=rule.target.filename(env),
+        target=target_path(env, rule.target),
         deps=(target_path(env, i) for i in rule.deps),
         recipe=rule.cmd,
         phony=True

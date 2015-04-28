@@ -1,8 +1,8 @@
 # -*- python -*-
 
 include = header_directory('include')
-lib = shared_library('lib/library', files=['src/library.cpp'],
+lib = shared_library('sub/library', files=['src/library.cpp'],
                      include=[include])
-prog = executable('bin/program', files=['src/program.cpp'], include=[include],
-                  libs=[lib], link_options="-Llib -Wl,-rpath='$ORIGIN/../lib'")
+prog = executable('sub/program', files=['src/program.cpp'], include=[include],
+                  libs=[lib])
 install(prog, lib, include)

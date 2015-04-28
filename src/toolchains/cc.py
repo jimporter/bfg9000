@@ -63,8 +63,17 @@ class CcLinker(object):
     def mode_args(self):
         return ['-shared', '-fPIC'] if self._mode == 'shared_library' else []
 
+    def lib_dir(self, directory):
+        return ['-L' + directory]
+
     def link_lib(self, library):
         return ['-l' + library]
+
+    def rpath(self, paths):
+        rpath = ':'.join(os.path.join('$ORIGIN', i) for i in paths)
+        if not rpath:
+            return []
+        return ["-Wl,-rpath='{}'".format(rpath)]
 
 class CxxCompiler(CcCompiler):
     def __init__(self):

@@ -26,3 +26,6 @@ class ArLinker(object):
     @property
     def mode_args(self):
         return []
+
+    def rpath(self, paths):
+        return []

@@ -14,8 +14,15 @@ class TestInstall(IntegrationTest):
         IntegrationTest.setUp(self)
         cleandir(self.distdir)
 
+    def test_all(self):
+        subprocess.check_call([self.backend])
+        self.assertEqual(subprocess.check_output(
+            [os.path.join('bin', 'program')],
+        ), 'hello, library!\n')
+
     def test_install(self):
         subprocess.check_call([self.backend, 'install'])
+        cleandir(self.builddir)
 
         self.assertTrue(os.path.exists(os.path.join(
             self.distdir, 'include', 'library.hpp'

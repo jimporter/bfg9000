@@ -9,7 +9,7 @@ class TestStaticLibrary(IntegrationTest):
 
     def test_all(self):
         subprocess.check_call([self.backend])
-        self.assertEqual(subprocess.check_output(['./program']),
+        self.assertEqual(subprocess.check_output(['bin/program']),
                          'hello, library!\n')
 
 if __name__ == '__main__':

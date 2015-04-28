@@ -16,8 +16,9 @@ class TestSubdirs(IntegrationTest):
 
     def test_all(self):
         subprocess.check_call([self.backend])
-        self.assertEqual(subprocess.check_output(['bin/program']),
-                         'hello, library!\n')
+        self.assertEqual(subprocess.check_output(
+            [os.path.join('bin', 'sub', 'program')],
+        ), 'hello, library!\n')
 
     def test_install(self):
         subprocess.check_call([self.backend, 'install'])
@@ -28,14 +29,14 @@ class TestSubdirs(IntegrationTest):
         )))
         # TODO: Support other platform naming schemes
         self.assertTrue(os.path.exists(os.path.join(
-            self.distdir, 'bin', 'program'
+            self.distdir, 'bin', 'sub', 'program'
         )))
         self.assertTrue(os.path.exists(os.path.join(
-            self.distdir, 'lib', 'liblibrary.so'
+            self.distdir, 'lib', 'sub', 'liblibrary.so'
         )))
 
         self.assertEqual(subprocess.check_output(
-            [os.path.join(self.distdir, 'bin', 'program')]
+            [os.path.join(self.distdir, 'bin', 'sub', 'program')]
         ), 'hello, library!\n')
 
     def test_install_existing_paths(self):
@@ -50,14 +51,14 @@ class TestSubdirs(IntegrationTest):
         )))
         # TODO: Support other platform naming schemes
         self.assertTrue(os.path.exists(os.path.join(
-            self.distdir, 'bin', 'program'
+            self.distdir, 'bin', 'sub', 'program'
         )))
         self.assertTrue(os.path.exists(os.path.join(
-            self.distdir, 'lib', 'liblibrary.so'
+            self.distdir, 'lib', 'sub', 'liblibrary.so'
         )))
 
         self.assertEqual(subprocess.check_output(
-            [os.path.join(self.distdir, 'bin', 'program')]
+            [os.path.join(self.distdir, 'bin', 'sub', 'program')]
         ), 'hello, library!\n')
 
 if __name__ == '__main__':

@@ -8,13 +8,13 @@ class TestSimple(IntegrationTest):
         IntegrationTest.__init__(self, 'simple', *args, **kwargs)
 
     def test_build(self):
-        subprocess.check_call([self.backend, 'simple'])
-        self.assertEqual(subprocess.check_output(['./simple']),
+        subprocess.check_call([self.backend, 'bin/simple'])
+        self.assertEqual(subprocess.check_output(['bin/simple']),
                          'hello, world!\n')
 
     def test_default(self):
         subprocess.check_call([self.backend])
-        self.assertEqual(subprocess.check_output(['./simple']),
+        self.assertEqual(subprocess.check_output(['bin/simple']),
                          'hello, world!\n')
 
 if __name__ == '__main__':

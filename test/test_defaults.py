@@ -9,9 +9,9 @@ class TestDefaults(IntegrationTest):
 
     def test_default(self):
         subprocess.check_call([self.backend])
-        self.assertEqual(subprocess.check_output(['./a']),
+        self.assertEqual(subprocess.check_output(['bin/a']),
                          'hello, a!\n')
-        self.assertEqual(subprocess.check_output(['./b']),
+        self.assertEqual(subprocess.check_output(['bin/b']),
                          'hello, b!\n')
 
 if __name__ == '__main__':

@@ -8,8 +8,8 @@ class TestOptions(IntegrationTest):
         IntegrationTest.__init__(self, 'options', *args, **kwargs)
 
     def test_build(self):
-        subprocess.check_call([self.backend, 'program'])
-        self.assertEqual(subprocess.check_output(['./program']),
+        subprocess.check_call([self.backend])
+        self.assertEqual(subprocess.check_output(['bin/program']),
                          'hello, world!\n')
 
 if __name__ == '__main__':

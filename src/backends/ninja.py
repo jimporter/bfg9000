@@ -184,7 +184,10 @@ class NinjaWriter(object):
 srcdir_var = NinjaVariable('srcdir')
 def target_path(env, target):
     name = target.filename(env)
-    return os.path.join(str(srcdir_var), name) if target.is_source else name
+    if target.is_source:
+        return path_join(srcdir_var, name)
+    else:
+        return path_join(getattr(target, 'install_dir', None), name)
 
 def write(env, build_inputs):
     writer = NinjaWriter()
@@ -252,9 +255,7 @@ def install_rule(install_targets, writer, env):
 
     def install_line(file):
         src = target_path(env, file)
-        dst = path_join(
-            prefix, file.install_dir, os.path.basename(file.filename(env))
-        )
+        dst = path_join(prefix, file.install_dir, file.filename(env))
         return [ install_cmd(file.install_kind), '-D', src, dst ]
 
     def mkdir_line(dir):
@@ -311,7 +312,7 @@ def emit_object_file(rule, build_inputs, writer, env):
     if cflags_value:
         variables[cflags] = [global_cflags] + cflags_value
 
-    writer.build(output=rule.target.filename(env), rule=compiler.name,
+    writer.build(output=target_path(env, rule.target), rule=compiler.name,
                  inputs=[target_path(env, rule.file)],
                  variables=variables)
 
@@ -337,12 +338,21 @@ def emit_link(rule, build_inputs, writer, env):
             libs=ldlibs, args=ldflags
         ))
 
+    lib_dirs = set(os.path.dirname(target_path(env, i)) for i in rule.libs)
+    target = target_path(env, rule.target)
+    target_dir = os.path.dirname(target)
+
     variables = {}
 
     ldflags_value = []
     ldflags_value.extend(linker.mode_args)
     ldflags_value.extend(rule.options)
-
+    ldflags_value.extend(chain.from_iterable(
+        linker.lib_dir(i) for i in lib_dirs
+    ))
+    ldflags_value.extend(linker.rpath(
+        os.path.relpath(i, target_dir) for i in lib_dirs
+    ))
     if ldflags_value:
         variables[ldflags] = [global_ldflags] + ldflags_value
 
@@ -352,7 +362,7 @@ def emit_link(rule, build_inputs, writer, env):
         ))
 
     writer.build(
-        output=rule.target.filename(env), rule=linker.name,
+        output=target, rule=linker.name,
         inputs=(target_path(env, i) for i in rule.files),
         implicit=(target_path(env, i) for i in rule.libs if not i.is_source),
         variables=variables
@@ -361,7 +371,7 @@ def emit_link(rule, build_inputs, writer, env):
 @rule_handler('Alias')
 def emit_alias(rule, build_inputs, writer, env):
     writer.build(
-        output=rule.target.filename(env), rule='phony',
+        output=target_path(env, rule.target), rule='phony',
         inputs=[target_path(env, i) for i in rule.deps]
     )
 
@@ -370,7 +380,7 @@ def emit_command(rule, build_inputs, writer, env):
     if not writer.has_rule('command'):
         writer.rule(name='command', command=var('cmd'))
     writer.build(
-        output=rule.target.filename(env), rule='command',
+        output=target_path(env, rule.target), rule='command',
         inputs=(target_path(env, i) for i in rule.deps),
         variables={'cmd': ' && '.join(rule.cmd)}
     )
