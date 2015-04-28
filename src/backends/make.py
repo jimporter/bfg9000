@@ -181,6 +181,9 @@ class MakeWriter(object):
         out.write('\n\n')
 
     def write(self, out):
+        # Don't let make use built-in suffix rules
+        out.write('.SUFFIXES:\n\n')
+
         for name, value in self._global_variables.iteritems():
             self._write_variable(out, name, value[0], value[1])
         if self._global_variables:
