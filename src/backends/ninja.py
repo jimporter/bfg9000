@@ -11,7 +11,7 @@ def rule_handler(rule_name):
         return fn
     return decorator
 
-NinjaRule = namedtuple('NinjaRule', ['command', 'depfile'])
+NinjaRule = namedtuple('NinjaRule', ['command', 'depfile', 'generator'])
 NinjaBuild = namedtuple('NinjaBuild', ['rule', 'inputs', 'implicit',
                                        'order_only', 'variables'])
 class escaped_str(str):
@@ -93,10 +93,10 @@ class NinjaWriter(object):
             name = NinjaVariable(name)
         return name in self._variables
 
-    def rule(self, name, command, depfile=None):
+    def rule(self, name, command, depfile=None, generator=False):
         if self.has_rule(name):
             raise RuntimeError('rule "{}" already exists'.format(name))
-        self._rules[name] = NinjaRule(command, depfile)
+        self._rules[name] = NinjaRule(command, depfile, generator)
 
     def has_rule(self, name):
         return name in self._rules
@@ -131,6 +131,8 @@ class NinjaWriter(object):
         self._write_variable(out, var('command'), rule.command, 1)
         if rule.depfile:
             self._write_variable(out, var('depfile'), rule.depfile, 1)
+        if rule.generator:
+            self._write_variable(out, var('generator'), 1, 1)
 
     def _write_build(self, out, name, build):
         out.write('build {output}: {rule}'.format(
@@ -192,6 +194,7 @@ def write(env, build_inputs):
     install_rule(build_inputs.install_targets, writer, env)
     for e in build_inputs.edges:
         _rule_handlers[type(e).__name__](e, build_inputs, writer, env)
+    regenerate_rule(writer, env)
 
     with open(os.path.join(env.builddir, 'build.ninja'), 'w') as out:
         writer.write(out)
@@ -267,6 +270,17 @@ def install_rule(install_targets, writer, env):
         variables={'cmd': escaped_str(
             ' && '.join(escape_list(i) for i in commands)
         )}
+    )
+
+def regenerate_rule(writer, env):
+    writer.rule(
+        name='regenerate',
+        command=[env.bfgpath, '--regenerate', '.'],
+        generator=True
+    )
+    writer.build(
+        output='build.ninja', rule='regenerate',
+        implicit=[path_join(srcdir_var, 'build.bfg')]
     )
 
 @rule_handler('Compile')

@@ -4,6 +4,7 @@
 import argparse
 import importlib
 import os
+import pickle
 import sys
 
 import builtins
@@ -18,7 +19,7 @@ envfile = '.bfg_environ'
 def is_srcdir(path):
     return os.path.exists(os.path.join(path, bfgfile))
 
-def validate_directories(args):
+def validate_build_directories(args):
     if not args.srcdir:
         raise ValueError('at least one of srcdir or builddir must be defined')
 
@@ -51,23 +52,38 @@ def validate_directories(args):
     args.srcdir = os.path.abspath(args.srcdir)
     args.builddir = os.path.abspath(args.builddir)
 
+def validate_regen_directories(args):
+    if args.builddir:
+        raise ValueError('foo')
+    args.srcdir, args.builddir = None, os.path.abspath(args.srcdir or '.')
+
 parser = argparse.ArgumentParser()
 parser.add_argument('srcdir', nargs='?', help='source directory')
 parser.add_argument('builddir', nargs='?', help='build directory')
-parser.add_argument('--backend', help='backend', default='make')
-parser.add_argument('--prefix', help='installation prefix', default='/usr')
+parser.add_argument('--backend', default='make', help='backend')
+parser.add_argument('--prefix', default='/usr', help='installation prefix')
+parser.add_argument('--regenerate', action='store_true',
+                    help='regenerate build files')
 args = parser.parse_args()
 
 try:
-    validate_directories(args)
+    if args.regenerate:
+        validate_regen_directories(args)
+        env = pickle.load(open(os.path.join(args.builddir, envfile)))
+    else:
+        validate_build_directories(args)
+        env = Environment(
+            bfgpath=os.path.realpath(__file__),
+            srcdir=args.srcdir, builddir=args.builddir, backend=args.backend,
+            install_prefix=os.path.abspath(args.prefix)
+        )
+        pickle.dump(env, open(os.path.join(args.builddir, envfile), 'w'),
+                    protocol=2)
 except Exception as e:
     parser.error(e)
 
-backend = importlib.import_module('backends.{}'.format(args.backend))
-
-env = Environment(srcdir=args.srcdir, builddir=args.builddir,
-                  install_prefix=os.path.abspath(args.prefix))
-
 build = BuildInputs()
-execfile(os.path.join(args.srcdir, bfgfile), builtins.bind(build))
+execfile(os.path.join(env.srcdir, bfgfile), builtins.bind(build))
+
+backend = importlib.import_module('backends.{}'.format(env.backend))
 backend.write(env, build)

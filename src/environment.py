@@ -4,9 +4,11 @@ import toolchains.ar
 import toolchains.cc
 
 class Environment(object):
-    def __init__(self, srcdir, builddir, install_prefix):
+    def __init__(self, bfgpath, srcdir, builddir, backend, install_prefix):
+        self.bfgpath = bfgpath
         self.srcdir = srcdir
         self.builddir = builddir
+        self.backend = backend
         self.install_prefix = install_prefix
 
         self._compilers = {

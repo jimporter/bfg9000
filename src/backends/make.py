@@ -218,6 +218,7 @@ def write(env, build_inputs):
     install_rule(build_inputs.install_targets, writer, env)
     for e in build_inputs.edges:
         _rule_handlers[type(e).__name__](e, build_inputs, writer, env)
+    regenerate_rule(writer, env)
 
     with open(os.path.join(env.builddir, 'Makefile'), 'w') as out:
         writer.write(out)
@@ -282,6 +283,13 @@ def install_rule(install_targets, writer, env):
     recipe = ([install_line(i) for i in install_targets.files] +
               [mkdir_line(i) for i in install_targets.directories])
     writer.rule(target='install', deps=['all'], recipe=recipe, phony=True)
+
+def regenerate_rule(writer, env):
+    writer.rule(
+        target='Makefile',
+        deps=[path_join(srcdir_var, 'build.bfg')],
+        recipe=[[env.bfgpath, '--regenerate', '.']]
+    )
 
 _seen_dirs = set() # TODO: Put this on the writer
 def directory_rule(path, writer):
