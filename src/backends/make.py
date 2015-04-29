@@ -383,9 +383,8 @@ def emit_link(rule, build_inputs, writer, env):
             )
         ], flavor='define')
 
-    lib_dirs = set(os.path.dirname(target_path(env, i)) for i in rule.libs)
-    lib_deps = (i for i in rule.libs if not i.is_source)
-    deps = (target_path(env, i) for i in chain(rule.files, rule.deps, lib_deps))
+    lib_deps = [i for i in rule.libs if not i.is_source]
+    lib_dirs = set(os.path.dirname(target_path(env, i)) for i in lib_deps)
     target = target_path(env, rule.target)
     target_dir = os.path.dirname(target)
 
@@ -408,6 +407,7 @@ def emit_link(rule, build_inputs, writer, env):
             linker.link_lib(i.lib_name) for i in rule.libs
         ))
 
+    deps = (target_path(env, i) for i in chain(rule.files, rule.deps, lib_deps))
     order_only = [target_dir] if target_dir else None
     writer.rule(
         target=target, deps=deps, order_only=order_only, recipe=MakeCall(

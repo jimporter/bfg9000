@@ -121,7 +121,9 @@ def _binary(build, target, files, libs=None, lang=None,
                            options=compile_options, lang=lang)
 
     objects = utils.objectify_list(files, ObjectFile, make_obj)
-    libs = utils.objectify_list(libs, Library, external=True)
+    # TODO: Indicate that these libraries may be external via some other way
+    # than them not having a `creator` attribute?
+    libs = utils.objectify_list(libs, Library)
     target.langs = set(i.lang for i in objects)
 
     link = Link(target, objects, libs, utils.shell_listify(link_options), deps)

@@ -338,7 +338,8 @@ def emit_link(rule, build_inputs, writer, env):
             libs=ldlibs, args=ldflags
         ))
 
-    lib_dirs = set(os.path.dirname(target_path(env, i)) for i in rule.libs)
+    lib_deps = [i for i in rule.libs if not i.is_source]
+    lib_dirs = set(os.path.dirname(target_path(env, i)) for i in lib_deps)
     target = target_path(env, rule.target)
     target_dir = os.path.dirname(target)
 
@@ -364,7 +365,7 @@ def emit_link(rule, build_inputs, writer, env):
     writer.build(
         output=target, rule=linker.name,
         inputs=(target_path(env, i) for i in rule.files),
-        implicit=(target_path(env, i) for i in rule.libs if not i.is_source),
+        implicit=(target_path(env, i) for i in lib_deps),
         variables=variables
     )
 
