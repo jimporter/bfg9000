@@ -1,4 +1,6 @@
+import errno
 import os
+import ntpath
 import uuid
 from lxml import etree
 from lxml.builder import E
@@ -8,8 +10,8 @@ from builtin_rules import *
 def makedirs(path, mode=0o777, exist_ok=False):
     try:
         os.makedirs(path)
-    except OSError as exc:
-        if not exist_ok or exc.errno != errno.EEXIST or not os.path.isdir(path):
+    except OSError as e:
+        if not exist_ok or e.errno != errno.EEXIST or not os.path.isdir(path):
             raise
 
 class SlnElement(object):
@@ -110,9 +112,10 @@ class VcxProject(object):
     _XMLNS = 'http://schemas.microsoft.com/developer/msbuild/2003'
     _DOCTYPE = '<?xml version="1.0" encoding="utf-8"?>'
 
-    def __init__(self, name, files):
+    def __init__(self, name, files, srcdir):
         self.name = name
         self.files = files
+        self.srcdir = srcdir
 
     @property
     def path(self):
@@ -139,7 +142,8 @@ class VcxProject(object):
             E.PropertyGroup({'Label': 'Globals'},
                 # TODO: Use a smarter way to make UUIDs
                 E.ProjectGuid(self.uuid_str),
-                E.RootNamespace(self.name)
+                E.RootNamespace(self.name),
+                E.SourceDir(ntpath.normpath(self.srcdir))
             ),
             E.Import(Project='$(VCTargetsPath)\Microsoft.Cpp.default.props'),
             E.PropertyGroup({'Label': 'Configuration'},
@@ -156,7 +160,9 @@ class VcxProject(object):
                 )
             ),
             E.ItemGroup(
-                *[E.ClCompile(Include=i) for i in self.files]
+                *[E.ClCompile(Include=ntpath.normpath(
+                    ntpath.join('$(SourceDir)', i)
+                )) for i in self.files]
             ),
             E.Import(Project='$(VCTargetsPath)\Microsoft.Cpp.Targets')
         )
@@ -171,7 +177,8 @@ def write(env, build_inputs):
         if isinstance(e, Link):
             projects.append(VcxProject(
                 e.target.filename(env),
-                (i.creator.file.filename(env) for i in e.files)
+                (i.creator.file.filename(env) for i in e.files),
+                env.srcdir
             ))
 
     with open(os.path.join(env.builddir, 'project.sln'), 'w') as out:
