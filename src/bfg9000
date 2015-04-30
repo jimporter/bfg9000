@@ -19,6 +19,14 @@ envfile = '.bfg_environ'
 def is_srcdir(path):
     return os.path.exists(os.path.join(path, bfgfile))
 
+def samefile(path1, path2):
+    if hasattr(os.path, 'samefile'):
+        return os.path.samefile(path1, path2)
+    else:
+        # This isn't entirely accurate, but it's close enough, and should only
+        # be necessary for Windows with Python 2.x.
+        return os.path.realpath(path1) == os.path.realpath(path2)
+
 def validate_build_directories(args):
     if not args.srcdir:
         raise ValueError('at least one of srcdir or builddir must be defined')
@@ -35,7 +43,7 @@ def validate_build_directories(args):
             args.srcdir, args.builddir = '.', args.srcdir
 
     if os.path.exists(args.builddir):
-        if os.path.samefile(args.srcdir, args.builddir):
+        if samefile(args.srcdir, args.builddir):
             raise ValueError('source and build directories must be different')
         if not os.path.isdir(args.builddir):
             raise ValueError('{} is not a directory'.format(args.builddir))
