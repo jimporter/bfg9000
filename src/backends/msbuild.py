@@ -170,7 +170,8 @@ def write(env, build_inputs):
     for e in build_inputs.edges:
         if isinstance(e, Link):
             projects.append(VcxProject(
-                e.target.name, (i.creator.file.name for i in e.files)
+                e.target.filename(env),
+                (i.creator.file.filename(env) for i in e.files)
             ))
 
     with open(os.path.join(env.builddir, 'project.sln'), 'w') as out:
