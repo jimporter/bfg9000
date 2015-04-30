@@ -2,7 +2,7 @@ import os.path
 import subprocess
 import unittest
 
-from integration import IntegrationTest, cleandir
+from integration import *
 
 class TestInstall(IntegrationTest):
     def __init__(self, *args, **kwargs):
@@ -15,10 +15,8 @@ class TestInstall(IntegrationTest):
         cleandir(self.distdir)
 
     def test_all(self):
-        subprocess.check_call([self.backend])
-        self.assertEqual(subprocess.check_output(
-            [os.path.join('bin', 'program')],
-        ), 'hello, library!\n')
+        self.build()
+        self.assertOutput([executable('program')], 'hello, library!\n')
 
     def test_install(self):
         subprocess.check_call([self.backend, 'install'])
@@ -35,9 +33,10 @@ class TestInstall(IntegrationTest):
             self.distdir, 'lib', 'liblibrary.so'
         )))
 
-        self.assertEqual(subprocess.check_output(
-            [os.path.join(self.distdir, 'bin', 'program')]
-        ), 'hello, library!\n')
+        self.assertOutput(
+            [os.path.join(self.distdir, executable('program'))],
+            'hello, library!\n'
+        )
 
 if __name__ == '__main__':
     unittest.main()

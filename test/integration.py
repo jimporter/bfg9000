@@ -1,17 +1,27 @@
+import errno
+import os
+import platform
 import shutil
+import subprocess
+import sys
+import time
 import unittest
 
-import os
-import subprocess
-
 basedir = os.path.abspath(os.path.dirname(__file__))
-bfg9000 = os.path.join(basedir, '../src/bfg9000')
+bfg9000 = os.path.join(basedir, '..', 'src', 'bfg9000')
 
 def cleandir(path):
     try:
         shutil.rmtree(path)
-    except:
-        pass
+    except Exception as e:
+        if e.errno == errno.ENOTEMPTY:
+            # Windows seems to keep an executable file open a little bit after
+            # the process returns from wait(), so sleep a bit and try again in
+            # case this bites us.
+            time.sleep(0.5)
+            shutil.rmtree(path)
+        elif e.errno != errno.ENOENT:
+            raise
     os.mkdir(path)
 
 class IntegrationTest(unittest.TestCase):
@@ -26,7 +36,29 @@ class IntegrationTest(unittest.TestCase):
         os.chdir(self.srcdir)
         cleandir(self.builddir)
         subprocess.check_call(
-            [bfg9000, self.srcdir, self.builddir, '--backend', self.backend] +
-            self.extra_args
+            # TODO: Remove sys.executable?
+            [sys.executable, bfg9000, self.srcdir, self.builddir, '--backend',
+             self.backend] + self.extra_args
         )
         os.chdir(self.builddir)
+
+    def build(self, target=None):
+        args = [self.backend]
+        if target:
+            if self.backend == 'msbuild':
+                args.append('/target:' + target)
+            else:
+                args.append(target)
+        subprocess.check_call(args)
+
+    def assertOutput(self, args, output):
+        if self.backend == 'msbuild':
+            args = args[:]
+            args[0] = os.path.join('Debug', args[0])
+        self.assertEqual(subprocess.check_output(args), output)
+
+def executable(name):
+    if platform.system() == 'Linux':
+        return os.path.join('bin', name)
+    else:
+        return name
