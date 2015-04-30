@@ -55,7 +55,9 @@ class IntegrationTest(unittest.TestCase):
         if self.backend == 'msbuild':
             args = args[:]
             args[0] = os.path.join('Debug', args[0])
-        self.assertEqual(subprocess.check_output(args), output)
+        self.assertEqual(
+            subprocess.check_output(args, universal_newlines=True), output
+        )
 
 def executable(name):
     if platform.system() == 'Linux':
