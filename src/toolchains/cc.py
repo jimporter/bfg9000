@@ -3,16 +3,12 @@ import shlex
 
 import utils
 
-class CcCompiler(object):
-    def __init__(self):
-        self.command_name = os.getenv('CC', 'cc')
-        self.command_var = 'cc'
-        self.name = 'cc'
-
-        self.global_args = (
-            shlex.split(os.getenv('CFLAGS', ''), posix=False) +
-            shlex.split(os.getenv('CPPFLAGS', ''), posix=False)
-        )
+class CcCompilerBase(object):
+    def __init__(self, platform_info, command, name):
+        self._platform_info = platform_info
+        self.command_name = command
+        self.name = name
+        self.command_var = name
 
     def command(self, cmd, input, output, dep=None, args=None):
         result = [cmd]
@@ -24,8 +20,7 @@ class CcCompiler(object):
         return result
 
     def output_name(self, basename):
-        # TODO: Support other platform naming schemes
-        return basename + '.o'
+        return self._platform_info.object_file_name(basename)
 
     @property
     def library_args(self):
@@ -34,15 +29,14 @@ class CcCompiler(object):
     def include_dir(self, directory):
         return ['-I' + directory]
 
-class CcLinker(object):
-    def __init__(self, mode):
-        self.command_name = os.getenv('CC', 'cc')
-        self.command_var = 'cc'
-        self.link_var = 'ld'
+class CcLinkerBase(object):
+    def __init__(self, mode, platform_info, command, name):
         self._mode = mode
-        self.name = 'link_cc'
-
-        self.global_args = shlex.split(os.getenv('LDFLAGS', ''), posix=False)
+        self._platform_info = platform_info
+        self.command_name = command
+        self.name = 'link_' + name
+        self.command_var = name
+        self.link_var = 'ld'
 
     def command(self, cmd, input, output, libs=None, args=None):
         result = [cmd]
@@ -55,9 +49,9 @@ class CcLinker(object):
     def output_name(self, basename):
         # TODO: Support other platform naming schemes
         if self._mode == 'shared_library':
-            return 'lib' + basename + '.so'
+            return self._platform_info.shared_library_name(basename)
         else:
-            return basename
+            return self._platform_info.executable_name(basename)
 
     @property
     def mode_args(self):
@@ -75,23 +69,36 @@ class CcLinker(object):
             return []
         return ["-Wl,-rpath='{}'".format(rpath)]
 
-class CxxCompiler(CcCompiler):
-    def __init__(self):
-        self.command_name = os.getenv('CXX', 'c++')
-        self.command_var = 'cxx'
-        self.name = 'cxx'
+class CcCompiler(CcCompilerBase):
+    def __init__(self, platform_info):
+        CcCompilerBase.__init__(
+            self, platform_info, os.getenv('CC', 'cc'), 'cc'
+        )
+        self.global_args = (
+            shlex.split(os.getenv('CFLAGS', ''), posix=False) +
+            shlex.split(os.getenv('CPPFLAGS', ''), posix=False)
+        )
 
+class CxxCompiler(CcCompilerBase):
+    def __init__(self, platform_info):
+        CcCompilerBase.__init__(
+            self, platform_info, os.getenv('CXX', 'c++'), 'cxx'
+        )
         self.global_args = (
             shlex.split(os.getenv('CXXFLAGS', ''), posix=False) +
             shlex.split(os.getenv('CPPFLAGS', ''), posix=False)
         )
 
-class CxxLinker(CcLinker):
-    def __init__(self, mode):
-        self.command_name = os.getenv('CXX', 'c++')
-        self.command_var = 'cxx'
-        self.link_var = 'ld'
-        self._mode = mode
-        self.name = 'link_cxx'
+class CcLinker(CcLinkerBase):
+    def __init__(self, mode, platform_info):
+        CcLinkerBase.__init__(
+            self, mode, platform_info, os.getenv('CC', 'cc'), 'cc'
+        )
+        self.global_args = shlex.split(os.getenv('LDFLAGS', ''), posix=False)
 
+class CxxLinker(CcLinkerBase):
+    def __init__(self, mode, platform_info):
+        CcLinkerBase.__init__(
+            self, mode, platform_info, os.getenv('CXX', 'c++'), 'cxx'
+        )
         self.global_args = shlex.split(os.getenv('LDFLAGS', ''), posix=False)

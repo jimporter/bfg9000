@@ -4,7 +4,8 @@ import shlex
 import utils
 
 class ArLinker(object):
-    def __init__(self):
+    def __init__(self, platform_info):
+        self._platform_info = platform_info
         self.command_name = os.getenv('AR', 'ar')
         self.command_var = 'ar'
         self.link_var = 'ar'
@@ -20,8 +21,7 @@ class ArLinker(object):
         return result
 
     def output_name(self, basename):
-        # TODO: Support other platform naming schemes
-        return 'lib' + basename + '.a'
+        return self._platform_info.static_library_name(basename)
 
     @property
     def mode_args(self):

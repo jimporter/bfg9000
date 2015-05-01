@@ -24,6 +24,13 @@ class SlnElement(object):
         self.children = []
 
     def __call__(self, *args):
+        return self.extend(args)
+
+    def append(self, item):
+        self.children.append(item)
+        return self
+
+    def extend(self, args):
         self.children.extend(args)
         return self
 
@@ -67,7 +74,7 @@ def sln_write(out, x):
         x._write(out, 0)
 
 def write_solution(out, projects):
-    E = SlnMaker()
+    S = SlnMaker()
     Var = SlnVariable
 
     main_uuid = '986DAF6F-BAF1-40AB-9AB7-7AF8E8A7B82A' # TODO: Generate this
@@ -81,30 +88,34 @@ def write_solution(out, projects):
     configs = []
 
     for p in projects:
-        sln.append(E.Project(
+        proj = S.Project(
             '"{}"'.format(main_uuid),
             '"{name}", "{path}", "{uuid}"'.format(
                 name=p.name, path=p.path, uuid=p.uuid_str
             )
-        ))
+        )
+        if p.dependencies:
+            proj.append(
+                S.ProjectSection('ProjectDependencies', 'postProject')
+                 .extend(Var(i.uuid_str, i.uuid_str) for i in p.dependencies)
+            )
+        sln.append(proj)
+
         configs.append(Var('{}.Debug|x86.ActiveCfg'.format(p.uuid_str),
                            'Debug|Win32'))
         configs.append(Var('{}.Debug|x86.Build.0'.format(p.uuid_str),
                            'Debug|Win32'))
 
-    sln.extend([
-        E.Global()(
-            E.GlobalSection('SolutionConfigurationPlatforms', 'preSolution')(
-                Var('Debug|x86', 'Debug|x86')
-            ),
-            E.GlobalSection('ProjectConfigurationPlatforms', 'postSolution')(
-                *configs
-            ),
-            E.GlobalSection('SolutionProperties', 'preSolution')(
-                Var('HideSolutionNode', 'FALSE')
-            )
+    sln.append(S.Global()(
+        S.GlobalSection('SolutionConfigurationPlatforms', 'preSolution')(
+            Var('Debug|x86', 'Debug|x86')
+        ),
+        S.GlobalSection('ProjectConfigurationPlatforms', 'postSolution')
+         .extend(configs),
+        S.GlobalSection('SolutionProperties', 'preSolution')(
+            Var('HideSolutionNode', 'FALSE')
         )
-    ])
+    ))
 
     sln_write(out, sln)
 
@@ -112,10 +123,15 @@ class VcxProject(object):
     _XMLNS = 'http://schemas.microsoft.com/developer/msbuild/2003'
     _DOCTYPE = '<?xml version="1.0" encoding="utf-8"?>'
 
-    def __init__(self, name, files, srcdir):
+    def __init__(self, name, files, srcdir, mode='Application', libs=None,
+                 libdirs=None, dependencies=None):
         self.name = name
         self.files = files
         self.srcdir = srcdir
+        self.mode = mode
+        self.libs = libs
+        self.libdirs = libdirs
+        self.dependencies = dependencies or []
 
     @property
     def path(self):
@@ -129,7 +145,26 @@ class VcxProject(object):
     def uuid_str(self):
         return '{{{}}}'.format(str(self.uuid).upper())
 
+    def _item_definition_group(self):
+        return item_defs
+
     def write(self, out):
+        item_defs = E.ItemDefinitionGroup(
+            E.ClCompile(
+                # TODO: Add more options
+                E.WarningLevel('Level3')
+            )
+        )
+        if self.libs:
+            libs = ';'.join(self.libs + ['%(AdditionalDependencies)'])
+            item_defs.append(E.Link( E.AdditionalDependencies(libs) ))
+
+        override_props = E.PropertyGroup()
+        if self.libdirs:
+            override_props.append(E.LibraryPath(
+                ';'.join(self.libdirs + ['$(LibraryPath)'])
+            ))
+
         project = E.Project({'DefaultTargets': 'Build'},
                             {'ToolsVersion': '14.0'}, {'xmlns': self._XMLNS},
             E.ItemGroup({'Label' : 'ProjectConfigurations'},
@@ -147,18 +182,14 @@ class VcxProject(object):
             ),
             E.Import(Project='$(VCTargetsPath)\Microsoft.Cpp.default.props'),
             E.PropertyGroup({'Label': 'Configuration'},
-                E.ConfigurationType('Application'), # TODO: Support libraries
+                E.ConfigurationType(self.mode),
                 E.UseDebugLibraries('true'),
                 E.PlatformToolset('v140'),
                 E.CharacterSet('Multibyte')
             ),
             E.Import(Project='$(VCTargetsPath)\Microsoft.Cpp.props'),
-            E.ItemDefinitionGroup(
-                E.ClCompile(
-                    # TODO: Add more options
-                    E.WarningLevel('Level3')
-                )
-            ),
+            override_props,
+            item_defs,
             E.ItemGroup(
                 *[E.ClCompile(Include=ntpath.normpath(
                     ntpath.join('$(SourceDir)', i)
@@ -170,16 +201,41 @@ class VcxProject(object):
         out.write(etree.tostring(project, doctype=self._DOCTYPE,
                                  pretty_print=True))
 
+# TODO: Remove this
+def link_mode(target):
+    return {
+        'Executable'   : 'Application',
+        'SharedLibrary': 'DynamicLibrary',
+        'StaticLibrary': 'StaticLibrary',
+    }[type(target).__name__]
+
 def write(env, build_inputs):
     projects = []
+    project_map = {}
     # TODO: Handle default().
     for e in build_inputs.edges:
         if isinstance(e, Link):
-            projects.append(VcxProject(
-                e.target.filename(env),
+            # By definition, a dependency for an edge must already be defined by
+            # the time the edge is created, so we can map *all* the dependencies
+            # to their associated projects by looking at the projects we've
+            # already created.
+            dependencies = []
+            for dep in e.libs:
+                # TODO: It might make sense to issue a warning if we see a dep
+                # we don't have a project for...
+                if dep.creator and id(dep.creator.target) in project_map:
+                    dependencies.append(project_map[id(dep.creator.target)])
+
+            project = VcxProject(
+                e.target.raw_name,
                 (i.creator.file.filename(env) for i in e.files),
-                env.srcdir
-            ))
+                env.srcdir, link_mode(e.target),
+                libs=[i.filename(env) for i in e.libs],
+                libdirs=['$(OutDir)'],
+                dependencies=dependencies
+            )
+            projects.append(project)
+            project_map[id(e.target)] = project
 
     with open(os.path.join(env.builddir, 'project.sln'), 'w') as out:
         write_solution(out, projects)
