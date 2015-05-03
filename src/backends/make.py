@@ -356,17 +356,9 @@ def emit_object_file(rule, build_inputs, writer, env):
     base = os.path.splitext(target)[0]
     writer.include(base + '.d', optional=True)
 
-# TODO: Remove this
-def link_mode(target):
-    return {
-        'Executable'   : 'executable',
-        'SharedLibrary': 'shared_library',
-        'StaticLibrary': 'static_library',
-    }[type(target).__name__]
-
 @rule_handler('Link')
 def emit_link(rule, build_inputs, writer, env):
-    linker = env.linker(rule.target.langs, link_mode(rule.target))
+    linker = env.linker(rule.target.langs, rule.target.mode)
     recipename = MakeVariable('RULE_{}'.format(linker.name.upper()))
 
     global_ldflags, ldflags = flags_vars(

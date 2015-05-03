@@ -17,6 +17,8 @@ class UnixPlatform(object):
     def static_library_name(self, basename):
         return 'lib' + basename + '.a'
 
+    import_library_name = shared_library_name
+
 class DarwinPlatform(UnixPlatform):
     def shared_library_name(self, basename):
         return 'lib' + basename + '.dylib'
@@ -33,6 +35,8 @@ class WindowsPlatform(object):
 
     def static_library_name(self, basename):
         return basename + '.lib'
+
+    import_library_name = static_library_name
 
 class Environment(object):
     def __init__(self, bfgpath, srcdir, builddir, backend, install_prefix):

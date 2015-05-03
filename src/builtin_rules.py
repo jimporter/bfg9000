@@ -31,17 +31,18 @@ class Binary(build_inputs.Node):
         build_inputs.Node.__init__(self, name)
         self.langs = None
 
-    def _filename(self, env, mode):
+    def filename(self, env):
         base, name = os.path.split(self.raw_name)
         return os.path.join(
-            base, env.linker(self.langs, mode).output_name(name)
+            base, env.linker(self.langs, self.mode).output_name(name)
         )
 
 class Executable(Binary):
     install_dir = 'bin'
+    mode = 'executable'
 
     def filename(self, env):
-        return self._filename(env, 'executable')
+        return self._filename(env)
 
 class Library(Binary):
     install_dir = 'lib'
@@ -50,13 +51,16 @@ class Library(Binary):
     def lib_name(self):
         return os.path.basename(self.raw_name)
 
+    def import_library_name(self, env):
+        return env.linker(self.langs, self.mode).import_library_name(
+            self.lib_name
+        )
+
 class SharedLibrary(Library):
-    def filename(self, env):
-        return self._filename(env, 'shared_library')
+    mode = 'shared_library'
 
 class StaticLibrary(Library):
-    def filename(self, env):
-        return self._filename(env, 'static_library')
+    mode = 'static_library'
 
 class HeaderDirectory(build_inputs.Directory):
     install_dir = 'include'

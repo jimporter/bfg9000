@@ -53,6 +53,15 @@ class CcLinkerBase(object):
         else:
             return self._platform_info.executable_name(basename)
 
+    def import_library_name(self, basename):
+        # TODO: Support other platform naming schemes
+        if self._mode == 'shared_library':
+            return self._platform_info.import_library_name(basename)
+        else:
+            raise NotImplementedError(
+                'import_library_name() not implemented for executables'
+            )
+
     @property
     def mode_args(self):
         return ['-shared', '-fPIC'] if self._mode == 'shared_library' else []
