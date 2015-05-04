@@ -41,9 +41,6 @@ class Executable(Binary):
     install_dir = 'bin'
     mode = 'executable'
 
-    def filename(self, env):
-        return self._filename(env)
-
 class Library(Binary):
     install_dir = 'lib'
 
