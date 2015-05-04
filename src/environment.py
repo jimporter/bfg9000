@@ -17,7 +17,8 @@ class UnixPlatform(object):
     def static_library_name(self, basename):
         return 'lib' + basename + '.a'
 
-    import_library_name = shared_library_name
+    def import_library_name(self, basename):
+        raise NotImplementedError("Unix platforms don't have import libraries")
 
 class DarwinPlatform(UnixPlatform):
     def shared_library_name(self, basename):

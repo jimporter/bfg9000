@@ -51,8 +51,8 @@ class Library(Binary):
     def lib_name(self):
         return os.path.basename(self.raw_name)
 
-    def import_library_name(self, env):
-        return env.linker(self.langs, self.mode).import_library_name(
+    def link_library_name(self, env):
+        return env.linker(self.langs, self.mode).link_library_name(
             self.lib_name
         )
 
