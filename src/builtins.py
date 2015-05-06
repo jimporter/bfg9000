@@ -6,8 +6,8 @@ def builtin(fn):
     _all_builtins[fn.__name__] = fn
     return fn
 
-def bind(build_inputs):
+def bind(build_inputs, env):
     result = {}
     for k, v in _all_builtins.iteritems():
-        result[k] = functools.partial(v, build_inputs)
+        result[k] = functools.partial(v, build_inputs, env)
     return result

@@ -15,27 +15,12 @@ class HeaderFile(build_inputs.Node):
     install_dir = 'include'
 
 class ObjectFile(build_inputs.Node):
-    def __init__(self, name, lang=None):
-        build_inputs.Node.__init__(self, name)
+    def __init__(self, name, raw_name, lang=None):
+        build_inputs.Node.__init__(self, name, raw_name)
         self.lang = lang
-        self.in_shared_library = False
-
-    def filename(self, env):
-        base, name = os.path.split(self.raw_name)
-        return os.path.join(base, env.compiler(self.lang).output_name(name))
 
 class Binary(build_inputs.Node):
     install_kind = 'program'
-
-    def __init__(self, name):
-        build_inputs.Node.__init__(self, name)
-        self.langs = None
-
-    def filename(self, env):
-        base, name = os.path.split(self.raw_name)
-        return os.path.join(
-            base, env.linker(self.langs, self.mode).output_name(name)
-        )
 
 class Executable(Binary):
     install_dir = 'bin'
@@ -44,14 +29,10 @@ class Executable(Binary):
 class Library(Binary):
     install_dir = 'lib'
 
-    @property
-    def lib_name(self):
-        return os.path.basename(self.raw_name)
-
-    def link_library_name(self, env):
-        return env.linker(self.langs, self.mode).link_library_name(
-            self.lib_name
-        )
+    def __init__(self, name, raw_name, lib_name, link_library_name=None):
+        Binary.__init__(self, name, raw_name)
+        self.lib_name = lib_name
+        self.link_library_name = link_library_name
 
 class SharedLibrary(Library):
     mode = 'shared_library'
@@ -59,20 +40,28 @@ class SharedLibrary(Library):
 class StaticLibrary(Library):
     mode = 'static_library'
 
+class ExternalLibrary(Library):
+    def __init__(self, name):
+        # TODO: Handle import library names?
+        Library.__init__(self, name, name, name)
+
 class HeaderDirectory(build_inputs.Directory):
     install_dir = 'include'
 
 #####
 
 class Compile(build_inputs.Edge):
-    def __init__(self, target, file, include, options, deps):
+    def __init__(self, target, builder, file, include, options, deps):
+        self.builder = builder
         self.file = file
         self.include = include
         self.options = options
+        self.in_shared_library = False
         build_inputs.Edge.__init__(self, target, deps)
 
 class Link(build_inputs.Edge):
-    def __init__(self, target, files, libs, options, deps):
+    def __init__(self, target, builder, files, libs, options, deps):
+        self.builder = builder
         self.files = files
         self.libs = libs
         self.options = options
@@ -89,11 +78,11 @@ class Command(build_inputs.Edge):
 #####
 
 @builtin
-def header(build, name):
+def header(build, env, name):
     return HeaderFile(name)
 
 @builtin
-def object_file(build, name=None, file=None, include=None, options=None,
+def object_file(build, env, name=None, file=None, include=None, options=None,
                 lang=None, deps=None):
     if file is None:
         raise TypeError('"file" argument must not be None')
@@ -104,62 +93,72 @@ def object_file(build, name=None, file=None, include=None, options=None,
 
     if name is None:
         name = os.path.splitext(file)[0]
-    target = ObjectFile(name, lang)
-    build.add_edge(Compile(
-        target, source_file, includes, utils.shell_listify(options), deps
-    ))
+
+    builder = env.compiler(source_file.lang)
+    head, tail = os.path.split(name)
+    filename = os.path.join(head, builder.output_name(tail))
+    target = ObjectFile(filename, name, lang)
+
+    build.add_edge(Compile( target, builder, source_file, includes,
+                            utils.shell_listify(options), deps ))
     return target
 
 @builtin
-def object_files(build, files, include=None, options=None, lang=None):
-    return [object_file(build, file=f, include=include, options=options,
-                        lang=lang) for f in files]
+def object_files(build, env, files, include=None, options=None, lang=None):
+    def make_object(f):
+        return object_file(build, env, file=f, include=include,
+                           options=options, lang=lang)
+    return utils.objectify_list(files, ObjectFile, make_object)
 
-def _binary(build, target, files, libs=None, lang=None,
-            include=None, compile_options=None, link_options=None, deps=None):
-    def make_obj(x):
-        return object_file(build, file=x, include=include,
-                           options=compile_options, lang=lang)
-
-    objects = utils.objectify_list(files, ObjectFile, make_obj)
-    # TODO: Indicate that these libraries may be external via some other way
-    # than them not having a `creator` attribute?
-    libs = utils.objectify_list(libs, Library)
-    target.langs = set(i.lang for i in objects)
-
-    link = Link(target, objects, libs, utils.shell_listify(link_options), deps)
-    build.add_edge(link)
+def _link(build, target, builder, objects, libs=None, options=None, deps=None):
+    libs = utils.objectify_list(libs, Library, ExternalLibrary)
+    build.add_edge(Link( target, builder, objects, libs,
+                         utils.shell_listify(options), deps ))
     build.fallback_default = target
-    return link
-
-@builtin
-def executable(build, name, *args, **kwargs):
-    target = Executable(name)
-    _binary(build, target, *args, **kwargs)
     return target
 
 @builtin
-def shared_library(build, name, *args, **kwargs):
-    target = SharedLibrary(name)
-    rule = _binary(build, target, *args, **kwargs)
-    for f in rule.files:
-        f.in_shared_library = True
+def executable(build, env, name, files, libs=None, include=None,
+               compile_options=None, link_options=None, lang=None, deps=None):
+    objects = object_files(build, env, files, include, compile_options, lang)
+    builder = env.linker((i.lang for i in objects), Executable.mode)
+
+    head, tail = os.path.split(name)
+    target = Executable(os.path.join(head, builder.output_name(tail)), name)
+    _link(build, target, builder, objects, libs, link_options, deps)
+    return target
+
+def _library(build, env, target_type, name, files, libs=None, include=None,
+             compile_options=None, link_options=None, lang=None, deps=None):
+    objects = object_files(build, env, files, include, compile_options, lang)
+    builder = env.linker((i.lang for i in objects), target_type.mode)
+
+    head, tail = os.path.split(name)
+    filename = os.path.join(head, builder.output_name(tail))
+    importname = os.path.join(head, builder.link_library_name(tail))
+    target = target_type(filename, name, tail, importname)
+    _link(build, target, builder, objects, libs, link_options, deps)
     return target
 
 @builtin
-def static_library(build, name, *args, **kwargs):
-    target = StaticLibrary(name)
-    _binary(build, target, *args, **kwargs)
+def shared_library(build, env, *args, **kwargs):
+    target = _library(build, env, SharedLibrary, *args, **kwargs)
+    for f in target.creator.files:
+        f.creator.in_shared_library = True
     return target
 
 @builtin
-def alias(build, name, deps):
+def static_library(build, env, *args, **kwargs):
+    return _library(build, env, StaticLibrary, *args, **kwargs)
+
+@builtin
+def alias(build, env, name, deps):
     target = build_inputs.Node(name)
     build.add_edge(Alias(target, deps))
     return target
 
 @builtin
-def command(build, name, cmd, deps=None):
+def command(build, env, name, cmd, deps=None):
     target = build_inputs.Node(name)
     build.add_edge(Command(target, cmd, deps))
     return target
@@ -167,11 +166,11 @@ def command(build, name, cmd, deps=None):
 #####
 
 @builtin
-def default(build, *args):
+def default(build, env, *args):
     build.default_targets.extend(i for i in args if not i.is_source)
 
 @builtin
-def install(build, *args):
+def install(build, env, *args):
     for i in args:
         if isinstance(i, build_inputs.Directory):
             build.install_targets.directories.append(i)
@@ -180,11 +179,11 @@ def install(build, *args):
             build.install_targets.files.append(i)
 
 @builtin
-def header_directory(build, directory):
+def header_directory(build, env, directory):
     return HeaderDirectory(directory)
 
 @builtin
-def global_options(build, options, lang):
+def global_options(build, env, options, lang):
     if not lang in build.global_options:
         build.global_options[lang] = []
     build.global_options[lang].extend(utils.shell_listify(options))

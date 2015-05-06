@@ -228,9 +228,9 @@ def write(env, build_inputs):
 
             project = VcxProject(
                 e.target.raw_name,
-                (i.creator.file.filename(env) for i in e.files),
+                (i.creator.file.name for i in e.files),
                 env.srcdir, link_mode(e.target),
-                libs=[i.link_library_name(env) for i in e.libs],
+                libs=[i.link_library_name for i in e.libs],
                 libdirs=['$(OutDir)'],
                 dependencies=dependencies
             )
