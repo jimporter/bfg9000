@@ -322,15 +322,15 @@ def emit_object_file(rule, build_inputs, writer):
         writer
     )
     if not writer.has_variable(recipename):
-        esc = escaped_str
+        depfile = var('*') + '.d'
         writer.variable(recipename, [
             compiler.command(
                 cmd=cmd_var(compiler, writer), input=var('<'), output=var('@'),
-                dep=var('*') + '.d', args=cflags
+                dep=depfile, args=cflags
             ),
             # Munge the depfile so that it works a little better...
-            esc("@sed -e 's/.*://' -e 's/\\\\$$//' < $*.d | fmt -1 | \\"),
-            esc("  sed -e 's/^ *//' -e 's/$$/:/' >> $*.d")
+            r"@sed -e 's/.*://' -e 's/\\$//' < " + depfile + " | fmt -1 | \\",
+            "  sed -e 's/^ *//' -e 's/$/:/' >> " + depfile
         ], flavor='define')
 
     variables = {}
