@@ -15,8 +15,8 @@ class HeaderFile(build_inputs.Node):
     install_dir = 'include'
 
 class ObjectFile(build_inputs.Node):
-    def __init__(self, name, raw_name, lang=None):
-        build_inputs.Node.__init__(self, name, raw_name)
+    def __init__(self, name, path, lang=None):
+        build_inputs.Node.__init__(self, name, path)
         self.lang = lang
 
 class Binary(build_inputs.Node):
@@ -29,8 +29,8 @@ class Executable(Binary):
 class Library(Binary):
     install_dir = 'lib'
 
-    def __init__(self, name, raw_name, lib_name, link_library_name=None):
-        Binary.__init__(self, name, raw_name)
+    def __init__(self, name, path, lib_name, link_library_name=None):
+        Binary.__init__(self, name, path)
         self.lib_name = lib_name
         self.link_library_name = link_library_name
 
@@ -96,8 +96,8 @@ def object_file(build, env, name=None, file=None, include=None, options=None,
 
     builder = env.compiler(source_file.lang)
     head, tail = os.path.split(name)
-    filename = os.path.join(head, builder.output_name(tail))
-    target = ObjectFile(filename, name, lang)
+    path = os.path.join(head, builder.output_name(tail))
+    target = ObjectFile(name, path, lang)
 
     build.add_edge(Compile( target, builder, source_file, includes,
                             utils.shell_listify(options), deps ))
@@ -124,7 +124,8 @@ def executable(build, env, name, files, libs=None, include=None,
     builder = env.linker((i.lang for i in objects), Executable.mode)
 
     head, tail = os.path.split(name)
-    target = Executable(os.path.join(head, builder.output_name(tail)), name)
+    path = os.path.join(head, builder.output_name(tail))
+    target = Executable(name, path)
     _link(build, target, builder, objects, libs, link_options, deps)
     return target
 
@@ -134,9 +135,9 @@ def _library(build, env, target_type, name, files, libs=None, include=None,
     builder = env.linker((i.lang for i in objects), target_type.mode)
 
     head, tail = os.path.split(name)
-    filename = os.path.join(head, builder.output_name(tail))
+    path = os.path.join(head, builder.output_name(tail))
     importname = os.path.join(head, builder.link_library_name(tail))
-    target = target_type(filename, name, tail, importname)
+    target = target_type(name, path, tail, importname)
     _link(build, target, builder, objects, libs, link_options, deps)
     return target
 

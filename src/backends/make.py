@@ -211,9 +211,9 @@ class MakeWriter(object):
 srcdir_var = MakeVariable('srcdir')
 def target_path(target):
     if target.is_source:
-        return path_join(srcdir_var, target.name)
+        return path_join(srcdir_var, target.path)
     else:
-        return path_join(getattr(target, 'install_dir', None), target.name)
+        return path_join(getattr(target, 'install_dir', None), target.path)
 
 def write(env, build_inputs):
     writer = MakeWriter()
@@ -275,7 +275,7 @@ def install_rule(install_targets, writer, env):
 
     def install_line(file):
         src = target_path(file)
-        dst = path_join(prefix, file.install_dir, file.name)
+        dst = path_join(prefix, file.install_dir, file.path)
         return [ install_cmd(file.install_kind), '-D', src, dst ]
 
     def mkdir_line(dir):

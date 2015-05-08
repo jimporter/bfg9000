@@ -1,9 +1,9 @@
 import utils
 
 class Node(object):
-    def __init__(self, name, raw_name=None):
+    def __init__(self, name, path = None):
         self.name = name
-        self.raw_name = raw_name if raw_name is not None else name
+        self.path = path if path is not None else name
         self.creator = None
 
     @property
