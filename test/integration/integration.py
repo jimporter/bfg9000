@@ -8,7 +8,7 @@ import time
 import unittest
 
 basedir = os.path.abspath(os.path.dirname(__file__))
-bfg9000 = os.path.join(basedir, '..', 'src', 'bfg9000')
+bfg9000 = os.path.join(basedir, '..', '..', 'src', 'bfg9000')
 
 def cleandir(path):
     try:
