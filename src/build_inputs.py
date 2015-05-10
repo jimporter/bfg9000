@@ -1,9 +1,8 @@
 import utils
 
 class Node(object):
-    def __init__(self, name, path = None):
-        self.name = name
-        self.path = path if path is not None else name
+    def __init__(self, path):
+        self.path = path
         self.creator = None
 
     @property
@@ -12,10 +11,15 @@ class Node(object):
 
     def __repr__(self):
         return '<{type} {name}>'.format(
-            type=type(self).__name__, name=repr(self.name)
+            type=type(self).__name__, name=repr(self.path)
         )
 
-class Directory(Node):
+class File(Node):
+    def __init__(self, raw_name, path=None):
+        Node.__init__(self, path if path is not None else raw_name)
+        self.raw_name = raw_name
+
+class Directory(File):
     pass
 
 class Edge(object):

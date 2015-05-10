@@ -227,7 +227,7 @@ def write(env, build_inputs):
                     dependencies.append(project_map[id(dep.creator.target)])
 
             project = VcxProject(
-                e.target.name,
+                e.target.raw_name,
                 (i.creator.file.path for i in e.files),
                 env.srcdir, link_mode(e.target),
                 libs=[i.path for i in e.libs],

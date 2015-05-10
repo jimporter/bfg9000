@@ -5,21 +5,21 @@ from languages import ext2lang
 import build_inputs
 import utils
 
-class SourceFile(build_inputs.Node):
+class SourceFile(build_inputs.File):
     def __init__(self, name, lang=None):
-        build_inputs.Node.__init__(self, name)
+        build_inputs.File.__init__(self, name)
         self.lang = lang
 
-class HeaderFile(build_inputs.Node):
+class HeaderFile(build_inputs.File):
     install_kind = 'data'
     install_dir = 'include'
 
-class ObjectFile(build_inputs.Node):
+class ObjectFile(build_inputs.File):
     def __init__(self, name, path, lang=None):
-        build_inputs.Node.__init__(self, name, path)
+        build_inputs.File.__init__(self, name, path)
         self.lang = lang
 
-class Binary(build_inputs.Node):
+class Binary(build_inputs.File):
     install_kind = 'program'
 
 class Executable(Binary):
