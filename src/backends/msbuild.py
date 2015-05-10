@@ -230,7 +230,7 @@ def write(env, build_inputs):
                 e.target.name,
                 (i.creator.file.path for i in e.files),
                 env.srcdir, link_mode(e.target),
-                libs=[i.link_library_name for i in e.libs],
+                libs=[i.path for i in e.libs],
                 libdirs=['$(OutDir)'],
                 dependencies=dependencies
             )

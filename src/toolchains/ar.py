@@ -23,8 +23,6 @@ class ArLinker(object):
     def output_name(self, basename):
         return self._platform_info.static_library_name(basename)
 
-    link_library_name = output_name
-
     @property
     def mode_args(self):
         return []

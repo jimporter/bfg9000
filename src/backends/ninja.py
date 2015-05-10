@@ -4,6 +4,8 @@ import sys
 from collections import Iterable, namedtuple, OrderedDict
 from itertools import chain
 
+import utils
+
 _rule_handlers = {}
 def rule_handler(rule_name):
     def decorator(fn):
@@ -12,7 +14,7 @@ def rule_handler(rule_name):
     return decorator
 
 NinjaRule = namedtuple('NinjaRule', ['command', 'depfile', 'generator'])
-NinjaBuild = namedtuple('NinjaBuild', ['rule', 'inputs', 'implicit',
+NinjaBuild = namedtuple('NinjaBuild', ['output', 'rule', 'inputs', 'implicit',
                                        'order_only', 'variables'])
 class escaped_str(str):
     @staticmethod
@@ -77,7 +79,8 @@ class NinjaWriter(object):
         # TODO: Sort variables in some useful order
         self._variables = OrderedDict()
         self._rules = OrderedDict()
-        self._builds = OrderedDict()
+        self._builds = []
+        self._build_outputs = set()
         self._defaults = []
 
     def variable(self, name, value):
@@ -110,10 +113,12 @@ class NinjaWriter(object):
                     k = NinjaVariable(k)
                 real_variables[k] = v
 
-        if self.has_build(output):
-            raise RuntimeError('build for "{}" already exists'.format(output))
-        self._builds[output] = NinjaBuild(rule, inputs, implicit, order_only,
-                                          real_variables)
+        for i in utils.listify(output):
+            if self.has_build(i):
+                raise RuntimeError('build for "{}" already exists'.format(i))
+            self._build_outputs.add(i)
+        self._builds.append(NinjaBuild(output, rule, inputs, implicit,
+                                       order_only, real_variables))
 
     def default(self, paths):
         self._defaults.extend(paths)
@@ -127,16 +132,16 @@ class NinjaWriter(object):
         ))
 
     def _write_rule(self, out, name, rule):
-        out.write('rule {}\n'.format(escape_str(name)))
+        out.write('rule {}\n'.format(escape_list(name)))
         self._write_variable(out, var('command'), rule.command, 1)
         if rule.depfile:
             self._write_variable(out, var('depfile'), rule.depfile, 1)
         if rule.generator:
             self._write_variable(out, var('generator'), 1, 1)
 
-    def _write_build(self, out, name, build):
+    def _write_build(self, out, build):
         out.write('build {output}: {rule}'.format(
-            output=escape_str(name),
+            output=escape_list(build.output),
             rule=escape_str(build.rule)
         ))
 
@@ -173,8 +178,8 @@ class NinjaWriter(object):
             self._write_rule(out, name, rule)
             out.write('\n')
 
-        for name, build in self._builds.iteritems():
-            self._write_build(out, name, build)
+        for build in self._builds:
+            self._write_build(out, build)
 
         if self._defaults:
             out.write('\ndefault {}\n'.format(' '.join(
@@ -182,11 +187,12 @@ class NinjaWriter(object):
             )))
 
 srcdir_var = NinjaVariable('srcdir')
-def target_path(target):
+def target_path(target, attr='path'):
+    path = getattr(target, attr)
     if target.is_source:
-        return path_join(srcdir_var, target.path)
+        return path_join(srcdir_var, path)
     else:
-        return path_join(getattr(target, 'install_dir', None), target.path)
+        return path_join(getattr(target, 'install_dir', None), path)
 
 def write(env, build_inputs):
     writer = NinjaWriter()
@@ -333,6 +339,10 @@ def emit_link(rule, build_inputs, writer):
     lib_dirs = set(os.path.dirname(target_path(i)) for i in lib_deps)
     target = target_path(rule.target)
     target_dir = os.path.dirname(target)
+
+    # Handle link rules that generate multiple files (foo.lib and foo.dll).
+    if hasattr(rule.target, 'dll_path'):
+        target = [target, target_path(rule.target, 'dll_path')]
 
     variables = {}
 

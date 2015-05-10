@@ -11,14 +11,11 @@ class UnixPlatform(object):
     def executable_name(self, basename):
         return basename
 
-    def shared_library_name(self, basename):
-        return 'lib' + basename + '.so'
-
     def static_library_name(self, basename):
         return 'lib' + basename + '.a'
 
-    def import_library_name(self, basename):
-        raise NotImplementedError("Unix platforms don't have import libraries")
+    def shared_library_name(self, basename):
+        return 'lib' + basename + '.so'
 
 class DarwinPlatform(UnixPlatform):
     def shared_library_name(self, basename):
@@ -31,13 +28,11 @@ class WindowsPlatform(object):
     def executable_name(self, basename):
         return basename + '.exe'
 
-    def shared_library_name(self, basename):
-        return basename + '.dll'
-
     def static_library_name(self, basename):
         return basename + '.lib'
 
-    import_library_name = static_library_name
+    def shared_library_name(self, basename):
+        return [basename + '.lib', basename + '.dll']
 
 class Environment(object):
     def __init__(self, bfgpath, srcdir, builddir, backend, install_prefix):

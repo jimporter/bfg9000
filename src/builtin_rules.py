@@ -29,20 +29,24 @@ class Executable(Binary):
 class Library(Binary):
     install_dir = 'lib'
 
-    def __init__(self, name, path, lib_name, link_library_name=None):
+    def __init__(self, name, lib_name, path):
         Binary.__init__(self, name, path)
         self.lib_name = lib_name
-        self.link_library_name = link_library_name
 
 class SharedLibrary(Library):
     mode = 'shared_library'
+
+    def __init__(self, name, lib_name, path, dll_path=None):
+        Library.__init__(self, name, lib_name, path)
+        if dll_path:
+            self.dll_path = dll_path
 
 class StaticLibrary(Library):
     mode = 'static_library'
 
 class ExternalLibrary(Library):
     def __init__(self, name):
-        # TODO: Handle import library names?
+        # TODO: Handle import libraries specifically?
         Library.__init__(self, name, name, name)
 
 class HeaderDirectory(build_inputs.Directory):
@@ -135,9 +139,9 @@ def _library(build, env, target_type, name, files, libs=None, include=None,
     builder = env.linker((i.lang for i in objects), target_type.mode)
 
     head, tail = os.path.split(name)
-    path = os.path.join(head, builder.output_name(tail))
-    importname = os.path.join(head, builder.link_library_name(tail))
-    target = target_type(name, path, tail, importname)
+    paths = [ os.path.join(head, i) for i in
+              utils.listify(builder.output_name(tail)) ]
+    target = target_type(name, tail, *paths)
     _link(build, target, builder, objects, libs, link_options, deps)
     return target
 
