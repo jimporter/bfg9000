@@ -340,10 +340,6 @@ def emit_link(rule, build_inputs, writer):
     target = target_path(rule.target)
     target_dir = os.path.dirname(target)
 
-    # Handle link rules that generate multiple files (foo.lib and foo.dll).
-    if hasattr(rule.target, 'dll_path'):
-        target = [target, target_path(rule.target, 'dll_path')]
-
     variables = {}
 
     ldflags_value = []

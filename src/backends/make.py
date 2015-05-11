@@ -403,23 +403,10 @@ def emit_link(rule, build_inputs, writer):
     order_only = [target_dir] if target_dir else None
     recipe = MakeCall(recipename, (target_path(i) for i in rule.files))
 
-    # Handle link rules that generate multiple files (foo.lib and foo.dll).
-    # Since make doesn't like rules like this, we keep track of it with a .stamp
-    # file. TODO: It might make sense to handle this in the MakeWriter.
-    if hasattr(rule.target, 'dll_path'):
-        stamp = target + '.stamp'
-        real_targets = [target, target_path(rule.target, 'dll_path')]
-        writer.rule(
-            target=stamp, deps=deps, order_only=order_only, recipe=[
-                recipe, ['@touch', var('@')]
-            ], variables=variables
-        )
-        writer.rule(target=real_targets, deps=[stamp])
-    else:
-        writer.rule(
-            target=target, deps=deps, order_only=order_only, recipe=recipe,
-            variables=variables
-        )
+    writer.rule(
+        target=target, deps=deps, order_only=order_only, recipe=recipe,
+        variables=variables
+    )
 
     directory_rule(target_dir, writer)
 
