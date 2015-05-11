@@ -120,11 +120,11 @@ class NinjaWriter(object):
         self._builds.append(NinjaBuild(output, rule, inputs, implicit,
                                        order_only, real_variables))
 
+    def has_build(self, name):
+        return name in self._build_outputs
+
     def default(self, paths):
         self._defaults.extend(paths)
-
-    def has_build(self, name):
-        return name in self._builds
 
     def _write_variable(self, out, name, value, indent=0):
         out.write('{indent}{name} = {value}\n'.format(

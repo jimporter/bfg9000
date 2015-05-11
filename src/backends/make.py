@@ -3,6 +3,8 @@ import re
 from collections import Iterable, namedtuple, OrderedDict
 from itertools import chain
 
+import utils
+
 _rule_handlers = {}
 def rule_handler(rule_name):
     def decorator(fn):
@@ -93,8 +95,10 @@ class MakeWriter(object):
         self._global_variables = OrderedDict()
         self._target_variables = OrderedDict({'%': OrderedDict()})
         self._defines = OrderedDict()
-        self._includes = []
+
         self._rules = []
+        self._targets = set()
+        self._includes = []
 
     def variable(self, name, value, flavor='simple', target=None):
         if not isinstance(name, MakeVariable):
@@ -135,8 +139,15 @@ class MakeWriter(object):
                     k = MakeVariable(k)
                 real_variables[k] = v
 
+        for i in utils.listify(target):
+            if self.has_rule(i):
+                raise RuntimeError('rule for "{}" already exists'.format(i))
+            self._targets.add(i)
         self._rules.append(MakeRule(target, deps, order_only, recipe,
                                     real_variables, phony))
+
+    def has_rule(self, name):
+        return name in self._targets
 
     def _write_variable(self, out, name, value, flavor, target=None):
         operator = ':=' if flavor == 'simple' else '='
@@ -159,7 +170,7 @@ class MakeWriter(object):
                                      target=rule.target)
 
         if rule.phony:
-            out.write('.PHONY: {}\n'.format(escape_str(rule.target)))
+            out.write('.PHONY: {}\n'.format(escape_list(rule.target)))
         out.write('{target}:{deps}'.format(
             target=escape_list(rule.target),
             deps=''.join(' ' + escape_str(i) for i in rule.deps or [])
@@ -295,11 +306,9 @@ def regenerate_rule(writer, env):
         recipe=[[env.bfgpath, '--regenerate', '.']]
     )
 
-_seen_dirs = set() # TODO: Put this on the writer
 def directory_rule(path, writer):
-    if not path or path in _seen_dirs:
+    if not path or writer.has_rule(path):
         return
-    _seen_dirs.add(path)
 
     recipename = MakeVariable('RULE_MKDIR')
     if not writer.has_variable(recipename):
@@ -308,8 +317,7 @@ def directory_rule(path, writer):
     parent = os.path.dirname(path)
     order_only = [parent] if parent else None
     writer.rule(target=path, order_only=order_only, recipe=recipename)
-    if parent:
-        directory_rule(parent, writer)
+    directory_rule(parent, writer)
 
 @rule_handler('Compile')
 def emit_object_file(rule, build_inputs, writer):
