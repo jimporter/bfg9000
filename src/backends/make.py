@@ -310,14 +310,11 @@ def directory_rule(path, writer):
     if not path or writer.has_rule(path):
         return
 
-    recipename = MakeVariable('RULE_MKDIR')
-    if not writer.has_variable(recipename):
-        writer.variable(recipename, [['mkdir', var('@')]], flavor='define')
-
-    parent = os.path.dirname(path)
-    order_only = [parent] if parent else None
-    writer.rule(target=path, order_only=order_only, recipe=recipename)
-    directory_rule(parent, writer)
+    # XXX: `mkdir -p` isn't safe (or valid!) on all platforms.
+    recipe = var('RULE_MKDIR_P')
+    if not writer.has_variable(recipe):
+        writer.variable(recipe, [['mkdir', '-p', var('@')]], flavor='define')
+    writer.rule(target=path, recipe=recipe)
 
 @rule_handler('Compile')
 def emit_object_file(rule, build_inputs, writer):
