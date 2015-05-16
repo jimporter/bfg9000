@@ -139,7 +139,7 @@ class MakeWriter(object):
                     k = MakeVariable(k)
                 real_variables[k] = v
 
-        for i in utils.listify(target):
+        for i in utils.iterate(target):
             if self.has_rule(i):
                 raise RuntimeError('rule for "{}" already exists'.format(i))
             self._targets.add(i)

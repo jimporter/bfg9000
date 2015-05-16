@@ -15,9 +15,9 @@ class ArLinker(object):
     # TODO: Figure out a way to indicate that libs are useless here.
     def command(self, cmd, input, output, libs=None, args=None):
         result = [cmd]
-        result.extend(utils.listify(args))
+        result.extend(utils.iterate(args))
         result.append(output)
-        result.extend(utils.listify(input))
+        result.extend(utils.iterate(input))
         return result
 
     def output_name(self, basename):

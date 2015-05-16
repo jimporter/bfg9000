@@ -113,7 +113,7 @@ class NinjaWriter(object):
                     k = NinjaVariable(k)
                 real_variables[k] = v
 
-        for i in utils.listify(output):
+        for i in utils.iterate(output):
             if self.has_build(i):
                 raise RuntimeError('build for "{}" already exists'.format(i))
             self._build_outputs.add(i)

@@ -12,7 +12,7 @@ class CcCompilerBase(object):
 
     def command(self, cmd, input, output, dep=None, args=None):
         result = [cmd]
-        result.extend(utils.listify(args))
+        result.extend(utils.iterate(args))
         result.extend(['-c', input])
         if dep:
             result.extend(['-MMD', '-MF', dep])
@@ -40,9 +40,9 @@ class CcLinkerBase(object):
 
     def command(self, cmd, input, output, libs=None, args=None):
         result = [cmd]
-        result.extend(utils.listify(args))
-        result.extend(utils.listify(input))
-        result.extend(utils.listify(libs))
+        result.extend(utils.iterate(args))
+        result.extend(utils.iterate(input))
+        result.extend(utils.iterate(libs))
         result.extend(['-o', output])
         return result
 

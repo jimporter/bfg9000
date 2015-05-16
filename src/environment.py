@@ -32,7 +32,7 @@ class WindowsPlatform(object):
         return basename + '.lib'
 
     def shared_library_name(self, basename):
-        return [basename + '.lib', basename + '.dll']
+        return basename + '.lib', basename + '.dll'
 
 class Environment(object):
     def __init__(self, bfgpath, srcdir, builddir, backend, install_prefix):

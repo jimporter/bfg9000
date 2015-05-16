@@ -5,19 +5,29 @@ from collections import Iterable
 
 from builtins import builtin
 
-def listify(thing):
+def _generate_none():
+    return
+    yield
+
+def _generate_one(x):
+    yield x
+
+def iterate(thing):
     if thing is None:
-        return []
+        return _generate_none()
     elif isinstance(thing, Iterable) and not isinstance(thing, basestring):
-        return thing
+        return iter(thing)
     else:
-        return [thing]
+        return _generate_one(thing)
+
+def listify(thing):
+    return list(iterate(thing))
 
 def shell_listify(thing):
     if thing is None:
         return []
     elif isinstance(thing, Iterable) and not isinstance(thing, basestring):
-        return thing
+        return list(thing)
     else:
         return shlex.split(thing, posix=False)
 
@@ -30,7 +40,7 @@ def objectify(x, valid_type, creator=None, **kwargs):
         return valid_type(x, **kwargs)
 
 def objectify_list(iterable, *args, **kwargs):
-    return [objectify(i, *args, **kwargs) for i in listify(iterable)]
+    return [objectify(i, *args, **kwargs) for i in iterate(iterable)]
 
 @builtin
 def find(build_inputs, base='.', name='*', type=None):
