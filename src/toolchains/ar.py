@@ -5,6 +5,7 @@ import utils
 
 class ArLinker(object):
     def __init__(self, platform_info):
+        self.mode = 'static_library'
         self._platform_info = platform_info
         self.command_name = os.getenv('AR', 'ar')
         self.command_var = 'ar'

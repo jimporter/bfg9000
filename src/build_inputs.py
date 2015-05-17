@@ -24,9 +24,10 @@ class Directory(File):
 
 class Edge(object):
     def __init__(self, target, deps=None):
-        target.creator = self
+        for t in utils.iterate(target):
+            t.creator = self
         self.target = target
-        self.deps = utils.objectify_list(deps, Node)
+        self.deps = [utils.objectify(i, Node) for i in utils.iterate(deps)]
 
 class InstallInputs(object):
     def __init__(self):
@@ -51,6 +52,6 @@ class BuildInputs(object):
         if self.default_targets:
             return self.default_targets
         elif self.fallback_default:
-            return [self.fallback_default]
+            return utils.listify(self.fallback_default)
         else:
             return []

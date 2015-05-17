@@ -31,7 +31,7 @@ class CcCompilerBase(object):
 
 class CcLinkerBase(object):
     def __init__(self, mode, platform_info, command, name):
-        self._mode = mode
+        self.mode = mode
         self._platform_info = platform_info
         self.command_name = command
         self.name = 'link_' + name
@@ -47,14 +47,14 @@ class CcLinkerBase(object):
         return result
 
     def output_name(self, basename):
-        if self._mode == 'shared_library':
+        if self.mode == 'shared_library':
             return self._platform_info.shared_library_name(basename)
         else:
             return self._platform_info.executable_name(basename)
 
     @property
     def mode_args(self):
-        return ['-shared', '-fPIC'] if self._mode == 'shared_library' else []
+        return ['-shared', '-fPIC'] if self.mode == 'shared_library' else []
 
     def lib_dir(self, directory):
         return ['-L' + directory]

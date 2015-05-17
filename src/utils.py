@@ -20,6 +20,14 @@ def iterate(thing):
     else:
         return _generate_one(thing)
 
+def flatten(iterable):
+    for i in iterable:
+        if isinstance(i, Iterable) and not isinstance(i, basestring):
+            for j in i:
+                yield j
+        else:
+            yield i
+
 def listify(thing):
     return list(iterate(thing))
 
@@ -39,8 +47,11 @@ def objectify(x, valid_type, creator=None, **kwargs):
     else:
         return valid_type(x, **kwargs)
 
-def objectify_list(iterable, *args, **kwargs):
-    return [objectify(i, *args, **kwargs) for i in iterate(iterable)]
+def first(thing):
+    if isinstance(thing, Iterable) and not isinstance(thing, basestring):
+        return thing[0]
+    else:
+        return thing
 
 @builtin
 def find(build_inputs, base='.', name='*', type=None):

@@ -382,6 +382,7 @@ def emit_link(rule, build_inputs, writer):
 
     lib_deps = [i for i in rule.libs if not i.is_source]
     lib_dirs = set(os.path.dirname(target_path(i)) for i in lib_deps)
+    # TODO: Handle rules with multiple targets (e.g. shared libs on Windows).
     target = target_path(rule.target)
     target_dir = os.path.dirname(target)
 

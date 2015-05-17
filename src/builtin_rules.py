@@ -2,8 +2,9 @@ import os
 
 from builtins import builtin
 from languages import ext2lang
+from utils import iterate, listify, flatten, shell_listify, objectify
 import build_inputs
-import utils
+
 
 class SourceFile(build_inputs.File):
     def __init__(self, name, lang=None):
@@ -12,6 +13,9 @@ class SourceFile(build_inputs.File):
 
 class HeaderFile(build_inputs.File):
     install_kind = 'data'
+    install_dir = 'include'
+
+class HeaderDirectory(build_inputs.Directory):
     install_dir = 'include'
 
 class ObjectFile(build_inputs.File):
@@ -24,7 +28,6 @@ class Binary(build_inputs.File):
 
 class Executable(Binary):
     install_dir = 'bin'
-    mode = 'executable'
 
 class Library(Binary):
     install_dir = 'lib'
@@ -33,24 +36,20 @@ class Library(Binary):
         Binary.__init__(self, name, path)
         self.lib_name = lib_name
 
-class SharedLibrary(Library):
-    mode = 'shared_library'
-
-    def __init__(self, name, lib_name, path, dll_path=None):
-        Library.__init__(self, name, lib_name, path)
-        if dll_path:
-            self.dll_path = dll_path
-
 class StaticLibrary(Library):
-    mode = 'static_library'
+    pass
+
+class SharedLibrary(Library):
+    pass
+
+# Used for Windows DLL files, which aren't linked to directly.
+class DynamicLibrary(Library):
+    pass
 
 class ExternalLibrary(Library):
     def __init__(self, name):
         # TODO: Handle import libraries specifically?
         Library.__init__(self, name, name, name)
-
-class HeaderDirectory(build_inputs.Directory):
-    install_dir = 'include'
 
 #####
 
@@ -86,14 +85,18 @@ def header(build, env, name):
     return HeaderFile(name)
 
 @builtin
+def header_directory(build, env, directory):
+    return HeaderDirectory(directory)
+
+@builtin
 def object_file(build, env, name=None, file=None, include=None, options=None,
                 lang=None, deps=None):
     if file is None:
         raise TypeError('"file" argument must not be None')
     if lang is None:
         lang = ext2lang.get( os.path.splitext(file)[1] )
-    source_file = utils.objectify(file, SourceFile, lang=lang)
-    includes = utils.objectify_list(include, HeaderDirectory)
+    source_file = objectify(file, SourceFile, lang=lang)
+    includes = [objectify(i, HeaderDirectory) for i in iterate(include)]
 
     if name is None:
         name = os.path.splitext(file)[0]
@@ -104,7 +107,7 @@ def object_file(build, env, name=None, file=None, include=None, options=None,
     target = ObjectFile(name, path, lang)
 
     build.add_edge(Compile( target, builder, source_file, includes,
-                            utils.shell_listify(options), deps ))
+                            shell_listify(options), deps ))
     return target
 
 @builtin
@@ -112,12 +115,15 @@ def object_files(build, env, files, include=None, options=None, lang=None):
     def make_object(f):
         return object_file(build, env, file=f, include=include,
                            options=options, lang=lang)
-    return utils.objectify_list(files, ObjectFile, make_object)
+    return [objectify(i, ObjectFile, make_object) for i in iterate(files)]
 
 def _link(build, target, builder, objects, libs=None, options=None, deps=None):
-    libs = utils.objectify_list(libs, Library, ExternalLibrary)
+    gen = ( objectify(i, Library, ExternalLibrary)
+            for i in flatten(iterate(libs)) )
+    libs = [i for i in gen if not isinstance(i, DynamicLibrary)]
+
     build.add_edge(Link( target, builder, objects, libs,
-                         utils.shell_listify(options), deps ))
+                         shell_listify(options), deps ))
     build.fallback_default = target
     return target
 
@@ -125,36 +131,48 @@ def _link(build, target, builder, objects, libs=None, options=None, deps=None):
 def executable(build, env, name, files, libs=None, include=None,
                compile_options=None, link_options=None, lang=None, deps=None):
     objects = object_files(build, env, files, include, compile_options, lang)
-    builder = env.linker((i.lang for i in objects), Executable.mode)
+    builder = env.linker((i.lang for i in objects), 'executable')
 
     head, tail = os.path.split(name)
     path = os.path.join(head, builder.output_name(tail))
     target = Executable(name, path)
+
     _link(build, target, builder, objects, libs, link_options, deps)
     return target
 
-def _library(build, env, target_type, name, files, libs=None, include=None,
-             compile_options=None, link_options=None, lang=None, deps=None):
+@builtin
+def static_library(build, env, name, files, libs=None, include=None,
+                   compile_options=None, link_options=None, lang=None,
+                   deps=None):
     objects = object_files(build, env, files, include, compile_options, lang)
-    builder = env.linker((i.lang for i in objects), target_type.mode)
+    builder = env.linker((i.lang for i in objects), 'static_library')
 
     head, tail = os.path.split(name)
-    paths = [ os.path.join(head, i) for i in
-              utils.listify(builder.output_name(tail)) ]
-    target = target_type(name, tail, *paths)
+    path = os.path.join(head, builder.output_name(tail))
+    target = StaticLibrary(name, tail, path)
+
     _link(build, target, builder, objects, libs, link_options, deps)
     return target
 
 @builtin
-def shared_library(build, env, *args, **kwargs):
-    target = _library(build, env, SharedLibrary, *args, **kwargs)
-    for f in target.creator.files:
-        f.creator.in_shared_library = True
-    return target
+def shared_library(build, env, name, files, libs=None, include=None,
+                   compile_options=None, link_options=None, lang=None,
+                   deps=None):
+    objects = object_files(build, env, files, include, compile_options, lang)
+    for i in objects:
+        i.creator.in_shared_library = True
+    builder = env.linker((i.lang for i in objects), 'shared_library')
 
-@builtin
-def static_library(build, env, *args, **kwargs):
-    return _library(build, env, StaticLibrary, *args, **kwargs)
+    head, tail = os.path.split(name)
+    output = builder.output_name(tail)
+    if type(output) == tuple:
+        target = ( SharedLibrary(name, tail, os.path.join(head, output[0])),
+                   DynamicLibrary(name, tail, os.path.join(head, output[1])) )
+    else:
+        target = SharedLibrary(name, tail, os.path.join(head, output))
+
+    _link(build, target, builder, objects, libs, link_options, deps)
+    return target
 
 @builtin
 def alias(build, env, name, deps):
@@ -172,11 +190,13 @@ def command(build, env, name, cmd, deps=None):
 
 @builtin
 def default(build, env, *args):
-    build.default_targets.extend(i for i in args if not i.is_source)
+    build.default_targets.extend(
+        i for i in flatten(args) if not i.is_source
+    )
 
 @builtin
 def install(build, env, *args):
-    for i in args:
+    for i in flatten(args):
         if isinstance(i, build_inputs.Directory):
             build.install_targets.directories.append(i)
         else:
@@ -184,11 +204,7 @@ def install(build, env, *args):
             build.install_targets.files.append(i)
 
 @builtin
-def header_directory(build, env, directory):
-    return HeaderDirectory(directory)
-
-@builtin
 def global_options(build, env, options, lang):
     if not lang in build.global_options:
         build.global_options[lang] = []
-    build.global_options[lang].extend(utils.shell_listify(options))
+    build.global_options[lang].extend(shell_listify(options))

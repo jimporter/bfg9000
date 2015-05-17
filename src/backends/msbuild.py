@@ -5,6 +5,7 @@ import uuid
 from lxml import etree
 from lxml.builder import E
 
+import utils
 from builtin_rules import *
 
 def makedirs(path, mode=0o777, exist_ok=False):
@@ -123,15 +124,16 @@ class VcxProject(object):
     _XMLNS = 'http://schemas.microsoft.com/developer/msbuild/2003'
     _DOCTYPE = '<?xml version="1.0" encoding="utf-8"?>'
 
-    def __init__(self, name, files, srcdir, mode='Application', libs=None,
-                 libdirs=None, dependencies=None):
+    def __init__(self, name, mode='Application'):
         self.name = name
-        self.files = files
-        self.srcdir = srcdir
         self.mode = mode
-        self.libs = libs
-        self.libdirs = libdirs
-        self.dependencies = dependencies or []
+        self.output_file = None
+        self.import_lib = None
+        self.files = []
+        self.srcdir = None
+        self.libs = []
+        self.libdirs = []
+        self.dependencies = []
 
     @property
     def path(self):
@@ -145,19 +147,23 @@ class VcxProject(object):
     def uuid_str(self):
         return '{{{}}}'.format(str(self.uuid).upper())
 
-    def _item_definition_group(self):
-        return item_defs
-
     def write(self, out):
+        link = E.Link()
+        if self.output_file:
+            link.append(E.OutputFile(self.output_file))
+        if self.import_lib:
+            link.append(E.ImportLibrary(self.import_lib))
+        if self.libs:
+            libs = ';'.join(self.libs + ['%(AdditionalDependencies)'])
+            link.append(E.AdditionalDependencies(libs))
+
         item_defs = E.ItemDefinitionGroup(
             E.ClCompile(
                 # TODO: Add more options
                 E.WarningLevel('Level3')
-            )
+            ),
+            link
         )
-        if self.libs:
-            libs = ';'.join(self.libs + ['%(AdditionalDependencies)'])
-            item_defs.append(E.Link( E.AdditionalDependencies(libs) ))
 
         override_props = E.PropertyGroup()
         if self.libdirs:
@@ -201,13 +207,12 @@ class VcxProject(object):
         out.write(etree.tostring(project, doctype=self._DOCTYPE,
                                  pretty_print=True))
 
-# TODO: Remove this
-def link_mode(target):
+def link_mode(mode):
     return {
-        'Executable'   : 'Application',
-        'SharedLibrary': 'DynamicLibrary',
-        'StaticLibrary': 'StaticLibrary',
-    }[type(target).__name__]
+        'executable'    : 'Application',
+        'static_library': 'StaticLibrary',
+        'shared_library': 'DynamicLibrary',
+    }[mode]
 
 def write(env, build_inputs):
     projects = []
@@ -227,13 +232,23 @@ def write(env, build_inputs):
                     dependencies.append(project_map[id(dep.creator.target)])
 
             project = VcxProject(
-                e.target.raw_name,
-                (i.creator.file.path for i in e.files),
-                env.srcdir, link_mode(e.target),
-                libs=[i.path for i in e.libs],
-                libdirs=['$(OutDir)'],
-                dependencies=dependencies
+                utils.first(e.target).raw_name,
+                link_mode(e.builder.mode),
             )
+
+            # TODO: It's awfully easy to misspell these and silently fail...
+            if type(e.target) == tuple:
+                project.import_lib = e.target[0].path
+                project.output_file = e.target[1].path
+            else:
+                project.output_file = e.target.path
+
+            project.srcdir = env.srcdir
+            project.files = [i.creator.file.path for i in e.files]
+            project.libs = [i.path for i in e.libs]
+            project.libdirs = ['$(OutDir)']
+            project.dependencies = dependencies
+
             projects.append(project)
             project_map[id(e.target)] = project
 
