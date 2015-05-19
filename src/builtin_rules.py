@@ -118,9 +118,10 @@ def object_files(build, env, files, include=None, options=None, lang=None):
     return [objectify(i, ObjectFile, make_object) for i in iterate(files)]
 
 def _link(build, target, builder, objects, libs=None, options=None, deps=None):
-    gen = ( objectify(i, Library, ExternalLibrary)
-            for i in flatten(iterate(libs)) )
-    libs = [i for i in gen if not isinstance(i, DynamicLibrary)]
+    # Flatten the list of libraries and remove any DynamicLibraries (since they
+    # can't be linked to at build time).
+    libs = [ objectify(i, Library, ExternalLibrary) for i in
+             flatten(iterate(libs)) if not isinstance(i, DynamicLibrary) ]
 
     build.add_edge(Link( target, builder, objects, libs,
                          shell_listify(options), deps ))
