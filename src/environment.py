@@ -3,6 +3,7 @@ import platform
 
 import toolchains.ar
 import toolchains.cc
+import toolchains.msvc
 
 class UnixPlatform(object):
     def object_file_name(self, basename):
@@ -46,26 +47,57 @@ class Environment(object):
             'Windows': WindowsPlatform,
             'Darwin': DarwinPlatform
         }
-        platform_info = platforms.get(platform.system(), UnixPlatform)()
+        platform_name = platform.system()
+        platform_info = platforms.get(platform_name, UnixPlatform)()
 
-        self._compilers = {
-            'c'  : toolchains.cc.CcCompiler(platform_info),
-            'c++': toolchains.cc.CxxCompiler(platform_info),
-        }
-        self._linkers = {
-            'executable': {
-                'c'  : toolchains.cc.CcLinker('executable', platform_info),
-                'c++': toolchains.cc.CxxLinker('executable', platform_info),
-            },
-            'shared_library': {
-                'c'  : toolchains.cc.CcLinker('shared_library', platform_info),
-                'c++': toolchains.cc.CxxLinker('shared_library', platform_info),
-            },
-            'static_library': {
-                'c'  : toolchains.ar.ArLinker(platform_info),
-                'c++': toolchains.ar.ArLinker(platform_info),
+        # TODO: Come up with a more flexible way to initialize the compilers and
+        # linkers for each language.
+        if platform_name == 'Windows':
+            compiler = toolchains.msvc.MSVCCompiler(platform_info)
+            exelinker = toolchains.msvc.MSVCLinker('executable', platform_info)
+            liblinker = toolchains.msvc.MSVCLinker('static_library',
+                                                   platform_info)
+            dlllinker = toolchains.msvc.MSVCLinker('shared_library',
+                                                   platform_info)
+            self._compilers = {
+                'c'  : compiler,
+                'c++': compiler,
             }
-        }
+            self._linkers = {
+                'executable': {
+                    'c'  : exelinker,
+                    'c++': exelinker,
+                },
+                'static_library': {
+                    'c'  : liblinker,
+                    'c++': liblinker,
+                },
+                'shared_library': {
+                    'c'  : dlllinker,
+                    'c++': dlllinker,
+                },
+            }
+        else:
+            self._compilers = {
+                'c'  : toolchains.cc.CcCompiler(platform_info),
+                'c++': toolchains.cc.CxxCompiler(platform_info),
+            }
+            self._linkers = {
+                'executable': {
+                    'c'  : toolchains.cc.CcLinker('executable', platform_info),
+                    'c++': toolchains.cc.CxxLinker('executable', platform_info),
+                },
+                'static_library': {
+                    'c'  : toolchains.ar.ArLinker(platform_info),
+                    'c++': toolchains.ar.ArLinker(platform_info),
+                },
+                'shared_library': {
+                    'c'  : toolchains.cc.CcLinker('shared_library',
+                                                  platform_info),
+                    'c++': toolchains.cc.CxxLinker('shared_library',
+                                                   platform_info),
+                },
+            }
 
     def compiler(self, lang):
         return self._compilers[lang]
