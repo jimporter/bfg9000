@@ -5,6 +5,7 @@ from collections import Iterable, namedtuple, OrderedDict
 from itertools import chain
 
 import utils
+from path import Path
 
 _rule_handlers = {}
 def rule_handler(rule_name):
@@ -43,9 +44,6 @@ def escape_list(value, delim=' '):
         return escaped_str(delim.join(escape_str(i) for i in value if i))
     else:
         return escape_str(value)
-
-def path_join(*args):
-    return escape_list(args, delim=os.sep)
 
 class NinjaVariable(object):
     def __init__(self, name):
@@ -186,17 +184,20 @@ class NinjaWriter(object):
                 escape_str(i) for i in self._defaults
             )))
 
-srcdir_var = NinjaVariable('srcdir')
-def target_path(target, attr='path'):
-    path = getattr(target, attr)
-    if target.is_source:
-        return path_join(srcdir_var, path)
+_path_vars = {
+    'srcdir': NinjaVariable('srcdir'),
+    'prefix': NinjaVariable('prefix'),
+}
+def path_str(path, form='local_path'):
+    source, pathname = getattr(path, form)()
+    if source:
+        return escape_list([_path_vars[source], pathname], os.sep)
     else:
-        return path_join(getattr(target, 'install_dir', None), path)
+        return escape_str(pathname)
 
 def write(env, build_inputs):
     writer = NinjaWriter()
-    writer.variable(srcdir_var, env.srcdir)
+    writer.variable(_path_vars['srcdir'], env.srcdir)
 
     all_rule(build_inputs.get_default_targets(), writer)
     install_rule(build_inputs.install_targets, writer, env)
@@ -230,14 +231,15 @@ def all_rule(default_targets, writer):
     writer.default(['all'])
     writer.build(
         output='all', rule='phony',
-        inputs=(target_path(i) for i in default_targets)
+        inputs=(path_str(i.path) for i in default_targets)
     )
 
 # TODO: Write a better `install` program to simplify this
 def install_rule(install_targets, writer, env):
     if not install_targets:
         return
-    prefix = writer.variable('prefix', env.install_prefix)
+
+    writer.variable(_path_vars['prefix'], env.install_prefix)
 
     def install_cmd(kind):
         install = NinjaVariable('install')
@@ -259,13 +261,13 @@ def install_rule(install_targets, writer, env):
         writer.rule(name='command', command=var('cmd'))
 
     def install_line(file):
-        src = target_path(file)
-        dst = path_join(prefix, file.install_dir, file.path)
+        src = path_str(file.path)
+        dst = path_str(file.path, 'install_path')
         return [ install_cmd(file.install_kind), '-D', src, dst ]
 
     def mkdir_line(dir):
-        src = path_join(target_path(dir), '*')
-        dst = path_join(prefix, dir.install_dir)
+        src = path_str(dir.path.append('*'))
+        dst = path_str(dir.path.parent(), 'install_path')
         return ['mkdir', '-p', dst, '&&', 'cp', '-r', src, dst]
 
     commands = ([install_line(i) for i in install_targets.files] +
@@ -286,7 +288,7 @@ def regenerate_rule(writer, env):
     )
     writer.build(
         output='build.ninja', rule='regenerate',
-        implicit=[path_join(srcdir_var, 'build.bfg')]
+        implicit=[path_str(Path('build.bfg', Path.srcdir, Path.basedir))]
     )
 
 @rule_handler('Compile')
@@ -311,15 +313,15 @@ def emit_object_file(rule, build_inputs, writer):
     if rule.in_shared_library:
         cflags_value.extend(compiler.library_args)
     cflags_value.extend(chain.from_iterable(
-        compiler.include_dir(target_path(i)) for i in rule.include
+        compiler.include_dir(path_str(i.path)) for i in rule.include
     ))
     cflags_value.extend(rule.options)
     if cflags_value:
         variables[cflags] = [global_cflags] + cflags_value
 
-    writer.build(output=target_path(rule.target), rule=compiler.name,
-                 inputs=[target_path(rule.file)],
-                 variables=variables)
+    # TODO: Support extra dependencies
+    writer.build(output=path_str(rule.target.path), rule=compiler.name,
+                 inputs=[path_str(rule.file.path)], variables=variables)
 
 @rule_handler('Link')
 def emit_link(rule, build_inputs, writer):
@@ -335,11 +337,12 @@ def emit_link(rule, build_inputs, writer):
             libs=ldlibs, args=ldflags
         ))
 
-    lib_deps = [i for i in rule.libs if not i.is_source]
-    lib_dirs = set(os.path.dirname(target_path(i)) for i in lib_deps)
+    lib_deps = [i for i in rule.libs if i.creator]
+    lib_dirs = set(os.path.dirname(path_str(i.path)) for i in lib_deps)
     # TODO: Handle rules with multiple targets (e.g. shared libs on Windows).
-    target = target_path(rule.target)
-    target_dir = os.path.dirname(target)
+    path = rule.target.path
+    target_dir = path.parent()
+    target_dirname = path_str(target_dir)
 
     variables = {}
 
@@ -350,7 +353,7 @@ def emit_link(rule, build_inputs, writer):
         linker.lib_dir(i) for i in lib_dirs
     ))
     ldflags_value.extend(linker.rpath(
-        os.path.relpath(i, target_dir) for i in lib_dirs
+        os.path.relpath(i, target_dirname) for i in lib_dirs
     ))
     if ldflags_value:
         variables[ldflags] = [global_ldflags] + ldflags_value
@@ -361,17 +364,17 @@ def emit_link(rule, build_inputs, writer):
         ))
 
     writer.build(
-        output=target, rule=linker.name,
-        inputs=(target_path(i) for i in rule.files),
-        implicit=(target_path(i) for i in lib_deps),
+        output=path_str(path), rule=linker.name,
+        inputs=(path_str(i.path) for i in rule.files),
+        implicit=(path_str(i.path) for i in chain(lib_deps, rule.deps)),
         variables=variables
     )
 
 @rule_handler('Alias')
 def emit_alias(rule, build_inputs, writer):
     writer.build(
-        output=target_path(rule.target), rule='phony',
-        inputs=[target_path(i) for i in rule.deps]
+        output=path_str(rule.target.path), rule='phony',
+        inputs=[path_str(i.path) for i in rule.deps]
     )
 
 @rule_handler('Command')
@@ -379,7 +382,7 @@ def emit_command(rule, build_inputs, writer):
     if not writer.has_rule('command'):
         writer.rule(name='command', command=var('cmd'))
     writer.build(
-        output=target_path(rule.target), rule='command',
-        inputs=(target_path(i) for i in rule.deps),
+        output=path_str(rule.target.path), rule='command',
+        inputs=(path_str(i.path) for i in rule.deps),
         variables={'cmd': ' && '.join(rule.cmd)}
     )

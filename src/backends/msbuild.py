@@ -120,6 +120,13 @@ def write_solution(out, projects):
 
     sln_write(out, sln)
 
+def path_str(path):
+    source, pathname = path.local_path()
+    if source:
+        return ntpath.normpath(ntpath.join('$(SourceDir)', pathname))
+    else:
+        return ntpath.normpath(pathname)
+
 class VcxProject(object):
     _XMLNS = 'http://schemas.microsoft.com/developer/msbuild/2003'
     _DOCTYPE = '<?xml version="1.0" encoding="utf-8"?>'
@@ -197,9 +204,7 @@ class VcxProject(object):
             override_props,
             item_defs,
             E.ItemGroup(
-                *[E.ClCompile(Include=ntpath.normpath(
-                    ntpath.join('$(SourceDir)', i)
-                )) for i in self.files]
+                *[E.ClCompile(Include=i) for i in self.files]
             ),
             E.Import(Project='$(VCTargetsPath)\Microsoft.Cpp.Targets')
         )
@@ -235,14 +240,17 @@ def write(env, build_inputs):
 
             # TODO: It's awfully easy to misspell these and silently fail...
             if type(e.target) == tuple:
-                project.import_lib = e.target[0].path
-                project.output_file = e.target[1].path
+                # TODO: These currently end up in subdirs (e.g. bin/). We
+                # probably shouldn't do this. Maybe that's more dependent on the
+                # Windows platform than the MSBuild backend, though.
+                project.import_lib = path_str(e.target[0].path)
+                project.output_file = path_str(e.target[1].path)
             else:
-                project.output_file = e.target.path
+                project.output_file = path_str(e.target.path)
 
             project.srcdir = env.srcdir
-            project.files = [i.creator.file.path for i in e.files]
-            project.libs = [i.path for i in e.libs]
+            project.files = [path_str(i.creator.file.path) for i in e.files]
+            project.libs = [path_str(i.path) for i in e.libs]
             project.libdirs = ['$(OutDir)']
             project.dependencies = dependencies
 

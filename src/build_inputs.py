@@ -1,13 +1,12 @@
+import path
 import utils
 
 class Node(object):
-    def __init__(self, path):
-        self.path = path
-        self.creator = None
+    install_root = path.Path.basedir
 
-    @property
-    def is_source(self):
-        return self.creator is None
+    def __init__(self, name, source):
+        self.path = path.Path(name, source, self.install_root)
+        self.creator = None
 
     def __repr__(self):
         return '<{type} {name}>'.format(
@@ -15,10 +14,16 @@ class Node(object):
         )
 
 class File(Node):
-    pass
+    # TODO: Remove this and just use Node's ctor?
+    def __init__(self, name, source=path.Path.builddir):
+        Node.__init__(self, name, source)
 
 class Directory(File):
     pass
+
+class Phony(Node):
+    def __init__(self, name):
+        Node.__init__(self, name, Path.builddir)
 
 class Edge(object):
     def __init__(self, target, deps=None):

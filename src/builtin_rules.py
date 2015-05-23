@@ -2,38 +2,38 @@ import os
 
 from builtins import builtin
 from languages import ext2lang
+from path import Path
 from utils import iterate, listify, flatten, shell_listify, objectify
 import build_inputs
 
-
 class SourceFile(build_inputs.File):
-    def __init__(self, path, lang=None):
-        build_inputs.File.__init__(self, path)
+    def __init__(self, name, source=Path.srcdir, lang=None):
+        build_inputs.File.__init__(self, name, source=source)
         self.lang = lang
 
 class HeaderFile(build_inputs.File):
     install_kind = 'data'
-    install_dir = 'include'
+    install_root = Path.includedir
 
 class HeaderDirectory(build_inputs.Directory):
-    install_dir = 'include'
+    install_root = Path.includedir
 
 class ObjectFile(build_inputs.File):
-    def __init__(self, path, lang=None):
-        build_inputs.File.__init__(self, path)
+    def __init__(self, name, source=Path.builddir, lang=None):
+        build_inputs.File.__init__(self, name, source)
         self.lang = lang
 
 class Binary(build_inputs.File):
     install_kind = 'program'
 
 class Executable(Binary):
-    install_dir = 'bin'
+    install_root = Path.bindir
 
 class Library(Binary):
-    install_dir = 'lib'
+    install_root = Path.libdir
 
-    def __init__(self, path, lib_name):
-        Binary.__init__(self, path)
+    def __init__(self, lib_name, name, source=Path.builddir):
+        Binary.__init__(self, name, source)
         self.lib_name = lib_name
 
 class StaticLibrary(Library):
@@ -86,11 +86,11 @@ class Command(build_inputs.Edge):
 
 @builtin
 def header(build, env, name):
-    return HeaderFile(name)
+    return HeaderFile(name, source=Path.srcdir)
 
 @builtin
 def header_directory(build, env, directory):
-    return HeaderDirectory(directory)
+    return HeaderDirectory(directory, source=Path.srcdir)
 
 @builtin
 def object_file(build, env, name=None, file=None, include=None, options=None,
@@ -99,8 +99,9 @@ def object_file(build, env, name=None, file=None, include=None, options=None,
         raise TypeError('"file" argument must not be None')
     if lang is None:
         lang = ext2lang.get( os.path.splitext(file)[1] )
-    source_file = objectify(file, SourceFile, lang=lang)
-    includes = [objectify(i, HeaderDirectory) for i in iterate(include)]
+    source_file = objectify(file, SourceFile, source=Path.srcdir, lang=lang)
+    includes = [objectify(i, HeaderDirectory, source=Path.srcdir)
+                for i in iterate(include)]
 
     if name is None:
         name = os.path.splitext(file)[0]
@@ -108,7 +109,7 @@ def object_file(build, env, name=None, file=None, include=None, options=None,
     builder = env.compiler(source_file.lang)
     head, tail = os.path.split(name)
     path = os.path.join(head, builder.output_name(tail))
-    target = ObjectFile(path, lang)
+    target = ObjectFile(path, Path.builddir, lang)
 
     build.add_edge(Compile( target, builder, source_file, includes,
                             shell_listify(options), deps ))
@@ -141,7 +142,7 @@ def executable(build, env, name, files, libs=None, include=None,
 
     head, tail = os.path.split(name)
     path = os.path.join(head, builder.output_name(tail))
-    target = Executable(path)
+    target = Executable(path, Path.builddir)
 
     _link(build, name, target, builder, objects, libs, link_options, deps)
     return target
@@ -155,7 +156,7 @@ def static_library(build, env, name, files, libs=None, include=None,
 
     head, tail = os.path.split(name)
     path = os.path.join(head, builder.output_name(tail))
-    target = StaticLibrary(path, tail)
+    target = StaticLibrary(tail, path, Path.builddir)
 
     _link(build, name, target, builder, objects, libs, link_options, deps)
     return target
@@ -172,23 +173,27 @@ def shared_library(build, env, name, files, libs=None, include=None,
     head, tail = os.path.split(name)
     output = builder.output_name(tail)
     if type(output) == tuple:
-        target = ( SharedLibrary(os.path.join(head, output[0]), tail),
-                   DynamicLibrary(os.path.join(head, output[1]), tail) )
+        target = (
+            SharedLibrary(tail, os.path.join(head, output[0]), Path.builddir),
+            DynamicLibrary(tail, os.path.join(head, output[1]), Path.builddir)
+        )
     else:
-        target = SharedLibrary(os.path.join(head, output), tail)
+        target = SharedLibrary(
+            tail, os.path.join(head, output), Path.builddir
+        )
 
     _link(build, name, target, builder, objects, libs, link_options, deps)
     return target
 
 @builtin
 def alias(build, env, name, deps):
-    target = build_inputs.Node(name)
+    target = build_inputs.Phony(name)
     build.add_edge(Alias(target, deps))
     return target
 
 @builtin
 def command(build, env, name, cmd, deps=None):
-    target = build_inputs.Node(name)
+    target = build_inputs.Phony(name)
     build.add_edge(Command(target, cmd, deps))
     return target
 
@@ -197,7 +202,7 @@ def command(build, env, name, cmd, deps=None):
 @builtin
 def default(build, env, *args):
     build.default_targets.extend(
-        i for i in flatten(args) if not i.is_source
+        i for i in flatten(args) if i.creator
     )
 
 @builtin

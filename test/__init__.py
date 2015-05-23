@@ -1,1 +1,1 @@
-__all__ = ['integration']
+__all__ = ['integration', 'unit']
