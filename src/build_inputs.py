@@ -15,9 +15,7 @@ class Node(object):
         )
 
 class File(Node):
-    def __init__(self, raw_name, path=None):
-        Node.__init__(self, path if path is not None else raw_name)
-        self.raw_name = raw_name
+    pass
 
 class Directory(File):
     pass

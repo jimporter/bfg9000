@@ -47,12 +47,6 @@ def objectify(x, valid_type, creator=None, **kwargs):
     else:
         return valid_type(x, **kwargs)
 
-def first(thing):
-    if isinstance(thing, Iterable) and not isinstance(thing, basestring):
-        return thing[0]
-    else:
-        return thing
-
 @builtin
 def find(build_inputs, base='.', name='*', type=None):
     results = []

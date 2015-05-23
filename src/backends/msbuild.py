@@ -231,10 +231,7 @@ def write(env, build_inputs):
                 if dep.creator and id(dep.creator.target) in project_map:
                     dependencies.append(project_map[id(dep.creator.target)])
 
-            project = VcxProject(
-                utils.first(e.target).raw_name,
-                link_mode(e.builder.mode),
-            )
+            project = VcxProject(e.project_name, link_mode(e.builder.mode))
 
             # TODO: It's awfully easy to misspell these and silently fail...
             if type(e.target) == tuple:
