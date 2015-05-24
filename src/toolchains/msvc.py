@@ -1,8 +1,9 @@
+import native
 import utils
 
-class MSVCCompiler(object):
+class MSVCCompiler(native.NativeCompiler):
     def __init__(self, platform_info):
-        self._platform_info = platform_info
+        native.NativeCompiler.__init__(self, platform)
         self.command_name = 'cl'
         self.name = 'cxx'
         self.command_var = 'cxx'
@@ -16,9 +17,6 @@ class MSVCCompiler(object):
         result.append('/Fo' + output)
         return result
 
-    def output_name(self, basename):
-        return self._platform_info.object_file_name(basename)
-
     @property
     def library_args(self):
         return []
@@ -26,10 +24,9 @@ class MSVCCompiler(object):
     def include_dir(self, directory):
         return ['/I' + directory]
 
-class MSVCLinker(object):
-    def __init__(self, mode, platform_info):
-        self.mode = mode
-        self._platform_info = platform_info
+class MSVCLinker(native.NativeLinker):
+    def __init__(self, platform, mode):
+        native.NativeLinker.__init__(self, platform, mode)
         self.command_name = 'link'
         self.name = 'link'
         self.command_var = 'link'
@@ -43,12 +40,6 @@ class MSVCLinker(object):
         result.extend(utils.iterate(libs))
         result.append('/OUT:' + output)
         return result
-
-    def output_name(self, basename):
-        if self.mode == 'shared_library':
-            return self._platform_info.shared_library_name(basename)
-        else:
-            return self._platform_info.executable_name(basename)
 
     @property
     def mode_args(self):

@@ -1,12 +1,12 @@
 import os
 import shlex
 
+import native
 import utils
 
-class ArLinker(object):
-    def __init__(self, platform_info):
-        self.mode = 'static_library'
-        self._platform_info = platform_info
+class ArLinker(native.NativeLinker):
+    def __init__(self, platform):
+        native.NativeLinker.__init__(self, platform, 'static_library')
         self.command_name = os.getenv('AR', 'ar')
         self.command_var = 'ar'
         self.link_var = 'ar'
@@ -20,9 +20,6 @@ class ArLinker(object):
         result.append(output)
         result.extend(utils.iterate(input))
         return result
-
-    def output_name(self, basename):
-        return self._platform_info.static_library_name(basename)
 
     @property
     def mode_args(self):

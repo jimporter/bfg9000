@@ -54,11 +54,11 @@ class Environment(object):
         # linkers for each language.
         if platform_name == 'Windows':
             compiler = toolchains.msvc.MSVCCompiler(platform_info)
-            exelinker = toolchains.msvc.MSVCLinker('executable', platform_info)
-            liblinker = toolchains.msvc.MSVCLinker('static_library',
-                                                   platform_info)
-            dlllinker = toolchains.msvc.MSVCLinker('shared_library',
-                                                   platform_info)
+            exelinker = toolchains.msvc.MSVCLinker(platform_info, 'executable')
+            liblinker = toolchains.msvc.MSVCLinker(platform_info,
+                                                   'static_library')
+            dlllinker = toolchains.msvc.MSVCLinker(platform_info,
+                                                   'shared_library')
             self._compilers = {
                 'c'  : compiler,
                 'c++': compiler,
@@ -84,18 +84,18 @@ class Environment(object):
             }
             self._linkers = {
                 'executable': {
-                    'c'  : toolchains.cc.CcLinker('executable', platform_info),
-                    'c++': toolchains.cc.CxxLinker('executable', platform_info),
+                    'c'  : toolchains.cc.CcLinker(platform_info, 'executable'),
+                    'c++': toolchains.cc.CxxLinker(platform_info, 'executable'),
                 },
                 'static_library': {
                     'c'  : toolchains.ar.ArLinker(platform_info),
                     'c++': toolchains.ar.ArLinker(platform_info),
                 },
                 'shared_library': {
-                    'c'  : toolchains.cc.CcLinker('shared_library',
-                                                  platform_info),
-                    'c++': toolchains.cc.CxxLinker('shared_library',
-                                                   platform_info),
+                    'c'  : toolchains.cc.CcLinker(platform_info,
+                                                  'shared_library'),
+                    'c++': toolchains.cc.CxxLinker(platform_info,
+                                                   'shared_library'),
                 },
             }
 
