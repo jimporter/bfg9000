@@ -1,12 +1,12 @@
 import os
 import shlex
 
-import native
 import utils
+from file_types import *
 
-class CcCompilerBase(native.NativeCompiler):
+class CcCompilerBase(object):
     def __init__(self, platform, command, name):
-        native.NativeCompiler.__init__(self, platform)
+        self.platform = platform
         self.command_name = command
         self.name = name
         self.command_var = name
@@ -20,6 +20,9 @@ class CcCompilerBase(native.NativeCompiler):
         result.extend(['-o', output])
         return result
 
+    def output_file(self, name, lang):
+        return ObjectFile(name + '.o', Path.builddir, lang)
+
     @property
     def library_args(self):
         return ['-fPIC']
@@ -27,9 +30,10 @@ class CcCompilerBase(native.NativeCompiler):
     def include_dir(self, directory):
         return ['-I' + directory]
 
-class CcLinkerBase(native.NativeLinker):
+class CcLinkerBase(object):
     def __init__(self, platform, mode, command, name):
-        native.NativeLinker.__init__(self, platform, mode)
+        self.platform = platform
+        self.mode = mode
         self.command_name = command
         self.name = 'link_' + name
         self.command_var = name
@@ -42,6 +46,29 @@ class CcLinkerBase(native.NativeLinker):
         result.extend(utils.iterate(libs))
         result.extend(['-o', output])
         return result
+
+    def output_file(self, name):
+        if self.mode == 'executable':
+            return Executable(
+                name + self.platform.executable_ext, Path.builddir
+            )
+        elif self.mode == 'shared_library':
+            head, tail = os.path.split(name)
+            def libpath(prefix='lib'):
+                return os.path.join(
+                    head, 'lib' + tail + self.platform.shared_library_ext
+                )
+
+            if self.platform.has_import_library:
+                prefix = 'cyg' if self.platform.name == 'cygwin' else 'lib'
+                return (
+                    SharedLibrary(tail, libpath() + '.a', Path.builddir),
+                    DynamicLibrary(tail, libpath(prefix), Path.builddir),
+                )
+            else:
+                return SharedLibrary(tail, libpath(), Path.builddir)
+        else:
+            raise RuntimeError('unknown mode "{}"'.format(self.mode))
 
     @property
     def mode_args(self):

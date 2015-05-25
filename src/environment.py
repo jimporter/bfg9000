@@ -1,39 +1,9 @@
 import os.path
-import platform
 
+import platforms
 import toolchains.ar
 import toolchains.cc
 import toolchains.msvc
-
-class UnixPlatform(object):
-    def object_file_name(self, basename):
-        return basename + '.o'
-
-    def executable_name(self, basename):
-        return basename
-
-    def static_library_name(self, basename):
-        return 'lib' + basename + '.a'
-
-    def shared_library_name(self, basename):
-        return 'lib' + basename + '.so'
-
-class DarwinPlatform(UnixPlatform):
-    def shared_library_name(self, basename):
-        return 'lib' + basename + '.dylib'
-
-class WindowsPlatform(object):
-    def object_file_name(self, basename):
-        return basename + '.obj'
-
-    def executable_name(self, basename):
-        return basename + '.exe'
-
-    def static_library_name(self, basename):
-        return basename + '.lib'
-
-    def shared_library_name(self, basename):
-        return basename + '.lib', basename + '.dll'
 
 class Environment(object):
     def __init__(self, bfgpath, srcdir, builddir, backend, install_prefix):
@@ -43,21 +13,16 @@ class Environment(object):
         self.backend = backend
         self.install_prefix = install_prefix
 
-        platforms = {
-            'Windows': WindowsPlatform,
-            'Darwin': DarwinPlatform
-        }
-        platform_name = platform.system()
-        platform_info = platforms.get(platform_name, UnixPlatform)()
+        self.platform = platforms.platform_info(platforms.platform_name())
 
         # TODO: Come up with a more flexible way to initialize the compilers and
         # linkers for each language.
-        if platform_name == 'Windows':
-            compiler = toolchains.msvc.MSVCCompiler(platform_info)
-            exelinker = toolchains.msvc.MSVCLinker(platform_info, 'executable')
-            liblinker = toolchains.msvc.MSVCLinker(platform_info,
+        if self.platform.name == 'Windows':
+            compiler = toolchains.msvc.MSVCCompiler(self.platform)
+            exelinker = toolchains.msvc.MSVCLinker(self.platform, 'executable')
+            liblinker = toolchains.msvc.MSVCLinker(self.platform,
                                                    'static_library')
-            dlllinker = toolchains.msvc.MSVCLinker(platform_info,
+            dlllinker = toolchains.msvc.MSVCLinker(self.platform,
                                                    'shared_library')
             self._compilers = {
                 'c'  : compiler,
@@ -79,22 +44,22 @@ class Environment(object):
             }
         else:
             self._compilers = {
-                'c'  : toolchains.cc.CcCompiler(platform_info),
-                'c++': toolchains.cc.CxxCompiler(platform_info),
+                'c'  : toolchains.cc.CcCompiler(self.platform),
+                'c++': toolchains.cc.CxxCompiler(self.platform),
             }
             self._linkers = {
                 'executable': {
-                    'c'  : toolchains.cc.CcLinker(platform_info, 'executable'),
-                    'c++': toolchains.cc.CxxLinker(platform_info, 'executable'),
+                    'c'  : toolchains.cc.CcLinker(self.platform, 'executable'),
+                    'c++': toolchains.cc.CxxLinker(self.platform, 'executable'),
                 },
                 'static_library': {
-                    'c'  : toolchains.ar.ArLinker(platform_info),
-                    'c++': toolchains.ar.ArLinker(platform_info),
+                    'c'  : toolchains.ar.ArLinker(self.platform),
+                    'c++': toolchains.ar.ArLinker(self.platform),
                 },
                 'shared_library': {
-                    'c'  : toolchains.cc.CcLinker(platform_info,
+                    'c'  : toolchains.cc.CcLinker(self.platform,
                                                   'shared_library'),
-                    'c++': toolchains.cc.CxxLinker(platform_info,
+                    'c++': toolchains.cc.CxxLinker(self.platform,
                                                    'shared_library'),
                 },
             }
