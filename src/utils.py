@@ -48,7 +48,7 @@ def objectify(x, valid_type, creator=None, **kwargs):
         return valid_type(x, **kwargs)
 
 @builtin
-def find(build_inputs, base='.', name='*', type=None):
+def find(build_inputs, env, base='.', name='*', type=None):
     results = []
     for path, dirs, files in os.walk(base):
         if type != 'f':
