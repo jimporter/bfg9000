@@ -8,15 +8,14 @@ from path import Path
 class ArLinker(object):
     def __init__(self, platform):
         self.platform = platform
+        self.mode = 'static_library'
         self.command_name = os.getenv('AR', 'ar')
         self.command_var = 'ar'
         self.link_var = 'ar'
         self.name = 'ar'
         self.global_args = shlex.split(os.getenv('ARFLAGS', 'cru'), posix=False)
-        self.global_libs = None # TODO: Remove this.
 
-    # TODO: Figure out a way to indicate that libs are useless here.
-    def command(self, cmd, input, output, libs=None, args=None):
+    def command(self, cmd, input, output, args=None):
         result = [cmd]
         result.extend(utils.iterate(args))
         result.append(output)

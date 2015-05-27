@@ -215,11 +215,6 @@ def cmd_var(compiler, writer):
     return var
 
 def flags_vars(name, value, writer):
-    # TODO: Remove this and replace it with something better (this is just to
-    # work around `ar` not supporting LDLIBS).
-    if value is None:
-        return None, None
-
     global_flags = NinjaVariable('global_{}'.format(name))
     if not writer.has_variable(global_flags):
         writer.variable(global_flags, ' '.join(value))
@@ -297,18 +292,12 @@ def regenerate_rule(writer, env):
 @rule_handler('Compile')
 def emit_object_file(rule, build_inputs, writer):
     compiler = rule.builder
-
     global_cflags, cflags = flags_vars(
         compiler.command_var + 'flags',
         compiler.global_args +
           build_inputs.global_options.get(rule.file.lang, []),
         writer
     )
-    if not writer.has_rule(compiler.name):
-        writer.rule(name=compiler.name, command=compiler.command(
-            cmd=cmd_var(compiler, writer), input=var('in'), output=var('out'),
-            dep=var('out') + '.d', args=cflags
-        ), depfile=var('out') + '.d')
 
     variables = {}
 
@@ -322,6 +311,12 @@ def emit_object_file(rule, build_inputs, writer):
     if cflags_value:
         variables[cflags] = [global_cflags] + cflags_value
 
+    if not writer.has_rule(compiler.name):
+        writer.rule(name=compiler.name, command=compiler.command(
+            cmd=cmd_var(compiler, writer), input=var('in'), output=var('out'),
+            dep=var('out') + '.d', args=cflags
+        ), depfile=var('out') + '.d')
+
     # TODO: Support extra dependencies
     writer.build(output=path_str(rule.target.path), rule=compiler.name,
                  inputs=[path_str(rule.file.path)], variables=variables)
@@ -329,45 +324,48 @@ def emit_object_file(rule, build_inputs, writer):
 @rule_handler('Link')
 def emit_link(rule, build_inputs, writer):
     linker = rule.builder
-
     global_ldflags, ldflags = flags_vars(
         linker.link_var + 'flags', linker.global_args, writer
     )
-    global_ldlibs, ldlibs = flags_vars(
-        linker.link_var + 'LIBS', linker.global_libs, writer
-    )
 
-    if not writer.has_rule(linker.name):
-        writer.rule(name=linker.name, command=linker.command(
-            cmd=cmd_var(linker, writer), input=var('in'), output=var('out'),
-            libs=ldlibs, args=ldflags
-        ))
-
-    lib_deps = [i for i in rule.libs if i.creator]
-    lib_dirs = set(os.path.dirname(path_str(i.path)) for i in lib_deps)
     # TODO: Handle rules with multiple targets (e.g. shared libs on Windows).
     path = rule.target.path
     target_dir = path.parent()
     target_dirname = path_str(target_dir)
 
     variables = {}
+    command_kwargs = {}
+    ldflags_value = linker.mode_args[:]
+    lib_deps = [i for i in rule.libs if i.creator]
 
-    ldflags_value = []
-    ldflags_value.extend(linker.mode_args)
-    ldflags_value.extend(rule.options)
-    ldflags_value.extend(chain.from_iterable(
-        linker.lib_dir(i) for i in lib_dirs
-    ))
-    ldflags_value.extend(linker.rpath(
-        # TODO: Provide a relpath function for Path objects?
-        os.path.relpath(i, target_dirname) for i in lib_dirs
-    ))
+    # TODO: Create a more flexible way of determining when to use these options?
+    if linker.mode != 'static_library':
+        lib_dirs = set(os.path.dirname(path_str(i.path)) for i in lib_deps)
+        ldflags_value.extend(rule.options)
+        ldflags_value.extend(chain.from_iterable(
+            linker.lib_dir(i) for i in lib_dirs
+        ))
+        ldflags_value.extend(linker.rpath(
+            # TODO: Provide a relpath function for Path objects?
+            os.path.relpath(i, target_dirname) for i in lib_dirs
+        ))
+
+        global_ldlibs, ldlibs = flags_vars(
+            linker.link_var + 'LIBS', linker.global_libs, writer
+        )
+        command_kwargs['libs'] = ldlibs
+        if rule.libs:
+            variables[ldlibs] = [global_ldlibs] + list(chain.from_iterable(
+                linker.link_lib(i.lib_name) for i in rule.libs
+            ))
+
     if ldflags_value:
         variables[ldflags] = [global_ldflags] + ldflags_value
 
-    if ldlibs and rule.libs:
-        variables[ldlibs] = [global_ldlibs] + list(chain.from_iterable(
-            linker.link_lib(i.lib_name) for i in rule.libs
+    if not writer.has_rule(linker.name):
+        writer.rule(name=linker.name, command=linker.command(
+            cmd=cmd_var(linker, writer), input=var('in'), output=var('out'),
+            args=ldflags, **command_kwargs
         ))
 
     writer.build(

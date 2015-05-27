@@ -248,11 +248,6 @@ def cmd_var(compiler, writer):
     return var
 
 def flags_vars(name, value, writer):
-    # TODO: Remove this and replace it with something better (this is just to
-    # work around `ar` not supporting LDLIBS).
-    if value is None:
-        return None, None
-
     name = name.upper()
     global_flags = MakeVariable('GLOBAL_{}'.format(name))
     if not writer.has_variable(global_flags):
@@ -329,13 +324,28 @@ def directory_rule(path, writer):
 def emit_object_file(rule, build_inputs, writer):
     compiler = rule.builder
     recipename = MakeVariable('RULE_{}'.format(compiler.name.upper()))
-
     global_cflags, cflags = flags_vars(
         compiler.command_var + 'FLAGS',
         compiler.global_args +
           build_inputs.global_options.get(rule.file.lang, []),
         writer
     )
+
+    path = rule.target.path
+    target_dir = path.parent()
+
+    variables = {}
+    cflags_value = []
+
+    if rule.in_shared_library:
+        cflags_value.extend(compiler.library_args)
+    cflags_value.extend(chain.from_iterable(
+        compiler.include_dir(path_str(i.path)) for i in rule.include
+    ))
+    cflags_value.extend(rule.options)
+    if cflags_value:
+        variables[cflags] = [global_cflags] + cflags_value
+
     if not writer.has_variable(recipename):
         depfile = var('*') + '.d'
         writer.variable(recipename, [
@@ -348,25 +358,11 @@ def emit_object_file(rule, build_inputs, writer):
             "  sed -e 's/^ *//' -e 's/$/:/' >> " + depfile
         ], flavor='define')
 
-    variables = {}
-
-    cflags_value = []
-    if rule.in_shared_library:
-        cflags_value.extend(compiler.library_args)
-    cflags_value.extend(chain.from_iterable(
-        compiler.include_dir(path_str(i.path)) for i in rule.include
-    ))
-    cflags_value.extend(rule.options)
-    if cflags_value:
-        variables[cflags] = [global_cflags] + cflags_value
-
-    path = rule.target.path
-    directory = path.parent()
-    order_only = [path_str(directory)] if directory else None
     # TODO: Support extra dependencies
     writer.rule(target=path_str(path), deps=[path_str(rule.file.path)],
-                order_only=order_only, recipe=recipename, variables=variables)
-    directory_rule(directory, writer)
+                order_only=[path_str(target_dir)] if target_dir else None,
+                recipe=recipename, variables=variables)
+    directory_rule(target_dir, writer)
 
     writer.include(path.subext('.d'), optional=True)
 
@@ -374,55 +370,59 @@ def emit_object_file(rule, build_inputs, writer):
 def emit_link(rule, build_inputs, writer):
     linker = rule.builder
     recipename = MakeVariable('RULE_{}'.format(linker.name.upper()))
-
     global_ldflags, ldflags = flags_vars(
         linker.link_var + 'FLAGS', linker.global_args, writer
     )
-    global_ldlibs, ldlibs = flags_vars(
-        linker.link_var + 'LIBS', linker.global_libs, writer
-    )
 
-    if not writer.has_variable(recipename):
-        writer.variable(recipename, [
-            linker.command(
-                cmd=cmd_var(linker, writer), input=var('1'), output=var('@'),
-                libs=ldlibs, args=ldflags
-            )
-        ], flavor='define')
-
-    lib_deps = [i for i in rule.libs if i.creator]
-    lib_dirs = set(path_str(i.path.parent()) for i in lib_deps)
     # TODO: Handle rules with multiple targets (e.g. shared libs on Windows).
     path = rule.target.path
     target_dir = path.parent()
     target_dirname = path_str(target_dir)
 
     variables = {}
+    command_kwargs = {}
+    ldflags_value = linker.mode_args[:]
+    lib_deps = [i for i in rule.libs if i.creator]
 
-    ldflags_value = []
-    ldflags_value.extend(linker.mode_args)
-    ldflags_value.extend(rule.options)
-    ldflags_value.extend(chain.from_iterable(
-        linker.lib_dir(i) for i in lib_dirs
-    ))
-    ldflags_value.extend(linker.rpath(
-        # TODO: Provide a relpath function for Path objects?
-        os.path.relpath(i, target_dirname) for i in lib_dirs
-    ))
+    # TODO: Create a more flexible way of determining when to use these options?
+    if linker.mode != 'static_library':
+        lib_dirs = set(path_str(i.path.parent()) for i in lib_deps)
+
+        ldflags_value.extend(rule.options)
+        ldflags_value.extend(chain.from_iterable(
+            linker.lib_dir(i) for i in lib_dirs
+        ))
+        ldflags_value.extend(linker.rpath(
+            # TODO: Provide a relpath function for Path objects?
+            os.path.relpath(i, target_dirname) for i in lib_dirs
+        ))
+
+        global_ldlibs, ldlibs = flags_vars(
+            linker.link_var + 'LIBS', linker.global_libs, writer
+        )
+        command_kwargs['libs'] = ldlibs
+
+        if rule.libs:
+            variables[ldlibs] = [global_ldlibs] + list(chain.from_iterable(
+                linker.link_lib(i.lib_name) for i in rule.libs
+            ))
+
     if ldflags_value:
         variables[ldflags] = [global_ldflags] + ldflags_value
 
-    if ldlibs and rule.libs:
-        variables[ldlibs] = [global_ldlibs] + list(chain.from_iterable(
-            linker.link_lib(i.lib_name) for i in rule.libs
-        ))
-
-    deps = (path_str(i.path) for i in chain(rule.files, lib_deps, rule.deps))
-    order_only = [target_dirname] if target_dir else None
-    recipe = MakeCall(recipename, (path_str(i.path) for i in rule.files))
+    if not writer.has_variable(recipename):
+        writer.variable(recipename, [
+            linker.command(
+                cmd=cmd_var(linker, writer), input=var('1'), output=var('@'),
+                args=ldflags, **command_kwargs
+            )
+        ], flavor='define')
 
     writer.rule(
-        target=path_str(path), deps=deps, order_only=order_only, recipe=recipe,
+        target=path_str(path),
+        deps=(path_str(i.path) for i in chain(rule.files, lib_deps, rule.deps)),
+        order_only=[target_dirname] if target_dir else None,
+        recipe=MakeCall(recipename, (path_str(i.path) for i in rule.files)),
         variables=variables
     )
 
