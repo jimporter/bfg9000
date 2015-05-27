@@ -23,7 +23,7 @@ class Directory(File):
 
 class Phony(Node):
     def __init__(self, name):
-        Node.__init__(self, name, Path.builddir)
+        Node.__init__(self, name, path.Path.builddir)
 
 class Edge(object):
     def __init__(self, target, deps=None):
