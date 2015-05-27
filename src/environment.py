@@ -1,9 +1,9 @@
 import os.path
 
 import platforms
-import toolchains.ar
-import toolchains.cc
-import toolchains.msvc
+from builders import ar
+from builders import cc
+from builders import msvc
 
 class Environment(object):
     def __init__(self, bfgpath, srcdir, builddir, backend, install_prefix):
@@ -18,12 +18,10 @@ class Environment(object):
         # TODO: Come up with a more flexible way to initialize the compilers and
         # linkers for each language.
         if self.platform.name == 'Windows':
-            compiler = toolchains.msvc.MSVCCompiler(self.platform)
-            exelinker = toolchains.msvc.MSVCLinker(self.platform, 'executable')
-            liblinker = toolchains.msvc.MSVCLinker(self.platform,
-                                                   'static_library')
-            dlllinker = toolchains.msvc.MSVCLinker(self.platform,
-                                                   'shared_library')
+            compiler = msvc.MSVCCompiler(self.platform)
+            exelinker = msvc.MSVCLinker(self.platform, 'executable')
+            liblinker = msvc.MSVCLinker(self.platform, 'static_library')
+            dlllinker = msvc.MSVCLinker(self.platform, 'shared_library')
             self._compilers = {
                 'c'  : compiler,
                 'c++': compiler,
@@ -44,23 +42,21 @@ class Environment(object):
             }
         else:
             self._compilers = {
-                'c'  : toolchains.cc.CcCompiler(self.platform),
-                'c++': toolchains.cc.CxxCompiler(self.platform),
+                'c'  : cc.CcCompiler(self.platform),
+                'c++': cc.CxxCompiler(self.platform),
             }
             self._linkers = {
                 'executable': {
-                    'c'  : toolchains.cc.CcLinker(self.platform, 'executable'),
-                    'c++': toolchains.cc.CxxLinker(self.platform, 'executable'),
+                    'c'  : cc.CcLinker(self.platform, 'executable'),
+                    'c++': cc.CxxLinker(self.platform, 'executable'),
                 },
                 'static_library': {
-                    'c'  : toolchains.ar.ArLinker(self.platform),
-                    'c++': toolchains.ar.ArLinker(self.platform),
+                    'c'  : ar.ArLinker(self.platform),
+                    'c++': ar.ArLinker(self.platform),
                 },
                 'shared_library': {
-                    'c'  : toolchains.cc.CcLinker(self.platform,
-                                                  'shared_library'),
-                    'c++': toolchains.cc.CxxLinker(self.platform,
-                                                   'shared_library'),
+                    'c'  : cc.CcLinker(self.platform, 'shared_library'),
+                    'c++': cc.CxxLinker(self.platform, 'shared_library'),
                 },
             }
 
