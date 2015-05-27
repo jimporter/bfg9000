@@ -13,6 +13,7 @@ class ArLinker(object):
         self.link_var = 'ar'
         self.name = 'ar'
         self.global_args = shlex.split(os.getenv('ARFLAGS', 'cru'), posix=False)
+        self.global_libs = None # TODO: Remove this.
 
     # TODO: Figure out a way to indicate that libs are useless here.
     def command(self, cmd, input, output, libs=None, args=None):

@@ -106,6 +106,7 @@ class CcLinker(CcLinkerBase):
     def __init__(self, platform, mode):
         CcLinkerBase.__init__(self, platform, mode, os.getenv('CC', 'cc'), 'cc')
         self.global_args = shlex.split(os.getenv('LDFLAGS', ''), posix=False)
+        self.global_libs = shlex.split(os.getenv('LDLIBS', ''), posix=False)
 
 class CxxLinker(CcLinkerBase):
     def __init__(self, platform, mode):
@@ -113,3 +114,4 @@ class CxxLinker(CcLinkerBase):
             self, platform, mode, os.getenv('CXX', 'c++'), 'cxx'
         )
         self.global_args = shlex.split(os.getenv('LDFLAGS', ''), posix=False)
+        self.global_libs = shlex.split(os.getenv('LDLIBS', ''), posix=False)

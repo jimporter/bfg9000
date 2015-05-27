@@ -36,6 +36,7 @@ class MSVCLinker(object):
         self.command_var = 'link'
         self.link_var = 'ld'
         self.global_args = [] # TODO
+        self.global_libs = [] # TODO
 
     def command(self, cmd, input, output, libs=None, args=None):
         result = [cmd]

@@ -214,14 +214,17 @@ def cmd_var(compiler, writer):
         writer.variable(var, compiler.command_name)
     return var
 
-def flags_vars(lang, value, writer):
+def flags_vars(name, value, writer):
+    # TODO: Remove this and replace it with something better (this is just to
+    # work around `ar` not supporting LDLIBS).
     if value is None:
         return None, None
 
-    global_flags = NinjaVariable('global_{}flags'.format(lang))
+    global_flags = NinjaVariable('global_{}'.format(name))
     if not writer.has_variable(global_flags):
         writer.variable(global_flags, ' '.join(value))
-    flags = NinjaVariable('{}flags'.format(lang))
+
+    flags = NinjaVariable('{}'.format(name))
     if not writer.has_variable(flags):
         writer.variable(flags, str(global_flags))
 
@@ -296,7 +299,7 @@ def emit_object_file(rule, build_inputs, writer):
     compiler = rule.builder
 
     global_cflags, cflags = flags_vars(
-        compiler.command_var,
+        compiler.command_var + 'flags',
         compiler.global_args +
           build_inputs.global_options.get(rule.file.lang, []),
         writer
@@ -328,9 +331,12 @@ def emit_link(rule, build_inputs, writer):
     linker = rule.builder
 
     global_ldflags, ldflags = flags_vars(
-        linker.link_var, linker.global_args, writer
+        linker.link_var + 'flags', linker.global_args, writer
     )
-    ldlibs = NinjaVariable('{}libs'.format(linker.link_var))
+    global_ldlibs, ldlibs = flags_vars(
+        linker.link_var + 'LIBS', linker.global_libs, writer
+    )
+
     if not writer.has_rule(linker.name):
         writer.rule(name=linker.name, command=linker.command(
             cmd=cmd_var(linker, writer), input=var('in'), output=var('out'),
@@ -353,13 +359,14 @@ def emit_link(rule, build_inputs, writer):
         linker.lib_dir(i) for i in lib_dirs
     ))
     ldflags_value.extend(linker.rpath(
+        # TODO: Provide a relpath function for Path objects?
         os.path.relpath(i, target_dirname) for i in lib_dirs
     ))
     if ldflags_value:
         variables[ldflags] = [global_ldflags] + ldflags_value
 
-    if rule.libs:
-        variables[ldlibs] = list(chain.from_iterable(
+    if ldlibs and rule.libs:
+        variables[ldlibs] = [global_ldlibs] + list(chain.from_iterable(
             linker.link_lib(i.lib_name) for i in rule.libs
         ))
 

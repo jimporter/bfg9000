@@ -247,12 +247,18 @@ def cmd_var(compiler, writer):
         writer.variable(var, compiler.command_name)
     return var
 
-def flags_vars(lang, value, writer):
-    global_flags = MakeVariable('GLOBAL_{}FLAGS'.format(lang.upper()))
+def flags_vars(name, value, writer):
+    # TODO: Remove this and replace it with something better (this is just to
+    # work around `ar` not supporting LDLIBS).
+    if value is None:
+        return None, None
+
+    name = name.upper()
+    global_flags = MakeVariable('GLOBAL_{}'.format(name))
     if not writer.has_variable(global_flags):
         writer.variable(global_flags, value)
 
-    flags = MakeVariable('{}FLAGS'.format(lang.upper()))
+    flags = MakeVariable(name)
     if not writer.has_variable(flags, target='%'):
         writer.variable(flags, global_flags, target='%')
 
@@ -325,7 +331,7 @@ def emit_object_file(rule, build_inputs, writer):
     recipename = MakeVariable('RULE_{}'.format(compiler.name.upper()))
 
     global_cflags, cflags = flags_vars(
-        compiler.command_var,
+        compiler.command_var + 'FLAGS',
         compiler.global_args +
           build_inputs.global_options.get(rule.file.lang, []),
         writer
@@ -370,12 +376,13 @@ def emit_link(rule, build_inputs, writer):
     recipename = MakeVariable('RULE_{}'.format(linker.name.upper()))
 
     global_ldflags, ldflags = flags_vars(
-        linker.link_var, linker.global_args, writer
+        linker.link_var + 'FLAGS', linker.global_args, writer
     )
-    ldlibs = MakeVariable('{}LIBS'.format(linker.link_var.upper()))
+    global_ldlibs, ldlibs = flags_vars(
+        linker.link_var + 'LIBS', linker.global_libs, writer
+    )
+
     if not writer.has_variable(recipename):
-        if not writer.has_variable(ldlibs, target='%'):
-            writer.variable(ldlibs, '', target='%')
         writer.variable(recipename, [
             linker.command(
                 cmd=cmd_var(linker, writer), input=var('1'), output=var('@'),
@@ -405,8 +412,8 @@ def emit_link(rule, build_inputs, writer):
     if ldflags_value:
         variables[ldflags] = [global_ldflags] + ldflags_value
 
-    if rule.libs:
-        variables[ldlibs] = list(chain.from_iterable(
+    if ldlibs and rule.libs:
+        variables[ldlibs] = [global_ldlibs] + list(chain.from_iterable(
             linker.link_lib(i.lib_name) for i in rule.libs
         ))
 
