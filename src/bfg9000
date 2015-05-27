@@ -91,6 +91,7 @@ except Exception as e:
     parser.error(e)
 
 build = BuildInputs()
+os.chdir(env.srcdir)
 execfile(os.path.join(env.srcdir, bfgfile), builtins.bind(build, env))
 
 backend = importlib.import_module('backends.{}'.format(env.backend))
