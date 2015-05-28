@@ -317,9 +317,10 @@ def emit_object_file(rule, build_inputs, writer):
             dep=var('out') + '.d', args=cflags
         ), depfile=var('out') + '.d')
 
-    # TODO: Support extra dependencies
     writer.build(output=path_str(rule.target.path), rule=compiler.name,
-                 inputs=[path_str(rule.file.path)], variables=variables)
+                 inputs=[path_str(rule.file.path)],
+                 implicit=(path_str(i.path) for i in rule.extra_deps),
+                 variables=variables)
 
 @rule_handler('Link')
 def emit_link(rule, build_inputs, writer):
@@ -371,7 +372,7 @@ def emit_link(rule, build_inputs, writer):
     writer.build(
         output=path_str(path), rule=linker.name,
         inputs=(path_str(i.path) for i in rule.files),
-        implicit=(path_str(i.path) for i in chain(lib_deps, rule.deps)),
+        implicit=(path_str(i.path) for i in chain(lib_deps, rule.extra_deps)),
         variables=variables
     )
 
@@ -379,7 +380,7 @@ def emit_link(rule, build_inputs, writer):
 def emit_alias(rule, build_inputs, writer):
     writer.build(
         output=path_str(rule.target.path), rule='phony',
-        inputs=[path_str(i.path) for i in rule.deps]
+        inputs=[path_str(i.path) for i in rule.extra_deps]
     )
 
 @rule_handler('Command')
@@ -388,6 +389,6 @@ def emit_command(rule, build_inputs, writer):
         writer.rule(name='command', command=var('cmd'))
     writer.build(
         output=path_str(rule.target.path), rule='command',
-        inputs=(path_str(i.path) for i in rule.deps),
+        inputs=(path_str(i.path) for i in rule.extra_deps),
         variables={'cmd': ' && '.join(rule.cmd)}
     )

@@ -8,17 +8,17 @@ from path import Path
 from utils import iterate, listify, flatten, shell_listify, objectify
 
 class Compile(build_inputs.Edge):
-    def __init__(self, target, builder, file, include, options, deps):
+    def __init__(self, target, builder, file, include, options, extra_deps):
         self.builder = builder
         self.file = file
         self.include = include
         self.options = options
         self.in_shared_library = False
-        build_inputs.Edge.__init__(self, target, deps)
+        build_inputs.Edge.__init__(self, target, extra_deps)
 
 class Link(build_inputs.Edge):
     def __init__(self, target, project_name, builder, files, libs, options,
-                 deps):
+                 extra_deps):
         # This is just for MSBuild. TODO: Remove this?
         self.project_name = project_name
 
@@ -26,15 +26,15 @@ class Link(build_inputs.Edge):
         self.files = files
         self.libs = libs
         self.options = options
-        build_inputs.Edge.__init__(self, target, deps)
+        build_inputs.Edge.__init__(self, target, extra_deps)
 
 class Alias(build_inputs.Edge):
     pass
 
 class Command(build_inputs.Edge):
-    def __init__(self, target, cmd, deps):
+    def __init__(self, target, cmd, extra_deps):
         self.cmd = cmd
-        build_inputs.Edge.__init__(self, target, deps)
+        build_inputs.Edge.__init__(self, target, extra_deps)
 
 #####
 
@@ -48,7 +48,7 @@ def header_directory(build, env, directory):
 
 @builtin
 def object_file(build, env, name=None, file=None, include=None, options=None,
-                lang=None, deps=None):
+                lang=None, extra_deps=None):
     if file is None:
         raise TypeError('"file" argument must not be None')
     if lang is None:
@@ -63,7 +63,7 @@ def object_file(build, env, name=None, file=None, include=None, options=None,
     builder = env.compiler(source_file.lang)
     target = builder.output_file(name, lang)
     build.add_edge(Compile( target, builder, source_file, includes,
-                            shell_listify(options), deps ))
+                            shell_listify(options), extra_deps ))
     return target
 
 @builtin
@@ -75,7 +75,7 @@ def object_files(build, env, files, include=None, options=None, lang=None):
 
 def _link(build, env, mode, project_name, name, files, libs=None,
           include=None, compile_options=None, link_options=None, lang=None,
-          deps=None):
+          extra_deps=None):
     objects = object_files(build, env, files, include, compile_options, lang)
 
     # Flatten the list of libraries and remove any DynamicLibraries (since they
@@ -86,7 +86,7 @@ def _link(build, env, mode, project_name, name, files, libs=None,
     builder = env.linker((i.lang for i in objects), mode)
     target = builder.output_file(name)
     build.add_edge(Link( target, project_name, builder, objects, libs,
-                         shell_listify(link_options), deps ))
+                         shell_listify(link_options), extra_deps ))
     build.fallback_default = target
     return target
 
@@ -114,9 +114,9 @@ def alias(build, env, name, deps):
     return target
 
 @builtin
-def command(build, env, name, cmd, deps=None):
+def command(build, env, name, cmd, extra_deps=None):
     target = build_inputs.Phony(name)
-    build.add_edge(Command(target, cmd, deps))
+    build.add_edge(Command(target, cmd, extra_deps))
     return target
 
 #####

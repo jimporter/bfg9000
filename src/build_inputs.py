@@ -26,11 +26,15 @@ class Phony(Node):
         Node.__init__(self, name, path.Path.builddir)
 
 class Edge(object):
-    def __init__(self, target, deps=None):
+    def __init__(self, target, extra_deps=None):
         for t in utils.iterate(target):
             t.creator = self
         self.target = target
-        self.deps = [utils.objectify(i, Node) for i in utils.iterate(deps)]
+
+        def make_dep(x):
+            return File(x, path.Path.srcdir)
+        self.extra_deps = [utils.objectify(i, Node, make_dep)
+                           for i in utils.iterate(extra_deps)]
 
 class InstallInputs(object):
     def __init__(self):

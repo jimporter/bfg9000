@@ -358,12 +358,14 @@ def emit_object_file(rule, build_inputs, writer):
             "  sed -e 's/^ *//' -e 's/$/:/' >> " + depfile
         ], flavor='define')
 
-    # TODO: Support extra dependencies
-    writer.rule(target=path_str(path), deps=[path_str(rule.file.path)],
-                order_only=[path_str(target_dir)] if target_dir else None,
-                recipe=recipename, variables=variables)
+    writer.rule(
+        target=path_str(path),
+        deps=(path_str(i.path) for i in chain([rule.file], rule.extra_deps)),
+        order_only=[path_str(target_dir)] if target_dir else None,
+        recipe=recipename,
+        variables=variables
+    )
     directory_rule(target_dir, writer)
-
     writer.include(path.subext('.d'), optional=True)
 
 @rule_handler('Link')
@@ -420,19 +422,19 @@ def emit_link(rule, build_inputs, writer):
 
     writer.rule(
         target=path_str(path),
-        deps=(path_str(i.path) for i in chain(rule.files, lib_deps, rule.deps)),
+        deps=(path_str(i.path) for i in chain(rule.files, lib_deps,
+                                              rule.extra_deps)),
         order_only=[target_dirname] if target_dir else None,
         recipe=MakeCall(recipename, (path_str(i.path) for i in rule.files)),
         variables=variables
     )
-
     directory_rule(target_dir, writer)
 
 @rule_handler('Alias')
 def emit_alias(rule, build_inputs, writer):
     writer.rule(
         target=path_str(rule.target.path),
-        deps=(path_str(i.path) for i in rule.deps),
+        deps=(path_str(i.path) for i in rule.extra_deps),
         recipe=[],
         phony=True
     )
@@ -441,7 +443,7 @@ def emit_alias(rule, build_inputs, writer):
 def emit_command(rule, build_inputs, writer):
     writer.rule(
         target=path_str(rule.target.path),
-        deps=(path_str(i.path) for i in rule.deps),
+        deps=(path_str(i.path) for i in rule.extra_deps),
         recipe=rule.cmd,
         phony=True
     )

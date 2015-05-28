@@ -42,6 +42,8 @@ def shell_listify(thing):
 def objectify(x, valid_type, creator=None, **kwargs):
     if isinstance(x, valid_type):
         return x
+    elif not isinstance(x, basestring):
+        raise TypeError('expected a {} or a string'.format(valid_type))
     elif creator:
         return creator(x)
     else:
