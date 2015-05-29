@@ -73,19 +73,21 @@ class MakeVariable(object):
 
 var = MakeVariable
 
-class MakeCall(object):
+class MakeFunc(object):
     def __init__(self, name, *args):
-        if not isinstance(name, MakeVariable):
-            name = MakeVariable(name)
         self.name = name
         self.args = args
 
     def __str__(self):
-        return escaped_str('$(call {})'.format(
-            ','.join(chain(
-                [self.name.name], (escape_list(i) for i in self.args)
-            ))
+        return escaped_str('$({name} {args})'.format(
+            name=self.name, args=','.join(escape_list(i) for i in self.args)
         ))
+
+class MakeCall(MakeFunc):
+    def __init__(self, func, *args):
+        if not isinstance(func, MakeVariable):
+            func = MakeVariable(func)
+        MakeFunc.__init__(self, 'call', func.name, *args)
 
 class MakeWriter(object):
     def __init__(self):
@@ -182,7 +184,7 @@ class MakeWriter(object):
             out.write(' ' + escape_str(i))
 
         if (isinstance(rule.recipe, MakeVariable) or
-            isinstance(rule.recipe, MakeCall)):
+            isinstance(rule.recipe, MakeFunc)):
             out.write(' ; {}'.format(escape_str(rule.recipe)))
         elif rule.recipe is not None:
             for cmd in rule.recipe:
@@ -236,6 +238,7 @@ def write(env, build_inputs):
     install_rule(build_inputs.install_targets, writer, env)
     for e in build_inputs.edges:
         _rule_handlers[type(e).__name__](e, build_inputs, writer)
+    directory_rule(writer)
     regenerate_rule(writer, env)
 
     with open(os.path.join(env.builddir, 'Makefile'), 'w') as out:
@@ -302,23 +305,23 @@ def install_rule(install_targets, writer, env):
               [mkdir_line(i) for i in install_targets.directories])
     writer.rule(target='install', deps=['all'], recipe=recipe, phony=True)
 
+dir_sentinel = '.dir'
+def directory_rule(writer):
+    # XXX: `mkdir -p` isn't safe (or valid!) on all platforms.
+    writer.rule(
+        target=os.path.join('%', dir_sentinel),
+        recipe=[
+            ['@mkdir', '-p', MakeFunc('dir', var('@'))],
+            ['@touch', var('@')]
+        ]
+    )
+
 def regenerate_rule(writer, env):
     writer.rule(
         target='Makefile',
         deps=[path_str(Path('build.bfg', Path.srcdir, Path.basedir))],
         recipe=[[env.bfgpath, '--regenerate', '.']]
     )
-
-def directory_rule(path, writer):
-    pathname = path_str(path)
-    if not path or writer.has_rule(pathname):
-        return
-
-    # XXX: `mkdir -p` isn't safe (or valid!) on all platforms.
-    recipe = var('RULE_MKDIR_P')
-    if not writer.has_variable(recipe):
-        writer.variable(recipe, [['mkdir', '-p', var('@')]], flavor='define')
-    writer.rule(target=pathname, recipe=recipe)
 
 @rule_handler('Compile')
 def emit_object_file(rule, build_inputs, writer):
@@ -361,11 +364,11 @@ def emit_object_file(rule, build_inputs, writer):
     writer.rule(
         target=path_str(path),
         deps=(path_str(i.path) for i in chain([rule.file], rule.extra_deps)),
-        order_only=[path_str(target_dir)] if target_dir else None,
+        order_only=[path_str(target_dir.append(dir_sentinel))]
+                   if target_dir else None,
         recipe=recipename,
         variables=variables
     )
-    directory_rule(target_dir, writer)
     writer.include(path_str(path.addext('.d')), optional=True)
 
 @rule_handler('Link')
@@ -379,7 +382,6 @@ def emit_link(rule, build_inputs, writer):
     # TODO: Handle rules with multiple targets (e.g. shared libs on Windows).
     path = rule.target.path
     target_dir = path.parent()
-    target_dirname = path_str(target_dir)
 
     variables = {}
     command_kwargs = {}
@@ -389,6 +391,7 @@ def emit_link(rule, build_inputs, writer):
     # TODO: Create a more flexible way of determining when to use these options?
     if linker.mode != 'static_library':
         lib_dirs = set(path_str(i.path.parent()) for i in lib_deps)
+        target_dirname = path_str(target_dir)
 
         ldflags_value.extend(rule.options)
         ldflags_value.extend(chain.from_iterable(
@@ -424,18 +427,17 @@ def emit_link(rule, build_inputs, writer):
         target=path_str(path),
         deps=(path_str(i.path) for i in chain(rule.files, lib_deps,
                                               rule.extra_deps)),
-        order_only=[target_dirname] if target_dir else None,
+        order_only=[path_str(target_dir.append(dir_sentinel))]
+                   if target_dir else None,
         recipe=MakeCall(recipename, (path_str(i.path) for i in rule.files)),
         variables=variables
     )
-    directory_rule(target_dir, writer)
 
 @rule_handler('Alias')
 def emit_alias(rule, build_inputs, writer):
     writer.rule(
         target=path_str(rule.target.path),
         deps=(path_str(i.path) for i in rule.extra_deps),
-        recipe=[],
         phony=True
     )
 

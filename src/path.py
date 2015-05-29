@@ -67,6 +67,6 @@ class Path(object):
                 self.path == rhs.path)
 
     def __nonzero__(self):
-        return (self.source != Path.srcdir or
+        return (self.source != Path.builddir or
                 self.install_base != Path.basedir or
                 bool(self.path))
