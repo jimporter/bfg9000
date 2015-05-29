@@ -347,7 +347,7 @@ def emit_object_file(rule, build_inputs, writer):
         variables[cflags] = [global_cflags] + cflags_value
 
     if not writer.has_variable(recipename):
-        depfile = var('*') + '.d'
+        depfile = var('@') + '.d'
         writer.variable(recipename, [
             compiler.command(
                 cmd=cmd_var(compiler, writer), input=var('<'), output=var('@'),
@@ -366,7 +366,7 @@ def emit_object_file(rule, build_inputs, writer):
         variables=variables
     )
     directory_rule(target_dir, writer)
-    writer.include(path.subext('.d'), optional=True)
+    writer.include(path_str(path.addext('.d')), optional=True)
 
 @rule_handler('Link')
 def emit_link(rule, build_inputs, writer):

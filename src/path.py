@@ -28,10 +28,9 @@ class Path(object):
         return Path(os.path.join(self.path, path), self.source,
                     self.install_base)
 
-    def subext(self, ext):
+    def addext(self, ext):
         # TODO: Is there a better way to do this?
-        return Path(os.path.splitext(self.path)[0] + ext, self.source,
-                    self.install_base)
+        return Path(self.path + ext, self.source, self.install_base)
 
     def local_path(self):
         if self.source == Path.srcdir:
@@ -47,6 +46,9 @@ class Path(object):
         else:
             path = self.path
         return VarPath('prefix', os.path.join(self.install_base, path))
+
+    def __str__(self):
+        raise NotImplementedError
 
     def __repr__(self):
         if self.source == Path.srcdir:
