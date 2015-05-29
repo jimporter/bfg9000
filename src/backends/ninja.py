@@ -317,10 +317,13 @@ def emit_object_file(rule, build_inputs, writer):
             dep=var('out') + '.d', args=cflags
         ), depfile=var('out') + '.d')
 
-    writer.build(output=path_str(rule.target.path), rule=compiler.name,
-                 inputs=[path_str(rule.file.path)],
-                 implicit=(path_str(i.path) for i in rule.extra_deps),
-                 variables=variables)
+    writer.build(
+        output=path_str(rule.target.path),
+        rule=compiler.name,
+        inputs=[path_str(rule.file.path)],
+        implicit=(path_str(i.path) for i in rule.extra_deps),
+        variables=variables
+    )
 
 @rule_handler('Link')
 def emit_link(rule, build_inputs, writer):
@@ -352,7 +355,7 @@ def emit_link(rule, build_inputs, writer):
         ))
 
         global_ldlibs, ldlibs = flags_vars(
-            linker.link_var + 'LIBS', linker.global_libs, writer
+            linker.link_var + 'libs', linker.global_libs, writer
         )
         command_kwargs['libs'] = ldlibs
         if rule.libs:
@@ -370,7 +373,8 @@ def emit_link(rule, build_inputs, writer):
         ))
 
     writer.build(
-        output=path_str(path), rule=linker.name,
+        output=path_str(path),
+        rule=linker.name,
         inputs=(path_str(i.path) for i in rule.files),
         implicit=(path_str(i.path) for i in chain(lib_deps, rule.extra_deps)),
         variables=variables
@@ -379,7 +383,8 @@ def emit_link(rule, build_inputs, writer):
 @rule_handler('Alias')
 def emit_alias(rule, build_inputs, writer):
     writer.build(
-        output=path_str(rule.target.path), rule='phony',
+        output=path_str(rule.target.path),
+        rule='phony',
         inputs=[path_str(i.path) for i in rule.extra_deps]
     )
 
@@ -388,7 +393,8 @@ def emit_command(rule, build_inputs, writer):
     if not writer.has_rule('command'):
         writer.rule(name='command', command=var('cmd'))
     writer.build(
-        output=path_str(rule.target.path), rule='command',
+        output=path_str(rule.target.path),
+        rule='command',
         inputs=(path_str(i.path) for i in rule.extra_deps),
         variables={'cmd': ' && '.join(rule.cmd)}
     )
