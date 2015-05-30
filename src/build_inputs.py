@@ -14,9 +14,7 @@ class Node(object):
         )
 
 class File(Node):
-    # TODO: Remove this and just use Node's ctor?
-    def __init__(self, name, source=path.Path.builddir):
-        Node.__init__(self, name, source)
+    pass
 
 class Directory(File):
     pass
