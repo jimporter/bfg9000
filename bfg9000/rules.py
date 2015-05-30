@@ -143,6 +143,23 @@ def install(build, env, *args):
             default(build, i)
             build.install_targets.files.append(i)
 
+class TestDriver(object):
+    def __init__(self, driver):
+        self.driver = driver
+        self.test_targets = []
+
+@builtin
+def test(build, env, test, driver=None):
+    build.all_tests.append(test)
+    (driver or build).test_targets.append(test)
+
+@builtin
+def test_driver(build, env, driver):
+    # TODO: Support nested test drivers? (e.g. for things like caliber)
+    result = TestDriver(driver)
+    build.test_targets.append(result)
+    return result
+
 @builtin
 def global_options(build, env, options, lang):
     if not lang in build.global_options:

@@ -319,6 +319,7 @@ def write(env, build_inputs):
 
     all_rule(build_inputs.get_default_targets(), buildfile)
     install_rule(build_inputs.install_targets, buildfile, env)
+    test_rule(build_inputs.test_targets, build_inputs.all_tests, buildfile)
     for e in build_inputs.edges:
         _rule_handlers[type(e).__name__](e, build_inputs, buildfile)
     directory_rule(buildfile)
@@ -393,6 +394,28 @@ def install_rule(install_targets, buildfile, env):
         recipe=recipe,
         phony=True
     )
+
+def test_rule(test_targets, all_tests, buildfile):
+    if not test_targets:
+        return
+
+    buildfile.rule(
+        target='tests',
+        deps=(path_str(i.path) for i in all_tests),
+        phony=True
+    )
+
+    deps = []
+    recipe = []
+    for i in test_targets:
+        if type(i).__name__ == 'TestDriver':
+            deps.append(path_str(i.driver.path))
+            recipe.append(path_str(i.path) for i in
+                          chain([i.driver], i.test_targets))
+        else:
+            recipe.append(i)
+    deps.append('tests')
+    buildfile.rule(target='test', deps=deps, recipe=recipe, phony=True)
 
 dir_sentinel = '.dir'
 def directory_rule(buildfile):

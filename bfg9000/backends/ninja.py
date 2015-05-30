@@ -219,6 +219,7 @@ def write(env, build_inputs):
 
     all_rule(build_inputs.get_default_targets(), buildfile)
     install_rule(build_inputs.install_targets, buildfile, env)
+    test_rule(build_inputs.test_targets, build_inputs.all_tests, buildfile)
     for e in build_inputs.edges:
         _rule_handlers[type(e).__name__](e, build_inputs, buildfile)
     regenerate_rule(buildfile, env)
@@ -301,6 +302,36 @@ def install_rule(install_targets, buildfile, env):
         rule='command',
         implicit=['all'],
         variables={'cmd': chain_commands(commands)}
+    )
+
+def test_rule(test_targets, all_rules, buildfile):
+    if not test_targets:
+        return
+
+    buildfile.build(
+        output='tests',
+        rule='phony',
+        inputs=(path_str(i.path) for i in all_tests)
+    )
+
+    deps = []
+    commands = []
+    for i in test_targets:
+        if type(i).__name__ == 'TestDriver':
+            deps.append(path_str(i.driver.path))
+            commands.append(path_str(i.path) for i in
+                            chain([i.driver], i.test_targets))
+        else:
+            commands.append(i)
+    deps.append('tests')
+
+    if not buildfile.has_rule('command'):
+        buildfile.rule(name='command', command=var('cmd'))
+    buildfile.build(
+        output='test',
+        rule='command',
+        inputs=deps,
+        variables={'cmd': ' && '.join(commands)}
     )
 
 def regenerate_rule(buildfile, env):
