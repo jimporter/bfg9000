@@ -1,6 +1,7 @@
 import errno
 import os
 import ntpath
+import pickle
 import uuid
 from lxml import etree
 from lxml.builder import E
@@ -14,6 +15,9 @@ def makedirs(path, mode=0o777, exist_ok=False):
     except OSError as e:
         if not exist_ok or e.errno != errno.EEXIST or not os.path.isdir(path):
             raise
+
+def uuid_str(uuid):
+    return '{{{}}}'.format(str(uuid).upper())
 
 class SlnElement(object):
     def __init__(self, name, arg=None, value=None):
@@ -74,11 +78,11 @@ def sln_write(out, x):
     else:
         x._write(out, 0)
 
-def write_solution(out, projects):
+def write_solution(out, uuid, projects):
     S = SlnMaker()
     Var = SlnVariable
 
-    main_uuid = '986DAF6F-BAF1-40AB-9AB7-7AF8E8A7B82A' # TODO: Generate this
+    uuid = uuid_str(uuid)
     out.write('Microsoft Visual Studio Solution File, Format Version 12.00\n')
     out.write('# Visual Studio 14\n')
 
@@ -90,7 +94,7 @@ def write_solution(out, projects):
 
     for p in projects:
         proj = S.Project(
-            '"{}"'.format(main_uuid),
+            '"{}"'.format(uuid),
             '"{name}", "{path}", "{uuid}"'.format(
                 name=p.name, path=p.path, uuid=p.uuid_str
             )
@@ -131,8 +135,9 @@ class VcxProject(object):
     _XMLNS = 'http://schemas.microsoft.com/developer/msbuild/2003'
     _DOCTYPE = '<?xml version="1.0" encoding="utf-8"?>'
 
-    def __init__(self, name, mode='Application'):
+    def __init__(self, name, uuid, mode='Application'):
         self.name = name
+        self.uuid = uuid
         self.mode = mode
         self.output_file = None
         self.import_lib = None
@@ -147,12 +152,8 @@ class VcxProject(object):
         return os.path.join(self.name, '{}.vcxproj'.format(self.name))
 
     @property
-    def uuid(self):
-        return uuid.uuid3(uuid.NAMESPACE_DNS, self.name)
-
-    @property
     def uuid_str(self):
-        return '{{{}}}'.format(str(self.uuid).upper())
+        return uuid_str(self.uuid)
 
     def write(self, out):
         link = E.Link()
@@ -188,7 +189,6 @@ class VcxProject(object):
                 )
             ),
             E.PropertyGroup({'Label': 'Globals'},
-                # TODO: Use a smarter way to make UUIDs
                 E.ProjectGuid(self.uuid_str),
                 E.RootNamespace(self.name),
                 E.SourceDir(ntpath.normpath(self.srcdir))
@@ -219,7 +219,32 @@ def link_mode(mode):
         'shared_library': 'DynamicLibrary',
     }[mode]
 
+class UUIDMap(object):
+    def __init__(self, path):
+        self._path = path
+        self._seen = set()
+        try:
+            self._map = pickle.load(open(path))
+        except IOError:
+            self._map = {}
+
+    def __getitem__(self, key):
+        self._seen.add(key)
+        if key in self._map:
+            return self._map[key]
+        else:
+            u = uuid.uuid4()
+            self._map[key] = u
+            return u
+
+    def save(self, path=None):
+        # Only save the UUIDs we saw this time. Skip ones we didn't see.
+        seenmap = {k: v for k, v in self._map.iteritems() if k in self._seen}
+        pickle.dump(seenmap, open(path or self._path, 'w'), protocol=2)
+
 def write(env, build_inputs):
+    uuids = UUIDMap(os.path.join(env.builddir, '.bfg_uuid'))
+
     projects = []
     project_map = {}
     # TODO: Handle default().
@@ -236,7 +261,8 @@ def write(env, build_inputs):
                 if dep.creator and id(dep.creator.target) in project_map:
                     dependencies.append(project_map[id(dep.creator.target)])
 
-            project = VcxProject(e.project_name, link_mode(e.builder.mode))
+            project = VcxProject(e.project_name, uuids[e.project_name],
+                                 link_mode(e.builder.mode))
 
             # TODO: It's awfully easy to misspell these and silently fail...
             if type(e.target) == tuple:
@@ -258,9 +284,10 @@ def write(env, build_inputs):
             project_map[id(e.target)] = project
 
     with open(os.path.join(env.builddir, 'project.sln'), 'w') as out:
-        write_solution(out, projects)
+        write_solution(out, uuids[None], projects)
     for p in projects:
         projfile = os.path.join(env.builddir, p.path)
         makedirs(os.path.dirname(projfile), exist_ok=True)
         with open(projfile, 'w') as out:
             p.write(out)
+    uuids.save()
