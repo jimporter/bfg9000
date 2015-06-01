@@ -4,8 +4,9 @@ import sys
 from collections import Iterable, namedtuple, OrderedDict
 from itertools import chain
 
+import safe_str
 import utils
-from path import Path
+from path import Path, phony_path
 
 _rule_handlers = {}
 def rule_handler(rule_name):
@@ -15,45 +16,24 @@ def rule_handler(rule_name):
     return decorator
 
 NinjaRule = namedtuple('NinjaRule', ['command', 'depfile', 'generator'])
-NinjaBuild = namedtuple('NinjaBuild', ['output', 'rule', 'inputs', 'implicit',
+NinjaBuild = namedtuple('NinjaBuild', ['outputs', 'rule', 'inputs', 'implicit',
                                        'order_only', 'variables'])
-class escaped_str(str):
-    @staticmethod
-    def escape(value):
-        if not isinstance(value, basestring):
-            raise TypeError('escape only works on strings')
-        if not isinstance(value, escaped_str):
-            # TODO: Handle other escape chars
-            value = value.replace('$', '$$')
-        return value
-
-    def __str__(self):
-        return self
-
-    def __add__(self, rhs):
-        return escaped_str(str.__add__( self, escaped_str.escape(rhs) ))
-
-    def __radd__(self, lhs):
-        return escaped_str(str.__add__( escaped_str.escape(lhs), self ))
-
-def escape_str(value):
-    return escaped_str.escape(str(value))
-
-def escape_list(value, delim=' '):
-    if isinstance(value, Iterable) and not isinstance(value, basestring):
-        return escaped_str(delim.join(escape_str(i) for i in value if i))
-    else:
-        return escape_str(value)
 
 class NinjaVariable(object):
     def __init__(self, name):
         self.name = re.sub('/', '_', name)
 
     def use(self):
-        return escaped_str('${}'.format(self.name))
+        return safe_str.escaped_str('${}'.format(self.name))
+
+    def _safe_str(self):
+        return self.use()
 
     def __str__(self):
-        return self.use()
+        raise NotImplementedError()
+
+    def __repr__(self):
+        return repr(self.use())
 
     def __hash__(self):
         return hash(self.name)
@@ -65,10 +45,10 @@ class NinjaVariable(object):
         return self.name != rhs.name
 
     def __add__(self, rhs):
-        return str(self) + rhs
+        return self.use() + rhs
 
     def __radd__(self, lhs):
-        return lhs + str(self)
+        return lhs + self.use()
 
 var = NinjaVariable
 
@@ -111,12 +91,15 @@ class NinjaWriter(object):
                     k = NinjaVariable(k)
                 real_variables[k] = v
 
-        for i in utils.iterate(output):
+        outputs = utils.listify(output)
+        for i in outputs:
             if self.has_build(i):
                 raise RuntimeError('build for "{}" already exists'.format(i))
             self._build_outputs.add(i)
-        self._builds.append(NinjaBuild(output, rule, inputs, implicit,
-                                       order_only, real_variables))
+        self._builds.append(NinjaBuild(
+            outputs, rule, utils.listify(inputs), utils.listify(implicit),
+            utils.listify(order_only), real_variables
+        ))
 
     def has_build(self, name):
         return name in self._build_outputs
@@ -124,43 +107,64 @@ class NinjaWriter(object):
     def default(self, paths):
         self._defaults.extend(paths)
 
+    @classmethod
+    def escape_str(cls, string, syntax):
+        # TODO: Handle other escape chars
+        return string.replace('$', '$$')
+
+    @classmethod
+    def _write_literal(cls, out, string):
+        out.write(string)
+
+    @classmethod
+    def _write(cls, out, thing, syntax):
+        # TODO: Remove this once paths have _safe_str.
+        if isinstance(thing, Path):
+            thing = path_str(thing)
+        thing = safe_str.safe_str(thing)
+
+        if isinstance(thing, basestring):
+            out.write(cls.escape_str(thing, syntax))
+        elif isinstance(thing, safe_str.escaped_str):
+            out.write(thing.string)
+        elif isinstance(thing, safe_str.jbos):
+            for j in thing.bits:
+                cls._write(out, j, syntax)
+        else:
+            raise TypeError(type(thing))
+
+    @classmethod
+    def _write_each(cls, out, things, syntax, delim=' ', prefix=None,
+                    suffix=None):
+        for tween, i in utils.tween(things, delim, prefix, suffix):
+            cls._write_literal(out, i) if tween else cls._write(out, i, syntax)
+
     def _write_variable(self, out, name, value, indent=0):
-        out.write('{indent}{name} = {value}\n'.format(
-            indent='  ' * indent, name=name.name, value=escape_list(value)
-        ))
+        self._write_literal(out, ('  ' * indent) + name.name + ' = ')
+        self._write_each(out, utils.iterate(value), syntax='shell')
+        self._write_literal(out, '\n')
 
     def _write_rule(self, out, name, rule):
-        out.write('rule {}\n'.format(escape_list(name)))
+        self._write_literal(out, 'rule ')
+        self._write(out, name, syntax='shell')
+        self._write_literal(out, '\n')
+
         self._write_variable(out, var('command'), rule.command, 1)
         if rule.depfile:
             self._write_variable(out, var('depfile'), rule.depfile, 1)
         if rule.generator:
-            self._write_variable(out, var('generator'), 1, 1)
+            self._write_variable(out, var('generator'), '1', 1)
 
     def _write_build(self, out, build):
-        out.write('build {output}: {rule}'.format(
-            output=escape_list(build.output),
-            rule=escape_str(build.rule)
-        ))
+        self._write_literal(out, 'build ')
+        self._write_each(out, build.outputs, syntax='shell')
+        self._write_literal(out, ': ')
+        self._write(out, build.rule, syntax='shell')
 
-        for i in build.inputs or []:
-            out.write(' ' + escape_str(i))
-
-        first = True
-        for i in build.implicit or []:
-            if first:
-                first = False
-                out.write(' |')
-            out.write(' ' + escape_str(i))
-
-        first = True
-        for i in build.order_only or []:
-            if first:
-                first = False
-                out.write(' ||')
-            out.write(' ' + escape_str(i))
-
-        out.write('\n')
+        self._write_each(out, build.inputs, syntax='shell', prefix=' ')
+        self._write_each(out, build.implicit, syntax='shell', prefix=' | ')
+        self._write_each(out, build.order_only, syntax='shell', prefix=' || ')
+        self._write_literal(out, '\n')
 
         if build.variables:
             for k, v in build.variables.iteritems():
@@ -170,19 +174,19 @@ class NinjaWriter(object):
         for name, value in self._variables.iteritems():
             self._write_variable(out, name, value)
         if self._variables:
-            out.write('\n')
+            self._write_literal(out, '\n')
 
         for name, rule in self._rules.iteritems():
             self._write_rule(out, name, rule)
-            out.write('\n')
+            self._write_literal(out, '\n')
 
         for build in self._builds:
             self._write_build(out, build)
 
         if self._defaults:
-            out.write('\ndefault {}\n'.format(' '.join(
-                escape_str(i) for i in self._defaults
-            )))
+            self._write_literal(out, '\ndefault ')
+            self._write_each(out, self._defaults, syntax='shell')
+            self._write_literal(out, '\n')
 
 _path_vars = {
     'srcdir': NinjaVariable('srcdir'),
@@ -191,9 +195,9 @@ _path_vars = {
 def path_str(path, form='local_path'):
     source, pathname = getattr(path, form)()
     if source:
-        return escape_list([_path_vars[source], pathname], os.sep)
+        return _path_vars[source] + os.sep + pathname
     else:
-        return escape_str(pathname)
+        return pathname
 
 def write(env, build_inputs):
     writer = NinjaWriter()
@@ -221,7 +225,7 @@ def flags_vars(name, value, writer):
 
     flags = NinjaVariable('{}'.format(name))
     if not writer.has_variable(flags):
-        writer.variable(flags, str(global_flags))
+        writer.variable(flags, global_flags)
 
     return global_flags, flags
 
@@ -268,13 +272,13 @@ def install_rule(install_targets, writer, env):
         dst = path_str(dir.path.parent(), 'install_path')
         return ['mkdir', '-p', dst, '&&', 'cp', '-r', src, dst]
 
-    commands = ([install_line(i) for i in install_targets.files] +
-                [mkdir_line(i) for i in install_targets.directories])
+    commands = chain((install_line(i) for i in install_targets.files),
+                     (mkdir_line(i) for i in install_targets.directories))
     writer.build(
         output='install', rule='command', implicit=['all'],
         # TODO: Improve how variables are defined here
-        variables={'cmd': escaped_str(
-            ' && '.join(escape_list(i) for i in commands)
+        variables={'cmd': sum(
+            (i for _, i in utils.tween(commands, ['&&'])), []
         )}
     )
 
@@ -396,5 +400,8 @@ def emit_command(rule, build_inputs, writer):
         output=path_str(rule.target.path),
         rule='command',
         inputs=(path_str(i.path) for i in rule.extra_deps),
-        variables={'cmd': ' && '.join(rule.cmd)}
+        # TODO: Improve how variables are defined here
+        variables={'cmd': sum(
+            (i for _, i in utils.tween(rule.cmd, ['&&'])), []
+        )}
     )

@@ -115,6 +115,7 @@ def alias(build, env, name, deps):
 
 @builtin
 def command(build, env, name, cmd, extra_deps=None):
+    # TODO: Support command passed as a string, list, or list of lists.
     target = build_inputs.Phony(name)
     build.add_edge(Command(target, cmd, extra_deps))
     return target

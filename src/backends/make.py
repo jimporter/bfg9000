@@ -1,10 +1,12 @@
 import os
 import re
+from cStringIO import StringIO
 from collections import Iterable, namedtuple, OrderedDict
 from itertools import chain
 
+import safe_str
 import utils
-from path import Path
+from path import Path, phony_path
 
 _rule_handlers = {}
 def rule_handler(rule_name):
@@ -14,36 +16,8 @@ def rule_handler(rule_name):
     return decorator
 
 MakeInclude = namedtuple('MakeInclude', ['name', 'optional'])
-MakeRule = namedtuple('MakeRule', ['target', 'deps', 'order_only', 'recipe',
+MakeRule = namedtuple('MakeRule', ['targets', 'deps', 'order_only', 'recipe',
                                    'variables', 'phony'])
-
-class escaped_str(str):
-    @staticmethod
-    def escape(value):
-        if not isinstance(value, basestring):
-            raise TypeError('escape only works on strings')
-        if not isinstance(value, escaped_str):
-            # TODO: Handle other escape chars
-            value = value.replace('$', '$$')
-        return value
-
-    def __str__(self):
-        return self
-
-    def __add__(self, rhs):
-        return escaped_str(str.__add__( self, escaped_str.escape(rhs) ))
-
-    def __radd__(self, lhs):
-        return escaped_str(str.__add__( escaped_str.escape(lhs), self ))
-
-def escape_str(value):
-    return escaped_str.escape(str(value))
-
-def escape_list(value, delim=' '):
-    if isinstance(value, Iterable) and not isinstance(value, basestring):
-        return escaped_str(delim.join(escape_str(i) for i in value if i))
-    else:
-        return escape_str(value)
 
 class MakeVariable(object):
     def __init__(self, name):
@@ -51,10 +25,16 @@ class MakeVariable(object):
 
     def use(self):
         fmt = '${}' if len(self.name) == 1 else '$({})'
-        return escaped_str(fmt.format(self.name))
+        return safe_str.escaped_str(fmt.format(self.name))
+
+    def _safe_str(self):
+        return self.use()
 
     def __str__(self):
-        return self.use()
+        raise NotImplementedError()
+
+    def __repr__(self):
+        return repr(self.use())
 
     def __hash__(self):
         return hash(self.name)
@@ -66,10 +46,10 @@ class MakeVariable(object):
         return self.name != rhs.name
 
     def __add__(self, rhs):
-        return str(self) + rhs
+        return self.use() + rhs
 
     def __radd__(self, lhs):
-        return lhs + str(self)
+        return lhs + self.use()
 
 var = MakeVariable
 
@@ -78,10 +58,25 @@ class MakeFunc(object):
         self.name = name
         self.args = args
 
+    def use(self):
+        out = StringIO()
+        MakeWriter._write_literal(out, '$(' + self.name + ' ')
+        for tween, i in utils.tween(self.args, ','):
+            if tween:
+                MakeWriter._write_literal(out, i)
+            else:
+                MakeWriter._write_each(out, utils.iterate(i), syntax='function')
+        MakeWriter._write_literal(out, ')')
+        return safe_str.escaped_str(out.getvalue())
+
+    def _safe_str(self):
+        return self.use()
+
     def __str__(self):
-        return escaped_str('$({name} {args})'.format(
-            name=self.name, args=','.join(escape_list(i) for i in self.args)
-        ))
+        raise NotImplementedError()
+
+    def __repr__(self):
+        return repr(self.use())
 
 class MakeCall(MakeFunc):
     def __init__(self, func, *args):
@@ -93,7 +88,7 @@ class MakeWriter(object):
     def __init__(self):
         # TODO: Sort variables in some useful order
         self._global_variables = OrderedDict()
-        self._target_variables = OrderedDict({'%': OrderedDict()})
+        self._target_variables = OrderedDict({phony_path('%'): OrderedDict()})
         self._defines = OrderedDict()
 
         self._rules = []
@@ -139,66 +134,104 @@ class MakeWriter(object):
                     k = MakeVariable(k)
                 real_variables[k] = v
 
-        for i in utils.iterate(target):
+        targets = utils.listify(target)
+        if len(targets) == 0:
+            raise RuntimeError('must have at least one target')
+        for i in targets:
             if self.has_rule(i):
                 raise RuntimeError('rule for "{}" already exists'.format(i))
             self._targets.add(i)
-        self._rules.append(MakeRule(target, deps, order_only, recipe,
-                                    real_variables, phony))
+        self._rules.append(MakeRule(
+            targets, utils.listify(deps), utils.listify(order_only), recipe,
+            real_variables, phony
+        ))
 
     def has_rule(self, name):
         return name in self._targets
 
+    @classmethod
+    def escape_str(cls, string, syntax):
+        # TODO: Handle other escape chars
+        return string.replace('$', '$$')
+
+    @classmethod
+    def _write_literal(cls, out, string):
+        out.write(string)
+
+    @classmethod
+    def _write(cls, out, thing, syntax):
+        # TODO: Remove this once paths have _safe_str.
+        if isinstance(thing, Path):
+            thing = path_str(thing)
+        thing = safe_str.safe_str(thing)
+
+        if isinstance(thing, basestring):
+            out.write(cls.escape_str(thing, syntax))
+        elif isinstance(thing, safe_str.escaped_str):
+            out.write(thing.string)
+        elif isinstance(thing, safe_str.jbos):
+            for j in thing.bits:
+                cls._write(out, j, syntax)
+        else:
+            raise TypeError(type(thing))
+
+    @classmethod
+    def _write_each(cls, out, things, syntax, delim=' ', prefix=None,
+                    suffix=None):
+        for tween, i in utils.tween(things, delim, prefix, suffix):
+            cls._write_literal(out, i) if tween else cls._write(out, i, syntax)
+
     def _write_variable(self, out, name, value, flavor, target=None):
-        operator = ':=' if flavor == 'simple' else '='
+        operator = ' := ' if flavor == 'simple' else ' = '
         if target:
-            out.write('{}: '.format(escape_list(target)))
-        out.write('{name} {op} {value}\n'.format(
-            name=name.name, op=operator, value=escape_list(value)
-        ))
+            self._write(out, target, syntax='path')
+            self._write_literal(out, ': ')
+        self._write_literal(out, name.name + operator)
+        self._write_each(out, utils.iterate(value), syntax='shell')
+        self._write_literal(out, '\n')
 
     def _write_define(self, out, name, value):
-        out.write('define {name}\n'.format(name=name.name))
+        self._write_literal(out, 'define ' + name.name + '\n')
         for i in value:
-            out.write(escape_list(i) + '\n')
-        out.write('endef\n\n')
+            self._write_each(out, i, syntax='shell')
+            self._write_literal(out, '\n')
+        self._write_literal(out, 'endef\n\n')
 
     def _write_rule(self, out, rule):
         if rule.variables:
-            for name, value in rule.variables.iteritems():
-                self._write_variable(out, name, value, 'simple',
-                                     target=rule.target)
+            for target in rule.targets:
+                for name, value in rule.variables.iteritems():
+                    self._write_variable(out, name, value, 'simple',
+                                         target=target)
 
         if rule.phony:
-            out.write('.PHONY: {}\n'.format(escape_list(rule.target)))
-        out.write('{target}:{deps}'.format(
-            target=escape_list(rule.target),
-            deps=''.join(' ' + escape_str(i) for i in rule.deps or [])
-        ))
+            self._write_literal(out, '.PHONY: ')
+            self._write_each(out, rule.targets, syntax='path')
+            self._write_literal(out, '\n')
 
-        first = True
-        for i in rule.order_only or []:
-            if first:
-                first = False
-                out.write(' |')
-            out.write(' ' + escape_str(i))
+        self._write_each(out, rule.targets, syntax='path')
+        self._write_literal(out, ':')
+        self._write_each(out, rule.deps, syntax='path', prefix=' ')
+        self._write_each(out, rule.order_only, syntax='path', prefix=' | ')
 
         if (isinstance(rule.recipe, MakeVariable) or
             isinstance(rule.recipe, MakeFunc)):
-            out.write(' ; {}'.format(escape_str(rule.recipe)))
+            self._write_literal(out, ' ; ')
+            self._write(out, rule.recipe, syntax='shell')
         elif rule.recipe is not None:
             for cmd in rule.recipe:
-                out.write('\n\t{}'.format(escape_list(cmd)))
-        out.write('\n\n')
+                self._write_literal(out, '\n\t')
+                self._write_each(out, cmd, syntax='shell')
+        self._write_literal(out, '\n\n')
 
     def write(self, out):
-        # Don't let make use built-in suffix rules
-        out.write('.SUFFIXES:\n\n')
+        # Don't let make use built-in suffix rules.
+        self._write_literal(out, '.SUFFIXES:\n\n')
 
         for name, value in self._global_variables.iteritems():
             self._write_variable(out, name, value[0], value[1])
         if self._global_variables:
-            out.write('\n')
+            self._write_literal(out, '\n')
 
         newline = False
         for target, each in self._target_variables.iteritems():
@@ -206,7 +239,7 @@ class MakeWriter(object):
                 newline = True
                 self._write_variable(out, name, value[0], value[1], target)
         if newline:
-            out.write('\n')
+            self._write_literal(out, '\n')
 
         for name, value in self._defines.iteritems():
             self._write_define(out, name, value)
@@ -215,9 +248,9 @@ class MakeWriter(object):
             self._write_rule(out, r)
 
         for i in self._includes:
-            out.write('{opt}include {name}\n'.format(
-                name=escape_str(i.name), opt='-' if i.optional else ''
-            ))
+            self._write_literal(out, ('-' if i.optional else '') + 'include ')
+            self._write(out, i.name, syntax='path')
+            self._write_literal(out, '\n')
 
 _path_vars = {
     'srcdir': MakeVariable('srcdir'),
@@ -226,9 +259,9 @@ _path_vars = {
 def path_str(path, form='local_path'):
     source, pathname = getattr(path, form)()
     if source:
-        return escape_list([_path_vars[source], pathname], os.sep)
+        return _path_vars[source] + os.sep + pathname
     else:
-        return escape_str(pathname)
+        return pathname
 
 def write(env, build_inputs):
     writer = MakeWriter()
@@ -257,15 +290,15 @@ def flags_vars(name, value, writer):
         writer.variable(global_flags, value)
 
     flags = MakeVariable(name)
-    if not writer.has_variable(flags, target='%'):
-        writer.variable(flags, global_flags, target='%')
+    if not writer.has_variable(flags, target=phony_path('%')):
+        writer.variable(flags, global_flags, target=phony_path('%'))
 
     return global_flags, flags
 
 def all_rule(default_targets, writer):
     writer.rule(
-        target='all',
-        deps=(path_str(i.path) for i in default_targets)
+        target=phony_path('all'),
+        deps=(i.path for i in default_targets)
     )
 
 # TODO: Write a better `install` program to simplify this
@@ -303,13 +336,18 @@ def install_rule(install_targets, writer, env):
 
     recipe = ([install_line(i) for i in install_targets.files] +
               [mkdir_line(i) for i in install_targets.directories])
-    writer.rule(target='install', deps=['all'], recipe=recipe, phony=True)
+    writer.rule(
+        target=phony_path('install'),
+        deps=phony_path('all'),
+        recipe=recipe,
+        phony=True
+    )
 
 dir_sentinel = '.dir'
 def directory_rule(writer):
     # XXX: `mkdir -p` isn't safe (or valid!) on all platforms.
     writer.rule(
-        target=os.path.join('%', dir_sentinel),
+        target=phony_path(os.path.join('%', dir_sentinel)),
         recipe=[
             ['@mkdir', '-p', MakeFunc('dir', var('@'))],
             ['@touch', var('@')]
@@ -318,8 +356,8 @@ def directory_rule(writer):
 
 def regenerate_rule(writer, env):
     writer.rule(
-        target='Makefile',
-        deps=[path_str(Path('build.bfg', Path.srcdir, Path.basedir))],
+        target=phony_path('Makefile'),
+        deps=Path('build.bfg', Path.srcdir, Path.basedir),
         recipe=[[env.bfgpath, '--regenerate', '.']]
     )
 
@@ -357,19 +395,19 @@ def emit_object_file(rule, build_inputs, writer):
                 dep=depfile, args=cflags
             ),
             # Munge the depfile so that it works a little better...
-            r"@sed -e 's/.*://' -e 's/\\$//' < " + depfile + " | fmt -1 | \\",
-            "  sed -e 's/^ *//' -e 's/$/:/' >> " + depfile
+            # FIXME: Don't just wrap this in a list
+            [r"@sed -e 's/.*://' -e 's/\\$//' < " + depfile + " | fmt -1 | \\"],
+            ["  sed -e 's/^ *//' -e 's/$/:/' >> " + depfile]
         ], flavor='define')
 
     writer.rule(
-        target=path_str(path),
-        deps=(path_str(i.path) for i in chain([rule.file], rule.extra_deps)),
-        order_only=[path_str(target_dir.append(dir_sentinel))]
-                   if target_dir else None,
+        target=path,
+        deps=(i.path for i in chain([rule.file], rule.extra_deps)),
+        order_only=[target_dir.append(dir_sentinel)] if target_dir else None,
         recipe=recipename,
         variables=variables
     )
-    writer.include(path_str(path.addext('.d')), optional=True)
+    writer.include(path.addext('.d'), optional=True)
 
 @rule_handler('Link')
 def emit_link(rule, build_inputs, writer):
@@ -424,11 +462,9 @@ def emit_link(rule, build_inputs, writer):
         ], flavor='define')
 
     writer.rule(
-        target=path_str(path),
-        deps=(path_str(i.path) for i in chain(rule.files, lib_deps,
-                                              rule.extra_deps)),
-        order_only=[path_str(target_dir.append(dir_sentinel))]
-                   if target_dir else None,
+        target=path,
+        deps=(i.path for i in chain(rule.files, lib_deps, rule.extra_deps)),
+        order_only=[target_dir.append(dir_sentinel)] if target_dir else None,
         recipe=MakeCall(recipename, (path_str(i.path) for i in rule.files)),
         variables=variables
     )
@@ -436,16 +472,16 @@ def emit_link(rule, build_inputs, writer):
 @rule_handler('Alias')
 def emit_alias(rule, build_inputs, writer):
     writer.rule(
-        target=path_str(rule.target.path),
-        deps=(path_str(i.path) for i in rule.extra_deps),
+        target=rule.target.path,
+        deps=(i.path for i in rule.extra_deps),
         phony=True
     )
 
 @rule_handler('Command')
 def emit_command(rule, build_inputs, writer):
     writer.rule(
-        target=path_str(rule.target.path),
-        deps=(path_str(i.path) for i in rule.extra_deps),
+        target=rule.target.path,
+        deps=(i.path for i in rule.extra_deps),
         recipe=rule.cmd,
         phony=True
     )

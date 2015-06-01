@@ -20,6 +20,19 @@ def iterate(thing):
     else:
         return _generate_one(thing)
 
+def tween(iterable, delim, prefix=None, suffix=None):
+    first = True
+    for i in iterable:
+        if first:
+            first = False
+            if prefix is not None:
+                yield True, prefix
+        else:
+            yield True, delim
+        yield False, i
+    if not first and suffix is not None:
+        yield True, suffix
+
 def flatten(iterable):
     for i in iterable:
         if isinstance(i, Iterable) and not isinstance(i, basestring):
