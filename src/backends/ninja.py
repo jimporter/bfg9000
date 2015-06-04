@@ -245,6 +245,9 @@ def all_rule(default_targets, writer):
         inputs=(path_str(i.path) for i in default_targets)
     )
 
+def chain_commands(commands, delim=safe_str.escaped_str('&&')):
+    return sum((i for _, i in utils.tween(commands, [delim])), [])
+
 # TODO: Write a better `install` program to simplify this
 def install_rule(install_targets, writer, env):
     if not install_targets:
@@ -287,10 +290,7 @@ def install_rule(install_targets, writer, env):
                      (mkdir_line(i) for i in install_targets.directories))
     writer.build(
         output='install', rule='command', implicit=['all'],
-        # TODO: Improve how variables are defined here
-        variables={'cmd': sum(
-            (i for _, i in utils.tween(commands, [e('&&')])), []
-        )}
+        variables={'cmd': chain_commands(commands)}
     )
 
 def regenerate_rule(writer, env):
@@ -413,8 +413,5 @@ def emit_command(rule, build_inputs, writer):
         output=path_str(rule.target.path),
         rule='command',
         inputs=(path_str(i.path) for i in rule.extra_deps),
-        # TODO: Improve how variables are defined here
-        variables={'cmd': sum(
-            (i for _, i in utils.tween(rule.cmd, [e('&&')])), []
-        )}
+        variables={'cmd': chain_commands(rule.cmd)}
     )
