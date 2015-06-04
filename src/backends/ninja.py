@@ -5,6 +5,7 @@ from collections import Iterable, namedtuple, OrderedDict
 from itertools import chain
 
 import safe_str
+import shell
 import utils
 from path import Path, phony_path
 
@@ -61,12 +62,12 @@ class NinjaWriter(object):
         self._build_outputs = set()
         self._defaults = []
 
-    def variable(self, name, value):
+    def variable(self, name, value, syntax='variable'):
         if not isinstance(name, NinjaVariable):
             name = NinjaVariable(name)
         if self.has_variable(name):
             raise RuntimeError('variable "{}" already exists'.format(name))
-        self._variables[name] = value
+        self._variables[name] = (value, syntax)
         return name
 
     def has_variable(self, name):
@@ -75,6 +76,8 @@ class NinjaWriter(object):
         return name in self._variables
 
     def rule(self, name, command, depfile=None, generator=False):
+        if re.search('\W', name):
+            raise RuntimeError('rule name contains invalid characters')
         if self.has_rule(name):
             raise RuntimeError('rule "{}" already exists'.format(name))
         self._rules[name] = NinjaRule(command, depfile, generator)
@@ -84,6 +87,9 @@ class NinjaWriter(object):
 
     def build(self, output, rule, inputs=None, implicit=None, order_only=None,
               variables=None):
+        if rule != 'phony' and not self.has_rule(rule):
+            raise RuntimeError('unknown rule "{}"'.format(rule))
+
         real_variables = {}
         if variables:
             for k, v in variables.iteritems():
@@ -109,8 +115,14 @@ class NinjaWriter(object):
 
     @classmethod
     def escape_str(cls, string, syntax):
-        # TODO: Handle other escape chars
-        return string.replace('$', '$$')
+        if syntax == 'output':
+            return re.sub(r'([:$\n ])', r'$\1', string)
+        elif syntax == 'input' or syntax == 'variable':
+            return re.sub(r'([$\n ])', r'$\1', string)
+        elif syntax == 'shell':
+            return shell.quote(string).replace('$', '$$')
+        else:
+            raise RuntimeError('unknown syntax "{}"'.format(syntax))
 
     @classmethod
     def _write_literal(cls, out, string):
@@ -139,17 +151,15 @@ class NinjaWriter(object):
         for tween, i in utils.tween(things, delim, prefix, suffix):
             cls._write_literal(out, i) if tween else cls._write(out, i, syntax)
 
-    def _write_variable(self, out, name, value, indent=0):
+    def _write_variable(self, out, name, value, indent=0, syntax='variable'):
         self._write_literal(out, ('  ' * indent) + name.name + ' = ')
-        self._write_each(out, utils.iterate(value), syntax='shell')
+        self._write_each(out, utils.iterate(value), syntax)
         self._write_literal(out, '\n')
 
     def _write_rule(self, out, name, rule):
-        self._write_literal(out, 'rule ')
-        self._write(out, name, syntax='shell')
-        self._write_literal(out, '\n')
+        self._write_literal(out, 'rule ' + name + '\n')
 
-        self._write_variable(out, var('command'), rule.command, 1)
+        self._write_variable(out, var('command'), rule.command, 1, 'shell')
         if rule.depfile:
             self._write_variable(out, var('depfile'), rule.depfile, 1)
         if rule.generator:
@@ -157,22 +167,21 @@ class NinjaWriter(object):
 
     def _write_build(self, out, build):
         self._write_literal(out, 'build ')
-        self._write_each(out, build.outputs, syntax='shell')
-        self._write_literal(out, ': ')
-        self._write(out, build.rule, syntax='shell')
+        self._write_each(out, build.outputs, syntax='output')
+        self._write_literal(out, ': ' + build.rule)
 
-        self._write_each(out, build.inputs, syntax='shell', prefix=' ')
-        self._write_each(out, build.implicit, syntax='shell', prefix=' | ')
-        self._write_each(out, build.order_only, syntax='shell', prefix=' || ')
+        self._write_each(out, build.inputs, syntax='input', prefix=' ')
+        self._write_each(out, build.implicit, syntax='input', prefix=' | ')
+        self._write_each(out, build.order_only, syntax='input', prefix=' || ')
         self._write_literal(out, '\n')
 
         if build.variables:
             for k, v in build.variables.iteritems():
-                self._write_variable(out, k, v, 1)
+                self._write_variable(out, k, v, 1, 'shell')
 
     def write(self, out):
-        for name, value in self._variables.iteritems():
-            self._write_variable(out, name, value)
+        for name, (value, syntax) in self._variables.iteritems():
+            self._write_variable(out, name, value, syntax=syntax)
         if self._variables:
             self._write_literal(out, '\n')
 
@@ -185,7 +194,7 @@ class NinjaWriter(object):
 
         if self._defaults:
             self._write_literal(out, '\ndefault ')
-            self._write_each(out, self._defaults, syntax='shell')
+            self._write_each(out, self._defaults, syntax='input')
             self._write_literal(out, '\n')
 
 _path_vars = {
@@ -221,11 +230,11 @@ def cmd_var(compiler, writer):
 def flags_vars(name, value, writer):
     global_flags = NinjaVariable('global_{}'.format(name))
     if not writer.has_variable(global_flags):
-        writer.variable(global_flags, ' '.join(value))
+        writer.variable(global_flags, value, syntax='shell')
 
     flags = NinjaVariable('{}'.format(name))
     if not writer.has_variable(flags):
-        writer.variable(flags, global_flags)
+        writer.variable(flags, global_flags, syntax='shell')
 
     return global_flags, flags
 
@@ -241,22 +250,24 @@ def install_rule(install_targets, writer, env):
     if not install_targets:
         return
 
+    e = safe_str.escaped_str
     writer.variable(_path_vars['prefix'], env.install_prefix)
 
     def install_cmd(kind):
         install = NinjaVariable('install')
         if not writer.has_variable(install):
-            writer.variable(install, 'install')
+            writer.variable(install, 'install', syntax='shell')
 
         if kind == 'program':
             install_program = NinjaVariable('install_program')
             if not writer.has_variable(install_program):
-                writer.variable(install_program, install)
+                writer.variable(install_program, install, syntax='shell')
             return install_program
         else:
             install_data = NinjaVariable('install_data')
             if not writer.has_variable(install_data):
-                writer.variable(install_data, [install, '-m', '644'])
+                writer.variable(install_data, [install, '-m', '644'],
+                                syntax='shell')
             return install_data
 
     if not writer.has_rule('command'):
@@ -268,9 +279,9 @@ def install_rule(install_targets, writer, env):
         return [ install_cmd(file.install_kind), '-D', src, dst ]
 
     def mkdir_line(dir):
-        src = path_str(dir.path.append('*'))
+        src = path_str(dir.path) + os.sep + e('*')
         dst = path_str(dir.path.parent(), 'install_path')
-        return ['mkdir', '-p', dst, '&&', 'cp', '-r', src, dst]
+        return ['mkdir', '-p', dst, e('&&'), 'cp', '-r', src, dst]
 
     commands = chain((install_line(i) for i in install_targets.files),
                      (mkdir_line(i) for i in install_targets.directories))
@@ -278,7 +289,7 @@ def install_rule(install_targets, writer, env):
         output='install', rule='command', implicit=['all'],
         # TODO: Improve how variables are defined here
         variables={'cmd': sum(
-            (i for _, i in utils.tween(commands, ['&&'])), []
+            (i for _, i in utils.tween(commands, [e('&&')])), []
         )}
     )
 
@@ -396,12 +407,14 @@ def emit_alias(rule, build_inputs, writer):
 def emit_command(rule, build_inputs, writer):
     if not writer.has_rule('command'):
         writer.rule(name='command', command=var('cmd'))
+
+    e = safe_str.escaped_str
     writer.build(
         output=path_str(rule.target.path),
         rule='command',
         inputs=(path_str(i.path) for i in rule.extra_deps),
         # TODO: Improve how variables are defined here
         variables={'cmd': sum(
-            (i for _, i in utils.tween(rule.cmd, ['&&'])), []
+            (i for _, i in utils.tween(rule.cmd, [e('&&')])), []
         )}
     )

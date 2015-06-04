@@ -1,5 +1,5 @@
 import os
-import shlex
+import shell
 
 import utils
 import file_types
@@ -13,7 +13,7 @@ class ArLinker(object):
         self.command_var = 'ar'
         self.link_var = 'ar'
         self.name = 'ar'
-        self.global_args = shlex.split(os.getenv('ARFLAGS', 'cru'), posix=False)
+        self.global_args = shell.split(os.getenv('ARFLAGS', 'cru'))
 
     def command(self, cmd, input, output, args=None):
         result = [cmd]

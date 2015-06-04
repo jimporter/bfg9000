@@ -5,6 +5,7 @@ from collections import Iterable, namedtuple, OrderedDict
 from itertools import chain
 
 import safe_str
+import shell
 import utils
 from path import Path, phony_path
 
@@ -86,7 +87,7 @@ class MakeCall(MakeFunc):
 
 class MakeWriter(object):
     def __init__(self):
-        # TODO: Sort variables in some useful order
+        # TODO: Sort variables in some useful order.
         self._global_variables = OrderedDict()
         self._target_variables = OrderedDict({phony_path('%'): OrderedDict()})
         self._defines = OrderedDict()
@@ -94,6 +95,9 @@ class MakeWriter(object):
         self._rules = []
         self._targets = set()
         self._includes = []
+
+        # Necessary for escaping commas in function calls.
+        self.variable(',', ',')
 
     def variable(self, name, value, flavor='simple', target=None):
         if not isinstance(name, MakeVariable):
@@ -151,8 +155,20 @@ class MakeWriter(object):
 
     @classmethod
     def escape_str(cls, string, syntax):
-        # TODO: Handle other escape chars
-        return string.replace('$', '$$')
+        def repl(match):
+            return match.group(1) * 2 + '\\' + match.group(2)
+        result = string.replace('$', '$$')
+
+        if syntax == 'target':
+            return re.sub(r'(\\*)([#?*\[\]~\s])', repl, result)
+        if syntax == 'dependency':
+            return re.sub(r'(\\*)([#?*\[\]~\s|])', repl, result)
+        elif syntax == 'shell':
+            return shell.quote(result)
+        elif syntax == 'function':
+            return shell.quote(re.sub(',', '$,', result))
+        else:
+            raise RuntimeError('unknown syntax "{}"'.format(syntax))
 
     @classmethod
     def _write_literal(cls, out, string):
@@ -184,7 +200,7 @@ class MakeWriter(object):
     def _write_variable(self, out, name, value, flavor, target=None):
         operator = ' := ' if flavor == 'simple' else ' = '
         if target:
-            self._write(out, target, syntax='path')
+            self._write(out, target, syntax='target')
             self._write_literal(out, ': ')
         self._write_literal(out, name.name + operator)
         self._write_each(out, utils.iterate(value), syntax='shell')
@@ -206,13 +222,14 @@ class MakeWriter(object):
 
         if rule.phony:
             self._write_literal(out, '.PHONY: ')
-            self._write_each(out, rule.targets, syntax='path')
+            self._write_each(out, rule.targets, syntax='dependency')
             self._write_literal(out, '\n')
 
-        self._write_each(out, rule.targets, syntax='path')
+        self._write_each(out, rule.targets, syntax='target')
         self._write_literal(out, ':')
-        self._write_each(out, rule.deps, syntax='path', prefix=' ')
-        self._write_each(out, rule.order_only, syntax='path', prefix=' | ')
+        self._write_each(out, rule.deps, syntax='dependency', prefix=' ')
+        self._write_each(out, rule.order_only, syntax='dependency',
+                         prefix=' | ')
 
         if (isinstance(rule.recipe, MakeVariable) or
             isinstance(rule.recipe, MakeFunc)):
@@ -249,7 +266,7 @@ class MakeWriter(object):
 
         for i in self._includes:
             self._write_literal(out, ('-' if i.optional else '') + 'include ')
-            self._write(out, i.name, syntax='path')
+            self._write(out, i.name, syntax='target')
             self._write_literal(out, '\n')
 
 _path_vars = {
@@ -330,9 +347,10 @@ def install_rule(install_targets, writer, env):
         return [ install_cmd(file.install_kind), '-D', src, dst ]
 
     def mkdir_line(dir):
-        src = path_str(dir.path.append('*'))
+        e = safe_str.escaped_str
+        src = path_str(dir.path) + os.sep + e('*')
         dst = path_str(dir.path.parent(), 'install_path')
-        return ['mkdir', '-p', dst, '&&', 'cp', '-r', src, dst]
+        return ['mkdir', '-p', dst, e('&&'), 'cp', '-r', src, dst]
 
     recipe = ([install_line(i) for i in install_targets.files] +
               [mkdir_line(i) for i in install_targets.directories])
@@ -389,15 +407,16 @@ def emit_object_file(rule, build_inputs, writer):
 
     if not writer.has_variable(recipename):
         depfile = var('@') + '.d'
+        e = safe_str.escaped_str
         writer.variable(recipename, [
             compiler.command(
                 cmd=cmd_var(compiler, writer), input=var('<'), output=var('@'),
                 dep=depfile, args=cflags
             ),
             # Munge the depfile so that it works a little better...
-            # FIXME: Don't just wrap this in a list
-            [r"@sed -e 's/.*://' -e 's/\\$//' < " + depfile + " | fmt -1 | \\"],
-            ["  sed -e 's/^ *//' -e 's/$/:/' >> " + depfile]
+            ['@sed', '-e', 's/.*://', '-e', 's/\\$//', e('<'), depfile, e('|'),
+             'fmt', '-1', e('| \\')],
+            [e(' '), 'sed', '-e', 's/^ *//', '-e', 's/$/:/', e('>>'), depfile]
         ], flavor='define')
 
     writer.rule(

@@ -1,5 +1,5 @@
 import os
-import shlex
+import shell
 
 import utils
 from file_types import *
@@ -84,34 +84,34 @@ class CcLinkerBase(object):
         rpath = ':'.join(os.path.join('$ORIGIN', i) for i in paths)
         if not rpath:
             return []
-        return ["-Wl,-rpath='{}'".format(rpath)]
+        return ["-Wl,-rpath={}".format(rpath)]
 
 class CcCompiler(CcCompilerBase):
     def __init__(self, platform):
         CcCompilerBase.__init__(self, platform, os.getenv('CC', 'cc'), 'cc')
         self.global_args = (
-            shlex.split(os.getenv('CFLAGS', ''), posix=False) +
-            shlex.split(os.getenv('CPPFLAGS', ''), posix=False)
+            shell.split(os.getenv('CFLAGS', '')) +
+            shell.split(os.getenv('CPPFLAGS', ''))
         )
 
 class CxxCompiler(CcCompilerBase):
     def __init__(self, platform):
         CcCompilerBase.__init__(self, platform, os.getenv('CXX', 'c++'), 'cxx')
         self.global_args = (
-            shlex.split(os.getenv('CXXFLAGS', ''), posix=False) +
-            shlex.split(os.getenv('CPPFLAGS', ''), posix=False)
+            shell.split(os.getenv('CXXFLAGS', '')) +
+            shell.split(os.getenv('CPPFLAGS', ''))
         )
 
 class CcLinker(CcLinkerBase):
     def __init__(self, platform, mode):
         CcLinkerBase.__init__(self, platform, mode, os.getenv('CC', 'cc'), 'cc')
-        self.global_args = shlex.split(os.getenv('LDFLAGS', ''), posix=False)
-        self.global_libs = shlex.split(os.getenv('LDLIBS', ''), posix=False)
+        self.global_args = shell.split(os.getenv('LDFLAGS', ''))
+        self.global_libs = shell.split(os.getenv('LDLIBS', ''))
 
 class CxxLinker(CcLinkerBase):
     def __init__(self, platform, mode):
         CcLinkerBase.__init__(
             self, platform, mode, os.getenv('CXX', 'c++'), 'cxx'
         )
-        self.global_args = shlex.split(os.getenv('LDFLAGS', ''), posix=False)
-        self.global_libs = shlex.split(os.getenv('LDLIBS', ''), posix=False)
+        self.global_args = shell.split(os.getenv('LDFLAGS', ''))
+        self.global_libs = shell.split(os.getenv('LDLIBS', ''))
