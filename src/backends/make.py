@@ -310,7 +310,8 @@ def flags_vars(name, value, writer):
 def all_rule(default_targets, writer):
     writer.rule(
         target=phony_path('all'),
-        deps=(i.path for i in default_targets)
+        deps=[i.path for i in default_targets],
+        phony=True
     )
 
 # TODO: Write a better `install` program to simplify this
