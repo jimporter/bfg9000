@@ -414,7 +414,7 @@ def emit_object_file(rule, build_inputs, writer):
                 dep=depfile, args=cflags
             ),
             # Munge the depfile so that it works a little better...
-            ['@sed', '-e', 's/.*://', '-e', 's/\\$//', e('<'), depfile, e('|'),
+            ['@sed', '-e', 's/.*://', '-e', r's/\\$//', e('<'), depfile, e('|'),
              'fmt', '-1', e('| \\')],
             [e(' '), 'sed', '-e', 's/^ *//', '-e', 's/$/:/', e('>>'), depfile]
         ], flavor='define')
