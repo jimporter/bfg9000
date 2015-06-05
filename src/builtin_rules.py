@@ -1,3 +1,4 @@
+import fnmatch
 import os
 
 import build_inputs
@@ -142,3 +143,17 @@ def global_options(build, env, options, lang):
     if not lang in build.global_options:
         build.global_options[lang] = []
     build.global_options[lang].extend(shell_listify(options))
+
+@builtin
+def find(build_inputs, env, base='.', name='*', type=None):
+    results = []
+    for path, dirs, files in os.walk(base):
+        if type != 'f':
+            results.extend((
+                os.path.join(path, i) for i in fnmatch.filter(dirs, name)
+            ))
+        if type != 'd':
+            results.extend((
+                os.path.join(path, i) for i in fnmatch.filter(files, name)
+            ))
+    return results
