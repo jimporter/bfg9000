@@ -1,13 +1,14 @@
+import operator
 import os
 import re
 from cStringIO import StringIO
 from collections import Iterable, namedtuple, OrderedDict
 from itertools import chain
 
+import path
 import safe_str
 import shell
 import utils
-from path import Path, phony_path, real_path
 
 _rule_handlers = {}
 def rule_handler(rule_name):
@@ -19,6 +20,38 @@ def rule_handler(rule_name):
 MakeInclude = namedtuple('MakeInclude', ['name', 'optional'])
 MakeRule = namedtuple('MakeRule', ['targets', 'deps', 'order_only', 'recipe',
                                    'variables', 'phony'])
+
+class Pattern(object):
+    def __init__(self, path):
+        if len(re.findall(r'([^\\]|^)(\\\\)*%', path)) != 1:
+            raise RuntimeError('exactly one % required')
+        self.path = path
+
+    def use(self):
+        bits = re.split(r'%', self.path)
+        delim = safe_str.escaped_str('%')
+        return reduce(operator.add, utils.tween(bits, delim, flag=False))
+
+    def _safe_str(self):
+        return self.use()
+
+    def __str__(self):
+        raise NotImplementedError()
+
+    def __repr__(self):
+        return repr(self.use())
+
+    def __hash__(self):
+        return hash(self.path)
+
+    def __cmp__(self, rhs):
+        return cmp(self.path, rhs.path)
+
+    def __add__(self, rhs):
+        return self.use() + rhs
+
+    def __radd__(self, lhs):
+        return lhs + self.use()
 
 class MakeVariable(object):
     def __init__(self, name):
@@ -40,11 +73,8 @@ class MakeVariable(object):
     def __hash__(self):
         return hash(self.name)
 
-    def __eq__(self, rhs):
-        return self.name == rhs.name
-
-    def __ne__(self, rhs):
-        return self.name != rhs.name
+    def __cmp__(self, rhs):
+        return cmp(self.name, rhs.name)
 
     def __add__(self, rhs):
         return self.use() + rhs
@@ -93,7 +123,7 @@ class MakeWriter(object):
     def __init__(self):
         # TODO: Sort variables in some useful order.
         self._global_variables = OrderedDict()
-        self._target_variables = OrderedDict({phony_path('%'): OrderedDict()})
+        self._target_variables = OrderedDict({Pattern('%'): OrderedDict()})
         self._defines = OrderedDict()
 
         self._rules = []
@@ -164,9 +194,9 @@ class MakeWriter(object):
         result = string.replace('$', '$$')
 
         if syntax == 'target':
-            return re.sub(r'(\\*)([#?*\[\]~\s])', repl, result)
-        if syntax == 'dependency':
-            return re.sub(r'(\\*)([#?*\[\]~\s|])', repl, result)
+            return re.sub(r'(\\*)([#?*\[\]~\s%])', repl, result)
+        elif syntax == 'dependency':
+            return re.sub(r'(\\*)([#?*\[\]~\s|%])', repl, result)
         elif syntax == 'shell':
             return shell.quote(result)
         elif syntax == 'function':
@@ -186,7 +216,7 @@ class MakeWriter(object):
             cls._write_literal(out, cls.escape_str(thing, syntax))
         elif isinstance(thing, safe_str.escaped_str):
             cls._write_literal(out, thing.string)
-        elif isinstance(thing, real_path):
+        elif isinstance(thing, path.real_path):
             if thing.base != 'builddir':
                 cls._write(out, _path_vars[thing.base], syntax)
                 cls._write_literal(out, os.sep)
@@ -302,14 +332,14 @@ def flags_vars(name, value, writer):
         writer.variable(global_flags, value)
 
     flags = MakeVariable(name)
-    if not writer.has_variable(flags, target=phony_path('%')):
-        writer.variable(flags, global_flags, target=phony_path('%'))
+    if not writer.has_variable(flags, target=Pattern('%')):
+        writer.variable(flags, global_flags, target=Pattern('%'))
 
     return global_flags, flags
 
 def all_rule(default_targets, writer):
     writer.rule(
-        target=phony_path('all'),
+        target='all',
         deps=[i.path for i in default_targets],
         phony=True
     )
@@ -351,8 +381,8 @@ def install_rule(install_targets, writer, env):
     recipe = ([install_line(i) for i in install_targets.files] +
               [mkdir_line(i) for i in install_targets.directories])
     writer.rule(
-        target=phony_path('install'),
-        deps=phony_path('all'),
+        target='install',
+        deps='all',
         recipe=recipe,
         phony=True
     )
@@ -361,7 +391,7 @@ dir_sentinel = '.dir'
 def directory_rule(writer):
     # XXX: `mkdir -p` isn't safe (or valid!) on all platforms.
     writer.rule(
-        target=phony_path(os.path.join('%', dir_sentinel)),
+        target=Pattern(os.path.join('%', dir_sentinel)),
         recipe=[
             ['@mkdir', '-p', MakeFunc('dir', var('@'))],
             ['@touch', var('@')]
@@ -370,8 +400,8 @@ def directory_rule(writer):
 
 def regenerate_rule(writer, env):
     writer.rule(
-        target=phony_path('Makefile'),
-        deps=Path('build.bfg', Path.srcdir, Path.basedir),
+        target=path.Path('Makefile', path.Path.builddir, path.Path.basedir),
+        deps=path.Path('build.bfg', path.Path.srcdir, path.Path.basedir),
         recipe=[[env.bfgpath, '--regenerate', '.']]
     )
 

@@ -4,10 +4,10 @@ import sys
 from collections import Iterable, namedtuple, OrderedDict
 from itertools import chain
 
+import path
 import safe_str
 import shell
 import utils
-from path import Path, phony_path, real_path
 
 _rule_handlers = {}
 def rule_handler(rule_name):
@@ -39,11 +39,8 @@ class NinjaVariable(object):
     def __hash__(self):
         return hash(self.name)
 
-    def __eq__(self, rhs):
-        return self.name == rhs.name
-
-    def __ne__(self, rhs):
-        return self.name != rhs.name
+    def __cmp__(self, rhs):
+        return cmp(self.name, rhs.name)
 
     def __add__(self, rhs):
         return self.use() + rhs
@@ -140,7 +137,7 @@ class NinjaWriter(object):
             cls._write_literal(out, cls.escape_str(thing, syntax))
         elif isinstance(thing, safe_str.escaped_str):
             cls._write_literal(out, thing.string)
-        elif isinstance(thing, real_path):
+        elif isinstance(thing, path.real_path):
             if thing.base != 'builddir':
                 cls._write(out, _path_vars[thing.base], syntax)
                 cls._write_literal(out, os.sep)
@@ -236,12 +233,13 @@ def flags_vars(name, value, writer):
 def all_rule(default_targets, writer):
     writer.default(['all'])
     writer.build(
-        output='all', rule='phony',
+        output='all',
+        rule='phony',
         inputs=[i.path for i in default_targets]
     )
 
 def chain_commands(commands, delim=safe_str.escaped_str('&&')):
-    return sum((i for _, i in utils.tween(commands, [delim])), [])
+    return sum(utils.tween(commands, [delim], flag=False), [])
 
 # TODO: Write a better `install` program to simplify this
 def install_rule(install_targets, writer, env):
@@ -284,7 +282,9 @@ def install_rule(install_targets, writer, env):
     commands = chain((install_line(i) for i in install_targets.files),
                      (mkdir_line(i) for i in install_targets.directories))
     writer.build(
-        output='install', rule='command', implicit=['all'],
+        output='install',
+        rule='command',
+        implicit=['all'],
         variables={'cmd': chain_commands(commands)}
     )
 
@@ -295,8 +295,9 @@ def regenerate_rule(writer, env):
         generator=True
     )
     writer.build(
-        output='build.ninja', rule='regenerate',
-        implicit=[Path('build.bfg', Path.srcdir, Path.basedir)]
+        output=path.Path('build.ninja', path.Path.builddir, path.Path.basedir),
+        rule='regenerate',
+        implicit=[path.Path('build.bfg', path.Path.srcdir, path.Path.basedir)]
     )
 
 @rule_handler('Compile')

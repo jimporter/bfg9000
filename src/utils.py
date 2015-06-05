@@ -20,18 +20,21 @@ def iterate(thing):
     else:
         return _generate_one(thing)
 
-def tween(iterable, delim, prefix=None, suffix=None):
+def tween(iterable, delim, prefix=None, suffix=None, flag=True):
+    def item(tween, value):
+        return (tween, value) if flag else value
+
     first = True
     for i in iterable:
         if first:
             first = False
             if prefix is not None:
-                yield True, prefix
+                yield item(True, prefix)
         else:
-            yield True, delim
-        yield False, i
+            yield item(True, delim)
+        yield item(False, i)
     if not first and suffix is not None:
-        yield True, suffix
+        yield item(True, suffix)
 
 def flatten(iterable):
     for i in iterable:

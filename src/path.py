@@ -96,6 +96,3 @@ class Path(object):
         return (self.source != Path.builddir or
                 self.install_base != Path.basedir or
                 bool(self.path))
-
-def phony_path(path):
-    return Path(path, Path.builddir, Path.basedir)
