@@ -22,7 +22,7 @@ NinjaBuild = namedtuple('NinjaBuild', ['outputs', 'rule', 'inputs', 'implicit',
 
 class NinjaVariable(object):
     def __init__(self, name):
-        self.name = re.sub('/', '_', name)
+        self.name = re.sub('\W', '_', name)
 
     def use(self):
         return safe_str.escaped_str('${}'.format(self.name))
