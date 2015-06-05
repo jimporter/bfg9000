@@ -28,7 +28,7 @@ class CcCompilerBase(object):
         return ['-fPIC']
 
     def include_dir(self, directory):
-        return ['-I' + directory]
+        return ['-I' + directory.path.local_path()]
 
 class CcLinkerBase(object):
     def __init__(self, platform, mode, command, name):
@@ -74,11 +74,12 @@ class CcLinkerBase(object):
     def mode_args(self):
         return ['-shared', '-fPIC'] if self.mode == 'shared_library' else []
 
-    def lib_dir(self, directory):
-        return ['-L' + directory]
+    def lib_dirs(self, libraries):
+        dirs = set(i.path.parent().local_path() for i in libraries)
+        return ['-L' + i for i in dirs]
 
     def link_lib(self, library):
-        return ['-l' + library]
+        return ['-l' + library.lib_name]
 
     def rpath(self, paths):
         rpath = ':'.join(os.path.join('$ORIGIN', i) for i in paths)

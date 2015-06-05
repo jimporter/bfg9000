@@ -7,7 +7,7 @@ from itertools import chain
 import safe_str
 import shell
 import utils
-from path import Path, phony_path
+from path import Path, phony_path, real_path
 
 _rule_handlers = {}
 def rule_handler(rule_name):
@@ -85,6 +85,10 @@ class MakeCall(MakeFunc):
             func = MakeVariable(func)
         MakeFunc.__init__(self, 'call', func.name, *args)
 
+_path_vars = {
+    'srcdir': MakeVariable('srcdir'),
+    'prefix': MakeVariable('prefix'),
+}
 class MakeWriter(object):
     def __init__(self):
         # TODO: Sort variables in some useful order.
@@ -176,15 +180,17 @@ class MakeWriter(object):
 
     @classmethod
     def _write(cls, out, thing, syntax):
-        # TODO: Remove this once paths have _safe_str.
-        if isinstance(thing, Path):
-            thing = path_str(thing)
         thing = safe_str.safe_str(thing)
 
         if isinstance(thing, basestring):
-            out.write(cls.escape_str(thing, syntax))
+            cls._write_literal(out, cls.escape_str(thing, syntax))
         elif isinstance(thing, safe_str.escaped_str):
-            out.write(thing.string)
+            cls._write_literal(out, thing.string)
+        elif isinstance(thing, real_path):
+            if thing.base != 'builddir':
+                cls._write(out, _path_vars[thing.base], syntax)
+                cls._write_literal(out, os.sep)
+            cls._write(out, thing.path, syntax)
         elif isinstance(thing, safe_str.jbos):
             for j in thing.bits:
                 cls._write(out, j, syntax)
@@ -269,17 +275,6 @@ class MakeWriter(object):
             self._write(out, i.name, syntax='target')
             self._write_literal(out, '\n')
 
-_path_vars = {
-    'srcdir': MakeVariable('srcdir'),
-    'prefix': MakeVariable('prefix'),
-}
-def path_str(path, form='local_path'):
-    source, pathname = getattr(path, form)()
-    if source:
-        return _path_vars[source] + os.sep + pathname
-    else:
-        return pathname
-
 def write(env, build_inputs):
     writer = MakeWriter()
     writer.variable(_path_vars['srcdir'], env.srcdir)
@@ -342,14 +337,14 @@ def install_rule(install_targets, writer, env):
             return install_data
 
     def install_line(file):
-        src = path_str(file.path)
-        dst = path_str(file.path, 'install_path')
+        src = file.path.local_path()
+        dst = file.path.install_path()
         return [ install_cmd(file.install_kind), '-D', src, dst ]
 
     def mkdir_line(dir):
         e = safe_str.escaped_str
-        src = path_str(dir.path) + os.sep + e('*')
-        dst = path_str(dir.path.parent(), 'install_path')
+        src = dir.path.local_path() + os.sep + e('*')
+        dst = dir.path.parent().install_path()
         return ['mkdir', '-p', dst, e('&&'), 'cp', '-r', src, dst]
 
     recipe = ([install_line(i) for i in install_targets.files] +
@@ -399,7 +394,7 @@ def emit_object_file(rule, build_inputs, writer):
     if rule.in_shared_library:
         cflags_value.extend(compiler.library_args)
     cflags_value.extend(chain.from_iterable(
-        compiler.include_dir(path_str(i.path)) for i in rule.include
+        compiler.include_dir(i) for i in rule.include
     ))
     cflags_value.extend(rule.options)
     if cflags_value:
@@ -421,7 +416,7 @@ def emit_object_file(rule, build_inputs, writer):
 
     writer.rule(
         target=path,
-        deps=(i.path for i in chain([rule.file], rule.extra_deps)),
+        deps=[i.path for i in chain([rule.file], rule.extra_deps)],
         order_only=[target_dir.append(dir_sentinel)] if target_dir else None,
         recipe=recipename,
         variables=variables
@@ -447,16 +442,14 @@ def emit_link(rule, build_inputs, writer):
 
     # TODO: Create a more flexible way of determining when to use these options?
     if linker.mode != 'static_library':
-        lib_dirs = set(path_str(i.path.parent()) for i in lib_deps)
-        target_dirname = path_str(target_dir)
-
         ldflags_value.extend(rule.options)
-        ldflags_value.extend(chain.from_iterable(
-            linker.lib_dir(i) for i in lib_dirs
-        ))
+        ldflags_value.extend(linker.lib_dirs(lib_deps))
+
+        target_dirname = target_dir.local_path().path
         ldflags_value.extend(linker.rpath(
             # TODO: Provide a relpath function for Path objects?
-            os.path.relpath(i, target_dirname) for i in lib_dirs
+            os.path.relpath(i.path.parent().local_path().path, target_dirname)
+            for i in lib_deps
         ))
 
         global_ldlibs, ldlibs = flags_vars(
@@ -466,7 +459,7 @@ def emit_link(rule, build_inputs, writer):
 
         if rule.libs:
             variables[ldlibs] = [global_ldlibs] + list(chain.from_iterable(
-                linker.link_lib(i.lib_name) for i in rule.libs
+                linker.link_lib(i) for i in rule.libs
             ))
 
     if ldflags_value:
@@ -482,9 +475,9 @@ def emit_link(rule, build_inputs, writer):
 
     writer.rule(
         target=path,
-        deps=(i.path for i in chain(rule.files, lib_deps, rule.extra_deps)),
+        deps=[i.path for i in chain(rule.files, lib_deps, rule.extra_deps)],
         order_only=[target_dir.append(dir_sentinel)] if target_dir else None,
-        recipe=MakeCall(recipename, (path_str(i.path) for i in rule.files)),
+        recipe=MakeCall(recipename, (i.path for i in rule.files)),
         variables=variables
     )
 
@@ -492,7 +485,7 @@ def emit_link(rule, build_inputs, writer):
 def emit_alias(rule, build_inputs, writer):
     writer.rule(
         target=rule.target.path,
-        deps=(i.path for i in rule.extra_deps),
+        deps=[i.path for i in rule.extra_deps],
         phony=True
     )
 
@@ -500,7 +493,7 @@ def emit_alias(rule, build_inputs, writer):
 def emit_command(rule, build_inputs, writer):
     writer.rule(
         target=rule.target.path,
-        deps=(i.path for i in rule.extra_deps),
+        deps=[i.path for i in rule.extra_deps],
         recipe=rule.cmd,
         phony=True
     )

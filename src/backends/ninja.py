@@ -7,7 +7,7 @@ from itertools import chain
 import safe_str
 import shell
 import utils
-from path import Path, phony_path
+from path import Path, phony_path, real_path
 
 _rule_handlers = {}
 def rule_handler(rule_name):
@@ -53,6 +53,10 @@ class NinjaVariable(object):
 
 var = NinjaVariable
 
+_path_vars = {
+    'srcdir': NinjaVariable('srcdir'),
+    'prefix': NinjaVariable('prefix'),
+}
 class NinjaWriter(object):
     def __init__(self):
         # TODO: Sort variables in some useful order
@@ -130,15 +134,17 @@ class NinjaWriter(object):
 
     @classmethod
     def _write(cls, out, thing, syntax):
-        # TODO: Remove this once paths have _safe_str.
-        if isinstance(thing, Path):
-            thing = path_str(thing)
         thing = safe_str.safe_str(thing)
 
         if isinstance(thing, basestring):
-            out.write(cls.escape_str(thing, syntax))
+            cls._write_literal(out, cls.escape_str(thing, syntax))
         elif isinstance(thing, safe_str.escaped_str):
-            out.write(thing.string)
+            cls._write_literal(out, thing.string)
+        elif isinstance(thing, real_path):
+            if thing.base != 'builddir':
+                cls._write(out, _path_vars[thing.base], syntax)
+                cls._write_literal(out, os.sep)
+            cls._write(out, thing.path, syntax)
         elif isinstance(thing, safe_str.jbos):
             for j in thing.bits:
                 cls._write(out, j, syntax)
@@ -197,17 +203,6 @@ class NinjaWriter(object):
             self._write_each(out, self._defaults, syntax='input')
             self._write_literal(out, '\n')
 
-_path_vars = {
-    'srcdir': NinjaVariable('srcdir'),
-    'prefix': NinjaVariable('prefix'),
-}
-def path_str(path, form='local_path'):
-    source, pathname = getattr(path, form)()
-    if source:
-        return _path_vars[source] + os.sep + pathname
-    else:
-        return pathname
-
 def write(env, build_inputs):
     writer = NinjaWriter()
     writer.variable(_path_vars['srcdir'], env.srcdir)
@@ -242,7 +237,7 @@ def all_rule(default_targets, writer):
     writer.default(['all'])
     writer.build(
         output='all', rule='phony',
-        inputs=(path_str(i.path) for i in default_targets)
+        inputs=[i.path for i in default_targets]
     )
 
 def chain_commands(commands, delim=safe_str.escaped_str('&&')):
@@ -277,13 +272,13 @@ def install_rule(install_targets, writer, env):
         writer.rule(name='command', command=var('cmd'))
 
     def install_line(file):
-        src = path_str(file.path)
-        dst = path_str(file.path, 'install_path')
+        src = file.path.local_path()
+        dst = file.path.install_path()
         return [ install_cmd(file.install_kind), '-D', src, dst ]
 
     def mkdir_line(dir):
-        src = path_str(dir.path) + os.sep + e('*')
-        dst = path_str(dir.path.parent(), 'install_path')
+        src = dir.path.local_path() + os.sep + e('*')
+        dst = dir.path.parent().install_path()
         return ['mkdir', '-p', dst, e('&&'), 'cp', '-r', src, dst]
 
     commands = chain((install_line(i) for i in install_targets.files),
@@ -301,7 +296,7 @@ def regenerate_rule(writer, env):
     )
     writer.build(
         output='build.ninja', rule='regenerate',
-        implicit=[path_str(Path('build.bfg', Path.srcdir, Path.basedir))]
+        implicit=[Path('build.bfg', Path.srcdir, Path.basedir)]
     )
 
 @rule_handler('Compile')
@@ -320,7 +315,7 @@ def emit_object_file(rule, build_inputs, writer):
     if rule.in_shared_library:
         cflags_value.extend(compiler.library_args)
     cflags_value.extend(chain.from_iterable(
-        compiler.include_dir(path_str(i.path)) for i in rule.include
+        compiler.include_dir(i) for i in rule.include
     ))
     cflags_value.extend(rule.options)
     if cflags_value:
@@ -333,10 +328,10 @@ def emit_object_file(rule, build_inputs, writer):
         ), depfile=var('out') + '.d')
 
     writer.build(
-        output=path_str(rule.target.path),
+        output=rule.target.path,
         rule=compiler.name,
-        inputs=[path_str(rule.file.path)],
-        implicit=(path_str(i.path) for i in rule.extra_deps),
+        inputs=[rule.file.path],
+        implicit=[i.path for i in rule.extra_deps],
         variables=variables
     )
 
@@ -350,7 +345,6 @@ def emit_link(rule, build_inputs, writer):
     # TODO: Handle rules with multiple targets (e.g. shared libs on Windows).
     path = rule.target.path
     target_dir = path.parent()
-    target_dirname = path_str(target_dir)
 
     variables = {}
     command_kwargs = {}
@@ -359,14 +353,14 @@ def emit_link(rule, build_inputs, writer):
 
     # TODO: Create a more flexible way of determining when to use these options?
     if linker.mode != 'static_library':
-        lib_dirs = set(os.path.dirname(path_str(i.path)) for i in lib_deps)
         ldflags_value.extend(rule.options)
-        ldflags_value.extend(chain.from_iterable(
-            linker.lib_dir(i) for i in lib_dirs
-        ))
+        ldflags_value.extend(linker.lib_dirs(lib_deps))
+
+        target_dirname = target_dir.local_path().path
         ldflags_value.extend(linker.rpath(
             # TODO: Provide a relpath function for Path objects?
-            os.path.relpath(i, target_dirname) for i in lib_dirs
+            os.path.relpath(i.path.parent().local_path().path, target_dirname)
+            for i in lib_deps
         ))
 
         global_ldlibs, ldlibs = flags_vars(
@@ -375,7 +369,7 @@ def emit_link(rule, build_inputs, writer):
         command_kwargs['libs'] = ldlibs
         if rule.libs:
             variables[ldlibs] = [global_ldlibs] + list(chain.from_iterable(
-                linker.link_lib(i.lib_name) for i in rule.libs
+                linker.link_lib(i) for i in rule.libs
             ))
 
     if ldflags_value:
@@ -388,19 +382,19 @@ def emit_link(rule, build_inputs, writer):
         ))
 
     writer.build(
-        output=path_str(path),
+        output=path,
         rule=linker.name,
-        inputs=(path_str(i.path) for i in rule.files),
-        implicit=(path_str(i.path) for i in chain(lib_deps, rule.extra_deps)),
+        inputs=[i.path for i in rule.files],
+        implicit=[i.path for i in chain(lib_deps, rule.extra_deps)],
         variables=variables
     )
 
 @rule_handler('Alias')
 def emit_alias(rule, build_inputs, writer):
     writer.build(
-        output=path_str(rule.target.path),
+        output=rule.target.path,
         rule='phony',
-        inputs=[path_str(i.path) for i in rule.extra_deps]
+        inputs=[i.path for i in rule.extra_deps]
     )
 
 @rule_handler('Command')
@@ -410,8 +404,8 @@ def emit_command(rule, build_inputs, writer):
 
     e = safe_str.escaped_str
     writer.build(
-        output=path_str(rule.target.path),
+        output=rule.target.path,
         rule='command',
-        inputs=(path_str(i.path) for i in rule.extra_deps),
+        inputs=[i.path for i in rule.extra_deps],
         variables={'cmd': chain_commands(rule.cmd)}
     )

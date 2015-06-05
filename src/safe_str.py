@@ -8,7 +8,10 @@ def safe_str(s):
     else:
         raise NotImplementedError()
 
-class escaped_str(object):
+class safe_string(object):
+    pass
+
+class escaped_str(safe_string):
     def __init__(self, string):
         if not isinstance(string, basestring):
             raise TypeError('expected a string')
@@ -34,13 +37,13 @@ class escaped_str(object):
     def __radd__(self, lhs):
         return jbos(lhs, self)
 
-class jbos(object): # Just a Bunch of Strings
+class jbos(safe_string): # Just a Bunch of Strings
     def __init__(self, *args):
         self.bits = []
         for i in args:
             if isinstance(i, jbos):
                 self.bits.extend(i.bits)
-            elif isinstance(i, basestring) or isinstance(i, escaped_str):
+            elif isinstance(i, basestring) or isinstance(i, safe_string):
                 self.bits.append(i)
             else:
                 raise TypeError()
@@ -49,7 +52,7 @@ class jbos(object): # Just a Bunch of Strings
         raise NotImplementedError()
 
     def __repr__(self):
-        return 'safe_str({})'.format(', '.join(repr(i) for i in self.bits))
+        return 'jbos({})'.format(', '.join(repr(i) for i in self.bits))
 
     def _safe_str(self):
         return self
