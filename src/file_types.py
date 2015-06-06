@@ -37,11 +37,13 @@ class StaticLibrary(Library):
 class SharedLibrary(Library):
     pass
 
-# Used for Windows DLL files, which aren't linked to directly.
+# Used for Windows DLL files, which aren't linked to directly. Import libraries
+# are handled via SharedLibrary above.
 class DynamicLibrary(Library):
     pass
 
 class ExternalLibrary(Library):
     def __init__(self, name):
-        # TODO: Handle import libraries specifically?
+        # TODO: Keep track of the external lib's actual location on the
+        # filesystem?
         Library.__init__(self, name, name)
