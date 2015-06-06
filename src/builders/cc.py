@@ -11,17 +11,21 @@ class CcCompilerBase(object):
         self.name = name
         self.command_var = name
 
-    def command(self, cmd, input, output, dep=None, args=None):
+    def command(self, cmd, input, output, deps=None, args=None):
         result = [cmd]
         result.extend(utils.iterate(args))
         result.extend(['-c', input])
-        if dep:
-            result.extend(['-MMD', '-MF', dep])
+        if deps:
+            result.extend(['-MMD', '-MF', deps])
         result.extend(['-o', output])
         return result
 
     def output_file(self, name, lang):
         return ObjectFile(name + '.o', Path.builddir, lang)
+
+    @property
+    def deps_flavor(self):
+        return 'gcc'
 
     @property
     def library_args(self):

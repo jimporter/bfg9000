@@ -440,16 +440,25 @@ def emit_object_file(rule, build_inputs, writer):
         variables[cflags] = [global_cflags] + cflags_value
 
     if not writer.has_variable(recipename):
-        depfile = var('@') + '.d'
+        command_kwargs = {}
+        recipe_extra = []
+        if compiler.deps_flavor == 'gcc':
+            command_kwargs['deps'] = deps = var('@') + '.d'
+            # Munge the depfile so that it works a little better...
+            recipe_extra = [
+                r"@sed -e 's/.*://' -e 's/\\$//' < " + deps + ' | fmt -1 | \\',
+                "  sed -e 's/^ *//' -e 's/$/:/' >> " + deps
+            ]
+            writer.include(path.addext('.d'), optional=True)
+        elif compiler.deps_flavor == 'msvc':
+            command_kwargs['deps'] = True
+
         writer.variable(recipename, [
             compiler.command(
                 cmd=cmd_var(compiler, writer), input=var('<'), output=var('@'),
-                dep=depfile, args=cflags
+                args=cflags, **command_kwargs
             ),
-            # Munge the depfile so that it works a little better...
-            r"@sed -e 's/.*://' -e 's/\\$//' < " + depfile + ' | fmt -1 | \\',
-            "  sed -e 's/^ *//' -e 's/$/:/' >> " + depfile
-        ], flavor='define')
+        ] + recipe_extra, flavor='define')
 
     writer.rule(
         target=path,
@@ -458,7 +467,6 @@ def emit_object_file(rule, build_inputs, writer):
         recipe=recipename,
         variables=variables
     )
-    writer.include(path.addext('.d'), optional=True)
 
 @rule_handler('Link')
 def emit_link(rule, build_inputs, writer):

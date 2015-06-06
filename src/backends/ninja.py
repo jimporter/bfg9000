@@ -17,7 +17,7 @@ def rule_handler(rule_name):
         return fn
     return decorator
 
-NinjaRule = namedtuple('NinjaRule', ['command', 'depfile', 'generator'])
+NinjaRule = namedtuple('NinjaRule', ['command', 'depfile', 'deps', 'generator'])
 NinjaBuild = namedtuple('NinjaBuild', ['outputs', 'rule', 'inputs', 'implicit',
                                        'order_only', 'variables'])
 
@@ -77,12 +77,12 @@ class NinjaWriter(object):
             name = NinjaVariable(name)
         return name in self._variables
 
-    def rule(self, name, command, depfile=None, generator=False):
+    def rule(self, name, command, depfile=None, deps=None, generator=False):
         if re.search('\W', name):
             raise ValueError('rule name contains invalid characters')
         if self.has_rule(name):
             raise ValueError('rule "{}" already exists'.format(name))
-        self._rules[name] = NinjaRule(command, depfile, generator)
+        self._rules[name] = NinjaRule(command, depfile, deps, generator)
 
     def has_rule(self, name):
         return name in self._rules
@@ -168,6 +168,8 @@ class NinjaWriter(object):
         self._write_variable(out, var('command'), rule.command, 1, 'shell_word')
         if rule.depfile:
             self._write_variable(out, var('depfile'), rule.depfile, 1)
+        if rule.deps:
+            self._write_variable(out, var('deps'), rule.deps, 1)
         if rule.generator:
             self._write_variable(out, var('generator'), '1', 1)
 
@@ -334,10 +336,20 @@ def emit_object_file(rule, build_inputs, writer):
         variables[cflags] = [global_cflags] + cflags_value
 
     if not writer.has_rule(compiler.name):
+        command_kwargs = {}
+        depfile = None
+        deps = None
+        if compiler.deps_flavor == 'gcc':
+            deps = 'gcc'
+            command_kwargs['deps'] = depfile = var('out') + '.d'
+        elif compiler.deps_flavor == 'msvc':
+            deps = 'msvc'
+            command_kwargs['deps'] = True
+
         writer.rule(name=compiler.name, command=compiler.command(
             cmd=cmd_var(compiler, writer), input=var('in'), output=var('out'),
-            dep=var('out') + '.d', args=cflags
-        ), depfile=var('out') + '.d')
+            args=cflags, **command_kwargs
+        ), depfile=depfile, deps=deps)
 
     writer.build(
         output=rule.target.path,

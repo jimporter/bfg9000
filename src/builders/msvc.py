@@ -11,16 +11,21 @@ class MSVCCompiler(object):
         self.command_var = 'cxx'
         self.global_args = [] # TODO
 
-    def command(self, cmd, input, output, dep=None, args=None):
+    def command(self, cmd, input, output, deps=None, args=None):
         result = [cmd]
         result.extend(utils.iterate(args))
+        if deps:
+            result.append('/showIncludes')
         result.extend(['/c', input])
-        # TODO: add depfile stuff
         result.append('/Fo' + output)
         return result
 
     def output_file(self, name, lang):
         return ObjectFile(name + '.obj', Path.builddir, lang)
+
+    @property
+    def deps_flavor(self):
+        return 'msvc'
 
     @property
     def library_args(self):
