@@ -9,10 +9,13 @@ def _generate_none():
 def _generate_one(x):
     yield x
 
+def isiterable(thing):
+    return isinstance(thing, Iterable) and not isinstance(thing, basestring)
+
 def iterate(thing):
     if thing is None:
         return _generate_none()
-    elif isinstance(thing, Iterable) and not isinstance(thing, basestring):
+    elif isiterable(thing):
         return iter(thing)
     else:
         return _generate_one(thing)
@@ -35,7 +38,7 @@ def tween(iterable, delim, prefix=None, suffix=None, flag=True):
 
 def flatten(iterable):
     for i in iterable:
-        if isinstance(i, Iterable) and not isinstance(i, basestring):
+        if isiterable(i):
             for j in i:
                 yield j
         else:
@@ -47,7 +50,7 @@ def listify(thing):
 def shell_listify(thing):
     if thing is None:
         return []
-    elif isinstance(thing, Iterable) and not isinstance(thing, basestring):
+    elif isiterable(thing):
         return list(thing)
     else:
         return shell.split(thing)

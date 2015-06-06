@@ -1,5 +1,3 @@
-from collections import Iterable
-
 def safe_str(s):
     if isinstance(s, basestring):
         return s

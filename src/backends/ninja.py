@@ -1,7 +1,7 @@
 import os
 import re
 import sys
-from collections import Iterable, namedtuple, OrderedDict
+from collections import namedtuple, OrderedDict
 from itertools import chain
 
 import path

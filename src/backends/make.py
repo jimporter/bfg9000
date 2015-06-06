@@ -2,7 +2,7 @@ import operator
 import os
 import re
 from cStringIO import StringIO
-from collections import Iterable, namedtuple, OrderedDict
+from collections import namedtuple, OrderedDict
 from itertools import chain
 
 import path
