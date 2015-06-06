@@ -1,6 +1,7 @@
 import os
 import re
 import sys
+from cStringIO import StringIO
 from collections import namedtuple, OrderedDict
 from itertools import chain
 
@@ -120,7 +121,9 @@ class NinjaWriter(object):
             return re.sub(r'([:$\n ])', r'$\1', string)
         elif syntax == 'input' or syntax == 'variable':
             return re.sub(r'([$\n ])', r'$\1', string)
-        elif syntax == 'shell':
+        elif syntax == 'shell_line':
+            return string.replace('$', '$$')
+        elif syntax == 'shell_word':
             return shell.quote(string).replace('$', '$$')
         else:
             raise RuntimeError('unknown syntax "{}"'.format(syntax))
@@ -162,7 +165,7 @@ class NinjaWriter(object):
     def _write_rule(self, out, name, rule):
         self._write_literal(out, 'rule ' + name + '\n')
 
-        self._write_variable(out, var('command'), rule.command, 1, 'shell')
+        self._write_variable(out, var('command'), rule.command, 1, 'shell_word')
         if rule.depfile:
             self._write_variable(out, var('depfile'), rule.depfile, 1)
         if rule.generator:
@@ -180,7 +183,7 @@ class NinjaWriter(object):
 
         if build.variables:
             for k, v in build.variables.iteritems():
-                self._write_variable(out, k, v, 1, 'shell')
+                self._write_variable(out, k, v, 1, 'shell_word')
 
     def write(self, out):
         for name, (value, syntax) in self._variables.iteritems():
@@ -222,11 +225,11 @@ def cmd_var(compiler, writer):
 def flags_vars(name, value, writer):
     global_flags = NinjaVariable('global_{}'.format(name))
     if not writer.has_variable(global_flags):
-        writer.variable(global_flags, value, syntax='shell')
+        writer.variable(global_flags, value, syntax='shell_word')
 
     flags = NinjaVariable('{}'.format(name))
     if not writer.has_variable(flags):
-        writer.variable(flags, global_flags, syntax='shell')
+        writer.variable(flags, global_flags, syntax='shell_word')
 
     return global_flags, flags
 
@@ -238,32 +241,40 @@ def all_rule(default_targets, writer):
         inputs=[i.path for i in default_targets]
     )
 
-def chain_commands(commands, delim=safe_str.escaped_str('&&')):
-    return sum(utils.tween(commands, [delim], flag=False), [])
+def chain_commands(commands, delim=' && '):
+    out = StringIO()
+    for tween, line in utils.tween(commands, delim):
+        if tween:
+            NinjaWriter._write_literal(out, line)
+        else:
+            if utils.isiterable(line):
+                NinjaWriter._write_each(out, line, 'shell_word')
+            else:
+                NinjaWriter._write(out, line, 'shell_line')
+    return safe_str.escaped_str(out.getvalue())
 
 # TODO: Write a better `install` program to simplify this
 def install_rule(install_targets, writer, env):
     if not install_targets:
         return
 
-    e = safe_str.escaped_str
     writer.variable(_path_vars['prefix'], env.install_prefix)
 
     def install_cmd(kind):
         install = NinjaVariable('install')
         if not writer.has_variable(install):
-            writer.variable(install, 'install', syntax='shell')
+            writer.variable(install, 'install', syntax='shell_word')
 
         if kind == 'program':
             install_program = NinjaVariable('install_program')
             if not writer.has_variable(install_program):
-                writer.variable(install_program, install, syntax='shell')
+                writer.variable(install_program, install)
             return install_program
         else:
             install_data = NinjaVariable('install_data')
             if not writer.has_variable(install_data):
                 writer.variable(install_data, [install, '-m', '644'],
-                                syntax='shell')
+                                syntax='shell_word')
             return install_data
 
     if not writer.has_rule('command'):
@@ -275,9 +286,9 @@ def install_rule(install_targets, writer, env):
         return [ install_cmd(file.install_kind), '-D', src, dst ]
 
     def mkdir_line(dir):
-        src = dir.path.local_path() + os.sep + e('*')
+        src = dir.path.append('*').local_path()
         dst = dir.path.parent().install_path()
-        return ['mkdir', '-p', dst, e('&&'), 'cp', '-r', src, dst]
+        return 'mkdir -p ' + dst + ' && cp -r ' + src + ' ' + dst
 
     commands = chain((install_line(i) for i in install_targets.files),
                      (mkdir_line(i) for i in install_targets.directories))

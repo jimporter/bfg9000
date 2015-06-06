@@ -197,7 +197,9 @@ class MakeWriter(object):
             return re.sub(r'(\\*)([#?*\[\]~\s%])', repl, result)
         elif syntax == 'dependency':
             return re.sub(r'(\\*)([#?*\[\]~\s|%])', repl, result)
-        elif syntax == 'shell':
+        elif syntax == 'shell_line':
+            return result
+        elif syntax == 'shell_word':
             return shell.quote(result)
         elif syntax == 'function':
             return shell.quote(re.sub(',', '$,', result))
@@ -233,19 +235,26 @@ class MakeWriter(object):
         for tween, i in utils.tween(things, delim, prefix, suffix):
             cls._write_literal(out, i) if tween else cls._write(out, i, syntax)
 
+    @classmethod
+    def _write_shell(cls, out, thing):
+        if utils.isiterable(thing):
+            cls._write_each(out, thing, 'shell_word')
+        else:
+            cls._write(out, thing, 'shell_line')
+
     def _write_variable(self, out, name, value, flavor, target=None):
         operator = ' := ' if flavor == 'simple' else ' = '
         if target:
             self._write(out, target, syntax='target')
             self._write_literal(out, ': ')
         self._write_literal(out, name.name + operator)
-        self._write_each(out, utils.iterate(value), syntax='shell')
+        self._write_shell(out, value)
         self._write_literal(out, '\n')
 
     def _write_define(self, out, name, value):
         self._write_literal(out, 'define ' + name.name + '\n')
-        for i in value:
-            self._write_each(out, i, syntax='shell')
+        for line in value:
+            self._write_shell(out, line)
             self._write_literal(out, '\n')
         self._write_literal(out, 'endef\n\n')
 
@@ -270,11 +279,11 @@ class MakeWriter(object):
         if (isinstance(rule.recipe, MakeVariable) or
             isinstance(rule.recipe, MakeFunc)):
             self._write_literal(out, ' ; ')
-            self._write(out, rule.recipe, syntax='shell')
+            self._write(out, rule.recipe, syntax='shell_line')
         elif rule.recipe is not None:
             for cmd in rule.recipe:
                 self._write_literal(out, '\n\t')
-                self._write_each(out, cmd, syntax='shell')
+                self._write_shell(out, cmd)
         self._write_literal(out, '\n\n')
 
     def write(self, out):
@@ -370,13 +379,12 @@ def install_rule(install_targets, writer, env):
     def install_line(file):
         src = file.path.local_path()
         dst = file.path.install_path()
-        return [ install_cmd(file.install_kind), '-D', src, dst ]
+        return [install_cmd(file.install_kind), '-D', src, dst]
 
     def mkdir_line(dir):
-        e = safe_str.escaped_str
-        src = dir.path.local_path() + os.sep + e('*')
+        src = dir.path.append('*').local_path()
         dst = dir.path.parent().install_path()
-        return ['mkdir', '-p', dst, e('&&'), 'cp', '-r', src, dst]
+        return 'mkdir -p ' + dst + ' && cp -r ' + src + ' ' + dst
 
     recipe = ([install_line(i) for i in install_targets.files] +
               [mkdir_line(i) for i in install_targets.directories])
@@ -433,16 +441,14 @@ def emit_object_file(rule, build_inputs, writer):
 
     if not writer.has_variable(recipename):
         depfile = var('@') + '.d'
-        e = safe_str.escaped_str
         writer.variable(recipename, [
             compiler.command(
                 cmd=cmd_var(compiler, writer), input=var('<'), output=var('@'),
                 dep=depfile, args=cflags
             ),
             # Munge the depfile so that it works a little better...
-            ['@sed', '-e', 's/.*://', '-e', r's/\\$//', e('<'), depfile, e('|'),
-             'fmt', '-1', e('| \\')],
-            [e(' '), 'sed', '-e', 's/^ *//', '-e', 's/$/:/', e('>>'), depfile]
+            r"@sed -e 's/.*://' -e 's/\\$//' < " + depfile + ' | fmt -1 | \\',
+            "  sed -e 's/^ *//' -e 's/$/:/' >> " + depfile
         ], flavor='define')
 
     writer.rule(
