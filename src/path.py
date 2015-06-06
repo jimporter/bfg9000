@@ -56,8 +56,10 @@ class Path(object):
                     self.install_base)
 
     def addext(self, ext):
-        # TODO: Is there a better way to do this?
         return Path(self.path + ext, self.source, self.install_base)
+
+    def basename(self):
+        return os.path.basename(self.path)
 
     def local_path(self):
         if self.source == Path.srcdir:

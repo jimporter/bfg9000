@@ -25,7 +25,7 @@ class MSVCCompiler(object):
         return []
 
     def include_dir(self, directory):
-        return ['/I' + directory]
+        return ['/I' + directory.path.local_path()]
 
 class MSVCLinker(object):
     def __init__(self, platform, mode):
@@ -67,12 +67,12 @@ class MSVCLinker(object):
         # TODO: Handle static libs (does this need to use a different command?)
         return ['/DLL'] if self.mode == 'shared_library' else []
 
-    def lib_dir(self, directory):
-        return ['/LIBPATH:' + directory]
+    def lib_dirs(self, libraries):
+        dirs = set(i.path.parent().local_path() for i in libraries)
+        return ['/LIBPATH:' + i for i in dirs]
 
     def link_lib(self, library):
-        # TODO: Emit the actual filename for the library
-        return [library]
+        return [library.path.basename()]
 
     def rpath(self, paths):
         return []
