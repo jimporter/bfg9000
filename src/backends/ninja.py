@@ -430,5 +430,5 @@ def emit_command(rule, build_inputs, writer):
         output=rule.target.path,
         rule='command',
         inputs=[i.path for i in rule.extra_deps],
-        variables={'cmd': chain_commands(rule.cmd)}
+        variables={'cmd': chain_commands(rule.cmds)}
     )

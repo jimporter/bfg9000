@@ -1,8 +1,8 @@
 # -*- python -*-
 
-touch_1 = command('touch1', cmd=[['touch', '1']])
-touch_2 = command('touch2', cmd=[['touch', '2']])
-touch_3 = command('touch3', cmd=[['touch', '3']], extra_deps=touch_2)
+touch_1 = command('touch1', cmd=['touch', '1'])
+touch_2 = command('touch2', cmd=['touch', '2'])
+touch_3 = command('touch3', cmd=['touch', '3'], extra_deps=touch_2)
 
 obj = object_file(file='program.cpp', extra_deps=touch_1)
 exe = executable('program', obj, extra_deps=touch_3)

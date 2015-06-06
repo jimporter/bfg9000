@@ -33,8 +33,8 @@ class Alias(build_inputs.Edge):
     pass
 
 class Command(build_inputs.Edge):
-    def __init__(self, target, cmd, extra_deps):
-        self.cmd = cmd
+    def __init__(self, target, cmds, extra_deps):
+        self.cmds = cmds
         build_inputs.Edge.__init__(self, target, extra_deps)
 
 #####
@@ -115,10 +115,14 @@ def alias(build, env, name, deps):
     return target
 
 @builtin
-def command(build, env, name, cmd, extra_deps=None):
-    # TODO: Support command passed as a string, list, or list of lists.
+def command(build, env, name, cmd=None, cmds=None, extra_deps=None):
+    if (cmd is None) == (cmds is None):
+        raise ValueError('exactly one of "cmd" or "cmds" must be specified')
+    elif cmds is None:
+        cmds = [cmd]
+
     target = build_inputs.Phony(name)
-    build.add_edge(Command(target, cmd, extra_deps))
+    build.add_edge(Command(target, cmds, extra_deps))
     return target
 
 #####

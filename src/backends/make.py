@@ -540,6 +540,6 @@ def emit_command(rule, build_inputs, writer):
     writer.rule(
         target=rule.target.path,
         deps=[i.path for i in rule.extra_deps],
-        recipe=rule.cmd,
+        recipe=rule.cmds,
         phony=True
     )
