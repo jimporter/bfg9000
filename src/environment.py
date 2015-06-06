@@ -17,30 +17,31 @@ class Environment(object):
 
         # TODO: Come up with a more flexible way to initialize the compilers and
         # linkers for each language.
-        if self.platform.name == 'Windows':
+        if self.platform.name == 'windows':
             compiler = msvc.MSVCCompiler(self.platform)
-            exelinker = msvc.MSVCLinker(self.platform, 'executable')
-            liblinker = msvc.MSVCLinker(self.platform, 'static_library')
-            dlllinker = msvc.MSVCLinker(self.platform, 'shared_library')
+            exe_linker = msvc.MSVCLinker(self.platform, 'executable')
+            lib_linker = msvc.MSVCStaticLinker(self.platform)
+            dll_linker = msvc.MSVCLinker(self.platform, 'shared_library')
             self._compilers = {
                 'c'  : compiler,
                 'c++': compiler,
             }
             self._linkers = {
                 'executable': {
-                    'c'  : exelinker,
-                    'c++': exelinker,
+                    'c'  : exe_linker,
+                    'c++': exe_linker,
                 },
                 'static_library': {
-                    'c'  : liblinker,
-                    'c++': liblinker,
+                    'c'  : lib_linker,
+                    'c++': lib_linker,
                 },
                 'shared_library': {
-                    'c'  : dlllinker,
-                    'c++': dlllinker,
+                    'c'  : dll_linker,
+                    'c++': dll_linker,
                 },
             }
         else:
+            ar_linker = ar.ArLinker(self.platform)
             self._compilers = {
                 'c'  : cc.CcCompiler(self.platform),
                 'c++': cc.CxxCompiler(self.platform),
@@ -51,8 +52,8 @@ class Environment(object):
                     'c++': cc.CxxLinker(self.platform, 'executable'),
                 },
                 'static_library': {
-                    'c'  : ar.ArLinker(self.platform),
-                    'c++': ar.ArLinker(self.platform),
+                    'c'  : ar_linker,
+                    'c++': ar_linker,
                 },
                 'shared_library': {
                     'c'  : cc.CcLinker(self.platform, 'shared_library'),

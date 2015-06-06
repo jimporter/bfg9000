@@ -85,7 +85,7 @@ class CcLinkerBase(object):
         rpath = ':'.join(os.path.join('$ORIGIN', i) for i in paths)
         if not rpath:
             return []
-        return ["-Wl,-rpath={}".format(rpath)]
+        return ['-Wl,-rpath={}'.format(rpath)]
 
 class CcCompiler(CcCompilerBase):
     def __init__(self, platform):

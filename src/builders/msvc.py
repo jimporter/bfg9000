@@ -1,3 +1,5 @@
+import os
+
 import utils
 from file_types import *
 
@@ -18,7 +20,7 @@ class MSVCCompiler(object):
         return result
 
     def output_file(self, name, lang):
-        return file_types.ObjectFile(name + '.obj', Path.builddir, lang)
+        return ObjectFile(name + '.obj', Path.builddir, lang)
 
     @property
     def library_args(self):
@@ -52,19 +54,17 @@ class MSVCLinker(object):
                 name + self.platform.executable_ext, Path.builddir
             )
         elif self.mode == 'shared_library':
+            libname = os.path.basename(name)
             ext = self.platform.shared_library_ext
             return (
-                SharedLibrary(tail, name + '.lib', Path.builddir),
-                DynamicLibrary(tail, name + ext, Path.builddir),
+                SharedLibrary(libname, name + '.lib', Path.builddir),
+                DynamicLibrary(libname, name + ext, Path.builddir),
             )
         else:
-            # TODO: Handle static libs (does this need to use a different
-            # command?)
             raise ValueError('unknown mode "{}"'.format(self.mode))
 
     @property
     def mode_args(self):
-        # TODO: Handle static libs (does this need to use a different command?)
         return ['/DLL'] if self.mode == 'shared_library' else []
 
     def lib_dirs(self, libraries):
@@ -75,4 +75,29 @@ class MSVCLinker(object):
         return [library.path.basename()]
 
     def rpath(self, paths):
+        return []
+
+class MSVCStaticLinker(object):
+    def __init__(self, platform):
+        self.platform = platform
+        self.mode = 'static_library'
+        self.command_name = 'lib'
+        self.name = 'lib'
+        self.command_var = 'lib'
+        self.link_var = 'lib'
+        self.global_args = [] # TODO
+
+    def command(self, cmd, input, output, args=None):
+        result = [cmd]
+        result.extend(utils.iterate(args))
+        result.extend(utils.iterate(input))
+        result.append('/OUT:' + output)
+        return result
+
+    def output_file(self, name):
+        libname = os.path.basename(name)
+        return StaticLibrary(libname, name + '.lib', Path.builddir)
+
+    @property
+    def mode_args(self):
         return []
