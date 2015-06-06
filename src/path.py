@@ -48,7 +48,7 @@ class Path(object):
 
     def parent(self):
         if not self.path:
-            raise RuntimeError('already at root')
+            raise ValueError('already at root')
         return Path(os.path.dirname(self.path), self.source, self.install_base)
 
     def append(self, path):

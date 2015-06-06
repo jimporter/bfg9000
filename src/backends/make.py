@@ -24,7 +24,7 @@ MakeRule = namedtuple('MakeRule', ['targets', 'deps', 'order_only', 'recipe',
 class Pattern(object):
     def __init__(self, path):
         if len(re.findall(r'([^\\]|^)(\\\\)*%', path)) != 1:
-            raise RuntimeError('exactly one % required')
+            raise ValueError('exactly one % required')
         self.path = path
 
     def use(self):
@@ -137,7 +137,7 @@ class MakeWriter(object):
         if not isinstance(name, MakeVariable):
             name = MakeVariable(name)
         if self.has_variable(name, target=target):
-            raise RuntimeError('variable "{}" already exists'.format(name))
+            raise ValueError('variable "{}" already exists'.format(name))
 
         if flavor == 'define':
             self._defines[name] = value
@@ -174,10 +174,10 @@ class MakeWriter(object):
 
         targets = utils.listify(target)
         if len(targets) == 0:
-            raise RuntimeError('must have at least one target')
+            raise ValueError('must have at least one target')
         for i in targets:
             if self.has_rule(i):
-                raise RuntimeError('rule for "{}" already exists'.format(i))
+                raise ValueError('rule for "{}" already exists'.format(i))
             self._targets.add(i)
         self._rules.append(MakeRule(
             targets, utils.listify(deps), utils.listify(order_only), recipe,
@@ -204,7 +204,7 @@ class MakeWriter(object):
         elif syntax == 'function':
             return shell.quote(re.sub(',', '$,', result))
         else:
-            raise RuntimeError('unknown syntax "{}"'.format(syntax))
+            raise ValueError('unknown syntax "{}"'.format(syntax))
 
     @classmethod
     def _write_literal(cls, out, string):

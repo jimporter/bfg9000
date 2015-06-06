@@ -68,7 +68,7 @@ class NinjaWriter(object):
         if not isinstance(name, NinjaVariable):
             name = NinjaVariable(name)
         if self.has_variable(name):
-            raise RuntimeError('variable "{}" already exists'.format(name))
+            raise ValueError('variable "{}" already exists'.format(name))
         self._variables[name] = (value, syntax)
         return name
 
@@ -79,9 +79,9 @@ class NinjaWriter(object):
 
     def rule(self, name, command, depfile=None, generator=False):
         if re.search('\W', name):
-            raise RuntimeError('rule name contains invalid characters')
+            raise ValueError('rule name contains invalid characters')
         if self.has_rule(name):
-            raise RuntimeError('rule "{}" already exists'.format(name))
+            raise ValueError('rule "{}" already exists'.format(name))
         self._rules[name] = NinjaRule(command, depfile, generator)
 
     def has_rule(self, name):
@@ -90,7 +90,7 @@ class NinjaWriter(object):
     def build(self, output, rule, inputs=None, implicit=None, order_only=None,
               variables=None):
         if rule != 'phony' and not self.has_rule(rule):
-            raise RuntimeError('unknown rule "{}"'.format(rule))
+            raise ValueError('unknown rule "{}"'.format(rule))
 
         real_variables = {}
         if variables:
@@ -102,7 +102,7 @@ class NinjaWriter(object):
         outputs = utils.listify(output)
         for i in outputs:
             if self.has_build(i):
-                raise RuntimeError('build for "{}" already exists'.format(i))
+                raise ValueError('build for "{}" already exists'.format(i))
             self._build_outputs.add(i)
         self._builds.append(NinjaBuild(
             outputs, rule, utils.listify(inputs), utils.listify(implicit),
@@ -126,7 +126,7 @@ class NinjaWriter(object):
         elif syntax == 'shell_word':
             return shell.quote(string).replace('$', '$$')
         else:
-            raise RuntimeError('unknown syntax "{}"'.format(syntax))
+            raise ValueError('unknown syntax "{}"'.format(syntax))
 
     @classmethod
     def _write_literal(cls, out, string):

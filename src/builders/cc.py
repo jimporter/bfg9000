@@ -68,7 +68,7 @@ class CcLinkerBase(object):
             else:
                 return SharedLibrary(tail, libpath(), Path.builddir)
         else:
-            raise RuntimeError('unknown mode "{}"'.format(self.mode))
+            raise ValueError('unknown mode "{}"'.format(self.mode))
 
     @property
     def mode_args(self):

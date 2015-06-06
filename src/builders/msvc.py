@@ -60,7 +60,7 @@ class MSVCLinker(object):
         else:
             # TODO: Handle static libs (does this need to use a different
             # command?)
-            raise RuntimeError('unknown mode "{}"'.format(self.mode))
+            raise ValueError('unknown mode "{}"'.format(self.mode))
 
     @property
     def mode_args(self):
