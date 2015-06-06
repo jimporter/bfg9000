@@ -44,7 +44,9 @@ def flatten(iterable):
         else:
             yield i
 
-def listify(thing):
+def listify(thing, always_copy=False):
+    if not always_copy and type(thing) == list:
+        return thing
     return list(iterate(thing))
 
 def shell_listify(thing):
