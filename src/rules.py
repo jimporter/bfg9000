@@ -20,7 +20,7 @@ class Compile(build_inputs.Edge):
 class Link(build_inputs.Edge):
     def __init__(self, target, project_name, builder, files, libs, options,
                  extra_deps):
-        # This is just for MSBuild. TODO: Remove this?
+        # This is just for MSBuild. XXX: Remove this?
         self.project_name = project_name
 
         self.builder = builder

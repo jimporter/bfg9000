@@ -444,7 +444,9 @@ def emit_object_file(rule, build_inputs, writer):
         recipe_extra = []
         if compiler.deps_flavor == 'gcc':
             command_kwargs['deps'] = deps = var('@') + '.d'
-            # Munge the depfile so that it works a little better...
+            # Munge the depfile so that it works a little better. See
+            # <http://scottmcpeak.com/autodepend/autodepend.html> for a
+            # discussion of how this works.
             recipe_extra = [
                 r"@sed -e 's/.*://' -e 's/\\$//' < " + deps + ' | fmt -1 | \\',
                 "  sed -e 's/^ *//' -e 's/$/:/' >> " + deps
@@ -485,7 +487,6 @@ def emit_link(rule, build_inputs, writer):
     ldflags_value = list(linker.mode_args)
     lib_deps = [i for i in rule.libs if i.creator]
 
-    # TODO: Create a more flexible way of determining when to use these options?
     if linker.mode != 'static_library':
         ldflags_value.extend(rule.options)
         ldflags_value.extend(linker.lib_dirs(lib_deps))

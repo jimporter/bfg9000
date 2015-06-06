@@ -375,7 +375,6 @@ def emit_link(rule, build_inputs, writer):
     ldflags_value = list(linker.mode_args)
     lib_deps = [i for i in rule.libs if i.creator]
 
-    # TODO: Create a more flexible way of determining when to use these options?
     if linker.mode != 'static_library':
         ldflags_value.extend(rule.options)
         ldflags_value.extend(linker.lib_dirs(lib_deps))
