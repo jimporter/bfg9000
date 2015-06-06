@@ -7,7 +7,7 @@ from lxml import etree
 from lxml.builder import E
 
 import utils
-from builtin_rules import *
+from rules import *
 
 def makedirs(path, mode=0o777, exist_ok=False):
     try:

@@ -8,7 +8,7 @@ import pickle
 import sys
 
 import builtins
-import builtin_rules
+import rules
 import utils
 from build_inputs import BuildInputs
 from environment import Environment
