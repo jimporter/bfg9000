@@ -20,19 +20,18 @@ class TestInstall(IntegrationTest):
 
     def test_install(self):
         subprocess.check_call([self.backend, 'install'])
-        cleandir(self.builddir)
 
         self.assertTrue(os.path.exists(os.path.join(
             self.distdir, 'include', 'library.hpp'
         )))
-        # TODO: Support other platform naming schemes
         self.assertTrue(os.path.exists(os.path.join(
-            self.distdir, 'bin', 'program'
+            self.distdir, executable('program')
         )))
         self.assertTrue(os.path.exists(os.path.join(
-            self.distdir, 'lib', 'liblibrary.so'
+            self.distdir, shared_library('library')
         )))
 
+        cleandir(self.builddir)
         self.assertOutput(
             [os.path.join(self.distdir, executable('program'))],
             'hello, library!\n'

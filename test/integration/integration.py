@@ -60,7 +60,18 @@ class IntegrationTest(unittest.TestCase):
         )
 
 def executable(name):
+    return os.path.join('bin', name)
+
+def shared_library(name):
     if platform.system() == 'Linux':
-        return os.path.join('bin', name)
+        head, tail = os.path.split(name)
+        return os.path.join('lib', head, 'lib' + tail + '.so')
     else:
-        return name
+        return os.path.join('lib', name + '.dll')
+
+def static_library(name):
+    if platform.system() == 'Linux':
+        head, tail = os.path.split(name)
+        return os.path.join('lib', head, 'lib' + tail + '.a')
+    else:
+        return os.path.join('lib', name + '.lib')

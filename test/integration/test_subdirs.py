@@ -23,19 +23,18 @@ class TestSubdirs(IntegrationTest):
 
     def test_install(self):
         self.build('install')
-        cleandir(self.builddir)
 
         self.assertTrue(os.path.exists(os.path.join(
             self.distdir, 'include', 'library.hpp'
         )))
-        # TODO: Support other platform naming schemes
         self.assertTrue(os.path.exists(os.path.join(
-            self.distdir, 'bin', 'sub', 'program'
+            self.distdir, executable(os.path.join('sub', 'program'))
         )))
         self.assertTrue(os.path.exists(os.path.join(
-            self.distdir, 'lib', 'sub', 'liblibrary.so'
+            self.distdir, shared_library(os.path.join('sub', 'library'))
         )))
 
+        cleandir(self.builddir)
         self.assertOutput([os.path.join(self.distdir, executable(
             os.path.join('sub', 'program')
         ))], 'hello, library!\n')
@@ -45,19 +44,18 @@ class TestSubdirs(IntegrationTest):
         os.mkdir(os.path.join(self.distdir, 'bin'))
         os.mkdir(os.path.join(self.distdir, 'lib'))
         self.build('install')
-        cleandir(self.builddir)
 
         self.assertTrue(os.path.exists(os.path.join(
             self.distdir, 'include', 'library.hpp'
         )))
-        # TODO: Support other platform naming schemes
         self.assertTrue(os.path.exists(os.path.join(
-            self.distdir, 'bin', 'sub', 'program'
+            self.distdir, executable(os.path.join('sub', 'program'))
         )))
         self.assertTrue(os.path.exists(os.path.join(
-            self.distdir, 'lib', 'sub', 'liblibrary.so'
+            self.distdir, shared_library(os.path.join('sub', 'library'))
         )))
 
+        cleandir(self.builddir)
         self.assertOutput([os.path.join(self.distdir, executable(
             os.path.join('sub', 'program')
         ))], 'hello, library!\n')
