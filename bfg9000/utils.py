@@ -44,6 +44,12 @@ def flatten(iterable):
         else:
             yield i
 
+def first(thing):
+    if isiterable(thing):
+        return next(iter(thing))
+    else:
+        return thing
+
 def listify(thing, always_copy=False):
     if not always_copy and type(thing) == list:
         return thing

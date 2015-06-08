@@ -14,14 +14,15 @@ def platform_name():
     return name
 
 PlatformInfo = namedtuple('PlatformInfo', [
-    'name', 'executable_ext', 'shared_library_ext', 'has_import_library'
+    'name', 'executable_ext', 'shared_library_ext', 'has_import_library',
+    'has_rpath'
 ])
 
 def platform_info(name):
     # TODO: This should probably be made more flexible somehow...
     if name == 'windows' or name == 'cygwin':
-        return PlatformInfo(name, '.exe', '.dll', True)
+        return PlatformInfo(name, '.exe', '.dll', True, False)
     elif name == 'darwin':
-        return PlatformInfo(name, '', '.dylib', False)
+        return PlatformInfo(name, '', '.dylib', False, False)
     else: # Probably some POSIX system
-        return PlatformInfo(name, '', '.so', False)
+        return PlatformInfo(name, '', '.so', False, True)

@@ -478,20 +478,18 @@ def emit_link(rule, build_inputs, writer):
         linker.link_var + 'FLAGS', linker.global_args, writer
     )
 
-    # TODO: Handle rules with multiple targets (e.g. shared libs on Windows).
-    path = rule.target.path
-    target_dir = path.parent()
-
     variables = {}
     command_kwargs = {}
     ldflags_value = list(linker.mode_args)
     lib_deps = [i for i in rule.libs if i.creator]
 
+    path = utils.first(rule.target).path
+
     if linker.mode != 'static_library':
         ldflags_value.extend(rule.options)
         ldflags_value.extend(linker.lib_dirs(lib_deps))
 
-        target_dirname = target_dir.local_path().path
+        target_dirname = path.parent().local_path().path
         ldflags_value.extend(linker.rpath(
             # TODO: Provide a relpath function for Path objects?
             os.path.relpath(i.path.parent().local_path().path, target_dirname)
@@ -508,22 +506,34 @@ def emit_link(rule, build_inputs, writer):
                 linker.link_lib(i) for i in rule.libs
             ))
 
+    if linker.mode == 'shared_library' and isinstance(rule.target, tuple):
+        ldflags_value.extend(linker.import_lib(rule.target[1]))
+
     if ldflags_value:
         variables[ldflags] = [global_ldflags] + ldflags_value
 
     if not writer.has_variable(recipename):
         writer.variable(recipename, [
             linker.command(
-                cmd=cmd_var(linker, writer), input=var('1'), output=var('@'),
+                cmd=cmd_var(linker, writer), input=var('1'), output=var('2'),
                 args=ldflags, **command_kwargs
             )
         ], flavor='define')
 
+    recipe = MakeCall(recipename, (i.path for i in rule.files), path)
+    if isinstance(rule.target, tuple):
+        target = path.addext('.stamp')
+        writer.rule(target=[i.path for i in rule.target], deps=[target])
+        recipe = [recipe, ['@touch', var('@')]]
+    else:
+        target = path
+
+    dirs = set(i.path.parent() for i in utils.iterate(rule.target))
     writer.rule(
-        target=path,
+        target=target,
         deps=[i.path for i in chain(rule.files, lib_deps, rule.extra_deps)],
-        order_only=[target_dir.append(dir_sentinel)] if target_dir else None,
-        recipe=MakeCall(recipename, (i.path for i in rule.files)),
+        order_only=[i.append(dir_sentinel) for i in dirs if i],
+        recipe=recipe,
         variables=variables
     )
 

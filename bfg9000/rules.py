@@ -6,7 +6,7 @@ from .builtins import builtin
 from .file_types import *
 from .languages import ext2lang
 from .path import Path
-from .utils import iterate, listify, flatten, shell_listify, objectify
+from .utils import flatten, iterate, listify, objectify, shell_listify
 
 class Compile(build_inputs.Edge):
     def __init__(self, target, builder, file, include, options, extra_deps):
@@ -86,25 +86,26 @@ def _link(build, env, mode, project_name, name, files, libs=None,
 
     builder = env.linker((i.lang for i in objects), mode)
     target = builder.output_file(name)
-    build.add_edge(Link( target, project_name, builder, objects, libs,
-                         shell_listify(link_options), extra_deps ))
+    rule = Link(target, project_name, builder, objects, libs,
+                shell_listify(link_options), extra_deps)
+    build.add_edge(rule)
     build.fallback_default = target
-    return target
+    return target, rule
 
 @builtin
 def executable(build, env, name, *args, **kwargs):
-    return _link(build, env, 'executable', name, name, *args, **kwargs)
+    return _link(build, env, 'executable', name, name, *args, **kwargs)[0]
 
 @builtin
 def static_library(build, env, name, *args, **kwargs):
     return _link(build, env, 'static_library', 'lib' + name, name, *args,
-                 **kwargs)
+                 **kwargs)[0]
 
 @builtin
 def shared_library(build, env, name, *args, **kwargs):
-    target = _link(build, env, 'shared_library', 'lib' + name, name, *args,
-                   **kwargs)
-    for i in target.creator.files:
+    target, rule = _link(build, env, 'shared_library', 'lib' + name, name,
+                         *args, **kwargs)
+    for i in rule.files:
         i.creator.in_shared_library = True
     return target
 

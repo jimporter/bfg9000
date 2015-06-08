@@ -62,8 +62,8 @@ class MSVCLinker(object):
             libname = os.path.basename(name)
             ext = self.platform.shared_library_ext
             return (
-                SharedLibrary(libname, name + '.lib', Path.builddir),
                 DynamicLibrary(libname, name + ext, Path.builddir),
+                SharedLibrary(libname, name + '.lib', Path.builddir),
             )
         else:
             raise ValueError('unknown mode "{}"'.format(self.mode))
@@ -78,6 +78,11 @@ class MSVCLinker(object):
 
     def link_lib(self, library):
         return [library.path.basename()]
+
+    def import_lib(self, library):
+        if self.mode != 'shared_library':
+            raise ValueError('import libraries only apply to shared libraries')
+        return ['/IMPLIB:' + library.path.local_path()]
 
     def rpath(self, paths):
         return []

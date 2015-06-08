@@ -66,8 +66,8 @@ class CcLinkerBase(object):
             if self.platform.has_import_library:
                 prefix = 'cyg' if self.platform.name == 'cygwin' else 'lib'
                 return (
-                    SharedLibrary(tail, libpath() + '.a', Path.builddir),
                     DynamicLibrary(tail, libpath(prefix), Path.builddir),
+                    SharedLibrary(tail, libpath() + '.a', Path.builddir),
                 )
             else:
                 return SharedLibrary(tail, libpath(), Path.builddir)
@@ -85,7 +85,17 @@ class CcLinkerBase(object):
     def link_lib(self, library):
         return ['-l' + library.lib_name]
 
+    def import_lib(self, library):
+        if self.platform.has_import_library:
+            raise ValueError('platform "{}" doesn\'t have import libraries'
+                             .format(self.platform.name))
+        if self.mode != 'shared_library':
+            raise ValueError('import libraries only apply to shared libraries')
+        return ['-Wl,--out-implib=' + library.path.local_path()]
+
     def rpath(self, paths):
+        if not self.platform.has_rpath:
+            return []
         rpath = ':'.join(os.path.join('$ORIGIN', i) for i in paths)
         if not rpath:
             return []
