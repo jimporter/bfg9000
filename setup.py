@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='bfg9000',
-    version='0.1.0pre',
+    version='0.1.0-dev',
     license='BSD',
 
     author='Jim Porter',
