@@ -19,7 +19,7 @@ class TestInstall(IntegrationTest):
         self.assertOutput([executable('program')], 'hello, library!\n')
 
     def test_install(self):
-        subprocess.check_call([self.backend, 'install'])
+        self.build('install')
 
         self.assertTrue(os.path.exists(os.path.join(
             self.distdir, 'include', 'library.hpp'
