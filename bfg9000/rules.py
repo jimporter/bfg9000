@@ -1,12 +1,12 @@
 import fnmatch
 import os
 
-import build_inputs
-from builtins import builtin
-from file_types import *
-from languages import ext2lang
-from path import Path
-from utils import iterate, listify, flatten, shell_listify, objectify
+from . import build_inputs
+from .builtins import builtin
+from .file_types import *
+from .languages import ext2lang
+from .path import Path
+from .utils import iterate, listify, flatten, shell_listify, objectify
 
 class Compile(build_inputs.Edge):
     def __init__(self, target, builder, file, include, options, extra_deps):

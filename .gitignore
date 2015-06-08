@@ -1,3 +1,5 @@
 *.pyc
+/env/
+/bfg9000.egg-info/
 build
 dist

@@ -1,5 +1,5 @@
-import build_inputs
-from path import Path
+from . import build_inputs
+from .path import Path
 
 class SourceFile(build_inputs.File):
     def __init__(self, name, source=Path.srcdir, lang=None):

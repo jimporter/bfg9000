@@ -1,11 +1,6 @@
-import os
-import sys
 import unittest
 
-basedir = os.path.abspath(os.path.dirname(__file__))
-sys.path.append(os.path.join(basedir, '..', '..', 'src'))
-
-from safe_str import *
+from bfg9000.safe_str import *
 
 class TestSafeStr(unittest.TestCase):
     def test_construct_from_strings(self):

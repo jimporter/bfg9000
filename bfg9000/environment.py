@@ -1,9 +1,9 @@
 import os.path
 
-import platforms
-from builders import ar
-from builders import cc
-from builders import msvc
+from . import platforms
+from .builders import ar
+from .builders import cc
+from .builders import msvc
 
 class Environment(object):
     def __init__(self, bfgpath, srcdir, builddir, backend, install_prefix):

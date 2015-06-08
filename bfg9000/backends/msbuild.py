@@ -6,8 +6,8 @@ import uuid
 from lxml import etree
 from lxml.builder import E
 
-import utils
-from rules import *
+from .. import utils
+from ..rules import *
 
 def makedirs(path, mode=0o777, exist_ok=False):
     try:

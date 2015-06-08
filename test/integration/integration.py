@@ -8,7 +8,6 @@ import time
 import unittest
 
 basedir = os.path.abspath(os.path.dirname(__file__))
-bfg9000 = os.path.join(basedir, '..', '..', 'src', 'bfg9000')
 
 def cleandir(path):
     try:
@@ -36,9 +35,8 @@ class IntegrationTest(unittest.TestCase):
         os.chdir(self.srcdir)
         cleandir(self.builddir)
         subprocess.check_call(
-            # TODO: Remove sys.executable?
-            [sys.executable, bfg9000, self.srcdir, self.builddir, '--backend',
-             self.backend] + self.extra_args
+            ['bfg9000', self.srcdir, self.builddir, '--backend', self.backend] +
+            self.extra_args
         )
         os.chdir(self.builddir)
 

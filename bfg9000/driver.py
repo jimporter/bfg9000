@@ -7,11 +7,11 @@ import os
 import pickle
 import sys
 
-import builtins
-import rules
-import utils
-from build_inputs import BuildInputs
-from environment import Environment
+from . import builtins
+from . import rules
+from . import utils
+from .build_inputs import BuildInputs
+from .environment import Environment
 
 bfgfile = 'build.bfg'
 envfile = '.bfg_environ'
@@ -65,34 +65,38 @@ def validate_regen_directories(args):
         raise ValueError('foo')
     args.srcdir, args.builddir = None, os.path.abspath(args.srcdir or '.')
 
-parser = argparse.ArgumentParser()
-parser.add_argument('srcdir', nargs='?', help='source directory')
-parser.add_argument('builddir', nargs='?', help='build directory')
-parser.add_argument('--backend', default='make', help='backend')
-parser.add_argument('--prefix', default='/usr', help='installation prefix')
-parser.add_argument('--regenerate', action='store_true',
-                    help='regenerate build files')
-args = parser.parse_args()
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('srcdir', nargs='?', help='source directory')
+    parser.add_argument('builddir', nargs='?', help='build directory')
+    parser.add_argument('--backend', default='make', help='backend')
+    parser.add_argument('--prefix', default='/usr', help='installation prefix')
+    parser.add_argument('--regenerate', action='store_true',
+                        help='regenerate build files')
+    args = parser.parse_args()
 
-try:
-    if args.regenerate:
-        validate_regen_directories(args)
-        env = pickle.load(open(os.path.join(args.builddir, envfile)))
-    else:
-        validate_build_directories(args)
-        env = Environment(
-            bfgpath=os.path.realpath(__file__),
-            srcdir=args.srcdir, builddir=args.builddir, backend=args.backend,
-            install_prefix=os.path.abspath(args.prefix)
-        )
-        pickle.dump(env, open(os.path.join(args.builddir, envfile), 'w'),
-                    protocol=2)
-except Exception as e:
-    parser.error(e)
+    try:
+        if args.regenerate:
+            validate_regen_directories(args)
+            env = pickle.load(open(os.path.join(args.builddir, envfile)))
+        else:
+            validate_build_directories(args)
+            env = Environment(
+                bfgpath=os.path.realpath(__file__),
+                srcdir=args.srcdir,
+                builddir=args.builddir,
+                backend=args.backend,
+                install_prefix=os.path.abspath(args.prefix)
+            )
+            pickle.dump(env, open(os.path.join(args.builddir, envfile), 'w'),
+                        protocol=2)
+    except Exception as e:
+        parser.error(e)
 
-build = BuildInputs()
-os.chdir(env.srcdir)
-execfile(os.path.join(env.srcdir, bfgfile), builtins.bind(build, env))
+    build = BuildInputs()
+    os.chdir(env.srcdir)
+    execfile(os.path.join(env.srcdir, bfgfile), builtins.bind(build, env))
 
-backend = importlib.import_module('backends.{}'.format(env.backend))
-backend.write(env, build)
+    backend = importlib.import_module('.backends.{}'.format(env.backend),
+                                      'bfg9000')
+    backend.write(env, build)

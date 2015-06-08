@@ -1,7 +1,7 @@
 import os.path
 from collections import namedtuple
 
-import safe_str
+from . import safe_str
 
 class real_path(safe_str.safe_string):
     def __init__(self, base, path):

@@ -1,9 +1,9 @@
 import os
-import shell
 
-import utils
-import file_types
-from path import Path
+from .. import shell
+from .. import utils
+from .. import file_types
+from ..path import Path
 
 class ArLinker(object):
     def __init__(self, platform):

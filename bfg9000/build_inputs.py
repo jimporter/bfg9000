@@ -1,5 +1,5 @@
-import path
-import utils
+from . import path
+from . import utils
 
 class Node(object):
     install_root = path.Path.basedir

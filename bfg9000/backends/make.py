@@ -5,10 +5,10 @@ from cStringIO import StringIO
 from collections import namedtuple, OrderedDict
 from itertools import chain
 
-import path
-import safe_str
-import shell
-import utils
+from .. import path
+from .. import safe_str
+from .. import shell
+from .. import utils
 
 _rule_handlers = {}
 def rule_handler(rule_name):

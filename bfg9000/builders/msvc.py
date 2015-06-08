@@ -1,7 +1,7 @@
 import os
 
-import utils
-from file_types import *
+from .. import utils
+from ..file_types import *
 
 class MSVCCompiler(object):
     def __init__(self, platform):

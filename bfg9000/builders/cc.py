@@ -1,8 +1,8 @@
 import os
-import shell
 
-import utils
-from file_types import *
+from .. import shell
+from .. import utils
+from ..file_types import *
 
 class CcCompilerBase(object):
     def __init__(self, platform, command, name):

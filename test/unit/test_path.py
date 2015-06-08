@@ -1,11 +1,6 @@
-import os
-import sys
 import unittest
 
-basedir = os.path.abspath(os.path.dirname(__file__))
-sys.path.append(os.path.join(basedir, '..', '..', 'src'))
-
-from path import Path, real_path
+from bfg9000.path import Path, real_path
 
 class TestPath(unittest.TestCase):
     def test_src_base(self):
