@@ -12,6 +12,7 @@ from . import rules
 from . import utils
 from .build_inputs import BuildInputs
 from .environment import Environment
+from .version import __version__
 
 bfgfile = 'build.bfg'
 envfile = '.bfg_environ'
@@ -73,6 +74,9 @@ def main():
     parser.add_argument('--prefix', default='/usr', help='installation prefix')
     parser.add_argument('--regenerate', action='store_true',
                         help='regenerate build files')
+    parser.add_argument('--version', action='version',
+                        version='%(prog)s ' + __version__)
+
     args = parser.parse_args()
 
     try:

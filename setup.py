@@ -1,8 +1,9 @@
 from setuptools import setup, find_packages
+from bfg9000.version import __version__
 
 setup(
     name='bfg9000',
-    version='0.1.0-dev',
+    version=__version__,
     license='BSD',
 
     author='Jim Porter',
