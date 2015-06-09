@@ -401,21 +401,41 @@ def test_rule(test_targets, all_tests, buildfile):
 
     buildfile.rule(
         target='tests',
-        deps=(path_str(i.path) for i in all_tests),
+        deps=[i.path for i in all_tests],
         phony=True
     )
 
-    deps = []
-    recipe = []
-    for i in test_targets:
-        if type(i).__name__ == 'TestDriver':
-            deps.append(path_str(i.driver.path))
-            recipe.append(path_str(i.path) for i in
-                          chain([i.driver], i.test_targets))
-        else:
-            recipe.append(i)
-    deps.append('tests')
-    buildfile.rule(target='test', deps=deps, recipe=recipe, phony=True)
+    def build_command(test_targets, driver=None, collapse=False):
+        cmd = []
+        deps = []
+        if driver:
+            cmd.append(driver.path)
+            deps.append(driver.path)
+
+        for i in test_targets:
+            if type(i).__name__ == 'TestDriver':
+                sub, moredeps = build_command(i.test_targets, i.driver, True)
+                deps.extend(moredeps)
+
+                if collapse:
+                    out = MakeWriter(StringIO())
+                    out.write_each(sub, 'shell_word')
+                    cmd.append(safe_str.escaped_str(
+                        shell.quote(out.stream.getvalue())
+                    ))
+                else:
+                    cmd.append(sub)
+            else:
+                cmd.append(i.path)
+        return cmd, deps
+
+    recipe, deps = build_command(test_targets)
+    buildfile.rule(
+        target='test',
+        deps=['tests'] + deps,
+        recipe=recipe,
+        phony=True
+    )
 
 dir_sentinel = '.dir'
 def directory_rule(buildfile):

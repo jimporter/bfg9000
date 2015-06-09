@@ -154,10 +154,9 @@ def test(build, env, test, driver=None):
     (driver or build).test_targets.append(test)
 
 @builtin
-def test_driver(build, env, driver):
-    # TODO: Support nested test drivers? (e.g. for things like caliber)
+def test_driver(build, env, driver, parent=None):
     result = TestDriver(driver)
-    build.test_targets.append(result)
+    (parent or build).test_targets.append(result)
     return result
 
 @builtin

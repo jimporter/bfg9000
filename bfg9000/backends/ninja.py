@@ -311,27 +311,41 @@ def test_rule(test_targets, all_rules, buildfile):
     buildfile.build(
         output='tests',
         rule='phony',
-        inputs=(path_str(i.path) for i in all_tests)
+        inputs=[i.path for i in all_tests]
     )
 
-    deps = []
-    commands = []
-    for i in test_targets:
-        if type(i).__name__ == 'TestDriver':
-            deps.append(path_str(i.driver.path))
-            commands.append(path_str(i.path) for i in
-                            chain([i.driver], i.test_targets))
-        else:
-            commands.append(i)
-    deps.append('tests')
+    def build_command(test_targets, driver=None, collapse=False):
+        cmd = []
+        deps = []
+        if driver:
+            cmd.append(driver.path)
+            deps.append(driver.path)
 
+        for i in test_targets:
+            if type(i).__name__ == 'TestDriver':
+                sub, moredeps = build_command(i.test_targets, i.driver, True)
+                deps.extend(moredeps)
+
+                if collapse:
+                    out = NinjaWriter(StringIO())
+                    out.write_each(sub, 'shell_word')
+                    cmd.append(safe_str.escaped_str(
+                        shell.quote(out.stream.getvalue())
+                    ))
+                else:
+                    cmd.append(sub)
+            else:
+                cmd.append(i.path)
+        return cmd, deps
+
+    commands, deps = build_command(test_targets)
     if not buildfile.has_rule('command'):
         buildfile.rule(name='command', command=var('cmd'))
     buildfile.build(
         output='test',
         rule='command',
         inputs=deps,
-        variables={'cmd': ' && '.join(commands)}
+        variables={'cmd': chain_commands(commands)}
     )
 
 def regenerate_rule(buildfile, env):
