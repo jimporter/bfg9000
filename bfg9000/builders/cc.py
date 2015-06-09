@@ -67,7 +67,8 @@ class CcLinkerBase(object):
                 prefix = 'cyg' if self.platform.name == 'cygwin' else 'lib'
                 return (
                     DynamicLibrary(tail, libpath(prefix), Path.builddir),
-                    SharedLibrary(tail, libpath() + '.a', Path.builddir),
+                    SharedLibrary(tail + self.platform.shared_library_ext,
+                                  libpath() + '.a', Path.builddir),
                 )
             else:
                 return SharedLibrary(tail, libpath(), Path.builddir)
