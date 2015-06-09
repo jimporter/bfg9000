@@ -2,10 +2,7 @@ from . import path
 from . import utils
 
 class Node(object):
-    install_root = path.Path.basedir
-
-    def __init__(self, name, source):
-        self.path = path.Path(name, source, self.install_root)
+    def __init__(self):
         self.creator = None
 
     def __repr__(self):
@@ -14,14 +11,19 @@ class Node(object):
         )
 
 class File(Node):
-    pass
+    install_root = path.Path.basedir
+
+    def __init__(self, name, source):
+        Node.__init__(self)
+        self.path = path.Path(name, source, self.install_root)
 
 class Directory(File):
     pass
 
 class Phony(Node):
     def __init__(self, name):
-        Node.__init__(self, name, path.Path.builddir)
+        Node.__init__(self)
+        self.path = name
 
 class Edge(object):
     def __init__(self, target, extra_deps=None):
