@@ -21,6 +21,60 @@ MakeInclude = namedtuple('MakeInclude', ['name', 'optional'])
 MakeRule = namedtuple('MakeRule', ['targets', 'deps', 'order_only', 'recipe',
                                    'variables', 'phony'])
 
+class MakeWriter(object):
+    def __init__(self, stream):
+        self.stream = stream
+
+    @staticmethod
+    def escape_str(string, syntax):
+        def repl(match):
+            return match.group(1) * 2 + '\\' + match.group(2)
+        result = string.replace('$', '$$')
+
+        if syntax == 'target':
+            return re.sub(r'(\\*)([#?*\[\]~\s%])', repl, result)
+        elif syntax == 'dependency':
+            return re.sub(r'(\\*)([#?*\[\]~\s|%])', repl, result)
+        elif syntax == 'shell_line':
+            return result
+        elif syntax == 'shell_word':
+            return shell.quote(result)
+        elif syntax == 'function':
+            return shell.quote(re.sub(',', '$,', result))
+        else:
+            raise ValueError('unknown syntax "{}"'.format(syntax))
+
+    def write_literal(self, string):
+        self.stream.write(string)
+
+    def write(self, thing, syntax):
+        thing = safe_str.safe_str(thing)
+
+        if isinstance(thing, basestring):
+            self.write_literal(self.escape_str(thing, syntax))
+        elif isinstance(thing, safe_str.escaped_str):
+            self.write_literal(thing.string)
+        elif isinstance(thing, path.real_path):
+            if thing.base != 'builddir':
+                self.write(_path_vars[thing.base], syntax)
+                self.write_literal(os.sep)
+            self.write(thing.path, syntax)
+        elif isinstance(thing, safe_str.jbos):
+            for j in thing.bits:
+                self.write(j, syntax)
+        else:
+            raise TypeError(type(thing))
+
+    def write_each(self, things, syntax, delim=' ', prefix=None, suffix=None):
+        for tween, i in utils.tween(things, delim, prefix, suffix):
+            self.write_literal(i) if tween else self.write(i, syntax)
+
+    def write_shell(self, thing):
+        if utils.isiterable(thing):
+            self.write_each(thing, 'shell_word')
+        else:
+            self.write(thing, 'shell_line')
+
 class Pattern(object):
     def __init__(self, path):
         if len(re.findall(r'([^\\]|^)(\\\\)*%', path)) != 1:
@@ -90,15 +144,14 @@ class MakeFunc(object):
         self.args = args
 
     def use(self):
-        out = StringIO()
-        MakeWriter._write_literal(out, '$(' + self.name + ' ')
-        for tween, i in utils.tween(self.args, ','):
+        out = MakeWriter(StringIO())
+        prefix = '$(' + self.name + ' '
+        for tween, i in utils.tween(self.args, ',', prefix, ')'):
             if tween:
-                MakeWriter._write_literal(out, i)
+                out.write_literal(i)
             else:
-                MakeWriter._write_each(out, utils.iterate(i), syntax='function')
-        MakeWriter._write_literal(out, ')')
-        return safe_str.escaped_str(out.getvalue())
+                out.write_each(utils.iterate(i), syntax='function')
+        return safe_str.escaped_str(out.stream.getvalue())
 
     def _safe_str(self):
         return self.use()
@@ -119,7 +172,7 @@ _path_vars = {
     'srcdir': MakeVariable('srcdir'),
     'prefix': MakeVariable('prefix'),
 }
-class MakeWriter(object):
+class Makefile(object):
     def __init__(self):
         # TODO: Sort variables in some useful order.
         self._global_variables = OrderedDict()
@@ -187,76 +240,21 @@ class MakeWriter(object):
     def has_rule(self, name):
         return name in self._targets
 
-    @classmethod
-    def escape_str(cls, string, syntax):
-        def repl(match):
-            return match.group(1) * 2 + '\\' + match.group(2)
-        result = string.replace('$', '$$')
-
-        if syntax == 'target':
-            return re.sub(r'(\\*)([#?*\[\]~\s%])', repl, result)
-        elif syntax == 'dependency':
-            return re.sub(r'(\\*)([#?*\[\]~\s|%])', repl, result)
-        elif syntax == 'shell_line':
-            return result
-        elif syntax == 'shell_word':
-            return shell.quote(result)
-        elif syntax == 'function':
-            return shell.quote(re.sub(',', '$,', result))
-        else:
-            raise ValueError('unknown syntax "{}"'.format(syntax))
-
-    @classmethod
-    def _write_literal(cls, out, string):
-        out.write(string)
-
-    @classmethod
-    def _write(cls, out, thing, syntax):
-        thing = safe_str.safe_str(thing)
-
-        if isinstance(thing, basestring):
-            cls._write_literal(out, cls.escape_str(thing, syntax))
-        elif isinstance(thing, safe_str.escaped_str):
-            cls._write_literal(out, thing.string)
-        elif isinstance(thing, path.real_path):
-            if thing.base != 'builddir':
-                cls._write(out, _path_vars[thing.base], syntax)
-                cls._write_literal(out, os.sep)
-            cls._write(out, thing.path, syntax)
-        elif isinstance(thing, safe_str.jbos):
-            for j in thing.bits:
-                cls._write(out, j, syntax)
-        else:
-            raise TypeError(type(thing))
-
-    @classmethod
-    def _write_each(cls, out, things, syntax, delim=' ', prefix=None,
-                    suffix=None):
-        for tween, i in utils.tween(things, delim, prefix, suffix):
-            cls._write_literal(out, i) if tween else cls._write(out, i, syntax)
-
-    @classmethod
-    def _write_shell(cls, out, thing):
-        if utils.isiterable(thing):
-            cls._write_each(out, thing, 'shell_word')
-        else:
-            cls._write(out, thing, 'shell_line')
-
     def _write_variable(self, out, name, value, flavor, target=None):
         operator = ' := ' if flavor == 'simple' else ' = '
         if target:
-            self._write(out, target, syntax='target')
-            self._write_literal(out, ': ')
-        self._write_literal(out, name.name + operator)
-        self._write_shell(out, value)
-        self._write_literal(out, '\n')
+            out.write(target, syntax='target')
+            out.write_literal(': ')
+        out.write_literal(name.name + operator)
+        out.write_shell(value)
+        out.write_literal('\n')
 
     def _write_define(self, out, name, value):
-        self._write_literal(out, 'define ' + name.name + '\n')
+        out.write_literal('define ' + name.name + '\n')
         for line in value:
-            self._write_shell(out, line)
-            self._write_literal(out, '\n')
-        self._write_literal(out, 'endef\n\n')
+            out.write_shell(line)
+            out.write_literal('\n')
+        out.write_literal('endef\n\n')
 
     def _write_rule(self, out, rule):
         if rule.variables:
@@ -266,34 +264,35 @@ class MakeWriter(object):
                                          target=target)
 
         if rule.phony:
-            self._write_literal(out, '.PHONY: ')
-            self._write_each(out, rule.targets, syntax='dependency')
-            self._write_literal(out, '\n')
+            out.write_literal('.PHONY: ')
+            out.write_each(rule.targets, syntax='dependency')
+            out.write_literal('\n')
 
-        self._write_each(out, rule.targets, syntax='target')
-        self._write_literal(out, ':')
-        self._write_each(out, rule.deps, syntax='dependency', prefix=' ')
-        self._write_each(out, rule.order_only, syntax='dependency',
-                         prefix=' | ')
+        out.write_each(rule.targets, syntax='target')
+        out.write_literal(':')
+        out.write_each(rule.deps, syntax='dependency', prefix=' ')
+        out.write_each(rule.order_only, syntax='dependency', prefix=' | ')
 
         if (isinstance(rule.recipe, MakeVariable) or
             isinstance(rule.recipe, MakeFunc)):
-            self._write_literal(out, ' ; ')
-            self._write(out, rule.recipe, syntax='shell_line')
+            out.write_literal(' ; ')
+            out.write(rule.recipe, syntax='shell_line')
         elif rule.recipe is not None:
             for cmd in rule.recipe:
-                self._write_literal(out, '\n\t')
-                self._write_shell(out, cmd)
-        self._write_literal(out, '\n\n')
+                out.write_literal('\n\t')
+                out.write_shell(cmd)
+        out.write_literal('\n\n')
 
     def write(self, out):
+        out = MakeWriter(out)
+
         # Don't let make use built-in suffix rules.
-        self._write_literal(out, '.SUFFIXES:\n\n')
+        out.write_literal('.SUFFIXES:\n\n')
 
         for name, value in self._global_variables.iteritems():
             self._write_variable(out, name, value[0], value[1])
         if self._global_variables:
-            self._write_literal(out, '\n')
+            out.write_literal('\n')
 
         newline = False
         for target, each in self._target_variables.iteritems():
@@ -301,7 +300,7 @@ class MakeWriter(object):
                 newline = True
                 self._write_variable(out, name, value[0], value[1], target)
         if newline:
-            self._write_literal(out, '\n')
+            out.write_literal('\n')
 
         for name, value in self._defines.iteritems():
             self._write_define(out, name, value)
@@ -310,70 +309,70 @@ class MakeWriter(object):
             self._write_rule(out, r)
 
         for i in self._includes:
-            self._write_literal(out, ('-' if i.optional else '') + 'include ')
-            self._write(out, i.name, syntax='target')
-            self._write_literal(out, '\n')
+            out.write_literal(('-' if i.optional else '') + 'include ')
+            out.write(i.name, syntax='target')
+            out.write_literal('\n')
 
 def write(env, build_inputs):
-    writer = MakeWriter()
-    writer.variable(_path_vars['srcdir'], env.srcdir)
+    buildfile = Makefile()
+    buildfile.variable(_path_vars['srcdir'], env.srcdir)
 
-    all_rule(build_inputs.get_default_targets(), writer)
-    install_rule(build_inputs.install_targets, writer, env)
+    all_rule(build_inputs.get_default_targets(), buildfile)
+    install_rule(build_inputs.install_targets, buildfile, env)
     for e in build_inputs.edges:
-        _rule_handlers[type(e).__name__](e, build_inputs, writer)
-    directory_rule(writer)
-    regenerate_rule(writer, env)
+        _rule_handlers[type(e).__name__](e, build_inputs, buildfile)
+    directory_rule(buildfile)
+    regenerate_rule(buildfile, env)
 
     with open(os.path.join(env.builddir, 'Makefile'), 'w') as out:
-        writer.write(out)
+        buildfile.write(out)
 
-def cmd_var(compiler, writer):
+def cmd_var(compiler, buildfile):
     var = MakeVariable(compiler.command_var.upper())
-    if not writer.has_variable(var):
-        writer.variable(var, compiler.command_name)
+    if not buildfile.has_variable(var):
+        buildfile.variable(var, compiler.command_name)
     return var
 
-def flags_vars(name, value, writer):
+def flags_vars(name, value, buildfile):
     name = name.upper()
     global_flags = MakeVariable('GLOBAL_{}'.format(name))
-    if not writer.has_variable(global_flags):
-        writer.variable(global_flags, value)
+    if not buildfile.has_variable(global_flags):
+        buildfile.variable(global_flags, value)
 
     flags = MakeVariable(name)
-    if not writer.has_variable(flags, target=Pattern('%')):
-        writer.variable(flags, global_flags, target=Pattern('%'))
+    if not buildfile.has_variable(flags, target=Pattern('%')):
+        buildfile.variable(flags, global_flags, target=Pattern('%'))
 
     return global_flags, flags
 
-def all_rule(default_targets, writer):
-    writer.rule(
+def all_rule(default_targets, buildfile):
+    buildfile.rule(
         target='all',
         deps=[i.path for i in default_targets],
         phony=True
     )
 
 # TODO: Write a better `install` program to simplify this
-def install_rule(install_targets, writer, env):
+def install_rule(install_targets, buildfile, env):
     if not install_targets:
         return
 
-    writer.variable(_path_vars['prefix'], env.install_prefix)
+    buildfile.variable(_path_vars['prefix'], env.install_prefix)
 
     def install_cmd(kind):
         install = MakeVariable('INSTALL')
-        if not writer.has_variable(install):
-            writer.variable(install, 'install')
+        if not buildfile.has_variable(install):
+            buildfile.variable(install, 'install')
 
         if kind == 'program':
             install_program = MakeVariable('INSTALL_PROGRAM')
-            if not writer.has_variable(install_program):
-                writer.variable(install_program, install)
+            if not buildfile.has_variable(install_program):
+                buildfile.variable(install_program, install)
             return install_program
         else:
             install_data = MakeVariable('INSTALL_DATA')
-            if not writer.has_variable(install_data):
-                writer.variable(install_data, [install, '-m', '644'])
+            if not buildfile.has_variable(install_data):
+                buildfile.variable(install_data, [install, '-m', '644'])
             return install_data
 
     def install_line(file):
@@ -388,7 +387,7 @@ def install_rule(install_targets, writer, env):
 
     recipe = ([install_line(i) for i in install_targets.files] +
               [mkdir_line(i) for i in install_targets.directories])
-    writer.rule(
+    buildfile.rule(
         target='install',
         deps='all',
         recipe=recipe,
@@ -396,9 +395,9 @@ def install_rule(install_targets, writer, env):
     )
 
 dir_sentinel = '.dir'
-def directory_rule(writer):
+def directory_rule(buildfile):
     # XXX: `mkdir -p` isn't safe (or valid!) on all platforms.
-    writer.rule(
+    buildfile.rule(
         target=Pattern(os.path.join('%', dir_sentinel)),
         recipe=[
             ['@mkdir', '-p', MakeFunc('dir', var('@'))],
@@ -406,22 +405,22 @@ def directory_rule(writer):
         ]
     )
 
-def regenerate_rule(writer, env):
-    writer.rule(
+def regenerate_rule(buildfile, env):
+    buildfile.rule(
         target=path.Path('Makefile', path.Path.builddir, path.Path.basedir),
         deps=path.Path('build.bfg', path.Path.srcdir, path.Path.basedir),
         recipe=[[env.bfgpath, '--regenerate', '.']]
     )
 
 @rule_handler('Compile')
-def emit_object_file(rule, build_inputs, writer):
+def emit_object_file(rule, build_inputs, buildfile):
     compiler = rule.builder
     recipename = MakeVariable('RULE_{}'.format(compiler.name.upper()))
     global_cflags, cflags = flags_vars(
         compiler.command_var + 'FLAGS',
         compiler.global_args +
           build_inputs.global_options.get(rule.file.lang, []),
-        writer
+        buildfile
     )
 
     path = rule.target.path
@@ -439,7 +438,7 @@ def emit_object_file(rule, build_inputs, writer):
     if cflags_value:
         variables[cflags] = [global_cflags] + cflags_value
 
-    if not writer.has_variable(recipename):
+    if not buildfile.has_variable(recipename):
         command_kwargs = {}
         recipe_extra = []
         if compiler.deps_flavor == 'gcc':
@@ -451,18 +450,18 @@ def emit_object_file(rule, build_inputs, writer):
                 r"@sed -e 's/.*://' -e 's/\\$//' < " + deps + ' | fmt -1 | \\',
                 "  sed -e 's/^ *//' -e 's/$/:/' >> " + deps
             ]
-            writer.include(path.addext('.d'), optional=True)
+            buildfile.include(path.addext('.d'), optional=True)
         elif compiler.deps_flavor == 'msvc':
             command_kwargs['deps'] = True
 
-        writer.variable(recipename, [
+        buildfile.variable(recipename, [
             compiler.command(
-                cmd=cmd_var(compiler, writer), input=var('<'), output=var('@'),
-                args=cflags, **command_kwargs
+                cmd=cmd_var(compiler, buildfile), input=var('<'),
+                output=var('@'), args=cflags, **command_kwargs
             ),
         ] + recipe_extra, flavor='define')
 
-    writer.rule(
+    buildfile.rule(
         target=path,
         deps=[i.path for i in chain([rule.file], rule.extra_deps)],
         order_only=[target_dir.append(dir_sentinel)] if target_dir else None,
@@ -471,11 +470,11 @@ def emit_object_file(rule, build_inputs, writer):
     )
 
 @rule_handler('Link')
-def emit_link(rule, build_inputs, writer):
+def emit_link(rule, build_inputs, buildfile):
     linker = rule.builder
     recipename = MakeVariable('RULE_{}'.format(linker.name.upper()))
     global_ldflags, ldflags = flags_vars(
-        linker.link_var + 'FLAGS', linker.global_args, writer
+        linker.link_var + 'FLAGS', linker.global_args, buildfile
     )
 
     variables = {}
@@ -497,7 +496,7 @@ def emit_link(rule, build_inputs, writer):
         ))
 
         global_ldlibs, ldlibs = flags_vars(
-            linker.link_var + 'LIBS', linker.global_libs, writer
+            linker.link_var + 'LIBS', linker.global_libs, buildfile
         )
         command_kwargs['libs'] = ldlibs
 
@@ -512,10 +511,10 @@ def emit_link(rule, build_inputs, writer):
     if ldflags_value:
         variables[ldflags] = [global_ldflags] + ldflags_value
 
-    if not writer.has_variable(recipename):
-        writer.variable(recipename, [
+    if not buildfile.has_variable(recipename):
+        buildfile.variable(recipename, [
             linker.command(
-                cmd=cmd_var(linker, writer), input=var('1'), output=var('2'),
+                cmd=cmd_var(linker, buildfile), input=var('1'), output=var('2'),
                 args=ldflags, **command_kwargs
             )
         ], flavor='define')
@@ -523,13 +522,13 @@ def emit_link(rule, build_inputs, writer):
     recipe = MakeCall(recipename, (i.path for i in rule.files), path)
     if isinstance(rule.target, tuple):
         target = path.addext('.stamp')
-        writer.rule(target=[i.path for i in rule.target], deps=[target])
+        buildfile.rule(target=[i.path for i in rule.target], deps=[target])
         recipe = [recipe, ['@touch', var('@')]]
     else:
         target = path
 
     dirs = set(i.path.parent() for i in utils.iterate(rule.target))
-    writer.rule(
+    buildfile.rule(
         target=target,
         deps=[i.path for i in chain(rule.files, lib_deps, rule.extra_deps)],
         order_only=[i.append(dir_sentinel) for i in dirs if i],
@@ -538,16 +537,16 @@ def emit_link(rule, build_inputs, writer):
     )
 
 @rule_handler('Alias')
-def emit_alias(rule, build_inputs, writer):
-    writer.rule(
+def emit_alias(rule, build_inputs, buildfile):
+    buildfile.rule(
         target=rule.target.path,
         deps=[i.path for i in rule.extra_deps],
         phony=True
     )
 
 @rule_handler('Command')
-def emit_command(rule, build_inputs, writer):
-    writer.rule(
+def emit_command(rule, build_inputs, buildfile):
+    buildfile.rule(
         target=rule.target.path,
         deps=[i.path for i in rule.extra_deps],
         recipe=rule.cmds,
