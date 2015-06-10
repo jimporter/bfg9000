@@ -2,23 +2,22 @@ import os
 import shell
 from collections import Iterable
 
-def _generate_none():
-    return
-    yield
-
-def _generate_one(x):
-    yield x
-
 def isiterable(thing):
     return isinstance(thing, Iterable) and not isinstance(thing, basestring)
 
 def iterate(thing):
+    def generate_none():
+        return
+        yield
+    def generate_one(x):
+        yield x
+
     if thing is None:
-        return _generate_none()
+        return generate_none()
     elif isiterable(thing):
         return iter(thing)
     else:
-        return _generate_one(thing)
+        return generate_one(thing)
 
 def tween(iterable, delim, prefix=None, suffix=None, flag=True):
     def item(tween, value):
@@ -49,6 +48,15 @@ def first(thing):
         return next(iter(thing))
     else:
         return thing
+
+def uniques(iterable):
+    def generate_uniques(iterable):
+        seen = set()
+        for item in iterable:
+            if item not in seen:
+                seen.add(item)
+                yield item
+    return list(generate_uniques(iterable))
 
 def listify(thing, always_copy=False):
     if not always_copy and type(thing) == list:
