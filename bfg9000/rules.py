@@ -156,14 +156,16 @@ class TestDriver(object):
 
 @builtin
 def test(build, env, test, options=None, driver=None):
-    build.test_targets.append(test)
-    case = TestCase(test, shell_listify(options))
+    test_file = objectify(test, build_inputs.File, source=Path.srcdir)
+    build.test_targets.append(test_file)
+    case = TestCase(test_file, shell_listify(options))
     (driver or build).tests.append(case)
     return case
 
 @builtin
 def test_driver(build, env, driver, options=None, parent=None):
-    result = TestDriver(driver, shell_listify(options))
+    result = TestDriver(objectify(driver, Executable, ExternalExecutable),
+                        shell_listify(options))
     (parent or build).tests.append(result)
     return result
 

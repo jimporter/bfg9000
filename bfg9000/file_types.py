@@ -42,8 +42,12 @@ class SharedLibrary(Library):
 class DynamicLibrary(Library):
     pass
 
+# TODO: Remove these eventually?
+class ExternalExecutable(Binary):
+    install_root = None
+
 class ExternalLibrary(Library):
+    install_root = None
+
     def __init__(self, name):
-        # TODO: Keep track of the external lib's actual location on the
-        # filesystem?
         Library.__init__(self, name, name)
