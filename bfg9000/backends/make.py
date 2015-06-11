@@ -42,7 +42,7 @@ class MakeWriter(object):
         elif syntax == 'function':
             return shell.quote(re.sub(',', '$,', result))
         else:
-            raise ValueError('unknown syntax "{}"'.format(syntax))
+            raise ValueError('unknown syntax {}'.format(repr(syntax)))
 
     def write_literal(self, string):
         self.stream.write(string)
@@ -190,7 +190,7 @@ class Makefile(object):
         if not isinstance(name, MakeVariable):
             name = MakeVariable(name)
         if self.has_variable(name, target=target):
-            raise ValueError('variable "{}" already exists'.format(name))
+            raise ValueError('variable {} already exists'.format(repr(name)))
 
         if flavor == 'define':
             self._defines[name] = value
@@ -230,7 +230,7 @@ class Makefile(object):
             raise ValueError('must have at least one target')
         for i in targets:
             if self.has_rule(i):
-                raise ValueError('rule for "{}" already exists'.format(i))
+                raise ValueError('rule for {} already exists'.format(repr(i)))
             self._targets.add(i)
         self._rules.append(MakeRule(
             targets, utils.listify(deps), utils.listify(order_only), recipe,

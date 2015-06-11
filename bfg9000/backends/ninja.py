@@ -116,7 +116,7 @@ class NinjaFile(object):
         if not isinstance(name, NinjaVariable):
             name = NinjaVariable(name)
         if self.has_variable(name):
-            raise ValueError('variable "{}" already exists'.format(name))
+            raise ValueError('variable {} already exists'.format(repr(name)))
         self._variables[name] = (value, syntax)
         return name
 
@@ -129,7 +129,7 @@ class NinjaFile(object):
         if re.search('\W', name):
             raise ValueError('rule name contains invalid characters')
         if self.has_rule(name):
-            raise ValueError('rule "{}" already exists'.format(name))
+            raise ValueError('rule {} already exists'.format(repr(name)))
         self._rules[name] = NinjaRule(command, depfile, deps, generator)
 
     def has_rule(self, name):
@@ -138,7 +138,7 @@ class NinjaFile(object):
     def build(self, output, rule, inputs=None, implicit=None, order_only=None,
               variables=None):
         if rule != 'phony' and not self.has_rule(rule):
-            raise ValueError('unknown rule "{}"'.format(rule))
+            raise ValueError('unknown rule {}'.format(repr(rule)))
 
         real_variables = {}
         if variables:
@@ -150,7 +150,7 @@ class NinjaFile(object):
         outputs = utils.listify(output)
         for i in outputs:
             if self.has_build(i):
-                raise ValueError('build for "{}" already exists'.format(i))
+                raise ValueError('build for {} already exists'.format(repr(i)))
             self._build_outputs.add(i)
         self._builds.append(NinjaBuild(
             outputs, rule, utils.listify(inputs), utils.listify(implicit),
