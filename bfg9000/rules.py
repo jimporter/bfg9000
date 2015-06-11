@@ -175,16 +175,28 @@ def global_options(build, env, options, lang):
         build.global_options[lang] = []
     build.global_options[lang].extend(shell_listify(options))
 
+def _walk_flat(path):
+    names = os.listdir(path)
+    dirs, nondirs = [], []
+    for name in names:
+        if os.path.isdir(os.path.join(path, name)):
+            dirs.append(name)
+        else:
+            nondirs.append(name)
+    yield path, dirs, nondirs
+
 @builtin
-def find(build_inputs, env, base='.', name='*', type=None):
+def find(build_inputs, env, base='.', name='*', type=None, flat=False):
     results = []
-    for path, dirs, files in os.walk(base):
-        if type != 'f':
-            results.extend((
-                os.path.join(path, i) for i in fnmatch.filter(dirs, name)
-            ))
-        if type != 'd':
-            results.extend((
-                os.path.join(path, i) for i in fnmatch.filter(files, name)
-            ))
+    for b in iterate(base):
+        generator = _walk_flat(b) if flat else os.walk(b)
+        for path, dirs, files in generator:
+            if type != 'f':
+                results.extend((
+                    os.path.join(path, i) for i in fnmatch.filter(dirs, name)
+                ))
+            if type != 'd':
+                results.extend((
+                    os.path.join(path, i) for i in fnmatch.filter(files, name)
+                ))
     return results
