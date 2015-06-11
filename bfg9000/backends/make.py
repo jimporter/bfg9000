@@ -417,7 +417,9 @@ def test_rule(tests, test_targets, buildfile):
         for i in tests:
             if type(i).__name__ == 'TestDriver':
                 args, moredeps = build_commands(i.tests, True)
-                deps += [i.driver.path] + moredeps
+                if i.driver.creator:
+                    deps.append(i.driver.path)
+                deps.extend(moredeps)
                 cmd.append(command([i.driver.path] + i.options + args))
             else:
                 cmd.append(command([i.test.path] + i.options))

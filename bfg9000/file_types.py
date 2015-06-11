@@ -2,7 +2,7 @@ from . import build_inputs
 from .path import Path
 
 class SourceFile(build_inputs.File):
-    def __init__(self, name, source=Path.srcdir, lang=None):
+    def __init__(self, name, source, lang=None):
         build_inputs.File.__init__(self, name, source=source)
         self.lang = lang
 
@@ -14,7 +14,7 @@ class HeaderDirectory(build_inputs.Directory):
     install_root = Path.includedir
 
 class ObjectFile(build_inputs.File):
-    def __init__(self, name, source=Path.builddir, lang=None):
+    def __init__(self, name, source, lang=None):
         build_inputs.File.__init__(self, name, source)
         self.lang = lang
 
@@ -27,7 +27,7 @@ class Executable(Binary):
 class Library(Binary):
     install_root = Path.libdir
 
-    def __init__(self, lib_name, name, source=Path.builddir):
+    def __init__(self, lib_name, name, source):
         Binary.__init__(self, name, source)
         self.lib_name = lib_name
 
@@ -43,11 +43,15 @@ class DynamicLibrary(Library):
     pass
 
 # TODO: Remove these eventually?
-class ExternalExecutable(Binary):
-    install_root = None
-
-class ExternalLibrary(Library):
-    install_root = None
+class ExternalExecutable(Executable):
+    install_root = Path.basedir
 
     def __init__(self, name):
-        Library.__init__(self, name, name)
+        Executable.__init__(self, name, source=Path.builddir)
+
+
+class ExternalLibrary(Library):
+    install_root = Path.basedir
+
+    def __init__(self, name):
+        Library.__init__(self, name, name, source=Path.builddir)

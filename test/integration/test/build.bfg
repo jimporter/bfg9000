@@ -1,0 +1,7 @@
+# -*- python -*-
+
+prog = executable('prog', files=['prog.cpp'])
+test(prog)
+
+driver = test_driver('python')
+test('script.py', driver=driver)
