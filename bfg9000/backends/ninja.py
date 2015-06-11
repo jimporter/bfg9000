@@ -227,6 +227,28 @@ def write(env, build_inputs):
     with open(os.path.join(env.builddir, 'build.ninja'), 'w') as out:
         buildfile.write(out)
 
+def chain_commands(commands, delim=' && '):
+    out = NinjaWriter(StringIO())
+    for tween, line in utils.tween(commands, delim):
+        out.write_literal(line) if tween else out.write_shell(line)
+    return safe_str.escaped_str(out.stream.getvalue())
+
+def command_build(buildfile, output, inputs=None, implicit=None,
+                  order_only=None, commands=None):
+    if not buildfile.has_rule('command'):
+        buildfile.rule(name='command', command=var('cmd'))
+    if not buildfile.has_build('PHONY'):
+        buildfile.build(output='PHONY', rule='phony')
+
+    buildfile.build(
+        output=output,
+        rule='command',
+        inputs=inputs,
+        implicit=utils.listify(implicit) + ['PHONY'],
+        order_only=order_only,
+        variables={'cmd': chain_commands(commands)}
+    )
+
 def cmd_var(compiler, buildfile):
     var = NinjaVariable(compiler.command_var)
     if not buildfile.has_variable(var):
@@ -252,12 +274,6 @@ def all_rule(default_targets, buildfile):
         inputs=[i.path for i in default_targets]
     )
 
-def chain_commands(commands, delim=' && '):
-    out = NinjaWriter(StringIO())
-    for tween, line in utils.tween(commands, delim):
-        out.write_literal(line) if tween else out.write_shell(line)
-    return safe_str.escaped_str(out.stream.getvalue())
-
 # TODO: Write a better `install` program to simplify this
 def install_rule(install_targets, buildfile, env):
     if not install_targets:
@@ -282,9 +298,6 @@ def install_rule(install_targets, buildfile, env):
                                    syntax='shell_word')
             return install_data
 
-    if not buildfile.has_rule('command'):
-        buildfile.rule(name='command', command=var('cmd'))
-
     def install_line(file):
         src = file.path.local_path()
         dst = file.path.install_path()
@@ -297,11 +310,11 @@ def install_rule(install_targets, buildfile, env):
 
     commands = chain((install_line(i) for i in install_targets.files),
                      (mkdir_line(i) for i in install_targets.directories))
-    buildfile.build(
+    command_build(
+        buildfile,
         output='install',
-        rule='command',
-        implicit=['all'],
-        variables={'cmd': chain_commands(commands)}
+        inputs=['all'],
+        commands=commands
     )
 
 def test_rule(tests, test_targets, buildfile):
@@ -333,13 +346,11 @@ def test_rule(tests, test_targets, buildfile):
         return cmd, deps
 
     commands, deps = build_commands(tests)
-    if not buildfile.has_rule('command'):
-        buildfile.rule(name='command', command=var('cmd'))
-    buildfile.build(
+    command_build(
+        buildfile,
         output='test',
-        rule='command',
         inputs=['tests'] + deps,
-        variables={'cmd': chain_commands(commands)}
+        commands=commands
     )
 
 def regenerate_rule(buildfile, env):
@@ -465,13 +476,9 @@ def emit_alias(rule, build_inputs, buildfile):
 
 @rule_handler('Command')
 def emit_command(rule, build_inputs, buildfile):
-    if not buildfile.has_rule('command'):
-        buildfile.rule(name='command', command=var('cmd'))
-
-    e = safe_str.escaped_str
-    buildfile.build(
+    command_build(
+        buildfile,
         output=rule.target.path,
-        rule='command',
         inputs=[i.path for i in rule.extra_deps],
-        variables={'cmd': chain_commands(rule.cmds)}
+        commands=rule.cmds
     )
