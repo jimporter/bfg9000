@@ -143,20 +143,28 @@ def install(build, env, *args):
             default(build, i)
             build.install_targets.files.append(i)
 
+class TestCase(object):
+    def __init__(self, test, options):
+        self.test = test
+        self.options = options
+
 class TestDriver(object):
-    def __init__(self, driver):
+    def __init__(self, driver, options):
         self.driver = driver
-        self.test_targets = []
+        self.options = options
+        self.tests = []
 
 @builtin
-def test(build, env, test, driver=None):
-    build.all_tests.append(test)
-    (driver or build).test_targets.append(test)
+def test(build, env, test, options=None, driver=None):
+    build.test_targets.append(test)
+    case = TestCase(test, shell_listify(options))
+    (driver or build).tests.append(case)
+    return case
 
 @builtin
-def test_driver(build, env, driver, parent=None):
-    result = TestDriver(driver)
-    (parent or build).test_targets.append(result)
+def test_driver(build, env, driver, options=None, parent=None):
+    result = TestDriver(driver, shell_listify(options))
+    (parent or build).tests.append(result)
     return result
 
 @builtin

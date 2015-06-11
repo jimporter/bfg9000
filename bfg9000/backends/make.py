@@ -319,7 +319,7 @@ def write(env, build_inputs):
 
     all_rule(build_inputs.get_default_targets(), buildfile)
     install_rule(build_inputs.install_targets, buildfile, env)
-    test_rule(build_inputs.test_targets, build_inputs.all_tests, buildfile)
+    test_rule(build_inputs.tests, build_inputs.test_targets, buildfile)
     for e in build_inputs.edges:
         _rule_handlers[type(e).__name__](e, build_inputs, buildfile)
     directory_rule(buildfile)
@@ -395,41 +395,35 @@ def install_rule(install_targets, buildfile, env):
         phony=True
     )
 
-def test_rule(test_targets, all_tests, buildfile):
+def test_rule(tests, test_targets, buildfile):
     if not test_targets:
         return
 
     buildfile.rule(
         target='tests',
-        deps=[i.path for i in all_tests],
+        deps=[i.path for i in test_targets],
         phony=True
     )
 
-    def build_command(test_targets, driver=None, collapse=False):
-        cmd = []
-        deps = []
-        if driver:
-            cmd.append(driver.path)
-            deps.append(driver.path)
+    def build_commands(tests, collapse=False):
+        cmd, deps = [], []
+        def command(subcmd):
+            if collapse:
+                out = MakeWriter(StringIO())
+                out.write_each(subcmd, 'shell_word')
+                return safe_str.escaped_str(shell.quote(out.stream.getvalue()))
+            return subcmd
 
-        for i in test_targets:
+        for i in tests:
             if type(i).__name__ == 'TestDriver':
-                sub, moredeps = build_command(i.test_targets, i.driver, True)
-                deps.extend(moredeps)
-
-                if collapse:
-                    out = MakeWriter(StringIO())
-                    out.write_each(sub, 'shell_word')
-                    cmd.append(safe_str.escaped_str(
-                        shell.quote(out.stream.getvalue())
-                    ))
-                else:
-                    cmd.append(sub)
+                args, moredeps = build_commands(i.tests, True)
+                deps += [i.driver.path] + moredeps
+                cmd.append(command([i.driver.path] + i.options + args))
             else:
-                cmd.append(i.path)
+                cmd.append(command([i.test.path] + i.options))
         return cmd, deps
 
-    recipe, deps = build_command(test_targets)
+    recipe, deps = build_commands(tests)
     buildfile.rule(
         target='test',
         deps=['tests'] + deps,

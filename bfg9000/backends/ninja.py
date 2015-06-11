@@ -219,7 +219,7 @@ def write(env, build_inputs):
 
     all_rule(build_inputs.get_default_targets(), buildfile)
     install_rule(build_inputs.install_targets, buildfile, env)
-    test_rule(build_inputs.test_targets, build_inputs.all_tests, buildfile)
+    test_rule(build_inputs.tests, build_inputs.test_targets, buildfile)
     for e in build_inputs.edges:
         _rule_handlers[type(e).__name__](e, build_inputs, buildfile)
     regenerate_rule(buildfile, env)
@@ -304,47 +304,41 @@ def install_rule(install_targets, buildfile, env):
         variables={'cmd': chain_commands(commands)}
     )
 
-def test_rule(test_targets, all_rules, buildfile):
+def test_rule(tests, test_targets, buildfile):
     if not test_targets:
         return
 
     buildfile.build(
         output='tests',
         rule='phony',
-        inputs=[i.path for i in all_tests]
+        inputs=[i.path for i in test_targets]
     )
 
-    def build_command(test_targets, driver=None, collapse=False):
-        cmd = []
-        deps = []
-        if driver:
-            cmd.append(driver.path)
-            deps.append(driver.path)
+    def build_commands(tests, collapse=False):
+        cmd, deps = [], []
+        def command(subcmd):
+            if collapse:
+                out = NinjaWriter(StringIO())
+                out.write_each(subcmd, 'shell_word')
+                return safe_str.escaped_str(shell.quote(out.stream.getvalue()))
+            return subcmd
 
-        for i in test_targets:
+        for i in tests:
             if type(i).__name__ == 'TestDriver':
-                sub, moredeps = build_command(i.test_targets, i.driver, True)
-                deps.extend(moredeps)
-
-                if collapse:
-                    out = NinjaWriter(StringIO())
-                    out.write_each(sub, 'shell_word')
-                    cmd.append(safe_str.escaped_str(
-                        shell.quote(out.stream.getvalue())
-                    ))
-                else:
-                    cmd.append(sub)
+                args, moredeps = build_commands(i.tests, True)
+                deps += [i.driver.path] + moredeps
+                cmd.append(command([i.driver.path] + i.options + args))
             else:
-                cmd.append(i.path)
+                cmd.append(command([i.test.path] + i.options))
         return cmd, deps
 
-    commands, deps = build_command(test_targets)
+    commands, deps = build_commands(tests)
     if not buildfile.has_rule('command'):
         buildfile.rule(name='command', command=var('cmd'))
     buildfile.build(
         output='test',
         rule='command',
-        inputs=deps,
+        inputs=['tests'] + deps,
         variables={'cmd': chain_commands(commands)}
     )
 
