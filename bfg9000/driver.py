@@ -62,8 +62,12 @@ def validate_build_directories(args):
     args.builddir = os.path.abspath(args.builddir)
 
 def validate_regen_directories(args):
+    # The "source" directory will become our builddir, since it only makes sense
+    # to pass a single dir here.
     if args.builddir:
-        raise ValueError('foo')
+        raise ValueError(
+            'source directory must not be defined when regenerating'
+        )
     args.srcdir, args.builddir = None, os.path.abspath(args.srcdir or '.')
 
 def main():
@@ -78,7 +82,6 @@ def main():
                         version='%(prog)s ' + __version__)
 
     args = parser.parse_args()
-
     try:
         if args.regenerate:
             validate_regen_directories(args)
@@ -86,7 +89,7 @@ def main():
         else:
             validate_build_directories(args)
             env = Environment(
-                bfgpath=os.path.realpath(__file__),
+                bfgpath=os.path.realpath(sys.argv[0]),
                 srcdir=args.srcdir,
                 builddir=args.builddir,
                 backend=args.backend,
