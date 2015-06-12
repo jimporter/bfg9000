@@ -319,7 +319,7 @@ def write(env, build_inputs):
 
     all_rule(build_inputs.get_default_targets(), buildfile)
     install_rule(build_inputs.install_targets, buildfile, env)
-    test_rule(build_inputs.tests, build_inputs.test_targets, buildfile)
+    test_rule(build_inputs.tests, buildfile)
     for e in build_inputs.edges:
         _rule_handlers[type(e).__name__](e, build_inputs, buildfile)
     directory_rule(buildfile)
@@ -395,15 +395,19 @@ def install_rule(install_targets, buildfile, env):
         phony=True
     )
 
-def test_rule(tests, test_targets, buildfile):
-    if not test_targets:
+def test_rule(tests, buildfile):
+    if not tests:
         return
 
-    buildfile.rule(
-        target='tests',
-        deps=[i.path for i in test_targets],
-        phony=True
-    )
+    deps = []
+    if tests.targets:
+        buildfile.rule(
+            target='tests',
+            deps=[i.path for i in tests.targets],
+            phony=True
+        )
+        deps.append('tests')
+    deps.extend(i.path for i in tests.extra_deps)
 
     def build_commands(tests, collapse=False):
         cmd, deps = [], []
@@ -425,10 +429,10 @@ def test_rule(tests, test_targets, buildfile):
                 cmd.append(command([i.test.path] + i.options))
         return cmd, deps
 
-    recipe, deps = build_commands(tests)
+    recipe, moredeps = build_commands(tests.tests)
     buildfile.rule(
         target='test',
-        deps=['tests'] + deps,
+        deps=deps + moredeps,
         recipe=recipe,
         phony=True
     )

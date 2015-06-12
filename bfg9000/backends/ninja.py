@@ -219,7 +219,7 @@ def write(env, build_inputs):
 
     all_rule(build_inputs.get_default_targets(), buildfile)
     install_rule(build_inputs.install_targets, buildfile, env)
-    test_rule(build_inputs.tests, build_inputs.test_targets, buildfile)
+    test_rule(build_inputs.tests, buildfile)
     for e in build_inputs.edges:
         _rule_handlers[type(e).__name__](e, build_inputs, buildfile)
     regenerate_rule(buildfile, env)
@@ -317,15 +317,19 @@ def install_rule(install_targets, buildfile, env):
         commands=commands
     )
 
-def test_rule(tests, test_targets, buildfile):
-    if not test_targets:
+def test_rule(tests, buildfile):
+    if not tests:
         return
 
-    buildfile.build(
-        output='tests',
-        rule='phony',
-        inputs=[i.path for i in test_targets]
-    )
+    deps = []
+    if tests.targets:
+        buildfile.build(
+            output='tests',
+            rule='phony',
+            inputs=[i.path for i in tests.targets]
+        )
+        deps.append('tests')
+    deps.extend(i.path for i in tests.extra_deps)
 
     def build_commands(tests, collapse=False):
         cmd, deps = [], []
@@ -347,11 +351,11 @@ def test_rule(tests, test_targets, buildfile):
                 cmd.append(command([i.test.path] + i.options))
         return cmd, deps
 
-    commands, deps = build_commands(tests)
+    commands, moredeps = build_commands(tests.tests)
     command_build(
         buildfile,
         output='test',
-        inputs=['tests'] + deps,
+        inputs=deps + moredeps,
         commands=commands
     )
 

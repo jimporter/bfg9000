@@ -44,14 +44,22 @@ class InstallInputs(object):
     def __nonzero__(self):
         return bool(self.files or self.directories)
 
+class TestInputs(object):
+    def __init__(self):
+        self.tests = []
+        self.targets = []
+        self.extra_deps = []
+
+    def __nonzero__(self):
+        return bool(self.tests)
+
 class BuildInputs(object):
     def __init__(self):
         self.edges = []
         self.default_targets = []
         self.fallback_default = None
         self.install_targets = InstallInputs()
-        self.tests = []
-        self.test_targets = []
+        self.tests = TestInputs()
         self.global_options = {}
 
     def add_edge(self, edge):
