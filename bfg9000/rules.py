@@ -8,6 +8,29 @@ from .languages import ext2lang
 from .path import Path
 from .utils import flatten, iterate, listify, objectify, shell_listify
 
+class TestCase(object):
+    def __init__(self, target, options):
+        self.target = target
+        self.options = options
+
+class TestDriver(object):
+    def __init__(self, target, options):
+        self.target = target
+        self.options = options
+        self.tests = []
+
+class ObjectFiles(list):
+    def __getitem__(self, key):
+        if isinstance(key, basestring):
+            for i in self:
+                if i.creator and i.creator.file.path.path == key:
+                    return i
+            raise ValueError('{} not found'.format(repr(key)))
+        else:
+            return list.__getitem__(self, key)
+
+#####
+
 class Compile(build_inputs.Edge):
     def __init__(self, target, builder, file, include, options, extra_deps):
         self.builder = builder
@@ -72,7 +95,8 @@ def object_files(build, env, files, include=None, options=None, lang=None):
     def make_object(f):
         return object_file(build, env, file=f, include=include,
                            options=options, lang=lang)
-    return [objectify(i, ObjectFile, make_object) for i in iterate(files)]
+    return ObjectFiles(objectify(i, ObjectFile, make_object)
+                       for i in iterate(files))
 
 def _link(build, env, mode, project_name, name, files, libs=None,
           include=None, compile_options=None, link_options=None, lang=None,
@@ -142,17 +166,6 @@ def install(build, env, *args):
         else:
             default(build, i)
             build.install_targets.files.append(i)
-
-class TestCase(object):
-    def __init__(self, test, options):
-        self.test = test
-        self.options = options
-
-class TestDriver(object):
-    def __init__(self, driver, options):
-        self.driver = driver
-        self.options = options
-        self.tests = []
 
 @builtin
 def test(build, env, test, options=None, driver=None):
