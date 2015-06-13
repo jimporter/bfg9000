@@ -4,7 +4,7 @@ def safe_str(s):
     elif hasattr(s, '_safe_str'):
         return s._safe_str()
     else:
-        raise NotImplementedError()
+        raise NotImplementedError(type(s))
 
 class safe_string(object):
     pass
@@ -44,7 +44,7 @@ class jbos(safe_string): # Just a Bunch of Strings
             elif isinstance(i, basestring) or isinstance(i, safe_string):
                 self.bits.append(i)
             else:
-                raise TypeError()
+                raise TypeError(type(i))
 
     def __str__(self):
         raise NotImplementedError()

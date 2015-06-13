@@ -81,7 +81,7 @@ class Path(object):
         return self.local_path()
 
     def __str__(self):
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def __repr__(self):
         return repr(self.local_path())
