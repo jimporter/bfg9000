@@ -411,7 +411,9 @@ def test_rule(tests, buildfile):
 
     def build_commands(tests, collapse=False):
         cmd, deps = [], []
-        def command(subcmd):
+        def command(test, args=None):
+            env = [safe_str.jbos(k, '=', v) for k, v in test.env.iteritems()]
+            subcmd = env + [test.target.path] + test.options + (args or [])
             if collapse:
                 out = MakeWriter(StringIO())
                 out.write_each(subcmd, 'shell_word')
@@ -421,12 +423,12 @@ def test_rule(tests, buildfile):
         for i in tests:
             if type(i).__name__ == 'TestDriver':
                 args, moredeps = build_commands(i.tests, True)
-                if i.driver.creator:
-                    deps.append(i.driver.path)
+                if i.target.creator:
+                    deps.append(i.target.path)
                 deps.extend(moredeps)
-                cmd.append(command([i.driver.path] + i.options + args))
+                cmd.append(command(i, args))
             else:
-                cmd.append(command([i.test.path] + i.options))
+                cmd.append(command(i))
         return cmd, deps
 
     recipe, moredeps = build_commands(tests.tests)

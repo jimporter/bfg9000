@@ -9,14 +9,16 @@ from .path import Path
 from .utils import flatten, iterate, listify, objectify, shell_listify
 
 class TestCase(object):
-    def __init__(self, target, options):
+    def __init__(self, target, options, env):
         self.target = target
         self.options = options
+        self.env = env
 
 class TestDriver(object):
-    def __init__(self, target, options):
+    def __init__(self, target, options, env):
         self.target = target
         self.options = options
+        self.env = env
         self.tests = []
 
 class ObjectFiles(list):
@@ -168,17 +170,18 @@ def install(build, env, *args):
             build.install_targets.files.append(i)
 
 @builtin
-def test(build, env, test, options=None, driver=None):
+def test(build, env, test, options=None, environment=None, driver=None):
     test = objectify(test, build_inputs.File, source=Path.srcdir)
     build.tests.targets.append(test)
-    case = TestCase(test, shell_listify(options))
+    case = TestCase(test, shell_listify(options), environment or {})
     (driver or build.tests).tests.append(case)
     return case
 
 @builtin
-def test_driver(build, env, driver, options=None, parent=None):
+def test_driver(build, env, driver, options=None, environment=None,
+                parent=None):
     driver = objectify(driver, Executable, ExternalExecutable)
-    result = TestDriver(driver, shell_listify(options))
+    result = TestDriver(driver, shell_listify(options), environment or {})
     (parent or build.tests).tests.append(result)
     return result
 
