@@ -5,6 +5,7 @@ from cStringIO import StringIO
 from collections import namedtuple, OrderedDict
 from itertools import chain
 
+from .. import find
 from .. import path
 from .. import safe_str
 from .. import shell
@@ -17,7 +18,8 @@ def rule_handler(rule_name):
         return fn
     return decorator
 
-NinjaRule = namedtuple('NinjaRule', ['command', 'depfile', 'deps', 'generator'])
+NinjaRule = namedtuple('NinjaRule', ['command', 'depfile', 'deps', 'generator',
+                                     'restat'])
 NinjaBuild = namedtuple('NinjaBuild', ['outputs', 'rule', 'inputs', 'implicit',
                                        'order_only', 'variables'])
 
@@ -125,12 +127,13 @@ class NinjaFile(object):
             name = NinjaVariable(name)
         return name in self._variables
 
-    def rule(self, name, command, depfile=None, deps=None, generator=False):
+    def rule(self, name, command, depfile=None, deps=None, generator=False,
+             restat=False):
         if re.search('\W', name):
             raise ValueError('rule name contains invalid characters')
         if self.has_rule(name):
             raise ValueError('rule {} already exists'.format(repr(name)))
-        self._rules[name] = NinjaRule(command, depfile, deps, generator)
+        self._rules[name] = NinjaRule(command, depfile, deps, generator, restat)
 
     def has_rule(self, name):
         return name in self._rules
@@ -178,6 +181,8 @@ class NinjaFile(object):
             self._write_variable(out, var('deps'), rule.deps, 1)
         if rule.generator:
             self._write_variable(out, var('generator'), '1', 1)
+        if rule.restat:
+            self._write_variable(out, var('restat'), '1', 1)
 
     def _write_build(self, out, build):
         out.write_literal('build ')
@@ -222,7 +227,7 @@ def write(env, build_inputs):
     test_rule(build_inputs.tests, buildfile)
     for e in build_inputs.edges:
         _rule_handlers[type(e).__name__](e, build_inputs, buildfile)
-    regenerate_rule(buildfile, env)
+    regenerate_rule(build_inputs.find_results, buildfile, env)
 
     with open(os.path.join(env.builddir, 'build.ninja'), 'w') as out:
         buildfile.write(out)
@@ -361,16 +366,34 @@ def test_rule(tests, buildfile):
         commands=commands
     )
 
-def regenerate_rule(buildfile, env):
+def regenerate_rule(find_results, buildfile, env):
+    bfgpath = path.Path('build.bfg', path.Path.srcdir)
+    extra_deps = []
+
+    if find_results:
+        find_results.save(os.path.join(env.builddir, find.cachefile))
+        cachepath = path.Path(find.cachefile)
+        extra_deps.append(cachepath)
+
+        if not buildfile.has_build('PHONY'):
+            buildfile.build(output='PHONY', rule='phony')
+
+        buildfile.rule(
+            name='rescan',
+            command=[env.scanpath, var('out'), '-S', bfgpath],
+            restat=True
+        )
+        buildfile.build(output=cachepath, rule='rescan', implicit='PHONY')
+
     buildfile.rule(
         name='regenerate',
-        command=[env.bfgpath, '--regenerate', '.'],
+        command=[env.bfgpath, '--regenerate', path.Path('.')],
         generator=True
     )
     buildfile.build(
-        output=path.Path('build.ninja', path.Path.builddir, path.Path.basedir),
+        output=path.Path('build.ninja'),
         rule='regenerate',
-        implicit=[path.Path('build.bfg', path.Path.srcdir, path.Path.basedir)]
+        implicit=[bfgpath] + extra_deps
     )
 
 @rule_handler('Compile')

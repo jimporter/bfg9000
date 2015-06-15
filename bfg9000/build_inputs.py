@@ -1,3 +1,4 @@
+from . import find
 from . import path
 from . import utils
 
@@ -61,6 +62,7 @@ class BuildInputs(object):
         self.install_targets = InstallInputs()
         self.tests = TestInputs()
         self.global_options = {}
+        self.find_results = find.FindCache()
 
     def add_edge(self, edge):
         self.edges.append(edge)

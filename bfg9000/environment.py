@@ -1,13 +1,18 @@
 import os.path
+import pickle
 
 from . import platforms
 from .builders import ar
 from .builders import cc
 from .builders import msvc
 
+envfile = '.bfg_environ'
+
 class Environment(object):
     def __init__(self, bfgpath, srcdir, builddir, backend, install_prefix):
         self.bfgpath = bfgpath
+        self.scanpath = os.path.join(os.path.dirname(bfgpath), 'arachnotron')
+
         self.srcdir = srcdir
         self.builddir = builddir
         self.backend = backend
@@ -74,3 +79,12 @@ class Environment(object):
         if 'c++' in lang:
             return self._linkers[mode]['c++']
         return self._linkers[mode]['c']
+
+    def save(self, path):
+        with open(os.path.join(path, envfile), 'w') as out:
+            pickle.dump(self, out, protocol=2)
+
+    @staticmethod
+    def load(path):
+        with open(os.path.join(path, envfile)) as inp:
+            return pickle.load(inp)

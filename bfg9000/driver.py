@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# -*- python -*-
-
 import argparse
 import importlib
 import os
@@ -8,6 +5,7 @@ import pickle
 import sys
 
 from . import builtins
+from . import find
 from . import rules
 from . import utils
 from .build_inputs import BuildInputs
@@ -15,7 +13,6 @@ from .environment import Environment
 from .version import __version__
 
 bfgfile = 'build.bfg'
-envfile = '.bfg_environ'
 
 def is_srcdir(path):
     return os.path.exists(os.path.join(path, bfgfile))
@@ -85,7 +82,7 @@ def main():
     try:
         if args.regenerate:
             validate_regen_directories(args)
-            env = pickle.load(open(os.path.join(args.builddir, envfile)))
+            env = Environment.load(args.builddir)
         else:
             validate_build_directories(args)
             env = Environment(
@@ -95,10 +92,10 @@ def main():
                 backend=args.backend,
                 install_prefix=os.path.abspath(args.prefix)
             )
-            pickle.dump(env, open(os.path.join(args.builddir, envfile), 'w'),
-                        protocol=2)
+            env.save(args.builddir)
     except Exception as e:
         parser.error(e)
+        return 1
 
     build = BuildInputs()
     os.chdir(env.srcdir)

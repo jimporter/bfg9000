@@ -41,7 +41,7 @@ class Path(object):
     libdir = 'lib'
     includedir = 'include'
 
-    def __init__(self, path, source, install_base):
+    def __init__(self, path, source=builddir, install_base=basedir):
         self.path = path
         self.source = source
         self.install_base = install_base

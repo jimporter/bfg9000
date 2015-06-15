@@ -12,7 +12,10 @@ setup(
     packages=find_packages(exclude=['test']),
     install_requires=['lxml'],
     entry_points={
-        'console_scripts': ['bfg9000=bfg9000.driver:main'],
+        'console_scripts': [
+            'bfg9000=bfg9000.driver:main',
+            'arachnotron=bfg9000.scanner:scan',
+        ],
     },
 
     test_suite='test',
