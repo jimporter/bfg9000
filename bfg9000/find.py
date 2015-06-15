@@ -45,6 +45,8 @@ def _walk_flat(path):
 def _find(base, paths, name, type, flat):
     results = []
     for p in paths:
+        if type != 'f' and fnmatch.fnmatch(p, name):
+            results.append(p)
         full_path = os.path.join(base, p)
         generator = _walk_flat(full_path) if flat else os.walk(full_path)
         for path, dirs, files in generator:
