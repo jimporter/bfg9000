@@ -155,17 +155,21 @@ def command(build, env, name, cmd=None, cmds=None, extra_deps=None):
 
 @builtin
 def default(build, env, *args):
+    if len(args) == 0:
+        raise ValueError('expected at least one argument')
     build.default_targets.extend(
         i for i in flatten(args) if i.creator
     )
 
 @builtin
 def install(build, env, *args):
+    if len(args) == 0:
+        raise ValueError('expected at least one argument')
     for i in flatten(args):
         if isinstance(i, build_inputs.Directory):
             build.install_targets.directories.append(i)
         else:
-            default(build, i)
+            default(build, env, i)
             build.install_targets.files.append(i)
 
 @builtin
