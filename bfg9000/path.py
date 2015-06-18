@@ -77,6 +77,18 @@ class Path(object):
             path = self.path
         return real_path('prefix', os.path.join(self.install_base, path))
 
+    # XXX: It might make sense to remove this if/when we support changing
+    # bindir, libdir, etc. At that point, we might have to mandate absolute
+    # paths for rpath.
+    def relpath(self, start):
+        if os.path.isabs(self.path):
+            return self.path
+        else:
+            if self.source != start.source:
+                raise ValueError('source mismatch')
+            return os.path.relpath(self.local_path().path,
+                                   start.local_path().path)
+
     def _safe_str(self):
         return self.local_path()
 

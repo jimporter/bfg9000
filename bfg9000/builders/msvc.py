@@ -1,7 +1,7 @@
 import os
 
 from .. import shell
-from .. import utils
+from ..utils import iterate, uniques
 from ..file_types import *
 
 class MSVCCompiler(object):
@@ -17,7 +17,7 @@ class MSVCCompiler(object):
 
     def command(self, cmd, input, output, deps=None, args=None):
         result = [cmd]
-        result.extend(utils.iterate(args))
+        result.extend(iterate(args))
         if deps:
             result.append('/showIncludes')
         result.extend(['/c', input])
@@ -51,9 +51,9 @@ class MSVCLinker(object):
 
     def command(self, cmd, input, output, libs=None, args=None):
         result = [cmd]
-        result.extend(utils.iterate(args))
-        result.extend(utils.iterate(input))
-        result.extend(utils.iterate(libs))
+        result.extend(iterate(args))
+        result.extend(iterate(input))
+        result.extend(iterate(libs))
         result.append('/OUT:' + output)
         return result
 
@@ -74,7 +74,8 @@ class MSVCLinker(object):
         return ['/DLL'] if self.mode == 'shared_library' else []
 
     def lib_dirs(self, libraries):
-        dirs = utils.uniques(i.path.parent().local_path() for i in libraries)
+        dirs = uniques(i.path.parent().local_path() for i in libraries
+                       if i.path.parent())
         return ['/LIBPATH:' + i for i in dirs]
 
     def link_lib(self, library):
@@ -100,8 +101,8 @@ class MSVCStaticLinker(object):
 
     def command(self, cmd, input, output, args=None):
         result = [cmd]
-        result.extend(utils.iterate(args))
-        result.extend(utils.iterate(input))
+        result.extend(iterate(args))
+        result.extend(iterate(input))
         result.append('/OUT:' + output)
         return result
 

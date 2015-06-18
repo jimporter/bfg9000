@@ -1,4 +1,4 @@
-import os
+import os.path
 
 from . import build_inputs
 from .builtins import builtin
@@ -72,8 +72,8 @@ def header_directory(build, env, directory):
     return HeaderDirectory(directory, source=Path.srcdir)
 
 @builtin
-def object_file(build, env, name=None, file=None, include=None, options=None,
-                lang=None, extra_deps=None):
+def object_file(build, env, name=None, file=None, include=None, packages=None,
+                options=None, lang=None, extra_deps=None):
     if file is None:
         raise TypeError('"file" argument must not be None')
     if lang is None:
@@ -81,6 +81,7 @@ def object_file(build, env, name=None, file=None, include=None, options=None,
     source_file = objectify(file, SourceFile, source=Path.srcdir, lang=lang)
     includes = [objectify(i, HeaderDirectory, source=Path.srcdir)
                 for i in iterate(include)]
+    includes += sum((i.includes for i in iterate(packages)), [])
 
     if name is None:
         name = os.path.splitext(file)[0]
@@ -92,7 +93,8 @@ def object_file(build, env, name=None, file=None, include=None, options=None,
     return target
 
 @builtin
-def object_files(build, env, files, include=None, options=None, lang=None):
+def object_files(build, env, files, include=None, packages=None, options=None,
+                 lang=None):
     def make_object(f):
         return object_file(build, env, file=f, include=include,
                            options=options, lang=lang)
@@ -100,10 +102,12 @@ def object_files(build, env, files, include=None, options=None, lang=None):
                        for i in iterate(files))
 
 def _link(build, env, mode, project_name, name, files, libs=None,
-          include=None, compile_options=None, link_options=None, lang=None,
-          extra_deps=None):
-    objects = object_files(build, env, files, include, compile_options, lang)
-    libs = [ objectify(i, Library, ExternalLibrary) for i in iterate(libs) ]
+          include=None, packages=None, compile_options=None, link_options=None,
+          lang=None, extra_deps=None):
+    objects = object_files(build, env, files, include, packages,
+                           compile_options, lang)
+    libs = listify(libs, always_copy=True) # FIXME: Type-check/objectify?
+    libs += sum((i.libraries for i in iterate(packages)), [])
 
     builder = env.linker((i.lang for i in objects), mode)
     target = builder.output_file(name)

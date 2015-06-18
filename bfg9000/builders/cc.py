@@ -2,7 +2,7 @@ import os.path
 import re
 
 from .. import shell
-from .. import utils
+from ..utils import iterate, uniques
 from ..file_types import *
 
 class CcCompilerBase(object):
@@ -14,7 +14,7 @@ class CcCompilerBase(object):
 
     def command(self, cmd, input, output, deps=None, args=None):
         result = [cmd]
-        result.extend(utils.iterate(args))
+        result.extend(iterate(args))
         result.extend(['-c', input])
         if deps:
             result.extend(['-MMD', '-MF', deps])
@@ -53,9 +53,9 @@ class CcLinkerBase(object):
 
     def command(self, cmd, input, output, libs=None, args=None):
         result = [cmd]
-        result.extend(utils.iterate(args))
-        result.extend(utils.iterate(input))
-        result.extend(utils.iterate(libs))
+        result.extend(iterate(args))
+        result.extend(iterate(input))
+        result.extend(iterate(libs))
         result.extend(['-o', output])
         return result
 
@@ -85,26 +85,25 @@ class CcLinkerBase(object):
         return ['-shared', '-fPIC'] if self.mode == 'shared_library' else []
 
     def lib_dirs(self, libraries):
-        dirs = utils.uniques(i.path.parent().local_path() for i in libraries)
+        dirs = uniques(i.path.parent().local_path() for i in libraries
+                       if i.path.parent())
         return ['-L' + i for i in dirs]
 
     def link_lib(self, library):
         lib_name = library.path.basename()
-        if not isinstance(library, ExternalLibrary):
-            m = self._lib_re.match(lib_name)
-            if not m:
-                raise ValueError("{} is not a valid library"
-                                 .format(repr(lib_name)))
-            lib_name = m.group(1)
-        return ['-l' + lib_name]
+        m = self._lib_re.match(lib_name)
+        if not m:
+            raise ValueError("{} is not a valid library".format(repr(lib_name)))
+        return ['-l' + m.group(1)]
 
     def import_lib(self, library):
         if self.platform.has_import_library and self.mode == 'shared_library':
             return ['-Wl,--out-implib=' + library.path.local_path()]
         return []
 
-    def rpath(self, paths):
+    def rpath(self, libraries, start):
         if self.platform.has_rpath:
+            paths = uniques(i.path.parent().relpath(start) for i in libraries)
             rpath = ':'.join(os.path.join('$ORIGIN', i) for i in paths)
             if rpath:
                 return ['-Wl,-rpath={}'.format(rpath)]

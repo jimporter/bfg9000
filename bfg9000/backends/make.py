@@ -539,32 +539,23 @@ def emit_link(rule, build_inputs, buildfile):
     variables = {}
     command_kwargs = {}
     ldflags_value = list(linker.mode_args)
-    lib_deps = [i for i in rule.libs if i.creator]
 
     # Get the path for the DLL if this is a Windows build.
     path = utils.first(rule.target).path
 
     if linker.mode != 'static_library':
         ldflags_value.extend(rule.options)
-        ldflags_value.extend(linker.lib_dirs(lib_deps))
-
-        target_dirname = path.parent().local_path().path
-        ldflags_value.extend(linker.rpath(
-            # TODO: Provide a relpath function for Path objects?
-            os.path.relpath(i.path.parent().local_path().path, target_dirname)
-            for i in lib_deps
-        ))
+        ldflags_value.extend(linker.lib_dirs(rule.libs))
+        ldflags_value.extend(linker.rpath(rule.libs, path.parent()))
         ldflags_value.extend(linker.import_lib(rule.target))
 
         global_ldlibs, ldlibs = flags_vars(
             linker.link_var + 'LIBS', linker.global_libs, buildfile
         )
         command_kwargs['libs'] = ldlibs
-
         if rule.libs:
-            variables[ldlibs] = [global_ldlibs] + list(chain.from_iterable(
-                linker.link_lib(i) for i in rule.libs
-            ))
+            libs = sum((linker.link_lib(i) for i in rule.libs), [])
+            variables[ldlibs] = [global_ldlibs] + libs
 
     if ldflags_value:
         variables[ldflags] = [global_ldflags] + ldflags_value
@@ -577,6 +568,7 @@ def emit_link(rule, build_inputs, buildfile):
             )
         ], flavor='define')
 
+    lib_deps = (i for i in rule.libs if i.creator)
     recipe = MakeCall(recipename, (i.path for i in rule.files), path)
     if utils.isiterable(rule.target):
         target = path.addext('.stamp')

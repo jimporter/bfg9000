@@ -56,10 +56,3 @@ class ExternalExecutable(Executable):
 
     def __init__(self, name):
         Executable.__init__(self, name, source=Path.builddir)
-
-
-class ExternalLibrary(Library):
-    install_root = Path.basedir
-
-    def __init__(self, name):
-        Library.__init__(self, name, source=Path.builddir)

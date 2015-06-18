@@ -6,6 +6,7 @@ import sys
 
 from . import builtins
 from . import find
+from . import packages
 from . import rules
 from . import utils
 from .build_inputs import BuildInputs

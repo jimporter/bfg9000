@@ -1,8 +1,11 @@
 # -*- python -*-
 
-# Most significant projects require the use of external libraries. Currently,
-# you can reference an external library by passing its name as a string to the
-# `libs` argument for a build. NOTE: This will change soon, so be ready to
-# update any build.bfg files that rely on this!
+# Most significant projects require the use of external libraries. You can find
+# these libraries on the system with the sys_package() function:
 
-prog = executable('program', files=['program.cpp'], libs=['z'])
+zlib = sys_package('z')
+
+# Packages can be passed to the build functions, which will link the object with
+# the package and add the appropriate include directories:
+
+executable('program', files=['program.cpp'], packages=[zlib])
