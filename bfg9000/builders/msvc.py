@@ -60,10 +60,8 @@ class MSVCLinker(object):
             )
         elif self.mode == 'shared_library':
             ext = self.platform.shared_library_ext
-            return (
-                DynamicLibrary(name + ext, Path.builddir),
-                SharedLibrary(name + '.lib', Path.builddir),
-            )
+            dll = DllLibrary(name + ext, Path.builddir)
+            return SharedLibrary(name + '.lib', Path.builddir, dll)
         else:
             raise ValueError('unknown mode "{}"'.format(self.mode))
 

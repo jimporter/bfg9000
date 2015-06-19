@@ -540,6 +540,7 @@ def emit_link(rule, build_inputs, buildfile):
     ldflags_value = list(linker.mode_args)
     lib_deps = [i for i in rule.libs if i.creator]
 
+    # Get the path for the DLL if this is a Windows build.
     path = utils.first(rule.target).path
 
     if linker.mode != 'static_library':
@@ -552,6 +553,7 @@ def emit_link(rule, build_inputs, buildfile):
             os.path.relpath(i.path.parent().local_path().path, target_dirname)
             for i in lib_deps
         ))
+        ldflags_value.extend(linker.import_lib(rule.target))
 
         global_ldlibs, ldlibs = flags_vars(
             linker.link_var + 'LIBS', linker.global_libs, buildfile
@@ -562,9 +564,6 @@ def emit_link(rule, build_inputs, buildfile):
             variables[ldlibs] = [global_ldlibs] + list(chain.from_iterable(
                 linker.link_lib(i) for i in rule.libs
             ))
-
-    if linker.mode == 'shared_library' and isinstance(rule.target, tuple):
-        ldflags_value.extend(linker.import_lib(rule.target[1]))
 
     if ldflags_value:
         variables[ldflags] = [global_ldflags] + ldflags_value
@@ -578,7 +577,7 @@ def emit_link(rule, build_inputs, buildfile):
         ], flavor='define')
 
     recipe = MakeCall(recipename, (i.path for i in rule.files), path)
-    if isinstance(rule.target, tuple):
+    if utils.isiterable(rule.target):
         target = path.addext('.stamp')
         buildfile.rule(target=[i.path for i in rule.target], deps=[target])
         recipe = [recipe, ['@touch', var('@')]]

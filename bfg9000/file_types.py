@@ -34,11 +34,20 @@ class StaticLibrary(Library):
     pass
 
 class SharedLibrary(Library):
-    pass
+    def __init__(self, name, source, dll=None):
+        Library.__init__(self, name, source)
+        self.dll = dll
 
-# Used for Windows DLL files, which aren't linked to directly. Import libraries
-# are handled via SharedLibrary above.
-class DynamicLibrary(Library):
+    def __iter__(self):
+        # This allows a shared lib on Windows to be "flattened" into the
+        # import lib and DLL for various functions like default() and install(),
+        # which should apply to both by default.
+        if self.dll is not None:
+            yield self.dll
+        yield self
+
+# Used for Windows DLL files, which aren't linked to directly.
+class DllLibrary(Library):
     pass
 
 # TODO: Remove these eventually?

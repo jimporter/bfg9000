@@ -103,11 +103,7 @@ def _link(build, env, mode, project_name, name, files, libs=None,
           include=None, compile_options=None, link_options=None, lang=None,
           extra_deps=None):
     objects = object_files(build, env, files, include, compile_options, lang)
-
-    # Flatten the list of libraries and remove any DynamicLibraries (since they
-    # can't be linked to at build time).
-    libs = [ objectify(i, Library, ExternalLibrary) for i in
-             flatten(iterate(libs)) if not isinstance(i, DynamicLibrary) ]
+    libs = [ objectify(i, Library, ExternalLibrary) for i in iterate(libs) ]
 
     builder = env.linker((i.lang for i in objects), mode)
     target = builder.output_file(name)
