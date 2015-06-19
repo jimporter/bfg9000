@@ -27,9 +27,8 @@ class Executable(Binary):
 class Library(Binary):
     install_root = Path.libdir
 
-    def __init__(self, lib_name, name, source):
+    def __init__(self, name, source):
         Binary.__init__(self, name, source)
-        self.lib_name = lib_name
 
 class StaticLibrary(Library):
     pass
@@ -54,4 +53,4 @@ class ExternalLibrary(Library):
     install_root = Path.basedir
 
     def __init__(self, name):
-        Library.__init__(self, name, name, source=Path.builddir)
+        Library.__init__(self, name, source=Path.builddir)

@@ -59,11 +59,10 @@ class MSVCLinker(object):
                 name + self.platform.executable_ext, Path.builddir
             )
         elif self.mode == 'shared_library':
-            libname = os.path.basename(name)
             ext = self.platform.shared_library_ext
             return (
-                DynamicLibrary(libname, name + ext, Path.builddir),
-                SharedLibrary(libname, name + '.lib', Path.builddir),
+                DynamicLibrary(name + ext, Path.builddir),
+                SharedLibrary(name + '.lib', Path.builddir),
             )
         else:
             raise ValueError('unknown mode "{}"'.format(self.mode))
@@ -105,8 +104,7 @@ class MSVCStaticLinker(object):
         return result
 
     def output_file(self, name):
-        libname = os.path.basename(name)
-        return StaticLibrary(libname, name + '.lib', Path.builddir)
+        return StaticLibrary(name + '.lib', Path.builddir)
 
     @property
     def mode_args(self):

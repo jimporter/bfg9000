@@ -1,4 +1,5 @@
 import os
+import re
 
 from .. import shell
 from .. import utils
@@ -43,6 +44,13 @@ class CcLinkerBase(object):
         self.command_var = name
         self.link_var = 'ld'
 
+        # Create a regular expression to extract the library name for linking
+        # with -l. TODO: Support .lib as an extension on Windows/Cygwin?
+        exts = [r'\.a']
+        if not self.platform.has_import_library:
+            exts.append(re.escape(self.platform.shared_library_ext))
+        self._lib_re = re.compile('lib(.*)(?:' + '|'.join(exts) + ')$')
+
     def command(self, cmd, input, output, libs=None, args=None):
         result = [cmd]
         result.extend(utils.iterate(args))
@@ -64,16 +72,15 @@ class CcLinkerBase(object):
                 )
 
             if self.platform.has_import_library:
-                prefix = 'cyg' if self.platform.name == 'cygwin' else 'lib'
+                dllprefix = 'cyg' if self.platform.name == 'cygwin' else 'lib'
                 return (
-                    DynamicLibrary(tail, libpath(prefix), Path.builddir),
-                    SharedLibrary(tail + self.platform.shared_library_ext,
-                                  libpath() + '.a', Path.builddir),
+                    DynamicLibrary(libpath(dllprefix), Path.builddir),
+                    SharedLibrary(libpath() + '.a', Path.builddir),
                 )
             else:
-                return SharedLibrary(tail, libpath(), Path.builddir)
+                return SharedLibrary(libpath(), Path.builddir)
         else:
-            raise ValueError('unknown mode "{}"'.format(self.mode))
+            raise ValueError('unknown mode {}'.format(repr(self.mode)))
 
     @property
     def mode_args(self):
@@ -84,12 +91,19 @@ class CcLinkerBase(object):
         return ['-L' + i for i in dirs]
 
     def link_lib(self, library):
-        return ['-l' + library.lib_name]
+        lib_name = library.path.basename()
+        if not isinstance(library, ExternalLibrary):
+            m = self._lib_re.match(lib_name)
+            if not m:
+                raise ValueError("{} is not a valid library"
+                                 .format(repr(lib_name)))
+            lib_name = m.group(1)
+        return ['-l' + lib_name]
 
     def import_lib(self, library):
         if self.platform.has_import_library:
-            raise ValueError('platform "{}" doesn\'t have import libraries'
-                             .format(self.platform.name))
+            raise ValueError("platform {} doesn't have import libraries"
+                             .format(repr(self.platform.name)))
         if self.mode != 'shared_library':
             raise ValueError('import libraries only apply to shared libraries')
         return ['-Wl,--out-implib=' + library.path.local_path()]

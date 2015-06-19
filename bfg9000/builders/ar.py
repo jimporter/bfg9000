@@ -25,7 +25,7 @@ class ArLinker(object):
     def output_file(self, name):
         head, tail = os.path.split(name)
         path = os.path.join(head, 'lib' + tail + '.a')
-        return file_types.StaticLibrary(tail, path, Path.builddir)
+        return file_types.StaticLibrary(path, Path.builddir)
 
     @property
     def mode_args(self):
