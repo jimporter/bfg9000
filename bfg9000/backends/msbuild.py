@@ -135,17 +135,18 @@ class VcxProject(object):
     _XMLNS = 'http://schemas.microsoft.com/developer/msbuild/2003'
     _DOCTYPE = '<?xml version="1.0" encoding="utf-8"?>'
 
-    def __init__(self, name, uuid, mode='Application'):
+    def __init__(self, name, uuid, mode='Application', output_file=None,
+                 import_lib=None, files=None, srcdir=None, libs=None,
+                 libdirs=None, dependencies=None):
         self.name = name
         self.uuid = uuid
         self.mode = mode
-        self.output_file = None
-        self.import_lib = None
-        self.files = []
-        self.srcdir = None
-        self.libs = []
-        self.libdirs = []
-        self.dependencies = []
+        self.output_files = utils.listify(output_file)
+        self.files = files or []
+        self.srcdir = srcdir
+        self.libs = libs or []
+        self.libdirs = libdirs or []
+        self.dependencies = dependencies or []
 
     @property
     def path(self):
@@ -157,10 +158,10 @@ class VcxProject(object):
 
     def write(self, out):
         link = E.Link()
-        if self.output_file:
-            link.append(E.OutputFile(self.output_file))
-        if self.import_lib:
-            link.append(E.ImportLibrary(self.import_lib))
+        if len(self.output_files) >= 1:
+            link.append(E.OutputFile(self.output_files[0]))
+        if len(self.output_files) == 2:
+            link.append(E.ImportLibrary(self.output_files[1]))
         if self.libs:
             libs = ';'.join(self.libs + ['%(AdditionalDependencies)'])
             link.append(E.AdditionalDependencies(libs))
@@ -261,25 +262,22 @@ def write(env, build_inputs):
                 if dep.creator and id(dep.creator.target) in project_map:
                     dependencies.append(project_map[id(dep.creator.target)])
 
-            project = VcxProject(e.project_name, uuids[e.project_name],
-                                 link_mode(e.builder.mode))
+            project = VcxProject(
+                name=e.project_name,
+                uuid=uuids[e.project_name],
+                mode=link_mode(e.builder.mode),
 
-            # TODO: It's awfully easy to misspell these and silently fail...
-            if type(e.target) == tuple:
                 # TODO: These currently end up in subdirs (e.g. bin/). We
                 # probably shouldn't do this. Maybe that's more dependent on the
                 # Windows platform than the MSBuild backend, though.
-                project.import_lib = path_str(e.target[0].path)
-                project.output_file = path_str(e.target[1].path)
-            else:
-                project.output_file = path_str(e.target.path)
+                output_file=[path_str(i.path) for i in utils.iterate(e.target)],
 
-            project.srcdir = env.srcdir
-            project.files = [path_str(i.creator.file.path) for i in e.files]
-            project.libs = [path_str(i.path) for i in e.libs]
-            project.libdirs = ['$(OutDir)']
-            project.dependencies = dependencies
-
+                srcdir=env.srcdir,
+                files=[path_str(i.creator.file.path) for i in e.files],
+                libs=[path_str(i.path) for i in e.libs],
+                libdirs=['$(OutDir)'],
+                dependencies=dependencies,
+            )
             projects.append(project)
             project_map[id(e.target)] = project
 
