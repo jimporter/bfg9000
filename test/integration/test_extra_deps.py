@@ -1,4 +1,4 @@
-import subprocess
+import os.path
 import unittest
 
 from integration import *

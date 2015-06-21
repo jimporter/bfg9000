@@ -1,3 +1,0 @@
-# -*- python -*-
-
-executable('simple', files=['simple.cpp'])

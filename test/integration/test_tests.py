@@ -1,11 +1,13 @@
-import subprocess
+import os.path
 import unittest
 
 from integration import *
 
-class TestTest(IntegrationTest):
+class TestTests(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        IntegrationTest.__init__(self, 'test', *args, **kwargs)
+        IntegrationTest.__init__(
+            self, os.path.join(examples_dir, '06_tests'), *args, **kwargs
+        )
 
     def test_test(self):
         self.build('test')

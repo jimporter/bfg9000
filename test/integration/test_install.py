@@ -1,5 +1,4 @@
 import os.path
-import subprocess
 import unittest
 
 from integration import *

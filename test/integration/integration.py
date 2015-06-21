@@ -7,7 +7,9 @@ import sys
 import time
 import unittest
 
-basedir = os.path.abspath(os.path.dirname(__file__))
+this_dir = os.path.abspath(os.path.dirname(__file__))
+examples_dir = os.path.join(this_dir, '..', '..', 'examples')
+test_data_dir = os.path.join(this_dir, '..', 'test_data')
 
 def cleandir(path):
     try:
@@ -32,7 +34,7 @@ class SubprocessError(AssertionError):
 class IntegrationTest(unittest.TestCase):
     def __init__(self, srcdir, *args, **kwargs):
         unittest.TestCase.__init__(self, *args, **kwargs)
-        self.srcdir = os.path.join(basedir, srcdir)
+        self.srcdir = os.path.join(test_data_dir, srcdir)
         self.builddir = os.path.join(self.srcdir, 'build')
         self.extra_args = []
         self.backend = os.getenv('BACKEND', 'make')
@@ -65,7 +67,7 @@ class IntegrationTest(unittest.TestCase):
 
     def assertOutput(self, args, output):
         if self.backend == 'msbuild':
-            args = args[:]
+            args = list(args)
             args[0] = os.path.join('Debug', args[0])
         self.assertEqual(
             subprocess.check_output(args, universal_newlines=True), output

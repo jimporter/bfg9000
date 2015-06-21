@@ -1,12 +1,13 @@
 import os
-import subprocess
 import unittest
 
 from integration import *
 
 class TestSubdirs(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        IntegrationTest.__init__(self, 'subdirs', *args, **kwargs)
+        IntegrationTest.__init__(
+            self, os.path.join(examples_dir, '04_subdirs'), *args, **kwargs
+        )
         self.distdir = os.path.join(self.srcdir, 'dist')
         self.extra_args = ['--prefix', self.distdir]
 
