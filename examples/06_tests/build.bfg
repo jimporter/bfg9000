@@ -1,7 +1,14 @@
 # -*- python -*-
 
-prog = executable('prog', files=['prog.cpp'])
-test(prog)
+# It's important to have tests for your code! Any executable can be run as a
+# test by passing it to the test() function:
+
+test( executable('prog', files=['prog.cpp']) )
+
+# In addition, you can provide a test driver that collects all of your tests
+# together and runs them as one. In this case, we just test a Python script
+# using the `python` command, but you're free to use any test driver you like
+# (including ones built by the executable() function in bfg9000!).
 
 driver = test_driver('python')
 test('script.py', driver=driver)

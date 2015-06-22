@@ -1,5 +1,21 @@
 # -*- python -*-
 
+# This build.bfg shows how to build a shared library and use it in an
+# executable. First, create the shared_library and give it a name; like
+# executables, this name will be transformed to match the conventions for your
+# platform (e.g. `liblibrary.so`). The return value of shared_library() is a
+# reference to the built library, which can be used elsewhere in the build file.
+
 lib = shared_library('library', files=['library.cpp'])
+
+# Next, use the `lib` variable to link the newly-created library to an
+# executable that requires it.
+
 prog = executable('program', files=['program.cpp'], libs=[lib])
+
+# Finally, we can specify the default targets for this build script. These will
+# be built when running `make` or `make all`. This isn't strictly necessary in
+# this case, since `prog` already depends on `lib` and will ensure it's built
+# first. However, for more complex build scripts, this can be useful.
+
 default(prog, lib)

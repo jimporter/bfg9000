@@ -1,5 +1,17 @@
 # -*- python -*-
 
+# Many projects need to set compiler options for their code to build. bfg9000
+# supports setting options at the language level and for each target. To set
+# global options for a particular language, use the global_options() function:
+
 global_options('-DPRE=\'"hello"\'', lang='c++')
+
+# Targets may also have their own options. For linking steps (e.g. executables),
+# options can be set for compilation or linking, using `compile_options` and
+# `link_options`, respectively.
+
 executable('program', compile_options='-DPOST=\'"world!"\'',
            files=['program.cpp'])
+
+# Finally, individual builds can set various options using the usual environment
+# variables, such as CXXFLAGS, CPPFLAGS, and LDFLAGS.

@@ -1,3 +1,20 @@
 # -*- python -*-
 
+# This is about the simplest build.bfg you can write: a single executable with a
+# single file. The first argument is the name of the executable to be built
+# (which may be modified for the platform you're building for, e.g. "simple.exe"
+# on Windows). The "files" argument specifies the source files to be built into
+# the executable.
+#
+# To build this executable, first run bfg9000 to make the backend-specific build
+# files:
+#
+#  $ cd examples/01_simple
+#  $ bfg9000 build/
+#  $ cd build/
+#  $ make
+#
+# Once the build finishes, you can run your newly-created executable, located at
+# bin/simple.
+
 executable('simple', files=['simple.cpp'])
