@@ -5,6 +5,15 @@ making it easy to define how to build your software. It converts a Python-based
 build script into the appropriate files for your underlying build system of
 choice (Make, Ninja, or MSBuild).
 
+## Installation
+
+bfg9000 uses setuptools, so installation is much the same as any other Python
+package. Just run:
+
+```sh
+python setup.py install
+```
+
 ## A Brief Example
 
 You can't get much simpler than the simplest `build.bfg` file:
@@ -23,6 +32,10 @@ make
 ```
 
 From there, you can run your newly-created executable: `bin/simple`. Hooray!
+
+For further examples, please see the
+[`examples/`](https://github.com/jimporter/bfg9000/tree/master/examples)
+subdirectory.
 
 ## License
 
