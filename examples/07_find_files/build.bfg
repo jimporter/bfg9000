@@ -1,0 +1,26 @@
+# -*- python -*-
+
+# For projects with many files (or lazy developers!), it can be bothersome to
+# have to list every source file explicitly. In cases like this, the
+# find_files() function comes in handy. It starts at a base directory and
+# searches recursively for files matching a glob:
+
+hello = executable('hello', files=find_files('hello', '*.cpp'))
+
+# It's also possible to search specifically for files ('f') or directories
+# ('d'):
+
+bye_dirs = find_files('goodbye', '*', type='d')
+
+# Finally, the search can be performed in multiple base directories, as well as
+# *not* recursing into subdirectories:
+
+goodbye = executable('goodbye', files=find_files(bye_dirs, '*.cpp', flat=True))
+
+default(hello, goodbye)
+
+# When using find_files(), bfg9000 records the result of the search and, before
+# each build, will check to ensure that the result hasn't change. If it has, the
+# build files will be regenerated automatically. Naturally, this can slow down
+# the build process for extremely large projects. To disable this, just pass
+# `cache=False` to find_files().

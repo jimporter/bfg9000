@@ -62,7 +62,7 @@ def _find(base, paths, name, type, flat):
     return results
 
 @builtin
-def find(build_inputs, env, path='.', name='*', type=None, flat=False):
+def find_files(build_inputs, env, path='.', name='*', type=None, flat=False):
     args = (os.getcwd(), listify(path), name, type, flat)
     results = _find(*args)
     build_inputs.find_results.add(args, list(results))
