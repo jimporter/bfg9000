@@ -381,6 +381,7 @@ def regenerate_rule(find_results, buildfile, env):
         buildfile.rule(
             name='rescan',
             command=[env.scanpath, var('out'), '-S', bfgpath],
+            generator=True,
             restat=True
         )
         buildfile.build(output=cachepath, rule='rescan', implicit='PHONY')
