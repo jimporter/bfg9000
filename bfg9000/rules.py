@@ -195,3 +195,7 @@ def global_options(build, env, options, lang):
     if not lang in build.global_options:
         build.global_options[lang] = []
     build.global_options[lang].extend(shell_listify(options))
+
+@builtin
+def global_link_options(build, env, options):
+    build.global_link_options.extend(shell_listify(options))

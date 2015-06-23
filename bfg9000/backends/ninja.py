@@ -446,7 +446,9 @@ def emit_object_file(rule, build_inputs, buildfile):
 def emit_link(rule, build_inputs, buildfile):
     linker = rule.builder
     global_ldflags, ldflags = flags_vars(
-        linker.link_var + 'flags', linker.global_args, buildfile
+        linker.link_var + 'flags',
+        linker.global_args + build_inputs.global_link_options,
+        buildfile
     )
 
     variables = {}

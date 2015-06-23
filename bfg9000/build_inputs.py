@@ -62,6 +62,7 @@ class BuildInputs(object):
         self.install_targets = InstallInputs()
         self.tests = TestInputs()
         self.global_options = {}
+        self.global_link_options = []
         self.find_results = find.FindCache()
 
     def add_edge(self, edge):

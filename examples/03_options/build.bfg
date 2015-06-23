@@ -6,6 +6,11 @@
 
 global_options('-DPRE=\'"hello"\'', lang='c++')
 
+# Occasionally, a project may also need to set some link-time options. This can
+# be done with global_link_options():
+
+global_link_options('-static-libstdc++')
+
 # Targets may also have their own options. For linking steps (e.g. executables),
 # options can be set for compilation or linking, using `compile_options` and
 # `link_options`, respectively.

@@ -532,7 +532,9 @@ def emit_link(rule, build_inputs, buildfile):
     linker = rule.builder
     recipename = MakeVariable('RULE_{}'.format(linker.name.upper()))
     global_ldflags, ldflags = flags_vars(
-        linker.link_var + 'FLAGS', linker.global_args, buildfile
+        linker.link_var + 'FLAGS',
+        linker.global_args + build_inputs.global_link_options,
+        buildfile
     )
 
     variables = {}
