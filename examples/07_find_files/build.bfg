@@ -20,7 +20,7 @@ goodbye = executable('goodbye', files=find_files(bye_dirs, '*.cpp', flat=True))
 default(hello, goodbye)
 
 # When using find_files(), bfg9000 records the result of the search and, before
-# each build, will check to ensure that the result hasn't change. If it has, the
-# build files will be regenerated automatically. Naturally, this can slow down
-# the build process for extremely large projects. To disable this, just pass
-# `cache=False` to find_files().
+# each build, will check to ensure that the result hasn't changed. If it has,
+# the build files will be regenerated automatically. Naturally, this can slow
+# down the build process for extremely large projects. To disable this, just
+# pass `cache=False` to find_files().
