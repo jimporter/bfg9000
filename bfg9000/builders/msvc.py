@@ -1,5 +1,6 @@
 import os
 
+from .. import shell
 from .. import utils
 from ..file_types import *
 
@@ -9,7 +10,10 @@ class MSVCCompiler(object):
         self.command_name = 'cl'
         self.name = 'cxx'
         self.command_var = 'cxx'
-        self.global_args = [] # TODO
+        self.global_args = (
+            shell.split(env.getvar('CXXFLAGS', '')) +
+            shell.split(env.getvar('CPPFLAGS', ''))
+        )
 
     def command(self, cmd, input, output, deps=None, args=None):
         result = [cmd]
@@ -42,8 +46,8 @@ class MSVCLinker(object):
         self.name = 'link'
         self.command_var = 'link'
         self.link_var = 'ld'
-        self.global_args = [] # TODO
-        self.global_libs = [] # TODO
+        self.global_args = shell.split(env.getvar('LDFLAGS', ''))
+        self.global_libs = shell.split(env.getvar('LDLIBS', ''))
 
     def command(self, cmd, input, output, libs=None, args=None):
         result = [cmd]
@@ -92,7 +96,7 @@ class MSVCStaticLinker(object):
         self.name = 'lib'
         self.command_var = 'lib'
         self.link_var = 'lib'
-        self.global_args = [] # TODO
+        self.global_args = shell.split(env.getvar('LIBFLAGS'))
 
     def command(self, cmd, input, output, args=None):
         result = [cmd]
