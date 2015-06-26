@@ -6,14 +6,14 @@ from .. import file_types
 from ..path import Path
 
 class ArLinker(object):
-    def __init__(self, platform):
-        self.platform = platform
+    def __init__(self, env):
+        self.platform = env.platform
         self.mode = 'static_library'
-        self.command_name = os.getenv('AR', 'ar')
+        self.command_name = env.getvar('AR', 'ar')
         self.command_var = 'ar'
         self.link_var = 'ar'
         self.name = 'ar'
-        self.global_args = shell.split(os.getenv('ARFLAGS', 'cru'))
+        self.global_args = shell.split(env.getvar('ARFLAGS', 'cru'))
 
     def command(self, cmd, input, output, args=None):
         result = [cmd]

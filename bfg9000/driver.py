@@ -90,7 +90,8 @@ def main():
                 srcdir=args.srcdir,
                 builddir=args.builddir,
                 backend=args.backend,
-                install_prefix=os.path.abspath(args.prefix)
+                install_prefix=os.path.abspath(args.prefix),
+                variables=dict(os.environ),
             )
             env.save(args.builddir)
     except Exception as e:

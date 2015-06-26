@@ -1,4 +1,4 @@
-import os
+import os.path
 import re
 
 from .. import shell
@@ -6,8 +6,8 @@ from .. import utils
 from ..file_types import *
 
 class CcCompilerBase(object):
-    def __init__(self, platform, command, name):
-        self.platform = platform
+    def __init__(self, env, command, name):
+        self.platform = env.platform
         self.command_name = command
         self.name = name
         self.command_var = name
@@ -36,8 +36,8 @@ class CcCompilerBase(object):
         return ['-I' + directory.path.local_path()]
 
 class CcLinkerBase(object):
-    def __init__(self, platform, mode, command, name):
-        self.platform = platform
+    def __init__(self, env, mode, command, name):
+        self.platform = env.platform
         self.mode = mode
         self.command_name = command
         self.name = 'link_' + name
@@ -111,31 +111,29 @@ class CcLinkerBase(object):
         return []
 
 class CcCompiler(CcCompilerBase):
-    def __init__(self, platform):
-        CcCompilerBase.__init__(self, platform, os.getenv('CC', 'cc'), 'cc')
+    def __init__(self, env):
+        CcCompilerBase.__init__(self, env, env.getvar('CC', 'cc'), 'cc')
         self.global_args = (
-            shell.split(os.getenv('CFLAGS', '')) +
-            shell.split(os.getenv('CPPFLAGS', ''))
+            shell.split(env.getvar('CFLAGS', '')) +
+            shell.split(env.getvar('CPPFLAGS', ''))
         )
 
 class CxxCompiler(CcCompilerBase):
-    def __init__(self, platform):
-        CcCompilerBase.__init__(self, platform, os.getenv('CXX', 'c++'), 'cxx')
+    def __init__(self, env):
+        CcCompilerBase.__init__(self, env, env.getvar('CXX', 'c++'), 'cxx')
         self.global_args = (
-            shell.split(os.getenv('CXXFLAGS', '')) +
-            shell.split(os.getenv('CPPFLAGS', ''))
+            shell.split(env.getvar('CXXFLAGS', '')) +
+            shell.split(env.getvar('CPPFLAGS', ''))
         )
 
 class CcLinker(CcLinkerBase):
-    def __init__(self, platform, mode):
-        CcLinkerBase.__init__(self, platform, mode, os.getenv('CC', 'cc'), 'cc')
-        self.global_args = shell.split(os.getenv('LDFLAGS', ''))
-        self.global_libs = shell.split(os.getenv('LDLIBS', ''))
+    def __init__(self, env, mode):
+        CcLinkerBase.__init__(self, env, mode, env.getvar('CC', 'cc'), 'cc')
+        self.global_args = shell.split(env.getvar('LDFLAGS', ''))
+        self.global_libs = shell.split(env.getvar('LDLIBS', ''))
 
 class CxxLinker(CcLinkerBase):
-    def __init__(self, platform, mode):
-        CcLinkerBase.__init__(
-            self, platform, mode, os.getenv('CXX', 'c++'), 'cxx'
-        )
-        self.global_args = shell.split(os.getenv('LDFLAGS', ''))
-        self.global_libs = shell.split(os.getenv('LDLIBS', ''))
+    def __init__(self, env, mode):
+        CcLinkerBase.__init__(self, env, mode, env.getvar('CXX', 'c++'), 'cxx')
+        self.global_args = shell.split(env.getvar('LDFLAGS', ''))
+        self.global_libs = shell.split(env.getvar('LDLIBS', ''))

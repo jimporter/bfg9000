@@ -1,15 +1,17 @@
+import json
 import os.path
-import pickle
 
 from . import platforms
 from .builders import ar
 from .builders import cc
 from .builders import msvc
 
-envfile = '.bfg_environ'
-
 class Environment(object):
-    def __init__(self, bfgpath, srcdir, builddir, backend, install_prefix):
+    version = 1
+    envfile = '.bfg_environ'
+
+    def __init__(self, bfgpath, srcdir, builddir, backend, install_prefix,
+                 variables):
         self.bfgpath = bfgpath
         self.scanpath = os.path.join(os.path.dirname(bfgpath), 'arachnotron')
 
@@ -18,15 +20,17 @@ class Environment(object):
         self.backend = backend
         self.install_prefix = install_prefix
 
+        self.variables = variables
+
         self.platform = platforms.platform_info(platforms.platform_name())
 
         # TODO: Come up with a more flexible way to initialize the compilers and
         # linkers for each language.
         if self.platform.name == 'windows':
-            compiler = msvc.MSVCCompiler(self.platform)
-            exe_linker = msvc.MSVCLinker(self.platform, 'executable')
-            lib_linker = msvc.MSVCStaticLinker(self.platform)
-            dll_linker = msvc.MSVCLinker(self.platform, 'shared_library')
+            compiler = msvc.MSVCCompiler(self)
+            exe_linker = msvc.MSVCLinker(self, 'executable')
+            lib_linker = msvc.MSVCStaticLinker(self)
+            dll_linker = msvc.MSVCLinker(self, 'shared_library')
             self._compilers = {
                 'c'  : compiler,
                 'c++': compiler,
@@ -46,25 +50,28 @@ class Environment(object):
                 },
             }
         else:
-            ar_linker = ar.ArLinker(self.platform)
+            ar_linker = ar.ArLinker(self)
             self._compilers = {
-                'c'  : cc.CcCompiler(self.platform),
-                'c++': cc.CxxCompiler(self.platform),
+                'c'  : cc.CcCompiler(self),
+                'c++': cc.CxxCompiler(self),
             }
             self._linkers = {
                 'executable': {
-                    'c'  : cc.CcLinker(self.platform, 'executable'),
-                    'c++': cc.CxxLinker(self.platform, 'executable'),
+                    'c'  : cc.CcLinker(self, 'executable'),
+                    'c++': cc.CxxLinker(self, 'executable'),
                 },
                 'static_library': {
                     'c'  : ar_linker,
                     'c++': ar_linker,
                 },
                 'shared_library': {
-                    'c'  : cc.CcLinker(self.platform, 'shared_library'),
-                    'c++': cc.CxxLinker(self.platform, 'shared_library'),
+                    'c'  : cc.CcLinker(self, 'shared_library'),
+                    'c++': cc.CxxLinker(self, 'shared_library'),
                 },
             }
+
+    def getvar(self, key, default=None):
+        return self.variables.get(key, default)
 
     def compiler(self, lang):
         return self._compilers[lang]
@@ -81,10 +88,23 @@ class Environment(object):
         return self._linkers[mode]['c']
 
     def save(self, path):
-        with open(os.path.join(path, envfile), 'w') as out:
-            pickle.dump(self, out, protocol=2)
+        with open(os.path.join(path, self.envfile), 'w') as out:
+            json.dump({
+                'version': self.version,
+                'data': {
+                    'bfgpath': self.bfgpath,
+                    'srcdir': self.srcdir,
+                    'builddir': self.builddir,
+                    'backend': self.backend,
+                    'install_prefix': self.install_prefix,
+                    'variables': self.variables,
+                }
+            }, out)
 
-    @staticmethod
-    def load(path):
-        with open(os.path.join(path, envfile)) as inp:
-            return pickle.load(inp)
+    @classmethod
+    def load(cls, path):
+        with open(os.path.join(path, cls.envfile)) as inp:
+            data = json.load(inp)
+        if data['version'] > cls.version:
+            raise ValueError('saved version exceeds expected version')
+        return Environment(**data['data'])

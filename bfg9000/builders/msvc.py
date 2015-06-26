@@ -35,8 +35,8 @@ class MSVCCompiler(object):
         return ['/I' + directory.path.local_path()]
 
 class MSVCLinker(object):
-    def __init__(self, platform, mode):
-        self.platform = platform
+    def __init__(self, env, mode):
+        self.platform = env.platform
         self.mode = mode
         self.command_name = 'link'
         self.name = 'link'
@@ -85,8 +85,8 @@ class MSVCLinker(object):
         return []
 
 class MSVCStaticLinker(object):
-    def __init__(self, platform):
-        self.platform = platform
+    def __init__(self, env):
+        self.platform = env.platform
         self.mode = 'static_library'
         self.command_name = 'lib'
         self.name = 'lib'
