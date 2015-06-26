@@ -5,7 +5,6 @@ from cStringIO import StringIO
 from collections import namedtuple, OrderedDict
 from itertools import chain
 
-from .. import find
 from .. import path
 from .. import safe_str
 from .. import shell
@@ -456,8 +455,8 @@ def regenerate_rule(find_results, buildfile, env):
     extra_deps = []
 
     if find_results:
-        find_results.save(os.path.join(env.builddir, find.cachefile))
-        cachepath = path.Path(find.cachefile)
+        find_results.save(os.path.join(env.builddir, find_results.cachefile))
+        cachepath = path.Path(find_results.cachefile)
         extra_deps.append(cachepath)
 
         buildfile.variable('__UNUSED__', MakeFunc('shell', [

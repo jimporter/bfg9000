@@ -1,13 +1,14 @@
 import fnmatch
 import os
-import pickle
+import json
 
 from .builtins import builtin
 from .utils import listify
 
-cachefile = '.bfg_watch'
-
 class FindCache(object):
+    version = 1
+    cachefile = '.bfg_watch'
+
     def __init__(self):
         self._cache = []
 
@@ -17,20 +18,28 @@ class FindCache(object):
     def __iter__(self):
         return iter(self._cache)
 
-    def has_changes(self):
-        for args, old_results in self:
-            if _find(*args) != old_results:
-                return True
-        return False
-
     def save(self, path):
         with open(path, 'w') as out:
-            pickle.dump(self, out, protocol=2)
+            json.dump({
+                'version': self.version,
+                'cache': self._cache
+            }, out)
 
-    @staticmethod
-    def load(path):
-        with open(path) as inp:
-            return pickle.load(inp)
+    @classmethod
+    def dirty(cls, path):
+        try:
+            with open(path) as inp:
+                data = json.load(inp)
+            if data['version'] > cls.version:
+                # XXX: Issue a warning about downgrading?
+                return True
+
+            for args, old_results in data['cache']:
+                if _find_files(*args) != old_results:
+                    return True
+            return False
+        except:
+            return True
 
 def _walk_flat(path):
     names = os.listdir(path)
@@ -42,7 +51,7 @@ def _walk_flat(path):
             nondirs.append(name)
     yield path, dirs, nondirs
 
-def _find(base, paths, name, type, flat):
+def _find_files(base, paths, name, type, flat):
     results = []
     for p in paths:
         if type != 'f' and fnmatch.fnmatch(p, name):
@@ -62,8 +71,10 @@ def _find(base, paths, name, type, flat):
     return results
 
 @builtin
-def find_files(build_inputs, env, path='.', name='*', type=None, flat=False):
+def find_files(build_inputs, env, path='.', name='*', type=None, flat=False,
+               cache=True):
     args = (os.getcwd(), listify(path), name, type, flat)
-    results = _find(*args)
-    build_inputs.find_results.add(args, list(results))
+    results = _find_files(*args)
+    if cache:
+        build_inputs.find_results.add(args, list(results))
     return results
