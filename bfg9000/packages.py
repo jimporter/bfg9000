@@ -19,7 +19,7 @@ def _find_library(env, search_dirs, name):
 
 @builtin
 def system_package(build, env, name):
-    return Package([], [_find_library(env, env.platform.lib_paths, name)])
+    return Package([], [_find_library(env, env.platform.lib_dirs, name)])
 
 @builtin
 def boost_package(build, env, name):
@@ -30,6 +30,6 @@ def boost_package(build, env, name):
         search_dirs = [os.path.join(root, 'lib')]
     else:
         headers = []
-        search_dirs = env.platform.lib_paths
+        search_dirs = env.platform.lib_dirs
 
     return Package(headers, [_find_library(env, search_dirs, 'boost_' + name)])
