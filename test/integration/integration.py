@@ -25,11 +25,11 @@ def cleandir(path):
             raise
     os.mkdir(path)
 
-class SubprocessError(AssertionError):
+class SubprocessError(unittest.TestCase.failureException):
     def __init__(self, message):
-        AssertionError.__init__(self, '\n{line}\n{message}\n{line}'.format(
-            line='-' * 60, message=message
-        ))
+        unittest.TestCase.failureException.__init__(
+            self, '\n{line}\n{msg}\n{line}'.format(line='-' * 60, msg=message)
+        )
 
 class IntegrationTest(unittest.TestCase):
     def __init__(self, srcdir, *args, **kwargs):
@@ -55,7 +55,7 @@ class IntegrationTest(unittest.TestCase):
                 args.append('/target:' + target)
             else:
                 args.append(target)
-        proc = self.assertPopen(args, True)
+        return self.assertPopen(args, True)
 
     def assertPopen(self, args, bad=False):
         proc = subprocess.Popen(
@@ -64,6 +64,7 @@ class IntegrationTest(unittest.TestCase):
         output = proc.communicate()[0]
         if proc.returncode != 0:
             raise SubprocessError(output)
+        return output
 
     def assertOutput(self, args, output):
         if self.backend == 'msbuild':

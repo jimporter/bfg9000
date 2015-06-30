@@ -64,6 +64,12 @@ class Command(build_inputs.Edge):
 #####
 
 @builtin
+def source_file(build, env, name, lang=None):
+    if lang is None:
+        lang = ext2lang.get( os.path.splitext(name)[1] )
+    return SourceFile(name, source=Path.srcdir, lang=lang)
+
+@builtin
 def header(build, env, name):
     return HeaderFile(name, source=Path.srcdir)
 

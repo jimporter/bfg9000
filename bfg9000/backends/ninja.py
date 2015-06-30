@@ -275,7 +275,7 @@ def all_rule(default_targets, buildfile):
     buildfile.build(
         output='all',
         rule='phony',
-        inputs=[i.path for i in default_targets]
+        inputs=default_targets
     )
 
 # TODO: Write a better `install` program to simplify this
@@ -330,15 +330,15 @@ def test_rule(tests, buildfile):
         buildfile.build(
             output='tests',
             rule='phony',
-            inputs=[i.path for i in tests.targets]
+            inputs=tests.targets
         )
         deps.append('tests')
-    deps.extend(i.path for i in tests.extra_deps)
+    deps.extend(tests.extra_deps)
 
     def build_commands(tests, collapse=False):
         def command(test, args=None):
             env = [safe_str.jbos(k, '=', v) for k, v in test.env.iteritems()]
-            subcmd = env + [test.target.path] + test.options + (args or [])
+            subcmd = env + [test.target] + test.options + (args or [])
             if collapse:
                 out = NinjaWriter(StringIO())
                 out.write_each(subcmd, 'shell_word')
@@ -350,7 +350,7 @@ def test_rule(tests, buildfile):
             if type(i).__name__ == 'TestDriver':
                 args, moredeps = build_commands(i.tests, True)
                 if i.target.creator:
-                    deps.append(i.target.path)
+                    deps.append(i.target)
                 deps.extend(moredeps)
                 cmd.append(command(i, args))
             else:
@@ -435,10 +435,10 @@ def emit_object_file(rule, build_inputs, buildfile):
         ), depfile=depfile, deps=deps)
 
     buildfile.build(
-        output=rule.target.path,
+        output=rule.target,
         rule=compiler.name,
-        inputs=[rule.file.path],
-        implicit=[i.path for i in rule.extra_deps],
+        inputs=[rule.file],
+        implicit=rule.extra_deps,
         variables=variables
     )
 
@@ -482,12 +482,12 @@ def emit_link(rule, build_inputs, buildfile):
             output=var('output'), args=ldflags, **command_kwargs
         ))
 
-    lib_deps = (i for i in rule.libs if i.creator)
+    lib_deps = [i for i in rule.libs if i.creator]
     buildfile.build(
-        output=[i.path for i in utils.iterate(rule.target)],
+        output=rule.target,
         rule=linker.name,
-        inputs=[i.path for i in rule.files],
-        implicit=[i.path for i in chain(lib_deps, rule.extra_deps)],
+        inputs=rule.files,
+        implicit=lib_deps + rule.extra_deps,
         variables=variables
     )
 
@@ -496,7 +496,7 @@ def emit_alias(rule, build_inputs, buildfile):
     buildfile.build(
         output=rule.target.path,
         rule='phony',
-        inputs=[i.path for i in rule.extra_deps]
+        inputs=rule.extra_deps
     )
 
 @rule_handler('Command')
@@ -504,6 +504,6 @@ def emit_command(rule, build_inputs, buildfile):
     command_build(
         buildfile,
         output=rule.target.path,
-        inputs=[i.path for i in rule.extra_deps],
+        inputs=rule.extra_deps,
         commands=rule.cmds
     )

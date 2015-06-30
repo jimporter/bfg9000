@@ -1,10 +1,14 @@
 from . import find
 from . import path
 from . import utils
+from .safe_str import safe_str
 
 class Node(object):
     def __init__(self):
         self.creator = None
+
+    def _safe_str(self):
+        return safe_str(self.path)
 
     def __repr__(self):
         return '<{type} {name}>'.format(

@@ -349,7 +349,7 @@ def flags_vars(name, value, buildfile):
 def all_rule(default_targets, buildfile):
     buildfile.rule(
         target='all',
-        deps=[i.path for i in default_targets],
+        deps=default_targets,
         phony=True
     )
 
@@ -403,17 +403,17 @@ def test_rule(tests, buildfile):
     if tests.targets:
         buildfile.rule(
             target='tests',
-            deps=[i.path for i in tests.targets],
+            deps=tests.targets,
             phony=True
         )
         deps.append('tests')
-    deps.extend(i.path for i in tests.extra_deps)
+    deps.extend(tests.extra_deps)
 
     def build_commands(tests, collapse=False):
         cmd, deps = [], []
         def command(test, args=None):
             env = [safe_str.jbos(k, '=', v) for k, v in test.env.iteritems()]
-            subcmd = env + [test.target.path] + test.options + (args or [])
+            subcmd = env + [test.target] + test.options + (args or [])
             if collapse:
                 out = MakeWriter(StringIO())
                 out.write_each(subcmd, 'shell_word')
@@ -424,7 +424,7 @@ def test_rule(tests, buildfile):
             if type(i).__name__ == 'TestDriver':
                 args, moredeps = build_commands(i.tests, True)
                 if i.target.creator:
-                    deps.append(i.target.path)
+                    deps.append(i.target)
                 deps.extend(moredeps)
                 cmd.append(command(i, args))
             else:
@@ -520,7 +520,7 @@ def emit_object_file(rule, build_inputs, buildfile):
 
     buildfile.rule(
         target=path,
-        deps=[i.path for i in chain([rule.file], rule.extra_deps)],
+        deps=[rule.file] + rule.extra_deps,
         order_only=[target_dir.append(dir_sentinel)] if target_dir else None,
         recipe=recipename,
         variables=variables
@@ -568,19 +568,19 @@ def emit_link(rule, build_inputs, buildfile):
             )
         ], flavor='define')
 
-    lib_deps = (i for i in rule.libs if i.creator)
-    recipe = MakeCall(recipename, (i.path for i in rule.files), path)
+    recipe = MakeCall(recipename, rule.files, path)
     if utils.isiterable(rule.target):
         target = path.addext('.stamp')
-        buildfile.rule(target=[i.path for i in rule.target], deps=[target])
+        buildfile.rule(target=rule.target, deps=[target])
         recipe = [recipe, ['@touch', var('@')]]
     else:
         target = path
 
-    dirs = set(i.path.parent() for i in utils.iterate(rule.target))
+    dirs = utils.uniques(i.path.parent() for i in utils.iterate(rule.target))
+    lib_deps = [i for i in rule.libs if i.creator]
     buildfile.rule(
         target=target,
-        deps=[i.path for i in chain(rule.files, lib_deps, rule.extra_deps)],
+        deps=rule.files + lib_deps + rule.extra_deps,
         order_only=[i.append(dir_sentinel) for i in dirs if i],
         recipe=recipe,
         variables=variables
@@ -589,16 +589,16 @@ def emit_link(rule, build_inputs, buildfile):
 @rule_handler('Alias')
 def emit_alias(rule, build_inputs, buildfile):
     buildfile.rule(
-        target=rule.target.path,
-        deps=[i.path for i in rule.extra_deps],
+        target=rule.target,
+        deps=rule.extra_deps,
         phony=True
     )
 
 @rule_handler('Command')
 def emit_command(rule, build_inputs, buildfile):
     buildfile.rule(
-        target=rule.target.path,
-        deps=[i.path for i in rule.extra_deps],
+        target=rule.target,
+        deps=rule.extra_deps,
         recipe=rule.cmds,
         phony=True
     )
