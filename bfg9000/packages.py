@@ -1,5 +1,6 @@
 import os.path
 
+from .file_types import *
 from .builtins import builtin
 
 class Package(object):
