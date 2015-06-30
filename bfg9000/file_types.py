@@ -2,7 +2,7 @@ from . import build_inputs
 from .path import Path
 
 class SourceFile(build_inputs.File):
-    def __init__(self, name, source, lang=None):
+    def __init__(self, name, source, lang):
         build_inputs.File.__init__(self, name, source=source)
         self.lang = lang
 
@@ -14,7 +14,7 @@ class HeaderDirectory(build_inputs.Directory):
     install_root = Path.includedir
 
 class ObjectFile(build_inputs.File):
-    def __init__(self, name, source, lang=None):
+    def __init__(self, name, source, lang):
         build_inputs.File.__init__(self, name, source)
         self.lang = lang
 
