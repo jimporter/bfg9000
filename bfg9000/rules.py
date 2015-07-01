@@ -1,3 +1,4 @@
+import functools
 import os.path
 
 from . import build_inputs
@@ -82,27 +83,30 @@ def object_file(build, env, name=None, file=None, include=None, packages=None,
                 options=None, lang=None, extra_deps=None):
     if file is None:
         raise TypeError('"file" argument must not be None')
-    source_file = objectify(file, SourceFile, source=Path.srcdir, lang=lang)
+    if name is None:
+        name = os.path.splitext(file)[0]
+
+    _source_file = functools.partial(source_file, build, env, lang=lang)
+    file = objectify(file, SourceFile, _source_file)
+
     includes = [objectify(i, HeaderDirectory, source=Path.srcdir)
                 for i in iterate(include)]
     includes += sum((i.includes for i in iterate(packages)), [])
 
-    if name is None:
-        name = os.path.splitext(file)[0]
-
-    builder = env.compiler(source_file.lang)
-    target = builder.output_file(name, lang)
-    build.add_edge(Compile( target, builder, source_file, includes,
+    builder = env.compiler(file.lang)
+    target = builder.output_file(name, file.lang)
+    build.add_edge(Compile( target, builder, file, includes,
                             shell_listify(options), extra_deps ))
     return target
 
 @builtin
 def object_files(build, env, files, include=None, packages=None, options=None,
                  lang=None):
-    def make_object(f):
-        return object_file(build, env, file=f, include=include,
-                           options=options, lang=lang)
-    return ObjectFiles(objectify(i, ObjectFile, make_object)
+    _object_file = functools.partial(
+        object_file, build, env, None, include=include, options=options,
+        lang=lang
+    )
+    return ObjectFiles(objectify(i, ObjectFile, _object_file)
                        for i in iterate(files))
 
 def _link(build, env, mode, project_name, name, files, libs=None,
