@@ -82,8 +82,6 @@ def object_file(build, env, name=None, file=None, include=None, packages=None,
                 options=None, lang=None, extra_deps=None):
     if file is None:
         raise TypeError('"file" argument must not be None')
-    if lang is None:
-        lang = ext2lang.get( os.path.splitext(file)[1] )
     source_file = objectify(file, SourceFile, source=Path.srcdir, lang=lang)
     includes = [objectify(i, HeaderDirectory, source=Path.srcdir)
                 for i in iterate(include)]
