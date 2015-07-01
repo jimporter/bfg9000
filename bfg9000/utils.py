@@ -71,12 +71,12 @@ def shell_listify(thing):
     else:
         return shell.split(thing)
 
-def objectify(x, valid_type, creator=None, **kwargs):
-    if isinstance(x, valid_type):
-        return x
-    elif not isinstance(x, basestring):
+def objectify(thing, valid_type, creator, *args, **kwargs):
+    if isinstance(thing, valid_type):
+        return thing
+    elif not isinstance(thing, basestring):
         raise TypeError('expected a {} or a string'.format(valid_type))
-    elif creator:
-        return creator(x)
     else:
-        return valid_type(x, **kwargs)
+        if creator is None:
+            creator = valid_type
+        return creator(*(args + (thing,)), **kwargs)

@@ -1,6 +1,6 @@
 from . import find
 from . import path
-from . import utils
+from .utils import iterate, listify, objectify
 from .safe_str import safe_str
 
 class Node(object):
@@ -14,6 +14,10 @@ class Node(object):
         return '<{type} {name}>'.format(
             type=type(self).__name__, name=repr(self.path)
         )
+
+def sourcify(thing, valid_type, make_type=None, **kwargs):
+    return objectify(thing, valid_type, make_type, source=path.Path.srcdir,
+                     **kwargs)
 
 class File(Node):
     install_root = path.Path.basedir
@@ -32,14 +36,11 @@ class Phony(Node):
 
 class Edge(object):
     def __init__(self, target, extra_deps=None):
-        for t in utils.iterate(target):
+        for t in iterate(target):
             t.creator = self
         self.target = target
 
-        def make_dep(x):
-            return File(x, path.Path.srcdir)
-        self.extra_deps = [utils.objectify(i, Node, make_dep)
-                           for i in utils.iterate(extra_deps)]
+        self.extra_deps = [sourcify(i, Node, File) for i in iterate(extra_deps)]
 
 class InstallInputs(object):
     def __init__(self):
@@ -76,6 +77,6 @@ class BuildInputs(object):
         if self.default_targets:
             return self.default_targets
         elif self.fallback_default:
-            return utils.listify(self.fallback_default)
+            return listify(self.fallback_default)
         else:
             return []

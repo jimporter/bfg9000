@@ -1,7 +1,7 @@
 import functools
 import os.path
 
-from . import build_inputs
+from .build_inputs import Directory, Edge, File, Phony, sourcify
 from .builtins import builtin
 from .file_types import *
 from .languages import ext2lang
@@ -33,16 +33,16 @@ class ObjectFiles(list):
 
 #####
 
-class Compile(build_inputs.Edge):
+class Compile(Edge):
     def __init__(self, target, builder, file, include, options, extra_deps):
         self.builder = builder
         self.file = file
         self.include = include
         self.options = options
         self.in_shared_library = False
-        build_inputs.Edge.__init__(self, target, extra_deps)
+        Edge.__init__(self, target, extra_deps)
 
-class Link(build_inputs.Edge):
+class Link(Edge):
     def __init__(self, target, project_name, builder, files, libs, options,
                  extra_deps):
         # This is just for MSBuild. XXX: Remove this?
@@ -52,22 +52,21 @@ class Link(build_inputs.Edge):
         self.files = files
         self.libs = libs
         self.options = options
-        build_inputs.Edge.__init__(self, target, extra_deps)
+        Edge.__init__(self, target, extra_deps)
 
-class Alias(build_inputs.Edge):
+class Alias(Edge):
     pass
 
-class Command(build_inputs.Edge):
+class Command(Edge):
     def __init__(self, target, cmds, extra_deps):
         self.cmds = cmds
-        build_inputs.Edge.__init__(self, target, extra_deps)
+        Edge.__init__(self, target, extra_deps)
 
 #####
 
 @builtin
 def source_file(build, env, name, lang=None):
-    if lang is None:
-        lang = ext2lang.get( os.path.splitext(name)[1] )
+    # XXX: Add a way to make a generic File object instead of a SourceFile?
     return SourceFile(name, source=Path.srcdir, lang=lang)
 
 @builtin
@@ -86,28 +85,23 @@ def object_file(build, env, name=None, file=None, include=None, packages=None,
     if name is None:
         name = os.path.splitext(file)[0]
 
-    _source_file = functools.partial(source_file, build, env, lang=lang)
-    file = objectify(file, SourceFile, _source_file)
-
-    includes = [objectify(i, HeaderDirectory, source=Path.srcdir)
-                for i in iterate(include)]
-    includes += sum((i.includes for i in iterate(packages)), [])
+    file = sourcify(file, SourceFile, lang=lang)
+    include = [sourcify(i, HeaderDirectory) for i in iterate(include)]
+    include += sum((i.includes for i in iterate(packages)), [])
 
     builder = env.compiler(file.lang)
     target = builder.output_file(name, file.lang)
-    build.add_edge(Compile( target, builder, file, includes,
+    build.add_edge(Compile( target, builder, file, include,
                             shell_listify(options), extra_deps ))
     return target
 
 @builtin
 def object_files(build, env, files, include=None, packages=None, options=None,
                  lang=None):
-    _object_file = functools.partial(
-        object_file, build, env, None, include=include, options=options,
-        lang=lang
-    )
-    return ObjectFiles(objectify(i, ObjectFile, _object_file)
-                       for i in iterate(files))
+    return ObjectFiles(objectify(
+        i, ObjectFile, object_file, build, env, None, include=include,
+        options=options, lang=lang
+    ) for i in iterate(files))
 
 def _link(build, env, mode, project_name, name, files, libs=None,
           include=None, packages=None, compile_options=None, link_options=None,
@@ -144,7 +138,7 @@ def shared_library(build, env, name, *args, **kwargs):
 
 @builtin
 def alias(build, env, name, deps):
-    target = build_inputs.Phony(name)
+    target = Phony(name)
     build.add_edge(Alias(target, deps))
     return target
 
@@ -155,7 +149,7 @@ def command(build, env, name, cmd=None, cmds=None, extra_deps=None):
     elif cmds is None:
         cmds = [cmd]
 
-    target = build_inputs.Phony(name)
+    target = Phony(name)
     build.add_edge(Command(target, cmds, extra_deps))
     return target
 
@@ -174,7 +168,7 @@ def install(build, env, *args):
     if len(args) == 0:
         raise ValueError('expected at least one argument')
     for i in flatten(args):
-        if isinstance(i, build_inputs.Directory):
+        if isinstance(i, Directory):
             build.install_targets.directories.append(i)
         else:
             default(build, env, i)
@@ -182,7 +176,7 @@ def install(build, env, *args):
 
 @builtin
 def test(build, env, test, options=None, environment=None, driver=None):
-    test = objectify(test, build_inputs.File, source=Path.srcdir)
+    test = sourcify(test, File)
     build.tests.targets.append(test)
     case = TestCase(test, shell_listify(options), environment or {})
     (driver or build.tests).tests.append(case)

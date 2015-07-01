@@ -1,9 +1,14 @@
+import os.path
+
 from . import build_inputs
+from .languages import ext2lang
 from .path import Path
 
 class SourceFile(build_inputs.File):
-    def __init__(self, name, source, lang):
+    def __init__(self, name, source, lang=None):
         build_inputs.File.__init__(self, name, source=source)
+        if lang is None:
+            lang = ext2lang.get( os.path.splitext(name)[1] )
         self.lang = lang
 
 class HeaderFile(build_inputs.File):
@@ -50,7 +55,7 @@ class SharedLibrary(Library):
 class DllLibrary(Library):
     pass
 
-# TODO: Remove these eventually?
+# TODO: Remove this eventually?
 class ExternalExecutable(Executable):
     install_root = Path.basedir
 
