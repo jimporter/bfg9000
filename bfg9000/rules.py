@@ -34,33 +34,58 @@ class ObjectFiles(list):
 #####
 
 class Compile(Edge):
-    def __init__(self, target, builder, file, include, options, extra_deps):
-        self.builder = builder
-        self.file = file
-        self.include = include
-        self.options = options
+    def __init__(self, build, env, name, file, include=None,
+                 packages=None, options=None, lang=None, extra_deps=None):
+        if name is None:
+            name = os.path.splitext(file)[0]
+        include = [sourcify(i, HeaderDirectory) for i in iterate(include)]
+
+        self.file = sourcify(file, SourceFile, lang=lang)
+        self.builder = env.compiler(self.file.lang)
+        self.include = sum((i.includes for i in iterate(packages)), include)
+        self.options = shell_listify(options)
         self.in_shared_library = False
-        Edge.__init__(self, target, extra_deps)
+
+        target = self.builder.output_file(name, self.file.lang)
+        Edge.__init__(self, build, target, extra_deps)
 
 class Link(Edge):
-    def __init__(self, target, project_name, builder, files, libs, options,
-                 extra_deps):
-        # This is just for MSBuild. XXX: Remove this?
-        self.project_name = project_name
+    # This is just for MSBuild. XXX: Remove this?
+    _project_prefixes = {
+        'executable': '',
+        'static_library': 'lib',
+        'shared_library': 'lib',
+    }
 
-        self.builder = builder
-        self.files = files
-        self.libs = libs
-        self.options = options
-        Edge.__init__(self, target, extra_deps)
+    def __init__(self, build, env, mode, name, files, libs=None, include=None,
+                 packages=None, compile_options=None, link_options=None,
+                 lang=None, extra_deps=None):
+        libs = listify(libs, always_copy=True) # TODO: Type-check/objectify?
+
+        self.project_name = self._project_prefixes[mode] + name
+        self.files = object_files(build, env, files, include, packages,
+                                  compile_options, lang)
+        self.builder = env.linker((i.lang for i in self.files), mode)
+        self.libs = sum((i.libraries for i in iterate(packages)), libs)
+        self.options = shell_listify(link_options)
+
+        target = self.builder.output_file(name)
+        build.fallback_default = target
+        Edge.__init__(self, build, target, extra_deps)
 
 class Alias(Edge):
-    pass
+    def __init__(self, build, name, deps=None):
+        Edge.__init__(self, build, Phony(name), deps)
 
 class Command(Edge):
-    def __init__(self, target, cmds, extra_deps):
+    def __init__(self, build, name, cmd=None, cmds=None, extra_deps=None):
+        if (cmd is None) == (cmds is None):
+            raise ValueError('exactly one of "cmd" or "cmds" must be specified')
+        elif cmds is None:
+            cmds = [cmd]
+
         self.cmds = cmds
-        Edge.__init__(self, target, extra_deps)
+        Edge.__init__(self, build, Phony(name), extra_deps)
 
 #####
 
@@ -78,80 +103,42 @@ def header_directory(build, env, directory):
     return HeaderDirectory(directory, source=Path.srcdir)
 
 @builtin
-def object_file(build, env, name=None, file=None, include=None, packages=None,
-                options=None, lang=None, extra_deps=None):
+def object_file(build, env, name=None, file=None, *args, **kwargs):
     if file is None:
-        raise TypeError('"file" argument must not be None')
-    if name is None:
-        name = os.path.splitext(file)[0]
-
-    file = sourcify(file, SourceFile, lang=lang)
-    include = [sourcify(i, HeaderDirectory) for i in iterate(include)]
-    include += sum((i.includes for i in iterate(packages)), [])
-
-    builder = env.compiler(file.lang)
-    target = builder.output_file(name, file.lang)
-    build.add_edge(Compile( target, builder, file, include,
-                            shell_listify(options), extra_deps ))
-    return target
+        if name is None:
+            raise TypeError('expected name')
+        return ObjectFile(name, source=Path.srcdir, *args, **kwargs)
+    else:
+        return Compile(build, env, name, file, *args, **kwargs).target
 
 @builtin
-def object_files(build, env, files, include=None, packages=None, options=None,
-                 lang=None):
-    return ObjectFiles(objectify(
-        i, ObjectFile, object_file, build, env, None, include=include,
-        options=options, lang=lang
-    ) for i in iterate(files))
-
-def _link(build, env, mode, project_name, name, files, libs=None,
-          include=None, packages=None, compile_options=None, link_options=None,
-          lang=None, extra_deps=None):
-    objects = object_files(build, env, files, include, packages,
-                           compile_options, lang)
-    libs = listify(libs, always_copy=True) # FIXME: Type-check/objectify?
-    libs += sum((i.libraries for i in iterate(packages)), [])
-
-    builder = env.linker((i.lang for i in objects), mode)
-    target = builder.output_file(name)
-    rule = Link(target, project_name, builder, objects, libs,
-                shell_listify(link_options), extra_deps)
-    build.add_edge(rule)
-    build.fallback_default = target
-    return target, rule
+def object_files(build, env, files, *args, **kwargs):
+    _object_file = functools.partial(object_file, build, env, None)
+    return ObjectFiles(objectify(i, ObjectFile, _object_file, *args, **kwargs)
+                       for i in iterate(files))
 
 @builtin
 def executable(build, env, name, *args, **kwargs):
-    return _link(build, env, 'executable', name, name, *args, **kwargs)[0]
+    return Link(build, env, 'executable', name, *args, **kwargs).target
 
 @builtin
 def static_library(build, env, name, *args, **kwargs):
-    return _link(build, env, 'static_library', 'lib' + name, name, *args,
-                 **kwargs)[0]
+    return Link(build, env, 'static_library', name, *args, **kwargs).target
 
 @builtin
 def shared_library(build, env, name, *args, **kwargs):
-    target, rule = _link(build, env, 'shared_library', 'lib' + name, name,
-                         *args, **kwargs)
+    rule = Link(build, env, 'shared_library', name, *args, **kwargs)
     for i in rule.files:
         i.creator.in_shared_library = True
-    return target
+    return rule.target
 
 @builtin
-def alias(build, env, name, deps):
-    target = Phony(name)
-    build.add_edge(Alias(target, deps))
-    return target
+def alias(build, env, *args, **kwargs):
+    return Alias(build, *args, **kwargs).target
 
 @builtin
-def command(build, env, name, cmd=None, cmds=None, extra_deps=None):
-    if (cmd is None) == (cmds is None):
-        raise ValueError('exactly one of "cmd" or "cmds" must be specified')
-    elif cmds is None:
-        cmds = [cmd]
-
-    target = Phony(name)
-    build.add_edge(Command(target, cmds, extra_deps))
-    return target
+def command(build, env, *args, **kwargs):
+    return Command(build, *args, **kwargs).target
 
 #####
 

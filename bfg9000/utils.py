@@ -79,4 +79,4 @@ def objectify(thing, valid_type, creator, *args, **kwargs):
     else:
         if creator is None:
             creator = valid_type
-        return creator(*(args + (thing,)), **kwargs)
+        return creator(thing, *args, **kwargs)

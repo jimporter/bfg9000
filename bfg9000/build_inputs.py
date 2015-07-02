@@ -35,12 +35,13 @@ class Phony(Node):
         self.path = name
 
 class Edge(object):
-    def __init__(self, target, extra_deps=None):
+    def __init__(self, build, target, extra_deps=None):
         for t in iterate(target):
             t.creator = self
         self.target = target
 
         self.extra_deps = [sourcify(i, Node, File) for i in iterate(extra_deps)]
+        build.add_edge(self)
 
 class InstallInputs(object):
     def __init__(self):
