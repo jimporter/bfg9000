@@ -118,19 +118,31 @@ def object_files(build, env, files, *args, **kwargs):
                        for i in iterate(files))
 
 @builtin
-def executable(build, env, name, *args, **kwargs):
-    return Link(build, env, 'executable', name, *args, **kwargs).target
+def executable(build, env, name, files=None, *args, **kwargs):
+    if files is None:
+        return Executable(name, source=Path.srcdir, *args, **kwargs)
+    else:
+        return Link(build, env, 'executable', name, files, *args,
+                    **kwargs).target
 
 @builtin
-def static_library(build, env, name, *args, **kwargs):
-    return Link(build, env, 'static_library', name, *args, **kwargs).target
+def static_library(build, env, name, files=None, *args, **kwargs):
+    if files is None:
+        return StaticLibrary(name, source=Path.srcdir, *args, **kwargs)
+    else:
+        return Link(build, env, 'static_library', name, files, *args,
+                    **kwargs).target
 
 @builtin
-def shared_library(build, env, name, *args, **kwargs):
-    rule = Link(build, env, 'shared_library', name, *args, **kwargs)
-    for i in rule.files:
-        i.creator.in_shared_library = True
-    return rule.target
+def shared_library(build, env, name, files=None, *args, **kwargs):
+    if files is None:
+        # XXX: What to do here for Windows, which has a separate DLL file?
+        return SharedLibrary(name, source=Path.srcdir, *args, **kwargs)
+    else:
+        rule = Link(build, env, 'shared_library', name, files, *args, **kwargs)
+        for i in rule.files:
+            i.creator.in_shared_library = True
+        return rule.target
 
 @builtin
 def alias(build, env, *args, **kwargs):
