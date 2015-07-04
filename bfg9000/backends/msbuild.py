@@ -297,7 +297,7 @@ def write(env, build_inputs):
             project_map[id(e.target)] = project
 
     with open(os.path.join(env.builddir, 'project.sln'), 'w') as out:
-        write_solution(out, uuids[None], projects)
+        write_solution(out, uuids[''], projects)
     for p in projects:
         projfile = os.path.join(env.builddir, p.path)
         makedirs(os.path.dirname(projfile), exist_ok=True)
