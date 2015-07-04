@@ -1,7 +1,7 @@
 import errno
+import json
 import os
 import ntpath
-import pickle
 import uuid
 from lxml import etree
 from lxml.builder import E
@@ -221,11 +221,13 @@ def link_mode(mode):
     }[mode]
 
 class UUIDMap(object):
+    version = 1
+
     def __init__(self, path):
         self._path = path
         self._seen = set()
         try:
-            self._map = pickle.load(open(path))
+            self._map = self._load(path)
         except IOError:
             self._map = {}
 
@@ -238,10 +240,23 @@ class UUIDMap(object):
             self._map[key] = u
             return u
 
+    @classmethod
+    def _load(cls, path):
+        with open(path) as inp:
+            state = json.load(inp)
+        if state['version'] > cls.version:
+            raise ValueError('saved version exceeds expected version')
+        return { k: uuid.UUID(hex=v) for k, v in state['map'].iteritems() }
+
     def save(self, path=None):
-        # Only save the UUIDs we saw this time. Skip ones we didn't see.
-        seenmap = {k: v for k, v in self._map.iteritems() if k in self._seen}
-        pickle.dump(seenmap, open(path or self._path, 'w'), protocol=2)
+        with open(path or self._path, 'w') as out:
+            # Only save the UUIDs we saw this time. Skip ones we didn't see.
+            seenmap = { k: v.hex for k, v in self._map.iteritems()
+                        if k in self._seen }
+            json.dump({
+                'version': self.version,
+                'map': seenmap,
+            }, out)
 
 def write(env, build_inputs):
     uuids = UUIDMap(os.path.join(env.builddir, '.bfg_uuid'))
