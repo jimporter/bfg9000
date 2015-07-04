@@ -10,7 +10,7 @@ from . import packages
 from . import rules
 from . import utils
 from .build_inputs import BuildInputs
-from .environment import Environment
+from .environment import Environment, EnvVersionError
 from .version import __version__
 
 bfgfile = 'build.bfg'
@@ -84,22 +84,25 @@ def main():
                         help='regenerate build files')
 
     args = parse_args(parser)
-    try:
-        if args.regenerate:
+    if args.regenerate:
+        try:
             env = Environment.load(args.builddir)
-        else:
-            env = Environment(
-                bfgpath=os.path.realpath(sys.argv[0]),
-                srcdir=args.srcdir,
-                builddir=args.builddir,
-                backend=args.backend,
-                install_prefix=os.path.abspath(args.prefix),
-                variables=dict(os.environ),
-            )
-            env.save(args.builddir)
-    except Exception as e:
-        sys.stderr.write('{}: {}\n'.format(parser.prog, e))
-        return 1
+        except Exception as e:
+            sys.stderr.write('{prog}: error loading environment: {msg}\n'
+                             .format(prog=parser.prog, msg=e))
+            if isinstance(e, EnvVersionError):
+                sys.stderr.write('Please re-run bfg9000 manually.\n')
+            return 1
+    else:
+        env = Environment(
+            bfgdir=os.path.realpath(os.path.dirname(sys.argv[0])),
+            srcdir=args.srcdir,
+            builddir=args.builddir,
+            backend=args.backend,
+            install_prefix=os.path.abspath(args.prefix),
+        )
+        env.save(args.builddir)
+
 
     build = BuildInputs()
     os.chdir(env.srcdir)

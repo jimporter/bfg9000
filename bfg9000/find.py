@@ -29,12 +29,12 @@ class FindCache(object):
     def dirty(cls, path):
         try:
             with open(path) as inp:
-                data = json.load(inp)
-            if data['version'] > cls.version:
+                state = json.load(inp)
+            if state['version'] > cls.version:
                 # XXX: Issue a warning about downgrading?
                 return True
 
-            for args, old_results in data['cache']:
+            for args, old_results in state['cache']:
                 if _find_files(*args) != old_results:
                     return True
             return False

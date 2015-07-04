@@ -1,29 +1,35 @@
 import json
-import os.path
+import os
 
 from . import platforms
 from .builders import ar
 from .builders import cc
 from .builders import msvc
 
+class EnvVersionError(RuntimeError):
+    pass
+
 class Environment(object):
-    version = 1
+    version = 2
     envfile = '.bfg_environ'
 
-    def __init__(self, bfgpath, srcdir, builddir, backend, install_prefix,
-                 variables):
-        self.bfgpath = bfgpath
-        self.scanpath = os.path.join(os.path.dirname(bfgpath), 'arachnotron')
+    bfgfile = 'bfg9000'
+    scanfile = 'arachnotron'
+
+    def __init__(self, bfgdir, backend, srcdir, builddir, install_prefix):
+        self.bfgpath = os.path.join(bfgdir, self.bfgfile)
+        self.scanpath = os.path.join(bfgdir, self.scanfile)
+        self.backend = backend
 
         self.srcdir = srcdir
         self.builddir = builddir
-        self.backend = backend
         self.install_prefix = install_prefix
 
-        self.variables = variables
-
+        self.variables = dict(os.environ)
         self.platform = platforms.platform_info(platforms.platform_name())
+        self.__init_compilers()
 
+    def __init_compilers(self):
         # TODO: Come up with a more flexible way to initialize the compilers and
         # linkers for each language.
         if self.platform.name == 'windows':
@@ -31,11 +37,11 @@ class Environment(object):
             exe_linker = msvc.MSVCLinker(self, 'executable')
             lib_linker = msvc.MSVCStaticLinker(self)
             dll_linker = msvc.MSVCLinker(self, 'shared_library')
-            self._compilers = {
+            self.__compilers = {
                 'c'  : compiler,
                 'c++': compiler,
             }
-            self._linkers = {
+            self.__linkers = {
                 'executable': {
                     'c'  : exe_linker,
                     'c++': exe_linker,
@@ -51,11 +57,11 @@ class Environment(object):
             }
         else:
             ar_linker = ar.ArLinker(self)
-            self._compilers = {
+            self.__compilers = {
                 'c'  : cc.CcCompiler(self),
                 'c++': cc.CxxCompiler(self),
             }
-            self._linkers = {
+            self.__linkers = {
                 'executable': {
                     'c'  : cc.CcLinker(self, 'executable'),
                     'c++': cc.CxxLinker(self, 'executable'),
@@ -74,18 +80,18 @@ class Environment(object):
         return self.variables.get(key, default)
 
     def compiler(self, lang):
-        return self._compilers[lang]
+        return self.__compilers[lang]
 
     def linker(self, lang, mode):
         if isinstance(lang, basestring):
-            return self._linkers[mode][lang]
+            return self.__linkers[mode][lang]
 
         if not isinstance(lang, set):
             lang = set(lang)
         # TODO: Be more intelligent about this when we support more languages
         if 'c++' in lang:
-            return self._linkers[mode]['c++']
-        return self._linkers[mode]['c']
+            return self.__linkers[mode]['c++']
+        return self.__linkers[mode]['c']
 
     def save(self, path):
         with open(os.path.join(path, self.envfile), 'w') as out:
@@ -93,10 +99,12 @@ class Environment(object):
                 'version': self.version,
                 'data': {
                     'bfgpath': self.bfgpath,
+                    'scanpath': self.scanpath,
+                    'backend': self.backend,
                     'srcdir': self.srcdir,
                     'builddir': self.builddir,
-                    'backend': self.backend,
                     'install_prefix': self.install_prefix,
+                    'platform': self.platform.name,
                     'variables': self.variables,
                 }
             }, out)
@@ -104,7 +112,20 @@ class Environment(object):
     @classmethod
     def load(cls, path):
         with open(os.path.join(path, cls.envfile)) as inp:
-            data = json.load(inp)
-        if data['version'] > cls.version:
-            raise ValueError('saved version exceeds expected version')
-        return Environment(**data['data'])
+            state = json.load(inp)
+        if state['version'] > cls.version:
+            raise EnvVersionError('saved version exceeds expected version')
+        if state['version'] == 1:
+            state['data']['scanpath'] = os.path.join(
+                state['data']['bfgpath'], cls.scanfile
+            )
+            state['data']['platform'] = platforms.platform_name()
+
+        env = Environment.__new__(Environment)
+        for k, v in state['data'].iteritems():
+            if k == 'platform':
+                env.platform = platforms.platform_info(v)
+            else:
+                setattr(env, k, v)
+        env.__init_compilers()
+        return env
