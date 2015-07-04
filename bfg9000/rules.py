@@ -27,7 +27,7 @@ class ObjectFiles(list):
             for i in self:
                 if i.creator and i.creator.file.path.path == key:
                     return i
-            raise ValueError('{} not found'.format(repr(key)))
+            raise ValueError('{!r} not found'.format(key))
         else:
             return list.__getitem__(self, key)
 

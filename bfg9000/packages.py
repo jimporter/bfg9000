@@ -16,7 +16,7 @@ def _find_library(env, search_dirs, name):
             candidate = i.output_file(os.path.join(d, name))
             if os.path.exists(candidate.path.path):
                 return candidate
-    return ValueError('unable to find package {}'.format(repr(name)))
+    raise ValueError('unable to find package {!r}'.format(name))
 
 @builtin
 def system_package(build, env, name):
