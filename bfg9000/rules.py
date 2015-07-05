@@ -60,7 +60,8 @@ class Link(Edge):
     def __init__(self, build, env, mode, name, files, libs=None, include=None,
                  packages=None, compile_options=None, link_options=None,
                  lang=None, extra_deps=None):
-        libs = listify(libs, always_copy=True) # TODO: Type-check/objectify?
+        # XXX: Try to detect if a string refers to a shared lib?
+        libs = [sourcify(i, Library, StaticLibrary) for i in iterate(libs)]
 
         self.project_name = self._project_prefixes[mode] + name
         self.files = object_files(build, env, files, include, packages,
