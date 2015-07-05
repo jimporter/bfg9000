@@ -54,10 +54,3 @@ class SharedLibrary(Library):
 # Used for Windows DLL files, which aren't linked to directly.
 class DllLibrary(Library):
     pass
-
-# TODO: Remove this eventually?
-class ExternalExecutable(Executable):
-    install_root = Path.basedir
-
-    def __init__(self, name):
-        Executable.__init__(self, name, source=Path.builddir)

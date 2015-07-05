@@ -1,5 +1,6 @@
 import os.path
 
+from . import path
 from .file_types import *
 from .builtins import builtin
 
@@ -8,7 +9,7 @@ class Package(object):
         self.includes = includes
         self.libraries = libraries
 
-def _find_library(env, search_dirs, name):
+def _find_library(env, name, search_dirs):
     linkers = [env.linker('c', 'shared_library'),
                env.linker('c', 'static_library')]
     for d in search_dirs:
@@ -20,17 +21,26 @@ def _find_library(env, search_dirs, name):
 
 @builtin
 def system_package(build, env, name):
-    return Package([], [_find_library(env, env.platform.lib_dirs, name)])
+    return Package([], [_find_library(env, name, env.lib_dirs)])
 
 @builtin
 def boost_package(build, env, name):
     root = env.getvar('BOOST_ROOT')
     if root:
         headers = [HeaderDirectory(os.path.join(root, 'include'),
-                                   source=Path.builddir)]
+                                   source=path.Path.builddir)]
         search_dirs = [os.path.join(root, 'lib')]
     else:
         headers = []
         search_dirs = env.platform.lib_dirs
 
-    return Package(headers, [_find_library(env, search_dirs, 'boost_' + name)])
+    return Package(headers, [_find_library(env, 'boost_' + name, search_dirs)])
+
+@builtin
+def system_executable(build, env, name):
+    for d in env.bin_dirs:
+        for ext in env.bin_exts:
+            candidate = os.path.join(d, name + ext)
+            if os.path.exists(candidate):
+                return Executable(candidate, source=path.Path.builddir)
+    raise ValueError('unable to find executable {!r}'.format(name))

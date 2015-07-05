@@ -4,7 +4,7 @@ import os.path
 from .build_inputs import Directory, Edge, File, Phony, sourcify
 from .builtins import builtin
 from .file_types import *
-from .languages import ext2lang
+from .packages import system_executable
 from .path import Path
 from .utils import flatten, iterate, listify, objectify, shell_listify
 
@@ -185,7 +185,8 @@ def test(build, env, test, options=None, environment=None, driver=None):
 @builtin
 def test_driver(build, env, driver, options=None, environment=None,
                 parent=None):
-    driver = objectify(driver, Executable, ExternalExecutable)
+    _system_executable = functools.partial(system_executable, build, env)
+    driver = objectify(driver, Executable, _system_executable)
     result = TestDriver(driver, shell_listify(options), environment or {})
     (parent or build.tests).tests.append(result)
     return result

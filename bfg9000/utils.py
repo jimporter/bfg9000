@@ -79,4 +79,5 @@ def objectify(thing, valid_type, creator, *args, **kwargs):
     else:
         if creator is None:
             creator = valid_type
+        # XXX: Come up with a way to provide args to prepend?
         return creator(thing, *args, **kwargs)
