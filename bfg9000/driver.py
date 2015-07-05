@@ -43,7 +43,7 @@ def parse_args(parser, args=None, namespace=None):
             check_dir(args.srcdir, check_exist=True)
         else:
             args.builddir = '.'
-            if is_srcdir(args.srcdir):
+            if not is_srcdir(args.srcdir):
                 args.srcdir, args.builddir = args.builddir, args.srcdir
 
         if os.path.exists(args.builddir):
