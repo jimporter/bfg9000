@@ -1,8 +1,8 @@
 import argparse
-import importlib
 import os
 import pickle
 import sys
+import pkg_resources
 
 from . import builtins
 from . import find
@@ -73,12 +73,17 @@ def parse_args(parser, args=None, namespace=None):
     return args
 
 def main():
+    backends = {
+        i.name: i for i in pkg_resources.iter_entry_points('bfg9000.backends')
+    }
+
     parser = argparse.ArgumentParser()
     parser.add_argument('srcdir', nargs='?', help='source directory')
     parser.add_argument('builddir', nargs='?', help='build directory')
     parser.add_argument('--version', action='version',
                         version='%(prog)s ' + __version__)
-    parser.add_argument('--backend', default='make', help='backend')
+    parser.add_argument('--backend', choices=backends.keys(), default='make',
+                        help='backend (default: %(default)s)')
     parser.add_argument('--prefix', default='/usr', help='installation prefix')
     parser.add_argument('--regenerate', action='store_true',
                         help='regenerate build files')
@@ -103,10 +108,9 @@ def main():
         )
         env.save(args.builddir)
 
-
     build = BuildInputs()
     os.chdir(env.srcdir)
     execfile(os.path.join(env.srcdir, bfgfile), builtins.bind(build, env))
 
-    backend = importlib.import_module('.' + env.backend, 'bfg9000.backends')
-    backend.write(env, build)
+    writer = backends[env.backend].load()
+    writer(env, build)

@@ -10,11 +10,16 @@ setup(
     license='BSD',
 
     packages=find_packages(exclude=['test']),
-    install_requires=['lxml'],
+    extras_require={'msbuild': ['lxml']},
     entry_points={
         'console_scripts': [
             'bfg9000=bfg9000.driver:main',
             'arachnotron=bfg9000.scanner:scan',
+        ],
+        'bfg9000.backends': [
+            'make=bfg9000.backends.make:write',
+            'ninja=bfg9000.backends.ninja:write',
+            'msbuild=bfg9000.backends.msbuild:write [msbuild]',
         ],
     },
 
