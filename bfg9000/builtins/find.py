@@ -1,9 +1,9 @@
 import fnmatch
-import os
 import json
+import os
 
-from .builtins import builtin
-from .utils import listify
+from . import builtin
+from ..utils import listify
 
 class FindCache(object):
     version = 1

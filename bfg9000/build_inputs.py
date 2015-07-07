@@ -1,5 +1,5 @@
-from . import find
 from . import path
+from .builtins.find import FindCache
 from .utils import iterate, listify, objectify
 from .safe_str import safe_str
 
@@ -69,7 +69,7 @@ class BuildInputs(object):
         self.tests = TestInputs()
         self.global_options = {}
         self.global_link_options = []
-        self.find_results = find.FindCache()
+        self.find_results = FindCache()
 
     def add_edge(self, edge):
         self.edges.append(edge)

@@ -1,12 +1,12 @@
 import functools
 import os.path
 
-from .build_inputs import Directory, Edge, File, Phony, sourcify
-from .builtins import builtin
-from .file_types import *
+from . import builtin
 from .packages import system_executable
-from .path import Path
-from .utils import flatten, iterate, listify, objectify, shell_listify
+from ..build_inputs import Directory, Edge, File, Phony, sourcify
+from ..file_types import *
+from ..path import Path
+from ..utils import flatten, iterate, listify, objectify, shell_listify
 
 class TestCase(object):
     def __init__(self, target, options, env):

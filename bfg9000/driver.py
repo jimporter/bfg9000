@@ -5,9 +5,6 @@ import sys
 import pkg_resources
 
 from . import builtins
-from . import find
-from . import packages
-from . import rules
 from . import utils
 from .build_inputs import BuildInputs
 from .environment import Environment, EnvVersionError

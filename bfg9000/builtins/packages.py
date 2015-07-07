@@ -1,8 +1,8 @@
 import os.path
 
-from . import path
-from .file_types import *
-from .builtins import builtin
+from . import builtin
+from .. import path
+from ..file_types import *
 
 class Package(object):
     def __init__(self, includes, libraries):

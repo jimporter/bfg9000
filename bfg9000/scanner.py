@@ -1,7 +1,7 @@
 import argparse
 import os
 
-from .find import FindCache
+from .builtins.find import FindCache
 from .version import __version__
 
 def scan():
