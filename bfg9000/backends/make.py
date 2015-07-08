@@ -507,7 +507,6 @@ def emit_object_file(rule, build_inputs, buildfile):
                 r"@sed -e 's/.*://' -e 's/\\$//' < " + deps + ' | fmt -1 | \\',
                 "  sed -e 's/^ *//' -e 's/$/:/' >> " + deps
             ]
-            buildfile.include(path.addext('.d'), optional=True)
         elif compiler.deps_flavor == 'msvc':
             command_kwargs['deps'] = True
 
@@ -525,6 +524,7 @@ def emit_object_file(rule, build_inputs, buildfile):
         recipe=recipename,
         variables=variables
     )
+    buildfile.include(path.addext('.d'), optional=True)
 
 @rule_handler('Link')
 def emit_link(rule, build_inputs, buildfile):
