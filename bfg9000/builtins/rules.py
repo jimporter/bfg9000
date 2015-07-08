@@ -1,4 +1,3 @@
-import functools
 import os.path
 
 from . import builtin
@@ -64,8 +63,9 @@ class Link(Edge):
         libs = [sourcify(i, Library, StaticLibrary) for i in iterate(libs)]
 
         self.project_name = self._project_prefixes[mode] + name
-        self.files = object_files(build, env, files, include, packages,
-                                  compile_options, lang)
+        self.files = object_files.bind(build, env)(
+            files, include, packages, compile_options, lang
+        )
         self.builder = env.linker((i.lang for i in self.files), mode)
         self.libs = sum((i.libraries for i in iterate(packages)), libs)
         self.options = shell_listify(link_options)
@@ -114,8 +114,9 @@ def object_file(build, env, name=None, file=None, *args, **kwargs):
 
 @builtin
 def object_files(build, env, files, *args, **kwargs):
-    _object_file = functools.partial(object_file, build, env, None)
-    return ObjectFiles(objectify(i, ObjectFile, _object_file, *args, **kwargs)
+    def _compile(file, *args, **kwargs):
+        return Compile(build, env, None, file, *args, **kwargs).target
+    return ObjectFiles(objectify(i, ObjectFile, _compile, *args, **kwargs)
                        for i in iterate(files))
 
 @builtin
@@ -171,7 +172,7 @@ def install(build, env, *args):
         if isinstance(i, Directory):
             build.install_targets.directories.append(i)
         else:
-            default(build, env, i)
+            default.bind(build, env)(i)
             build.install_targets.files.append(i)
 
 @builtin
@@ -185,8 +186,7 @@ def test(build, env, test, options=None, environment=None, driver=None):
 @builtin
 def test_driver(build, env, driver, options=None, environment=None,
                 parent=None):
-    _system_executable = functools.partial(system_executable, build, env)
-    driver = objectify(driver, Executable, _system_executable)
+    driver = objectify(driver, Executable, system_executable.bind(build, env))
     result = TestDriver(driver, shell_listify(options), environment or {})
     (parent or build.tests).tests.append(result)
     return result

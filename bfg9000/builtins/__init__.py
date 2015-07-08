@@ -6,9 +6,17 @@ import pkgutil
 _all_builtins = {}
 _loaded_builtins = False
 
+class Binder(object):
+    def __init__(self, fn):
+        self.fn = fn
+
+    def bind(self, build_inputs, env):
+        return functools.partial(self.fn, build_inputs, env)
+
 def builtin(fn):
-    _all_builtins[fn.__name__] = fn
-    return fn
+    bound = Binder(fn)
+    _all_builtins[fn.__name__] = bound
+    return bound
 
 def _load_builtins():
     for loader, name, _ in pkgutil.walk_packages(__path__, __name__ + '.'):
@@ -22,5 +30,5 @@ def bind(build_inputs, env):
 
     result = {}
     for k, v in _all_builtins.iteritems():
-        result[k] = functools.partial(v, build_inputs, env)
+        result[k] = v.bind(build_inputs, env)
     return result
