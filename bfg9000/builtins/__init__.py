@@ -19,7 +19,7 @@ def builtin(fn):
     return bound
 
 def _load_builtins():
-    for loader, name, _ in pkgutil.walk_packages(__path__, __name__ + '.'):
+    for loader, name, ispkg in pkgutil.walk_packages(__path__, __name__ + '.'):
         loader.find_module(name).load_module(name)
 
 def bind(build_inputs, env):
