@@ -6,15 +6,14 @@ from . import safe_str
 class real_path(safe_str.safe_string):
     def __init__(self, base, path):
         self.base = base
-        self.path = path
+        self.path = os.path.normpath(path) if path else ''
 
     def __str__(self):
         raise NotImplementedError()
 
     def __repr__(self):
-        return '`$({base}){sep}{path}`'.format(
-            base=self.base, sep=os.sep, path=self.path
-        )
+        path = os.sep + self.path if self.path else ''
+        return '`$({base}){path}`'.format(base=self.base, path=path)
 
     def _safe_str(self):
         return self

@@ -52,8 +52,10 @@ class NinjaWriter(object):
         elif isinstance(thing, path.real_path):
             if thing.base != 'builddir':
                 self.write(_path_vars[thing.base], syntax)
-                self.write_literal(os.sep)
-            self.write(thing.path, syntax)
+                if thing.path:
+                    self.write_literal(os.sep)
+            if thing.path:
+                self.write(thing.path, syntax)
         elif isinstance(thing, safe_str.jbos):
             for j in thing.bits:
                 self.write(j, syntax)

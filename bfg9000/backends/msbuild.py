@@ -126,10 +126,11 @@ def write_solution(out, uuid, projects):
 
 def path_str(path):
     p = path.local_path()
-    if p.base:
-        return ntpath.normpath(ntpath.join('$(SourceDir)', p.path))
-    else:
-        return ntpath.normpath(p.path)
+    suffix = ntpath.normpath(p.path)
+    if p.base == 'srcdir':
+        return ntpath.join('$(SourceDir)', suffix)
+    else: # p.base == 'builddir'
+        return suffix
 
 class VcxProject(object):
     _XMLNS = 'http://schemas.microsoft.com/developer/msbuild/2003'
