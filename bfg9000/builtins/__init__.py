@@ -31,4 +31,5 @@ def bind(build_inputs, env):
     result = {}
     for k, v in _all_builtins.iteritems():
         result[k] = v.bind(build_inputs, env)
+    result['env'] = env
     return result
