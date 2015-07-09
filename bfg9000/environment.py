@@ -26,7 +26,7 @@ class Environment(object):
         self.install_prefix = install_prefix
 
         self.variables = dict(os.environ)
-        self.platform = platforms.platform_info(platforms.platform_name())
+        self.platform = platforms.platform_info()
         self.__init_compilers()
 
     def __init_compilers(self):

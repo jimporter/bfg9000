@@ -1,11 +1,12 @@
 import errno
 import os
-import platform
 import shutil
 import subprocess
 import sys
 import time
 import unittest
+
+from bfg9000.platforms import platform_info
 
 this_dir = os.path.abspath(os.path.dirname(__file__))
 examples_dir = os.path.join(this_dir, '..', '..', 'examples')
@@ -76,18 +77,20 @@ class IntegrationTest(unittest.TestCase):
         )
 
 def executable(name):
-    return os.path.join('bin', name)
+    info = platform_info()
+    return os.path.join('bin', name + info.executable_ext)
 
 def shared_library(name):
-    if platform.system() == 'Linux':
-        head, tail = os.path.split(name)
-        return os.path.join('lib', head, 'lib' + tail + '.so')
-    else:
-        return os.path.join('lib', name + '.dll')
+    info = platform_info()
+    prefix = '' if info.name == 'windows' else 'lib'
+
+    head, tail = os.path.split(name)
+    return os.path.join('lib', head, prefix + tail + info.shared_library_ext)
 
 def static_library(name):
-    if platform.system() == 'Linux':
-        head, tail = os.path.split(name)
-        return os.path.join('lib', head, 'lib' + tail + '.a')
-    else:
-        return os.path.join('lib', name + '.lib')
+    info = platform_info()
+    prefix = '' if info.name == 'windows' else 'lib'
+    suffix = '.lib' if info.name == 'windows' else '.a'
+
+    head, tail = os.path.split(name)
+    return os.path.join('lib', head, prefix + tail + suffix)

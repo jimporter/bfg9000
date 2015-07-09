@@ -83,7 +83,10 @@ class WindowsPlatform(Platform):
         # TODO: Provide a list of lib paths
         return []
 
-def platform_info(name):
+def platform_info(name=None):
+    if name is None:
+        name = platform_name()
+
     if name == 'windows' or name == 'cygwin':
         return WindowsPlatform(name)
     elif name == 'darwin':
