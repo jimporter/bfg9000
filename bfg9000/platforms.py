@@ -7,11 +7,11 @@ def platform_name():
     name = platform.system().lower()
     if name == 'windows':
         try:
-            name = subprocess.check_output('uname').rstrip().lower()
+            uname = subprocess.check_output('uname').rstrip().lower()
+            if uname.startswith('cygwin'):
+                name = 'cygwin'
         except WindowsError:
             pass
-    if name.startswith('cygwin'):
-        return 'cygwin'
     return name
 
 class Platform(object):
