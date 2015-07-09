@@ -83,10 +83,11 @@ class MSVCLinker(object):
 
     def import_lib(self, library):
         if self.mode != 'shared_library':
-            raise ValueError('import libraries only apply to shared libraries')
+            # TODO: Raise an exception here.
+            return []
         return ['/IMPLIB:' + library.path.local_path()]
 
-    def rpath(self, paths):
+    def rpath(self, libraries, start):
         return []
 
 class MSVCStaticLinker(object):
