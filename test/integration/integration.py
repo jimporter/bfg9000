@@ -59,7 +59,8 @@ class IntegrationTest(unittest.TestCase):
 
     def assertPopen(self, args, bad=False):
         proc = subprocess.Popen(
-            args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+            args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+            universal_newlines=True
         )
         output = proc.communicate()[0]
         if proc.returncode != 0:
