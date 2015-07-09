@@ -8,7 +8,7 @@ def platform_name():
     if name == 'windows':
         try:
             name = subprocess.check_output('uname').rstrip().lower()
-        except subprocess.CalledProcessError:
+        except WindowsError:
             pass
     if name.startswith('cygwin'):
         return 'cygwin'
