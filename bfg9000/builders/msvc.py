@@ -5,8 +5,8 @@ from ..utils import iterate, uniques
 from ..file_types import *
 
 class MSVCCompiler(object):
-    def __init__(self, platform):
-        self.platform = platform
+    def __init__(self, env):
+        self.platform = env.platform
         self.command_name = 'cl'
         self.name = 'cxx'
         self.command_var = 'cxx'
@@ -97,7 +97,7 @@ class MSVCStaticLinker(object):
         self.name = 'lib'
         self.command_var = 'lib'
         self.link_var = 'lib'
-        self.global_args = shell.split(env.getvar('LIBFLAGS'))
+        self.global_args = shell.split(env.getvar('LIBFLAGS', ''))
 
     def command(self, cmd, input, output, args=None):
         result = [cmd]
