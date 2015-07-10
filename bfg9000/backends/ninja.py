@@ -9,6 +9,7 @@ from .. import path
 from .. import safe_str
 from .. import shell
 from .. import utils
+from ..builtins import find
 
 _rule_handlers = {}
 def rule_handler(rule_name):
@@ -228,7 +229,7 @@ def write(env, build_inputs):
     test_rule(build_inputs.tests, buildfile)
     for e in build_inputs.edges:
         _rule_handlers[type(e).__name__](e, build_inputs, buildfile)
-    regenerate_rule(build_inputs.find_results, buildfile, env)
+    regenerate_rule(build_inputs.find_dirs, buildfile, env)
 
     with open(os.path.join(env.builddir, 'build.ninja'), 'w') as out:
         buildfile.write(out)
@@ -367,35 +368,25 @@ def test_rule(tests, buildfile):
         commands=commands
     )
 
-def regenerate_rule(find_results, buildfile, env):
+def regenerate_rule(find_dirs, buildfile, env):
     bfgpath = path.Path('build.bfg', path.Path.srcdir)
-    extra_deps = []
+    depfile = None
 
-    if find_results:
-        find_results.save(os.path.join(env.builddir, find_results.cachefile))
-        cachepath = path.Path(find_results.cachefile)
-        extra_deps.append(cachepath)
-
-        if not buildfile.has_build('PHONY'):
-            buildfile.build(output='PHONY', rule='phony')
-
-        buildfile.rule(
-            name='rescan',
-            command=[env.scanpath, var('out'), '-S', bfgpath],
-            generator=True,
-            restat=True
-        )
-        buildfile.build(output=cachepath, rule='rescan', implicit='PHONY')
+    if find_dirs:
+        find.write_depfile(os.path.join(env.builddir, find.depfile_name),
+                           'build.ninja', find_dirs)
+        depfile = find.depfile_name
 
     buildfile.rule(
         name='regenerate',
         command=[env.bfgpath, '--regenerate', path.Path('.')],
-        generator=True
+        generator=True,
+        depfile=depfile,
     )
     buildfile.build(
         output=path.Path('build.ninja'),
         rule='regenerate',
-        implicit=[bfgpath] + extra_deps
+        implicit=[bfgpath]
     )
 
 @rule_handler('Compile')

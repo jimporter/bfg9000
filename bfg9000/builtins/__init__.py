@@ -1,5 +1,5 @@
 import functools
-import glob
+import importlib
 import os
 import pkgutil
 
@@ -19,8 +19,9 @@ def builtin(fn):
     return bound
 
 def _load_builtins():
-    for loader, name, ispkg in pkgutil.walk_packages(__path__, __name__ + '.'):
-        loader.find_module(name).load_module(name)
+    # XXX: There's probably a better way to do this.
+    for _, name, _ in pkgutil.walk_packages(__path__, '.'):
+        importlib.import_module(name, __package__)
 
 def bind(build_inputs, env):
     global _loaded_builtins

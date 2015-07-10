@@ -14,7 +14,6 @@ setup(
     entry_points={
         'console_scripts': [
             'bfg9000=bfg9000.driver:main',
-            'arachnotron=bfg9000.scanner:scan',
         ],
         'bfg9000.backends': [
             'make=bfg9000.backends.make:write',

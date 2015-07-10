@@ -9,6 +9,7 @@ from .. import path
 from .. import safe_str
 from .. import shell
 from .. import utils
+from ..builtins import find
 
 _rule_handlers = {}
 def rule_handler(rule_name):
@@ -325,7 +326,7 @@ def write(env, build_inputs):
     for e in build_inputs.edges:
         _rule_handlers[type(e).__name__](e, build_inputs, buildfile)
     directory_rule(buildfile)
-    regenerate_rule(build_inputs.find_results, buildfile, env)
+    regenerate_rule(build_inputs.find_dirs, buildfile, env)
 
     with open(os.path.join(env.builddir, 'Makefile'), 'w') as out:
         buildfile.write(out)
@@ -452,18 +453,14 @@ def directory_rule(buildfile):
         ]
     )
 
-def regenerate_rule(find_results, buildfile, env):
+def regenerate_rule(find_dirs, buildfile, env):
     bfgpath = path.Path('build.bfg', path.Path.srcdir)
     extra_deps = []
 
-    if find_results:
-        find_results.save(os.path.join(env.builddir, find_results.cachefile))
-        cachepath = path.Path(find_results.cachefile)
-        extra_deps.append(cachepath)
-
-        buildfile.variable('__UNUSED__', MakeFunc('shell', [
-            env.scanpath, cachepath, '-S', bfgpath
-        ]))
+    if find_dirs:
+        find.write_depfile(os.path.join(env.builddir, find.depfile_name),
+                           'Makefile', find_dirs, makeify=True)
+        buildfile.include(find.depfile_name)
 
     buildfile.rule(
         target=path.Path('Makefile'),
