@@ -18,6 +18,9 @@ class FindCache(object):
     def __iter__(self):
         return iter(self._cache)
 
+    def __nonzero__(self):
+        return bool(self._cache)
+
     def save(self, path):
         with open(path, 'w') as out:
             json.dump({
