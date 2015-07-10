@@ -29,7 +29,7 @@ class TestCommand(IntegrationTest):
         )
         self.assertTrue(os.path.exists(os.path.join(self.builddir, 'file')))
 
-    def test_aliaas(self):
+    def test_alias(self):
         output = self.build('hello-world')
         self.assertRegexpMatches(output, re.compile('^hello$', re.MULTILINE))
         self.assertRegexpMatches(output, re.compile('^world$', re.MULTILINE))
