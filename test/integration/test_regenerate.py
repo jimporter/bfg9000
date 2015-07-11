@@ -11,10 +11,14 @@ def stagedir(path):
     shutil.copytree(os.path.join(test_data_dir, path), dest)
     return dest
 
-# XXX: The sleep calls below are needed for ninja, which seems to have low
-# granularity when checking the mtime of files.
+class RegenerateBaseTest(IntegrationTest):
+    def _sleep(self, t=1):
+        # XXX: This sleep call is needed for ninja, which seems to have low
+        # granularity when checking the mtime of files.
+        if self.backend == 'ninja':
+            time.sleep(t)
 
-class TestRegenerate(IntegrationTest):
+class TestRegenerate(RegenerateBaseTest):
     def __init__(self, *args, **kwargs):
         stage = stagedir('regenerate')
         IntegrationTest.__init__(self, stage, *args, **kwargs)
@@ -24,14 +28,14 @@ class TestRegenerate(IntegrationTest):
         self.assertTrue(os.path.exists(os.path.join(self.builddir, 'foo')))
 
     def test_regenerate(self):
-        time.sleep(1)
+        self._sleep()
         with open(os.path.join(self.srcdir, 'build.bfg'), 'a') as out:
             out.write("command('bar', cmd=['touch', 'bar'])\n")
 
         self.build('bar')
         self.assertTrue(os.path.exists(os.path.join(self.builddir, 'bar')))
 
-class TestRegenerateGlob(IntegrationTest):
+class TestRegenerateGlob(RegenerateBaseTest):
     def __init__(self, *args, **kwargs):
         stage = stagedir(os.path.join(examples_dir, '08_find_files'))
         self.extradir = os.path.join(test_data_dir, 'regenerate-glob')
@@ -44,7 +48,7 @@ class TestRegenerateGlob(IntegrationTest):
                     os.path.join(self.srcdir, dest))
 
     def test_add_file(self):
-        time.sleep(1)
+        self._sleep()
         self._copy(os.path.join('hello', 'bonjour.hpp'))
         self._copy(os.path.join('hello', 'bonjour.cpp'))
         self._copy(os.path.join('hello', 'main_added.cpp'),
@@ -55,7 +59,7 @@ class TestRegenerateGlob(IntegrationTest):
                           'Hello, world!\nBonjour le monde!\n')
 
     def test_add_dir(self):
-        time.sleep(1)
+        self._sleep()
         shutil.copytree(os.path.join(self.extradir, 'goodbye', 'french'),
                         os.path.join(self.srcdir, 'goodbye', 'french'))
         self._copy(os.path.join('goodbye', 'main_added.cpp'),
@@ -66,7 +70,7 @@ class TestRegenerateGlob(IntegrationTest):
                           'Goodbye!\nAuf Wiedersehen!\nAu revoir!\n')
 
     def test_remove_file(self):
-        time.sleep(1)
+        self._sleep()
         os.unlink(os.path.join(self.srcdir, 'hello', 'hello.cpp'))
         self._copy(os.path.join('hello', 'main_removed.cpp'),
                    os.path.join('hello', 'main.cpp'))
@@ -74,7 +78,7 @@ class TestRegenerateGlob(IntegrationTest):
         self.assertOutput([executable('hello')], '')
 
     def test_remove_dir(self):
-        time.sleep(1)
+        self._sleep()
         cleandir(os.path.join(self.srcdir, 'goodbye', 'german'), recreate=False)
         self._copy(os.path.join('goodbye', 'main_removed.cpp'),
                    os.path.join('goodbye', 'main.cpp'))
