@@ -97,7 +97,7 @@ def main():
             return 1
     else:
         env = Environment(
-            bfgdir=os.path.realpath(os.path.dirname(sys.argv[0])),
+            bfgpath=os.path.realpath(sys.argv[0]),
             srcdir=args.srcdir,
             builddir=args.builddir,
             backend=args.backend,

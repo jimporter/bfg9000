@@ -10,15 +10,11 @@ class EnvVersionError(RuntimeError):
     pass
 
 class Environment(object):
-    version = 2
+    version = 3
     envfile = '.bfg_environ'
 
-    bfgfile = 'bfg9000'
-    scanfile = 'arachnotron'
-
-    def __init__(self, bfgdir, backend, srcdir, builddir, install_prefix):
-        self.bfgpath = os.path.join(bfgdir, self.bfgfile)
-        self.scanpath = os.path.join(bfgdir, self.scanfile)
+    def __init__(self, bfgpath, backend, srcdir, builddir, install_prefix):
+        self.bfgpath = bfgpath
         self.backend = backend
 
         self.srcdir = srcdir
@@ -118,7 +114,6 @@ class Environment(object):
                 'version': self.version,
                 'data': {
                     'bfgpath': self.bfgpath,
-                    'scanpath': self.scanpath,
                     'backend': self.backend,
                     'srcdir': self.srcdir,
                     'builddir': self.builddir,
@@ -135,9 +130,6 @@ class Environment(object):
         if state['version'] > cls.version:
             raise EnvVersionError('saved version exceeds expected version')
         if state['version'] == 1:
-            state['data']['scanpath'] = os.path.join(
-                state['data']['bfgpath'], cls.scanfile
-            )
             state['data']['platform'] = platforms.platform_name()
 
         env = Environment.__new__(Environment)
