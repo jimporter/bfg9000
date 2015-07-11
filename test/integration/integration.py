@@ -7,10 +7,12 @@ import time
 import unittest
 
 from bfg9000.platforms import platform_info
+from bfg9000.makedirs import makedirs
 
 this_dir = os.path.abspath(os.path.dirname(__file__))
 examples_dir = os.path.join(this_dir, '..', '..', 'examples')
 test_data_dir = os.path.join(this_dir, '..', 'test_data')
+test_stage_dir = os.path.join(this_dir, '..', 'stage')
 
 def cleandir(path):
     try:
@@ -36,7 +38,11 @@ class IntegrationTest(unittest.TestCase):
     def __init__(self, srcdir, *args, **kwargs):
         unittest.TestCase.__init__(self, *args, **kwargs)
         self.srcdir = os.path.join(test_data_dir, srcdir)
-        self.builddir = os.path.join(self.srcdir, 'build')
+
+        srcbase = os.path.basename(srcdir)
+        self.builddir = os.path.join(test_stage_dir, srcbase + '-build')
+        makedirs(self.builddir, exist_ok=True)
+
         self.extra_args = []
         self.backend = os.getenv('BACKEND', 'make')
 

@@ -1,4 +1,3 @@
-import errno
 import json
 import os
 import ntpath
@@ -7,14 +6,8 @@ from lxml import etree
 from lxml.builder import E
 
 from .. import utils
+from ..makedirs import makedirs
 from ..rules import *
-
-def makedirs(path, mode=0o777, exist_ok=False):
-    try:
-        os.makedirs(path)
-    except OSError as e:
-        if not exist_ok or e.errno != errno.EEXIST or not os.path.isdir(path):
-            raise
 
 def uuid_str(uuid):
     return '{{{}}}'.format(str(uuid).upper())
