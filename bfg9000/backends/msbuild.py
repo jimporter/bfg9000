@@ -7,7 +7,6 @@ from lxml.builder import E
 
 from .. import utils
 from ..makedirs import makedirs
-from ..rules import *
 
 def uuid_str(uuid):
     return '{{{}}}'.format(str(uuid).upper())
@@ -259,7 +258,7 @@ def write(env, build_inputs):
     project_map = {}
     # TODO: Handle default().
     for e in build_inputs.edges:
-        if isinstance(e, Link):
+        if type(e).__name__ == 'Link':
             # By definition, a dependency for an edge must already be defined by
             # the time the edge is created, so we can map *all* the dependencies
             # to their associated projects by looking at the projects we've
