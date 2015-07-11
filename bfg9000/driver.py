@@ -1,6 +1,7 @@
 import argparse
 import os
 import pickle
+import re
 import sys
 import pkg_resources
 
@@ -74,7 +75,7 @@ def main():
         i.name: i for i in pkg_resources.iter_entry_points('bfg9000.backends')
     }
 
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(prog='bfg9000')
     parser.add_argument('srcdir', nargs='?', help='source directory')
     parser.add_argument('builddir', nargs='?', help='build directory')
     parser.add_argument('--version', action='version',
@@ -96,8 +97,10 @@ def main():
                 sys.stderr.write('Please re-run bfg9000 manually.\n')
             return 1
     else:
+        # De-munge the entry point if we're on Windows.
+        bfgpath = os.path.realpath(re.sub('-script.py$', '.exe', sys.argv[0]))
         env = Environment(
-            bfgpath=os.path.realpath(sys.argv[0]),
+            bfgpath=bfgpath,
             srcdir=args.srcdir,
             builddir=args.builddir,
             backend=args.backend,
