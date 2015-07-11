@@ -29,6 +29,12 @@ def cleandir(path, recreate=True):
     if recreate:
         os.mkdir(path)
 
+def stagedir(path):
+    dest = os.path.join(test_stage_dir, os.path.basename(path))
+    cleandir(dest, recreate=False)
+    shutil.copytree(os.path.join(test_data_dir, path), dest)
+    return dest
+
 class SubprocessError(unittest.TestCase.failureException):
     def __init__(self, message):
         unittest.TestCase.failureException.__init__(
@@ -64,6 +70,9 @@ class IntegrationTest(unittest.TestCase):
             else:
                 args.append(target)
         return self.assertPopen(args, True)
+
+    def wait(self, t=1):
+        time.sleep(t)
 
     def assertPopen(self, args, bad=False):
         proc = subprocess.Popen(

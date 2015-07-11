@@ -1,0 +1,3 @@
+# -*- python -*-
+
+prog = executable('program', files=['program.cpp'])
