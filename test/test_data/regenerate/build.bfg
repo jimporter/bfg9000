@@ -1,0 +1,3 @@
+# -*- python -*-
+
+command('foo', cmd=['touch', 'foo'])

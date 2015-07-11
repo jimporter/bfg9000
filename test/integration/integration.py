@@ -14,7 +14,7 @@ examples_dir = os.path.join(this_dir, '..', '..', 'examples')
 test_data_dir = os.path.join(this_dir, '..', 'test_data')
 test_stage_dir = os.path.join(this_dir, '..', 'stage')
 
-def cleandir(path):
+def cleandir(path, recreate=True):
     try:
         shutil.rmtree(path)
     except Exception as e:
@@ -26,7 +26,8 @@ def cleandir(path):
             shutil.rmtree(path)
         elif e.errno != errno.ENOENT:
             raise
-    os.mkdir(path)
+    if recreate:
+        os.mkdir(path)
 
 class SubprocessError(unittest.TestCase.failureException):
     def __init__(self, message):
