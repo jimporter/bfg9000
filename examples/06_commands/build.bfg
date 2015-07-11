@@ -11,7 +11,7 @@ hello = command('hello', cmd=['python', '-c', 'print("hello")'])
 # shell syntax, such as piping. However, quoting each arg is then left up to the
 # user:
 
-world = command('world', cmd='python -c \'print("world")\'')
+world = command('world', cmd='python -c "print(\'world\')"')
 
 # The command() function also supports multiple commands, passed via `cmds`
 # instead of `cmd`, as well as automatically converting other targets into their
