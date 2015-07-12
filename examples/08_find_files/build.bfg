@@ -5,12 +5,12 @@
 # find_files() function comes in handy. It starts at a base directory and
 # searches recursively for files matching a glob:
 
-hello = executable('hello', files=find_files('hello', '*.cpp'))
+hello = executable('hello', files=find_files('src/hello', '*.cpp'))
 
 # It's also possible to search specifically for files ('f') or directories
 # ('d'):
 
-bye_dirs = find_files('goodbye', '*', type='d')
+bye_dirs = find_files('src/goodbye', '*', type='d')
 
 # Finally, the search can be performed in multiple base directories, as well as
 # *not* recursing into subdirectories:

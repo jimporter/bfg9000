@@ -85,8 +85,7 @@ class CcLinkerBase(object):
         return ['-shared', '-fPIC'] if self.mode == 'shared_library' else []
 
     def lib_dirs(self, libraries):
-        dirs = uniques(i.path.parent().local_path() for i in libraries
-                       if i.path.parent())
+        dirs = uniques(i.path.parent().local_path() for i in libraries)
         return ['-L' + i for i in dirs]
 
     def link_lib(self, library):

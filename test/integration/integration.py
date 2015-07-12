@@ -88,20 +88,30 @@ class IntegrationTest(unittest.TestCase):
         if self.backend == 'msbuild':
             args = list(args)
             args[0] = os.path.join('Debug', args[0])
+        else:
+            args[0] = os.path.join('.', args[0])
         self.assertEqual(
             subprocess.check_output(args, universal_newlines=True), output
         )
 
+    def assertExists(self, path):
+        if not os.path.exists(path):
+            raise unittest.TestCase.failureException(
+                "'{}' does not exist".format(os.path.normpath(path))
+            )
+
 def executable(name):
     info = platform_info()
-    return os.path.join('bin', name + info.executable_ext)
+    return os.path.normpath(name + info.executable_ext)
 
 def shared_library(name):
     info = platform_info()
     prefix = '' if info.name == 'windows' else 'lib'
 
     head, tail = os.path.split(name)
-    return os.path.join('lib', head, prefix + tail + info.shared_library_ext)
+    return os.path.normpath(os.path.join(
+        head, prefix + tail + info.shared_library_ext
+    ))
 
 def static_library(name):
     info = platform_info()
@@ -109,4 +119,4 @@ def static_library(name):
     suffix = '.lib' if info.name == 'windows' else '.a'
 
     head, tail = os.path.split(name)
-    return os.path.join('lib', head, prefix + tail + suffix)
+    return os.path.normpath(os.path.join(head, prefix + tail + suffix))

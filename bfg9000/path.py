@@ -6,14 +6,22 @@ from . import safe_str
 class real_path(safe_str.safe_string):
     def __init__(self, base, path):
         self.base = base
-        self.path = os.path.normpath(path) if path else ''
+        self.raw_path = os.path.normpath(path) if path else ''
+
+    def path(self, variables, executable=False):
+        if self.base in variables:
+            suffix = os.path.sep + self.raw_path if self.raw_path else ''
+            return variables[self.base] + suffix
+        elif executable:
+            return os.path.join('.', self.raw_path)
+        else:
+            return self.raw_path or '.'
 
     def __str__(self):
         raise NotImplementedError()
 
     def __repr__(self):
-        path = os.sep + self.path if self.path else ''
-        return '`$({base}){path}`'.format(base=self.base, path=path)
+        return '`$({base}){path}`'.format(base=self.base, path=self.path(True))
 
     def _safe_str(self):
         return self
@@ -21,7 +29,7 @@ class real_path(safe_str.safe_string):
     def __cmp__(self, rhs):
         if not isinstance(rhs, real_path):
             return NotImplemented
-        return cmp(self.base, rhs.base) or cmp(self.path, rhs.path)
+        return cmp(self.base, rhs.base) or cmp(self.raw_path, rhs.raw_path)
 
     def __add__(self, rhs):
         return safe_str.jbos(self, rhs)
@@ -64,10 +72,7 @@ class Path(object):
         if self.source == Path.srcdir:
             return real_path('srcdir', self.path)
         else:
-            path = self.install_base
-            if self.path:
-                path = os.path.join(path, self.path)
-            return real_path('builddir', path)
+            return real_path('builddir', self.path)
 
     def install_path(self):
         if self.source == Path.srcdir:
@@ -85,8 +90,7 @@ class Path(object):
         else:
             if self.source != start.source:
                 raise ValueError('source mismatch')
-            return os.path.relpath(self.local_path().path,
-                                   start.local_path().path)
+            return os.path.relpath(self.path or '.', start.path or '.')
 
     def _safe_str(self):
         return self.local_path()
@@ -106,6 +110,4 @@ class Path(object):
                 self.path == rhs.path)
 
     def __nonzero__(self):
-        return (self.source != Path.builddir or
-                self.install_base != Path.basedir or
-                bool(self.path))
+        return self.source != Path.builddir or bool(self.path)

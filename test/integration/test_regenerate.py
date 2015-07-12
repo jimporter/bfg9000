@@ -36,10 +36,10 @@ class TestRegenerateGlob(IntegrationTest):
 
     def test_add_file(self):
         self.wait()
-        self.copyfile(os.path.join('hello', 'bonjour.hpp'))
-        self.copyfile(os.path.join('hello', 'bonjour.cpp'))
-        self.copyfile(os.path.join('hello', 'main_added.cpp'),
-                      os.path.join('hello', 'main.cpp'))
+        self.copyfile(os.path.join('src', 'hello', 'bonjour.hpp'))
+        self.copyfile(os.path.join('src', 'hello', 'bonjour.cpp'))
+        self.copyfile(os.path.join('src', 'hello', 'main_added.cpp'),
+                      os.path.join('src', 'hello', 'main.cpp'))
 
         self.build(executable('hello'))
         self.assertOutput([executable('hello')],
@@ -47,10 +47,10 @@ class TestRegenerateGlob(IntegrationTest):
 
     def test_add_dir(self):
         self.wait()
-        shutil.copytree(os.path.join(self.extradir, 'goodbye', 'french'),
-                        os.path.join(self.srcdir, 'goodbye', 'french'))
-        self.copyfile(os.path.join('goodbye', 'main_added.cpp'),
-                      os.path.join('goodbye', 'main.cpp'))
+        shutil.copytree(os.path.join(self.extradir, 'src', 'goodbye', 'french'),
+                        os.path.join(self.srcdir, 'src', 'goodbye', 'french'))
+        self.copyfile(os.path.join('src', 'goodbye', 'main_added.cpp'),
+                      os.path.join('src', 'goodbye', 'main.cpp'))
 
         self.build(executable('goodbye'))
         self.assertOutput([executable('goodbye')],
@@ -58,17 +58,18 @@ class TestRegenerateGlob(IntegrationTest):
 
     def test_remove_file(self):
         self.wait()
-        os.unlink(os.path.join(self.srcdir, 'hello', 'hello.cpp'))
-        self.copyfile(os.path.join('hello', 'main_removed.cpp'),
-                      os.path.join('hello', 'main.cpp'))
+        os.unlink(os.path.join(self.srcdir, 'src', 'hello', 'hello.cpp'))
+        self.copyfile(os.path.join('src', 'hello', 'main_removed.cpp'),
+                      os.path.join('src', 'hello', 'main.cpp'))
         self.build(executable('hello'))
         self.assertOutput([executable('hello')], '')
 
     def test_remove_dir(self):
         self.wait()
-        cleandir(os.path.join(self.srcdir, 'goodbye', 'german'), recreate=False)
-        self.copyfile(os.path.join('goodbye', 'main_removed.cpp'),
-                      os.path.join('goodbye', 'main.cpp'))
+        cleandir(os.path.join(self.srcdir, 'src', 'goodbye', 'german'),
+                 recreate=False)
+        self.copyfile(os.path.join('src', 'goodbye', 'main_removed.cpp'),
+                      os.path.join('src', 'goodbye', 'main.cpp'))
 
         self.build(executable('goodbye'))
         self.assertOutput([executable('goodbye')], 'Goodbye!\n')

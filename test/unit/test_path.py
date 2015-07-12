@@ -33,7 +33,7 @@ class TestPath(unittest.TestCase):
         p = Path('foo/bar', Path.builddir, Path.bindir)
         self.assertEqual(
             p.local_path(),
-            real_path('builddir', os.path.join('bin', 'foo', 'bar'))
+            real_path('builddir', os.path.join('foo', 'bar'))
         )
         self.assertEqual(
             p.install_path(),
