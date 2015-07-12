@@ -82,7 +82,9 @@ def write_solution(out, uuid, projects):
         Var('VisualStudioVersion', '14.0.22609.0'),
         Var('MinimumVisualStudioVersion', '10.0.40219.1')
     ]
-    configs = []
+
+    configs = set()
+    project_info = []
 
     for p in projects:
         proj = S.Project(
@@ -98,17 +100,19 @@ def write_solution(out, uuid, projects):
             )
         sln.append(proj)
 
-        configs.append(Var('{}.Debug|x86.ActiveCfg'.format(p.uuid_str),
-                           'Debug|Win32'))
-        configs.append(Var('{}.Debug|x86.Build.0'.format(p.uuid_str),
-                           'Debug|Win32'))
+        configs.add(p.config_plat)
+        project_info.append(Var('{uuid}.{cfg}.ActiveCfg'.format(
+            uuid=p.uuid_str, cfg=p.config_plat
+        ), p.config_plat))
+        project_info.append(Var('{uuid}.{cfg}.Build.0'.format(
+            uuid=p.uuid_str, cfg=p.config_plat
+        ), p.config_plat))
 
     sln.append(S.Global()(
-        S.GlobalSection('SolutionConfigurationPlatforms', 'preSolution')(
-            Var('Debug|x86', 'Debug|x86')
-        ),
+        S.GlobalSection('SolutionConfigurationPlatforms', 'preSolution')
+         .extend(Var(i, i) for i in configs),
         S.GlobalSection('ProjectConfigurationPlatforms', 'postSolution')
-         .extend(configs),
+         .extend(project_info),
         S.GlobalSection('SolutionProperties', 'preSolution')(
             Var('HideSolutionNode', 'FALSE')
         )
@@ -128,12 +132,15 @@ class VcxProject(object):
     _XMLNS = 'http://schemas.microsoft.com/developer/msbuild/2003'
     _DOCTYPE = '<?xml version="1.0" encoding="utf-8"?>'
 
-    def __init__(self, name, uuid, mode='Application', output_file=None,
+    def __init__(self, name, uuid, mode='Application', configuration=None,
+                 platform=None, output_file=None,
                  import_lib=None, files=None, srcdir=None, libs=None,
                  libdirs=None, dependencies=None):
         self.name = name
         self.uuid = uuid
         self.mode = mode
+        self.configuration = configuration or 'Debug'
+        self.platform = platform or 'Win32'
         self.output_files = utils.listify(output_file)
         self.files = files or []
         self.srcdir = srcdir
@@ -144,6 +151,13 @@ class VcxProject(object):
     @property
     def path(self):
         return os.path.join(self.name, '{}.vcxproj'.format(self.name))
+
+    @property
+    def config_plat(self):
+        return '{config}|{platform}'.format(
+            config=self.configuration,
+            platform=self.platform
+        )
 
     @property
     def uuid_str(self):
@@ -180,9 +194,9 @@ class VcxProject(object):
                             {'ToolsVersion': '14.0'}, {'xmlns': self._XMLNS},
             E.ItemGroup({'Label' : 'ProjectConfigurations'},
                 # TODO: Handle other configurations
-                E.ProjectConfiguration({'Include' : 'Debug|Win32'},
-                    E.Configuration('Debug'),
-                    E.Platform('Win32')
+                E.ProjectConfiguration({'Include' : self.config_plat},
+                    E.Configuration(self.configuration),
+                    E.Platform(self.platform)
                 )
             ),
             E.PropertyGroup({'Label': 'Globals'},
@@ -277,6 +291,8 @@ def write(env, build_inputs):
                 name=e.project_name,
                 uuid=uuids[e.project_name],
                 mode=link_mode(e.builder.mode),
+
+                platform=env.getvar('PLATFORM'),
 
                 # TODO: These currently end up in subdirs (e.g. bin/). We
                 # probably shouldn't do this. Maybe that's more dependent on the
