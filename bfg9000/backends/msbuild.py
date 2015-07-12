@@ -150,11 +150,20 @@ class VcxProject(object):
         return uuid_str(self.uuid)
 
     def write(self, out):
+        override_props = E.PropertyGroup()
+        if self.libdirs:
+            override_props.append(E.LibraryPath(
+                ';'.join(self.libdirs + ['$(LibraryPath)'])
+            ))
+        override_props.append(E.TargetPath(
+            '$(OutDir)' + self.output_files[0]
+        ))
+
         link = E.Link()
         if len(self.output_files) >= 1:
-            link.append(E.OutputFile(self.output_files[0]))
+            link.append(E.OutputFile('$(TargetPath)'))
         if len(self.output_files) == 2:
-            link.append(E.ImportLibrary(self.output_files[1]))
+            link.append(E.ImportLibrary('$(OutDir)' + self.output_files[1]))
         if self.libs:
             libs = ';'.join(self.libs + ['%(AdditionalDependencies)'])
             link.append(E.AdditionalDependencies(libs))
@@ -166,12 +175,6 @@ class VcxProject(object):
             ),
             link
         )
-
-        override_props = E.PropertyGroup()
-        if self.libdirs:
-            override_props.append(E.LibraryPath(
-                ';'.join(self.libdirs + ['$(LibraryPath)'])
-            ))
 
         project = E.Project({'DefaultTargets': 'Build'},
                             {'ToolsVersion': '14.0'}, {'xmlns': self._XMLNS},
