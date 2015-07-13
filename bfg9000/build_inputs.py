@@ -23,7 +23,7 @@ class File(Node):
 
     def __init__(self, name, source):
         Node.__init__(self)
-        self.path = path.Path(name, source, self.install_root)
+        self.path = path.Path(name, source)
 
 class Directory(File):
     pass

@@ -36,7 +36,7 @@ class MSVCCompiler(object):
         return []
 
     def include_dir(self, directory):
-        return ['/I' + directory.path.local_path()]
+        return ['/I' + directory.path]
 
 class MSVCLinker(object):
     def __init__(self, env, mode):
@@ -74,8 +74,7 @@ class MSVCLinker(object):
         return ['/DLL'] if self.mode == 'shared_library' else []
 
     def lib_dirs(self, libraries):
-        dirs = uniques(i.path.parent().local_path() for i in libraries
-                       if i.path.parent())
+        dirs = uniques(i.path.parent() for i in libraries)
         return ['/LIBPATH:' + i for i in dirs]
 
     def link_lib(self, library):
@@ -85,7 +84,7 @@ class MSVCLinker(object):
         if self.mode != 'shared_library':
             # TODO: Raise an exception here.
             return []
-        return ['/IMPLIB:' + library.path.local_path()]
+        return ['/IMPLIB:' + library.path]
 
     def rpath(self, libraries, start):
         return []

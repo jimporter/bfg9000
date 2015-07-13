@@ -50,8 +50,9 @@ class NinjaWriter(object):
             self.write_literal(self.escape_str(thing, syntax))
         elif isinstance(thing, safe_str.escaped_str):
             self.write_literal(thing.string)
-        elif isinstance(thing, path.real_path):
-            self.write(thing.path(_path_vars, syntax == 'shell_word'), syntax)
+        elif isinstance(thing, path.Path):
+            self.write(thing.realize(_path_vars, syntax == 'shell_word'),
+                       syntax)
         elif isinstance(thing, safe_str.jbos):
             for j in thing.bits:
                 self.write(j, syntax)
@@ -100,6 +101,7 @@ var = NinjaVariable
 
 _path_vars = {
     'srcdir': NinjaVariable('srcdir'),
+    'builddir': None,
     'prefix': NinjaVariable('prefix'),
 }
 class NinjaFile(object):
@@ -301,13 +303,13 @@ def install_rule(install_targets, buildfile, env):
             return install_data
 
     def install_line(file):
-        src = file.path.local_path()
-        dst = file.path.install_path()
+        src = file.path
+        dst = path.install_path(file.path, file.install_root)
         return [ install_cmd(file.install_kind), '-D', src, dst ]
 
     def mkdir_line(dir):
-        src = dir.path.append('*').local_path()
-        dst = dir.path.parent().install_path()
+        src = dir.path.append('*')
+        dst = path.install_path(dir.path.parent(), dir.install_root)
         return 'mkdir -p ' + dst + ' && cp -r ' + src + ' ' + dst
 
     commands = chain((install_line(i) for i in install_targets.files),

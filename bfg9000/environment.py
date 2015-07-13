@@ -91,8 +91,9 @@ class Environment(object):
 
     @property
     def lib_dirs(self):
-        return (self.getvar('LIBRARY_PATH', '').split(os.pathsep) +
-                self.platform.lib_dirs)
+        paths = self.getvar('LIBRARY_PATH')
+        paths = paths.split(os.pathsep) if paths else []
+        return paths + self.platform.lib_dirs
 
     def compiler(self, lang):
         return self.__compilers[lang]

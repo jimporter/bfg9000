@@ -1,13 +1,13 @@
+class safe_string(object):
+    pass
+
 def safe_str(s):
-    if isinstance(s, basestring):
+    if isinstance(s, basestring) or isinstance(s, safe_string):
         return s
     elif hasattr(s, '_safe_str'):
         return s._safe_str()
     else:
         raise NotImplementedError(type(s))
-
-class safe_string(object):
-    pass
 
 class escaped_str(safe_string):
     def __init__(self, string):
@@ -20,9 +20,6 @@ class escaped_str(safe_string):
 
     def __repr__(self):
         return '`{}`'.format(self.string)
-
-    def _safe_str(self):
-        return self
 
     def __cmp__(self, rhs):
         if not isinstance(rhs, escaped_str):
@@ -51,9 +48,6 @@ class jbos(safe_string): # Just a Bunch of Strings
 
     def __repr__(self):
         return 'jbos({})'.format(', '.join(repr(i) for i in self.bits))
-
-    def _safe_str(self):
-        return self
 
     def __add__(self, rhs):
         return jbos(self, rhs)

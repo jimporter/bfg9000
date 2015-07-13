@@ -15,7 +15,7 @@ def _find_library(env, name, search_dirs):
     for d in search_dirs:
         for i in linkers:
             candidate = i.output_file(os.path.join(d, name))
-            if os.path.exists(candidate.path.path):
+            if os.path.exists(candidate.path.realize(None)):
                 return candidate
     raise ValueError('unable to find package {!r}'.format(name))
 
