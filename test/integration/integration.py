@@ -15,19 +15,20 @@ test_data_dir = os.path.join(this_dir, '..', 'test_data')
 test_stage_dir = os.path.join(this_dir, '..', 'stage')
 
 def cleandir(path, recreate=True):
-    try:
-        shutil.rmtree(path)
-    except Exception as e:
-        if e.errno == errno.ENOTEMPTY:
-            # Windows seems to keep an executable file open a little bit after
-            # the process returns from wait(), so sleep a bit and try again in
-            # case this bites us.
-            time.sleep(0.5)
+    if os.path.exists(path):
+        try:
             shutil.rmtree(path)
-        elif e.errno != errno.ENOENT:
-            raise
+        except Exception as e:
+            if e.errno == errno.ENOTEMPTY:
+                # Windows seems to keep an executable file open a little bit
+                # after the process returns from wait(), so sleep a bit and try
+                # again in case this bites us.
+                time.sleep(0.5)
+                shutil.rmtree(path)
+            elif e.errno != errno.ENOENT:
+                raise
     if recreate:
-        os.mkdir(path)
+        makedirs(path)
 
 def stagedir(path):
     dest = os.path.join(test_stage_dir, os.path.basename(path))
@@ -43,15 +44,22 @@ class SubprocessError(unittest.TestCase.failureException):
 
 class IntegrationTest(unittest.TestCase):
     def __init__(self, srcdir, *args, **kwargs):
+        dist = kwargs.pop('dist', False)
         unittest.TestCase.__init__(self, *args, **kwargs)
-        self.srcdir = os.path.join(test_data_dir, srcdir)
 
+        self.backend = os.getenv('BACKEND', 'make')
+        self.extra_args = []
+
+        self.srcdir = os.path.join(test_data_dir, srcdir)
         srcbase = os.path.basename(srcdir)
         self.builddir = os.path.join(test_stage_dir, srcbase + '-build')
-        makedirs(self.builddir, exist_ok=True)
 
-        self.extra_args = []
-        self.backend = os.getenv('BACKEND', 'make')
+        if dist:
+            self.distdir = os.path.join(test_stage_dir, srcbase + '-dist')
+            self.includedir = os.path.join(self.distdir, 'include')
+            self.bindir = os.path.join(self.distdir, 'bin')
+            self.libdir = os.path.join(self.distdir, 'lib')
+            self.extra_args = ['--prefix', self.distdir]
 
     def setUp(self):
         os.chdir(self.srcdir)

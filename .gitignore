@@ -1,5 +1,4 @@
 *.pyc
 bfg9000.egg-info
-dist
 env
 /test/stage/

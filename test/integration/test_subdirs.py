@@ -7,14 +7,8 @@ pjoin = os.path.join
 class TestSubdirs(IntegrationTest):
     def __init__(self, *args, **kwargs):
         IntegrationTest.__init__(
-            self, pjoin(examples_dir, '04_subdirs'), *args, **kwargs
+            self, pjoin(examples_dir, '04_subdirs'), dist=True, *args, **kwargs
         )
-
-        self.distdir = pjoin(self.srcdir, 'dist')
-        self.includedir = pjoin(self.distdir, 'include')
-        self.bindir = pjoin(self.distdir, 'bin')
-        self.libdir = pjoin(self.distdir, 'lib')
-        self.extra_args = ['--prefix', self.distdir]
 
     def setUp(self):
         IntegrationTest.setUp(self)

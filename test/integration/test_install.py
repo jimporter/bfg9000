@@ -6,13 +6,7 @@ pjoin = os.path.join
 
 class TestInstall(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        IntegrationTest.__init__(self, 'install', *args, **kwargs)
-
-        self.distdir = pjoin(self.srcdir, 'dist')
-        self.includedir = pjoin(self.distdir, 'include')
-        self.bindir = pjoin(self.distdir, 'bin')
-        self.libdir = pjoin(self.distdir, 'lib')
-        self.extra_args = ['--prefix', self.distdir]
+        IntegrationTest.__init__(self, 'install', dist=True, *args, **kwargs)
 
     def setUp(self):
         IntegrationTest.setUp(self)
