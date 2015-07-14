@@ -40,5 +40,18 @@ class TestSafeStr(unittest.TestCase):
         self.assertEqual(safe_str(jbos('foo')).bits, jbos('foo').bits)
         self.assertRaises(NotImplementedError, safe_str, 123)
 
+    def test_join(self):
+        s = join([], ',')
+        self.assertEqual(s.bits, [])
+
+        s = join(['foo'], ',')
+        self.assertEqual(s.bits, ['foo'])
+
+        s = join(['foo', 'bar'], ',')
+        self.assertEqual(s.bits, ['foo', ',', 'bar'])
+
+        s = join([escaped_str('foo'), 'bar'], ',')
+        self.assertEqual(s.bits, [escaped_str('foo'), ',', 'bar'])
+
 if __name__ == '__main__':
     unittest.main()

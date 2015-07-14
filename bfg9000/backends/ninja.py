@@ -312,8 +312,12 @@ def install_rule(install_targets, buildfile, env):
         dst = path.install_path(dir.path.parent(), dir.install_root)
         return 'mkdir -p ' + dst + ' && cp -r ' + src + ' ' + dst
 
+    post_install = filter(None, (getattr(i, 'post_install', None)
+                                 for i in install_targets.files))
+
     commands = chain((install_line(i) for i in install_targets.files),
-                     (mkdir_line(i) for i in install_targets.directories))
+                     (mkdir_line(i) for i in install_targets.directories),
+                     post_install)
     command_build(
         buildfile,
         output='install',

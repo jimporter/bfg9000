@@ -73,6 +73,8 @@ class Link(Edge):
         target = self.builder.output_file(name)
         build.fallback_default = target
         Edge.__init__(self, build, target, extra_deps)
+        if hasattr(self.builder, 'post_install_command'):
+            target.post_install = self.builder.post_install_command(target)
 
 class Alias(Edge):
     def __init__(self, build, name, deps=None):

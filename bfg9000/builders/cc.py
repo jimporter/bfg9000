@@ -1,6 +1,8 @@
 import os.path
 import re
 
+from .. import path
+from .. import safe_str
 from .. import shell
 from ..utils import iterate, uniques
 from ..file_types import *
@@ -58,6 +60,19 @@ class CcLinkerBase(object):
         result.extend(iterate(libs))
         result.extend(['-o', output])
         return result
+
+    def post_install_command(self, target):
+        if self.platform.has_rpath:
+            paths = uniques(
+                path.install_path(i.path, i.install_root).parent()
+                for i in target.creator.libs if isinstance(i, SharedLibrary)
+            )
+            if paths:
+                # TODO: Improve the configurability of this (e.g. provide a
+                # PatchElf class that installers can work with).
+                return ['patchelf', '--set-rpath', safe_str.join(paths, ':'),
+                        path.install_path(target.path, target.install_root)]
+        return None
 
     def output_file(self, name):
         if self.mode == 'executable':
