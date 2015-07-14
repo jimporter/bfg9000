@@ -27,9 +27,9 @@ def samefile(path1, path2):
 def parse_args(parser, args=None, namespace=None):
     def check_dir(path, check_exist=False):
         if not os.path.exists(path):
-            parser.error('{!r} does not exist'.format(path))
+            parser.error("'{}' does not exist".format(path))
         if not os.path.isdir(path):
-            parser.error('{!r} is not a directory'.format(path))
+            parser.error("'{}' is not a directory".format(path))
 
     args = parser.parse_args(args, namespace)
 

@@ -93,7 +93,7 @@ class CcLinkerBase(object):
             else:
                 return SharedLibrary(libpath(), Path.builddir)
         else:
-            raise ValueError('unknown mode {!r}'.format(self.mode))
+            raise ValueError("unknown mode '{}'".format(self.mode))
 
     @property
     def mode_args(self):
@@ -107,7 +107,7 @@ class CcLinkerBase(object):
         lib_name = library.path.basename()
         m = self._lib_re.match(lib_name)
         if not m:
-            raise ValueError("{!r} is not a valid library".format(lib_name))
+            raise ValueError("'{}' is not a valid library".format(lib_name))
         return ['-l' + m.group(1)]
 
     def import_lib(self, library):

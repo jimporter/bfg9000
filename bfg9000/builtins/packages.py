@@ -17,7 +17,7 @@ def _find_library(env, name, search_dirs):
             candidate = i.output_file(os.path.join(d, name))
             if os.path.exists(candidate.path.realize(None)):
                 return candidate
-    raise ValueError('unable to find package {!r}'.format(name))
+    raise ValueError("unable to find package '{}'".format(name))
 
 @builtin
 def system_package(build, env, name):
@@ -43,4 +43,4 @@ def system_executable(build, env, name):
             candidate = os.path.join(d, name + ext)
             if os.path.exists(candidate):
                 return Executable(candidate, source=path.Path.builddir)
-    raise ValueError('unable to find executable {!r}'.format(name))
+    raise ValueError("unable to find executable '{}'".format(name))

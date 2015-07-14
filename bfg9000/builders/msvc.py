@@ -67,7 +67,7 @@ class MSVCLinker(object):
             dll = DllLibrary(name + ext, Path.builddir)
             return SharedLibrary(name + '.lib', Path.builddir, dll)
         else:
-            raise ValueError('unknown mode {!r}'.format(self.mode))
+            raise ValueError("unknown mode '{}'".format(self.mode))
 
     @property
     def mode_args(self):
