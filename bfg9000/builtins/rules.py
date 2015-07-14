@@ -23,8 +23,9 @@ class TestDriver(object):
 class ObjectFiles(list):
     def __getitem__(self, key):
         if isinstance(key, basestring):
+            path = Path(key, Path.srcdir)
             for i in self:
-                if i.creator and i.creator.file.path.path == key:
+                if i.creator and i.creator.file.path == path:
                     return i
             raise ValueError('{!r} not found'.format(key))
         else:
