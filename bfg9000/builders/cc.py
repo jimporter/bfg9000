@@ -119,9 +119,10 @@ class CcLinkerBase(object):
         if self.platform.has_rpath:
             paths = uniques(i.path.parent().relpath(start) for i in libraries
                             if isinstance(i, SharedLibrary))
-            rpath = ':'.join(os.path.join('$ORIGIN', i) for i in paths)
-            if rpath:
-                return ['-Wl,-rpath={}'.format(rpath)]
+            if paths:
+                rpaths = ('$ORIGIN' if i == '.' else os.path.join('$ORIGIN', i)
+                          for i in paths)
+                return ['-Wl,-rpath={}'.format(':'.join(rpaths))]
         return []
 
 class CcCompiler(CcCompilerBase):
