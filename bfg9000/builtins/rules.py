@@ -23,11 +23,15 @@ class TestDriver(object):
 class ObjectFiles(list):
     def __getitem__(self, key):
         if isinstance(key, basestring):
-            path = Path(key, Path.srcdir)
+            key = Path(key, Path.srcdir)
+        elif isinstance(key, File):
+            key = key.path
+
+        if isinstance(key, Path):
             for i in self:
-                if i.creator and i.creator.file.path == path:
+                if i.creator and i.creator.file.path == key:
                     return i
-            raise ValueError("'{}' not found".format(key))
+            raise ValueError("{!r} not found".format(key))
         else:
             return list.__getitem__(self, key)
 
