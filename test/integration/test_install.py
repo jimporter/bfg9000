@@ -1,6 +1,7 @@
 import os.path
 import unittest
 
+from bfg9000.makedirs import makedirs
 from integration import *
 pjoin = os.path.join
 
@@ -23,20 +24,22 @@ class TestInstall(IntegrationTest):
         self.assertExists(pjoin(self.bindir, executable('program')))
         self.assertExists(pjoin(self.libdir, shared_library('library')))
 
+        os.chdir(self.srcdir)
         cleandir(self.builddir)
         self.assertOutput([pjoin(self.bindir, executable('program'))],
                           'hello, library!\n')
 
     def test_install_existing_paths(self):
-        os.mkdir(self.includedir)
-        os.mkdir(self.bindir)
-        os.mkdir(self.libdir)
+        makedirs(self.includedir, exist_ok=True)
+        makedirs(self.bindir, exist_ok=True)
+        makedirs(self.libdir, exist_ok=True)
         self.build('install')
 
         self.assertExists(pjoin(self.includedir, 'library.hpp'))
         self.assertExists(pjoin(self.bindir, executable('program')))
         self.assertExists(pjoin(self.libdir, shared_library('library')))
 
+        os.chdir(self.srcdir)
         cleandir(self.builddir)
         self.assertOutput([pjoin(self.bindir, executable('program'))],
                           'hello, library!\n')
