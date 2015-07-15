@@ -6,6 +6,7 @@ import sys
 import time
 import unittest
 
+from bfg9000.path import Path
 from bfg9000.platforms import platform_info
 from bfg9000.makedirs import makedirs
 
@@ -56,10 +57,13 @@ class IntegrationTest(unittest.TestCase):
 
         if dist:
             self.distdir = os.path.join(test_stage_dir, srcbase + '-dist')
-            self.includedir = os.path.join(self.distdir, 'include')
-            self.bindir = os.path.join(self.distdir, 'bin')
-            self.libdir = os.path.join(self.distdir, 'lib')
             self.extra_args = ['--prefix', self.distdir]
+
+            install_dirs = platform_info().install_dirs
+            path_vars = {Path.prefix: self.distdir}
+            self.bindir = install_dirs['bindir'].realize(path_vars)
+            self.libdir = install_dirs['libdir'].realize(path_vars)
+            self.includedir = install_dirs['includedir'].realize(path_vars)
 
     def setUp(self):
         os.chdir(self.srcdir)
