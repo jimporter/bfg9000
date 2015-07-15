@@ -3,6 +3,8 @@ import re
 import subprocess
 from collections import namedtuple
 
+from path import Path
+
 def platform_name():
     name = platform.system().lower()
     if name == 'windows':
@@ -38,6 +40,15 @@ class PosixPlatform(Platform):
     @property
     def lib_dirs(self):
         return ['/usr/local/lib', '/lib', '/usr/lib']
+
+    @property
+    def install_dirs(self):
+        return {
+            Path.prefix:     Path('/usr/local', Path.absolute),
+            Path.bindir:     Path('bin', Path.prefix),
+            Path.libdir:     Path('lib', Path.prefix),
+            Path.includedir: Path('include', Path.prefix),
+        }
 
 class LinuxPlatform(PosixPlatform):
     @property
@@ -82,6 +93,16 @@ class WindowsPlatform(Platform):
     def lib_dirs(self):
         # TODO: Provide a list of lib paths
         return []
+
+    @property
+    def install_dirs(self):
+        return {
+            # TODO: Pick a better prefix
+            Path.prefix:     Path('C:\\', Path.absolute),
+            Path.bindir:     Path('', Path.prefix),
+            Path.libdir:     Path('', Path.prefix),
+            Path.includedir: Path('', Path.prefix),
+        }
 
 def platform_info(name=None):
     if name is None:

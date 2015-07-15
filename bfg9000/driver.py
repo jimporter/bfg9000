@@ -3,12 +3,14 @@ import os
 import pickle
 import re
 import sys
-import pkg_resources
+from pkg_resources import iter_entry_points
 
 from . import builtins
 from . import utils
 from .build_inputs import BuildInputs
 from .environment import Environment, EnvVersionError
+from .path import Path
+from .platforms import platform_info
 from .version import __version__
 
 bfgfile = 'build.bfg'
@@ -71,18 +73,32 @@ def parse_args(parser, args=None, namespace=None):
     return args
 
 def main():
-    backends = {
-        i.name: i for i in pkg_resources.iter_entry_points('bfg9000.backends')
-    }
+    backends = {i.name: i for i in iter_entry_points('bfg9000.backends')}
+    install_dirs = platform_info().install_dirs
 
+    path_help = 'installation path for {} (default: %(default)r)'
     parser = argparse.ArgumentParser(prog='bfg9000')
+    def path_arg(value):
+        return Path(os.path.abspath(value), Path.absolute)
+
     parser.add_argument('srcdir', nargs='?', help='source directory')
     parser.add_argument('builddir', nargs='?', help='build directory')
     parser.add_argument('--version', action='version',
                         version='%(prog)s ' + __version__)
     parser.add_argument('--backend', choices=backends.keys(), default='make',
                         help='backend (default: %(default)s)')
-    parser.add_argument('--prefix', default='/usr', help='installation prefix')
+    parser.add_argument('--prefix', default=install_dirs[Path.prefix],
+                        type=path_arg, metavar='PATH',
+                        help='installation prefix (default: %(default)r)')
+    parser.add_argument('--bindir', default=install_dirs[Path.bindir],
+                        type=path_arg, metavar='PATH',
+                        help=path_help.format('executables'))
+    parser.add_argument('--libdir', default=install_dirs[Path.libdir],
+                        type=path_arg, metavar='PATH',
+                        help=path_help.format('libraries'))
+    parser.add_argument('--includedir', default=install_dirs[Path.includedir],
+                        type=path_arg, metavar='PATH',
+                        help=path_help.format('headers'))
     parser.add_argument('--regenerate', action='store_true',
                         help='regenerate build files')
 
@@ -101,11 +117,16 @@ def main():
         bfgpath = os.path.realpath(re.sub('-script.py$', '.exe', sys.argv[0]))
         env = Environment(
             bfgpath=bfgpath,
+            backend=args.backend,
             srcdir=args.srcdir,
             builddir=args.builddir,
-            backend=args.backend,
-            install_prefix=os.path.abspath(args.prefix),
-        )
+            install_dirs={
+                Path.prefix: args.prefix,
+                Path.bindir: args.bindir,
+                Path.libdir: args.libdir,
+                Path.includedir: args.includedir,
+            }
+       )
         env.save(args.builddir)
 
     build = BuildInputs()

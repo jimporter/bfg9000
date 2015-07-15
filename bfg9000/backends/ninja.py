@@ -11,6 +11,8 @@ from .. import shell
 from .. import utils
 from ..builtins import find
 
+Path = path.Path
+
 _rule_handlers = {}
 def rule_handler(rule_name):
     def decorator(fn):
@@ -50,7 +52,7 @@ class NinjaWriter(object):
             self.write_literal(self.escape_str(thing, syntax))
         elif isinstance(thing, safe_str.escaped_str):
             self.write_literal(thing.string)
-        elif isinstance(thing, path.Path):
+        elif isinstance(thing, Path):
             self.write(thing.realize(_path_vars, syntax == 'shell_word'),
                        syntax)
         elif isinstance(thing, safe_str.jbos):
@@ -100,10 +102,14 @@ class NinjaVariable(object):
 var = NinjaVariable
 
 _path_vars = {
-    'srcdir': NinjaVariable('srcdir'),
-    'builddir': None,
-    'prefix': NinjaVariable('prefix'),
+    Path.srcdir:     var('srcdir'),
+    Path.builddir:   None,
+    Path.prefix:     var('prefix'),
+    Path.bindir:     var('bindir'),
+    Path.libdir:     var('libdir'),
+    Path.includedir: var('includedir'),
 }
+
 class NinjaFile(object):
     def __init__(self):
         # TODO: Sort variables in some useful order
@@ -220,6 +226,8 @@ class NinjaFile(object):
 def write(env, build_inputs):
     buildfile = NinjaFile()
     buildfile.variable(_path_vars['srcdir'], env.srcdir)
+    for i in [Path.prefix, Path.bindir, Path.libdir, Path.includedir]:
+        buildfile.variable(_path_vars[i], env.install_dirs[i])
 
     all_rule(build_inputs.get_default_targets(), buildfile)
     install_rule(build_inputs.install_targets, buildfile, env)
@@ -282,8 +290,6 @@ def all_rule(default_targets, buildfile):
 def install_rule(install_targets, buildfile, env):
     if not install_targets:
         return
-
-    buildfile.variable(_path_vars['prefix'], env.install_prefix)
 
     def install_cmd(kind):
         install = NinjaVariable('install')
@@ -370,7 +376,7 @@ def test_rule(tests, buildfile):
     )
 
 def regenerate_rule(find_dirs, buildfile, env):
-    bfgpath = path.Path('build.bfg', path.Path.srcdir)
+    bfgpath = Path('build.bfg', Path.srcdir)
     depfile = None
 
     if find_dirs:
@@ -380,12 +386,12 @@ def regenerate_rule(find_dirs, buildfile, env):
 
     buildfile.rule(
         name='regenerate',
-        command=[env.bfgpath, '--regenerate', path.Path('.')],
+        command=[env.bfgpath, '--regenerate', Path('.')],
         generator=True,
         depfile=depfile,
     )
     buildfile.build(
-        output=path.Path('build.ninja'),
+        output=Path('build.ninja'),
         rule='regenerate',
         implicit=[bfgpath]
     )

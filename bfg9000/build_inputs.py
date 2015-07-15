@@ -19,7 +19,7 @@ def sourcify(thing, valid_type, make_type=None, **kwargs):
                      **kwargs)
 
 class File(Node):
-    install_root = path.Path.basedir
+    install_root = None
 
     def __init__(self, name, source):
         Node.__init__(self)

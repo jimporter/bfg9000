@@ -5,8 +5,11 @@ import uuid
 from lxml import etree
 from lxml.builder import E
 
+from .. import path
 from .. import utils
 from ..makedirs import makedirs
+
+Path = path.Path
 
 def uuid_str(uuid):
     return '{{{}}}'.format(str(uuid).upper())
@@ -121,8 +124,8 @@ def write_solution(out, uuid, projects):
     sln_write(out, sln)
 
 _path_vars = {
-    'srcdir': '$(SourceDir)',
-    'builddir': None,
+    Path.srcdir: '$(SourceDir)',
+    Path.builddir: None,
 }
 def path_str(path):
     return ntpath.normpath(path.realize(_path_vars))

@@ -66,12 +66,12 @@ class TestPath(unittest.TestCase):
     def test_install_path_srcdir(self):
         p = Path('foo/bar', Path.srcdir)
         self.assertEqual(install_path(p, Path.bindir),
-                         Path('bin/bar', Path.prefix))
+                         Path('bar', Path.bindir))
 
     def test_install_path_builddir(self):
         p = Path('foo/bar', Path.builddir)
         self.assertEqual(install_path(p, Path.bindir),
-                         Path('bin/foo/bar', Path.prefix))
+                         Path('foo/bar', Path.bindir))
 
 if __name__ == '__main__':
     unittest.main()

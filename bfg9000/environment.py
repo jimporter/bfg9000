@@ -1,6 +1,7 @@
 import json
 import os
 
+from .path import Path
 from . import platforms
 from .builders import ar
 from .builders import cc
@@ -10,16 +11,16 @@ class EnvVersionError(RuntimeError):
     pass
 
 class Environment(object):
-    version = 3
+    version = 4
     envfile = '.bfg_environ'
 
-    def __init__(self, bfgpath, backend, srcdir, builddir, install_prefix):
+    def __init__(self, bfgpath, backend, srcdir, builddir, install_dirs):
         self.bfgpath = bfgpath
         self.backend = backend
 
         self.srcdir = srcdir
         self.builddir = builddir
-        self.install_prefix = install_prefix
+        self.install_dirs = install_dirs
 
         self.variables = dict(os.environ)
         self.platform = platforms.platform_info()
@@ -118,7 +119,10 @@ class Environment(object):
                     'backend': self.backend,
                     'srcdir': self.srcdir,
                     'builddir': self.builddir,
-                    'install_prefix': self.install_prefix,
+                    'install_dirs': {
+                        k: (v.raw_path, v.base) for k, v in
+                        self.install_dirs.iteritems()
+                    },
                     'platform': self.platform.name,
                     'variables': self.variables,
                 }
@@ -130,14 +134,26 @@ class Environment(object):
             state = json.load(inp)
         if state['version'] > cls.version:
             raise EnvVersionError('saved version exceeds expected version')
+
         if state['version'] == 1:
             state['data']['platform'] = platforms.platform_name()
 
+        platform = state['data']['platform'] = platforms.platform_info(
+            state['data']['platform']
+        )
+
+        if state['version'] <= 3:
+            prefix = state['data'].pop('install_prefix')
+            state['data'][Path.prefix] = Path(prefix, Path.absolute)
+            for i in ['bindir', 'libdir', 'includedir']:
+                state['data']['install_dirs'][i] = platform.install_paths[i]
+        else:
+            install_dirs = state['data']['install_dirs']
+            for k, v in install_dirs.iteritems():
+                install_dirs[k] = Path(*v)
+
         env = Environment.__new__(Environment)
         for k, v in state['data'].iteritems():
-            if k == 'platform':
-                env.platform = platforms.platform_info(v)
-            else:
-                setattr(env, k, v)
+            setattr(env, k, v)
         env.__init_compilers()
         return env

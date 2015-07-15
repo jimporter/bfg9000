@@ -11,6 +11,8 @@ from .. import shell
 from .. import utils
 from ..builtins import find
 
+Path = path.Path
+
 _rule_handlers = {}
 def rule_handler(rule_name):
     def decorator(fn):
@@ -55,7 +57,7 @@ class MakeWriter(object):
             self.write_literal(self.escape_str(thing, syntax))
         elif isinstance(thing, safe_str.escaped_str):
             self.write_literal(thing.string)
-        elif isinstance(thing, path.Path):
+        elif isinstance(thing, Path):
             self.write(thing.realize(_path_vars, syntax == 'shell_word'),
                        syntax)
         elif isinstance(thing, safe_str.jbos):
@@ -168,10 +170,14 @@ class MakeCall(MakeFunc):
         MakeFunc.__init__(self, 'call', func.name, *args)
 
 _path_vars = {
-    'srcdir': MakeVariable('srcdir'),
-    'builddir': None,
-    'prefix': MakeVariable('prefix'),
+    Path.srcdir:     var('srcdir'),
+    Path.builddir:   None,
+    Path.prefix:     var('prefix'),
+    Path.bindir:     var('bindir'),
+    Path.libdir:     var('libdir'),
+    Path.includedir: var('includedir'),
 }
+
 class Makefile(object):
     def __init__(self):
         # TODO: Sort variables in some useful order.
@@ -190,7 +196,7 @@ class Makefile(object):
         if not isinstance(name, MakeVariable):
             name = MakeVariable(name)
         if self.has_variable(name, target=target):
-            raise ValueError("variable '{}' already exists".format(name))
+            raise ValueError("variable '{}' already exists".format(name.name))
 
         if flavor == 'define':
             self._defines[name] = value
@@ -316,6 +322,8 @@ class Makefile(object):
 def write(env, build_inputs):
     buildfile = Makefile()
     buildfile.variable(_path_vars['srcdir'], env.srcdir)
+    for i in [Path.prefix, Path.bindir, Path.libdir, Path.includedir]:
+        buildfile.variable(_path_vars[i], env.install_dirs[i])
 
     all_rule(build_inputs.get_default_targets(), buildfile)
     install_rule(build_inputs.install_targets, buildfile, env)
@@ -357,8 +365,6 @@ def all_rule(default_targets, buildfile):
 def install_rule(install_targets, buildfile, env):
     if not install_targets:
         return
-
-    buildfile.variable(_path_vars['prefix'], env.install_prefix)
 
     def install_cmd(kind):
         install = MakeVariable('INSTALL')
@@ -455,7 +461,7 @@ def directory_rule(buildfile):
     )
 
 def regenerate_rule(find_dirs, buildfile, env):
-    bfgpath = path.Path('build.bfg', path.Path.srcdir)
+    bfgpath = Path('build.bfg', Path.srcdir)
     extra_deps = []
 
     if find_dirs:
@@ -464,7 +470,7 @@ def regenerate_rule(find_dirs, buildfile, env):
         buildfile.include(find.depfile_name)
 
     buildfile.rule(
-        target=path.Path('Makefile'),
+        target=Path('Makefile'),
         deps=[bfgpath] + extra_deps,
         recipe=[[env.bfgpath, '--regenerate', '.']]
     )

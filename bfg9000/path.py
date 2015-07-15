@@ -6,15 +6,12 @@ from . import safe_str
 class Path(safe_str.safe_string):
     srcdir = 'srcdir'
     builddir = 'builddir'
-    prefix = 'prefix'
     absolute = 'absolute'
 
-    # TODO: Allow these to be set by the user. Then, just keep track of which
-    # dir and build it up appropriately somehow in the backend.
-    basedir = ''
-    bindir = 'bin'
-    libdir = 'lib'
-    includedir = 'include'
+    prefix = 'prefix'
+    bindir = 'bindir'
+    libdir = 'libdir'
+    includedir = 'includedir'
 
     def __init__(self, path, source=builddir):
         self.raw_path = os.path.normpath(path)
@@ -73,6 +70,9 @@ class Path(safe_str.safe_string):
             self.srcdir: '$(srcdir)',
             self.builddir: '$(builddir)',
             self.prefix: '$(prefix)',
+            self.bindir: '$(bindir)',
+            self.libdir: '$(libdir)',
+            self.includedir: '$(includedir)',
         }
         return '`{}`'.format(self.realize(variables))
 
@@ -96,4 +96,4 @@ def install_path(path, install_root):
         suffix = os.path.basename(path.raw_path)
     else:
         suffix = path.raw_path
-    return Path(os.path.join(install_root, suffix), Path.prefix)
+    return Path(suffix, install_root)
