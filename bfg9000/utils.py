@@ -1,5 +1,4 @@
 import os
-import shell
 from collections import Iterable
 
 def isiterable(thing):
@@ -62,14 +61,6 @@ def listify(thing, always_copy=False):
     if not always_copy and type(thing) == list:
         return thing
     return list(iterate(thing))
-
-def shell_listify(thing):
-    if thing is None:
-        return []
-    elif isiterable(thing):
-        return list(thing)
-    else:
-        return shell.split(thing)
 
 def objectify(thing, valid_type, creator, *args, **kwargs):
     if isinstance(thing, valid_type):

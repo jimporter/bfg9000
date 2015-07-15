@@ -1,7 +1,9 @@
-import platforms
 import re
 import sys
 from shlex import shlex
+
+from . import platforms
+from . import utils
 
 def split(s):
     if not isinstance(s, basestring):
@@ -10,6 +12,14 @@ def split(s):
     lexer.commenters = ''
     lexer.whitespace_split = True
     return list(lexer)
+
+def listify(thing):
+    if thing is None:
+        return []
+    elif utils.isiterable(thing):
+        return list(thing)
+    else:
+        return split(thing)
 
 _bad_posix_chars = re.compile(r'[^\w@%+=:,./-]')
 _bad_windows_chars = re.compile(r'(\s|"|\\$)')

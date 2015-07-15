@@ -31,7 +31,10 @@ class Path(safe_str.safe_string):
     def realize(self, variables, executable=False):
         base = variables[self.base] if self.base != self.absolute else None
         if base is not None:
-            return base + (os.path.sep + self.raw_path if self.raw_path else '')
+            if self.raw_path:
+                return base + os.path.sep + self.raw_path
+            else:
+                return base
         elif executable and os.path.sep not in self.raw_path:
             return os.path.join('.', self.raw_path)
         else:

@@ -1,11 +1,12 @@
 import os.path
 
 from . import builtin
+from .. import shell
 from .packages import system_executable
 from ..build_inputs import Directory, Edge, File, Phony, sourcify
 from ..file_types import *
 from ..path import Path
-from ..utils import flatten, iterate, listify, objectify, shell_listify
+from ..utils import flatten, iterate, listify, objectify
 
 class TestCase(object):
     def __init__(self, target, options, env):
@@ -47,7 +48,7 @@ class Compile(Edge):
         self.file = sourcify(file, SourceFile, lang=lang)
         self.builder = env.compiler(self.file.lang)
         self.include = sum((i.includes for i in iterate(packages)), include)
-        self.options = shell_listify(options)
+        self.options = shell.listify(options)
         self.in_shared_library = False
 
         target = self.builder.output_file(name, self.file.lang)
@@ -73,7 +74,7 @@ class Link(Edge):
         )
         self.builder = env.linker((i.lang for i in self.files), mode)
         self.libs = sum((i.libraries for i in iterate(packages)), libs)
-        self.options = shell_listify(link_options)
+        self.options = shell.listify(link_options)
 
         target = self.builder.output_file(name)
         build.fallback_default = target
@@ -186,7 +187,7 @@ def install(build, env, *args):
 def test(build, env, test, options=None, environment=None, driver=None):
     test = sourcify(test, File)
     build.tests.targets.append(test)
-    case = TestCase(test, shell_listify(options), environment or {})
+    case = TestCase(test, shell.listify(options), environment or {})
     (driver or build.tests).tests.append(case)
     return case
 
@@ -194,7 +195,7 @@ def test(build, env, test, options=None, environment=None, driver=None):
 def test_driver(build, env, driver, options=None, environment=None,
                 parent=None):
     driver = objectify(driver, Executable, system_executable.bind(build, env))
-    result = TestDriver(driver, shell_listify(options), environment or {})
+    result = TestDriver(driver, shell.listify(options), environment or {})
     (parent or build.tests).tests.append(result)
     return result
 
@@ -208,8 +209,8 @@ def test_deps(build, env, *args):
 def global_options(build, env, options, lang):
     if not lang in build.global_options:
         build.global_options[lang] = []
-    build.global_options[lang].extend(shell_listify(options))
+    build.global_options[lang].extend(shell.listify(options))
 
 @builtin
 def global_link_options(build, env, options):
-    build.global_link_options.extend(shell_listify(options))
+    build.global_link_options.extend(shell.listify(options))
