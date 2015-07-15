@@ -38,31 +38,32 @@ class MakeWriter(object):
             return re.sub(r'(\\*)([#?*\[\]~\s%])', repl, result)
         elif syntax == 'dependency':
             return re.sub(r'(\\*)([#?*\[\]~\s|%])', repl, result)
-        elif syntax == 'shell_line':
-            return result
-        elif syntax == 'shell_word':
-            return shell.quote(result)
         elif syntax == 'function':
             return shell.quote(re.sub(',', '$,', result))
+        elif syntax == 'shell':
+            return result
         else:
             raise ValueError("unknown syntax '{}'".format(syntax))
 
     def write_literal(self, string):
         self.stream.write(string)
 
-    def write(self, thing, syntax):
+    def write(self, thing, syntax, shell_quote=True):
         thing = safe_str.safe_str(thing)
+        shelly = syntax in ['function', 'shell']
 
-        if isinstance(thing, basestring):
-            self.write_literal(self.escape_str(thing, syntax))
-        elif isinstance(thing, safe_str.escaped_str):
+        if isinstance(thing, safe_str.escaped_str):
             self.write_literal(thing.string)
-        elif isinstance(thing, Path):
-            self.write(thing.realize(_path_vars, syntax == 'shell_word'),
-                       syntax)
+        elif isinstance(thing, basestring):
+            thing = self.escape_str(thing, syntax)
+            if shelly and shell_quote:
+                thing = shell.quote(thing)
+            self.write_literal(thing)
         elif isinstance(thing, safe_str.jbos):
-            for j in thing.bits:
-                self.write(j, syntax)
+            for i in thing.bits:
+                self.write(i, syntax, shell_quote)
+        elif isinstance(thing, Path):
+            self.write(thing.realize(_path_vars, shelly), syntax, shell_quote)
         else:
             raise TypeError(type(thing))
 
@@ -72,9 +73,9 @@ class MakeWriter(object):
 
     def write_shell(self, thing):
         if utils.isiterable(thing):
-            self.write_each(thing, 'shell_word')
+            self.write_each(thing, 'shell')
         else:
-            self.write(thing, 'shell_line')
+            self.write(thing, 'shell', shell_quote=False)
 
 class Pattern(object):
     def __init__(self, path):
@@ -282,7 +283,7 @@ class Makefile(object):
         if (isinstance(rule.recipe, MakeVariable) or
             isinstance(rule.recipe, MakeFunc)):
             out.write_literal(' ; ')
-            out.write(rule.recipe, syntax='shell_line')
+            out.write_shell(rule.recipe)
         elif rule.recipe is not None:
             for cmd in rule.recipe:
                 out.write_literal('\n\t')
@@ -426,7 +427,7 @@ def test_rule(tests, buildfile):
             subcmd = env + [test.target] + test.options + (args or [])
             if collapse:
                 out = MakeWriter(StringIO())
-                out.write_each(subcmd, 'shell_word')
+                out.write_shell(subcmd)
                 return safe_str.escaped_str(shell.quote(out.stream.getvalue()))
             return subcmd
 
