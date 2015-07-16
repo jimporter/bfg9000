@@ -2,6 +2,7 @@ import os
 import unittest
 
 from bfg9000.path import Path, install_path
+from bfg9000.platforms import platform_name
 
 path_variables = {
     Path.srcdir: '$(srcdir)',
@@ -37,9 +38,16 @@ class TestPath(unittest.TestCase):
     def test_realize_absolute(self):
         p = Path('/foo/bar', Path.builddir)
         self.assertEqual(p.realize(path_variables),
-                         os.path.join('/', 'foo', 'bar'))
+                         os.path.join(os.path.sep, 'foo', 'bar'))
         self.assertEqual(p.realize(path_variables, executable=True),
-                         os.path.join('/', 'foo', 'bar'))
+                         os.path.join(os.path.sep, 'foo', 'bar'))
+
+        if platform_name() == 'windows':
+            p = Path(r'C:\foo\bar', Path.builddir)
+            self.assertEqual(p.realize(path_variables),
+                             os.path.join('C:', os.path.sep, 'foo', 'bar'))
+            self.assertEqual(p.realize(path_variables, executable=True),
+                             os.path.join('C:', os.path.sep, 'foo', 'bar'))
 
     def test_realize_srcdir_empty(self):
         p = Path('', Path.srcdir)
