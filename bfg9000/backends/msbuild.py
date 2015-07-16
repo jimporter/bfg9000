@@ -293,15 +293,9 @@ def write(env, build_inputs):
                 name=e.project_name,
                 uuid=uuids[e.project_name],
                 mode=link_mode(e.builder.mode),
-
                 platform=env.getvar('PLATFORM'),
-
-                # TODO: These currently end up in subdirs (e.g. bin/). We
-                # probably shouldn't do this. Maybe that's more dependent on the
-                # Windows platform than the MSBuild backend, though.
                 output_file=[path_str(i.path) for i in
                              iterutils.iterate(e.target)],
-
                 srcdir=env.srcdir,
                 files=[path_str(i.creator.file.path) for i in e.files],
                 libs=[path_str(i.path) for i in e.libs],

@@ -82,7 +82,6 @@ class MSVCLinker(object):
 
     def import_lib(self, library):
         if self.mode != 'shared_library':
-            # TODO: Raise an exception here.
             return []
         return ['/IMPLIB:' + library.path]
 
