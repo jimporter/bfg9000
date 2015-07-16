@@ -32,6 +32,9 @@ class MakeWriter(object):
     def escape_str(string, syntax):
         def repl(match):
             return match.group(1) * 2 + '\\' + match.group(2)
+
+        if '\n' in string:
+            raise ValueError('illegal newline')
         result = string.replace('$', '$$')
 
         if syntax == 'target':
@@ -39,7 +42,7 @@ class MakeWriter(object):
         elif syntax == 'dependency':
             return re.sub(r'(\\*)([#?*\[\]~\s|%])', repl, result)
         elif syntax == 'function':
-            return shell.quote(re.sub(',', '$,', result))
+            return re.sub(',', '$,', result)
         elif syntax == 'shell':
             return result
         else:

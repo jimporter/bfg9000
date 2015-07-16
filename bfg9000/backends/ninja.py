@@ -31,11 +31,14 @@ class NinjaWriter(object):
 
     @staticmethod
     def escape_str(string, syntax):
+        if '\n' in string:
+            raise ValueError('illegal newline')
+
         if syntax == 'output':
-            return re.sub(r'([:$\n ])', r'$\1', string)
-        elif syntax == 'input' or syntax == 'variable':
-            return re.sub(r'([$\n ])', r'$\1', string)
-        elif syntax == 'shell':
+            return re.sub(r'([:$ ])', r'$\1', string)
+        elif syntax == 'input':
+            return re.sub(r'([$ ])', r'$\1', string)
+        elif syntax in ['variable', 'shell']:
             return string.replace('$', '$$')
         else:
             raise ValueError("unknown syntax '{}'".format(syntax))
