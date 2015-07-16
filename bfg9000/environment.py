@@ -3,9 +3,7 @@ import os
 
 from .path import Path
 from . import platforms
-from .builders import ar
-from .builders import cc
-from .builders import msvc
+from .tools import ar, cc, msvc
 
 class EnvVersionError(RuntimeError):
     pass
