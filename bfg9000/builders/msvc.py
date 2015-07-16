@@ -1,7 +1,7 @@
 import os
 
 from .. import shell
-from ..utils import iterate, uniques
+from ..iterutils import iterate, uniques
 from ..file_types import *
 
 class MSVCCompiler(object):

@@ -4,7 +4,7 @@ import re
 from .. import path
 from .. import safe_str
 from .. import shell
-from ..utils import iterate, uniques
+from ..iterutils import iterate, uniques
 from ..file_types import *
 
 class CcCompilerBase(object):

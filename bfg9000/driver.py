@@ -6,7 +6,6 @@ import sys
 from pkg_resources import iter_entry_points
 
 from . import builtins
-from . import utils
 from .build_inputs import BuildInputs
 from .environment import Environment, EnvVersionError
 from .path import Path

@@ -1,7 +1,7 @@
 import os
 
 from .. import shell
-from .. import utils
+from .. import iterutils
 from .. import file_types
 from ..path import Path
 
@@ -17,9 +17,9 @@ class ArLinker(object):
 
     def command(self, cmd, input, output, args=None):
         result = [cmd]
-        result.extend(utils.iterate(args))
+        result.extend(iterutils.iterate(args))
         result.append(output)
-        result.extend(utils.iterate(input))
+        result.extend(iterutils.iterate(input))
         return result
 
     def output_file(self, name):

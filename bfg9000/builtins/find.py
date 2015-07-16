@@ -2,7 +2,7 @@ import fnmatch
 import os
 
 from . import builtin
-from ..utils import listify
+from ..iterutils import listify
 
 depfile_name = '.bfg_find_deps'
 def write_depfile(path, output, seen_dirs, makeify=False):

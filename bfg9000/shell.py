@@ -3,7 +3,7 @@ import sys
 from shlex import shlex
 
 from . import platforms
-from . import utils
+from . import iterutils
 
 def split(s):
     if not isinstance(s, basestring):
@@ -16,7 +16,7 @@ def split(s):
 def listify(thing):
     if thing is None:
         return []
-    elif utils.isiterable(thing):
+    elif iterutils.isiterable(thing):
         return list(thing)
     else:
         return split(thing)

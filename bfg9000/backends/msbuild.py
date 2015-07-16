@@ -6,7 +6,7 @@ from lxml import etree
 from lxml.builder import E
 
 from .. import path
-from .. import utils
+from .. import iterutils
 from ..makedirs import makedirs
 
 Path = path.Path
@@ -143,7 +143,7 @@ class VcxProject(object):
         self.mode = mode
         self.configuration = configuration or 'Debug'
         self.platform = platform or 'Win32'
-        self.output_files = utils.listify(output_file)
+        self.output_files = iterutils.listify(output_file)
         self.files = files or []
         self.srcdir = srcdir
         self.libs = libs or []
@@ -299,7 +299,8 @@ def write(env, build_inputs):
                 # TODO: These currently end up in subdirs (e.g. bin/). We
                 # probably shouldn't do this. Maybe that's more dependent on the
                 # Windows platform than the MSBuild backend, though.
-                output_file=[path_str(i.path) for i in utils.iterate(e.target)],
+                output_file=[path_str(i.path) for i in
+                             iterutils.iterate(e.target)],
 
                 srcdir=env.srcdir,
                 files=[path_str(i.creator.file.path) for i in e.files],

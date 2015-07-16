@@ -8,7 +8,7 @@ from itertools import chain
 from .. import path
 from .. import safe_str
 from .. import shell
-from .. import utils
+from .. import iterutils
 from ..builtins import find
 
 Path = path.Path
@@ -66,11 +66,11 @@ class NinjaWriter(object):
             raise TypeError(type(thing))
 
     def write_each(self, things, syntax, delim=' ', prefix=None, suffix=None):
-        for tween, i in utils.tween(things, delim, prefix, suffix):
+        for tween, i in iterutils.tween(things, delim, prefix, suffix):
             self.write_literal(i) if tween else self.write(i, syntax)
 
     def write_shell(self, thing):
-        if utils.isiterable(thing):
+        if iterutils.isiterable(thing):
             self.write_each(thing, 'shell')
         else:
             self.write(thing, 'shell', shell_quote=False)
@@ -159,14 +159,15 @@ class NinjaFile(object):
                     k = NinjaVariable(k)
                 real_variables[k] = v
 
-        outputs = utils.listify(output)
+        outputs = iterutils.listify(output)
         for i in outputs:
             if self.has_build(i):
                 raise ValueError("build for '{}' already exists".format(i))
             self._build_outputs.add(i)
         self._builds.append(NinjaBuild(
-            outputs, rule, utils.listify(inputs), utils.listify(implicit),
-            utils.listify(order_only), real_variables
+            outputs, rule, iterutils.listify(inputs),
+            iterutils.listify(implicit), iterutils.listify(order_only),
+            real_variables
         ))
 
     def has_build(self, name):
@@ -180,7 +181,7 @@ class NinjaFile(object):
         if syntax == 'shell':
             out.write_shell(value)
         else:
-            out.write_each(utils.iterate(value), syntax)
+            out.write_each(iterutils.iterate(value), syntax)
         out.write_literal('\n')
 
     def _write_rule(self, out, name, rule):
@@ -248,7 +249,7 @@ def write(env, build_inputs):
 
 def chain_commands(commands, delim=' && '):
     out = NinjaWriter(StringIO())
-    for tween, line in utils.tween(commands, delim):
+    for tween, line in iterutils.tween(commands, delim):
         out.write_literal(line) if tween else out.write_shell(line)
     return safe_str.escaped_str(out.stream.getvalue())
 
@@ -263,7 +264,7 @@ def command_build(buildfile, output, inputs=None, implicit=None,
         output=output,
         rule='command',
         inputs=inputs,
-        implicit=utils.listify(implicit) + ['PHONY'],
+        implicit=iterutils.listify(implicit) + ['PHONY'],
         order_only=order_only,
         variables={'cmd': chain_commands(commands)}
     )
@@ -463,7 +464,7 @@ def emit_link(rule, build_inputs, buildfile):
     ldflags_value = list(linker.mode_args)
 
     # Get the path for the DLL if this is a Windows build.
-    path = utils.first(rule.target).path
+    path = iterutils.first(rule.target).path
     variables[var('output')] = path
 
     if linker.mode != 'static_library':

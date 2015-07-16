@@ -1,4 +1,3 @@
-import os
 from collections import Iterable
 
 def isiterable(thing):
@@ -61,14 +60,3 @@ def listify(thing, always_copy=False):
     if not always_copy and type(thing) == list:
         return thing
     return list(iterate(thing))
-
-def objectify(thing, valid_type, creator, *args, **kwargs):
-    if isinstance(thing, valid_type):
-        return thing
-    elif not isinstance(thing, basestring):
-        raise TypeError('expected a {} or a string'.format(valid_type))
-    else:
-        if creator is None:
-            creator = valid_type
-        # XXX: Come up with a way to provide args to prepend?
-        return creator(thing, *args, **kwargs)

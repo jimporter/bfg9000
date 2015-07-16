@@ -8,7 +8,7 @@ from itertools import chain
 from .. import path
 from .. import safe_str
 from .. import shell
-from .. import utils
+from .. import iterutils
 from ..builtins import find
 
 Path = path.Path
@@ -71,11 +71,11 @@ class MakeWriter(object):
             raise TypeError(type(thing))
 
     def write_each(self, things, syntax, delim=' ', prefix=None, suffix=None):
-        for tween, i in utils.tween(things, delim, prefix, suffix):
+        for tween, i in iterutils.tween(things, delim, prefix, suffix):
             self.write_literal(i) if tween else self.write(i, syntax)
 
     def write_shell(self, thing):
-        if utils.isiterable(thing):
+        if iterutils.isiterable(thing):
             self.write_each(thing, 'shell')
         else:
             self.write(thing, 'shell', shell_quote=False)
@@ -89,7 +89,7 @@ class Pattern(object):
     def use(self):
         bits = re.split(r'%', self.path)
         delim = safe_str.escaped_str('%')
-        return reduce(operator.add, utils.tween(bits, delim, flag=False))
+        return reduce(operator.add, iterutils.tween(bits, delim, flag=False))
 
     def _safe_str(self):
         return self.use()
@@ -151,11 +151,11 @@ class MakeFunc(object):
     def use(self):
         out = MakeWriter(StringIO())
         prefix = '$(' + self.name + ' '
-        for tween, i in utils.tween(self.args, ',', prefix, ')'):
+        for tween, i in iterutils.tween(self.args, ',', prefix, ')'):
             if tween:
                 out.write_literal(i)
             else:
-                out.write_each(utils.iterate(i), syntax='function')
+                out.write_each(iterutils.iterate(i), syntax='function')
         return safe_str.escaped_str(out.stream.getvalue())
 
     def _safe_str(self):
@@ -235,7 +235,7 @@ class Makefile(object):
                     k = MakeVariable(k)
                 real_variables[k] = v
 
-        targets = utils.listify(target)
+        targets = iterutils.listify(target)
         if len(targets) == 0:
             raise ValueError('must have at least one target')
         for i in targets:
@@ -243,8 +243,8 @@ class Makefile(object):
                 raise ValueError("rule for '{}' already exists".format(i))
             self._targets.add(i)
         self._rules.append(MakeRule(
-            targets, utils.listify(deps), utils.listify(order_only), recipe,
-            real_variables, phony
+            targets, iterutils.listify(deps), iterutils.listify(order_only),
+            recipe, real_variables, phony
         ))
 
     def has_rule(self, name):
@@ -551,7 +551,7 @@ def emit_link(rule, build_inputs, buildfile):
     ldflags_value = list(linker.mode_args)
 
     # Get the path for the DLL if this is a Windows build.
-    path = utils.first(rule.target).path
+    path = iterutils.first(rule.target).path
 
     if linker.mode != 'static_library':
         ldflags_value.extend(rule.options)
@@ -579,14 +579,16 @@ def emit_link(rule, build_inputs, buildfile):
         ], flavor='define')
 
     recipe = MakeCall(recipename, rule.files, path)
-    if utils.isiterable(rule.target):
+    if iterutils.isiterable(rule.target):
         target = path.addext('.stamp')
         buildfile.rule(target=rule.target, deps=[target])
         recipe = [recipe, ['@touch', var('@')]]
     else:
         target = path
 
-    dirs = utils.uniques(i.path.parent() for i in utils.iterate(rule.target))
+    dirs = iterutils.uniques(
+        i.path.parent() for i in iterutils.iterate(rule.target)
+    )
     lib_deps = [i for i in rule.libs if i.creator]
     buildfile.rule(
         target=target,

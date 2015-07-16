@@ -1,5 +1,5 @@
 from . import path
-from .utils import iterate, listify, objectify
+from .iterutils import iterate, listify
 from .safe_str import safe_str
 
 class Node(object):
@@ -13,6 +13,17 @@ class Node(object):
         return '<{type} {name}>'.format(
             type=type(self).__name__, name=repr(self.path)
         )
+
+def objectify(thing, valid_type, creator, *args, **kwargs):
+    if isinstance(thing, valid_type):
+        return thing
+    elif not isinstance(thing, basestring):
+        raise TypeError('expected a {} or a string'.format(valid_type))
+    else:
+        if creator is None:
+            creator = valid_type
+        # XXX: Come up with a way to provide args to prepend?
+        return creator(thing, *args, **kwargs)
 
 def sourcify(thing, valid_type, make_type=None, **kwargs):
     return objectify(thing, valid_type, make_type, source=path.Path.srcdir,

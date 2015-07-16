@@ -3,10 +3,10 @@ import os.path
 from . import builtin
 from .. import shell
 from .packages import system_executable
-from ..build_inputs import Directory, Edge, File, Phony, sourcify
+from ..build_inputs import Directory, Edge, File, Phony, objectify, sourcify
 from ..file_types import *
 from ..path import Path
-from ..utils import flatten, iterate, listify, objectify
+from ..iterutils import flatten, iterate, listify
 
 class TestCase(object):
     def __init__(self, target, options, env):

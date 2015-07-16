@@ -1,4 +1,4 @@
-import utils
+import iterutils
 
 class safe_string(object):
     pass
@@ -58,4 +58,4 @@ class jbos(safe_string): # Just a Bunch of Strings
         return jbos(lhs, self)
 
 def join(iterable, delim):
-    return sum(utils.tween(iterable, delim, flag=False), jbos())
+    return sum(iterutils.tween(iterable, delim, flag=False), jbos())
