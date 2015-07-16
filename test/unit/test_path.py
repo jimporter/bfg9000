@@ -41,6 +41,17 @@ class TestPath(unittest.TestCase):
         self.assertEqual(p.realize(path_variables, executable=True),
                          os.path.join('/', 'foo', 'bar'))
 
+    def test_realize_srcdir_empty(self):
+        p = Path('', Path.srcdir)
+        self.assertEqual(p.realize(path_variables), '$(srcdir)')
+        self.assertEqual(p.realize(path_variables, executable=True),
+                         '$(srcdir)')
+
+    def test_realize_builddir_empty(self):
+        p = Path('', Path.builddir)
+        self.assertEqual(p.realize(path_variables), '.')
+        self.assertEqual(p.realize(path_variables, executable=True), '.')
+
     def test_parent(self):
         p = Path('foo/bar', Path.srcdir)
         self.assertEqual(p.parent(), Path('foo', Path.srcdir))

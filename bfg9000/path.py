@@ -27,15 +27,17 @@ class Path(safe_str.safe_string):
 
     def realize(self, variables, executable=False):
         base = variables[self.base] if self.base != self.absolute else None
-        if base is not None:
-            if self.raw_path:
-                return base + os.path.sep + self.raw_path
-            else:
-                return base
-        elif executable and os.path.sep not in self.raw_path:
-            return os.path.join('.', self.raw_path)
-        else:
+        if executable and base is None and os.path.sep not in self.raw_path:
+            base = '.'
+
+        if base is None:
             return self.raw_path or '.'
+        if not self.raw_path:
+            return base
+        # XXX: Add the separator and path first to make the jbos two elements
+        # instead of three. This fixes an obscure bug with Windows path
+        # escaping.
+        return base + (os.path.sep + self.raw_path)
 
     def parent(self):
         if not self.raw_path:
@@ -67,11 +69,11 @@ class Path(safe_str.safe_string):
 
     def __repr__(self):
         variables = {
-            self.srcdir: '$(srcdir)',
-            self.builddir: '$(builddir)',
-            self.prefix: '$(prefix)',
-            self.bindir: '$(bindir)',
-            self.libdir: '$(libdir)',
+            self.srcdir:     '$(srcdir)',
+            self.builddir:   '$(builddir)',
+            self.prefix:     '$(prefix)',
+            self.bindir:     '$(bindir)',
+            self.libdir:     '$(libdir)',
             self.includedir: '$(includedir)',
         }
         return '`{}`'.format(self.realize(variables))
