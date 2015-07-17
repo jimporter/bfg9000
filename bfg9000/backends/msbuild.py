@@ -2,6 +2,7 @@ import json
 import os
 import ntpath
 import uuid
+from itertools import chain
 from lxml import etree
 from lxml.builder import E
 
@@ -127,8 +128,8 @@ _path_vars = {
     Path.srcdir: '$(SourceDir)',
     Path.builddir: None,
 }
-def path_str(path):
-    return ntpath.normpath(path.realize(_path_vars))
+def path_str(node):
+    return ntpath.normpath(node.path.realize(_path_vars))
 
 class VcxProject(object):
     _XMLNS = 'http://schemas.microsoft.com/developer/msbuild/2003'
@@ -136,16 +137,18 @@ class VcxProject(object):
 
     def __init__(self, name, uuid, mode='Application', configuration=None,
                  platform=None, output_file=None,
-                 import_lib=None, files=None, srcdir=None, libs=None,
-                 libdirs=None, dependencies=None):
+                 import_lib=None, srcdir=None, files=None, compile_options=None,
+                 includes=None, libs=None, libdirs=None, dependencies=None):
         self.name = name
         self.uuid = uuid
         self.mode = mode
         self.configuration = configuration or 'Debug'
         self.platform = platform or 'Win32'
         self.output_files = iterutils.listify(output_file)
-        self.files = files or []
         self.srcdir = srcdir
+        self.files = files or []
+        self.compile_options = compile_options or []
+        self.includes = includes or []
         self.libs = libs or []
         self.libdirs = libdirs or []
         self.dependencies = dependencies or []
@@ -177,27 +180,32 @@ class VcxProject(object):
             '$(OutDir)' + self.output_files[0]
         ))
 
-        link = E.Link()
+        compile_opts = E.ClCompile(
+            E.WarningLevel('Level3')
+        )
+        if self.compile_options:
+            compile_opts.append(E.AdditionalOptions(
+                ' '.join(self.compile_options + ['%(AdditionalOptions)'])
+            ))
+        if self.includes:
+            compile_opts.append(E.AdditionalIncludeDirectories(
+                ';'.join(self.includes + ['%(AdditionalIncludeDirectories)'])
+            ))
+
+        link_opts = E.Link()
         if len(self.output_files) >= 1:
-            link.append(E.OutputFile('$(TargetPath)'))
+            link_opts.append(E.OutputFile('$(TargetPath)'))
         if len(self.output_files) == 2:
-            link.append(E.ImportLibrary('$(OutDir)' + self.output_files[1]))
+            link_opts.append(E.ImportLibrary(
+                '$(OutDir)' + self.output_files[1]
+            ))
         if self.libs:
             libs = ';'.join(self.libs + ['%(AdditionalDependencies)'])
-            link.append(E.AdditionalDependencies(libs))
-
-        item_defs = E.ItemDefinitionGroup(
-            E.ClCompile(
-                # TODO: Add more options
-                E.WarningLevel('Level3')
-            ),
-            link
-        )
+            link_opts.append(E.AdditionalDependencies(libs))
 
         project = E.Project({'DefaultTargets': 'Build'},
                             {'ToolsVersion': '14.0'}, {'xmlns': self._XMLNS},
             E.ItemGroup({'Label' : 'ProjectConfigurations'},
-                # TODO: Handle other configurations
                 E.ProjectConfiguration({'Include' : self.config_plat},
                     E.Configuration(self.configuration),
                     E.Platform(self.platform)
@@ -217,7 +225,7 @@ class VcxProject(object):
             ),
             E.Import(Project='$(VCTargetsPath)\Microsoft.Cpp.props'),
             override_props,
-            item_defs,
+            E.ItemDefinitionGroup(compile_opts, link_opts),
             E.ItemGroup(
                 *[E.ClCompile(Include=i) for i in self.files]
             ),
@@ -272,6 +280,27 @@ class UUIDMap(object):
                 'map': seenmap,
             }, out)
 
+def reduce_options(files, global_options):
+    compilers = iterutils.uniques(i.creator.builder for i in files)
+    langs = iterutils.uniques(i.lang for i in files)
+
+    per_file_opts = []
+    for i in files:
+        opts = i.creator.options
+        if opts not in per_file_opts:
+            per_file_opts.append(opts)
+
+    return list(chain(
+        chain.from_iterable(i.global_args for i in compilers),
+        chain.from_iterable(global_options.get(i, []) for i in langs),
+        chain.from_iterable(per_file_opts)
+    ))
+
+def reduce_includes(files):
+    return iterutils.uniques(chain.from_iterable(
+        (i.creator.include for i in files)
+    ))
+
 def write(env, build_inputs):
     uuids = UUIDMap(os.path.join(env.builddir, '.bfg_uuid'))
 
@@ -296,11 +325,14 @@ def write(env, build_inputs):
                 uuid=uuids[e.project_name],
                 mode=link_mode(e.builder.mode),
                 platform=env.getvar('PLATFORM'),
-                output_file=[path_str(i.path) for i in
-                             iterutils.iterate(e.target)],
+                output_file=[path_str(i) for i in iterutils.iterate(e.target)],
                 srcdir=env.srcdir,
-                files=[path_str(i.creator.file.path) for i in e.files],
-                libs=[path_str(i.path) for i in e.libs],
+                files=[path_str(i.creator.file) for i in e.files],
+                compile_options=reduce_options(
+                    e.files, build_inputs.global_options
+                ),
+                includes=[path_str(i) for i in reduce_includes(e.files)],
+                libs=[path_str(i) for i in e.libs],
                 libdirs=['$(OutDir)'],
                 dependencies=dependencies,
             )
