@@ -11,6 +11,7 @@ class TestRegenerate(IntegrationTest):
         IntegrationTest.__init__(self, 'regenerate', stage_src=True,
                                  *args, **kwargs)
 
+    @skip_if_backend('msbuild')
     def test_build(self):
         self.build('foo')
         self.assertExists(pjoin(self.builddir, 'foo'))

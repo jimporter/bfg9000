@@ -30,7 +30,7 @@ class TestCommand(IntegrationTest):
             self.build('script'),
             re.compile('^hello, world!$', re.MULTILINE)
         )
-        self.assertTrue(os.path.exists(os.path.join(self.builddir, 'file')))
+        self.assertExists(os.path.join(self.builddir, 'file'))
 
     @skip_if_backend('msbuild')
     def test_alias(self):
