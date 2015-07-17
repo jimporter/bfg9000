@@ -6,6 +6,8 @@ import sys
 import time
 import unittest
 
+from collections import namedtuple
+
 from bfg9000.path import Path
 from bfg9000.platforms import platform_info
 from bfg9000.makedirs import makedirs
@@ -14,6 +16,8 @@ this_dir = os.path.abspath(os.path.dirname(__file__))
 examples_dir = os.path.join(this_dir, '..', '..', 'examples')
 test_data_dir = os.path.join(this_dir, '..', 'test_data')
 test_stage_dir = os.path.join(this_dir, '..', 'stage')
+
+Target = namedtuple('Target', ['name', 'path'])
 
 def cleandir(path, recreate=True):
     if os.path.exists(path):
@@ -36,6 +40,17 @@ def stagedir(path):
     cleandir(dest, recreate=False)
     shutil.copytree(os.path.join(test_data_dir, path), dest)
     return dest
+
+def skip_if_backend(backend):
+    def wrap(fn):
+        def inner(self, *args, **kwargs):
+            if self.backend == backend:
+                raise unittest.SkipTest(
+                    "skipped for backend '{}'".format(backend)
+                )
+            return fn(self, *args, **kwargs)
+        return inner
+    return wrap
 
 class SubprocessError(unittest.TestCase.failureException):
     def __init__(self, message):
@@ -65,6 +80,23 @@ class IntegrationTest(unittest.TestCase):
             self.libdir = install_dirs['libdir'].realize(path_vars)
             self.includedir = install_dirs['includedir'].realize(path_vars)
 
+    def _target_name(self, target):
+        if isinstance(target, Target):
+            target = target.name
+        if self.backend == 'msbuild':
+            return '/target:' + target
+        return target
+
+    def _target_path(self, target):
+        if isinstance(target, Target):
+            prefix = '.'
+            if self.backend == 'msbuild':
+                prefix = 'Debug'
+                if os.getenv('PLATFORM') == 'X64':
+                    prefix = os.path.join('X64', prefix)
+            return os.path.join(prefix, target.path)
+        return target
+
     def setUp(self):
         os.chdir(self.srcdir)
         cleandir(self.builddir)
@@ -77,16 +109,14 @@ class IntegrationTest(unittest.TestCase):
     def build(self, target=None):
         args = [self.backend]
         if target:
-            if self.backend == 'msbuild':
-                args.append('/target:' + target)
-            else:
-                args.append(target)
+            args.append(self._target_name(target))
         return self.assertPopen(args, True)
 
     def wait(self, t=1):
         time.sleep(t)
 
     def assertPopen(self, args, bad=False):
+        args = [self._target_path(i) for i in args]
         proc = subprocess.Popen(
             args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
             universal_newlines=True
@@ -97,33 +127,31 @@ class IntegrationTest(unittest.TestCase):
         return output
 
     def assertOutput(self, args, output):
-        if self.backend == 'msbuild':
-            args = list(args)
-            args[0] = os.path.join('Debug', args[0])
-        else:
-            args[0] = os.path.join('.', args[0])
+        args = [self._target_path(i) for i in args]
         self.assertEqual(
             subprocess.check_output(args, universal_newlines=True), output
         )
 
     def assertExists(self, path):
-        if not os.path.exists(path):
+        if not os.path.exists(self._target_path(path)):
             raise unittest.TestCase.failureException(
                 "'{}' does not exist".format(os.path.normpath(path))
             )
 
 def executable(name):
     info = platform_info()
-    return os.path.normpath(name + info.executable_ext)
+    return Target(name, os.path.normpath(os.path.join(
+        '.', name + info.executable_ext
+    )))
 
 def shared_library(name):
     info = platform_info()
     prefix = '' if info.name == 'windows' else 'lib'
 
     head, tail = os.path.split(name)
-    return os.path.normpath(os.path.join(
-        head, prefix + tail + info.shared_library_ext
-    ))
+    return Target(name, os.path.normpath(os.path.join(
+        '.', head, prefix + tail + info.shared_library_ext
+    )))
 
 def static_library(name):
     info = platform_info()
@@ -131,4 +159,6 @@ def static_library(name):
     suffix = '.lib' if info.name == 'windows' else '.a'
 
     head, tail = os.path.split(name)
-    return os.path.normpath(os.path.join(head, prefix + tail + suffix))
+    return Target(name, os.path.normpath(os.path.join(
+        '.', head, prefix + tail + suffix
+    )))

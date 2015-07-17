@@ -13,6 +13,7 @@ class TestSimple(IntegrationTest):
         self.build(executable('simple'))
         self.assertOutput([executable('simple')], 'hello, world!\n')
 
+    @skip_if_backend('msbuild')
     def test_all(self):
         self.build('all')
         self.assertOutput([executable('simple')], 'hello, world!\n')

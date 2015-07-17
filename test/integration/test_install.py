@@ -13,7 +13,7 @@ class TestInstall(IntegrationTest):
         IntegrationTest.setUp(self)
         cleandir(self.distdir)
 
-    def test_all(self):
+    def test_default(self):
         self.build()
         self.assertOutput([executable('program')], 'hello, library!\n')
 
@@ -21,12 +21,12 @@ class TestInstall(IntegrationTest):
         self.build('install')
 
         self.assertExists(pjoin(self.includedir, 'library.hpp'))
-        self.assertExists(pjoin(self.bindir, executable('program')))
-        self.assertExists(pjoin(self.libdir, shared_library('library')))
+        self.assertExists(pjoin(self.bindir, executable('program').path))
+        self.assertExists(pjoin(self.libdir, shared_library('library').path))
 
         os.chdir(self.srcdir)
         cleandir(self.builddir)
-        self.assertOutput([pjoin(self.bindir, executable('program'))],
+        self.assertOutput([pjoin(self.bindir, executable('program').path)],
                           'hello, library!\n')
 
     def test_install_existing_paths(self):
@@ -36,12 +36,12 @@ class TestInstall(IntegrationTest):
         self.build('install')
 
         self.assertExists(pjoin(self.includedir, 'library.hpp'))
-        self.assertExists(pjoin(self.bindir, executable('program')))
-        self.assertExists(pjoin(self.libdir, shared_library('library')))
+        self.assertExists(pjoin(self.bindir, executable('program').path))
+        self.assertExists(pjoin(self.libdir, shared_library('library').path))
 
         os.chdir(self.srcdir)
         cleandir(self.builddir)
-        self.assertOutput([pjoin(self.bindir, executable('program'))],
+        self.assertOutput([pjoin(self.bindir, executable('program').path)],
                           'hello, library!\n')
 
 if __name__ == '__main__':
