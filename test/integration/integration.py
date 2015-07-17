@@ -35,12 +35,6 @@ def cleandir(path, recreate=True):
     if recreate:
         makedirs(path)
 
-def stagedir(path):
-    dest = os.path.join(test_stage_dir, os.path.basename(path))
-    cleandir(dest, recreate=False)
-    shutil.copytree(os.path.join(test_data_dir, path), dest)
-    return dest
-
 def skip_if_backend(backend):
     def wrap(fn):
         def inner(self, *args, **kwargs):
@@ -61,17 +55,22 @@ class SubprocessError(unittest.TestCase.failureException):
 class IntegrationTest(unittest.TestCase):
     def __init__(self, srcdir, *args, **kwargs):
         dist = kwargs.pop('dist', False)
+        self.stage_src = kwargs.pop('stage_src', False)
         unittest.TestCase.__init__(self, *args, **kwargs)
 
         self.backend = os.getenv('BACKEND', 'make')
         self.extra_args = []
 
+        srcname = os.path.basename(srcdir)
         self.srcdir = os.path.join(test_data_dir, srcdir)
-        srcbase = os.path.basename(srcdir)
-        self.builddir = os.path.join(test_stage_dir, srcbase + '-build')
+        if self.stage_src:
+            self.orig_srcdir = self.srcdir
+            self.srcdir = os.path.join(test_stage_dir, srcname)
+
+        self.builddir = os.path.join(test_stage_dir, srcname + '-build')
 
         if dist:
-            self.distdir = os.path.join(test_stage_dir, srcbase + '-dist')
+            self.distdir = os.path.join(test_stage_dir, srcname + '-dist')
             self.extra_args = ['--prefix', self.distdir]
 
             install_dirs = platform_info().install_dirs
@@ -98,6 +97,9 @@ class IntegrationTest(unittest.TestCase):
         return target
 
     def setUp(self):
+        if self.stage_src:
+            cleandir(self.srcdir, recreate=False)
+            shutil.copytree(self.orig_srcdir, self.srcdir)
         os.chdir(self.srcdir)
         cleandir(self.builddir)
         self.assertPopen(

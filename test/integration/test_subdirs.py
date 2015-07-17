@@ -15,7 +15,7 @@ class TestSubdirs(IntegrationTest):
         IntegrationTest.setUp(self)
         cleandir(self.distdir)
 
-    def test_all(self):
+    def test_build(self):
         self.build()
         self.assertOutput([executable('sub/program')], 'hello, library!\n')
 

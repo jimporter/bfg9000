@@ -5,9 +5,8 @@ from integration import *
 
 class TestSimple(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        IntegrationTest.__init__(
-            self, os.path.join(examples_dir, '01_simple'), *args, **kwargs
-        )
+        IntegrationTest.__init__(self, os.path.join(examples_dir, '01_simple'),
+                                 *args, **kwargs)
 
     def test_build(self):
         self.build(executable('simple'))

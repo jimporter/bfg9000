@@ -10,7 +10,7 @@ class TestExternalLibrary(IntegrationTest):
             *args, **kwargs
         )
 
-    def test_all(self):
+    def test_build(self):
         self.build()
         self.assertOutput([executable('program')], '')
 

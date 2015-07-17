@@ -6,8 +6,8 @@ from integration import *
 
 class TestDepfile(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        stage = stagedir('depfile')
-        IntegrationTest.__init__(self, stage, *args, **kwargs)
+        IntegrationTest.__init__(self, 'depfile', stage_src=True,
+                                 *args, **kwargs)
 
     def test_build(self):
         self.build(executable('program'))
