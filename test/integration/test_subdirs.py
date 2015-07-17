@@ -19,6 +19,7 @@ class TestSubdirs(IntegrationTest):
         self.build()
         self.assertOutput([executable('sub/program')], 'hello, library!\n')
 
+    @skip_if_backend('msbuild')
     def test_install(self):
         self.build('install')
 
@@ -33,6 +34,7 @@ class TestSubdirs(IntegrationTest):
         self.assertOutput([pjoin(self.bindir, executable('sub/program').path)],
                           'hello, library!\n')
 
+    @skip_if_backend('msbuild')
     def test_install_existing_paths(self):
         makedirs(self.includedir, exist_ok=True)
         makedirs(self.bindir, exist_ok=True)

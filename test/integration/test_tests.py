@@ -9,6 +9,7 @@ class TestTests(IntegrationTest):
             self, os.path.join(examples_dir, '07_tests'), *args, **kwargs
         )
 
+    @skip_if_backend('msbuild')
     def test_test(self):
         self.build('test')
 

@@ -15,6 +15,7 @@ class TestRegenerate(IntegrationTest):
         self.build('foo')
         self.assertExists(pjoin(self.builddir, 'foo'))
 
+    @skip_if_backend('msbuild')
     def test_regenerate(self):
         self.wait()
         with open(pjoin(self.srcdir, 'build.bfg'), 'a') as out:
@@ -35,6 +36,7 @@ class TestRegenerateGlob(IntegrationTest):
         shutil.copy(pjoin(self.extradir, src),
                     pjoin(self.srcdir, dest))
 
+    @skip_if_backend('msbuild')
     def test_add_file(self):
         self.wait()
         self.copyfile(pjoin('src', 'hello', 'bonjour.hpp'))
@@ -46,6 +48,7 @@ class TestRegenerateGlob(IntegrationTest):
         self.assertOutput([executable('hello')],
                           'Hello, world!\nBonjour le monde!\n')
 
+    @skip_if_backend('msbuild')
     def test_add_dir(self):
         self.wait()
         shutil.copytree(pjoin(self.extradir, 'src', 'goodbye', 'french'),
@@ -57,6 +60,7 @@ class TestRegenerateGlob(IntegrationTest):
         self.assertOutput([executable('goodbye')],
                           'Goodbye!\nAuf Wiedersehen!\nAu revoir!\n')
 
+    @skip_if_backend('msbuild')
     def test_remove_file(self):
         self.wait()
         os.unlink(pjoin(self.srcdir, 'src', 'hello', 'hello.cpp'))
@@ -65,6 +69,7 @@ class TestRegenerateGlob(IntegrationTest):
         self.build(executable('hello'))
         self.assertOutput([executable('hello')], '')
 
+    @skip_if_backend('msbuild')
     def test_remove_dir(self):
         self.wait()
         cleandir(pjoin(self.srcdir, 'src', 'goodbye', 'german'),

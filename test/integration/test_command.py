@@ -10,18 +10,21 @@ class TestCommand(IntegrationTest):
             self, os.path.join(examples_dir, '06_commands'), *args, **kwargs
         )
 
+    @skip_if_backend('msbuild')
     def test_hello(self):
         self.assertRegexpMatches(
             self.build('hello'),
             re.compile('^hello$', re.MULTILINE)
         )
 
+    @skip_if_backend('msbuild')
     def test_world(self):
         self.assertRegexpMatches(
             self.build('world'),
             re.compile('^world$', re.MULTILINE)
         )
 
+    @skip_if_backend('msbuild')
     def test_script(self):
         self.assertRegexpMatches(
             self.build('script'),
@@ -29,6 +32,7 @@ class TestCommand(IntegrationTest):
         )
         self.assertTrue(os.path.exists(os.path.join(self.builddir, 'file')))
 
+    @skip_if_backend('msbuild')
     def test_alias(self):
         output = self.build('hello-world')
         self.assertRegexpMatches(output, re.compile('^hello$', re.MULTILINE))
