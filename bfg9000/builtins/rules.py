@@ -56,11 +56,16 @@ class Compile(Edge):
 
 class Link(Edge):
     # This is just for MSBuild. XXX: Remove this?
-    _project_prefixes = {
+    __project_prefixes = {
         'executable': '',
         'static_library': 'lib',
         'shared_library': 'lib',
     }
+
+    @classmethod
+    def __project(cls, name, mode):
+        head, tail = os.path.split(name)
+        return os.path.join(head, cls.__project_prefixes[mode] + tail)
 
     def __init__(self, build, env, mode, name, files, libs=None, include=None,
                  packages=None, compile_options=None, link_options=None,
@@ -68,7 +73,7 @@ class Link(Edge):
         # XXX: Try to detect if a string refers to a shared lib?
         libs = [sourcify(i, Library, StaticLibrary) for i in iterate(libs)]
 
-        self.project_name = self._project_prefixes[mode] + name
+        self.project_name = self.__project(name, mode)
         self.files = object_files.bind(build, env)(
             files, include, packages, compile_options, lang
         )

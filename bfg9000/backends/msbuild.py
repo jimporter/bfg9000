@@ -152,7 +152,9 @@ class VcxProject(object):
 
     @property
     def path(self):
-        return os.path.join(self.name, '{}.vcxproj'.format(self.name))
+        return os.path.join(self.name, '{}.vcxproj'.format(
+            os.path.basename(self.name)
+        ))
 
     @property
     def config_plat(self):
