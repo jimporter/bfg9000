@@ -6,8 +6,9 @@ from itertools import chain
 from lxml import etree
 from lxml.builder import E
 
-from .. import path
 from .. import iterutils
+from .. import path
+from .. import shell
 from ..makedirs import makedirs
 
 Path = path.Path
@@ -185,7 +186,8 @@ class VcxProject(object):
         )
         if self.compile_options:
             compile_opts.append(E.AdditionalOptions(
-                ' '.join(self.compile_options + ['%(AdditionalOptions)'])
+                ' '.join(shell.quote(i) for i in self.compile_options) +
+                ' %(AdditionalOptions)'
             ))
         if self.includes:
             compile_opts.append(E.AdditionalIncludeDirectories(
