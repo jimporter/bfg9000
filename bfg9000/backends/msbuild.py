@@ -126,11 +126,17 @@ def write_solution(out, uuid, projects):
     sln_write(out, sln)
 
 _path_vars = {
-    Path.srcdir: '$(SourceDir)',
-    Path.builddir: None,
+    False: {
+        Path.srcdir: '$(SourceDir)',
+        Path.builddir: '$(IntDir)',
+    },
+    True: {
+        Path.srcdir: '$(SourceDir)',
+        Path.builddir: '$(OutDir)',
+    },
 }
-def path_str(node):
-    return ntpath.normpath(node.path.realize(_path_vars))
+def path_str(node, out=False):
+    return ntpath.normpath(node.path.realize(_path_vars[out]))
 
 class VcxProject(object):
     _XMLNS = 'http://schemas.microsoft.com/developer/msbuild/2003'
@@ -178,7 +184,7 @@ class VcxProject(object):
                 ';'.join(self.libdirs + ['$(LibraryPath)'])
             ))
         override_props.append(E.TargetPath(
-            '$(OutDir)' + self.output_files[0]
+            path_str(self.output_files[0], out=True)
         ))
 
         compile_opts = E.ClCompile(
@@ -191,22 +197,22 @@ class VcxProject(object):
             ))
         if self.includes:
             compile_opts.append(E.AdditionalIncludeDirectories(
-                ';'.join(self.includes + ['%(AdditionalIncludeDirectories)'])
+                ';'.join(path_str(i) for i in self.includes) +
+                ';%(AdditionalIncludeDirectories)'
             ))
 
-        if self.mode == 'StaticLibrary':
-            link_opts = E.Lib()
-        else:
-            link_opts = E.Link()
+        link_opts = E.Lib() if self.mode == 'StaticLibrary' else E.Link()
         if len(self.output_files) >= 1:
             link_opts.append(E.OutputFile('$(TargetPath)'))
         if len(self.output_files) == 2:
             link_opts.append(E.ImportLibrary(
-                '$(OutDir)' + self.output_files[1]
+                path_str(self.output_files[1], out=True)
             ))
         if self.libs:
-            libs = ';'.join(self.libs + ['%(AdditionalDependencies)'])
-            link_opts.append(E.AdditionalDependencies(libs))
+            link_opts.append(E.AdditionalDependencies(
+                ';'.join(path_str(i) for i in self.libs) +
+                ';%(AdditionalDependencies)'
+            ))
 
         project = E.Project({'DefaultTargets': 'Build'},
                             {'ToolsVersion': '14.0'}, {'xmlns': self._XMLNS},
@@ -232,7 +238,7 @@ class VcxProject(object):
             override_props,
             E.ItemDefinitionGroup(compile_opts, link_opts),
             E.ItemGroup(
-                *[E.ClCompile(Include=i) for i in self.files]
+                *[E.ClCompile(Include=path_str(i)) for i in self.files]
             ),
             E.Import(Project='$(VCTargetsPath)\Microsoft.Cpp.Targets')
         )
@@ -330,14 +336,14 @@ def write(env, build_inputs):
                 uuid=uuids[e.project_name],
                 mode=link_mode(e.builder.mode),
                 platform=env.getvar('PLATFORM'),
-                output_file=[path_str(i) for i in iterutils.iterate(e.target)],
+                output_file=e.target,
                 srcdir=env.srcdir,
-                files=[path_str(i.creator.file) for i in e.files],
+                files=[i.creator.file for i in e.files],
                 compile_options=reduce_options(
                     e.files, build_inputs.global_options
                 ),
-                includes=[path_str(i) for i in reduce_includes(e.files)],
-                libs=[path_str(i) for i in e.libs],
+                includes=reduce_includes(e.files),
+                libs=e.libs,
                 libdirs=['$(OutDir)'],
                 dependencies=dependencies,
             )
