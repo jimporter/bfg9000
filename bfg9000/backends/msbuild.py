@@ -194,7 +194,10 @@ class VcxProject(object):
                 ';'.join(self.includes + ['%(AdditionalIncludeDirectories)'])
             ))
 
-        link_opts = E.Link()
+        if self.mode == 'StaticLibrary':
+            link_opts = E.Lib()
+        else:
+            link_opts = E.Link()
         if len(self.output_files) >= 1:
             link_opts.append(E.OutputFile('$(TargetPath)'))
         if len(self.output_files) == 2:
