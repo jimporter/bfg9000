@@ -212,7 +212,7 @@ class VcxProject(object):
             ))
         if self.libs:
             link_opts.append(E.AdditionalDependencies(
-                ';'.join(path_str(i) for i in self.libs) +
+                ';'.join(path_str(i, out=True) for i in self.libs) +
                 ';%(AdditionalDependencies)'
             ))
 
@@ -361,7 +361,6 @@ def write(env, build_inputs):
                 ),
                 includes=reduce_includes(e.files),
                 libs=e.libs,
-                libdirs=['$(OutDir)'],
                 dependencies=dependencies,
             )
             projects.append(project)
