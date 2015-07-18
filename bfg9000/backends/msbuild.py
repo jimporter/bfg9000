@@ -2,6 +2,7 @@ import json
 import os
 import ntpath
 import uuid
+from collections import defaultdict
 from itertools import chain
 from lxml import etree
 from lxml.builder import E
@@ -10,6 +11,7 @@ from .. import iterutils
 from .. import path
 from .. import shell
 from ..makedirs import makedirs
+from ..safe_str import safe_str
 
 Path = path.Path
 
@@ -136,7 +138,7 @@ _path_vars = {
     },
 }
 def path_str(node, out=False):
-    return ntpath.normpath(node.path.realize(_path_vars[out]))
+    return ntpath.normpath(safe_str(node).realize(_path_vars[out]))
 
 class VcxProject(object):
     _XMLNS = 'http://schemas.microsoft.com/developer/msbuild/2003'
@@ -214,6 +216,23 @@ class VcxProject(object):
                 ';%(AdditionalDependencies)'
             ))
 
+        names = defaultdict(lambda: [])
+        for i in self.files:
+            basename = ntpath.splitext(i.path.basename())[0]
+            names[basename].append(i.path.parent())
+
+        compiles = E.ItemGroup()
+        for i in self.files:
+            c = E.ClCompile(Include=path_str(i))
+            dupes = names[ ntpath.splitext(i.path.basename())[0] ]
+            if len(dupes) > 1:
+                # XXX: This can still fail rarely if the paths' bases are
+                # different.
+                prefix = ntpath.commonprefix([j.raw_path for j in dupes])
+                suffix = path.Path(i.path.parent().raw_path[len(prefix):])
+                c.append(E.ObjectFileName(path_str(suffix) + '\\'))
+            compiles.append(c)
+
         project = E.Project({'DefaultTargets': 'Build'},
                             {'ToolsVersion': '14.0'}, {'xmlns': self._XMLNS},
             E.ItemGroup({'Label' : 'ProjectConfigurations'},
@@ -237,9 +256,7 @@ class VcxProject(object):
             E.Import(Project='$(VCTargetsPath)\Microsoft.Cpp.props'),
             override_props,
             E.ItemDefinitionGroup(compile_opts, link_opts),
-            E.ItemGroup(
-                *[E.ClCompile(Include=path_str(i)) for i in self.files]
-            ),
+            compiles,
             E.Import(Project='$(VCTargetsPath)\Microsoft.Cpp.Targets')
         )
 
