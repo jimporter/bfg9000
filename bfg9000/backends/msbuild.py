@@ -144,12 +144,13 @@ class VcxProject(object):
     _XMLNS = 'http://schemas.microsoft.com/developer/msbuild/2003'
     _DOCTYPE = '<?xml version="1.0" encoding="utf-8"?>'
 
-    def __init__(self, name, uuid, mode='Application', configuration=None,
-                 platform=None, output_file=None,
+    def __init__(self, name, uuid, version=None, mode='Application',
+                 configuration=None, platform=None, output_file=None,
                  import_lib=None, srcdir=None, files=None, compile_options=None,
                  includes=None, libs=None, libdirs=None, dependencies=None):
         self.name = name
         self.uuid = uuid
+        self.version = version or '14.0'
         self.mode = mode
         self.configuration = configuration or 'Debug'
         self.platform = platform or 'Win32'
@@ -178,6 +179,10 @@ class VcxProject(object):
     @property
     def uuid_str(self):
         return uuid_str(self.uuid)
+
+    @property
+    def toolset(self):
+        return 'v' + self.version.replace('.', '')
 
     def write(self, out):
         override_props = E.PropertyGroup()
@@ -233,8 +238,9 @@ class VcxProject(object):
                 c.append(E.ObjectFileName(path_str(suffix) + '\\'))
             compiles.append(c)
 
-        project = E.Project({'DefaultTargets': 'Build'},
-                            {'ToolsVersion': '14.0'}, {'xmlns': self._XMLNS},
+        project = E.Project({'DefaultTargets': 'Build',
+                             'ToolsVersion': self.version,
+                             'xmlns': self._XMLNS},
             E.ItemGroup({'Label' : 'ProjectConfigurations'},
                 E.ProjectConfiguration({'Include' : self.config_plat},
                     E.Configuration(self.configuration),
@@ -351,6 +357,7 @@ def write(env, build_inputs):
             project = VcxProject(
                 name=e.project_name,
                 uuid=uuids[e.project_name],
+                version=env.getvar('VISUALSTUDIOVERSION'),
                 mode=link_mode(e.builder.mode),
                 platform=env.getvar('PLATFORM'),
                 output_file=e.target,
