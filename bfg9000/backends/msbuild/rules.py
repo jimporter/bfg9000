@@ -47,10 +47,9 @@ def write(env, build_inputs):
             # already created.
             dependencies = []
             for dep in e.libs:
-                # TODO: It might make sense to issue a warning if we see a dep
-                # we don't have a project for...
-                if dep.creator and id(dep.creator.target) in project_map:
-                    dependencies.append(project_map[id(dep.creator.target)])
+                if dep.creator and id(dep.creator.target) not in project_map:
+                    raise ValueError('unknown dependency for {!r}'.format(dep))
+                dependencies.append(project_map[id(dep.creator.target)])
 
             project = VcxProject(
                 name=e.project_name,
