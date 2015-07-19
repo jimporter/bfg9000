@@ -18,8 +18,8 @@ setup(
         ],
         'bfg9000.backends': [
             'make=bfg9000.backends.make.rules:write',
-            'ninja=bfg9000.backends.ninja:write',
-            'msbuild=bfg9000.backends.msbuild:write [msbuild]',
+            'ninja=bfg9000.backends.ninja.rules:write',
+            'msbuild=bfg9000.backends.msbuild.rules:write [msbuild]',
         ],
     },
 
