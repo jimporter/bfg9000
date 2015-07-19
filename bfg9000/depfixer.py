@@ -19,11 +19,15 @@ def main():
         sys.stderr.write('invalid depfile')
         return 1
 
-    out = MakeWriter(sys.stdout)
+    files = []
     while True:
         tok = lexer.get_token()
         if tok == lexer.eof:
             break
         if not tok.isspace():
-            out.write(tok, 'target')
-            out.write_literal(':\n')
+            files.append(tok)
+
+    out = MakeWriter(sys.stdout)
+    for i in files:
+        out.write(i, 'target')
+        out.write_literal(':\n')
