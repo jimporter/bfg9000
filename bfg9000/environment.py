@@ -71,6 +71,10 @@ class Environment(object):
                 },
             }
 
+    @property
+    def depfixer(self):
+        return os.path.join(os.path.dirname(self.bfgpath), 'depfixer')
+
     def getvar(self, key, default=None):
         return self.variables.get(key, default)
 

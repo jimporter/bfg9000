@@ -46,24 +46,34 @@ class NinjaWriter(object):
     def write_literal(self, string):
         self.stream.write(string)
 
-    def write(self, thing, syntax, shell_quote=True):
+    def write(self, thing, syntax, shell_quote=shell.quote_info):
         thing = safe_str.safe_str(thing)
         shelly = syntax == 'shell'
+        escaped = False
 
         if isinstance(thing, safe_str.escaped_str):
             self.write_literal(thing.string)
+            escaped = True
         elif isinstance(thing, basestring):
-            thing = self.escape_str(thing, syntax)
             if shelly and shell_quote:
-                thing = shell.quote(thing)
-            self.write_literal(thing)
+                thing, escaped = shell_quote(thing)
+            self.write_literal(self.escape_str(thing, syntax))
         elif isinstance(thing, safe_str.jbos):
             for i in thing.bits:
-                self.write(i, syntax, shell_quote)
+                escaped |= self.write(i, syntax, shell_quote)
         elif isinstance(thing, Path):
-            self.write(thing.realize(_path_vars, shelly), syntax, shell_quote)
+            out = NinjaWriter(StringIO())
+            thing = thing.realize(_path_vars, shelly)
+            escaped = out.write(thing, syntax, shell.escape)
+
+            thing = out.stream.getvalue()
+            if shelly and escaped:
+                thing = shell.quote_escaped(thing)
+            self.write_literal(thing)
         else:
             raise TypeError(type(thing))
+
+        return escaped
 
     def write_each(self, things, syntax, delim=' ', prefix=None, suffix=None):
         for tween, i in iterutils.tween(things, delim, prefix, suffix):
@@ -73,7 +83,7 @@ class NinjaWriter(object):
         if iterutils.isiterable(thing):
             self.write_each(thing, 'shell')
         else:
-            self.write(thing, 'shell', shell_quote=False)
+            self.write(thing, 'shell', shell_quote=None)
 
 class NinjaVariable(object):
     def __init__(self, name):
@@ -322,9 +332,9 @@ def install_rule(install_targets, buildfile, env):
         return [ install_cmd(file.install_kind), '-D', src, dst ]
 
     def mkdir_line(dir):
-        src = dir.path.append('*')
+        src = dir.path
         dst = path.install_path(dir.path.parent(), dir.install_root)
-        return 'mkdir -p ' + dst + ' && cp -r ' + src + ' ' + dst
+        return 'mkdir -p ' + dst + ' && cp -r ' + src + '/* ' + dst
 
     post_install = filter(None, (getattr(i, 'post_install', None)
                                  for i in install_targets.files))
@@ -360,7 +370,10 @@ def test_rule(tests, buildfile):
             if collapse:
                 out = NinjaWriter(StringIO())
                 out.write_shell(subcmd)
-                return safe_str.escaped_str(shell.quote(out.stream.getvalue()))
+                s = out.stream.getvalue()
+                if len(subcmd) > 1:
+                    s = shell.quote(s)
+                return safe_str.escaped_str(s)
             return subcmd
 
         cmd, deps = [], []

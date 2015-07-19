@@ -14,9 +14,10 @@ setup(
     entry_points={
         'console_scripts': [
             'bfg9000=bfg9000.driver:main',
+            'depfixer=bfg9000.depfixer:main',
         ],
         'bfg9000.backends': [
-            'make=bfg9000.backends.make:write',
+            'make=bfg9000.backends.make.rules:write',
             'ninja=bfg9000.backends.ninja:write',
             'msbuild=bfg9000.backends.msbuild:write [msbuild]',
         ],

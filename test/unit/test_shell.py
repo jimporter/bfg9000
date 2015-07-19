@@ -1,7 +1,7 @@
 import os
 import unittest
 
-from bfg9000.shell import split, quote_posix, quote_windows
+from bfg9000.shell import split, posix_quote, windows_quote
 
 class TestSplit(unittest.TestCase):
     def test_single(self):
@@ -14,37 +14,37 @@ class TestSplit(unittest.TestCase):
         self.assertEqual(split('foo "bar baz"'), ['foo', 'bar baz'])
         self.assertEqual(split('foo"bar baz"'), ['foobar baz'])
 
-class TestQuotePosix(unittest.TestCase):
+class TestPosixQuote(unittest.TestCase):
     def test_simple(self):
-        self.assertEqual(quote_posix('foo'), 'foo')
+        self.assertEqual(posix_quote('foo'), 'foo')
 
     def test_space(self):
-        self.assertEqual(quote_posix('foo bar'), "'foo bar'")
+        self.assertEqual(posix_quote('foo bar'), "'foo bar'")
 
     def test_quote(self):
-        self.assertEqual(quote_posix('"foo"'), '\'"foo"\'')
+        self.assertEqual(posix_quote('"foo"'), '\'"foo"\'')
 
     def test_shell_chars(self):
-        self.assertEqual(quote_posix('&&'), "'&&'")
-        self.assertEqual(quote_posix('>'), "'>'")
-        self.assertEqual(quote_posix('|'), "'|'")
+        self.assertEqual(posix_quote('&&'), "'&&'")
+        self.assertEqual(posix_quote('>'), "'>'")
+        self.assertEqual(posix_quote('|'), "'|'")
 
-class TestQuoteWindows(unittest.TestCase):
+class TestWindowsQuote(unittest.TestCase):
     def test_simple(self):
-        self.assertEqual(quote_windows('foo'), 'foo')
+        self.assertEqual(windows_quote('foo'), 'foo')
 
     def test_space(self):
-        self.assertEqual(quote_windows('foo bar'), '"foo bar"')
+        self.assertEqual(windows_quote('foo bar'), '"foo bar"')
 
     def test_quote(self):
-        self.assertEqual(quote_windows('"foo"'), '"\\"foo\\""')
+        self.assertEqual(windows_quote('"foo"'), '"\\"foo\\""')
 
     def test_backslash(self):
-        self.assertEqual(quote_windows(r'foo\bar'), r'foo\bar')
-        self.assertEqual(quote_windows('foo\\bar\\'), r'"foo\bar\\"')
+        self.assertEqual(windows_quote(r'foo\bar'), r'foo\bar')
+        self.assertEqual(windows_quote('foo\\bar\\'), r'"foo\bar\\"')
 
     def test_escaped_quote(self):
-        self.assertEqual(quote_windows(r'foo\"bar'), r'"foo\\\"bar"')
+        self.assertEqual(windows_quote(r'foo\"bar'), r'"foo\\\"bar"')
 
 if __name__ == '__main__':
     unittest.main()
