@@ -6,6 +6,12 @@ from .backends.make.syntax import MakeWriter
 from .version import __version__
 
 def main():
+    # Munge the depfile so that it works a little better under Make.
+    # Specifically, we need all the dependencies in the depfile to also be
+    # targets, so that we don't get an error if a dep is removed. See
+    # <http://scottmcpeak.com/autodepend/autodepend.html> for a discussion of
+    # how this works.
+
     parser = argparse.ArgumentParser()
     parser.add_argument('--version', action='version',
                         version='%(prog)s ' + __version__)

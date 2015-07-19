@@ -157,12 +157,12 @@ def test_rule(tests, buildfile):
 
 dir_sentinel = '.dir'
 def directory_rule(buildfile):
-    # XXX: `mkdir -p` isn't safe (or valid!) on all platforms.
     pattern = Pattern(os.path.join('%', dir_sentinel))
     out = qvar('@')
     buildfile.rule(
         target=pattern,
         recipe=[
+            # XXX: `mkdir -p` isn't safe (or valid!) on all platforms.
             ['@mkdir', '-p', MakeFunc('patsubst', pattern, Pattern('%'), out)],
             ['@touch', out]
         ]
@@ -214,9 +214,6 @@ def emit_object_file(rule, build_inputs, buildfile, env):
         recipe_extra = []
         if compiler.deps_flavor == 'gcc':
             command_kwargs['deps'] = deps = qvar('@') + '.d'
-            # Munge the depfile so that it works a little better. See
-            # <http://scottmcpeak.com/autodepend/autodepend.html> for a
-            # discussion of how this works.
             recipe_extra = ['@' + env.depfixer + ' < ' + deps + ' >> ' + deps]
         elif compiler.deps_flavor == 'msvc':
             command_kwargs['deps'] = True
