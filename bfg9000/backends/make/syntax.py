@@ -145,7 +145,7 @@ class MakeVariable(object):
         return lhs + self.use()
 
 class MakeFunc(object):
-    def __init__(self, name, *args, **kwargs):
+    def __init__(self, name, *args):
         self.name = name
         self.args = args
 
