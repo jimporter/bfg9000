@@ -187,7 +187,7 @@ class Makefile(object):
     def __init__(self):
         # TODO: Sort variables in some useful order.
         self._global_variables = OrderedDict()
-        self._target_variables = OrderedDict({Pattern('%'): OrderedDict()})
+        self._target_variables = OrderedDict()
         self._defines = OrderedDict()
 
         self._rules = []
@@ -197,32 +197,32 @@ class Makefile(object):
         # Necessary for escaping commas in function calls.
         self.variable(',', ',')
 
-    def variable(self, name, value, flavor='simple', target=None):
-        if not isinstance(name, MakeVariable):
-            name = MakeVariable(name)
-        if self.has_variable(name, target=target):
-            raise ValueError("variable '{}' already exists".format(name.name))
-
-        if flavor == 'define':
-            self._defines[name] = value
+    def variable(self, name, value, target=False, exist_ok=False):
+        name = self._unique_var(name, exist_ok)
+        if target:
+            self._target_variables[name] = value
         else:
-            if target:
-                if not target in self._target_variables:
-                    self._target_variables[target] = OrderedDict()
-                self._target_variables[target][name] = (value, flavor)
-            else:
-                self._global_variables[name] = (value, flavor)
+            self._global_variables[name] = value
         return name
 
-    def has_variable(self, name, target=None):
+    def define(self, name, value, exist_ok=False):
+        name = self._unique_var(name, exist_ok)
+        self._defines[name] = value
+        return name
+
+    def has_variable(self, name):
         if not isinstance(name, MakeVariable):
             name = MakeVariable(name)
-        if target:
-            return (target in self._target_variables and
-                    name in self._target_variables[target])
-        else:
-            return (name in self._global_variables or
-                    name in self._defines)
+        return (name in self._target_variables or
+                name in self._global_variables or
+                name in self._defines)
+
+    def _unique_var(self, name, exist_ok):
+        if not isinstance(name, MakeVariable):
+            name = MakeVariable(name)
+        if not exist_ok and self.has_variable(name):
+            raise ValueError("variable '{}' already exists".format(name.name))
+        return name
 
     def include(self, name, optional=False):
         self._includes.append(MakeInclude(name, optional))
@@ -251,12 +251,11 @@ class Makefile(object):
     def has_rule(self, name):
         return name in self._targets
 
-    def _write_variable(self, out, name, value, flavor, target=None):
-        operator = ' := ' if flavor == 'simple' else ' = '
+    def _write_variable(self, out, name, value, target=None):
         if target:
             out.write(target, syntax='target')
             out.write_literal(': ')
-        out.write_literal(name.name + operator)
+        out.write_literal(name.name + ' := ')
         out.write_shell(value)
         out.write_literal('\n')
 
@@ -271,8 +270,7 @@ class Makefile(object):
         if rule.variables:
             for target in rule.targets:
                 for name, value in rule.variables.iteritems():
-                    self._write_variable(out, name, value, 'simple',
-                                         target=target)
+                    self._write_variable(out, name, value, target=target)
 
         if rule.phony:
             out.write_literal('.PHONY: ')
@@ -301,16 +299,14 @@ class Makefile(object):
         out.write_literal('.SUFFIXES:\n\n')
 
         for name, value in self._global_variables.iteritems():
-            self._write_variable(out, name, value[0], value[1])
+            self._write_variable(out, name, value)
         if self._global_variables:
             out.write_literal('\n')
 
-        newline = False
-        for target, each in self._target_variables.iteritems():
-            for name, value in each.iteritems():
-                newline = True
-                self._write_variable(out, name, value[0], value[1], target)
-        if newline:
+        target = Pattern('%')
+        for name, value in self._target_variables.iteritems():
+            self._write_variable(out, name, value, target)
+        if self._target_variables:
             out.write_literal('\n')
 
         for name, value in self._defines.iteritems():

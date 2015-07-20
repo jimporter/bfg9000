@@ -40,21 +40,13 @@ def write(env, build_inputs):
         buildfile.write(out)
 
 def cmd_var(compiler, buildfile):
-    var = MakeVariable(compiler.command_var.upper())
-    if not buildfile.has_variable(var):
-        buildfile.variable(var, compiler.command_name)
-    return var
+    name = compiler.command_var.upper()
+    return buildfile.variable(name, compiler.command_name, exist_ok=True)
 
 def flags_vars(name, value, buildfile):
     name = name.upper()
-    global_flags = MakeVariable('GLOBAL_{}'.format(name))
-    if not buildfile.has_variable(global_flags):
-        buildfile.variable(global_flags, value)
-
-    flags = MakeVariable(name)
-    if not buildfile.has_variable(flags, target=Pattern('%')):
-        buildfile.variable(flags, global_flags, target=Pattern('%'))
-
+    global_flags = buildfile.variable('GLOBAL_' + name, value, exist_ok=True)
+    flags = buildfile.variable(name, global_flags, target=True, exist_ok=True)
     return global_flags, flags
 
 def all_rule(default_targets, buildfile):
@@ -70,20 +62,12 @@ def install_rule(install_targets, buildfile, env):
         return
 
     def install_cmd(kind):
-        install = MakeVariable('INSTALL')
-        if not buildfile.has_variable(install):
-            buildfile.variable(install, 'install')
-
+        install = buildfile.variable('INSTALL', 'install', exist_ok=True)
         if kind == 'program':
-            install_program = MakeVariable('INSTALL_PROGRAM')
-            if not buildfile.has_variable(install_program):
-                buildfile.variable(install_program, install)
-            return install_program
+            return buildfile.variable('INSTALL_PROGRAM', install, exist_ok=True)
         else:
-            install_data = MakeVariable('INSTALL_DATA')
-            if not buildfile.has_variable(install_data):
-                buildfile.variable(install_data, [install, '-m', '644'])
-            return install_data
+            return buildfile.variable('INSTALL_DATA', [install, '-m', '644'],
+                                      exist_ok=True)
 
     def install_line(file):
         src = file.path
@@ -218,12 +202,12 @@ def emit_object_file(rule, build_inputs, buildfile, env):
         elif compiler.deps_flavor == 'msvc':
             command_kwargs['deps'] = True
 
-        buildfile.variable(recipename, [
+        buildfile.define(recipename, [
             compiler.command(
                 cmd=cmd_var(compiler, buildfile), input=qvar('<'),
                 output=qvar('@'), args=cflags, **command_kwargs
             ),
-        ] + recipe_extra, flavor='define')
+        ] + recipe_extra)
 
     buildfile.rule(
         target=path,
@@ -269,12 +253,12 @@ def emit_link(rule, build_inputs, buildfile, env):
         variables[ldflags] = [global_ldflags] + ldflags_value
 
     if not buildfile.has_variable(recipename):
-        buildfile.variable(recipename, [
+        buildfile.define(recipename, [
             linker.command(
                 cmd=cmd_var(linker, buildfile), input=var('1'), output=var('2'),
                 args=ldflags, **command_kwargs
             )
-        ], flavor='define')
+        ])
 
     recipe = MakeCall(recipename, rule.files, path)
     if iterutils.isiterable(rule.target):
