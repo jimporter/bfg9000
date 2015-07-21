@@ -1,7 +1,8 @@
 import operator
 import re
 from cStringIO import StringIO
-from collections import namedtuple, OrderedDict
+from collections import namedtuple
+from enum import Enum
 
 from ... import path
 from ... import safe_str
@@ -33,7 +34,7 @@ class MakeWriter(object):
             return re.sub(r'(\\*)([#?*\[\]~\s|%])', repl, result)
         elif syntax == 'function':
             return re.sub(',', '$,', result)
-        elif syntax == 'shell':
+        elif syntax in ['shell', 'clean']:
             return result
         else:
             raise ValueError("unknown syntax '{}'".format(syntax))
@@ -74,11 +75,12 @@ class MakeWriter(object):
         for tween, i in iterutils.tween(things, delim, prefix, suffix):
             self.write_literal(i) if tween else self.write(i, syntax)
 
-    def write_shell(self, thing):
+    def write_shell(self, thing, clean=False):
+        syntax = 'clean' if clean else 'shell'
         if iterutils.isiterable(thing):
-            self.write_each(thing, 'shell')
+            self.write_each(thing, syntax)
         else:
-            self.write(thing, 'shell', shell_quote=False)
+            self.write(thing, syntax, shell_quote=None)
 
 class Pattern(object):
     def __init__(self, path):
@@ -144,6 +146,12 @@ class MakeVariable(object):
     def __radd__(self, lhs):
         return lhs + self.use()
 
+def var(v, quoted=False):
+    return v if isinstance(v, MakeVariable) else MakeVariable(v, quoted)
+
+def qvar(v):
+    return var(v, True)
+
 class MakeFunc(object):
     def __init__(self, name, *args):
         self.name = name
@@ -180,58 +188,54 @@ path_vars = {
 }
 path_vars.update({i: MakeVariable(i.name) for i in path.InstallRoot})
 
+Section = Enum('Section', ['path', 'command', 'flags', 'other'])
+
 class Makefile(object):
     def __init__(self):
-        # TODO: Sort variables in some useful order.
-        self._global_variables = OrderedDict()
-        self._target_variables = OrderedDict()
-        self._defines = OrderedDict()
+        self._var_table = set()
+        self._global_variables = {i: [] for i in Section}
+        self._target_variables = []
+        self._defines = []
 
         self._rules = []
         self._targets = set()
         self._includes = []
 
-        # Necessary for escaping commas in function calls.
-        self.variable(',', ',')
+    def variable(self, name, value, section=Section.other, exist_ok=False):
+        name, exists = self._unique_var(name, exist_ok)
+        if not exists:
+            self._global_variables[section].append((name, value))
+        return name
 
-    def variable(self, name, value, target=False, exist_ok=False):
-        name = self._unique_var(name, exist_ok)
-        if target:
-            self._target_variables[name] = value
-        else:
-            self._global_variables[name] = value
+    def target_variable(self, name, value, exist_ok=False):
+        name, exists = self._unique_var(name, exist_ok)
+        if not exists:
+            self._target_variables.append((name, value))
         return name
 
     def define(self, name, value, exist_ok=False):
-        name = self._unique_var(name, exist_ok)
-        self._defines[name] = value
+        name, exists = self._unique_var(name, exist_ok)
+        if not exists:
+            self._defines.append((name, value))
         return name
 
     def has_variable(self, name):
-        if not isinstance(name, MakeVariable):
-            name = MakeVariable(name)
-        return (name in self._target_variables or
-                name in self._global_variables or
-                name in self._defines)
+        return var(name) in self._var_table
 
     def _unique_var(self, name, exist_ok):
-        if not isinstance(name, MakeVariable):
-            name = MakeVariable(name)
-        if not exist_ok and self.has_variable(name):
-            raise ValueError("variable '{}' already exists".format(name.name))
-        return name
+        name = var(name)
+        exists = self.has_variable(name)
+        if exists and not exist_ok:
+            raise ValueError("variable {!r} already exists".format(name))
+        self._var_table.add(name)
+        return name, exists
 
     def include(self, name, optional=False):
         self._includes.append(MakeInclude(name, optional))
 
     def rule(self, target, deps=None, order_only=None, recipe=None,
              variables=None, phony=False):
-        real_variables = {}
-        if variables:
-            for k, v in variables.iteritems():
-                if not isinstance(k, MakeVariable):
-                    k = MakeVariable(k)
-                real_variables[k] = v
+        variables = {var(k): v for k, v in (variables or {}).iteritems()}
 
         targets = iterutils.listify(target)
         if len(targets) == 0:
@@ -242,18 +246,18 @@ class Makefile(object):
             self._targets.add(i)
         self._rules.append(MakeRule(
             targets, iterutils.listify(deps), iterutils.listify(order_only),
-            recipe, real_variables, phony
+            recipe, variables, phony
         ))
 
     def has_rule(self, name):
         return name in self._targets
 
-    def _write_variable(self, out, name, value, target=None):
+    def _write_variable(self, out, name, value, clean=False, target=None):
         if target:
             out.write(target, syntax='target')
             out.write_literal(': ')
         out.write_literal(name.name + ' := ')
-        out.write_shell(value)
+        out.write_shell(value, clean)
         out.write_literal('\n')
 
     def _write_define(self, out, name, value):
@@ -293,20 +297,27 @@ class Makefile(object):
         out = MakeWriter(out)
 
         # Don't let make use built-in suffix rules.
-        out.write_literal('.SUFFIXES:\n\n')
+        out.write_literal('.SUFFIXES:\n')
 
-        for name, value in self._global_variables.iteritems():
-            self._write_variable(out, name, value)
-        if self._global_variables:
-            out.write_literal('\n')
+        # Necessary for escaping commas in function calls.
+        self._write_variable(out, MakeVariable(','), ',')
+        out.write_literal('\n')
+
+        for section in Section:
+            # Paths are inherently clean (read: don't need shell quoting).
+            clean = section == Section.path
+            for name, value in self._global_variables[section]:
+                self._write_variable(out, name, value, clean)
+            if self._global_variables[section]:
+                out.write_literal('\n')
 
         target = Pattern('%')
-        for name, value in self._target_variables.iteritems():
-            self._write_variable(out, name, value, target)
+        for name, value in self._target_variables:
+            self._write_variable(out, name, value, target=target)
         if self._target_variables:
             out.write_literal('\n')
 
-        for name, value in self._defines.iteritems():
+        for name, value in self._defines:
             self._write_define(out, name, value)
 
         for r in self._rules:

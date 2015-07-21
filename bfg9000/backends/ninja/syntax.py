@@ -1,6 +1,7 @@
 import re
 from cStringIO import StringIO
 from collections import namedtuple, OrderedDict
+from enum import Enum
 
 from ... import path
 from ... import safe_str
@@ -27,7 +28,7 @@ class NinjaWriter(object):
             return re.sub(r'([:$ ])', r'$\1', string)
         elif syntax == 'input':
             return re.sub(r'([$ ])', r'$\1', string)
-        elif syntax in ['variable', 'shell']:
+        elif syntax in ['shell', 'clean']:
             return string.replace('$', '$$')
         else:
             raise ValueError("unknown syntax '{}'".format(syntax))
@@ -68,11 +69,12 @@ class NinjaWriter(object):
         for tween, i in iterutils.tween(things, delim, prefix, suffix):
             self.write_literal(i) if tween else self.write(i, syntax)
 
-    def write_shell(self, thing):
+    def write_shell(self, thing, clean=False):
+        syntax = 'clean' if clean else 'shell'
         if iterutils.isiterable(thing):
-            self.write_each(thing, 'shell')
+            self.write_each(thing, syntax)
         else:
-            self.write(thing, 'shell', shell_quote=None)
+            self.write(thing, syntax, shell_quote=None)
 
 class NinjaVariable(object):
     def __init__(self, name):
@@ -102,33 +104,40 @@ class NinjaVariable(object):
     def __radd__(self, lhs):
         return lhs + self.use()
 
+def var(v):
+    return v if isinstance(v, NinjaVariable) else NinjaVariable(v)
+
 path_vars = {
     path.Root.srcdir:   NinjaVariable('srcdir'),
     path.Root.builddir: None,
 }
 path_vars.update({i: NinjaVariable(i.name) for i in path.InstallRoot})
 
+Section = Enum('Section', ['path', 'command', 'flags', 'other'])
+
 class NinjaFile(object):
     def __init__(self):
-        # TODO: Sort variables in some useful order
-        self._variables = OrderedDict()
+        self._var_table = set()
+        self._variables = {i: [] for i in Section}
+
         self._rules = OrderedDict()
+
         self._builds = []
         self._build_outputs = set()
         self._defaults = []
 
-    def variable(self, name, value, syntax='variable'):
-        if not isinstance(name, NinjaVariable):
-            name = NinjaVariable(name)
+    def variable(self, name, value, section=Section.other, exist_ok=True):
+        name = var(name)
         if self.has_variable(name):
-            raise ValueError("variable '{}' already exists".format(name))
-        self._variables[name] = (value, syntax)
+            if not exist_ok:
+                raise ValueError("variable {!r} already exists".format(name))
+        else:
+            self._var_table.add(name)
+            self._variables[section].append((name, value))
         return name
 
     def has_variable(self, name):
-        if not isinstance(name, NinjaVariable):
-            name = NinjaVariable(name)
-        return name in self._variables
+        return var(name) in self._var_table
 
     def rule(self, name, command, depfile=None, deps=None, generator=False,
              restat=False):
@@ -146,12 +155,7 @@ class NinjaFile(object):
         if rule != 'phony' and not self.has_rule(rule):
             raise ValueError("unknown rule '{}'".format(rule))
 
-        real_variables = {}
-        if variables:
-            for k, v in variables.iteritems():
-                if not isinstance(k, NinjaVariable):
-                    k = NinjaVariable(k)
-                real_variables[k] = v
+        variables = {var(k): v for k, v in (variables or {}).iteritems()}
 
         outputs = iterutils.listify(output)
         for i in outputs:
@@ -161,7 +165,7 @@ class NinjaFile(object):
         self._builds.append(NinjaBuild(
             outputs, rule, iterutils.listify(inputs),
             iterutils.listify(implicit), iterutils.listify(order_only),
-            real_variables
+            variables
         ))
 
     def has_build(self, name):
@@ -170,27 +174,23 @@ class NinjaFile(object):
     def default(self, paths):
         self._defaults.extend(paths)
 
-    def _write_variable(self, out, name, value, indent=0, syntax='variable'):
+    def _write_variable(self, out, name, value, clean=False, indent=0):
         out.write_literal(('  ' * indent) + name.name + ' = ')
-        if syntax == 'shell':
-            out.write_shell(value)
-        else:
-            out.write_each(iterutils.iterate(value), syntax)
+        out.write_shell(value, clean)
         out.write_literal('\n')
 
     def _write_rule(self, out, name, rule):
         out.write_literal('rule ' + name + '\n')
 
-        self._write_variable(out, NinjaVariable('command'), rule.command, 1,
-                             'shell')
+        self._write_variable(out, var('command'), rule.command, indent=1)
         if rule.depfile:
-            self._write_variable(out, NinjaVariable('depfile'), rule.depfile, 1)
+            self._write_variable(out, var('depfile'), rule.depfile, indent=1)
         if rule.deps:
-            self._write_variable(out, NinjaVariable('deps'), rule.deps, 1)
+            self._write_variable(out, var('deps'), rule.deps, indent=1)
         if rule.generator:
-            self._write_variable(out, NinjaVariable('generator'), '1', 1)
+            self._write_variable(out, var('generator'), '1', indent=1)
         if rule.restat:
-            self._write_variable(out, NinjaVariable('restat'), '1', 1)
+            self._write_variable(out, var('restat'), '1', indent=1)
 
     def _write_build(self, out, build):
         out.write_literal('build ')
@@ -204,15 +204,19 @@ class NinjaFile(object):
 
         if build.variables:
             for k, v in build.variables.iteritems():
-                self._write_variable(out, k, v, 1, 'shell')
+                self._write_variable(out, k, v, indent=1)
 
     def write(self, out):
         out = NinjaWriter(out)
 
-        for name, (value, syntax) in self._variables.iteritems():
-            self._write_variable(out, name, value, syntax=syntax)
-        if self._variables:
-            out.write_literal('\n')
+        for section in Section:
+            # Paths are inherently clean (read: don't need shell quoting).
+            # XXX: This behavior is a bit strange and maybe should be reworked.
+            clean = section == Section.path
+            for name, value in self._variables[section]:
+                self._write_variable(out, name, value, clean)
+            if self._variables[section]:
+                out.write_literal('\n')
 
         for name, rule in self._rules.iteritems():
             self._write_rule(out, name, rule)

@@ -11,10 +11,6 @@ from ...builtins import find
 
 Path = path.Path
 
-var = MakeVariable
-def qvar(name):
-    return MakeVariable(name, quoted=True)
-
 _rule_handlers = {}
 def rule_handler(rule_name):
     def decorator(fn):
@@ -24,9 +20,9 @@ def rule_handler(rule_name):
 
 def write(env, build_inputs):
     buildfile = Makefile()
-    buildfile.variable(path_vars[path.Root.srcdir], env.srcdir)
+    buildfile.variable(path_vars[path.Root.srcdir], env.srcdir, Section.path)
     for i in path.InstallRoot:
-        buildfile.variable(path_vars[i], env.install_dirs[i])
+        buildfile.variable(path_vars[i], env.install_dirs[i], Section.path)
 
     all_rule(build_inputs.get_default_targets(), buildfile)
     install_rule(build_inputs.install_targets, buildfile, env)
@@ -39,15 +35,15 @@ def write(env, build_inputs):
     with open(os.path.join(env.builddir, 'Makefile'), 'w') as out:
         buildfile.write(out)
 
-def cmd_var(compiler, buildfile):
-    name = compiler.command_var.upper()
-    return buildfile.variable(name, compiler.command_name, exist_ok=True)
+def cmd_var(cmd, buildfile):
+    name = cmd.command_var.upper()
+    return buildfile.variable(name, cmd.command_name, Section.command, True)
 
 def flags_vars(name, value, buildfile):
     name = name.upper()
-    global_flags = buildfile.variable('GLOBAL_' + name, value, exist_ok=True)
-    flags = buildfile.variable(name, global_flags, target=True, exist_ok=True)
-    return global_flags, flags
+    gflags = buildfile.variable('GLOBAL_' + name, value, Section.flags, True)
+    flags = buildfile.target_variable(name, gflags, True)
+    return gflags, flags
 
 def all_rule(default_targets, buildfile):
     buildfile.rule(
@@ -62,12 +58,13 @@ def install_rule(install_targets, buildfile, env):
         return
 
     def install_cmd(kind):
-        install = buildfile.variable('INSTALL', 'install', exist_ok=True)
+        sec = Section.command
+        install = buildfile.variable('INSTALL', 'install', sec, True)
         if kind == 'program':
-            return buildfile.variable('INSTALL_PROGRAM', install, exist_ok=True)
+            return buildfile.variable('INSTALL_PROGRAM', install, sec, True)
         else:
-            return buildfile.variable('INSTALL_DATA', [install, '-m', '644'],
-                                      exist_ok=True)
+            cmd = [install, '-m', '644']
+            return buildfile.variable('INSTALL_DATA', cmd, sec, True)
 
     def install_line(file):
         src = file.path

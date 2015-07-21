@@ -22,9 +22,9 @@ def rule_handler(rule_name):
 
 def write(env, build_inputs):
     buildfile = NinjaFile()
-    buildfile.variable(path_vars[path.Root.srcdir], env.srcdir)
+    buildfile.variable(path_vars[path.Root.srcdir], env.srcdir, Section.path)
     for i in path.InstallRoot:
-        buildfile.variable(path_vars[i], env.install_dirs[i])
+        buildfile.variable(path_vars[i], env.install_dirs[i], Section.path)
 
     all_rule(build_inputs.get_default_targets(), buildfile)
     install_rule(build_inputs.install_targets, buildfile, env)
@@ -58,22 +58,15 @@ def command_build(buildfile, output, inputs=None, implicit=None,
         variables={'cmd': chain_commands(commands)}
     )
 
-def cmd_var(compiler, buildfile):
-    var = NinjaVariable(compiler.command_var)
-    if not buildfile.has_variable(var):
-        buildfile.variable(var, compiler.command_name)
-    return var
+def cmd_var(cmd, buildfile):
+    name = cmd.command_var.upper()
+    return buildfile.variable(name, cmd.command_name, Section.command, True)
 
 def flags_vars(name, value, buildfile):
-    global_flags = NinjaVariable('global_{}'.format(name))
-    if not buildfile.has_variable(global_flags):
-        buildfile.variable(global_flags, value, syntax='shell')
-
-    flags = NinjaVariable('{}'.format(name))
-    if not buildfile.has_variable(flags):
-        buildfile.variable(flags, global_flags, syntax='shell')
-
-    return global_flags, flags
+    name = name.upper()
+    gflags = buildfile.variable('GLOBAL_' + name, value, Section.flags, True)
+    flags = buildfile.variable(name, gflags, Section.other, True)
+    return gflags, flags
 
 def all_rule(default_targets, buildfile):
     buildfile.default(['all'])
@@ -89,21 +82,13 @@ def install_rule(install_targets, buildfile, env):
         return
 
     def install_cmd(kind):
-        install = NinjaVariable('install')
-        if not buildfile.has_variable(install):
-            buildfile.variable(install, 'install', syntax='shell')
-
+        sec = Section.command
+        install = buildfile.variable('INSTALL', 'install', sec, True)
         if kind == 'program':
-            install_program = NinjaVariable('install_program')
-            if not buildfile.has_variable(install_program):
-                buildfile.variable(install_program, install)
-            return install_program
+            return buildfile.variable('INSTALL_PROGRAM', install, sec, True)
         else:
-            install_data = NinjaVariable('install_data')
-            if not buildfile.has_variable(install_data):
-                buildfile.variable(install_data, [install, '-m', '644'],
-                                   syntax='shell')
-            return install_data
+            cmd = [install, '-m', '644']
+            return buildfile.variable('INSTALL_DATA', cmd, sec, True)
 
     def install_line(file):
         src = file.path
