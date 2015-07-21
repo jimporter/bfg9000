@@ -1,7 +1,7 @@
 import json
 import os
 
-from .path import Path
+from .path import Path, InstallRoot
 from . import platforms
 from .tools import ar, cc, msvc
 
@@ -122,7 +122,7 @@ class Environment(object):
                     'srcdir': self.srcdir,
                     'builddir': self.builddir,
                     'install_dirs': {
-                        k: (v.raw_path, v.base) for k, v in
+                        k.name: v.to_json() for k, v in
                         self.install_dirs.iteritems()
                     },
                     'platform': self.platform.name,
@@ -146,13 +146,15 @@ class Environment(object):
 
         if state['version'] <= 3:
             prefix = state['data'].pop('install_prefix')
-            state['data'][Path.prefix] = Path(prefix, Path.absolute)
-            for i in ['bindir', 'libdir', 'includedir']:
+            state['data'][InstallRoot.prefix] = Path(prefix)
+            for i in [InstallRoot.bindir, InstallRoot.libdir,
+                      InstallRoot.includedir]:
                 state['data']['install_dirs'][i] = platform.install_paths[i]
         else:
-            install_dirs = state['data']['install_dirs']
-            for k, v in install_dirs.iteritems():
-                install_dirs[k] = Path(*v)
+            state['data']['install_dirs'] = {
+                InstallRoot[k]: Path.from_json(v) for k, v in
+                state['data']['install_dirs'].iteritems()
+            }
 
         env = Environment.__new__(Environment)
         for k, v in state['data'].iteritems():

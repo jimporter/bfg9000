@@ -103,13 +103,10 @@ class NinjaVariable(object):
         return lhs + self.use()
 
 path_vars = {
-    Path.srcdir:     NinjaVariable('srcdir'),
-    Path.builddir:   None,
-    Path.prefix:     NinjaVariable('prefix'),
-    Path.bindir:     NinjaVariable('bindir'),
-    Path.libdir:     NinjaVariable('libdir'),
-    Path.includedir: NinjaVariable('includedir'),
+    path.Root.srcdir:   NinjaVariable('srcdir'),
+    path.Root.builddir: None,
 }
+path_vars.update({i: NinjaVariable(i.name) for i in path.InstallRoot})
 
 class NinjaFile(object):
     def __init__(self):

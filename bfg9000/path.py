@@ -1,91 +1,91 @@
 import os.path
 from collections import namedtuple
+from enum import Enum
 
 from . import safe_str
 
+Root = Enum('Root', ['srcdir', 'builddir', 'absolute'])
+InstallRoot = Enum('InstallRoot', ['prefix', 'bindir', 'libdir', 'includedir'])
+
 class Path(safe_str.safe_string):
-    srcdir = 'srcdir'
-    builddir = 'builddir'
-    absolute = 'absolute'
-
-    prefix = 'prefix'
-    bindir = 'bindir'
-    libdir = 'libdir'
-    includedir = 'includedir'
-
-    def __init__(self, path, source=builddir):
-        self.raw_path = os.path.normpath(path)
-        if self.raw_path == '.':
-            self.raw_path = ''
+    def __init__(self, path, root=Root.builddir):
+        self.suffix = os.path.normpath(path)
+        if self.suffix == '.':
+            self.suffix = ''
 
         if os.path.isabs(path):
-            self.base = self.absolute
-        elif source == self.absolute:
+            self.root = Root.absolute
+        elif root == Root.absolute:
             raise ValueError("'{}' is not absolute".format(path))
         else:
-            self.base = source
+            self.root = root
 
     def realize(self, variables, executable=False):
-        base = variables[self.base] if self.base != self.absolute else None
-        if executable and base is None and os.path.sep not in self.raw_path:
-            base = '.'
+        root = variables[self.root] if self.root != Root.absolute else None
+        if executable and root is None and os.path.sep not in self.suffix:
+            root = '.'
 
-        if base is None:
-            return self.raw_path or '.'
-        if not self.raw_path:
-            return base
+        if root is None:
+            return self.suffix or '.'
+        if not self.suffix:
+            return root
         # XXX: Add the separator and path first to make the jbos two elements
         # instead of three. This fixes an obscure bug with Windows path
         # escaping.
-        return base + (os.path.sep + self.raw_path)
+        return root + (os.path.sep + self.suffix)
 
     def parent(self):
-        if not self.raw_path:
+        if not self.suffix:
             raise ValueError('already at root')
-        return Path(os.path.dirname(self.raw_path), self.base)
+        return Path(os.path.dirname(self.suffix), self.root)
 
     def append(self, path):
-        return Path(os.path.join(self.raw_path, path), self.base)
+        return Path(os.path.join(self.suffix, path), self.root)
 
     def addext(self, ext):
-        return Path(self.raw_path + ext, self.base)
+        return Path(self.suffix + ext, self.root)
 
     def basename(self):
-        return os.path.basename(self.raw_path)
+        return os.path.basename(self.suffix)
 
     # XXX: It might make sense to remove this if/when we support changing
     # bindir, libdir, etc. At that point, we might have to mandate absolute
     # paths for rpath.
     def relpath(self, start):
-        if os.path.isabs(self.raw_path):
-            return self.raw_path
+        if os.path.isabs(self.suffix):
+            return self.suffix
         else:
-            if self.base != start.base:
+            if self.root != start.root:
                 raise ValueError('source mismatch')
-            return os.path.relpath(self.raw_path or '.', start.raw_path or '.')
+            return os.path.relpath(self.suffix or '.', start.suffix or '.')
+
+    def to_json(self):
+        return (self.suffix, self.root.name)
+
+    @staticmethod
+    def from_json(data):
+        try:
+            base = Root[data[1]]
+        except:
+            base = InstallRoot[data[1]]
+        return Path(data[0], base)
 
     def __str__(self):
         raise NotImplementedError()
 
     def __repr__(self):
-        variables = {
-            self.srcdir:     '$(srcdir)',
-            self.builddir:   '$(builddir)',
-            self.prefix:     '$(prefix)',
-            self.bindir:     '$(bindir)',
-            self.libdir:     '$(libdir)',
-            self.includedir: '$(includedir)',
-        }
+        variables = { i: '$({})'.format(i.name) for i in
+                      chain(Root, InstallRoot) }
         return '`{}`'.format(self.realize(variables))
 
     def __hash__(self):
-        return hash(self.raw_path)
+        return hash(self.suffix)
 
     def __eq__(self, rhs):
-        return self.base == rhs.base and self.raw_path == rhs.raw_path
+        return self.root == rhs.root and self.suffix == rhs.suffix
 
     def __nonzero__(self):
-        return self.base != Path.builddir or bool(self.raw_path)
+        return self.root != Root.builddir or bool(self.suffix)
 
     def __add__(self, rhs):
         return safe_str.jbos(self, rhs)
@@ -94,8 +94,8 @@ class Path(safe_str.safe_string):
         return safe_str.jbos(lhs, self)
 
 def install_path(path, install_root):
-    if path.base == Path.srcdir:
-        suffix = os.path.basename(path.raw_path)
+    if path.root == Root.srcdir:
+        suffix = os.path.basename(path.suffix)
     else:
-        suffix = path.raw_path
+        suffix = path.suffix
     return Path(suffix, install_root)

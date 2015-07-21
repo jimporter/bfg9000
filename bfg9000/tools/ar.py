@@ -1,9 +1,9 @@
 import os
 
 from .. import shell
-from .. import iterutils
 from .. import file_types
-from ..path import Path
+from .. import iterutils
+from ..path import Root
 
 class ArLinker(object):
     def __init__(self, env):
@@ -25,7 +25,7 @@ class ArLinker(object):
     def output_file(self, name):
         head, tail = os.path.split(name)
         path = os.path.join(head, 'lib' + tail + '.a')
-        return file_types.StaticLibrary(path, Path.builddir)
+        return file_types.StaticLibrary(path, Root.builddir)
 
     @property
     def mode_args(self):

@@ -22,8 +22,8 @@ def rule_handler(rule_name):
 
 def write(env, build_inputs):
     buildfile = NinjaFile()
-    buildfile.variable(path_vars['srcdir'], env.srcdir)
-    for i in [Path.prefix, Path.bindir, Path.libdir, Path.includedir]:
+    buildfile.variable(path_vars[path.Root.srcdir], env.srcdir)
+    for i in path.InstallRoot:
         buildfile.variable(path_vars[i], env.install_dirs[i])
 
     all_rule(build_inputs.get_default_targets(), buildfile)
@@ -176,7 +176,7 @@ def test_rule(tests, buildfile):
     )
 
 def regenerate_rule(find_dirs, buildfile, env):
-    bfgpath = Path('build.bfg', Path.srcdir)
+    bfgpath = Path('build.bfg', path.Root.srcdir)
     depfile = None
 
     if find_dirs:

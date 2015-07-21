@@ -1,11 +1,11 @@
 import os.path
 import re
 
-from .. import path
 from .. import safe_str
 from .. import shell
-from ..iterutils import iterate, uniques
 from ..file_types import *
+from ..iterutils import iterate, uniques
+from ..path import Root, install_path
 
 class CcCompilerBase(object):
     def __init__(self, env, command, name):
@@ -24,7 +24,7 @@ class CcCompilerBase(object):
         return result
 
     def output_file(self, name, lang):
-        return ObjectFile(name + '.o', Path.builddir, lang)
+        return ObjectFile(name + '.o', Root.builddir, lang)
 
     @property
     def deps_flavor(self):
@@ -64,20 +64,20 @@ class CcLinkerBase(object):
     def post_install_command(self, target):
         if self.platform.has_rpath:
             paths = uniques(
-                path.install_path(i.path, i.install_root).parent()
+                install_path(i.path, i.install_root).parent()
                 for i in target.creator.libs if isinstance(i, SharedLibrary)
             )
             if paths:
                 # TODO: Improve the configurability of this (e.g. provide a
                 # PatchElf class that installers can work with).
                 return ['patchelf', '--set-rpath', safe_str.join(paths, ':'),
-                        path.install_path(target.path, target.install_root)]
+                        install_path(target.path, target.install_root)]
         return None
 
     def output_file(self, name):
         if self.mode == 'executable':
             return Executable(
-                name + self.platform.executable_ext, Path.builddir
+                name + self.platform.executable_ext, Root.builddir
             )
         elif self.mode == 'shared_library':
             head, tail = os.path.split(name)
@@ -88,10 +88,10 @@ class CcLinkerBase(object):
 
             if self.platform.has_import_library:
                 dllprefix = 'cyg' if self.platform.name == 'cygwin' else 'lib'
-                dll = DllLibrary(libpath(dllprefix), Path.builddir)
-                return SharedLibrary(libpath() + '.a', Path.builddir, dll)
+                dll = DllLibrary(libpath(dllprefix), Root.builddir)
+                return SharedLibrary(libpath() + '.a', Root.builddir, dll)
             else:
-                return SharedLibrary(libpath(), Path.builddir)
+                return SharedLibrary(libpath(), Root.builddir)
         else:
             raise ValueError("unknown mode '{}'".format(self.mode))
 
@@ -120,8 +120,8 @@ class CcLinkerBase(object):
             paths = uniques(i.path.parent().relpath(start) for i in libraries
                             if isinstance(i, SharedLibrary))
             if paths:
-                rpaths = ('$ORIGIN' if i == '.' else os.path.join('$ORIGIN', i)
-                          for i in paths)
+                o = '$ORIGIN'
+                rpaths = (o if i == '.' else os.path.join(o, i) for i in paths)
                 return ['-Wl,-rpath={}'.format(':'.join(rpaths))]
         return []
 

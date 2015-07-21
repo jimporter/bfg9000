@@ -28,7 +28,7 @@ def boost_package(build, env, name):
     root = env.getvar('BOOST_ROOT')
     if root:
         headers = [HeaderDirectory(os.path.join(root, 'include'),
-                                   source=path.Path.builddir)]
+                                   root=path.Root.absolute)]
         search_dirs = [os.path.join(root, 'lib')]
     else:
         headers = []
@@ -42,5 +42,5 @@ def system_executable(build, env, name):
         for ext in env.bin_exts:
             candidate = os.path.join(d, name + ext)
             if os.path.exists(candidate):
-                return Executable(candidate, source=path.Path.builddir)
+                return Executable(candidate, root=path.Root.absolute)
     raise ValueError("unable to find executable '{}'".format(name))

@@ -26,15 +26,15 @@ def objectify(thing, valid_type, creator, *args, **kwargs):
         return creator(thing, *args, **kwargs)
 
 def sourcify(thing, valid_type, make_type=None, **kwargs):
-    return objectify(thing, valid_type, make_type, source=path.Path.srcdir,
+    return objectify(thing, valid_type, make_type, root=path.Root.srcdir,
                      **kwargs)
 
 class File(Node):
     install_root = None
 
-    def __init__(self, name, source):
+    def __init__(self, name, root):
         Node.__init__(self)
-        self.path = path.Path(name, source)
+        self.path = path.Path(name, root)
 
 class Directory(File):
     pass

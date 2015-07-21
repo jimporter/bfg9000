@@ -5,7 +5,7 @@ from .. import shell
 from .packages import system_executable
 from ..build_inputs import Directory, Edge, File, Phony, objectify, sourcify
 from ..file_types import *
-from ..path import Path
+from ..path import Path, Root
 from ..iterutils import flatten, iterate, listify
 
 class TestCase(object):
@@ -24,7 +24,7 @@ class TestDriver(object):
 class ObjectFiles(list):
     def __getitem__(self, key):
         if isinstance(key, basestring):
-            key = Path(key, Path.srcdir)
+            key = Path(key, Root.srcdir)
         elif isinstance(key, File):
             key = key.path
 
@@ -106,22 +106,22 @@ class Command(Edge):
 @builtin
 def source_file(build, env, name, lang=None):
     # XXX: Add a way to make a generic File object instead of a SourceFile?
-    return SourceFile(name, source=Path.srcdir, lang=lang)
+    return SourceFile(name, root=Root.srcdir, lang=lang)
 
 @builtin
 def header(build, env, name):
-    return HeaderFile(name, source=Path.srcdir)
+    return HeaderFile(name, root=Root.srcdir)
 
 @builtin
 def header_directory(build, env, directory):
-    return HeaderDirectory(directory, source=Path.srcdir)
+    return HeaderDirectory(directory, root=Root.srcdir)
 
 @builtin
 def object_file(build, env, name=None, file=None, *args, **kwargs):
     if file is None:
         if name is None:
             raise TypeError('expected name')
-        return ObjectFile(name, source=Path.srcdir, *args, **kwargs)
+        return ObjectFile(name, root=Root.srcdir, *args, **kwargs)
     else:
         return Compile(build, env, name, file, *args, **kwargs).target
 
@@ -135,7 +135,7 @@ def object_files(build, env, files, *args, **kwargs):
 @builtin
 def executable(build, env, name, files=None, *args, **kwargs):
     if files is None:
-        return Executable(name, source=Path.srcdir, *args, **kwargs)
+        return Executable(name, root=Root.srcdir, *args, **kwargs)
     else:
         return Link(build, env, 'executable', name, files, *args,
                     **kwargs).target
@@ -143,7 +143,7 @@ def executable(build, env, name, files=None, *args, **kwargs):
 @builtin
 def static_library(build, env, name, files=None, *args, **kwargs):
     if files is None:
-        return StaticLibrary(name, source=Path.srcdir, *args, **kwargs)
+        return StaticLibrary(name, root=Root.srcdir, *args, **kwargs)
     else:
         return Link(build, env, 'static_library', name, files, *args,
                     **kwargs).target
@@ -152,7 +152,7 @@ def static_library(build, env, name, files=None, *args, **kwargs):
 def shared_library(build, env, name, files=None, *args, **kwargs):
     if files is None:
         # XXX: What to do here for Windows, which has a separate DLL file?
-        return SharedLibrary(name, source=Path.srcdir, *args, **kwargs)
+        return SharedLibrary(name, root=Root.srcdir, *args, **kwargs)
     else:
         rule = Link(build, env, 'shared_library', name, files, *args, **kwargs)
         for i in rule.files:

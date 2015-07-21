@@ -127,12 +127,12 @@ def write_solution(out, uuid, projects):
 
 _path_vars = {
     False: {
-        Path.srcdir: '$(SourceDir)',
-        Path.builddir: '$(IntDir)',
+        path.Root.srcdir: '$(SourceDir)',
+        path.Root.builddir: '$(IntDir)',
     },
     True: {
-        Path.srcdir: '$(SourceDir)',
-        Path.builddir: '$(OutDir)',
+        path.Root.srcdir: '$(SourceDir)',
+        path.Root.builddir: '$(OutDir)',
     },
 }
 def path_str(node, out=False):
@@ -231,8 +231,8 @@ class VcxProject(object):
             if len(dupes) > 1:
                 # XXX: This can still fail rarely if the paths' bases are
                 # different.
-                prefix = ntpath.commonprefix([j.raw_path for j in dupes])
-                suffix = path.Path(i.path.parent().raw_path[len(prefix):])
+                prefix = ntpath.commonprefix([j.suffix for j in dupes])
+                suffix = path.Path(i.path.parent().suffix[len(prefix):])
                 c.append(E.ObjectFileName(path_str(suffix) + '\\'))
             compiles.append(c)
 

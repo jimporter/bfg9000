@@ -1,8 +1,9 @@
 import os
 
 from .. import shell
-from ..iterutils import iterate, uniques
 from ..file_types import *
+from ..iterutils import iterate, uniques
+from ..path import Root
 
 class MSVCCompiler(object):
     def __init__(self, env):
@@ -25,7 +26,7 @@ class MSVCCompiler(object):
         return result
 
     def output_file(self, name, lang):
-        return ObjectFile(name + '.obj', Path.builddir, lang)
+        return ObjectFile(name + '.obj', Root.builddir, lang)
 
     @property
     def deps_flavor(self):
@@ -60,12 +61,12 @@ class MSVCLinker(object):
     def output_file(self, name):
         if self.mode == 'executable':
             return Executable(
-                name + self.platform.executable_ext, Path.builddir
+                name + self.platform.executable_ext, Root.builddir
             )
         elif self.mode == 'shared_library':
             ext = self.platform.shared_library_ext
-            dll = DllLibrary(name + ext, Path.builddir)
-            return SharedLibrary(name + '.lib', Path.builddir, dll)
+            dll = DllLibrary(name + ext, Root.builddir)
+            return SharedLibrary(name + '.lib', Root.builddir, dll)
         else:
             raise ValueError("unknown mode '{}'".format(self.mode))
 
@@ -106,7 +107,7 @@ class MSVCStaticLinker(object):
         return result
 
     def output_file(self, name):
-        return StaticLibrary(name + '.lib', Path.builddir)
+        return StaticLibrary(name + '.lib', Root.builddir)
 
     @property
     def mode_args(self):

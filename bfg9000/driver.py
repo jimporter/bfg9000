@@ -8,7 +8,7 @@ from pkg_resources import iter_entry_points
 from . import builtins
 from .build_inputs import BuildInputs
 from .environment import Environment, EnvVersionError
-from .path import Path
+from .path import Path, InstallRoot
 from .platforms import platform_info
 from .version import __version__
 
@@ -78,7 +78,7 @@ def main():
     path_help = 'installation path for {} (default: %(default)r)'
     parser = argparse.ArgumentParser(prog='bfg9000')
     def path_arg(value):
-        return Path(os.path.abspath(value), Path.absolute)
+        return Path(os.path.abspath(value))
 
     parser.add_argument('srcdir', nargs='?', help='source directory')
     parser.add_argument('builddir', nargs='?', help='build directory')
@@ -86,17 +86,17 @@ def main():
                         version='%(prog)s ' + __version__)
     parser.add_argument('--backend', choices=backends.keys(), default='make',
                         help='backend (default: %(default)s)')
-    parser.add_argument('--prefix', default=install_dirs[Path.prefix],
-                        type=path_arg, metavar='PATH',
+    parser.add_argument('--prefix', type=path_arg, metavar='PATH',
+                        default=install_dirs[InstallRoot.prefix],
                         help='installation prefix (default: %(default)r)')
-    parser.add_argument('--bindir', default=install_dirs[Path.bindir],
-                        type=path_arg, metavar='PATH',
+    parser.add_argument('--bindir', type=path_arg, metavar='PATH',
+                        default=install_dirs[InstallRoot.bindir],
                         help=path_help.format('executables'))
-    parser.add_argument('--libdir', default=install_dirs[Path.libdir],
-                        type=path_arg, metavar='PATH',
+    parser.add_argument('--libdir', type=path_arg, metavar='PATH',
+                        default=install_dirs[InstallRoot.libdir],
                         help=path_help.format('libraries'))
-    parser.add_argument('--includedir', default=install_dirs[Path.includedir],
-                        type=path_arg, metavar='PATH',
+    parser.add_argument('--includedir', type=path_arg, metavar='PATH',
+                        default=install_dirs[InstallRoot.includedir],
                         help=path_help.format('headers'))
     parser.add_argument('--regenerate', action='store_true',
                         help='regenerate build files')
@@ -120,10 +120,10 @@ def main():
             srcdir=args.srcdir,
             builddir=args.builddir,
             install_dirs={
-                Path.prefix: args.prefix,
-                Path.bindir: args.bindir,
-                Path.libdir: args.libdir,
-                Path.includedir: args.includedir,
+                InstallRoot.prefix: args.prefix,
+                InstallRoot.bindir: args.bindir,
+                InstallRoot.libdir: args.libdir,
+                InstallRoot.includedir: args.includedir,
             }
        )
         env.save(args.builddir)

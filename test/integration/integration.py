@@ -8,7 +8,7 @@ import unittest
 
 from collections import namedtuple
 
-from bfg9000.path import Path
+from bfg9000.path import Path, InstallRoot
 from bfg9000.platforms import platform_info
 from bfg9000.makedirs import makedirs
 
@@ -74,10 +74,9 @@ class IntegrationTest(unittest.TestCase):
             self.extra_args = ['--prefix', self.distdir]
 
             install_dirs = platform_info().install_dirs
-            path_vars = {Path.prefix: self.distdir}
-            self.bindir = install_dirs['bindir'].realize(path_vars)
-            self.libdir = install_dirs['libdir'].realize(path_vars)
-            self.includedir = install_dirs['includedir'].realize(path_vars)
+            path_vars = {InstallRoot.prefix: self.distdir}
+            for i in InstallRoot:
+                setattr(self, i.name, install_dirs[i].realize(path_vars))
 
     def _target_name(self, target):
         if isinstance(target, Target):

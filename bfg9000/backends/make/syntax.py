@@ -175,13 +175,10 @@ class MakeCall(MakeFunc):
         MakeFunc.__init__(self, 'call', func.name, *args)
 
 path_vars = {
-    Path.srcdir:     MakeVariable('srcdir'),
-    Path.builddir:   None,
-    Path.prefix:     MakeVariable('prefix'),
-    Path.bindir:     MakeVariable('bindir'),
-    Path.libdir:     MakeVariable('libdir'),
-    Path.includedir: MakeVariable('includedir'),
+    path.Root.srcdir:   MakeVariable('srcdir'),
+    path.Root.builddir: None,
 }
+path_vars.update({i: MakeVariable(i.name) for i in path.InstallRoot})
 
 class Makefile(object):
     def __init__(self):

@@ -3,7 +3,7 @@ import re
 import subprocess
 from collections import namedtuple
 
-from path import Path
+from path import Path, Root, InstallRoot
 
 def platform_name():
     name = platform.system().lower()
@@ -44,10 +44,10 @@ class PosixPlatform(Platform):
     @property
     def install_dirs(self):
         return {
-            Path.prefix:     Path('/usr/local', Path.absolute),
-            Path.bindir:     Path('bin', Path.prefix),
-            Path.libdir:     Path('lib', Path.prefix),
-            Path.includedir: Path('include', Path.prefix),
+            InstallRoot.prefix:     Path('/usr/local', Root.absolute),
+            InstallRoot.bindir:     Path('bin', InstallRoot.prefix),
+            InstallRoot.libdir:     Path('lib', InstallRoot.prefix),
+            InstallRoot.includedir: Path('include', InstallRoot.prefix),
         }
 
 class LinuxPlatform(PosixPlatform):
@@ -98,10 +98,10 @@ class WindowsPlatform(Platform):
     def install_dirs(self):
         return {
             # TODO: Pick a better prefix
-            Path.prefix:     Path('C:\\', Path.absolute),
-            Path.bindir:     Path('', Path.prefix),
-            Path.libdir:     Path('', Path.prefix),
-            Path.includedir: Path('', Path.prefix),
+            InstallRoot.prefix:     Path('C:\\', Root.absolute),
+            InstallRoot.bindir:     Path('', InstallRoot.prefix),
+            InstallRoot.libdir:     Path('', InstallRoot.prefix),
+            InstallRoot.includedir: Path('', InstallRoot.prefix),
         }
 
 def platform_info(name=None):
