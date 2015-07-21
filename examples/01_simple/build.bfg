@@ -15,6 +15,6 @@
 #  $ make
 #
 # Once the build finishes, you can run your newly-created executable, located at
-# bin/simple.
+# ./simple.
 
 executable('simple', files=['simple.cpp'])
