@@ -2,7 +2,7 @@ import argparse
 import shlex
 import sys
 
-from .backends.make.syntax import MakeWriter, Syntax
+from .backends.make.syntax import Writer, Syntax
 from .version import __version__
 
 def main():
@@ -33,7 +33,7 @@ def main():
         if not tok.isspace():
             files.append(tok)
 
-    out = MakeWriter(sys.stdout)
+    out = Writer(sys.stdout)
     for i in files:
         out.write(i, Syntax.target)
         out.write_literal(':\n')

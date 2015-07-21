@@ -10,14 +10,14 @@ from ... import iterutils
 
 Path = path.Path
 
-NinjaRule = namedtuple('NinjaRule', ['command', 'depfile', 'deps', 'generator',
-                                     'restat'])
-NinjaBuild = namedtuple('NinjaBuild', ['outputs', 'rule', 'inputs', 'implicit',
-                                       'order_only', 'variables'])
+Rule = namedtuple('Rule', ['command', 'depfile', 'deps', 'generator', 'restat'])
+Build = namedtuple('Build', ['outputs', 'rule', 'inputs', 'implicit',
+                             'order_only', 'variables'])
 
 Syntax = Enum('Syntax', ['output', 'input', 'shell', 'clean'])
+Section = Enum('Section', ['path', 'command', 'flags', 'other'])
 
-class NinjaWriter(object):
+class Writer(object):
     def __init__(self, stream):
         self.stream = stream
 
@@ -54,7 +54,7 @@ class NinjaWriter(object):
             for i in thing.bits:
                 escaped |= self.write(i, syntax, shell_quote)
         elif isinstance(thing, Path):
-            out = NinjaWriter(StringIO())
+            out = Writer(StringIO())
             thing = thing.realize(path_vars, shelly)
             escaped = out.write(thing, syntax, shell.escape)
 
@@ -78,7 +78,7 @@ class NinjaWriter(object):
         else:
             self.write(thing, syntax, shell_quote=None)
 
-class NinjaVariable(object):
+class Variable(object):
     def __init__(self, name):
         self.name = re.sub('\W', '_', name)
 
@@ -107,15 +107,13 @@ class NinjaVariable(object):
         return lhs + self.use()
 
 def var(v):
-    return v if isinstance(v, NinjaVariable) else NinjaVariable(v)
+    return v if isinstance(v, Variable) else Variable(v)
 
 path_vars = {
-    path.Root.srcdir:   NinjaVariable('srcdir'),
+    path.Root.srcdir:   Variable('srcdir'),
     path.Root.builddir: None,
 }
-path_vars.update({i: NinjaVariable(i.name) for i in path.InstallRoot})
-
-Section = Enum('Section', ['path', 'command', 'flags', 'other'])
+path_vars.update({i: Variable(i.name) for i in path.InstallRoot})
 
 class NinjaFile(object):
     def __init__(self):
@@ -147,7 +145,7 @@ class NinjaFile(object):
             raise ValueError('rule name contains invalid characters')
         if self.has_rule(name):
             raise ValueError("rule '{}' already exists".format(name))
-        self._rules[name] = NinjaRule(command, depfile, deps, generator, restat)
+        self._rules[name] = Rule(command, depfile, deps, generator, restat)
 
     def has_rule(self, name):
         return name in self._rules
@@ -164,7 +162,7 @@ class NinjaFile(object):
             if self.has_build(i):
                 raise ValueError("build for '{}' already exists".format(i))
             self._build_outputs.add(i)
-        self._builds.append(NinjaBuild(
+        self._builds.append(Build(
             outputs, rule, iterutils.listify(inputs),
             iterutils.listify(implicit), iterutils.listify(order_only),
             variables
@@ -209,7 +207,7 @@ class NinjaFile(object):
                 self._write_variable(out, k, v, indent=1)
 
     def write(self, out):
-        out = NinjaWriter(out)
+        out = Writer(out)
 
         for section in Section:
             # Paths are inherently clean (read: don't need shell quoting).

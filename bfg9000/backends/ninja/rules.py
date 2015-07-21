@@ -11,8 +11,6 @@ from ...builtins import find
 
 Path = path.Path
 
-var = NinjaVariable
-
 _rule_handlers = {}
 def rule_handler(rule_name):
     def decorator(fn):
@@ -37,7 +35,7 @@ def write(env, build_inputs):
         buildfile.write(out)
 
 def chain_commands(commands, delim=' && '):
-    out = NinjaWriter(StringIO())
+    out = Writer(StringIO())
     for tween, line in iterutils.tween(commands, delim):
         out.write_literal(line) if tween else out.write_shell(line)
     return safe_str.escaped_str(out.stream.getvalue())
@@ -132,7 +130,7 @@ def test_rule(tests, buildfile):
             env = [safe_str.jbos(k, '=', v) for k, v in test.env.iteritems()]
             subcmd = env + [test.target] + test.options + (args or [])
             if collapse:
-                out = NinjaWriter(StringIO())
+                out = Writer(StringIO())
                 out.write_shell(subcmd)
                 s = out.stream.getvalue()
                 if len(subcmd) > 1:

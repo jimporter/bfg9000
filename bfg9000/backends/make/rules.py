@@ -109,7 +109,7 @@ def test_rule(tests, buildfile):
             env = [safe_str.jbos(k, '=', v) for k, v in test.env.iteritems()]
             subcmd = env + [test.target] + test.options + (args or [])
             if collapse:
-                out = MakeWriter(StringIO())
+                out = Writer(StringIO())
                 out.write_shell(subcmd)
                 s = out.stream.getvalue()
                 if len(subcmd) > 1:
@@ -144,7 +144,7 @@ def directory_rule(buildfile):
         target=pattern,
         recipe=[
             # XXX: `mkdir -p` isn't safe (or valid!) on all platforms.
-            ['@mkdir', '-p', MakeFunc('patsubst', pattern, Pattern('%'), out)],
+            ['@mkdir', '-p', Function('patsubst', pattern, Pattern('%'), out)],
             ['@touch', out]
         ]
     )
@@ -167,7 +167,7 @@ def regenerate_rule(find_dirs, buildfile, env):
 @rule_handler('Compile')
 def emit_object_file(rule, build_inputs, buildfile, env):
     compiler = rule.builder
-    recipename = MakeVariable('RULE_{}'.format(compiler.name.upper()))
+    recipename = Variable('RULE_{}'.format(compiler.name.upper()))
     global_cflags, cflags = flags_vars(
         compiler.command_var + 'FLAGS',
         compiler.global_args +
@@ -218,7 +218,7 @@ def emit_object_file(rule, build_inputs, buildfile, env):
 @rule_handler('Link')
 def emit_link(rule, build_inputs, buildfile, env):
     linker = rule.builder
-    recipename = MakeVariable('RULE_{}'.format(linker.name.upper()))
+    recipename = Variable('RULE_{}'.format(linker.name.upper()))
     global_ldflags, ldflags = flags_vars(
         linker.link_var + 'FLAGS',
         linker.global_args + build_inputs.global_link_options,
@@ -257,7 +257,7 @@ def emit_link(rule, build_inputs, buildfile, env):
             )
         ])
 
-    recipe = MakeCall(recipename, rule.files, path)
+    recipe = Call(recipename, rule.files, path)
     if iterutils.isiterable(rule.target):
         target = path.addext('.stamp')
         buildfile.rule(target=rule.target, deps=[target])

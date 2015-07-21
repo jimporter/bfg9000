@@ -11,13 +11,14 @@ from ... import iterutils
 
 Path = path.Path
 
-MakeInclude = namedtuple('MakeInclude', ['name', 'optional'])
-MakeRule = namedtuple('MakeRule', ['targets', 'deps', 'order_only', 'recipe',
-                                   'variables', 'phony'])
+Rule = namedtuple('Rule', ['targets', 'deps', 'order_only', 'recipe',
+                           'variables', 'phony'])
+Include = namedtuple('Include', ['name', 'optional'])
 
 Syntax = Enum('Syntax', ['target', 'dependency', 'function', 'shell', 'clean'])
+Section = Enum('Section', ['path', 'command', 'flags', 'other'])
 
-class MakeWriter(object):
+class Writer(object):
     def __init__(self, stream):
         self.stream = stream
 
@@ -60,7 +61,7 @@ class MakeWriter(object):
             for i in thing.bits:
                 escaped |= self.write(i, syntax, shell_quote)
         elif isinstance(thing, Path):
-            out = MakeWriter(StringIO())
+            out = Writer(StringIO())
             thing = thing.realize(path_vars, shelly)
             escaped = out.write(thing, syntax, shell.escape)
 
@@ -116,16 +117,12 @@ class Pattern(object):
     def __radd__(self, lhs):
         return lhs + self.use()
 
-class MakeVariable(object):
-    def __init__(self, name, quoted=False):
-        self.name = re.sub(r'[\s:#=]', '_', name)
-        self.quoted = quoted
+class Entity(object):
+    def __init__(self, name):
+        self.name = name
 
     def use(self):
-        fmt = '${}' if len(self.name) == 1 else '$({})'
-        if self.quoted:
-            fmt = shell.quote_escaped(fmt)
-        return safe_str.escaped_str(fmt.format(self.name))
+        raise NotImplementedError()
 
     def _safe_str(self):
         return self.use()
@@ -148,19 +145,30 @@ class MakeVariable(object):
     def __radd__(self, lhs):
         return lhs + self.use()
 
+class Variable(Entity):
+    def __init__(self, name, quoted=False):
+        Entity.__init__(self, re.sub(r'[\s:#=]', '_', name))
+        self.quoted = quoted
+
+    def use(self):
+        fmt = '${}' if len(self.name) == 1 else '$({})'
+        if self.quoted:
+            fmt = shell.quote_escaped(fmt)
+        return safe_str.escaped_str(fmt.format(self.name))
+
 def var(v, quoted=False):
-    return v if isinstance(v, MakeVariable) else MakeVariable(v, quoted)
+    return v if isinstance(v, Variable) else Variable(v, quoted)
 
 def qvar(v):
     return var(v, True)
 
-class MakeFunc(object):
+class Function(Entity):
     def __init__(self, name, *args):
-        self.name = name
+        Entity.__init__(self, name)
         self.args = args
 
     def use(self):
-        out = MakeWriter(StringIO())
+        out = Writer(StringIO())
         prefix = '$(' + self.name + ' '
         for tween, i in iterutils.tween(self.args, ',', prefix, ')'):
             if tween:
@@ -169,28 +177,15 @@ class MakeFunc(object):
                 out.write_each(iterutils.iterate(i), Syntax.function)
         return safe_str.escaped_str(out.stream.getvalue())
 
-    def _safe_str(self):
-        return self.use()
-
-    def __str__(self):
-        raise NotImplementedError()
-
-    def __repr__(self):
-        return repr(self.use())
-
-class MakeCall(MakeFunc):
+class Call(Function):
     def __init__(self, func, *args):
-        if not isinstance(func, MakeVariable):
-            func = MakeVariable(func)
-        MakeFunc.__init__(self, 'call', func.name, *args)
+        Function.__init__(self, 'call', var(func).name, *args)
 
 path_vars = {
-    path.Root.srcdir:   MakeVariable('srcdir'),
+    path.Root.srcdir:   Variable('srcdir'),
     path.Root.builddir: None,
 }
-path_vars.update({i: MakeVariable(i.name) for i in path.InstallRoot})
-
-Section = Enum('Section', ['path', 'command', 'flags', 'other'])
+path_vars.update({i: Variable(i.name) for i in path.InstallRoot})
 
 class Makefile(object):
     def __init__(self):
@@ -233,7 +228,7 @@ class Makefile(object):
         return name, exists
 
     def include(self, name, optional=False):
-        self._includes.append(MakeInclude(name, optional))
+        self._includes.append(Include(name, optional))
 
     def rule(self, target, deps=None, order_only=None, recipe=None,
              variables=None, phony=False):
@@ -246,7 +241,7 @@ class Makefile(object):
             if self.has_rule(i):
                 raise ValueError("rule for '{}' already exists".format(i))
             self._targets.add(i)
-        self._rules.append(MakeRule(
+        self._rules.append(Rule(
             targets, iterutils.listify(deps), iterutils.listify(order_only),
             recipe, variables, phony
         ))
@@ -285,8 +280,8 @@ class Makefile(object):
         out.write_each(rule.deps, Syntax.dependency, prefix=' ')
         out.write_each(rule.order_only, Syntax.dependency, prefix=' | ')
 
-        if (isinstance(rule.recipe, MakeVariable) or
-            isinstance(rule.recipe, MakeFunc)):
+        if (isinstance(rule.recipe, Variable) or
+            isinstance(rule.recipe, Function)):
             out.write_literal(' ; ')
             out.write_shell(rule.recipe)
         elif rule.recipe is not None:
@@ -296,13 +291,13 @@ class Makefile(object):
         out.write_literal('\n\n')
 
     def write(self, out):
-        out = MakeWriter(out)
+        out = Writer(out)
 
         # Don't let make use built-in suffix rules.
         out.write_literal('.SUFFIXES:\n')
 
         # Necessary for escaping commas in function calls.
-        self._write_variable(out, MakeVariable(','), ',')
+        self._write_variable(out, Variable(','), ',')
         out.write_literal('\n')
 
         for section in Section:

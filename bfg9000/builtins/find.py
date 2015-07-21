@@ -3,12 +3,12 @@ import os
 
 from . import builtin
 from ..iterutils import listify
-from ..backends.make.syntax import MakeWriter, Syntax
+from ..backends.make.syntax import Writer, Syntax
 
 depfile_name = '.bfg_find_deps'
 def write_depfile(path, output, seen_dirs, makeify=False):
     with open(path, 'w') as f:
-        out = MakeWriter(f)
+        out = Writer(f)
         out.write(output, Syntax.target)
         out.write_literal(':')
         for i in seen_dirs:
