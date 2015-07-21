@@ -15,6 +15,8 @@ NinjaRule = namedtuple('NinjaRule', ['command', 'depfile', 'deps', 'generator',
 NinjaBuild = namedtuple('NinjaBuild', ['outputs', 'rule', 'inputs', 'implicit',
                                        'order_only', 'variables'])
 
+Syntax = Enum('Syntax', ['output', 'input', 'shell', 'clean'])
+
 class NinjaWriter(object):
     def __init__(self, stream):
         self.stream = stream
@@ -24,11 +26,11 @@ class NinjaWriter(object):
         if '\n' in string:
             raise ValueError('illegal newline')
 
-        if syntax == 'output':
+        if syntax == Syntax.output:
             return re.sub(r'([:$ ])', r'$\1', string)
-        elif syntax == 'input':
+        elif syntax == Syntax.input:
             return re.sub(r'([$ ])', r'$\1', string)
-        elif syntax in ['shell', 'clean']:
+        elif syntax in [Syntax.shell, Syntax.clean]:
             return string.replace('$', '$$')
         else:
             raise ValueError("unknown syntax '{}'".format(syntax))
@@ -38,7 +40,7 @@ class NinjaWriter(object):
 
     def write(self, thing, syntax, shell_quote=shell.quote_info):
         thing = safe_str.safe_str(thing)
-        shelly = syntax == 'shell'
+        shelly = syntax == Syntax.shell
         escaped = False
 
         if isinstance(thing, safe_str.escaped_str):
@@ -70,7 +72,7 @@ class NinjaWriter(object):
             self.write_literal(i) if tween else self.write(i, syntax)
 
     def write_shell(self, thing, clean=False):
-        syntax = 'clean' if clean else 'shell'
+        syntax = Syntax.clean if clean else Syntax.shell
         if iterutils.isiterable(thing):
             self.write_each(thing, syntax)
         else:
@@ -194,12 +196,12 @@ class NinjaFile(object):
 
     def _write_build(self, out, build):
         out.write_literal('build ')
-        out.write_each(build.outputs, syntax='output')
+        out.write_each(build.outputs, Syntax.output)
         out.write_literal(': ' + build.rule)
 
-        out.write_each(build.inputs, syntax='input', prefix=' ')
-        out.write_each(build.implicit, syntax='input', prefix=' | ')
-        out.write_each(build.order_only, syntax='input', prefix=' || ')
+        out.write_each(build.inputs, Syntax.input, prefix=' ')
+        out.write_each(build.implicit, Syntax.input, prefix=' | ')
+        out.write_each(build.order_only, Syntax.input, prefix=' || ')
         out.write_literal('\n')
 
         if build.variables:
@@ -227,5 +229,5 @@ class NinjaFile(object):
 
         if self._defaults:
             out.write_literal('\ndefault ')
-            out.write_each(self._defaults, syntax='input')
+            out.write_each(self._defaults, Syntax.input)
             out.write_literal('\n')

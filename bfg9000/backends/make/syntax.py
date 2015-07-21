@@ -15,6 +15,8 @@ MakeInclude = namedtuple('MakeInclude', ['name', 'optional'])
 MakeRule = namedtuple('MakeRule', ['targets', 'deps', 'order_only', 'recipe',
                                    'variables', 'phony'])
 
+Syntax = Enum('Syntax', ['target', 'dependency', 'function', 'shell', 'clean'])
+
 class MakeWriter(object):
     def __init__(self, stream):
         self.stream = stream
@@ -28,13 +30,13 @@ class MakeWriter(object):
             raise ValueError('illegal newline')
         result = string.replace('$', '$$')
 
-        if syntax == 'target':
+        if syntax == Syntax.target:
             return re.sub(r'(\\*)([#?*\[\]~\s%])', repl, result)
-        elif syntax == 'dependency':
+        elif syntax == Syntax.dependency:
             return re.sub(r'(\\*)([#?*\[\]~\s|%])', repl, result)
-        elif syntax == 'function':
+        elif syntax == Syntax.function:
             return re.sub(',', '$,', result)
-        elif syntax in ['shell', 'clean']:
+        elif syntax in [Syntax.shell, Syntax.clean]:
             return result
         else:
             raise ValueError("unknown syntax '{}'".format(syntax))
@@ -44,7 +46,7 @@ class MakeWriter(object):
 
     def write(self, thing, syntax, shell_quote=shell.quote_info):
         thing = safe_str.safe_str(thing)
-        shelly = syntax in ['function', 'shell']
+        shelly = syntax in [Syntax.function, Syntax.shell]
         escaped = False
 
         if isinstance(thing, safe_str.escaped_str):
@@ -76,7 +78,7 @@ class MakeWriter(object):
             self.write_literal(i) if tween else self.write(i, syntax)
 
     def write_shell(self, thing, clean=False):
-        syntax = 'clean' if clean else 'shell'
+        syntax = Syntax.clean if clean else Syntax.shell
         if iterutils.isiterable(thing):
             self.write_each(thing, syntax)
         else:
@@ -164,7 +166,7 @@ class MakeFunc(object):
             if tween:
                 out.write_literal(i)
             else:
-                out.write_each(iterutils.iterate(i), syntax='function')
+                out.write_each(iterutils.iterate(i), Syntax.function)
         return safe_str.escaped_str(out.stream.getvalue())
 
     def _safe_str(self):
@@ -254,7 +256,7 @@ class Makefile(object):
 
     def _write_variable(self, out, name, value, clean=False, target=None):
         if target:
-            out.write(target, syntax='target')
+            out.write(target, Syntax.target)
             out.write_literal(': ')
         out.write_literal(name.name + ' := ')
         out.write_shell(value, clean)
@@ -275,13 +277,13 @@ class Makefile(object):
 
         if rule.phony:
             out.write_literal('.PHONY: ')
-            out.write_each(rule.targets, syntax='dependency')
+            out.write_each(rule.targets, Syntax.dependency)
             out.write_literal('\n')
 
-        out.write_each(rule.targets, syntax='target')
+        out.write_each(rule.targets, Syntax.target)
         out.write_literal(':')
-        out.write_each(rule.deps, syntax='dependency', prefix=' ')
-        out.write_each(rule.order_only, syntax='dependency', prefix=' | ')
+        out.write_each(rule.deps, Syntax.dependency, prefix=' ')
+        out.write_each(rule.order_only, Syntax.dependency, prefix=' | ')
 
         if (isinstance(rule.recipe, MakeVariable) or
             isinstance(rule.recipe, MakeFunc)):
@@ -305,6 +307,7 @@ class Makefile(object):
 
         for section in Section:
             # Paths are inherently clean (read: don't need shell quoting).
+            # XXX: This behavior is a bit strange and maybe should be reworked.
             clean = section == Section.path
             for name, value in self._global_variables[section]:
                 self._write_variable(out, name, value, clean)
@@ -325,5 +328,5 @@ class Makefile(object):
 
         for i in self._includes:
             out.write_literal(('-' if i.optional else '') + 'include ')
-            out.write(i.name, syntax='target')
+            out.write(i.name, Syntax.target)
             out.write_literal('\n')

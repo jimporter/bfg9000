@@ -2,7 +2,7 @@ import argparse
 import shlex
 import sys
 
-from .backends.make.syntax import MakeWriter
+from .backends.make.syntax import MakeWriter, Syntax
 from .version import __version__
 
 def main():
@@ -35,5 +35,5 @@ def main():
 
     out = MakeWriter(sys.stdout)
     for i in files:
-        out.write(i, 'target')
+        out.write(i, Syntax.target)
         out.write_literal(':\n')

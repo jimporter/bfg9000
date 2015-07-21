@@ -3,21 +3,21 @@ import os
 
 from . import builtin
 from ..iterutils import listify
-from ..backends.make.syntax import MakeWriter
+from ..backends.make.syntax import MakeWriter, Syntax
 
 depfile_name = '.bfg_find_deps'
 def write_depfile(path, output, seen_dirs, makeify=False):
     with open(path, 'w') as f:
         out = MakeWriter(f)
-        out.write(output, 'target')
+        out.write(output, Syntax.target)
         out.write_literal(':')
         for i in seen_dirs:
             out.write_literal(' ')
-            out.write(os.path.abspath(i), 'dependency')
+            out.write(os.path.abspath(i), Syntax.dependency)
         out.write_literal('\n')
         if makeify:
             for i in seen_dirs:
-                out.write(os.path.abspath(i), 'target')
+                out.write(os.path.abspath(i), Syntax.target)
                 out.write_literal(':\n')
 
 def _walk_flat(path):
