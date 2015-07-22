@@ -34,12 +34,6 @@ def write(env, build_inputs):
     with open(os.path.join(env.builddir, 'build.ninja'), 'w') as out:
         buildfile.write(out)
 
-def chain_commands(commands, delim=' && '):
-    out = Writer(StringIO())
-    for tween, line in iterutils.tween(commands, delim):
-        out.write_literal(line) if tween else out.write_shell(line)
-    return safe_str.escaped_str(out.stream.getvalue())
-
 def command_build(buildfile, output, inputs=None, implicit=None,
                   order_only=None, commands=None):
     if not buildfile.has_rule('command'):
@@ -53,7 +47,7 @@ def command_build(buildfile, output, inputs=None, implicit=None,
         inputs=inputs,
         implicit=iterutils.listify(implicit) + ['PHONY'],
         order_only=order_only,
-        variables={'cmd': chain_commands(commands)}
+        variables={'cmd': Commands(commands)}
     )
 
 def cmd_var(cmd, buildfile):

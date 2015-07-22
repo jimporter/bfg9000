@@ -7,6 +7,7 @@ from ... import path
 from ... import safe_str
 from ... import shell
 from ... import iterutils
+from ...platforms import platform_name
 
 Path = path.Path
 
@@ -108,6 +109,29 @@ class Variable(object):
 
 def var(v):
     return v if isinstance(v, Variable) else Variable(v)
+
+class Commands(object):
+    def __init__(self, commands):
+        self.commands = iterutils.listify(commands)
+
+    def use(self):
+        out = Writer(StringIO())
+        if self.__needs_shell and platform_name() == 'windows':
+            out.write_literal('cmd /c ')
+        for tween, line in iterutils.tween(self.commands, ' && '):
+            out.write_literal(line) if tween else out.write_shell(line)
+        return safe_str.escaped_str(out.stream.getvalue())
+
+    def _safe_str(self):
+        return self.use()
+
+    @property
+    def __needs_shell(self):
+        if len(self.commands) > 1:
+            return True
+        if any(not iterutils.isiterable(i) for i in self.commands):
+            return True
+        return False
 
 path_vars = {
     path.Root.srcdir:   Variable('srcdir'),
