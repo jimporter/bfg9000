@@ -16,6 +16,10 @@ def platform_name():
             pass
     return name
 
+# XXX: How much information should be stored in Platforms vs the Environment?
+# For instance, should the Platforms know how to fetch platform-specific
+# environment variables (implying a circular dependency between Environment and
+# Platform), or should it just hand off the var name to the Environment?
 class Platform(object):
     def __init__(self, name):
         self.name = name

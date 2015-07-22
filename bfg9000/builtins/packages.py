@@ -10,6 +10,8 @@ class Package(object):
         self.libraries = libraries
 
 def _find_library(env, name, search_dirs):
+    # XXX: Support alternative naming schemes (e.g. libfoo.a vs foo.lib for GCC
+    # on Windows)? Also not sure how we'll support other runtimes (e.g. JVM).
     linkers = [env.linker('c', 'shared_library'),
                env.linker('c', 'static_library')]
     for d in search_dirs:
@@ -34,6 +36,8 @@ def boost_package(build, env, name):
         headers = []
         search_dirs = env.platform.lib_dirs
 
+    # XXX: Figure out what to do for Windows, which usually has Boost's version
+    # number and build settings in the filename.
     return Package(headers, [_find_library(env, 'boost_' + name, search_dirs)])
 
 @builtin
