@@ -79,11 +79,14 @@ class IntegrationTest(unittest.TestCase):
                 setattr(self, i.name, install_dirs[i].realize(path_vars))
 
     def _target_name(self, target):
-        if isinstance(target, Target):
-            target = target.name
         if self.backend == 'msbuild':
+            if isinstance(target, Target):
+                target = target.name
             return '/target:' + target
-        return target
+        else:
+            if isinstance(target, Target):
+                target = target.path
+            return target
 
     def _target_path(self, target):
         if isinstance(target, Target):
