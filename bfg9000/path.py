@@ -1,6 +1,7 @@
 import os.path
 from collections import namedtuple
 from enum import Enum
+from itertools import chain
 
 from . import safe_str
 
