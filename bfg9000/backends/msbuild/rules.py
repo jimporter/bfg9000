@@ -5,6 +5,8 @@ from .syntax import *
 from ... import iterutils
 from ...makedirs import makedirs
 
+priority = 1 if version is not None else 0
+
 def link_mode(mode):
     return {
         'executable'    : 'Application',

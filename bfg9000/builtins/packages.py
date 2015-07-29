@@ -3,6 +3,7 @@ import os.path
 from . import builtin
 from .. import path
 from ..file_types import *
+from ..platforms import which
 
 class Package(object):
     def __init__(self, includes, libraries):
@@ -42,9 +43,4 @@ def boost_package(build, env, name):
 
 @builtin
 def system_executable(build, env, name):
-    for d in env.bin_dirs:
-        for ext in env.bin_exts:
-            candidate = os.path.join(d, name + ext)
-            if os.path.exists(candidate):
-                return Executable(candidate, root=path.Root.absolute)
-    raise ValueError("unable to find executable '{}'".format(name))
+    return Executable(which(name, env.variables), root=path.Root.absolute)

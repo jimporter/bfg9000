@@ -1,9 +1,11 @@
+import os
 import platform
 import re
 import subprocess
 from collections import namedtuple
 
-from path import Path, Root, InstallRoot
+from .iterutils import iterate
+from .path import Path, Root, InstallRoot
 
 def platform_name():
     name = platform.system().lower()
@@ -120,3 +122,25 @@ def platform_info(name=None):
         return LinuxPlatform(name)
     else: # Probably some POSIX system
         return PosixPlatform(name)
+
+def which(names, env=None):
+    if not env:
+        env = os.environ
+
+    # XXX: Create something to manage host-platform stuff like this?
+    # (`Platform` is for targets.)
+    paths = env.get('PATH', os.defpath).split(os.pathsep)
+    plat = platform_name()
+    if plat == 'windows' or plat == 'cygwin':
+        exts = self.get('PATHEXT', '').split(os.pathsep)
+    else:
+        exts = ['']
+
+    for name in iterate(names):
+        for path in paths:
+            for ext in exts:
+                candidate = os.path.join(path, name + ext)
+                if os.path.exists(candidate):
+                    return candidate
+
+    raise IOError("unable to find executable '{}'".format(name))

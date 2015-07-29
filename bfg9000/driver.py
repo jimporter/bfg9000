@@ -3,9 +3,9 @@ import os
 import pickle
 import re
 import sys
-from pkg_resources import iter_entry_points
 
 from . import builtins
+from .backends import get_backends
 from .build_inputs import BuildInputs
 from .environment import Environment, EnvVersionError
 from .path import Path, InstallRoot
@@ -72,7 +72,7 @@ def parse_args(parser, args=None, namespace=None):
     return args
 
 def main():
-    backends = {i.name: i for i in iter_entry_points('bfg9000.backends')}
+    backends, default_backend = get_backends()
     install_dirs = platform_info().install_dirs
 
     path_help = 'installation path for {} (default: %(default)r)'
@@ -84,7 +84,8 @@ def main():
     parser.add_argument('builddir', nargs='?', help='build directory')
     parser.add_argument('--version', action='version',
                         version='%(prog)s ' + __version__)
-    parser.add_argument('--backend', choices=backends.keys(), default='make',
+    parser.add_argument('--backend', choices=sorted(backends.keys()),
+                        default=default_backend,
                         help='backend (default: %(default)s)')
     parser.add_argument('--prefix', type=path_arg, metavar='PATH',
                         default=install_dirs[InstallRoot.prefix],
@@ -125,12 +126,11 @@ def main():
                 InstallRoot.libdir: args.libdir,
                 InstallRoot.includedir: args.includedir,
             }
-       )
+        )
         env.save(args.builddir)
 
     build = BuildInputs()
     os.chdir(env.srcdir)
     execfile(os.path.join(env.srcdir, bfgfile), builtins.bind(build, env))
 
-    writer = backends[env.backend].load()
-    writer(env, build)
+    backends[env.backend].write(env, build)

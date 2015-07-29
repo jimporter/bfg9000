@@ -2,6 +2,7 @@ import os
 from cStringIO import StringIO
 from itertools import chain
 
+from . import version
 from .syntax import *
 from ... import path
 from ... import safe_str
@@ -17,6 +18,8 @@ def rule_handler(rule_name):
         _rule_handlers[rule_name] = fn
         return fn
     return decorator
+
+priority = 3 if version is not None else 0
 
 def write(env, build_inputs):
     buildfile = NinjaFile()

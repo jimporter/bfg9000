@@ -20,9 +20,9 @@ setup(
             'depfixer=bfg9000.depfixer:main',
         ],
         'bfg9000.backends': [
-            'make=bfg9000.backends.make.rules:write',
-            'ninja=bfg9000.backends.ninja.rules:write',
-            'msbuild=bfg9000.backends.msbuild.rules:write [msbuild]',
+            'make=bfg9000.backends.make.rules',
+            'ninja=bfg9000.backends.ninja.rules',
+            'msbuild=bfg9000.backends.msbuild.rules [msbuild]',
         ],
     },
 
