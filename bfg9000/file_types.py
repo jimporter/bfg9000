@@ -52,5 +52,5 @@ class SharedLibrary(Library):
         yield self
 
 # Used for Windows DLL files, which aren't linked to directly.
-class DllLibrary(Library):
+class DllLibrary(Binary):
     pass
