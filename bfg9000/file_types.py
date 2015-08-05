@@ -32,9 +32,6 @@ class Executable(Binary):
 class Library(Binary):
     install_root = InstallRoot.libdir
 
-    def __init__(self, name, root):
-        Binary.__init__(self, name, root)
-
 class StaticLibrary(Library):
     pass
 
