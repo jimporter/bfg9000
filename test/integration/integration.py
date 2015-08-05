@@ -11,6 +11,7 @@ from collections import namedtuple
 from bfg9000.path import Path, InstallRoot
 from bfg9000.platforms import platform_info
 from bfg9000.makedirs import makedirs
+from bfg9000.backends import get_backends
 
 this_dir = os.path.abspath(os.path.dirname(__file__))
 examples_dir = os.path.join(this_dir, '..', '..', 'examples')
@@ -18,6 +19,11 @@ test_data_dir = os.path.join(this_dir, '..', 'test_data')
 test_stage_dir = os.path.join(this_dir, '..', 'stage')
 
 Target = namedtuple('Target', ['name', 'path'])
+
+if os.getenv('BACKENDS', '').strip():
+    backends = os.getenv('BACKENDS').split(' ')
+else:
+    backends = get_backends()[0].keys()
 
 def cleandir(path, recreate=True):
     if os.path.exists(path):
@@ -55,10 +61,15 @@ class SubprocessError(unittest.TestCase.failureException):
 class IntegrationTest(unittest.TestCase):
     def __init__(self, srcdir, *args, **kwargs):
         dist = kwargs.pop('dist', False)
-        self.stage_src = kwargs.pop('stage_src', False)
-        unittest.TestCase.__init__(self, *args, **kwargs)
+        self._args = args
+        self._kwargs = kwargs
 
-        self.backend = os.getenv('BACKEND', 'make')
+        self.stage_src = kwargs.pop('stage_src', False)
+        self.backend = kwargs.pop('backend', None)
+        unittest.TestCase.__init__(self, *args, **kwargs)
+        if self.backend is None:
+            return
+
         self.extra_args = []
 
         srcname = os.path.basename(srcdir)
@@ -77,6 +88,13 @@ class IntegrationTest(unittest.TestCase):
             path_vars = {InstallRoot.prefix: self.distdir}
             for i in InstallRoot:
                 setattr(self, i.name, install_dirs[i].realize(path_vars))
+
+    def parameterize(self):
+        return [ self.__class__(backend=i, *self._args, **self._kwargs)
+                 for i in sorted(backends) ]
+
+    def shortDescription(self):
+        return self.backend
 
     def _target_name(self, target):
         if self.backend == 'msbuild':
@@ -166,3 +184,10 @@ def static_library(name):
     return Target(name, os.path.normpath(os.path.join(
         '.', head, prefix + tail + suffix
     )))
+
+def load_tests(loader, standard_tests, pattern):
+    all_tests = unittest.TestSuite()
+    for suite in standard_tests:
+        for case in suite:
+            all_tests.addTests(case.parameterize())
+    return all_tests
