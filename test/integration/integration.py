@@ -23,7 +23,7 @@ Target = namedtuple('Target', ['name', 'path'])
 if os.getenv('BACKENDS', '').strip():
     backends = os.getenv('BACKENDS').split(' ')
 else:
-    backends = get_backends()[0].keys()
+    backends = [k for k, v in get_backends().iteritems() if v.priority > 0]
 
 def cleandir(path, recreate=True):
     if os.path.exists(path):
@@ -91,7 +91,7 @@ class IntegrationTest(unittest.TestCase):
 
     def parameterize(self):
         return [ self.__class__(backend=i, *self._args, **self._kwargs)
-                 for i in sorted(backends) ]
+                 for i in backends ]
 
     def shortDescription(self):
         return self.backend

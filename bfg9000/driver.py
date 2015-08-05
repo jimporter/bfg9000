@@ -72,7 +72,7 @@ def parse_args(parser, args=None, namespace=None):
     return args
 
 def main():
-    backends, default_backend = get_backends()
+    backends = get_backends()
     install_dirs = platform_info().install_dirs
 
     path_help = 'installation path for {} (default: %(default)r)'
@@ -84,8 +84,8 @@ def main():
     parser.add_argument('builddir', nargs='?', help='build directory')
     parser.add_argument('--version', action='version',
                         version='%(prog)s ' + __version__)
-    parser.add_argument('--backend', choices=sorted(backends.keys()),
-                        default=default_backend,
+    parser.add_argument('--backend', choices=backends.keys(),
+                        default=backends.keys()[0],
                         help='backend (default: %(default)s)')
     parser.add_argument('--prefix', type=path_arg, metavar='PATH',
                         default=install_dirs[InstallRoot.prefix],
