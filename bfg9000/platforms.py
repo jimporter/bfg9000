@@ -132,7 +132,7 @@ def which(names, env=None):
     paths = env.get('PATH', os.defpath).split(os.pathsep)
     plat = platform_name()
     if plat == 'windows' or plat == 'cygwin':
-        exts = self.get('PATHEXT', '').split(os.pathsep)
+        exts = env.get('PATHEXT', '').split(os.pathsep)
     else:
         exts = ['']
 
