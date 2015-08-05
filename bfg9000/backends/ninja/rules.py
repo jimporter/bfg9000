@@ -1,6 +1,7 @@
 import os
 from cStringIO import StringIO
 from itertools import chain
+from pkg_resources import parse_version
 
 from . import version
 from .syntax import *
@@ -39,8 +40,12 @@ def write(env, build_inputs):
 
 def command_build(buildfile, output, inputs=None, implicit=None,
                   order_only=None, commands=None):
+    extra_kwargs = {}
+    if version >= parse_version('1.5'):
+        extra_kwargs['pool'] = 'console'
+
     if not buildfile.has_rule('command'):
-        buildfile.rule(name='command', command=var('cmd'))
+        buildfile.rule(name='command', command=var('cmd'), **extra_kwargs)
     if not buildfile.has_build('PHONY'):
         buildfile.build(output='PHONY', rule='phony')
 

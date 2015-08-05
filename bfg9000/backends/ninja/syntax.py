@@ -2,6 +2,7 @@ import re
 from cStringIO import StringIO
 from collections import namedtuple, OrderedDict
 from enum import Enum
+from pkg_resources import parse_version
 
 from ... import path
 from ... import safe_str
@@ -11,7 +12,8 @@ from ...platforms import platform_name
 
 Path = path.Path
 
-Rule = namedtuple('Rule', ['command', 'depfile', 'deps', 'generator', 'restat'])
+Rule = namedtuple('Rule', ['command', 'depfile', 'deps', 'generator', 'pool',
+                           'restat'])
 Build = namedtuple('Build', ['outputs', 'rule', 'inputs', 'implicit',
                              'order_only', 'variables'])
 
@@ -141,6 +143,7 @@ path_vars.update({i: Variable(i.name) for i in path.InstallRoot})
 
 class NinjaFile(object):
     def __init__(self):
+        self._min_version = None
         self._var_table = set()
         self._variables = {i: [] for i in Section}
 
@@ -149,6 +152,11 @@ class NinjaFile(object):
         self._builds = []
         self._build_outputs = set()
         self._defaults = []
+
+    def min_version(self, version):
+        if ( self._min_version is None or
+             parse_version(version) > parse_version(self._min_version) ):
+            self._min_version = version
 
     def variable(self, name, value, section=Section.other, exist_ok=True):
         name = var(name)
@@ -164,12 +172,18 @@ class NinjaFile(object):
         return var(name) in self._var_table
 
     def rule(self, name, command, depfile=None, deps=None, generator=False,
-             restat=False):
+             pool=None, restat=False):
+        if pool is not None:
+            if pool == 'console':
+                self.min_version('1.5')
+            else:
+                raise ValueError("unknown pool '{}'".format(pool))
         if re.search('\W', name):
             raise ValueError('rule name contains invalid characters')
         if self.has_rule(name):
             raise ValueError("rule '{}' already exists".format(name))
-        self._rules[name] = Rule(command, depfile, deps, generator, restat)
+        self._rules[name] = Rule(command, depfile, deps, generator, pool,
+                                 restat)
 
     def has_rule(self, name):
         return name in self._rules
@@ -213,6 +227,8 @@ class NinjaFile(object):
             self._write_variable(out, var('deps'), rule.deps, indent=1)
         if rule.generator:
             self._write_variable(out, var('generator'), '1', indent=1)
+        if rule.pool:
+            self._write_variable(out, var('pool'), rule.pool, indent=1)
         if rule.restat:
             self._write_variable(out, var('restat'), '1', indent=1)
 
@@ -232,6 +248,12 @@ class NinjaFile(object):
 
     def write(self, out):
         out = Writer(out)
+
+        if self._min_version:
+            self._write_variable(
+                out, var('ninja_required_version'), self._min_version
+            )
+            out.write_literal('\n')
 
         for section in Section:
             # Paths are inherently clean (read: don't need shell quoting).
