@@ -25,9 +25,10 @@ class ObjectFile(build_inputs.File):
 
 class Binary(build_inputs.File):
     install_kind = 'program'
+    install_root = InstallRoot.bindir
 
 class Executable(Binary):
-    install_root = InstallRoot.bindir
+    pass
 
 class Library(Binary):
     install_root = InstallRoot.libdir
