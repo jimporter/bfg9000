@@ -1,3 +1,4 @@
+import re
 import subprocess
 
 from ...platforms import which

@@ -1,6 +1,7 @@
 import os
 from itertools import chain
 
+from . import version
 from .syntax import *
 from ... import iterutils
 from ...makedirs import makedirs
