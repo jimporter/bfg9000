@@ -1,7 +1,7 @@
 import os
 from cStringIO import StringIO
 from itertools import chain
-from pkg_resources import parse_version
+from packaging.specifiers import SpecifierSet
 
 from . import version
 from .syntax import *
@@ -42,7 +42,7 @@ def command_build(buildfile, output, inputs=None, implicit=None,
                   order_only=None, commands=None):
     # XXX: Only make come command builds use the console pool?
     extra_kwargs = {}
-    if version >= parse_version('1.5'):
+    if version in SpecifierSet('>=1.5'):
         extra_kwargs['pool'] = 'console'
 
     if not buildfile.has_rule('command'):

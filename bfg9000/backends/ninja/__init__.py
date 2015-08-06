@@ -1,4 +1,4 @@
-from pkg_resources import parse_version
+from packaging.version import Version
 import subprocess
 
 from ...platforms import which
@@ -6,6 +6,6 @@ from ...platforms import which
 try:
     ninja = which(['ninja', 'ninja-build'])
     output = subprocess.check_output([ninja, '--version'])
-    version = parse_version(output.strip())
+    version = Version(output.strip())
 except IOError:
     version = None

@@ -2,7 +2,7 @@ import re
 from cStringIO import StringIO
 from collections import namedtuple, OrderedDict
 from enum import Enum
-from pkg_resources import parse_version
+from packaging.version import Version
 
 from ... import path
 from ... import safe_str
@@ -155,7 +155,7 @@ class NinjaFile(object):
 
     def min_version(self, version):
         if ( self._min_version is None or
-             parse_version(version) > parse_version(self._min_version) ):
+             Version(version) > Version(self._min_version) ):
             self._min_version = version
 
     def variable(self, name, value, section=Section.other, exist_ok=True):
