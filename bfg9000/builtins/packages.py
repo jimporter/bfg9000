@@ -7,6 +7,7 @@ from . import builtin
 from .. import path
 from ..build_inputs import objectify
 from ..file_types import *
+from ..iterutils import iterate
 from ..platforms import which
 
 class Package(object):
@@ -44,8 +45,19 @@ def _boost_version(headers):
                 return Version(m.group(1).replace('_', '.'))
     raise IOError("unable to parse 'boost/version.hpp'")
 
+def _boost_name(env, name):
+    if env.platform.name == 'windows':
+        # XXX: Support other configurations.
+        vs_version = env.getvar('VISUALSTUDIOVERSION').replace('.', '')
+        return 'boost_{name}-vc{vs}-mt-{version}'.format(
+            name=name, vs=vs_version,
+            version=str(curr_version).replace('.', '_')
+        )
+    else:
+        return 'boost_' + name
+
 @builtin
-def boost_package(build, env, name, version=None):
+def boost_package(build, env, name=None, version=None):
     root = env.getvar('BOOST_ROOT')
     if root:
         headers = HeaderDirectory(os.path.join(root, 'include'),
@@ -85,7 +97,9 @@ def boost_package(build, env, name, version=None):
         libname = 'boost_' + name
 
     return BoostPackage(
-        [headers], [_find_library(env, libname, search_dirs)],
+        [headers],
+        [_find_library(env, _boost_name(env, i), search_dirs)
+         for i in iterate(name)],
         curr_version
     )
 
