@@ -73,13 +73,16 @@ class Link(Edge):
         # XXX: Try to detect if a string refers to a shared lib?
         libs = [sourcify(i, Library, StaticLibrary) for i in iterate(libs)]
 
-        self.project_name = self.__project(name, mode)
         self.files = object_files.bind(build, env)(
             files, include, packages, compile_options, lang
         )
+        if len(self.files) == 0:
+            raise ValueError('need at least one source file')
+
         self.builder = env.linker((i.lang for i in self.files), mode)
         self.libs = sum((i.libraries for i in iterate(packages)), libs)
         self.options = shell.listify(link_options)
+        self.project_name = self.__project(name, mode)
 
         target = self.builder.output_file(name)
         build.fallback_default = target
