@@ -1,7 +1,11 @@
 import os.path
+import re
+from packaging.specifiers import SpecifierSet
+from packaging.version import Version
 
 from . import builtin
 from .. import path
+from ..build_inputs import objectify
 from ..file_types import *
 from ..platforms import which
 
@@ -26,20 +30,56 @@ def _find_library(env, name, search_dirs):
 def system_package(build, env, name):
     return Package([], [_find_library(env, name, env.lib_dirs)])
 
+class BoostPackage(Package):
+    def __init__(self, includes, libraries, version):
+        Package.__init__(self, includes, libraries)
+        self.version = version
+
+def _boost_version(headers):
+    version_hpp = headers.path.append('boost').append('version.hpp')
+    with open(version_hpp.realize(None)) as f:
+        for line in f:
+            m = re.match(r'#\s*define\s+BOOST_LIB_VERSION\s+"([\d_]+)"', line)
+            if m:
+                return Version(m.group(1).replace('_', '.'))
+    raise IOError("unable to parse 'boost/version.hpp'")
+
 @builtin
-def boost_package(build, env, name):
+def boost_package(build, env, name, version=None):
     root = env.getvar('BOOST_ROOT')
     if root:
-        headers = [HeaderDirectory(os.path.join(root, 'include'),
-                                   root=path.Root.absolute)]
+        headers = HeaderDirectory(os.path.join(root, 'include'),
+                                  root=path.Root.absolute)
         search_dirs = [os.path.join(root, 'lib')]
+        curr_version = _boost_version(headers)
     else:
-        headers = []
+        dirs = env.platform.include_dirs
         search_dirs = env.platform.lib_dirs
+        if env.platform.name == 'windows':
+            dirs.append(r'C:\Boost')
 
-    # XXX: Figure out what to do for Windows, which usually has Boost's version
+        for i in dirs:
+            try:
+                headers = HeaderDirectory(i, root=path.Root.absolute)
+                curr_version = _boost_version(headers)
+                break
+            except IOError as e:
+                pass
+        else:
+            raise e
+
+    if version:
+        req_version = objectify(version, SpecifierSet, None)
+        if curr_version not in req_version:
+            raise ValueError("version {ver} doesn't meet requirement {req}"
+                             .format(ver=curr_version, req=req_version))
+
+    # TODO: Figure out what to do for Windows, which usually has Boost's version
     # number and build settings in the filename.
-    return Package(headers, [_find_library(env, 'boost_' + name, search_dirs)])
+    return BoostPackage(
+        [headers], [_find_library(env, 'boost_' + name, search_dirs)],
+        curr_version
+    )
 
 @builtin
 def system_executable(build, env, name):

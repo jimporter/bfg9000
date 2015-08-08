@@ -44,6 +44,10 @@ class PosixPlatform(Platform):
         return False
 
     @property
+    def include_dirs(self):
+        return ['/usr/local/include', '/usr/include']
+
+    @property
     def lib_dirs(self):
         return ['/usr/local/lib', '/lib', '/usr/lib']
 
@@ -94,6 +98,11 @@ class WindowsPlatform(Platform):
     @property
     def has_rpath(self):
         return False
+
+    @property
+    def include_dirs(self):
+        # TODO: Provide a list of include paths
+        return []
 
     @property
     def lib_dirs(self):
