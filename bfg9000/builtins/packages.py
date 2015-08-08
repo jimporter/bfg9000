@@ -74,10 +74,18 @@ def boost_package(build, env, name, version=None):
             raise ValueError("version {ver} doesn't meet requirement {req}"
                              .format(ver=curr_version, req=req_version))
 
-    # TODO: Figure out what to do for Windows, which usually has Boost's version
-    # number and build settings in the filename.
+    if env.platform.name == 'windows':
+        # XXX: Support other configurations.
+        vs_version = env.getvar('VISUALSTUDIOVERSION').replace('.', '')
+        libname = 'boost_{name}-vc{vs}-mt-{version}'.format(
+            name=name, vs=vs_version,
+            version=str(curr_version).replace('.', '_')
+        )
+    else:
+        libname = 'boost_' + name
+
     return BoostPackage(
-        [headers], [_find_library(env, 'boost_' + name, search_dirs)],
+        [headers], [_find_library(env, libname, search_dirs)],
         curr_version
     )
 
