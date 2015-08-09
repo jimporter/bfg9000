@@ -67,6 +67,8 @@ def write(env, build_inputs):
                     e.files, build_inputs.global_options
                 ),
                 includes=reduce_includes(e.files),
+                link_options=e.builder.global_args +
+                    build_inputs.global_link_options + e.options,
                 libs=e.libs,
                 dependencies=dependencies,
             )

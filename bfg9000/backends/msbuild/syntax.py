@@ -145,7 +145,8 @@ class VcxProject(object):
     def __init__(self, name, uuid, version=None, mode='Application',
                  configuration=None, platform=None, output_file=None,
                  import_lib=None, srcdir=None, files=None, compile_options=None,
-                 includes=None, libs=None, libdirs=None, dependencies=None):
+                 includes=None, link_options=None, libs=None, libdirs=None,
+                 dependencies=None):
         self.name = name
         self.uuid = uuid
         self.version = version or '14.0'
@@ -157,6 +158,7 @@ class VcxProject(object):
         self.files = files or []
         self.compile_options = compile_options or []
         self.includes = includes or []
+        self.link_options = link_options or []
         self.libs = libs or []
         self.libdirs = libdirs or []
         self.dependencies = dependencies or []
@@ -212,6 +214,11 @@ class VcxProject(object):
         if len(self.output_files) == 2:
             link_opts.append(E.ImportLibrary(
                 path_str(self.output_files[1], out=True)
+            ))
+        if self.link_options:
+            link_opts.append(E.AdditionalOptions(
+                ' '.join(shell.quote(i) for i in self.link_options) +
+                ' %(AdditionalOptions)'
             ))
         if self.libs:
             link_opts.append(E.AdditionalDependencies(
