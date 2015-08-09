@@ -45,35 +45,27 @@ def _boost_version(headers):
                 return Version(m.group(1).replace('_', '.'))
     raise IOError("unable to parse 'boost/version.hpp'")
 
-def _boost_name(env, name):
-    if env.platform.name == 'windows':
-        # XXX: Support other configurations.
-        vs_version = env.getvar('VISUALSTUDIOVERSION').replace('.', '')
-        return 'boost_{name}-vc{vs}-mt-{version}'.format(
-            name=name, vs=vs_version,
-            version=str(curr_version).replace('.', '_')
-        )
-    else:
-        return 'boost_' + name
-
 @builtin
 def boost_package(build, env, name=None, version=None):
+    pjoin = os.path.join
     root = env.getvar('BOOST_ROOT')
-    if root:
-        headers = HeaderDirectory(os.path.join(root, 'include'),
-                                  root=path.Root.absolute)
-        search_dirs = [os.path.join(root, 'lib')]
-        curr_version = _boost_version(headers)
+
+    inc_var = env.getvar('BOOST_INCLUDEDIR', os.path.join(root, 'include')
+                         if root else None)
+    lib_var = env.getvar('BOOST_LIBRARYDIR', os.path.join(root, 'lib')
+                         if root else None)
+
+    if inc_var:
+        headers = [HeaderDirectory(inc_var, root=path.Root.absolute)]
+        boost_version = _boost_version(headers[0])
     else:
         dirs = env.platform.include_dirs
-        search_dirs = env.platform.lib_dirs
         if env.platform.name == 'windows':
-            dirs.append(r'C:\Boost')
-
+            dirs.append(r'C:\Boost\include')
         for i in dirs:
             try:
-                headers = HeaderDirectory(i, root=path.Root.absolute)
-                curr_version = _boost_version(headers)
+                headers = [HeaderDirectory(i, root=path.Root.absolute)]
+                boost_version = _boost_version(headers[0])
                 break
             except IOError as e:
                 pass
@@ -82,26 +74,22 @@ def boost_package(build, env, name=None, version=None):
 
     if version:
         req_version = objectify(version, SpecifierSet, None)
-        if curr_version not in req_version:
+        if boost_version not in req_version:
             raise ValueError("version {ver} doesn't meet requirement {req}"
-                             .format(ver=curr_version, req=req_version))
+                             .format(ver=boost_version, req=req_version))
 
     if env.platform.name == 'windows':
-        # XXX: Support other configurations.
-        vs_version = env.getvar('VISUALSTUDIOVERSION').replace('.', '')
-        libname = 'boost_{name}-vc{vs}-mt-{version}'.format(
-            name=name, vs=vs_version,
-            version=str(curr_version).replace('.', '_')
-        )
+        if not env.compiler('c++').auto_link:
+            # XXX: Don't require auto-link
+            raise ValueError('Boost on Windows requires auto-link')
+        # XXX: Try to find the appropriate lib directory for auto-link?
+        libraries = []
     else:
-        libname = 'boost_' + name
+        dirs = [lib_var] if lib_var else env.platform.lib_dirs
+        libraries = [_find_library(env, 'boost_' + i, dirs)
+                     for i in iterate(name)]
 
-    return BoostPackage(
-        [headers],
-        [_find_library(env, _boost_name(env, i), search_dirs)
-         for i in iterate(name)],
-        curr_version
-    )
+    return BoostPackage(headers, libraries, boost_version)
 
 @builtin
 def system_executable(build, env, name):

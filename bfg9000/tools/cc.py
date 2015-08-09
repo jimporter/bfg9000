@@ -31,6 +31,10 @@ class CcCompilerBase(object):
         return 'gcc'
 
     @property
+    def auto_link(self):
+        return False
+
+    @property
     def library_args(self):
         return ['-fPIC']
 

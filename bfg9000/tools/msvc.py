@@ -33,6 +33,10 @@ class MSVCCompiler(object):
         return 'msvc'
 
     @property
+    def auto_link(self):
+        return True
+
+    @property
     def library_args(self):
         return []
 
