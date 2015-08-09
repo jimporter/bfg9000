@@ -5,6 +5,7 @@ from shlex import shlex
 from . import platforms
 from . import iterutils
 
+# XXX: Provide a Windows version of this function
 def split(s):
     if not isinstance(s, basestring):
         raise TypeError('expected a string')
