@@ -4,6 +4,7 @@ from packaging.specifiers import SpecifierSet
 from packaging.version import Version
 
 from . import builtin
+from .find import find
 from .. import path
 from ..build_inputs import objectify
 from ..file_types import *
@@ -59,10 +60,13 @@ def boost_package(build, env, name=None, version=None):
         headers = [HeaderDirectory(inc_var, root=path.Root.absolute)]
         boost_version = _boost_version(headers[0])
     else:
-        dirs = env.platform.include_dirs
+        include_dirs = env.platform.include_dirs
         if env.platform.name == 'windows':
-            dirs.append(r'C:\Boost\include')
-        for i in dirs:
+            dirs = find(r'C:\Boost\include', 'boost-*', type='d', flat=True)
+            if dirs:
+                include_dirs.insert(0, max(dirs))
+
+        for i in include_dirs:
             try:
                 headers = [HeaderDirectory(i, root=path.Root.absolute)]
                 boost_version = _boost_version(headers[0])

@@ -2,7 +2,7 @@ import fnmatch
 import os
 
 from . import builtin
-from ..iterutils import listify
+from ..iterutils import iterate
 from ..backends.make.syntax import Writer, Syntax
 
 depfile_name = '.bfg_find_deps'
@@ -33,7 +33,7 @@ def _walk_flat(path):
 def _find_files(paths, name, type, flat):
     results = []
     seen_dirs = []
-    for p in paths:
+    for p in iterate(paths):
         if type != 'f' and fnmatch.fnmatch(p, name):
             results.append(p)
 
@@ -52,10 +52,13 @@ def _find_files(paths, name, type, flat):
 
     return results, seen_dirs
 
+def find(path='.', name='*', type=None, flat=False):
+    return _find_files(path, name, type, flat)[0]
+
 @builtin
 def find_files(build_inputs, env, path='.', name='*', type=None, flat=False,
                cache=True):
-    results, seen_dirs = _find_files(listify(path), name, type, flat)
+    results, seen_dirs = _find_files(path, name, type, flat)
     if cache:
         build_inputs.find_dirs.update(seen_dirs)
     return results
