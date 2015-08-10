@@ -60,12 +60,11 @@ def command_build(buildfile, output, inputs=None, implicit=None,
     )
 
 def cmd_var(cmd, buildfile):
-    name = cmd.command_var.upper()
+    name = cmd.command_var
     return buildfile.variable(name, cmd.command_name, Section.command, True)
 
 def flags_vars(name, value, buildfile):
-    name = name.upper()
-    gflags = buildfile.variable('GLOBAL_' + name, value, Section.flags, True)
+    gflags = buildfile.variable('global_' + name, value, Section.flags, True)
     flags = buildfile.variable(name, gflags, Section.other, True)
     return gflags, flags
 
@@ -84,12 +83,12 @@ def install_rule(install_targets, buildfile, env):
 
     def install_cmd(kind):
         sec = Section.command
-        install = buildfile.variable('INSTALL', 'install', sec, True)
+        install = buildfile.variable('install', 'install', sec, True)
         if kind == 'program':
-            return buildfile.variable('INSTALL_PROGRAM', install, sec, True)
+            return buildfile.variable('install_program', install, sec, True)
         else:
             cmd = [install, '-m', '644']
-            return buildfile.variable('INSTALL_DATA', cmd, sec, True)
+            return buildfile.variable('install_data', cmd, sec, True)
 
     def install_line(file):
         src = file.path
@@ -280,7 +279,7 @@ def emit_link(rule, build_inputs, buildfile):
 @rule_handler('Alias')
 def emit_alias(rule, build_inputs, buildfile):
     buildfile.build(
-        output=rule.target.path,
+        output=rule.target,
         rule='phony',
         inputs=rule.extra_deps
     )
@@ -289,7 +288,7 @@ def emit_alias(rule, build_inputs, buildfile):
 def emit_command(rule, build_inputs, buildfile):
     command_build(
         buildfile,
-        output=rule.target.path,
+        output=rule.target,
         inputs=rule.extra_deps,
         commands=rule.cmds
     )
