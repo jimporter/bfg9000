@@ -6,6 +6,10 @@ class Node(object):
     def __init__(self):
         self.creator = None
 
+    @property
+    def all(self):
+        return [self]
+
     def _safe_str(self):
         return safe_str(self.path)
 
@@ -46,7 +50,7 @@ class Phony(Node):
 
 class Edge(object):
     def __init__(self, build, target, extra_deps=None):
-        for t in iterate(target):
+        for t in target.all:
             t.creator = self
         self.target = target
 
@@ -88,6 +92,6 @@ class BuildInputs(object):
         if self.default_targets:
             return self.default_targets
         elif self.fallback_default:
-            return listify(self.fallback_default)
+            return [self.fallback_default]
         else:
             return []

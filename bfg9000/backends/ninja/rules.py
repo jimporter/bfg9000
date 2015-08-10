@@ -240,14 +240,12 @@ def emit_link(rule, build_inputs, buildfile):
     command_kwargs = {}
     ldflags_value = list(linker.mode_args)
 
-    # Get the path for the DLL if this is a Windows build.
-    path = iterutils.first(rule.target).path
-    variables[var('output')] = path
+    variables[var('output')] = rule.target.path
 
     if linker.mode != 'static_library':
         ldflags_value.extend(rule.options)
         ldflags_value.extend(linker.lib_dirs(rule.libs))
-        ldflags_value.extend(linker.rpath(rule.libs, path.parent()))
+        ldflags_value.extend(linker.rpath(rule.libs, rule.target.path.parent()))
         ldflags_value.extend(linker.import_lib(rule.target))
 
         global_ldlibs, ldlibs = flags_vars(
@@ -269,7 +267,7 @@ def emit_link(rule, build_inputs, buildfile):
 
     lib_deps = [i for i in rule.libs if i.creator]
     buildfile.build(
-        output=rule.target,
+        output=rule.target.all,
         rule=linker.name,
         inputs=rule.files,
         implicit=lib_deps + rule.extra_deps,

@@ -33,20 +33,6 @@ def tween(iterable, delim, prefix=None, suffix=None, flag=True):
     if not first and suffix is not None:
         yield item(True, suffix)
 
-def flatten(iterable):
-    for i in iterable:
-        if isiterable(i):
-            for j in i:
-                yield j
-        else:
-            yield i
-
-def first(thing):
-    if isiterable(thing):
-        return next(iter(thing))
-    else:
-        return thing
-
 def uniques(iterable):
     def generate_uniques(iterable):
         seen = set()

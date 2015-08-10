@@ -232,13 +232,10 @@ def emit_link(rule, build_inputs, buildfile, env):
     command_kwargs = {}
     ldflags_value = list(linker.mode_args)
 
-    # Get the path for the DLL if this is a Windows build.
-    path = iterutils.first(rule.target).path
-
     if linker.mode != 'static_library':
         ldflags_value.extend(rule.options)
         ldflags_value.extend(linker.lib_dirs(rule.libs))
-        ldflags_value.extend(linker.rpath(rule.libs, path.parent()))
+        ldflags_value.extend(linker.rpath(rule.libs, rule.target.path.parent()))
         ldflags_value.extend(linker.import_lib(rule.target))
 
         global_ldlibs, ldlibs = flags_vars(
@@ -260,17 +257,15 @@ def emit_link(rule, build_inputs, buildfile, env):
             )
         ])
 
-    recipe = Call(recipename, rule.files, path)
-    if iterutils.isiterable(rule.target):
-        target = path.addext('.stamp')
-        buildfile.rule(target=rule.target, deps=[target])
+    recipe = Call(recipename, rule.files, rule.target.path)
+    if len(rule.target.all) > 1:
+        target = rule.target.path.addext('.stamp')
+        buildfile.rule(target=rule.target.all, deps=[target])
         recipe = [recipe, ['@touch', var('@')]]
     else:
-        target = path
+        target = rule.target
 
-    dirs = iterutils.uniques(
-        i.path.parent() for i in iterutils.iterate(rule.target)
-    )
+    dirs = iterutils.uniques(i.path.parent() for i in rule.target.all)
     lib_deps = [i for i in rule.libs if i.creator]
     buildfile.rule(
         target=target,

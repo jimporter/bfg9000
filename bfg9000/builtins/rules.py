@@ -6,7 +6,7 @@ from .packages import system_executable
 from ..build_inputs import Directory, Edge, File, Phony, objectify, sourcify
 from ..file_types import *
 from ..path import Path, Root
-from ..iterutils import flatten, iterate, listify
+from ..iterutils import iterate, listify
 
 class TestCase(object):
     def __init__(self, target, options, env):
@@ -176,15 +176,20 @@ def command(build, env, *args, **kwargs):
 def default(build, env, *args):
     if len(args) == 0:
         raise ValueError('expected at least one argument')
-    build.default_targets.extend(
-        i for i in flatten(args) if i.creator
-    )
+    build.default_targets.extend(i for i in args if i.creator)
+
+def _flatten(args):
+    for i in args:
+        for j in i.all:
+            yield j
 
 @builtin
-def install(build, env, *args):
+def install(build, env, *args, **kwargs):
     if len(args) == 0:
         raise ValueError('expected at least one argument')
-    for i in flatten(args):
+    all_files = kwargs.pop('all', True)
+
+    for i in _flatten(args) if all_files else args:
         if isinstance(i, Directory):
             build.install_targets.directories.append(i)
         else:
@@ -209,9 +214,9 @@ def test_driver(build, env, driver, options=None, environment=None,
 
 @builtin
 def test_deps(build, env, *args):
-    build.tests.extra_deps.extend(
-        i for i in flatten(args) if i.creator
-    )
+    if len(args) == 0:
+        raise ValueError('expected at least one argument')
+    build.tests.extra_deps.extend(i for i in args if i.creator)
 
 @builtin
 def global_options(build, env, options, lang):

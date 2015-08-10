@@ -69,8 +69,7 @@ class MSVCLinker(object):
             )
         elif self.mode == 'shared_library':
             ext = self.platform.shared_library_ext
-            dll = DllLibrary(name + ext, Root.builddir)
-            return SharedLibrary(name + '.lib', Root.builddir, dll)
+            return DllLibrary(name + ext, name + '.lib', Root.builddir)
         else:
             raise ValueError("unknown mode '{}'".format(self.mode))
 
@@ -83,12 +82,12 @@ class MSVCLinker(object):
         return ['/LIBPATH:' + i for i in dirs]
 
     def link_lib(self, library):
-        return [library.path.basename()]
+        return [library.link.path.basename()]
 
     def import_lib(self, library):
         if self.mode != 'shared_library':
             return []
-        return ['/IMPLIB:' + library.path]
+        return ['/IMPLIB:' + library.import_lib.path]
 
     def rpath(self, libraries, start):
         return []

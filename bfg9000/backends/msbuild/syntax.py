@@ -153,7 +153,7 @@ class VcxProject(object):
         self.mode = mode
         self.configuration = configuration or 'Debug'
         self.platform = platform or 'Win32'
-        self.output_files = iterutils.listify(output_file)
+        self.output_file = output_file
         self.srcdir = srcdir
         self.files = files or []
         self.compile_options = compile_options or []
@@ -191,7 +191,7 @@ class VcxProject(object):
                 ';'.join(self.libdirs + ['$(LibraryPath)'])
             ))
         override_props.append(E.TargetPath(
-            path_str(self.output_files[0], out=True)
+            path_str(self.output_file, out=True)
         ))
 
         compile_opts = E.ClCompile(
@@ -209,11 +209,10 @@ class VcxProject(object):
             ))
 
         link_opts = E.Lib() if self.mode == 'StaticLibrary' else E.Link()
-        if len(self.output_files) >= 1:
-            link_opts.append(E.OutputFile('$(TargetPath)'))
-        if len(self.output_files) == 2:
+        link_opts.append(E.OutputFile('$(TargetPath)'))
+        if hasattr(self.output_file, 'import_lib'):
             link_opts.append(E.ImportLibrary(
-                path_str(self.output_files[1], out=True)
+                path_str(self.output_file.import_lib, out=True)
             ))
         if self.link_options:
             link_opts.append(E.AdditionalOptions(
@@ -222,7 +221,7 @@ class VcxProject(object):
             ))
         if self.libs:
             link_opts.append(E.AdditionalDependencies(
-                ';'.join(path_str(i, out=True) for i in self.libs) +
+                ';'.join(path_str(i.link, out=True) for i in self.libs) +
                 ';%(AdditionalDependencies)'
             ))
 

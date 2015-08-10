@@ -85,17 +85,16 @@ class CcLinkerBase(object):
             )
         elif self.mode == 'shared_library':
             head, tail = os.path.split(name)
-            def libpath(prefix='lib'):
+            def lib(prefix='lib'):
                 return os.path.join(
-                    head, 'lib' + tail + self.platform.shared_library_ext
+                    head, prefix + tail + self.platform.shared_library_ext
                 )
 
             if self.platform.has_import_library:
                 dllprefix = 'cyg' if self.platform.name == 'cygwin' else 'lib'
-                dll = DllLibrary(libpath(dllprefix), Root.builddir)
-                return SharedLibrary(libpath() + '.a', Root.builddir, dll)
+                return DllLibrary(lib(dllprefix), lib() + '.a', Root.builddir)
             else:
-                return SharedLibrary(libpath(), Root.builddir)
+                return SharedLibrary(lib(), Root.builddir)
         else:
             raise ValueError("unknown mode '{}'".format(self.mode))
 
@@ -108,7 +107,7 @@ class CcLinkerBase(object):
         return ['-L' + i for i in dirs]
 
     def link_lib(self, library):
-        lib_name = library.path.basename()
+        lib_name = library.link.path.basename()
         m = self._lib_re.match(lib_name)
         if not m:
             raise ValueError("'{}' is not a valid library".format(lib_name))
@@ -116,7 +115,7 @@ class CcLinkerBase(object):
 
     def import_lib(self, library):
         if self.platform.has_import_library and self.mode == 'shared_library':
-            return ['-Wl,--out-implib=' + library.path]
+            return ['-Wl,--out-implib=' + library.import_lib.path]
         return []
 
     def rpath(self, libraries, start):

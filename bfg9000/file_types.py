@@ -25,30 +25,38 @@ class ObjectFile(build_inputs.File):
 
 class Binary(build_inputs.File):
     install_kind = 'program'
-    install_root = InstallRoot.bindir
 
 class Executable(Binary):
-    pass
+    install_root = InstallRoot.bindir
 
 class Library(Binary):
     install_root = InstallRoot.libdir
+
+    @property
+    def link(self):
+        return self
 
 class StaticLibrary(Library):
     pass
 
 class SharedLibrary(Library):
-    def __init__(self, name, root, dll=None):
-        Library.__init__(self, name, root)
-        self.dll = dll
-
-    def __iter__(self):
-        # This allows a shared lib on Windows to be "flattened" into the
-        # import lib and DLL for various functions like default() and install(),
-        # which should apply to both by default.
-        if self.dll is not None:
-            yield self.dll
-        yield self
-
-# Used for Windows DLL files, which aren't linked to directly.
-class DllLibrary(Binary):
     pass
+
+class ImportLibrary(SharedLibrary):
+    pass
+
+class DllLibrary(SharedLibrary):
+    install_root = InstallRoot.bindir
+
+    def __init__(self, name, import_name, root):
+        SharedLibrary.__init__(self, name, root)
+        self.import_lib = ImportLibrary(import_name, root)
+
+    @property
+    def all(self):
+        return [self, self.import_lib]
+
+    @property
+    def link(self):
+        return self.import_lib
+
