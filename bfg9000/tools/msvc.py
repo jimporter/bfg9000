@@ -12,6 +12,7 @@ class MSVCCompiler(object):
         self.name = 'cxx'
         self.command_var = 'cxx'
         self.global_args = (
+            ['/nologo'] +
             shell.split(env.getvar('CXXFLAGS', '')) +
             shell.split(env.getvar('CPPFLAGS', ''))
         )
@@ -51,7 +52,7 @@ class MSVCLinker(object):
         self.name = 'link'
         self.command_var = 'link'
         self.link_var = 'ld'
-        self.global_args = shell.split(env.getvar('LDFLAGS', ''))
+        self.global_args = ['/nologo'] + shell.split(env.getvar('LDFLAGS', ''))
         self.global_libs = shell.split(env.getvar('LDLIBS', ''))
 
     def command(self, cmd, input, output, libs=None, args=None):
