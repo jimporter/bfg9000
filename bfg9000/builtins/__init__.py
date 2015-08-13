@@ -12,6 +12,7 @@ class Binder(object):
         self.__fn = fn
 
     def bind(self, **kwargs):
+        # XXX: partial doesn't forward the docstring of the function.
         return functools.partial(self.__fn, *[kwargs[i] for i in self.__args])
 
 def _decorate_builtin(*args):
