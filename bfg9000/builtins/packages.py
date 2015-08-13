@@ -28,8 +28,8 @@ def _find_library(env, name, search_dirs):
                 return candidate
     raise ValueError("unable to find package '{}'".format(name))
 
-@builtin
-def system_package(build, env, name):
+@builtin.globals('env')
+def system_package(env, name):
     return Package([], [_find_library(env, name, env.lib_dirs)])
 
 class BoostPackage(Package):
@@ -46,8 +46,8 @@ def _boost_version(headers):
                 return Version(m.group(1).replace('_', '.'))
     raise IOError("unable to parse 'boost/version.hpp'")
 
-@builtin
-def boost_package(build, env, name=None, version=None):
+@builtin.globals('env')
+def boost_package(env, name=None, version=None):
     pjoin = os.path.join
     root = env.getvar('BOOST_ROOT')
 
@@ -95,6 +95,6 @@ def boost_package(build, env, name=None, version=None):
 
     return BoostPackage(headers, libraries, boost_version)
 
-@builtin
-def system_executable(build, env, name):
+@builtin.globals('env')
+def system_executable(env, name):
     return Executable(which(name, env.variables), root=path.Root.absolute)

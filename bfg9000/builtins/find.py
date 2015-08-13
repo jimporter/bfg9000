@@ -46,8 +46,6 @@ def _walk_recursive(top):
             for i in _walk_recursive(path):
                 yield i
 
-# FIXME: Always use forward slashes for path delimiters here? That way filtering
-# the results after the fact is predictable.
 def _find_files(paths, name, type, flat):
     results = []
     seen_dirs = []
@@ -75,8 +73,8 @@ def _find_files(paths, name, type, flat):
 def find(path='.', name='*', type=None, flat=False):
     return _find_files(path, name, type, flat)[0]
 
-@builtin
-def find_files(build_inputs, env, path='.', name='*', type=None, flat=False,
+@builtin.globals('build_inputs')
+def find_files(build_inputs, path='.', name='*', type=None, flat=False,
                cache=True):
     results, seen_dirs = _find_files(path, name, type, flat)
     if cache:

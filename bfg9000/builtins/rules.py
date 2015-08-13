@@ -1,6 +1,6 @@
 import os.path
 
-from . import builtin
+from . import builtin, builtin
 from .. import shell
 from .packages import system_executable
 from ..build_inputs import Directory, Edge, File, Phony, objectify, sourcify
@@ -67,7 +67,7 @@ class Link(Edge):
         head, tail = os.path.split(name)
         return os.path.join(head, cls.__project_prefixes[mode] + tail)
 
-    def __init__(self, build, env, mode, name, files, libs=None, include=None,
+    def __init__(self, build, env, mode, name, files, include=None, libs=None,
                  packages=None, compile_options=None, link_options=None,
                  lang=None, extra_deps=None):
         # XXX: Try to detect if a string refers to a shared lib?
@@ -107,19 +107,19 @@ class Command(Edge):
 #####
 
 @builtin
-def source_file(build, env, name, lang=None):
+def source_file(name, lang=None):
     # XXX: Add a way to make a generic File object instead of a SourceFile?
     return SourceFile(name, root=Root.srcdir, lang=lang)
 
 @builtin
-def header(build, env, name):
+def header(name):
     return HeaderFile(name, root=Root.srcdir)
 
 @builtin
-def header_directory(build, env, directory):
+def header_directory(directory):
     return HeaderDirectory(directory, root=Root.srcdir)
 
-@builtin
+@builtin.globals('build_inputs', 'env')
 def object_file(build, env, name=None, file=None, *args, **kwargs):
     if file is None:
         if name is None:
@@ -128,14 +128,14 @@ def object_file(build, env, name=None, file=None, *args, **kwargs):
     else:
         return Compile(build, env, name, file, *args, **kwargs).target
 
-@builtin
+@builtin.globals('build_inputs', 'env')
 def object_files(build, env, files, *args, **kwargs):
     def _compile(file, *args, **kwargs):
         return Compile(build, env, None, file, *args, **kwargs).target
     return ObjectFiles(objectify(i, ObjectFile, _compile, *args, **kwargs)
                        for i in iterate(files))
 
-@builtin
+@builtin.globals('build_inputs', 'env')
 def executable(build, env, name, files=None, *args, **kwargs):
     if files is None:
         return Executable(name, root=Root.srcdir, *args, **kwargs)
@@ -143,7 +143,7 @@ def executable(build, env, name, files=None, *args, **kwargs):
         return Link(build, env, 'executable', name, files, *args,
                     **kwargs).target
 
-@builtin
+@builtin.globals('build_inputs', 'env')
 def static_library(build, env, name, files=None, *args, **kwargs):
     if files is None:
         return StaticLibrary(name, root=Root.srcdir, *args, **kwargs)
@@ -151,7 +151,7 @@ def static_library(build, env, name, files=None, *args, **kwargs):
         return Link(build, env, 'static_library', name, files, *args,
                     **kwargs).target
 
-@builtin
+@builtin.globals('build_inputs', 'env')
 def shared_library(build, env, name, files=None, *args, **kwargs):
     if files is None:
         # XXX: What to do here for Windows, which has a separate DLL file?
@@ -162,18 +162,18 @@ def shared_library(build, env, name, files=None, *args, **kwargs):
             i.creator.in_shared_library = True
         return rule.target
 
-@builtin
-def alias(build, env, *args, **kwargs):
+@builtin.globals('build_inputs')
+def alias(build, *args, **kwargs):
     return Alias(build, *args, **kwargs).target
 
-@builtin
-def command(build, env, *args, **kwargs):
+@builtin.globals('build_inputs')
+def command(build, *args, **kwargs):
     return Command(build, *args, **kwargs).target
 
 #####
 
-@builtin
-def default(build, env, *args):
+@builtin.globals('build_inputs')
+def default(build, *args):
     if len(args) == 0:
         raise ValueError('expected at least one argument')
     build.default_targets.extend(i for i in args if i.creator)
@@ -183,8 +183,8 @@ def _flatten(args):
         for j in i.all:
             yield j
 
-@builtin
-def install(build, env, *args, **kwargs):
+@builtin.globals('build_inputs')
+def install(build, *args, **kwargs):
     if len(args) == 0:
         raise ValueError('expected at least one argument')
     all_files = kwargs.pop('all', True)
@@ -193,37 +193,37 @@ def install(build, env, *args, **kwargs):
         if isinstance(i, Directory):
             build.install_targets.directories.append(i)
         else:
-            default.bind(build, env)(i)
+            default.bind(build)(i)
             build.install_targets.files.append(i)
 
-@builtin
-def test(build, env, test, options=None, environment=None, driver=None):
+@builtin.globals('build_inputs')
+def test(build, test, options=None, environment=None, driver=None):
     test = sourcify(test, File)
     build.tests.targets.append(test)
     case = TestCase(test, shell.listify(options), environment or {})
     (driver or build.tests).tests.append(case)
     return case
 
-@builtin
+@builtin.globals('build_inputs', 'env')
 def test_driver(build, env, driver, options=None, environment=None,
                 parent=None):
-    driver = objectify(driver, Executable, system_executable.bind(build, env))
+    driver = objectify(driver, Executable, system_executable.bind(env))
     result = TestDriver(driver, shell.listify(options), environment or {})
     (parent or build.tests).tests.append(result)
     return result
 
-@builtin
-def test_deps(build, env, *args):
+@builtin.globals('build_inputs')
+def test_deps(build, *args):
     if len(args) == 0:
         raise ValueError('expected at least one argument')
     build.tests.extra_deps.extend(i for i in args if i.creator)
 
-@builtin
-def global_options(build, env, options, lang):
+@builtin.globals('build_inputs')
+def global_options(build, options, lang):
     if not lang in build.global_options:
         build.global_options[lang] = []
     build.global_options[lang].extend(shell.listify(options))
 
-@builtin
-def global_link_options(build, env, options):
+@builtin.globals('build_inputs')
+def global_link_options(build, options):
     build.global_link_options.extend(shell.listify(options))

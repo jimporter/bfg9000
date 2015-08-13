@@ -131,6 +131,8 @@ def main():
 
     build = BuildInputs()
     os.chdir(env.srcdir)
-    execfile(os.path.join(env.srcdir, bfgfile), builtins.bind(build, env))
+    execfile(os.path.join(env.srcdir, bfgfile), builtins.bind(
+        build_inputs=build, env=env
+    ))
 
     backends[env.backend].write(env, build)
