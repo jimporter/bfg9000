@@ -1,7 +1,7 @@
+import functools
 import importlib
 import os
 import pkgutil
-from functools import partial
 
 _all_builtins = {}
 _loaded_builtins = False
@@ -11,17 +11,8 @@ class Binder(object):
         self.__args = args
         self.__fn = fn
 
-    def bind(self, *args, **kwargs):
-        if args and kwargs:
-            raise TypeError('positional and keyword arguments cannot be ' +
-                            'passed together')
-        if kwargs:
-            return partial(self.__fn, *[kwargs[i] for i in self.__args])
-
-        if len(args) != len(self.__args):
-            raise ValueError('binder takes exactly {} arguments ({} given)'
-                             .format( len(self.__args), len(args) ))
-        return partial(self.__fn, *args)
+    def bind(self, **kwargs):
+        return functools.partial(self.__fn, *[kwargs[i] for i in self.__args])
 
 def _decorate_builtin(*args):
     def wrapper(fn):
@@ -44,10 +35,10 @@ def bind(**kwargs):
         _load_builtins()
         _loaded_builtins = True
 
-    result = {}
+    builtins = {}
     for k, v in _all_builtins.iteritems():
-        result[k] = v.bind(**kwargs)
+        builtins[k] = v.bind(builtins=builtins, **kwargs)
 
     # XXX: Make this more generic?
-    result['env'] = kwargs['env']
-    return result
+    builtins['env'] = kwargs['env']
+    return builtins

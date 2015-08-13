@@ -67,13 +67,13 @@ class Link(Edge):
         head, tail = os.path.split(name)
         return os.path.join(head, cls.__project_prefixes[mode] + tail)
 
-    def __init__(self, build, env, mode, name, files, include=None, libs=None,
-                 packages=None, compile_options=None, link_options=None,
-                 lang=None, extra_deps=None):
+    def __init__(self, builtins, build, env, mode, name, files, include=None,
+                 libs=None, packages=None, compile_options=None,
+                 link_options=None, lang=None, extra_deps=None):
         # XXX: Try to detect if a string refers to a shared lib?
         libs = [sourcify(i, Library, StaticLibrary) for i in iterate(libs)]
 
-        self.files = object_files.bind(build, env)(
+        self.files = builtins['object_files'](
             files, include, packages, compile_options, lang
         )
         if len(self.files) == 0:
@@ -135,29 +135,30 @@ def object_files(build, env, files, *args, **kwargs):
     return ObjectFiles(objectify(i, ObjectFile, _compile, *args, **kwargs)
                        for i in iterate(files))
 
-@builtin.globals('build_inputs', 'env')
-def executable(build, env, name, files=None, *args, **kwargs):
+@builtin.globals('builtins', 'build_inputs', 'env')
+def executable(builtins, build, env, name, files=None, *args, **kwargs):
     if files is None:
         return Executable(name, root=Root.srcdir, *args, **kwargs)
     else:
-        return Link(build, env, 'executable', name, files, *args,
+        return Link(builtins, build, env, 'executable', name, files, *args,
                     **kwargs).target
 
-@builtin.globals('build_inputs', 'env')
-def static_library(build, env, name, files=None, *args, **kwargs):
+@builtin.globals('builtins', 'build_inputs', 'env')
+def static_library(builtins, build, env, name, files=None, *args, **kwargs):
     if files is None:
         return StaticLibrary(name, root=Root.srcdir, *args, **kwargs)
     else:
-        return Link(build, env, 'static_library', name, files, *args,
+        return Link(builtins, build, env, 'static_library', name, files, *args,
                     **kwargs).target
 
-@builtin.globals('build_inputs', 'env')
-def shared_library(build, env, name, files=None, *args, **kwargs):
+@builtin.globals('builtins', 'build_inputs', 'env')
+def shared_library(builtins, build, env, name, files=None, *args, **kwargs):
     if files is None:
         # XXX: What to do here for Windows, which has a separate DLL file?
         return SharedLibrary(name, root=Root.srcdir, *args, **kwargs)
     else:
-        rule = Link(build, env, 'shared_library', name, files, *args, **kwargs)
+        rule = Link(builtins, build, env, 'shared_library', name, files, *args,
+                    **kwargs)
         for i in rule.files:
             i.creator.in_shared_library = True
         return rule.target
@@ -183,8 +184,8 @@ def _flatten(args):
         for j in i.all:
             yield j
 
-@builtin.globals('build_inputs')
-def install(build, *args, **kwargs):
+@builtin.globals('builtins', 'build_inputs')
+def install(builtins, build, *args, **kwargs):
     if len(args) == 0:
         raise ValueError('expected at least one argument')
     all_files = kwargs.pop('all', True)
@@ -193,7 +194,7 @@ def install(build, *args, **kwargs):
         if isinstance(i, Directory):
             build.install_targets.directories.append(i)
         else:
-            default.bind(build)(i)
+            builtins['default'](i)
             build.install_targets.files.append(i)
 
 @builtin.globals('build_inputs')
@@ -204,10 +205,10 @@ def test(build, test, options=None, environment=None, driver=None):
     (driver or build.tests).tests.append(case)
     return case
 
-@builtin.globals('build_inputs', 'env')
-def test_driver(build, env, driver, options=None, environment=None,
+@builtin.globals('builtins', 'build_inputs', 'env')
+def test_driver(builtins, build, env, driver, options=None, environment=None,
                 parent=None):
-    driver = objectify(driver, Executable, system_executable.bind(env))
+    driver = objectify(driver, Executable, builtins['system_executable'])
     result = TestDriver(driver, shell.listify(options), environment or {})
     (parent or build.tests).tests.append(result)
     return result
