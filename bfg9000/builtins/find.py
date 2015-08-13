@@ -1,6 +1,7 @@
 import fnmatch
 import os
 import posixpath
+import re
 
 from . import builtin
 from ..iterutils import iterate
@@ -46,12 +47,17 @@ def _walk_recursive(top):
             for i in _walk_recursive(path):
                 yield i
 
-def _find_files(paths, name, type, flat):
+def _find_files(paths, name, type, flat, filter):
     results = []
     seen_dirs = []
 
     # "Does the walker choose the path, or the path the walker?" - Garth Nix
     walker = _walk_flat if flat else _walk_recursive
+
+    def _filter_in_place(files, type, func):
+        for i in reversed(range( len(files) )):
+            if not func(files[i], type):
+                files.pop(i)
 
     def _filter_join(base, files, name):
         return (posixpath.join(base, i) for i in fnmatch.filter(files, name))
@@ -62,6 +68,10 @@ def _find_files(paths, name, type, flat):
 
         generator = walker(p)
         for path, dirs, files in generator:
+            if filter:
+                _filter_in_place(dirs, 'd', filter)
+                _filter_in_place(files, 'f', filter)
+
             seen_dirs.append(path)
             if type != 'f':
                 results.extend(_filter_join(path, dirs, name))
@@ -71,12 +81,23 @@ def _find_files(paths, name, type, flat):
     return results, seen_dirs
 
 def find(path='.', name='*', type=None, flat=False):
-    return _find_files(path, name, type, flat)[0]
+    return _find_files(path, name, type, flat, None)[0]
 
-@builtin.globals('build_inputs')
-def find_files(build_inputs, path='.', name='*', type=None, flat=False,
-               cache=True):
-    results, seen_dirs = _find_files(path, name, type, flat)
+known_platforms = ['posix', 'linux', 'darwin', 'cygwin', 'windows']
+
+@builtin.globals('env')
+def filter_by_platform(env, name, type):
+    my_plat = set([env.platform.name, env.platform.kind])
+    ex = '|'.join(re.escape(i) for i in known_platforms if i not in my_plat)
+    return re.search(r'(^|_)(' + ex + r')(\.[^\.])?$', name) is None
+
+@builtin.globals('builtins', 'build_inputs', 'env')
+def find_files(builtins, build_inputs, env, path='.', name='*', type=None,
+               flat=False, filter=filter_by_platform, cache=True):
+    if filter == filter_by_platform:
+        filter = builtins['filter_by_platform']
+
+    results, seen_dirs = _find_files(path, name, type, flat, filter)
     if cache:
         build_inputs.find_dirs.update(seen_dirs)
     return results

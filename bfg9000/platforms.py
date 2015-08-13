@@ -11,7 +11,7 @@ def platform_name():
     name = platform.system().lower()
     if name == 'windows':
         try:
-            uname = subprocess.check_output('uname').rstrip().lower()
+            uname = subprocess.check_output('uname').lower()
             if uname.startswith('cygwin'):
                 name = 'cygwin'
         except WindowsError:
@@ -27,6 +27,10 @@ class Platform(object):
         self.name = name
 
 class PosixPlatform(Platform):
+    @property
+    def kind(self):
+        return 'posix'
+
     @property
     def executable_ext(self):
         return ''
@@ -84,6 +88,10 @@ class DarwinPlatform(PosixPlatform):
 
 class WindowsPlatform(Platform):
     @property
+    def kind(self):
+        return 'windows'
+
+    @property
     def executable_ext(self):
         return '.exe'
 
@@ -119,12 +127,19 @@ class WindowsPlatform(Platform):
             InstallRoot.includedir: Path('', InstallRoot.prefix),
         }
 
+class CygwinPlatform(WindowsPlatform):
+    @property
+    def kind(self):
+        return 'posix'
+
 def platform_info(name=None):
     if name is None:
         name = platform_name()
 
-    if name == 'windows' or name == 'cygwin':
+    if name == 'windows':
         return WindowsPlatform(name)
+    elif name == 'cygwin':
+        return CygwinPlatform(name)
     elif name == 'darwin':
         return DarwinPlatform(name)
     elif name == 'linux':
@@ -139,8 +154,7 @@ def which(names, env=None):
     # XXX: Create something to manage host-platform stuff like this?
     # (`Platform` is for targets.)
     paths = env.get('PATH', os.defpath).split(os.pathsep)
-    plat = platform_name()
-    if plat == 'windows' or plat == 'cygwin':
+    if platform_name() in ['windows', 'cygwin']:
         exts = env.get('PATHEXT', '').split(os.pathsep)
     else:
         exts = ['']

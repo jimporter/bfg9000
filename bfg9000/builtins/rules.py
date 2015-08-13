@@ -179,13 +179,13 @@ def default(build, *args):
         raise ValueError('expected at least one argument')
     build.default_targets.extend(i for i in args if i.creator)
 
-def _flatten(args):
-    for i in args:
-        for j in i.all:
-            yield j
-
 @builtin.globals('builtins', 'build_inputs')
 def install(builtins, build, *args, **kwargs):
+    def _flatten(args):
+        for i in args:
+            for j in i.all:
+                yield j
+
     if len(args) == 0:
         raise ValueError('expected at least one argument')
     all_files = kwargs.pop('all', True)
