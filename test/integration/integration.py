@@ -30,14 +30,15 @@ def cleandir(path, recreate=True):
         # Windows seems to keep an executable file open a little bit after the
         # process returns from wait(), so try a few times, sleeping a bit in
         # between.
-        for t in [0.1, 0.5, 0.5, 1.0]:
+        for t in [0.1, 0.25, 0.5, 1.0, 2.0, None]:
             try:
                 shutil.rmtree(path)
                 break
             except Exception as e:
                 if e.errno == errno.ENOTEMPTY:
+                    if t is None:
+                        raise RuntimeError('unable to remove {}'.format(path))
                     time.sleep(t)
-                    shutil.rmtree(path)
                 elif e.errno != errno.ENOENT:
                     raise
     if recreate:
