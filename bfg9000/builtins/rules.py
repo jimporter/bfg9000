@@ -1,12 +1,12 @@
 import os.path
 
 from . import builtin, builtin
-from .. import shell
 from .packages import system_executable
 from ..build_inputs import Directory, Edge, File, Phony, objectify, sourcify
 from ..file_types import *
-from ..path import Path, Root
 from ..iterutils import iterate, listify
+from ..path import Path, Root
+from ..shell import posix as pshell
 
 class TestCase(object):
     def __init__(self, target, options, env):
@@ -48,7 +48,7 @@ class Compile(Edge):
         self.file = sourcify(file, SourceFile, lang=lang)
         self.builder = env.compiler(self.file.lang)
         self.include = sum((i.includes for i in iterate(packages)), include)
-        self.options = shell.listify(options)
+        self.options = pshell.listify(options)
         self.in_shared_library = False
 
         target = self.builder.output_file(name, self.file.lang)
@@ -81,7 +81,7 @@ class Link(Edge):
 
         self.builder = env.linker((i.lang for i in self.files), mode)
         self.libs = sum((i.libraries for i in iterate(packages)), libs)
-        self.options = shell.listify(link_options)
+        self.options = pshell.listify(link_options)
         self.project_name = self.__project(name, mode)
 
         target = self.builder.output_file(name)
@@ -201,7 +201,7 @@ def install(builtins, build, *args, **kwargs):
 def test(build, test, options=None, environment=None, driver=None):
     test = sourcify(test, File)
     build.tests.targets.append(test)
-    case = TestCase(test, shell.listify(options), environment or {})
+    case = TestCase(test, pshell.listify(options), environment or {})
     (driver or build.tests).tests.append(case)
     return case
 
@@ -209,7 +209,7 @@ def test(build, test, options=None, environment=None, driver=None):
 def test_driver(builtins, build, env, driver, options=None, environment=None,
                 parent=None):
     driver = objectify(driver, Executable, builtins['system_executable'])
-    result = TestDriver(driver, shell.listify(options), environment or {})
+    result = TestDriver(driver, pshell.listify(options), environment or {})
     (parent or build.tests).tests.append(result)
     return result
 
@@ -223,8 +223,8 @@ def test_deps(build, *args):
 def global_options(build, options, lang):
     if not lang in build.global_options:
         build.global_options[lang] = []
-    build.global_options[lang].extend(shell.listify(options))
+    build.global_options[lang].extend(pshell.listify(options))
 
 @builtin.globals('build_inputs')
 def global_link_options(build, options):
-    build.global_link_options.extend(shell.listify(options))
+    build.global_link_options.extend(pshell.listify(options))
