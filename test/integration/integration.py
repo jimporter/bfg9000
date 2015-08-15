@@ -27,17 +27,19 @@ else:
 
 def cleandir(path, recreate=True):
     if os.path.exists(path):
-        try:
-            shutil.rmtree(path)
-        except Exception as e:
-            if e.errno == errno.ENOTEMPTY:
-                # Windows seems to keep an executable file open a little bit
-                # after the process returns from wait(), so sleep a bit and try
-                # again in case this bites us.
-                time.sleep(0.5)
+        # Windows seems to keep an executable file open a little bit after the
+        # process returns from wait(), so try a few times, sleeping a bit in
+        # between.
+        for t in [0.1, 0.5, 0.5, 1.0]:
+            try:
                 shutil.rmtree(path)
-            elif e.errno != errno.ENOENT:
-                raise
+                break
+            except Exception as e:
+                if e.errno == errno.ENOTEMPTY:
+                    time.sleep(t)
+                    shutil.rmtree(path)
+                elif e.errno != errno.ENOENT:
+                    raise
     if recreate:
         makedirs(path)
 
