@@ -17,45 +17,40 @@ def _tokenize(s):
             escapes += 1
         elif c == '"':
             for i in range(escapes / 2):
-                yield ('char', '\\')
-            yield ('char', '"') if escapes % 2 else ('quote',)
+                yield ('char', type(s)('\\'))
+            yield ('char', '"') if escapes % 2 else ('quote', None)
             escapes = 0
         else:
             for i in range(escapes):
-                yield ('char', '\\')
+                yield ('char', type(s)('\\'))
             yield (('space' if c in ' \t' else 'char'), c)
             escapes = 0
 
 def split(s):
     state = 'between'
     args = []
-    buf = None
 
-    for t in _tokenize(s):
+    for tok, value in _tokenize(s):
         if state == 'between':
-            if t[0] == 'char':
-                buf = array('c', t[1])
+            if tok == 'char':
+                args.append(value)
                 state = 'word'
-            elif t[0] == 'quote':
-                buf = array('c')
+            elif tok == 'quote':
+                args.append('')
                 state = 'quoted'
         elif state == 'word':
-            if t[0] == 'quote':
+            if tok == 'quote':
                 state = 'quoted'
-            elif t[0] == 'char':
-                buf.append(t[1])
+            elif tok == 'char':
+                args[-1] += value
             else: # t[0] == 'space'
                 state = 'between'
-                args.append(buf.tostring())
-                buf = None
         else: # state == 'quoted'
-            if t[0] == 'quote':
+            if tok == 'quote':
                 state = 'word'
             else:
-                buf.append(t[1])
+                args[-1] += value
 
-    if buf is not None:
-        args.append(buf.tostring())
     return args
 
 def listify(thing):
