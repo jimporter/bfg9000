@@ -1,11 +1,10 @@
 import os.path
 import re
 
-from .. import safe_str
 from .. import shell
 from ..file_types import *
 from ..iterutils import iterate, uniques
-from ..path import Root, install_path
+from ..path import Root
 
 class CcCompilerBase(object):
     def __init__(self, env, command, name):
@@ -43,7 +42,7 @@ class CcCompilerBase(object):
 
 class CcLinkerBase(object):
     def __init__(self, env, mode, command, name):
-        self.platform = env.platform
+        self.env = env
         self.mode = mode
         self.command_name = command
         self.name = 'link_' + name
@@ -57,6 +56,10 @@ class CcLinkerBase(object):
             exts.append(re.escape(self.platform.shared_library_ext))
         self._lib_re = re.compile('lib(.*)(?:' + '|'.join(exts) + ')$')
 
+    @property
+    def platform(self):
+        return self.env.platform
+
     def command(self, cmd, input, output, libs=None, args=None):
         result = [cmd]
         result.extend(iterate(args))
@@ -65,17 +68,10 @@ class CcLinkerBase(object):
         result.extend(['-o', output])
         return result
 
-    def post_install_command(self, target):
+    @property
+    def post_install(self):
         if self.platform.has_rpath:
-            paths = uniques(
-                install_path(i.path, i.install_root).parent()
-                for i in target.creator.libs if isinstance(i, SharedLibrary)
-            )
-            if paths:
-                # TODO: Improve the configurability of this (e.g. provide a
-                # PatchElf class that installers can work with).
-                return ['patchelf', '--set-rpath', safe_str.join(paths, ':'),
-                        install_path(target.path, target.install_root)]
+            return self.env.tool('patchelf')
         return None
 
     def output_file(self, name):

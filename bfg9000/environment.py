@@ -3,7 +3,7 @@ import os
 
 from .path import Path, InstallRoot
 from . import platforms
-from .tools import ar, cc, msvc
+from .tools import ar, cc, msvc, patchelf
 
 class EnvVersionError(RuntimeError):
     pass
@@ -70,6 +70,9 @@ class Environment(object):
                     'c++': cc.CxxLinker(self, 'shared_library'),
                 },
             }
+            self.__tools = {
+                'patchelf': patchelf.PatchElf(self),
+            }
 
     @property
     def depfixer(self):
@@ -111,6 +114,9 @@ class Environment(object):
         if 'c++' in lang:
             return self.__linkers[mode]['c++']
         return self.__linkers[mode]['c']
+
+    def tool(self, name):
+        return self.__tools[name]
 
     def save(self, path):
         with open(os.path.join(path, self.envfile), 'w') as out:

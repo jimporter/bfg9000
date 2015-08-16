@@ -34,11 +34,13 @@ def sourcify(thing, valid_type, make_type=None, **kwargs):
                      **kwargs)
 
 class File(Node):
+    install_kind = None
     install_root = None
 
     def __init__(self, name, root):
         Node.__init__(self)
         self.path = path.Path(name, root)
+        self.post_install = None
 
 class Directory(File):
     pass

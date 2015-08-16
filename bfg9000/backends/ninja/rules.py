@@ -1,6 +1,6 @@
 import os
 from cStringIO import StringIO
-from itertools import chain
+from itertools import chain, ifilter
 from packaging.specifiers import SpecifierSet
 
 from . import version
@@ -29,10 +29,10 @@ def write(env, build_inputs):
         buildfile.variable(path_vars[i], env.install_dirs[i], Section.path)
 
     all_rule(build_inputs.get_default_targets(), buildfile)
-    install_rule(build_inputs.install_targets, buildfile, env)
-    test_rule(build_inputs.tests, buildfile)
     for e in build_inputs.edges:
         _rule_handlers[type(e).__name__](e, build_inputs, buildfile)
+    install_rule(build_inputs.install_targets, buildfile, env)
+    test_rule(build_inputs.tests, buildfile)
     regenerate_rule(build_inputs.find_dirs, buildfile, env)
 
     with open(os.path.join(env.builddir, 'build.ninja'), 'w') as out:
@@ -100,12 +100,17 @@ def install_rule(install_targets, buildfile, env):
         dst = path.install_path(dir.path.parent(), dir.install_root)
         return 'mkdir -p ' + dst + ' && cp -r ' + src + '/* ' + dst
 
-    post_install = filter(None, (getattr(i, 'post_install', None)
-                                 for i in install_targets.files))
+    def post_install(file):
+        if file.post_install:
+            cmd = cmd_var(file.post_install, buildfile)
+            return file.post_install.command(cmd, file)
+        return None
 
-    commands = chain((install_line(i) for i in install_targets.files),
-                     (mkdir_line(i) for i in install_targets.directories),
-                     post_install)
+    commands = chain(
+        (install_line(i) for i in install_targets.files),
+        (mkdir_line(i) for i in install_targets.directories),
+        ifilter(None, (post_install(i) for i in install_targets.files))
+    )
     command_build(
         buildfile,
         output='install',
