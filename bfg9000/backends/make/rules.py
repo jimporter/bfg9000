@@ -60,19 +60,19 @@ def install_rule(install_targets, buildfile, env):
     if not install_targets:
         return
 
-    def install_cmd(kind):
-        sec = Section.command
-        install = buildfile.variable('INSTALL', 'install', sec, True)
-        if kind == 'program':
-            return buildfile.variable('INSTALL_PROGRAM', install, sec, True)
-        else:
-            cmd = [install, '-m', '644']
-            return buildfile.variable('INSTALL_DATA', cmd, sec, True)
-
     def install_line(file):
+        install = env.tool('install')
+        kind = file.install_kind.upper()
+
+        cmd = cmd_var(install, buildfile)
+        if kind != 'PROGRAM':
+            kind = 'DATA'
+            cmd = [cmd] + install.data_args
+        cmd = buildfile.variable('INSTALL_' + kind, cmd, Section.command, True)
+
         src = file.path
         dst = path.install_path(file.path, file.install_root)
-        return [install_cmd(file.install_kind), '-D', src, dst]
+        return install.command(cmd, src, dst)
 
     def mkdir_line(dir):
         src = dir.path

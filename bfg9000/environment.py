@@ -3,7 +3,7 @@ import os
 
 from .path import Path, InstallRoot
 from . import platforms
-from .tools import ar, cc, msvc, patchelf
+from .tools import ar, cc, msvc, install, patchelf
 
 class EnvVersionError(RuntimeError):
     pass
@@ -50,6 +50,9 @@ class Environment(object):
                     'c++': dll_linker,
                 },
             }
+            self.__tools = {
+                'install': install.Install(self),
+            }
         else:
             ar_linker = ar.ArLinker(self)
             self.__compilers = {
@@ -71,6 +74,7 @@ class Environment(object):
                 },
             }
             self.__tools = {
+                'install': install.Install(self),
                 'patchelf': patchelf.PatchElf(self),
             }
 

@@ -160,10 +160,14 @@ def which(names, env=None):
         exts = ['']
 
     for name in iterate(names):
-        for path in paths:
-            for ext in exts:
-                candidate = os.path.join(path, name + ext)
-                if os.path.exists(candidate):
-                    return candidate
+        if os.path.isabs(name):
+            if os.path.exists(name):
+                return name
+        else:
+            for path in ['.'] if os.path.dirname(name) else paths:
+                for ext in exts:
+                    candidate = os.path.normpath(os.path.join(path, name + ext))
+                    if os.path.exists(candidate):
+                        return candidate
 
     raise IOError("unable to find executable '{}'".format(name))
