@@ -12,6 +12,17 @@ class Environment(object):
     version = 4
     envfile = '.bfg_environ'
 
+    def __new__(cls, *args, **kwargs):
+        env = object.__new__(cls, *args, **kwargs)
+        env.__compilers = {}
+        env.__linkers = {
+            'executable': {},
+            'static_library': {},
+            'shared_library': {}
+        }
+        env.__tools = {}
+        return env
+
     def __init__(self, bfgpath, backend, srcdir, builddir, install_dirs):
         self.bfgpath = bfgpath
         self.backend = backend
@@ -22,61 +33,28 @@ class Environment(object):
 
         self.variables = dict(os.environ)
         self.platform = platforms.platform_info()
-        self.__init_compilers()
 
-    def __init_compilers(self):
+    def __load_compiler(self, lang):
         # TODO: Come up with a more flexible way to initialize the compilers and
         # linkers for each language.
+        if lang not in ['c', 'c++']:
+            raise ValueError('unknown language "{}"'.format(lang))
+
         if self.platform.name == 'windows':
-            compiler = msvc.MSVCCompiler(self)
-            exe_linker = msvc.MSVCLinker(self, 'executable')
-            lib_linker = msvc.MSVCStaticLinker(self)
-            dll_linker = msvc.MSVCLinker(self, 'shared_library')
-            self.__compilers = {
-                'c'  : compiler,
-                'c++': compiler,
-            }
-            self.__linkers = {
-                'executable': {
-                    'c'  : exe_linker,
-                    'c++': exe_linker,
-                },
-                'static_library': {
-                    'c'  : lib_linker,
-                    'c++': lib_linker,
-                },
-                'shared_library': {
-                    'c'  : dll_linker,
-                    'c++': dll_linker,
-                },
-            }
-            self.__tools = {
-                'install': install.Install(self),
-            }
+            self.__compilers[lang] = msvc.MSVCCompiler(self)
+            for mode in ['executable', 'shared_library']:
+                self.__linkers[mode][lang] = msvc.MSVCLinker(self, mode)
+            self.__linkers['static_library'][lang] = msvc.MSVCStaticLinker(self)
         else:
-            ar_linker = ar.ArLinker(self)
-            self.__compilers = {
-                'c'  : cc.CcCompiler(self),
-                'c++': cc.CxxCompiler(self),
-            }
-            self.__linkers = {
-                'executable': {
-                    'c'  : cc.CcLinker(self, 'executable'),
-                    'c++': cc.CxxLinker(self, 'executable'),
-                },
-                'static_library': {
-                    'c'  : ar_linker,
-                    'c++': ar_linker,
-                },
-                'shared_library': {
-                    'c'  : cc.CcLinker(self, 'shared_library'),
-                    'c++': cc.CxxLinker(self, 'shared_library'),
-                },
-            }
-            self.__tools = {
-                'install': install.Install(self),
-                'patchelf': patchelf.PatchElf(self),
-            }
+            if lang == 'c':
+                self.__compilers[lang] = cc.CcCompiler(self)
+                linker = cc.CcLinker
+            else: # lang == 'c++'
+                self.__compilers[lang] = cc.CxxCompiler(self)
+                linker = cc.CxxLinker
+            for mode in ['executable', 'shared_library']:
+                self.__linkers[mode][lang] = linker(self, mode)
+            self.__linkers['static_library'][lang] = ar.ArLinker(self)
 
     @property
     def depfixer(self):
@@ -106,20 +84,29 @@ class Environment(object):
         return paths + self.platform.lib_dirs
 
     def compiler(self, lang):
+        if lang not in self.__compilers:
+            self.__load_compiler(lang)
         return self.__compilers[lang]
 
     def linker(self, lang, mode):
-        if isinstance(lang, basestring):
-            return self.__linkers[mode][lang]
+        # TODO: Be more intelligent about this when we support more languages.
+        if not isinstance(lang, basestring):
+            if 'c++' in lang:
+                lang = 'c++'
 
-        if not isinstance(lang, set):
-            lang = set(lang)
-        # TODO: Be more intelligent about this when we support more languages
-        if 'c++' in lang:
-            return self.__linkers[mode]['c++']
-        return self.__linkers[mode]['c']
+        if lang not in self.__linkers[mode]:
+            self.__load_compiler(lang)
+        return self.__linkers[mode][lang]
 
     def tool(self, name):
+        if name not in self.__tools:
+            if name == 'install':
+                self.__tools[name] = install.Install(self)
+            elif name == 'patchelf':
+                # XXX: Only do this on Linux?
+                self.__tools[name] = patchelf.PatchElf(self)
+            else:
+                raise ValueError('unknown tool "{}"'.format(name))
         return self.__tools[name]
 
     def save(self, path):
@@ -169,5 +156,4 @@ class Environment(object):
         env = Environment.__new__(Environment)
         for k, v in state['data'].iteritems():
             setattr(env, k, v)
-        env.__init_compilers()
         return env
