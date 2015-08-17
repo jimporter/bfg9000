@@ -2,12 +2,10 @@ from .. import safe_str
 from ..file_types import SharedLibrary
 from ..iterutils import uniques
 from ..path import install_path
-from ..platforms import which
 
 class PatchElf(object):
     def __init__(self, env):
-        self.command_name = which(env.getvar('PATCHELF', 'patchelf'),
-                                  env.variables)
+        self.command_name = env.getvar('PATCHELF', 'patchelf')
         self.command_var = 'patchelf'
 
     def command(self, cmd, file):

@@ -5,12 +5,11 @@ from .. import shell
 from ..file_types import *
 from ..iterutils import iterate, uniques
 from ..path import Root
-from ..platforms import which
 
 class CcCompilerBase(object):
     def __init__(self, env, command, name):
         self.platform = env.platform
-        self.command_name = which(command, env.variables)
+        self.command_name = command
         self.name = name
         self.command_var = name
 
@@ -45,7 +44,7 @@ class CcLinkerBase(object):
     def __init__(self, env, mode, command, name):
         self.env = env
         self.mode = mode
-        self.command_name = which(command, env.variables)
+        self.command_name = command
         self.name = 'link_' + name
         self.command_var = name
         self.link_var = 'ld'

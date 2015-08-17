@@ -8,6 +8,7 @@ from ..path import Root
 class MSVCCompiler(object):
     def __init__(self, env):
         self.platform = env.platform
+        # XXX: Pull this from an env var like CXX?
         self.command_name = 'cl'
         self.name = 'cxx'
         self.command_var = 'cxx'
@@ -48,6 +49,8 @@ class MSVCLinker(object):
     def __init__(self, env, mode):
         self.platform = env.platform
         self.mode = mode
+        # XXX: Pull this from an env var? Can't use LINK though, since Windows
+        # uses that for, effectively, LDFLAGS.
         self.command_name = 'link'
         self.name = 'link'
         self.command_var = 'link'
@@ -97,6 +100,8 @@ class MSVCStaticLinker(object):
     def __init__(self, env):
         self.platform = env.platform
         self.mode = 'static_library'
+        # XXX: Pull this from an env var? Can't use LIB though, since Windows
+        # uses that for, effectively, LIBRARY_PATH.
         self.command_name = 'lib'
         self.name = 'lib'
         self.command_var = 'lib'
