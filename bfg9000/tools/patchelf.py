@@ -10,8 +10,8 @@ class PatchElf(object):
 
     def command(self, cmd, file):
         paths = uniques(
-                install_path(i.path, i.install_root).parent()
-                for i in file.creator.libs if isinstance(i, SharedLibrary)
+            install_path(i.path, i.install_root).parent()
+            for i in file.creator.libs if isinstance(i, SharedLibrary)
         )
         if paths:
             return [cmd, '--set-rpath', safe_str.join(paths, ':'),
