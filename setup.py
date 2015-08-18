@@ -11,8 +11,7 @@ setup(
 
     packages=find_packages(exclude=['test']),
 
-    install_requires=['enum-compat'],
-    setup_requires=['packaging'],
+    install_requires=['enum-compat', 'packaging'],
     extras_require={'msbuild': ['lxml']},
 
     entry_points={
