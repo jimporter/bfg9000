@@ -32,7 +32,7 @@ def write(env, build_inputs):
         _rule_handlers[type(e).__name__](e, build_inputs, buildfile, env)
     install_rule(build_inputs.install_targets, buildfile, env)
     test_rule(build_inputs.tests, buildfile)
-    directory_rule(buildfile)
+    directory_rule(buildfile, env)
     regenerate_rule(build_inputs.find_dirs, buildfile, env)
 
     with open(os.path.join(env.builddir, 'Makefile'), 'w') as out:
@@ -60,11 +60,13 @@ def install_rule(install_targets, buildfile, env):
     if not install_targets:
         return
 
-    def install_line(file):
-        install = env.tool('install')
-        kind = file.install_kind.upper()
+    install = env.tool('install')
+    mkdir_p = env.tool('mkdir_p')
 
+    def install_line(file):
+        kind = file.install_kind.upper()
         cmd = cmd_var(install, buildfile)
+
         if kind != 'PROGRAM':
             kind = 'DATA'
             cmd = [cmd] + install.data_args
@@ -77,13 +79,12 @@ def install_rule(install_targets, buildfile, env):
     def mkdir_line(dir):
         src = dir.path
         dst = path.install_path(dir.path.parent(), dir.install_root)
-        return 'mkdir -p ' + dst + ' && cp -r ' + src + '/* ' + dst
+        return mkdir_p.copy_command(cmd_var(mkdir_p, buildfile), src, dst)
 
     def post_install(file):
         if file.post_install:
             cmd = cmd_var(file.post_install, buildfile)
             return file.post_install.command(cmd, file)
-        return None
 
     recipe = ([install_line(i) for i in install_targets.files] +
               [mkdir_line(i) for i in install_targets.directories] +
@@ -143,15 +144,18 @@ def test_rule(tests, buildfile):
     )
 
 dir_sentinel = '.dir'
-def directory_rule(buildfile):
+def directory_rule(buildfile, env):
+    mkdir_p = env.tool('mkdir_p')
+    cmd = cmd_var(mkdir_p, buildfile)
+
     pattern = Pattern(os.path.join('%', dir_sentinel))
     out = qvar('@')
+    path = Function('patsubst', pattern, Pattern('%'), out)
+
     buildfile.rule(
         target=pattern,
         recipe=[
-            # XXX: `mkdir -p` isn't safe (or valid!) on all platforms.
-            silent(['mkdir', '-p', Function('patsubst', pattern, Pattern('%'),
-                                            out)]),
+            silent(mkdir_p.command(cmd, path)),
             silent(['touch', out])
         ]
     )

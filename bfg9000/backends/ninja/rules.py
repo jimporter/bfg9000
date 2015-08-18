@@ -81,11 +81,13 @@ def install_rule(install_targets, buildfile, env):
     if not install_targets:
         return
 
-    def install_line(file):
-        install = env.tool('install')
-        kind = file.install_kind
+    install = env.tool('install')
+    mkdir_p = env.tool('mkdir_p')
 
+    def install_line(file):
+        kind = file.install_kind
         cmd = cmd_var(install, buildfile)
+
         if kind != 'program':
             kind = 'data'
             cmd = [cmd] + install.data_args
@@ -98,13 +100,12 @@ def install_rule(install_targets, buildfile, env):
     def mkdir_line(dir):
         src = dir.path
         dst = path.install_path(dir.path.parent(), dir.install_root)
-        return 'mkdir -p ' + dst + ' && cp -r ' + src + '/* ' + dst
+        return mkdir_p.copy_command(cmd_var(mkdir_p, buildfile), src, dst)
 
     def post_install(file):
         if file.post_install:
             cmd = cmd_var(file.post_install, buildfile)
             return file.post_install.command(cmd, file)
-        return None
 
     commands = chain(
         (install_line(i) for i in install_targets.files),

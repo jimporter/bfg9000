@@ -3,7 +3,7 @@ import os
 
 from .path import Path, InstallRoot
 from . import platforms
-from .tools import ar, cc, msvc, install, patchelf
+from .tools import ar, cc, msvc, install, mkdir_p, patchelf
 
 class EnvVersionError(RuntimeError):
     pass
@@ -105,6 +105,8 @@ class Environment(object):
             elif name == 'patchelf':
                 # XXX: Only do this on Linux?
                 self.__tools[name] = patchelf.PatchElf(self)
+            elif name == 'mkdir_p':
+                self.__tools[name] = mkdir_p.MkdirP(self)
             else:
                 raise ValueError('unknown tool "{}"'.format(name))
         return self.__tools[name]
