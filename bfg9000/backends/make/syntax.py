@@ -181,6 +181,12 @@ class Call(Function):
     def __init__(self, func, *args):
         Function.__init__(self, 'call', var(func).name, *args)
 
+def silent(command):
+    if isinstance(command, list):
+        return ['@' + command[0]] + command[1:]
+    else:
+        return '@' + command
+
 path_vars = {
     path.Root.srcdir:   Variable('srcdir'),
     path.Root.builddir: None,

@@ -150,8 +150,9 @@ def directory_rule(buildfile):
         target=pattern,
         recipe=[
             # XXX: `mkdir -p` isn't safe (or valid!) on all platforms.
-            ['@mkdir', '-p', Function('patsubst', pattern, Pattern('%'), out)],
-            ['@touch', out]
+            silent(['mkdir', '-p', Function('patsubst', pattern, Pattern('%'),
+                                            out)]),
+            silent(['touch', out])
         ]
     )
 
@@ -201,7 +202,7 @@ def emit_object_file(rule, build_inputs, buildfile, env):
         recipe_extra = []
         if compiler.deps_flavor == 'gcc':
             command_kwargs['deps'] = deps = qvar('@') + '.d'
-            recipe_extra = ['@' + env.depfixer + ' < ' + deps + ' >> ' + deps]
+            recipe_extra = [silent(env.depfixer + ' < ' + deps + ' >> ' + deps)]
         elif compiler.deps_flavor == 'msvc':
             command_kwargs['deps'] = True
 
@@ -264,7 +265,7 @@ def emit_link(rule, build_inputs, buildfile, env):
     if len(rule.target.all) > 1:
         target = rule.target.path.addext('.stamp')
         buildfile.rule(target=rule.target.all, deps=[target])
-        recipe = [recipe, ['@touch', var('@')]]
+        recipe = [recipe, silent([ 'touch', var('@') ])]
     else:
         target = rule.target
 
