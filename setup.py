@@ -1,9 +1,9 @@
 from setuptools import setup, find_packages
-from bfg9000.version import version
+from bfg9000.version import version_string
 
 setup(
     name='bfg9000',
-    version=version,
+    version=version_string,
 
     author='Jim Porter',
     author_email='porterj@alum.rit.edu',

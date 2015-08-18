@@ -1,4 +1,5 @@
 import os.path
+from packaging.specifiers import SpecifierSet
 
 from . import builtin, builtin
 from .packages import system_executable
@@ -7,6 +8,7 @@ from ..file_types import *
 from ..iterutils import iterate, listify
 from ..path import Path, Root
 from ..shell import posix as pshell
+from .. import version as _version
 
 class TestCase(object):
     def __init__(self, target, options, env):
@@ -229,3 +231,22 @@ def global_options(build, options, lang):
 @builtin.globals('build_inputs')
 def global_link_options(build, options):
     build.global_link_options.extend(pshell.listify(options))
+
+@builtin
+def bfg9000_required_version(version=None, python_version=None):
+    def ensure_specifier(v):
+        return None if v is None else objectify(v, SpecifierSet, None)
+    template = "{kind} version {ver} doesn't meet requirement {req}"
+
+    version = ensure_specifier(version)
+    python_version = ensure_specifier(python_version)
+
+    if version and _version.version not in version:
+        raise ValueError(template.format(
+            kind='bfg9000', ver=_version.version, req=version
+        ))
+
+    if python_version and _version.python_version not in python_version:
+        raise ValueError(template.format(
+            kind='python', ver=_version.python_version, req=python_version
+        ))

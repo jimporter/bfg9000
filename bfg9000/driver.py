@@ -10,7 +10,7 @@ from .build_inputs import BuildInputs
 from .environment import Environment, EnvVersionError
 from .path import Path, InstallRoot
 from .platforms import platform_info
-from .version import version
+from .version import version_string
 
 bfgfile = 'build.bfg'
 
@@ -83,7 +83,7 @@ def main():
     parser.add_argument('srcdir', nargs='?', help='source directory')
     parser.add_argument('builddir', nargs='?', help='build directory')
     parser.add_argument('--version', action='version',
-                        version='%(prog)s ' + version)
+                        version='%(prog)s ' + version_string)
     parser.add_argument('--backend', choices=backends.keys(),
                         default=backends.keys()[0],
                         help='backend (default: %(default)s)')
