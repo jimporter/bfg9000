@@ -260,7 +260,7 @@ class VcxProject(object):
             E.PropertyGroup({'Label': 'Configuration'},
                 E.ConfigurationType(self.mode),
                 E.UseDebugLibraries('true'),
-                E.PlatformToolset('v140'),
+                E.PlatformToolset(self.toolset),
                 E.CharacterSet('Multibyte')
             ),
             E.Import(Project='$(VCTargetsPath)\Microsoft.Cpp.props'),
