@@ -66,6 +66,8 @@ def boost_package(env, name=None, version=None):
             if dirs:
                 include_dirs.insert(0, max(dirs))
 
+        if not include_dirs:
+            raise ValueError('unable to find Boost on system')
         for i in include_dirs:
             try:
                 headers = [HeaderDirectory(i, root=path.Root.absolute)]
