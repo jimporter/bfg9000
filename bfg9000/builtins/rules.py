@@ -82,7 +82,10 @@ class Link(Edge):
 
         self.builder = env.linker((i.lang for i in self.files), mode)
         self.libs = sum((i.libraries for i in iterate(packages)), libs)
-        self.options = pshell.listify(link_options)
+
+        lib_dirs = (self.builder.lib_dirs(i.lib_dirs)
+                    for i in iterate(packages))
+        self.options = sum(lib_dirs, pshell.listify(link_options))
         self.project_name = self.__project(name, mode)
 
         target = self.builder.output_file(name)

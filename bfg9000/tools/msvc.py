@@ -82,7 +82,9 @@ class MSVCLinker(object):
         return ['/DLL'] if self.mode == 'shared_library' else []
 
     def lib_dirs(self, libraries):
-        dirs = uniques(i.path.parent() for i in libraries)
+        def get_dir(lib):
+            return lib.path.parent() if isinstance(lib, Library) else lib
+        dirs = uniques(get_dir(i) for i in iterate(libraries))
         return ['/LIBPATH:' + i for i in dirs]
 
     def link_lib(self, library):

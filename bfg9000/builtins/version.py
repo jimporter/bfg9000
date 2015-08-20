@@ -9,23 +9,20 @@ from ..build_inputs import objectify
 _bfg_version = Version(_bfg_version)
 _python_version = Version(platform.python_version())
 
+def make_specifier(s, prereleases=None):
+    if s is None:
+        return None
+    return objectify(s, SpecifierSet, None, prereleases=prereleases)
+
+def check_version(version, specifier, kind):
+    template = "{kind} version {ver} doesn't meet requirement {req}"
+    if specifier and version not in specifier:
+        raise ValueError(template.format(kind=kind, ver=version, req=specifier))
+
 @builtin
 def bfg9000_required_version(version=None, python_version=None):
-    def ensure_specifier(v):
-        if v is None:
-            return None
-        return objectify(v, SpecifierSet, None, prereleases=True)
-    template = "{kind} version {ver} doesn't meet requirement {req}"
+    version = make__specifier(version, prereleases=True)
+    python_version = make_specifier(python_version, prereleases=True)
 
-    version = ensure_specifier(version)
-    python_version = ensure_specifier(python_version)
-
-    if version and _bfg_version not in version:
-        raise ValueError(template.format(
-            kind='bfg9000', ver=_bfg_version, req=version
-        ))
-
-    if python_version and _python_version not in python_version:
-        raise ValueError(template.format(
-            kind='python', ver=_python_version, req=python_version
-        ))
+    check_version(_bfg_version, version, kind='bfg9000')
+    check_version(_python_version, python_version, kind='python')
