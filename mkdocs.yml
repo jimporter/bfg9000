@@ -1,0 +1,14 @@
+site_name: bfg9000
+docs_dir: doc
+repo_url: https://github.com/jimporter/bfg9000/
+theme: yeti
+
+extra_css:
+- css/extra.css
+
+pages:
+- Home: index.md
+- User Guide:
+  - Building with bfg9000: building.md
+- Developer Guide: developer.md
+- License: license.md

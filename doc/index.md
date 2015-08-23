@@ -1,9 +1,9 @@
-# bfg9000 - build file generator
+# bfg9000
 
-**bfg9000** is a cross-platform *build configuration system* with an emphasis on
-making it easy to define how to build your software. It converts a Python-based
-build script into the appropriate files for your underlying build system of
-choice (Make, Ninja, or MSBuild).
+**bfg9000** (*"build file generator"*) is a cross-platform *build configuration
+system* with an emphasis on making it easy to define how to build your software.
+It converts a Python-based build script into the appropriate files for your
+underlying build system of choice.
 
 ## A brief example
 
@@ -17,9 +17,9 @@ To build this executable, we need to create the actual build files and then
 run them:
 
 ```sh
-bfg9000 path/to/src/ build/
-cd build
-make
+$ bfg9000 path/to/src/ build/
+$ cd build
+$ ninja
 ```
 
 From there, you can run your newly-created executable: `./simple`. Hooray!
@@ -28,17 +28,13 @@ For further examples, please see the
 [`examples/`](https://github.com/jimporter/bfg9000/tree/master/examples)
 subdirectory.
 
-# Installation
+## Installation
 
 bfg9000 uses [setuptools](http://pythonhosted.org/setuptools/), so installation
 is much the same as any other Python package. Just run:
 
 ```sh
-python setup.py install
+$ python setup.py install
 ```
 
 From there, you can start using bfg9000 to build your software!
-
-## License
-
-This project is licensed under the BSD 3-clause license.
