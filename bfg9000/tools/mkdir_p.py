@@ -1,3 +1,6 @@
+from . import tool
+
+@tool('mkdir_p')
 class MkdirP(object):
     def __init__(self, env):
         default = 'gmkdir' if env.platform.name == 'windows' else 'mkdir'

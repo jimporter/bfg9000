@@ -3,7 +3,7 @@ import os
 
 from .path import Path, InstallRoot
 from . import platforms
-from .tools import ar, cc, msvc, install, mkdir_p, patchelf
+from . import tools
 
 class EnvVersionError(RuntimeError):
     pass
@@ -14,12 +14,7 @@ class Environment(object):
 
     def __new__(cls, *args, **kwargs):
         env = object.__new__(cls, *args, **kwargs)
-        env.__compilers = {}
-        env.__linkers = {
-            'executable': {},
-            'static_library': {},
-            'shared_library': {}
-        }
+        env.__builders = {}
         env.__tools = {}
         return env
 
@@ -33,28 +28,6 @@ class Environment(object):
 
         self.variables = dict(os.environ)
         self.platform = platforms.platform_info()
-
-    def __load_compiler(self, lang):
-        # TODO: Come up with a more flexible way to initialize the compilers and
-        # linkers for each language.
-        if lang not in ['c', 'c++']:
-            raise ValueError('unknown language "{}"'.format(lang))
-
-        if self.platform.name == 'windows':
-            self.__compilers[lang] = msvc.MSVCCompiler(self)
-            for mode in ['executable', 'shared_library']:
-                self.__linkers[mode][lang] = msvc.MSVCLinker(self, mode)
-            self.__linkers['static_library'][lang] = msvc.MSVCStaticLinker(self)
-        else:
-            if lang == 'c':
-                self.__compilers[lang] = cc.CcCompiler(self)
-                linker = cc.CcLinker
-            else: # lang == 'c++'
-                self.__compilers[lang] = cc.CxxCompiler(self)
-                linker = cc.CxxLinker
-            for mode in ['executable', 'shared_library']:
-                self.__linkers[mode][lang] = linker(self, mode)
-            self.__linkers['static_library'][lang] = ar.ArLinker(self)
 
     @property
     def depfixer(self):
@@ -84,9 +57,9 @@ class Environment(object):
         return paths + self.platform.lib_dirs
 
     def compiler(self, lang):
-        if lang not in self.__compilers:
-            self.__load_compiler(lang)
-        return self.__compilers[lang]
+        if lang not in self.__builders:
+            self.__builders[lang] = tools.get_builder(lang)(self)
+        return self.__builders[lang].compiler
 
     def linker(self, lang, mode):
         # TODO: Be more intelligent about this when we support more languages.
@@ -94,21 +67,13 @@ class Environment(object):
             if 'c++' in lang:
                 lang = 'c++'
 
-        if lang not in self.__linkers[mode]:
-            self.__load_compiler(lang)
-        return self.__linkers[mode][lang]
+        if lang not in self.__builders:
+            self.__builders[lang] = tools.get_builder(lang)(self)
+        return self.__builders[lang].linkers[mode]
 
     def tool(self, name):
         if name not in self.__tools:
-            if name == 'install':
-                self.__tools[name] = install.Install(self)
-            elif name == 'patchelf':
-                # XXX: Only do this on Linux?
-                self.__tools[name] = patchelf.PatchElf(self)
-            elif name == 'mkdir_p':
-                self.__tools[name] = mkdir_p.MkdirP(self)
-            else:
-                raise ValueError('unknown tool "{}"'.format(name))
+            self.__tools[name] = tools.get_tool(name)(self)
         return self.__tools[name]
 
     def save(self, path):

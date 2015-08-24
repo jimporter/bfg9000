@@ -1,8 +1,10 @@
+from . import tool
 from .. import safe_str
 from ..file_types import SharedLibrary
 from ..iterutils import uniques
 from ..path import install_path
 
+@tool('patchelf')
 class PatchElf(object):
     def __init__(self, env):
         self.command_name = env.getvar('PATCHELF', 'patchelf')

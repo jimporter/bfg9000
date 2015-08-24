@@ -5,7 +5,7 @@ from ..file_types import *
 from ..iterutils import iterate, uniques
 from ..path import Root
 
-class MSVCCompiler(object):
+class MsvcCompiler(object):
     def __init__(self, env):
         self.platform = env.platform
         # XXX: Pull this from an env var like CXX?
@@ -45,7 +45,7 @@ class MSVCCompiler(object):
     def include_dir(self, directory):
         return ['/I' + directory.path]
 
-class MSVCLinker(object):
+class MsvcLinker(object):
     def __init__(self, env, mode):
         self.platform = env.platform
         self.mode = mode
@@ -98,7 +98,7 @@ class MSVCLinker(object):
     def rpath(self, libraries, start):
         return []
 
-class MSVCStaticLinker(object):
+class MsvcStaticLinker(object):
     def __init__(self, env):
         self.platform = env.platform
         self.mode = 'static_library'
@@ -123,3 +123,12 @@ class MSVCStaticLinker(object):
     @property
     def mode_args(self):
         return []
+
+class MsvcBuilder(object):
+    def __init__(self, env):
+        self.compiler = MsvcCompiler(env)
+        self.linkers = {
+            'executable': MsvcLinker(env, 'executable'),
+            'shared_library': MsvcLinker(env, 'shared_library'),
+            'static_library': MsvcStaticLinker(env),
+        }

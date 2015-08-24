@@ -26,15 +26,16 @@ builtin = _decorate_builtin()
 builtin.globals = _decorate_builtin
 
 def _load_builtins():
-    # XXX: There's probably a better way to do this.
-    for _, name, _ in pkgutil.walk_packages(__path__, '.'):
-        importlib.import_module(name, __package__)
-
-def bind(**kwargs):
     global _loaded_builtins
     if not _loaded_builtins:
-        _load_builtins()
+        # Lazily load the builtins so we don't get cyclic imports.
+        # XXX: There's probably a better way to do this.
+        for _, name, _ in pkgutil.walk_packages(__path__, '.'):
+            importlib.import_module(name, __package__)
         _loaded_builtins = True
+
+def bind(**kwargs):
+    _load_builtins()
 
     builtins = {}
     for k, v in _all_builtins.iteritems():

@@ -1,6 +1,7 @@
 import os.path
 import re
 
+from .ar import ArLinker
 from .. import shell
 from ..file_types import *
 from ..iterutils import iterate, uniques
@@ -153,3 +154,21 @@ class CxxLinker(CcLinkerBase):
         CcLinkerBase.__init__(self, env, mode, env.getvar('CXX', 'c++'), 'cxx')
         self.global_args = shell.split(env.getvar('LDFLAGS', ''))
         self.global_libs = shell.split(env.getvar('LDLIBS', ''))
+
+class CcBuilder(object):
+    def __init__(self, env):
+        self.compiler = CcCompiler(env)
+        self.linkers = {
+            'executable': CcLinker(env, 'executable'),
+            'shared_library': CcLinker(env, 'shared_library'),
+            'static_library': ArLinker(env),
+        }
+
+class CxxBuilder(object):
+    def __init__(self, env):
+        self.compiler = CxxCompiler(env)
+        self.linkers = {
+            'executable': CxxLinker(env, 'executable'),
+            'shared_library': CxxLinker(env, 'shared_library'),
+            'static_library': ArLinker(env),
+        }
