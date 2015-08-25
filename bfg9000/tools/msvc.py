@@ -48,8 +48,6 @@ class MsvcLinker(object):
     def __init__(self, env, mode, command):
         self.platform = env.platform
         self.mode = mode
-        # XXX: Pull this from an env var? Can't use LINK though, since Windows
-        # uses that for, effectively, LDFLAGS.
         self.command_name = command
         self.name = 'link'
         self.command_var = 'link'
@@ -98,12 +96,10 @@ class MsvcLinker(object):
         return []
 
 class MsvcStaticLinker(object):
-    def __init__(self, env):
+    def __init__(self, env, command):
         self.platform = env.platform
         self.mode = 'static_library'
-        # XXX: Pull this from an env var? Can't use LIB though, since Windows
-        # uses that for, effectively, LIBRARY_PATH.
-        self.command_name = 'lib'
+        self.command_name = command
         self.name = 'lib'
         self.command_var = 'lib'
         self.link_var = 'lib'
@@ -124,10 +120,10 @@ class MsvcStaticLinker(object):
         return []
 
 class MsvcBuilder(object):
-    def __init__(self, env, compile_cmd, link_cmd):
+    def __init__(self, env, compile_cmd, link_cmd, lib_cmd):
         self.compiler = MsvcCompiler(env, compile_cmd)
         self.linkers = {
             'executable': MsvcLinker(env, 'executable', link_cmd),
             'shared_library': MsvcLinker(env, 'shared_library', link_cmd),
-            'static_library': MsvcStaticLinker(env),
+            'static_library': MsvcStaticLinker(env, lib_cmd),
         }
