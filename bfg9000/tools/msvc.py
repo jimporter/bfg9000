@@ -6,10 +6,9 @@ from ..iterutils import iterate, uniques
 from ..path import Root
 
 class MsvcCompiler(object):
-    def __init__(self, env):
+    def __init__(self, env, command):
         self.platform = env.platform
-        # XXX: Pull this from an env var like CXX?
-        self.command_name = 'cl'
+        self.command_name = command
         self.name = 'cxx'
         self.command_var = 'cxx'
         self.global_args = (
@@ -46,12 +45,12 @@ class MsvcCompiler(object):
         return ['/I' + directory.path]
 
 class MsvcLinker(object):
-    def __init__(self, env, mode):
+    def __init__(self, env, mode, command):
         self.platform = env.platform
         self.mode = mode
         # XXX: Pull this from an env var? Can't use LINK though, since Windows
         # uses that for, effectively, LDFLAGS.
-        self.command_name = 'link'
+        self.command_name = command
         self.name = 'link'
         self.command_var = 'link'
         self.link_var = 'ld'
@@ -125,10 +124,10 @@ class MsvcStaticLinker(object):
         return []
 
 class MsvcBuilder(object):
-    def __init__(self, env):
-        self.compiler = MsvcCompiler(env)
+    def __init__(self, env, compile_cmd, link_cmd):
+        self.compiler = MsvcCompiler(env, compile_cmd)
         self.linkers = {
-            'executable': MsvcLinker(env, 'executable'),
-            'shared_library': MsvcLinker(env, 'shared_library'),
+            'executable': MsvcLinker(env, 'executable', link_cmd),
+            'shared_library': MsvcLinker(env, 'shared_library', link_cmd),
             'static_library': MsvcStaticLinker(env),
         }

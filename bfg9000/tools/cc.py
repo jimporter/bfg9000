@@ -128,47 +128,47 @@ class CcLinkerBase(object):
         return []
 
 class CcCompiler(CcCompilerBase):
-    def __init__(self, env):
-        CcCompilerBase.__init__(self, env, env.getvar('CC', 'cc'), 'cc')
+    def __init__(self, env, command):
+        CcCompilerBase.__init__(self, env, command, 'cc')
         self.global_args = (
             shell.split(env.getvar('CFLAGS', '')) +
             shell.split(env.getvar('CPPFLAGS', ''))
         )
 
 class CxxCompiler(CcCompilerBase):
-    def __init__(self, env):
-        CcCompilerBase.__init__(self, env, env.getvar('CXX', 'c++'), 'cxx')
+    def __init__(self, env, command):
+        CcCompilerBase.__init__(self, env, command, 'cxx')
         self.global_args = (
             shell.split(env.getvar('CXXFLAGS', '')) +
             shell.split(env.getvar('CPPFLAGS', ''))
         )
 
 class CcLinker(CcLinkerBase):
-    def __init__(self, env, mode):
-        CcLinkerBase.__init__(self, env, mode, env.getvar('CC', 'cc'), 'cc')
+    def __init__(self, env, mode, command):
+        CcLinkerBase.__init__(self, env, mode, command, 'cc')
         self.global_args = shell.split(env.getvar('LDFLAGS', ''))
         self.global_libs = shell.split(env.getvar('LDLIBS', ''))
 
 class CxxLinker(CcLinkerBase):
-    def __init__(self, env, mode):
-        CcLinkerBase.__init__(self, env, mode, env.getvar('CXX', 'c++'), 'cxx')
+    def __init__(self, env, mode, command):
+        CcLinkerBase.__init__(self, env, mode, command, 'cxx')
         self.global_args = shell.split(env.getvar('LDFLAGS', ''))
         self.global_libs = shell.split(env.getvar('LDLIBS', ''))
 
 class CcBuilder(object):
-    def __init__(self, env):
-        self.compiler = CcCompiler(env)
+    def __init__(self, env, cmd, ar_cmd):
+        self.compiler = CcCompiler(env, cmd)
         self.linkers = {
-            'executable': CcLinker(env, 'executable'),
-            'shared_library': CcLinker(env, 'shared_library'),
-            'static_library': ArLinker(env),
+            'executable': CcLinker(env, 'executable', cmd),
+            'shared_library': CcLinker(env, 'shared_library', cmd),
+            'static_library': ArLinker(env, ar_cmd),
         }
 
 class CxxBuilder(object):
-    def __init__(self, env):
-        self.compiler = CxxCompiler(env)
+    def __init__(self, env, cmd, ar_cmd):
+        self.compiler = CxxCompiler(env, cmd)
         self.linkers = {
-            'executable': CxxLinker(env, 'executable'),
-            'shared_library': CxxLinker(env, 'shared_library'),
-            'static_library': ArLinker(env),
+            'executable': CxxLinker(env, 'executable', cmd),
+            'shared_library': CxxLinker(env, 'shared_library', cmd),
+            'static_library': ArLinker(env, ar_cmd),
         }
