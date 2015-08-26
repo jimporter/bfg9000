@@ -50,7 +50,9 @@ def write(env, build_inputs):
             # already created.
             dependencies = []
             for dep in e.libs:
-                if dep.creator and id(dep.creator.target) not in project_map:
+                if not dep.creator:
+                    continue
+                if id(dep.creator.target) not in project_map:
                     raise ValueError('unknown dependency for {!r}'.format(dep))
                 dependencies.append(project_map[id(dep.creator.target)])
 
