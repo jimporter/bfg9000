@@ -15,7 +15,7 @@ from bfg9000.backends import get_backends
 
 this_dir = os.path.abspath(os.path.dirname(__file__))
 examples_dir = os.path.join(this_dir, '..', '..', 'examples')
-test_data_dir = os.path.join(this_dir, '..', 'test_data')
+test_data_dir = os.path.join(this_dir, '..', 'data')
 test_stage_dir = os.path.join(this_dir, '..', 'stage')
 
 Target = namedtuple('Target', ['name', 'path'])
