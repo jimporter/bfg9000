@@ -1,7 +1,10 @@
-#include <zlib.h>
+#include <ogg/ogg.h>
 
 int main() {
-  gzFile f = gzopen("file.gz", "w");
-  gzclose(f);
+  ogg_sync_state state;
+
+  ogg_sync_init(&state);
+  ogg_sync_clear(&state);
+
   return 0;
 }

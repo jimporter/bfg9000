@@ -3,9 +3,9 @@
 # Most significant projects require the use of external libraries. You can find
 # these libraries on the system with the system_package() function:
 
-zlib = system_package('z')
+ogg = system_package('ogg')
 
 # Packages can be passed to the build functions, which will link the object with
 # the package and add the appropriate include directories:
 
-executable('program', files=['program.cpp'], packages=[zlib])
+executable('program', files=['program.cpp'], packages=[ogg])
