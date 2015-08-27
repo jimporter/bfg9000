@@ -25,7 +25,7 @@ class CFamilyBuilder(object):
         cmd = env.getvar(var, default_cmd)
 
         cflags = (
-            shell.split(env.getvar('CFLAGS', '')) +
+            shell.split(env.getvar(var + 'FLAGS', '')) +
             shell.split(env.getvar('CPPFLAGS', ''))
         )
         ldflags = shell.split(env.getvar('LDFLAGS', ''))
