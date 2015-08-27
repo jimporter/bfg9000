@@ -57,8 +57,8 @@ def parse_args(parser, args=None, namespace=None):
 
         if not os.path.exists(args.builddir):
             os.mkdir(args.builddir)
-        args.srcdir = os.path.abspath(args.srcdir)
-        args.builddir = os.path.abspath(args.builddir)
+        args.srcdir = Path(os.path.abspath(args.srcdir))
+        args.builddir = Path(os.path.abspath(args.builddir))
     else:
         args.srcdir, args.builddir = None, args.srcdir
         if args.srcdir:
@@ -67,7 +67,7 @@ def parse_args(parser, args=None, namespace=None):
             args.builddir = '.'
 
         check_dir(args.builddir, check_exist=True)
-        args.builddir = os.path.abspath(args.builddir)
+        args.builddir = Path(os.path.abspath(args.builddir))
 
     return args
 
@@ -105,7 +105,7 @@ def main():
     args = parse_args(parser)
     if args.regenerate:
         try:
-            env = Environment.load(args.builddir)
+            env = Environment.load(args.builddir.string())
         except Exception as e:
             sys.stderr.write('{prog}: error loading environment: {msg}\n'
                              .format(prog=parser.prog, msg=e))
@@ -127,11 +127,11 @@ def main():
                 InstallRoot.includedir: args.includedir,
             }
         )
-        env.save(args.builddir)
+        env.save(args.builddir.string())
 
     build = BuildInputs()
-    os.chdir(env.srcdir)
-    execfile(os.path.join(env.srcdir, bfgfile), builtins.bind(
+    os.chdir(env.srcdir.string())
+    execfile(env.srcdir.append(bfgfile).string(), builtins.bind(
         build_inputs=build, env=env
     ))
 

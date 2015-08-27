@@ -21,20 +21,6 @@ class Path(safe_str.safe_string):
         else:
             self.root = root
 
-    def realize(self, variables, executable=False):
-        root = variables[self.root] if self.root != Root.absolute else None
-        if executable and root is None and os.path.sep not in self.suffix:
-            root = '.'
-
-        if root is None:
-            return self.suffix or '.'
-        if not self.suffix:
-            return root
-        # XXX: Add the separator and path first to make the jbos two elements
-        # instead of three. This fixes an obscure bug with Windows path
-        # escaping.
-        return root + (os.path.sep + self.suffix)
-
     def parent(self):
         if not self.suffix:
             raise ValueError('already at root')
@@ -70,6 +56,23 @@ class Path(safe_str.safe_string):
         except:
             base = InstallRoot[data[1]]
         return Path(data[0], base)
+
+    def realize(self, variables, executable=False):
+        root = variables[self.root] if self.root != Root.absolute else None
+        if executable and root is None and os.path.sep not in self.suffix:
+            root = '.'
+
+        if root is None:
+            return self.suffix or '.'
+        if not self.suffix:
+            return root
+        # XXX: Add the separator and path first to make the jbos two elements
+        # instead of three. This fixes an obscure bug with Windows path
+        # escaping.
+        return root + (os.path.sep + self.suffix)
+
+    def string(self):
+        return self.realize(None)
 
     def __str__(self):
         raise NotImplementedError()

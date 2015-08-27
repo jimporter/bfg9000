@@ -37,7 +37,7 @@ def reduce_includes(files):
     ))
 
 def write(env, build_inputs):
-    uuids = UUIDMap(os.path.join(env.builddir, '.bfg_uuid'))
+    uuids = UUIDMap(env.builddir.append('.bfg_uuid').string())
 
     projects = []
     project_map = {}
@@ -63,7 +63,7 @@ def write(env, build_inputs):
                 mode=link_mode(e.builder.mode),
                 platform=env.getvar('PLATFORM'),
                 output_file=e.target,
-                srcdir=env.srcdir,
+                srcdir=env.srcdir.string(),
                 files=[i.creator.file for i in e.files],
                 compile_options=reduce_options(
                     e.files, build_inputs.global_options
@@ -77,10 +77,10 @@ def write(env, build_inputs):
             projects.append(project)
             project_map[id(e.target)] = project
 
-    with open(os.path.join(env.builddir, 'project.sln'), 'w') as out:
+    with open(env.builddir.append('project.sln').string(), 'w') as out:
         write_solution(out, uuids[''], projects)
     for p in projects:
-        projfile = os.path.join(env.builddir, p.path)
+        projfile = env.builddir.append(p.path).string()
         makedirs(os.path.dirname(projfile), exist_ok=True)
         with open(projfile, 'w') as out:
             p.write(out)

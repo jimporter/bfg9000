@@ -25,7 +25,7 @@ def _find_library(env, name, search_dirs):
     for d in search_dirs:
         for i in linkers:
             candidate = i.output_file(os.path.join(d, name))
-            if os.path.exists(candidate.link.path.realize(None)):
+            if os.path.exists(candidate.link.path.string()):
                 return candidate
     raise ValueError("unable to find package '{}'".format(name))
 
@@ -41,7 +41,7 @@ class BoostPackage(Package):
 
 def _boost_version(headers, required_version=None):
     version_hpp = headers.path.append('boost').append('version.hpp')
-    with open(version_hpp.realize(None)) as f:
+    with open(version_hpp.string()) as f:
         for line in f:
             m = re.match(r'#\s*define\s+BOOST_LIB_VERSION\s+"([\d_]+)"', line)
             if m:

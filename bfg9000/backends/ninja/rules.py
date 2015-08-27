@@ -1,4 +1,3 @@
-import os
 from cStringIO import StringIO
 from itertools import chain, ifilter
 from packaging.specifiers import SpecifierSet
@@ -35,7 +34,7 @@ def write(env, build_inputs):
     test_rule(build_inputs.tests, buildfile)
     regenerate_rule(build_inputs.find_dirs, buildfile, env)
 
-    with open(os.path.join(env.builddir, 'build.ninja'), 'w') as out:
+    with open(env.builddir.append('build.ninja').string(), 'w') as out:
         buildfile.write(out)
 
 def command_build(buildfile, output, inputs=None, implicit=None,
@@ -171,7 +170,7 @@ def regenerate_rule(find_dirs, buildfile, env):
     depfile = None
 
     if find_dirs:
-        find.write_depfile(os.path.join(env.builddir, find.depfile_name),
+        find.write_depfile(env.builddir.append(find.depfile_name).string(),
                            'build.ninja', find_dirs)
         depfile = find.depfile_name
 

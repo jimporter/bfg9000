@@ -9,7 +9,7 @@ class EnvVersionError(RuntimeError):
     pass
 
 class Environment(object):
-    version = 4
+    version = 5
     envfile = '.bfg_environ'
 
     def __new__(cls, *args, **kwargs):
@@ -85,8 +85,8 @@ class Environment(object):
                     'platform': self.platform.name,
                     'backend': self.backend,
                     'variables': self.variables,
-                    'srcdir': self.srcdir,
-                    'builddir': self.builddir,
+                    'srcdir': self.srcdir.to_json(),
+                    'builddir': self.builddir.to_json(),
                     'install_dirs': {
                         k.name: v.to_json() for k, v in
                         self.install_dirs.iteritems()
@@ -98,18 +98,25 @@ class Environment(object):
     def load(cls, path):
         with open(os.path.join(path, cls.envfile)) as inp:
             state = json.load(inp)
-        if state['version'] > cls.version:
+            version, data = state['version'], state['data']
+        if version > cls.version:
             raise EnvVersionError('saved version exceeds expected version')
 
         env = Environment.__new__(Environment)
 
-        for i in ['bfgpath', 'backend', 'variables', 'srcdir', 'builddir']:
-            setattr(env, i, state['data'][i])
+        for i in ['bfgpath', 'backend', 'variables']:
+            setattr(env, i, data[i])
+
+        for i in ['srcdir', 'builddir']:
+            if version <= 4:
+                setattr(env, i, Path(data[i]))
+            else:
+                setattr(env, i, Path.from_json(data[i]))
 
         env.platform = platforms.platform_info(state['data']['platform'])
         env.install_dirs = {
             InstallRoot[k]: Path.from_json(v) for k, v in
-            state['data']['install_dirs'].iteritems()
+            data['install_dirs'].iteritems()
         }
 
         return env

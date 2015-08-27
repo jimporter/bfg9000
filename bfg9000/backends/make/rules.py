@@ -35,7 +35,7 @@ def write(env, build_inputs):
     directory_rule(buildfile, env)
     regenerate_rule(build_inputs.find_dirs, buildfile, env)
 
-    with open(os.path.join(env.builddir, 'Makefile'), 'w') as out:
+    with open(env.builddir.append('Makefile').string(), 'w') as out:
         buildfile.write(out)
 
 def cmd_var(cmd, buildfile):
@@ -165,7 +165,7 @@ def regenerate_rule(find_dirs, buildfile, env):
     extra_deps = []
 
     if find_dirs:
-        find.write_depfile(os.path.join(env.builddir, find.depfile_name),
+        find.write_depfile(env.builddir.append(find.depfile_name).string(),
                            'Makefile', find_dirs, makeify=True)
         buildfile.include(find.depfile_name)
 
