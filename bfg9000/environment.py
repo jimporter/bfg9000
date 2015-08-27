@@ -106,21 +106,10 @@ class Environment(object):
         for i in ['bfgpath', 'backend', 'variables', 'srcdir', 'builddir']:
             setattr(env, i, state['data'][i])
 
-        if state['version'] == 1:
-            env.platform = platforms.platform_info()
-        else:
-            env.platform = platforms.platform_info(state['data']['platform'])
-
-        if state['version'] <= 3:
-            prefix = Path(state['data']['install_prefix'])
-            env.install_dirs[InstallRoot.prefix] = prefix
-            for i in [InstallRoot.bindir, InstallRoot.libdir,
-                      InstallRoot.includedir]:
-                env.install_dirs[i] = env.platform.install_paths[i]
-        else:
-            env.install_dirs = {
-                InstallRoot[k]: Path.from_json(v) for k, v in
-                state['data']['install_dirs'].iteritems()
-            }
+        env.platform = platforms.platform_info(state['data']['platform'])
+        env.install_dirs = {
+            InstallRoot[k]: Path.from_json(v) for k, v in
+            state['data']['install_dirs'].iteritems()
+        }
 
         return env
