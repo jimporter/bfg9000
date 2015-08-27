@@ -58,7 +58,7 @@ class Environment(object):
 
     def compiler(self, lang):
         if lang not in self.__builders:
-            self.__builders[lang] = tools.get_builder(lang)(self)
+            self.__builders[lang] = tools.get_builder(lang, self)
         return self.__builders[lang].compiler
 
     def linker(self, lang, mode):
@@ -68,12 +68,12 @@ class Environment(object):
                 lang = 'c++'
 
         if lang not in self.__builders:
-            self.__builders[lang] = tools.get_builder(lang)(self)
+            self.__builders[lang] = tools.get_builder(lang, self)
         return self.__builders[lang].linkers[mode]
 
     def tool(self, name):
         if name not in self.__tools:
-            self.__tools[name] = tools.get_tool(name)(self)
+            self.__tools[name] = tools.get_tool(name, self)
         return self.__tools[name]
 
     def save(self, path):

@@ -6,13 +6,14 @@ from .. import iterutils
 from ..path import Root
 
 class ArLinker(object):
-    def __init__(self, env, command):
+    def __init__(self, env):
         self.platform = env.platform
         self.mode = 'static_library'
-        self.command_name = command
-        self.command_var = 'ar'
+
+        self.name = self.command_var = 'ar'
+        self.command_name = env.getvar('AR', 'ar')
         self.link_var = 'ar'
-        self.name = 'ar'
+
         self.global_args = shell.split(env.getvar('ARFLAGS', 'cru'))
 
     def command(self, cmd, input, output, args=None):

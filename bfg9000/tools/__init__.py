@@ -14,16 +14,22 @@ def _load_tools():
             importlib.import_module(name, __package__)
         _loaded_tools = True
 
-def builder(lang):
+def builder(*args):
+    if len(args) == 0:
+        raise TypeError('must provide at least one language')
+    multi = len(args) > 1
+
     def wrapper(fn):
-        _builders[lang] = fn
+        for i in args:
+            _builders[i] = (fn, multi)
         return fn
     return wrapper
 
-def get_builder(lang):
+def get_builder(lang, env):
     _load_tools()
     try:
-        return _builders[lang]
+        fn, multi = _builders[lang]
+        return fn(env, lang) if multi else fn(env)
     except KeyError:
         raise ValueError('unknown language "{}"'.format(lang))
 
@@ -33,9 +39,9 @@ def tool(name):
         return fn
     return wrapper
 
-def get_tool(name):
+def get_tool(name, env):
     _load_tools()
     try:
-        return _tools[name]
+        return _tools[name](env)
     except KeyError:
         raise ValueError('unknown tool "{}"'.format(name))

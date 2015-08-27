@@ -6,16 +6,13 @@ from ..iterutils import iterate, uniques
 from ..path import Root
 
 class MsvcCompiler(object):
-    def __init__(self, env, command):
+    def __init__(self, env, name, command, cflags):
         self.platform = env.platform
+
+        self.name = self.command_var = name
         self.command_name = command
-        self.name = 'cxx'
-        self.command_var = 'cxx'
-        self.global_args = (
-            ['/nologo'] +
-            shell.split(env.getvar('CXXFLAGS', '')) +
-            shell.split(env.getvar('CPPFLAGS', ''))
-        )
+
+        self.global_args = ['/nologo'] + cflags
 
     def command(self, cmd, input, output, deps=None, args=None):
         result = [cmd]
@@ -45,15 +42,16 @@ class MsvcCompiler(object):
         return ['/I' + directory.path]
 
 class MsvcLinker(object):
-    def __init__(self, env, mode, command):
+    def __init__(self, env, mode, name, command, ldflags, ldlibs):
         self.platform = env.platform
         self.mode = mode
+
+        self.name = self.command_var = 'link_' + name
         self.command_name = command
-        self.name = 'link'
-        self.command_var = 'link'
         self.link_var = 'ld'
-        self.global_args = ['/nologo'] + shell.split(env.getvar('LDFLAGS', ''))
-        self.global_libs = shell.split(env.getvar('LDLIBS', ''))
+
+        self.global_args = ['/nologo'] + ldflags
+        self.global_libs = ldlibs
 
     def command(self, cmd, input, output, libs=None, args=None):
         result = [cmd]
@@ -96,13 +94,14 @@ class MsvcLinker(object):
         return []
 
 class MsvcStaticLinker(object):
-    def __init__(self, env, command):
+    def __init__(self, env, name, command):
         self.platform = env.platform
         self.mode = 'static_library'
+
+        self.name = self.command_var = 'lib_' + name
         self.command_name = command
-        self.name = 'lib'
-        self.command_var = 'lib'
         self.link_var = 'lib'
+
         self.global_args = shell.split(env.getvar('LIBFLAGS', ''))
 
     def command(self, cmd, input, output, args=None):
@@ -118,12 +117,3 @@ class MsvcStaticLinker(object):
     @property
     def mode_args(self):
         return []
-
-class MsvcBuilder(object):
-    def __init__(self, env, compile_cmd, link_cmd, lib_cmd):
-        self.compiler = MsvcCompiler(env, compile_cmd)
-        self.linkers = {
-            'executable': MsvcLinker(env, 'executable', link_cmd),
-            'shared_library': MsvcLinker(env, 'shared_library', link_cmd),
-            'static_library': MsvcStaticLinker(env, lib_cmd),
-        }

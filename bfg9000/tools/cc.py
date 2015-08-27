@@ -1,18 +1,18 @@
 import os.path
 import re
 
-from .ar import ArLinker
-from .. import shell
 from ..file_types import *
 from ..iterutils import iterate, uniques
 from ..path import Root
 
-class CcCompilerBase(object):
-    def __init__(self, env, command, name):
+class CcCompiler(object):
+    def __init__(self, env, name, command, cflags):
         self.platform = env.platform
+
+        self.name = self.command_var = name
         self.command_name = command
-        self.name = name
-        self.command_var = name
+
+        self.global_args = cflags
 
     def command(self, cmd, input, output, deps=None, args=None):
         result = [cmd]
@@ -41,14 +41,18 @@ class CcCompilerBase(object):
     def include_dir(self, directory):
         return ['-I' + directory.path]
 
-class CcLinkerBase(object):
-    def __init__(self, env, mode, command, name):
+class CcLinker(object):
+    def __init__(self, env, mode, name, command, ldflags, ldlibs):
         self.env = env
         self.mode = mode
-        self.command_name = command
+
         self.name = 'link_' + name
         self.command_var = name
+        self.command_name = command
         self.link_var = 'ld'
+
+        self.global_args = ldflags
+        self.global_libs = ldlibs
 
         # Create a regular expression to extract the library name for linking
         # with -l. TODO: Support .lib as an extension on Windows/Cygwin?
@@ -126,49 +130,3 @@ class CcLinkerBase(object):
                 rpaths = (o if i == '.' else os.path.join(o, i) for i in paths)
                 return ['-Wl,-rpath={}'.format(':'.join(rpaths))]
         return []
-
-class CcCompiler(CcCompilerBase):
-    def __init__(self, env, command):
-        CcCompilerBase.__init__(self, env, command, 'cc')
-        self.global_args = (
-            shell.split(env.getvar('CFLAGS', '')) +
-            shell.split(env.getvar('CPPFLAGS', ''))
-        )
-
-class CxxCompiler(CcCompilerBase):
-    def __init__(self, env, command):
-        CcCompilerBase.__init__(self, env, command, 'cxx')
-        self.global_args = (
-            shell.split(env.getvar('CXXFLAGS', '')) +
-            shell.split(env.getvar('CPPFLAGS', ''))
-        )
-
-class CcLinker(CcLinkerBase):
-    def __init__(self, env, mode, command):
-        CcLinkerBase.__init__(self, env, mode, command, 'cc')
-        self.global_args = shell.split(env.getvar('LDFLAGS', ''))
-        self.global_libs = shell.split(env.getvar('LDLIBS', ''))
-
-class CxxLinker(CcLinkerBase):
-    def __init__(self, env, mode, command):
-        CcLinkerBase.__init__(self, env, mode, command, 'cxx')
-        self.global_args = shell.split(env.getvar('LDFLAGS', ''))
-        self.global_libs = shell.split(env.getvar('LDLIBS', ''))
-
-class CcBuilder(object):
-    def __init__(self, env, cmd, ar_cmd):
-        self.compiler = CcCompiler(env, cmd)
-        self.linkers = {
-            'executable': CcLinker(env, 'executable', cmd),
-            'shared_library': CcLinker(env, 'shared_library', cmd),
-            'static_library': ArLinker(env, ar_cmd),
-        }
-
-class CxxBuilder(object):
-    def __init__(self, env, cmd, ar_cmd):
-        self.compiler = CxxCompiler(env, cmd)
-        self.linkers = {
-            'executable': CxxLinker(env, 'executable', cmd),
-            'shared_library': CxxLinker(env, 'shared_library', cmd),
-            'static_library': ArLinker(env, ar_cmd),
-        }
