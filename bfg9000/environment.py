@@ -82,15 +82,15 @@ class Environment(object):
                 'version': self.version,
                 'data': {
                     'bfgpath': self.bfgpath,
+                    'platform': self.platform.name,
                     'backend': self.backend,
+                    'variables': self.variables,
                     'srcdir': self.srcdir,
                     'builddir': self.builddir,
                     'install_dirs': {
                         k.name: v.to_json() for k, v in
                         self.install_dirs.iteritems()
                     },
-                    'platform': self.platform.name,
-                    'variables': self.variables,
                 }
             }, out)
 
@@ -101,26 +101,26 @@ class Environment(object):
         if state['version'] > cls.version:
             raise EnvVersionError('saved version exceeds expected version')
 
-        if state['version'] == 1:
-            state['data']['platform'] = platforms.platform_name()
+        env = Environment.__new__(Environment)
 
-        platform = state['data']['platform'] = platforms.platform_info(
-            state['data']['platform']
-        )
+        for i in ['bfgpath', 'backend', 'variables', 'srcdir', 'builddir']:
+            setattr(env, i, state['data'][i])
+
+        if state['version'] == 1:
+            env.platform = platforms.platform_info()
+        else:
+            env.platform = platforms.platform_info(state['data']['platform'])
 
         if state['version'] <= 3:
-            prefix = state['data'].pop('install_prefix')
-            state['data'][InstallRoot.prefix] = Path(prefix)
+            prefix = Path(state['data']['install_prefix'])
+            env.install_dirs[InstallRoot.prefix] = prefix
             for i in [InstallRoot.bindir, InstallRoot.libdir,
                       InstallRoot.includedir]:
-                state['data']['install_dirs'][i] = platform.install_paths[i]
+                env.install_dirs[i] = env.platform.install_paths[i]
         else:
-            state['data']['install_dirs'] = {
+            env.install_dirs = {
                 InstallRoot[k]: Path.from_json(v) for k, v in
                 state['data']['install_dirs'].iteritems()
             }
 
-        env = Environment.__new__(Environment)
-        for k, v in state['data'].iteritems():
-            setattr(env, k, v)
         return env
