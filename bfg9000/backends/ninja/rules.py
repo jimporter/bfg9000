@@ -39,7 +39,7 @@ def write(env, build_inputs):
 
 def command_build(buildfile, output, inputs=None, implicit=None,
                   order_only=None, commands=None):
-    # XXX: Only make come command builds use the console pool?
+    # XXX: Only make some command builds use the console pool?
     extra_kwargs = {}
     if version in SpecifierSet('>=1.5'):
         extra_kwargs['pool'] = 'console'
