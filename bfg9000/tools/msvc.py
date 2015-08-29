@@ -77,7 +77,7 @@ class MsvcLinker(object):
     def mode_args(self):
         return ['/DLL'] if self.mode == 'shared_library' else []
 
-    def extra_compile_args(self, output):
+    def extra_compile_args(self, name):
         return ['/D' + shared_library_macro(name)]
 
     def lib_dirs(self, libraries):
@@ -122,5 +122,5 @@ class MsvcStaticLinker(object):
     def mode_args(self):
         return []
 
-    def extra_compile_args(self, output):
+    def extra_compile_args(self, name):
         return ['/D' + static_library_macro(name)]
