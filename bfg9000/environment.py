@@ -64,8 +64,7 @@ class Environment(object):
     def linker(self, lang, mode):
         # TODO: Be more intelligent about this when we support more languages.
         if not isinstance(lang, basestring):
-            if 'c++' in lang:
-                lang = 'c++'
+            lang = 'c++' if 'c++' in lang else 'c'
 
         if lang not in self.__builders:
             self.__builders[lang] = tools.get_builder(lang, self)
