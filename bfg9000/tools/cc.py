@@ -31,10 +31,6 @@ class CcCompiler(object):
     def deps_flavor(self):
         return 'gcc'
 
-    @property
-    def auto_link(self):
-        return False
-
     def include_dir(self, directory):
         return ['-I' + directory.path]
 
@@ -75,6 +71,10 @@ class CcLinker(object):
         if self.platform.has_rpath:
             return self.env.tool('patchelf')
         return None
+
+    @property
+    def auto_link(self):
+        return False
 
     def output_file(self, name):
         if self.mode == 'executable':

@@ -32,10 +32,6 @@ class MsvcCompiler(object):
         return 'msvc'
 
     @property
-    def auto_link(self):
-        return True
-
-    @property
     def library_args(self):
         return []
 
@@ -72,6 +68,10 @@ class MsvcLinker(object):
             return DllLibrary(name + ext, name + '.lib', Root.builddir)
         else:
             raise ValueError("unknown mode '{}'".format(self.mode))
+
+    @property
+    def auto_link(self):
+        return True
 
     @property
     def mode_args(self):
