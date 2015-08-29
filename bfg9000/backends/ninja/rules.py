@@ -75,7 +75,6 @@ def all_rule(default_targets, buildfile):
         inputs=default_targets
     )
 
-# TODO: Write a better `install` program to simplify this
 def install_rule(install_targets, buildfile, env):
     if not install_targets:
         return

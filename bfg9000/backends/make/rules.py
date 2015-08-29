@@ -55,7 +55,6 @@ def all_rule(default_targets, buildfile):
         phony=True
     )
 
-# TODO: Write a better `install` program to simplify this
 def install_rule(install_targets, buildfile, env):
     if not install_targets:
         return

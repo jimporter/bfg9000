@@ -10,6 +10,6 @@ class MkdirP(object):
     def command(self, cmd, path):
         return [cmd, path]
 
-    # TODO: Remove this once we rewrite the install command.
+    # XXX: Remove this once we rewrite the install command.
     def copy_command(self, cmd, src, dst):
         return cmd + ' ' + dst + ' && cp -r ' + src + '/* ' + dst
