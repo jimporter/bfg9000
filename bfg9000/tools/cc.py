@@ -134,7 +134,8 @@ class CcLinker(object):
             paths = uniques(i.path.parent().relpath(start) for i in libraries
                             if isinstance(i, SharedLibrary))
             if paths:
-                o = '$ORIGIN'
-                rpaths = (o if i == '.' else os.path.join(o, i) for i in paths)
-                return ['-Wl,-rpath={}'.format(':'.join(rpaths))]
+                base = '$ORIGIN'
+                return ['-Wl,-rpath={}'.format(':'.join(
+                    base if i == '.' else os.path.join(base, i) for i in paths
+                ))]
         return []

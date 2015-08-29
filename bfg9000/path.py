@@ -35,9 +35,6 @@ class Path(safe_str.safe_string):
     def basename(self):
         return os.path.basename(self.suffix)
 
-    # XXX: It might make sense to remove this if/when we support changing
-    # bindir, libdir, etc. At that point, we might have to mandate absolute
-    # paths for rpath.
     def relpath(self, start):
         if os.path.isabs(self.suffix):
             return self.suffix
@@ -66,10 +63,7 @@ class Path(safe_str.safe_string):
             return self.suffix or '.'
         if not self.suffix:
             return root
-        # XXX: Add the separator and path first to make the jbos two elements
-        # instead of three. This fixes an obscure bug with Windows path
-        # escaping.
-        return root + (os.path.sep + self.suffix)
+        return root + os.path.sep + self.suffix
 
     def string(self):
         return self.realize(None)
