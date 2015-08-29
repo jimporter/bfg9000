@@ -1,6 +1,5 @@
 import os
 
-from .utils import static_library_macro
 from .. import shell
 from .. import file_types
 from .. import iterutils
@@ -31,10 +30,4 @@ class ArLinker(object):
 
     @property
     def mode_args(self):
-        return []
-
-    def extra_compile_args(self, name):
-        if self.platform.has_import_library:
-            # XXX: Consult the compiler to determine how to define a macro?
-            return ['-D' + static_library_macro(name)]
         return []

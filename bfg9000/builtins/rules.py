@@ -50,7 +50,7 @@ class Compile(Edge):
         self.builder = env.compiler(self.file.lang)
         self.include = sum((i.includes for i in iterate(packages)), include)
         self.options = pshell.listify(options)
-        self.extra_options = []
+        self.internal_options = []
 
         target = self.builder.output_file(name, self.file.lang)
         Edge.__init__(self, build, target, extra_deps)
@@ -88,10 +88,8 @@ class Link(Edge):
         self.name = self.__name(name, mode)
 
         target = self.builder.output_file(name)
-        if mode in ['shared_library', 'static_library']:
-            extra = self.builder.extra_compile_args(self.name)
-            for i in self.files:
-                i.creator.extra_options.extend(extra)
+        for c in (i.creator for i in self.files if i.creator):
+            c.internal_options.extend(c.builder.link_args(self.name, mode))
         if getattr(self.builder, 'post_install', None):
             target.post_install = self.builder.post_install
 

@@ -21,10 +21,9 @@ def reduce_options(files, global_options):
 
     per_file_opts = []
     for i in files:
-        if i.creator.options not in per_file_opts:
-            per_file_opts.append(i.creator.options)
-        if i.creator.extra_options not in per_file_opts:
-            per_file_opts.append(i.creator.extra_options)
+        for opts in [i.creator.internal_options, i.creator.options]:
+            if opts not in per_file_opts:
+                per_file_opts.append(opts)
 
     return list(chain(
         chain.from_iterable(i.global_args for i in compilers),

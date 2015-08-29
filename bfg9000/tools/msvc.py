@@ -1,6 +1,6 @@
 import os
 
-from .utils import *
+from .utils import library_macro
 from .. import shell
 from ..file_types import *
 from ..iterutils import iterate, uniques
@@ -37,6 +37,14 @@ class MsvcCompiler(object):
 
     def include_dir(self, directory):
         return ['/I' + directory.path]
+
+    def link_args(self, name, mode):
+        if mode == 'executable':
+            return []
+        elif mode in ['shared_library', 'static_library']:
+            return ['/D' + library_macro(name, mode)]
+        else:
+            raise ValueError("unknown mode '{}'".format(mode))
 
 class MsvcLinker(object):
     def __init__(self, env, mode, name, command, ldflags, ldlibs):
@@ -76,9 +84,6 @@ class MsvcLinker(object):
     @property
     def mode_args(self):
         return ['/DLL'] if self.mode == 'shared_library' else []
-
-    def extra_compile_args(self, name):
-        return ['/D' + shared_library_macro(name)]
 
     def lib_dirs(self, libraries):
         def get_dir(lib):
@@ -121,6 +126,3 @@ class MsvcStaticLinker(object):
     @property
     def mode_args(self):
         return []
-
-    def extra_compile_args(self, name):
-        return ['/D' + static_library_macro(name)]
