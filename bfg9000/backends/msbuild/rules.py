@@ -21,9 +21,10 @@ def reduce_options(files, global_options):
 
     per_file_opts = []
     for i in files:
-        opts = i.creator.options
-        if opts not in per_file_opts:
-            per_file_opts.append(opts)
+        if i.creator.options not in per_file_opts:
+            per_file_opts.append(i.creator.options)
+        if i.creator.extra_options not in per_file_opts:
+            per_file_opts.append(i.creator.extra_options)
 
     return list(chain(
         chain.from_iterable(i.global_args for i in compilers),
@@ -57,8 +58,8 @@ def write(env, build_inputs):
                 dependencies.append(project_map[id(dep.creator.target)])
 
             project = VcxProject(
-                name=e.project_name,
-                uuid=uuids[e.project_name],
+                name=e.name,
+                uuid=uuids[e.name],
                 version=env.getvar('VISUALSTUDIOVERSION'),
                 mode=link_mode(e.builder.mode),
                 platform=env.getvar('PLATFORM'),

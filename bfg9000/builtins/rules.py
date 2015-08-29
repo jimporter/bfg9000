@@ -50,23 +50,22 @@ class Compile(Edge):
         self.builder = env.compiler(self.file.lang)
         self.include = sum((i.includes for i in iterate(packages)), include)
         self.options = pshell.listify(options)
-        self.in_shared_library = False
+        self.extra_options = []
 
         target = self.builder.output_file(name, self.file.lang)
         Edge.__init__(self, build, target, extra_deps)
 
 class Link(Edge):
-    # This is just for MSBuild. XXX: Remove this?
-    __project_prefixes = {
+    __prefixes = {
         'executable': '',
         'static_library': 'lib',
         'shared_library': 'lib',
     }
 
     @classmethod
-    def __project(cls, name, mode):
+    def __name(cls, name, mode):
         head, tail = os.path.split(name)
-        return os.path.join(head, cls.__project_prefixes[mode] + tail)
+        return os.path.join(head, cls.__prefixes[mode] + tail)
 
     def __init__(self, builtins, build, env, mode, name, files, include=None,
                  libs=None, packages=None, compile_options=None,
@@ -86,9 +85,13 @@ class Link(Edge):
         lib_dirs = (self.builder.lib_dirs(i.lib_dirs)
                     for i in iterate(packages))
         self.options = sum(lib_dirs, pshell.listify(link_options))
-        self.project_name = self.__project(name, mode)
+        self.name = self.__name(name, mode)
 
         target = self.builder.output_file(name)
+        if mode in ['shared_library', 'static_library']:
+            extra = self.builder.extra_compile_args(self.name)
+            for i in self.files:
+                i.creator.extra_options.extend(extra)
         if getattr(self.builder, 'post_install', None):
             target.post_install = self.builder.post_install
 
@@ -162,11 +165,8 @@ def shared_library(builtins, build, env, name, files=None, *args, **kwargs):
         # XXX: What to do here for Windows, which has a separate DLL file?
         return SharedLibrary(name, root=Root.srcdir, *args, **kwargs)
     else:
-        rule = Link(builtins, build, env, 'shared_library', name, files, *args,
-                    **kwargs)
-        for i in rule.files:
-            i.creator.in_shared_library = True
-        return rule.target
+        return Link(builtins, build, env, 'shared_library', name, files, *args,
+                    **kwargs).target
 
 @builtin.globals('build_inputs')
 def alias(build, *args, **kwargs):

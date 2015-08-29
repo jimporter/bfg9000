@@ -1,6 +1,7 @@
 import os.path
 import re
 
+from .utils import shared_library_macro
 from ..file_types import *
 from ..iterutils import iterate, uniques
 from ..path import Root
@@ -33,10 +34,6 @@ class CcCompiler(object):
     @property
     def auto_link(self):
         return False
-
-    @property
-    def library_args(self):
-        return ['-fPIC']
 
     def include_dir(self, directory):
         return ['-I' + directory.path]
@@ -102,6 +99,14 @@ class CcLinker(object):
     @property
     def mode_args(self):
         return ['-shared', '-fPIC'] if self.mode == 'shared_library' else []
+
+    def extra_compile_args(self, name):
+        if self.mode == 'shared_library':
+            args = ['-fPIC']
+            if self.platform.has_import_library:
+                args.append('-D' + shared_library_macro(name))
+            return args
+        return []
 
     def lib_dirs(self, libraries):
         def get_dir(lib):

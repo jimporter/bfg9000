@@ -1,5 +1,6 @@
 import os
 
+from .utils import *
 from .. import shell
 from ..file_types import *
 from ..iterutils import iterate, uniques
@@ -76,6 +77,9 @@ class MsvcLinker(object):
     def mode_args(self):
         return ['/DLL'] if self.mode == 'shared_library' else []
 
+    def extra_compile_args(self, output):
+        return ['/D' + shared_library_macro(name)]
+
     def lib_dirs(self, libraries):
         def get_dir(lib):
             return lib.path.parent() if isinstance(lib, Library) else lib
@@ -117,3 +121,6 @@ class MsvcStaticLinker(object):
     @property
     def mode_args(self):
         return []
+
+    def extra_compile_args(self, output):
+        return ['/D' + static_library_macro(name)]
