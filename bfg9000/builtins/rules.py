@@ -202,6 +202,10 @@ def install(builtins, build, *args, **kwargs):
 
 @builtin.globals('build_inputs')
 def test(build, test, options=None, environment=None, driver=None):
+    if driver and environment:
+        raise TypeError('only one of "driver" and "environment" may be ' +
+                        'specified')
+
     test = sourcify(test, File)
     build.tests.targets.append(test)
     case = TestCase(test, pshell.listify(options), environment or {})
@@ -211,6 +215,10 @@ def test(build, test, options=None, environment=None, driver=None):
 @builtin.globals('builtins', 'build_inputs', 'env')
 def test_driver(builtins, build, env, driver, options=None, environment=None,
                 parent=None):
+    if parent and environment:
+        raise TypeError('only one of "parent" and "environment" may be ' +
+                        'specified')
+
     driver = objectify(driver, Executable, builtins['system_executable'])
     result = TestDriver(driver, pshell.listify(options), environment or {})
     (parent or build.tests).tests.append(result)
