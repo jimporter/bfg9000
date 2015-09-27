@@ -1,0 +1,6 @@
+# -*- python -*-
+
+test(
+    executable('prog', files=['prog.cpp']),
+    environment={'VARIABLE': 'hello world'}
+)

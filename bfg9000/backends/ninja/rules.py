@@ -38,7 +38,7 @@ def write(env, build_inputs):
         buildfile.write(out)
 
 def command_build(buildfile, output, inputs=None, implicit=None,
-                  order_only=None, commands=None):
+                  order_only=None, commands=None, needs_shell=False):
     # XXX: Only make some command builds use the console pool?
     extra_kwargs = {}
     if version in SpecifierSet('>=1.5'):
@@ -55,7 +55,7 @@ def command_build(buildfile, output, inputs=None, implicit=None,
         inputs=inputs,
         implicit=iterutils.listify(implicit) + ['PHONY'],
         order_only=order_only,
-        variables={'cmd': Commands(commands)}
+        variables={'cmd': Commands(commands, needs_shell)}
     )
 
 def cmd_var(cmd, buildfile):
@@ -133,8 +133,8 @@ def test_rule(tests, buildfile):
 
     def build_commands(tests, collapse=False):
         def command(test, args=None):
-            env = [safe_str.jbos(k, '=', v) for k, v in test.env.iteritems()]
-            subcmd = env + [test.target] + test.options + (args or [])
+            env_vars = [shell.env_var(k, v) for k, v in test.env.iteritems()]
+            subcmd = env_vars + [test.target] + test.options + (args or [])
             if collapse:
                 out = Writer(StringIO())
                 out.write_shell(subcmd)
@@ -161,7 +161,8 @@ def test_rule(tests, buildfile):
         buildfile,
         output='test',
         inputs=deps + moredeps,
-        commands=commands
+        commands=commands,
+        needs_shell=True # TODO: Remove this
     )
 
 def regenerate_rule(find_dirs, buildfile, env):

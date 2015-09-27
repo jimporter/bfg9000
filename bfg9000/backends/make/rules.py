@@ -112,8 +112,8 @@ def test_rule(tests, buildfile):
     def build_commands(tests, collapse=False):
         cmd, deps = [], []
         def command(test, args=None):
-            env = [safe_str.jbos(k, '=', v) for k, v in test.env.iteritems()]
-            subcmd = env + [test.target] + test.options + (args or [])
+            env_vars = [shell.env_var(k, v) for k, v in test.env.iteritems()]
+            subcmd = env_vars + [test.target] + test.options + (args or [])
             if collapse:
                 out = Writer(StringIO())
                 out.write_shell(subcmd)

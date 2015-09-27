@@ -4,8 +4,12 @@ from array import array
 from enum import Enum
 
 from .. import iterutils
+from ..safe_str import escaped_str, jbos
 
-__all__ = ['split', 'listify', 'escape', 'quote_escaped', 'quote', 'quote_info']
+__all__ = ['split', 'listify', 'escape', 'quote_escaped', 'quote', 'quote_info',
+           'env_var']
+
+# XXX: We need a way to escape cmd.exe-specific characters.
 
 _bad_chars = re.compile(r'(\s|"|\\$)')
 _replace = re.compile(r'(\\*)("|$)')
@@ -81,3 +85,9 @@ def quote(s):
 def quote_info(s):
     s, esc = escape(s)
     return quote_escaped(s, esc), esc
+
+def env_var(name, value):
+    # Join the name and value so they get quoted together, if necessary.
+    # TODO: This sets the variable for the entire line, not just the next
+    # command.
+    return jbos(escaped_str('set '), name + '=' + value, escaped_str('&'))

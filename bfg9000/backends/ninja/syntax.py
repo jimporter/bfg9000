@@ -113,7 +113,8 @@ def var(v):
     return v if isinstance(v, Variable) else Variable(v)
 
 class Commands(object):
-    def __init__(self, commands):
+    def __init__(self, commands, needs_shell=False):
+        self.__always_needs_shell = needs_shell
         self.commands = iterutils.listify(commands)
 
     def use(self):
@@ -129,9 +130,8 @@ class Commands(object):
 
     @property
     def __needs_shell(self):
-        if len(self.commands) > 1:
-            return True
-        if any(not iterutils.isiterable(i) for i in self.commands):
+        if ( self.__always_needs_shell or len(self.commands) > 1 or
+             any(not iterutils.isiterable(i) for i in self.commands )):
             return True
         return False
 

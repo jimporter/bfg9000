@@ -2,10 +2,12 @@ import re
 from shlex import shlex
 
 from .. import iterutils
+from .. import safe_str
 
-__all__ = ['split', 'listify', 'escape', 'quote_escaped', 'quote', 'quote_info']
+__all__ = ['split', 'listify', 'escape', 'quote_escaped', 'quote', 'quote_info',
+           'env_var']
 
-_bad_chars = re.compile(r'[^\w@%+=:,./-]')
+_bad_chars = re.compile(r'[^\w@%+:,./-]')
 
 def split(s):
     if not isinstance(s, basestring):
@@ -39,3 +41,6 @@ def quote(s):
 def quote_info(s):
     s, esc = escape(s)
     return quote_escaped(s, esc), esc
+
+def env_var(name, value):
+    return safe_str.jbos(name, safe_str.escaped_str('='), value)
