@@ -90,11 +90,9 @@ def join_commands(commands):
     return iterutils.tween(commands, escaped_str(' && '))
 
 def local_env(env):
-    # Join the name and value so they get quoted together, if necessary.
-    # TODO: This sets the variable for the entire line, not just the next
-    # command.
-    return [ jbos(escaped_str('set '), name + '=' + value, escaped_str('&'))
-             for name, value in env.iteritems() ]
+    # TODO: Don't use `env`, since this means we need GNU coreutils.
+    return ['env'] + [ jbos(name, escaped_str('='), value)
+                       for name, value in env.iteritems() ]
 
 def global_env(env):
     # Join the name and value so they get quoted together, if necessary.
