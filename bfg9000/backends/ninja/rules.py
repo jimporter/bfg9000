@@ -133,8 +133,7 @@ def test_rule(tests, buildfile):
 
     def build_commands(tests, collapse=False):
         def command(test, args=None):
-            env_vars = [shell.local_env_var(k, v)
-                        for k, v in test.env.iteritems()]
+            env_vars = shell.local_env(test.env)
             subcmd = env_vars + [test.target] + test.options + (args or [])
             if collapse:
                 out = Writer(StringIO())

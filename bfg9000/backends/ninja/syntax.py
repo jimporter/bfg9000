@@ -125,8 +125,8 @@ class Commands(object):
         if self.__needs_shell and platform_name() == 'windows':
             out.write_literal('cmd /c ')
 
-        env = (shell.global_env_var(k, v) for k, v in self.env.iteritems())
-        for line in shell.join_commands(chain(env, self.commands)):
+        env_vars = shell.global_env(self.env)
+        for line in shell.join_commands(chain(env_vars, self.commands)):
             out.write_shell(line)
         return safe_str.escaped_str(out.stream.getvalue())
 

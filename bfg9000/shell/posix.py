@@ -5,7 +5,7 @@ from .. import iterutils
 from ..safe_str import escaped_str, jbos
 
 __all__ = ['split', 'listify', 'escape', 'quote_escaped', 'quote', 'quote_info',
-           'join_commands', 'local_env_var', 'global_env_var']
+           'join_commands', 'local_env', 'global_env']
 
 _bad_chars = re.compile(r'[^\w@%+:,./-]')
 
@@ -45,8 +45,10 @@ def quote_info(s):
 def join_commands(commands):
     return iterutils.tween(commands, escaped_str(' && '))
 
-def local_env_var(name, value):
-    return jbos(name, escaped_str('='), value)
+def local_env(env):
+    return [ jbos(name, escaped_str('='), value)
+             for name, value in env.iteritems() ]
 
-def global_env_var(name, value):
-    return ['export', jbos(name, escaped_str('='), value)]
+def global_env(env):
+    return [ ['export', jbos(name, escaped_str('='), value)]
+             for name, value in env.iteritems() ]

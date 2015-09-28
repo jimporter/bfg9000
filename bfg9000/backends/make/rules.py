@@ -112,8 +112,7 @@ def test_rule(tests, buildfile):
     def build_commands(tests, collapse=False):
         cmd, deps = [], []
         def command(test, args=None):
-            env_vars = [shell.local_env_var(k, v)
-                        for k, v in test.env.iteritems()]
+            env_vars = shell.local_env(test.env)
             subcmd = env_vars + [test.target] + test.options + (args or [])
             if collapse:
                 out = Writer(StringIO())
@@ -293,7 +292,7 @@ def emit_alias(rule, build_inputs, buildfile, env):
 def emit_command(rule, build_inputs, buildfile, env):
     # Join all the commands onto one line so that users can use 'cd' and such.
     out = Writer(StringIO())
-    env_vars = (shell.global_env_var(k, v) for k, v in rule.env.iteritems())
+    env_vars = shell.global_env(rule.env)
     for line in shell.join_commands(chain(env_vars, rule.cmds)):
         out.write_shell(line)
 
