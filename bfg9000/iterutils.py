@@ -17,21 +17,18 @@ def iterate(thing):
     else:
         return generate_one(thing)
 
-def tween(iterable, delim, prefix=None, suffix=None, flag=True):
-    def item(tween, value):
-        return (tween, value) if flag else value
-
+def tween(iterable, delim, prefix=None, suffix=None):
     first = True
     for i in iterable:
         if first:
             first = False
             if prefix is not None:
-                yield item(True, prefix)
+                yield prefix
         else:
-            yield item(True, delim)
-        yield item(False, i)
+            yield delim
+        yield i
     if not first and suffix is not None:
-        yield item(True, suffix)
+        yield suffix
 
 def uniques(iterable):
     def generate_uniques(iterable):

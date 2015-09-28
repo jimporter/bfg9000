@@ -1,4 +1,3 @@
-import operator
 import re
 from cStringIO import StringIO
 from collections import namedtuple
@@ -74,9 +73,10 @@ class Writer(object):
 
         return escaped
 
-    def write_each(self, things, syntax, delim=' ', prefix=None, suffix=None):
-        for tween, i in iterutils.tween(things, delim, prefix, suffix):
-            self.write_literal(i) if tween else self.write(i, syntax)
+    def write_each(self, things, syntax, delim=safe_str.escaped_str(' '),
+                   prefix=None, suffix=None):
+        for i in iterutils.tween(things, delim, prefix, suffix):
+            self.write(i, syntax)
 
     def write_shell(self, thing, clean=False):
         syntax = Syntax.clean if clean else Syntax.shell
@@ -93,8 +93,7 @@ class Pattern(object):
 
     def use(self):
         bits = re.split(r'%', self.path)
-        delim = safe_str.escaped_str('%')
-        return reduce(operator.add, iterutils.tween(bits, delim, flag=False))
+        return safe_str.join(bits, safe_str.escaped_str('%'))
 
     def _safe_str(self):
         return self.use()
@@ -169,12 +168,11 @@ class Function(Entity):
 
     def use(self):
         out = Writer(StringIO())
+
+        esc = safe_str.escaped_str
         prefix = '$(' + self.name + ' '
-        for tween, i in iterutils.tween(self.args, ',', prefix, ')'):
-            if tween:
-                out.write_literal(i)
-            else:
-                out.write_each(iterutils.iterate(i), Syntax.function)
+        for i in iterutils.tween(self.args, esc(','), esc(prefix), esc(')')):
+            out.write_each(iterutils.iterate(i), Syntax.function)
         return safe_str.escaped_str(out.stream.getvalue())
 
 class Call(Function):
@@ -283,11 +281,12 @@ class Makefile(object):
 
         out.write_each(rule.targets, Syntax.target)
         out.write_literal(':')
-        out.write_each(rule.deps, Syntax.dependency, prefix=' ')
-        out.write_each(rule.order_only, Syntax.dependency, prefix=' | ')
 
-        if (isinstance(rule.recipe, Variable) or
-            isinstance(rule.recipe, Function)):
+        esc = safe_str.escaped_str
+        out.write_each(rule.deps, Syntax.dependency, prefix=esc(' '))
+        out.write_each(rule.order_only, Syntax.dependency, prefix=esc(' | '))
+
+        if isinstance(rule.recipe, Entity):
             out.write_literal(' ; ')
             out.write_shell(rule.recipe)
         elif rule.recipe is not None:

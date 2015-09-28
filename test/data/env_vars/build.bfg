@@ -4,3 +4,10 @@ test(
     executable('prog', files=['prog.cpp']),
     environment={'VARIABLE': 'hello world'}
 )
+
+script = source_file('script.py')
+command(
+    'script',
+    cmds=[ ['touch', 'file'], ['python', script] ],
+    environment={'VARIABLE': 'hello script'}
+)

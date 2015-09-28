@@ -2,6 +2,7 @@ import re
 from cStringIO import StringIO
 from collections import namedtuple, OrderedDict
 from enum import Enum
+from itertools import chain
 from packaging.version import Version
 
 from ... import path
@@ -70,9 +71,10 @@ class Writer(object):
 
         return escaped
 
-    def write_each(self, things, syntax, delim=' ', prefix=None, suffix=None):
-        for tween, i in iterutils.tween(things, delim, prefix, suffix):
-            self.write_literal(i) if tween else self.write(i, syntax)
+    def write_each(self, things, syntax, delim=safe_str.escaped_str(' '),
+                   prefix=None, suffix=None):
+        for i in iterutils.tween(things, delim, prefix, suffix):
+            self.write(i, syntax)
 
     def write_shell(self, thing, clean=False):
         syntax = Syntax.clean if clean else Syntax.shell
@@ -113,16 +115,19 @@ def var(v):
     return v if isinstance(v, Variable) else Variable(v)
 
 class Commands(object):
-    def __init__(self, commands, needs_shell=False):
+    def __init__(self, commands, env=None, needs_shell=False):
         self.__always_needs_shell = needs_shell
+        self.env = env or {}
         self.commands = iterutils.listify(commands)
 
     def use(self):
         out = Writer(StringIO())
         if self.__needs_shell and platform_name() == 'windows':
             out.write_literal('cmd /c ')
-        for tween, line in iterutils.tween(self.commands, ' && '):
-            out.write_literal(line) if tween else out.write_shell(line)
+
+        env = (shell.global_env_var(k, v) for k, v in self.env.iteritems())
+        for line in shell.join_commands(chain(env, self.commands)):
+            out.write_shell(line)
         return safe_str.escaped_str(out.stream.getvalue())
 
     def _safe_str(self):
@@ -130,10 +135,11 @@ class Commands(object):
 
     @property
     def __needs_shell(self):
-        if ( self.__always_needs_shell or len(self.commands) > 1 or
-             any(not iterutils.isiterable(i) for i in self.commands )):
-            return True
-        return False
+        return (
+            self.__always_needs_shell or
+            len(self.commands) + len(self.env) > 1 or
+            any(not iterutils.isiterable(i) for i in self.commands)
+        )
 
 path_vars = {
     path.Root.srcdir:   Variable('srcdir'),
@@ -237,9 +243,10 @@ class NinjaFile(object):
         out.write_each(build.outputs, Syntax.output)
         out.write_literal(': ' + build.rule)
 
-        out.write_each(build.inputs, Syntax.input, prefix=' ')
-        out.write_each(build.implicit, Syntax.input, prefix=' | ')
-        out.write_each(build.order_only, Syntax.input, prefix=' || ')
+        esc = safe_str.escaped_str
+        out.write_each(build.inputs, Syntax.input, prefix=esc(' '))
+        out.write_each(build.implicit, Syntax.input, prefix=esc(' | '))
+        out.write_each(build.order_only, Syntax.input, prefix=esc(' || '))
         out.write_literal('\n')
 
         if build.variables:

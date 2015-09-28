@@ -36,14 +36,22 @@ class escaped_str(safe_string):
 
 class jbos(safe_string): # Just a Bunch of Strings
     def __init__(self, *args):
-        self.bits = []
-        for i in args:
+        self.__bits = tuple(self.__flatten(args))
+
+    @staticmethod
+    def __flatten(value):
+        for i in value:
             if isinstance(i, jbos):
-                self.bits.extend(i.bits)
+                for j in i.bits:
+                    yield j
             elif isinstance(i, basestring) or isinstance(i, safe_string):
-                self.bits.append(i)
+                yield i
             else:
                 raise TypeError(type(i))
+
+    @property
+    def bits(self):
+        return self.__bits
 
     def __str__(self):
         raise NotImplementedError()
@@ -58,4 +66,4 @@ class jbos(safe_string): # Just a Bunch of Strings
         return jbos(lhs, self)
 
 def join(iterable, delim):
-    return sum(iterutils.tween(iterable, delim, flag=False), jbos())
+    return sum(iterutils.tween(iterable, delim), jbos())

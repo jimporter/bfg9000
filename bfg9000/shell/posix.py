@@ -2,10 +2,10 @@ import re
 from shlex import shlex
 
 from .. import iterutils
-from .. import safe_str
+from ..safe_str import escaped_str, jbos
 
 __all__ = ['split', 'listify', 'escape', 'quote_escaped', 'quote', 'quote_info',
-           'env_var']
+           'join_commands', 'local_env_var', 'global_env_var']
 
 _bad_chars = re.compile(r'[^\w@%+:,./-]')
 
@@ -42,5 +42,11 @@ def quote_info(s):
     s, esc = escape(s)
     return quote_escaped(s, esc), esc
 
-def env_var(name, value):
-    return safe_str.jbos(name, safe_str.escaped_str('='), value)
+def join_commands(commands):
+    return iterutils.tween(commands, escaped_str(' && '))
+
+def local_env_var(name, value):
+    return jbos(name, escaped_str('='), value)
+
+def global_env_var(name, value):
+    return ['export', jbos(name, escaped_str('='), value)]
