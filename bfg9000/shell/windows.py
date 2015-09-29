@@ -89,10 +89,9 @@ def quote_info(s):
 def join_commands(commands):
     return iterutils.tween(commands, escaped_str(' && '))
 
-def local_env(env):
-    # TODO: Don't use `env`, since this means we need GNU coreutils.
-    return ['env'] + [ jbos(name, escaped_str('='), value)
-                       for name, value in env.iteritems() ]
+def local_env(env, prog):
+    return [prog] + [ jbos(name, escaped_str('='), value)
+                      for name, value in env.iteritems() ] + ['--']
 
 def global_env(env):
     # Join the name and value so they get quoted together, if necessary.

@@ -31,7 +31,7 @@ def write(env, build_inputs):
     for e in build_inputs.edges:
         _rule_handlers[type(e).__name__](e, build_inputs, buildfile)
     install_rule(build_inputs.install_targets, buildfile, env)
-    test_rule(build_inputs.tests, buildfile)
+    test_rule(build_inputs.tests, buildfile, env)
     regenerate_rule(build_inputs.find_dirs, buildfile, env)
 
     with open(env.builddir.append('build.ninja').string(), 'w') as out:
@@ -117,7 +117,7 @@ def install_rule(install_targets, buildfile, env):
         commands=commands
     )
 
-def test_rule(tests, buildfile):
+def test_rule(tests, buildfile, env):
     if not tests:
         return
 
@@ -133,7 +133,7 @@ def test_rule(tests, buildfile):
 
     def build_commands(tests, collapse=False):
         def command(test, args=None):
-            env_vars = shell.local_env(test.env)
+            env_vars = shell.local_env(test.env, env.setenv)
             subcmd = env_vars + [test.target] + test.options + (args or [])
             if collapse:
                 out = Writer(StringIO())

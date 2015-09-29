@@ -31,7 +31,11 @@ class Environment(object):
 
     @property
     def depfixer(self):
-        return os.path.join(os.path.dirname(self.bfgpath), 'depfixer')
+        return os.path.join(os.path.dirname(self.bfgpath), 'bfg9000-depfixer')
+
+    @property
+    def setenv(self):
+        return os.path.join(os.path.dirname(self.bfgpath), 'bfg9000-setenv')
 
     def getvar(self, key, default=None):
         return self.variables.get(key, default)

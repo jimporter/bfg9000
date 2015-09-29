@@ -1,6 +1,7 @@
 import subprocess
 from setuptools import setup, find_packages, Command
 from bfg9000.version import version
+from bfg9000.platforms import platform_name
 
 class doc_serve(Command):
     description = 'serve the documentation locally'
@@ -30,6 +31,13 @@ class doc_deploy(Command):
     def run(self):
         subprocess.call(['mkdocs', 'gh-deploy', '--clean'])
 
+extra_exclude = []
+extra_scripts = []
+if platform_name() == 'windows':
+    extra_scripts.append('bfg9000-setenv=bfg9000.setenv:main')
+else:
+    extra_exclude.append('bfg9000.setenv')
+
 setup(
     name='bfg9000',
     version=version,
@@ -38,7 +46,7 @@ setup(
     author_email='porterj@alum.rit.edu',
     license='BSD',
 
-    packages=find_packages(exclude=['test']),
+    packages=find_packages(exclude=['test'] + extra_exclude),
 
     install_requires=['enum-compat', 'packaging'],
     extras_require={'msbuild': ['lxml']},
@@ -46,8 +54,8 @@ setup(
     entry_points={
         'console_scripts': [
             'bfg9000=bfg9000.driver:main',
-            'depfixer=bfg9000.depfixer:main',
-        ],
+            'bfg9000-depfixer=bfg9000.depfixer:main',
+        ] + extra_scripts,
         'bfg9000.backends': [
             'make=bfg9000.backends.make.rules',
             'ninja=bfg9000.backends.ninja.rules',

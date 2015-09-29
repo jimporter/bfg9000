@@ -76,10 +76,10 @@ def main():
     install_dirs = platform_info().install_dirs
 
     path_help = 'installation path for {} (default: %(default)r)'
-    parser = argparse.ArgumentParser(prog='bfg9000')
     def path_arg(value):
         return Path(os.path.abspath(value))
 
+    parser = argparse.ArgumentParser(prog='bfg9000')
     parser.add_argument('srcdir', nargs='?', help='source directory')
     parser.add_argument('builddir', nargs='?', help='build directory')
     parser.add_argument('--version', action='version',

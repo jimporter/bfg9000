@@ -45,7 +45,7 @@ def quote_info(s):
 def join_commands(commands):
     return iterutils.tween(commands, escaped_str(' && '))
 
-def local_env(env):
+def local_env(env, prog):
     return [ jbos(name, escaped_str('='), value)
              for name, value in env.iteritems() ]
 
