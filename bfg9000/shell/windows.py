@@ -90,8 +90,10 @@ def join_commands(commands):
     return iterutils.tween(commands, escaped_str(' && '))
 
 def local_env(env, prog):
-    return [prog] + [ jbos(name, escaped_str('='), value)
-                      for name, value in env.iteritems() ] + ['--']
+    if env:
+        return [prog] + [ jbos(name, escaped_str('='), value)
+                          for name, value in env.iteritems() ] + ['--']
+    return []
 
 def global_env(env):
     # Join the name and value so they get quoted together, if necessary.

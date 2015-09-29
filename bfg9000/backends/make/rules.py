@@ -109,11 +109,17 @@ def test_rule(tests, buildfile, env):
         deps.append('tests')
     deps.extend(tests.extra_deps)
 
+    try:
+        setenv = cmd_var(env.tool('setenv'), buildfile)
+    except ValueError:
+        setenv = None
+
     def build_commands(tests, collapse=False):
         cmd, deps = [], []
         def command(test, args=None):
-            env_vars = shell.local_env(test.env, env.setenv)
+            env_vars = shell.local_env(test.env, setenv)
             subcmd = env_vars + [test.target] + test.options + (args or [])
+
             if collapse:
                 out = Writer(StringIO())
                 out.write_shell(subcmd)
@@ -160,6 +166,7 @@ def directory_rule(buildfile, env):
     )
 
 def regenerate_rule(find_dirs, buildfile, env):
+    bfg9000 = cmd_var(env.tool('bfg9000'), buildfile)
     bfgpath = Path('build.bfg', path.Root.srcdir)
     extra_deps = []
 
@@ -171,7 +178,7 @@ def regenerate_rule(find_dirs, buildfile, env):
     buildfile.rule(
         target=Path('Makefile'),
         deps=[bfgpath] + extra_deps,
-        recipe=[[env.bfgpath, '--regenerate', '.']]
+        recipe=[[bfg9000, '--regenerate', '.']]
     )
 
 @rule_handler('Compile')
@@ -199,19 +206,20 @@ def emit_object_file(rule, build_inputs, buildfile, env):
         variables[cflags] = [global_cflags] + cflags_value
 
     if not buildfile.has_variable(recipename):
+        cmd = cmd_var(compiler, buildfile)
         command_kwargs = {}
         recipe_extra = []
+
         if compiler.deps_flavor == 'gcc':
+            depfixer = cmd_var(env.tool('depfixer'), buildfile)
             command_kwargs['deps'] = deps = qvar('@') + '.d'
-            recipe_extra = [silent(env.depfixer + ' < ' + deps + ' >> ' + deps)]
+            recipe_extra = [silent(depfixer + ' < ' + deps + ' >> ' + deps)]
         elif compiler.deps_flavor == 'msvc':
             command_kwargs['deps'] = True
 
         buildfile.define(recipename, [
-            compiler.command(
-                cmd=cmd_var(compiler, buildfile), input=qvar('<'),
-                output=qvar('@'), args=cflags, **command_kwargs
-            ),
+            compiler.command( cmd=cmd, input=qvar('<'), output=qvar('@'),
+                              args=cflags, **command_kwargs ),
         ] + recipe_extra)
 
     buildfile.rule(

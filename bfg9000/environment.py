@@ -29,14 +29,6 @@ class Environment(object):
         self.variables = dict(os.environ)
         self.platform = platforms.platform_info()
 
-    @property
-    def depfixer(self):
-        return os.path.join(os.path.dirname(self.bfgpath), 'bfg9000-depfixer')
-
-    @property
-    def setenv(self):
-        return os.path.join(os.path.dirname(self.bfgpath), 'bfg9000-setenv')
-
     def getvar(self, key, default=None):
         return self.variables.get(key, default)
 

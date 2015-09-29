@@ -131,10 +131,16 @@ def test_rule(tests, buildfile, env):
         deps.append('tests')
     deps.extend(tests.extra_deps)
 
+    try:
+        setenv = cmd_var(env.tool('setenv'), buildfile)
+    except ValueError:
+        setenv = None
+
     def build_commands(tests, collapse=False):
         def command(test, args=None):
-            env_vars = shell.local_env(test.env, env.setenv)
+            env_vars = shell.local_env(test.env, setenv)
             subcmd = env_vars + [test.target] + test.options + (args or [])
+
             if collapse:
                 out = Writer(StringIO())
                 out.write_shell(subcmd)
@@ -166,6 +172,7 @@ def test_rule(tests, buildfile, env):
     )
 
 def regenerate_rule(find_dirs, buildfile, env):
+    bfg9000 = cmd_var(env.tool('bfg9000'), buildfile)
     bfgpath = Path('build.bfg', path.Root.srcdir)
     depfile = None
 
@@ -176,7 +183,7 @@ def regenerate_rule(find_dirs, buildfile, env):
 
     buildfile.rule(
         name='regenerate',
-        command=[env.bfgpath, '--regenerate', Path('.')],
+        command=[bfg9000, '--regenerate', Path('.')],
         generator=True,
         depfile=depfile,
     )
