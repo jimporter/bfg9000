@@ -4,7 +4,7 @@ import unittest
 
 from integration import *
 
-class TestTests(IntegrationTest):
+class TestEnvVars(IntegrationTest):
     def __init__(self, *args, **kwargs):
         IntegrationTest.__init__(self, 'env_vars', *args, **kwargs)
 
