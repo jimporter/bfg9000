@@ -1,0 +1,94 @@
+{
+    "docs": [
+        {
+            "location": "/", 
+            "text": "bfg9000\n\n\nbfg9000\n (\n\"build file generator\"\n) is a cross-platform \nbuild configuration\nsystem\n with an emphasis on making it easy to define how to build your software.\nIt converts a Python-based build script into the appropriate files for your\nunderlying build system of choice.\n\n\nA brief example\n\n\nYou can't get much simpler than the simplest \nbuild.bfg\n file:\n\n\nexecutable('simple', files=['simple.cpp'])\n\n\n\n\nTo build this executable, we need to create the actual build files and then\nrun them:\n\n\n$ bfg9000 path/to/src/ build/\n$ cd build\n$ ninja\n\n\n\n\nFrom there, you can run your newly-created executable: \n./simple\n. Hooray!\n\n\nFor further examples, please see the\n\nexamples/\n\nsubdirectory.\n\n\nInstallation\n\n\nbfg9000 uses \nsetuptools\n, so installation\nis much the same as any other Python package. Just run:\n\n\n$ python setup.py install\n\n\n\n\nFrom there, you can start using bfg9000 to build your software!", 
+            "title": "Home"
+        }, 
+        {
+            "location": "/#bfg9000", 
+            "text": "bfg9000  ( \"build file generator\" ) is a cross-platform  build configuration\nsystem  with an emphasis on making it easy to define how to build your software.\nIt converts a Python-based build script into the appropriate files for your\nunderlying build system of choice.", 
+            "title": "bfg9000"
+        }, 
+        {
+            "location": "/#a-brief-example", 
+            "text": "You can't get much simpler than the simplest  build.bfg  file:  executable('simple', files=['simple.cpp'])  To build this executable, we need to create the actual build files and then\nrun them:  $ bfg9000 path/to/src/ build/\n$ cd build\n$ ninja  From there, you can run your newly-created executable:  ./simple . Hooray!  For further examples, please see the examples/ \nsubdirectory.", 
+            "title": "A brief example"
+        }, 
+        {
+            "location": "/#installation", 
+            "text": "bfg9000 uses  setuptools , so installation\nis much the same as any other Python package. Just run:  $ python setup.py install  From there, you can start using bfg9000 to build your software!", 
+            "title": "Installation"
+        }, 
+        {
+            "location": "/building/", 
+            "text": "Building With bfg9000\n\n\nLike some other tools (e.g. \nCMake\n or\n\nautotools\n), bfg9000 isn't actually a\nbuild system; it's a \nbuild configuration system\n or, if you prefer, a\n\nmeta-build system\n. That is, bfg9000 builds build files which you then use to\nrun your actual builds.\n\n\nYour first build\n\n\nInvoking bfg9000 is simple. Assuming you have an existing project that uses\nbfg9000, just call \nbfg9000 srcdir builddir\n and it will generate the final\nbuild script (\nbuild.ninja\n in this case) in \nbuilddir\n to use for\nbuilding your project:\n\n\n$ bfg9000 path/to/src/ build/\n$ cd build\n$ ninja\n\n\n\n\n\n\nNote\n\n\nOn Windows, using bfg9000 requires a bit more care. Since the MSVC tools\naren't in the \nPATH\n by default, you can't just open any command prompt.\nYou need to pick the \ncorrect\n prompt. Thankfully, Visual Studio provides\nStart Menu items such as \"VS2015 Developer Command Prompt\". These add the\nappropiate directories to the \nPATH\n, allowing you to use whichever version\nof the MSVC tools that you'd like.\n\n\n\n\nBuild directories\n\n\nYou might have noticed above that \nbuild.ninja\n was placed in a separate\ndirectory. This is because bfg9000 exclusively uses \nout-of-tree builds\n; that\nis, the build directory must be different from the source directory. While\nslightly more inconvenient for one-off builds (users will have to \ncd\n into\nanother directory to start the build), the benefits are significant. First, it\nensures that cleaning a build is trivial: just remove the build directory.\nSecond, simplifies building in multiple configurations, a very useful feature\nfor development; you can easily have debug and optimized builds sitting\nside-by-side.\n\n\nSetting options\n\n\nMany options for building can be set via the environment. These generally follow\nthe UNIX naming conventions, so you can use \nCFLAGS\n, \nCXXFLAGS\n, and \nCPPFLAGS\n\nfor compilation flags, \nLDFLAGS\n for linker flags, and \nLIBRARY_PATH\n for the\nlist of library search directories.", 
+            "title": "Building with bfg9000"
+        }, 
+        {
+            "location": "/building/#building-with-bfg9000", 
+            "text": "Like some other tools (e.g.  CMake  or autotools ), bfg9000 isn't actually a\nbuild system; it's a  build configuration system  or, if you prefer, a meta-build system . That is, bfg9000 builds build files which you then use to\nrun your actual builds.", 
+            "title": "Building With bfg9000"
+        }, 
+        {
+            "location": "/building/#your-first-build", 
+            "text": "Invoking bfg9000 is simple. Assuming you have an existing project that uses\nbfg9000, just call  bfg9000 srcdir builddir  and it will generate the final\nbuild script ( build.ninja  in this case) in  builddir  to use for\nbuilding your project:  $ bfg9000 path/to/src/ build/\n$ cd build\n$ ninja   Note  On Windows, using bfg9000 requires a bit more care. Since the MSVC tools\naren't in the  PATH  by default, you can't just open any command prompt.\nYou need to pick the  correct  prompt. Thankfully, Visual Studio provides\nStart Menu items such as \"VS2015 Developer Command Prompt\". These add the\nappropiate directories to the  PATH , allowing you to use whichever version\nof the MSVC tools that you'd like.", 
+            "title": "Your first build"
+        }, 
+        {
+            "location": "/building/#build-directories", 
+            "text": "You might have noticed above that  build.ninja  was placed in a separate\ndirectory. This is because bfg9000 exclusively uses  out-of-tree builds ; that\nis, the build directory must be different from the source directory. While\nslightly more inconvenient for one-off builds (users will have to  cd  into\nanother directory to start the build), the benefits are significant. First, it\nensures that cleaning a build is trivial: just remove the build directory.\nSecond, simplifies building in multiple configurations, a very useful feature\nfor development; you can easily have debug and optimized builds sitting\nside-by-side.", 
+            "title": "Build directories"
+        }, 
+        {
+            "location": "/building/#setting-options", 
+            "text": "Many options for building can be set via the environment. These generally follow\nthe UNIX naming conventions, so you can use  CFLAGS ,  CXXFLAGS , and  CPPFLAGS \nfor compilation flags,  LDFLAGS  for linker flags, and  LIBRARY_PATH  for the\nlist of library search directories.", 
+            "title": "Setting options"
+        }, 
+        {
+            "location": "/developer/", 
+            "text": "Developer Documentation\n\n\nAt its core, a build file is just a DAG (directed acyclic graph) that gets\nwalked through by the build system, where the nodes are files and the edges are\nbuild steps. A bfg9000 build file is no different.\n\n\nHow a build.bfg file is compiled\n\n\nSnapshot the environment\n\n\nWhen bfg9000 is invoked, it first takes a snapshot of the current environment\n(the operating system, environment variables, compiler to use, etc). This is\nimportant to provide a stable state for regeneration of the build file if\nnecessary (e.g. if build.bfg is changed).\n\n\nBuild an internal dependency graph\n\n\nNext, it executes the build.bfg file. Most bfg9000 functions represent build\nsteps or other related parts of the dependency graph. When called, these build\nup an internal DAG structure with all the backend-agnostic data filled in (e.g.\nvirtual filenames are resolved to real ones, such as \"foo\" to \"libfoo.so\").\n\n\nEmit the final build file\n\n\nOnce this is complete, the DAG is passed to the appropriate backend, which\niterates over all the known edges (build steps) and emits the backend-specific\ncode for them. Since all the backends handle walking the DAG on their own,\nbfg9000 can safely avoid worrying about trying to do this efficiently in Python.", 
+            "title": "Developer Guide"
+        }, 
+        {
+            "location": "/developer/#developer-documentation", 
+            "text": "At its core, a build file is just a DAG (directed acyclic graph) that gets\nwalked through by the build system, where the nodes are files and the edges are\nbuild steps. A bfg9000 build file is no different.", 
+            "title": "Developer Documentation"
+        }, 
+        {
+            "location": "/developer/#how-a-buildbfg-file-is-compiled", 
+            "text": "", 
+            "title": "How a build.bfg file is compiled"
+        }, 
+        {
+            "location": "/developer/#snapshot-the-environment", 
+            "text": "When bfg9000 is invoked, it first takes a snapshot of the current environment\n(the operating system, environment variables, compiler to use, etc). This is\nimportant to provide a stable state for regeneration of the build file if\nnecessary (e.g. if build.bfg is changed).", 
+            "title": "Snapshot the environment"
+        }, 
+        {
+            "location": "/developer/#build-an-internal-dependency-graph", 
+            "text": "Next, it executes the build.bfg file. Most bfg9000 functions represent build\nsteps or other related parts of the dependency graph. When called, these build\nup an internal DAG structure with all the backend-agnostic data filled in (e.g.\nvirtual filenames are resolved to real ones, such as \"foo\" to \"libfoo.so\").", 
+            "title": "Build an internal dependency graph"
+        }, 
+        {
+            "location": "/developer/#emit-the-final-build-file", 
+            "text": "Once this is complete, the DAG is passed to the appropriate backend, which\niterates over all the known edges (build steps) and emits the backend-specific\ncode for them. Since all the backends handle walking the DAG on their own,\nbfg9000 can safely avoid worrying about trying to do this efficiently in Python.", 
+            "title": "Emit the final build file"
+        }, 
+        {
+            "location": "/license/", 
+            "text": "License\n\n\nBSD 3-clause license\n\n\nCopyright (c) 2015, Jim Porter\nAll rights reserved.\n\n\nRedistribution and use in source and binary forms, with or without modification,\nare permitted provided that the following conditions are met:\n\n\n\n\n\n\nRedistributions of source code must retain the above copyright notice, this\nlist of conditions and the following disclaimer.\n\n\n\n\n\n\nRedistributions in binary form must reproduce the above copyright notice,\nthis list of conditions and the following disclaimer in the documentation and/or\nother materials provided with the distribution.\n\n\n\n\n\n\nNeither the name of the copyright holder nor the names of its contributors\nmay be used to endorse or promote products derived from this software without\nspecific prior written permission.\n\n\n\n\n\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\" AND\nANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED\nWARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE\nDISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR\nANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES\n(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;\nLOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON\nANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT\n(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS\nSOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.", 
+            "title": "License"
+        }, 
+        {
+            "location": "/license/#license", 
+            "text": "", 
+            "title": "License"
+        }, 
+        {
+            "location": "/license/#bsd-3-clause-license", 
+            "text": "Copyright (c) 2015, Jim Porter\nAll rights reserved.  Redistribution and use in source and binary forms, with or without modification,\nare permitted provided that the following conditions are met:    Redistributions of source code must retain the above copyright notice, this\nlist of conditions and the following disclaimer.    Redistributions in binary form must reproduce the above copyright notice,\nthis list of conditions and the following disclaimer in the documentation and/or\nother materials provided with the distribution.    Neither the name of the copyright holder nor the names of its contributors\nmay be used to endorse or promote products derived from this software without\nspecific prior written permission.    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\" AND\nANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED\nWARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE\nDISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR\nANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES\n(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;\nLOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON\nANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT\n(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS\nSOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.", 
+            "title": "BSD 3-clause license"
+        }
+    ]
+}

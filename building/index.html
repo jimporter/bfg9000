@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../img/favicon.ico">
+
+	<title>Building with bfg9000 - bfg9000</title>
+
+        <link href="../css/bootstrap-custom.min.css" rel="stylesheet">
+        <link href="../css/font-awesome-4.0.3.css" rel="stylesheet">
+        <link rel="stylesheet" href="../css/highlight.css">
+        <link href="../css/base.css" rel="stylesheet">
+        <link href="../css/extra.css" rel="stylesheet">
+
+        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+        <![endif]-->
+
+        
+    </head>
+
+    <body>
+
+        <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+
+        <!-- Collapsed navigation -->
+        <div class="navbar-header">
+            <!-- Expander button -->
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+
+            <!-- Main title -->
+            <a class="navbar-brand" href="..">bfg9000</a>
+        </div>
+
+        <!-- Expanded navigation -->
+        <div class="navbar-collapse collapse">
+            <!-- Main navigation -->
+            <ul class="nav navbar-nav">
+            
+            
+                <li >
+                    <a href="..">Home</a>
+                </li>
+            
+            
+            
+                <li class="dropdown active">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">User Guide <b class="caret"></b></a>
+                    <ul class="dropdown-menu">
+                    
+                        <li class="active">
+                            <a href="./">Building with bfg9000</a>
+                        </li>
+                    
+                    </ul>
+                </li>
+            
+            
+            
+                <li >
+                    <a href="../developer/">Developer Guide</a>
+                </li>
+            
+            
+            
+                <li >
+                    <a href="../license/">License</a>
+                </li>
+            
+            
+            </ul>
+
+            <!-- Search, Navigation and Repo links -->
+            <ul class="nav navbar-nav navbar-right">
+                <li >
+                    <a rel="next" href="..">
+                        <i class="fa fa-arrow-left"></i> Previous
+                    </a>
+                </li>
+                <li >
+                    <a rel="prev" href="../developer/">
+                        Next <i class="fa fa-arrow-right"></i>
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="https://github.com/jimporter/bfg9000/">
+                        
+                            <i class="fa fa-github"></i>
+                        
+                        GitHub
+                    </a>
+                </li>
+                
+            </ul>
+        </div>
+    </div>
+</div>
+
+        <div class="container">
+            <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+    
+        <li class="main active"><a href="#building-with-bfg9000">Building With bfg9000</a></li>
+        
+            <li><a href="#your-first-build">Your first build</a></li>
+        
+            <li><a href="#build-directories">Build directories</a></li>
+        
+            <li><a href="#setting-options">Setting options</a></li>
+        
+    
+    </ul>
+</div></div>
+            <div class="col-md-9" role="main">
+
+<h1 id="building-with-bfg9000">Building With bfg9000</h1>
+<p>Like some other tools (e.g. <a href="http://www.cmake.org/">CMake</a> or
+<a href="https://www.gnu.org/software/automake/">autotools</a>), bfg9000 isn't actually a
+build system; it's a <em>build configuration system</em> or, if you prefer, a
+<em>meta-build system</em>. That is, bfg9000 builds build files which you then use to
+run your actual builds.</p>
+<h2 id="your-first-build">Your first build</h2>
+<p>Invoking bfg9000 is simple. Assuming you have an existing project that uses
+bfg9000, just call <code>bfg9000 srcdir builddir</code> and it will generate the final
+build script (<code>build.ninja</code> in this case) in <code>builddir</code> to use for
+building your project:</p>
+<pre><code class="sh">$ bfg9000 path/to/src/ build/
+$ cd build
+$ ninja
+</code></pre>
+
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>On Windows, using bfg9000 requires a bit more care. Since the MSVC tools
+aren't in the <code>PATH</code> by default, you can't just open any command prompt.
+You need to pick the <em>correct</em> prompt. Thankfully, Visual Studio provides
+Start Menu items such as "VS2015 Developer Command Prompt". These add the
+appropiate directories to the <code>PATH</code>, allowing you to use whichever version
+of the MSVC tools that you'd like.</p>
+</div>
+<h2 id="build-directories">Build directories</h2>
+<p>You might have noticed above that <code>build.ninja</code> was placed in a separate
+directory. This is because bfg9000 exclusively uses <em>out-of-tree builds</em>; that
+is, the build directory must be different from the source directory. While
+slightly more inconvenient for one-off builds (users will have to <code>cd</code> into
+another directory to start the build), the benefits are significant. First, it
+ensures that cleaning a build is trivial: just remove the build directory.
+Second, simplifies building in multiple configurations, a very useful feature
+for development; you can easily have debug and optimized builds sitting
+side-by-side.</p>
+<h2 id="setting-options">Setting options</h2>
+<p>Many options for building can be set via the environment. These generally follow
+the UNIX naming conventions, so you can use <code>CFLAGS</code>, <code>CXXFLAGS</code>, and <code>CPPFLAGS</code>
+for compilation flags, <code>LDFLAGS</code> for linker flags, and <code>LIBRARY_PATH</code> for the
+list of library search directories.</p></div>
+        </div>
+
+        <script src="../js/jquery-1.10.2.min.js"></script>
+        <script src="../js/bootstrap-3.0.3.min.js"></script>
+        <script src="../js/highlight.pack.js"></script>
+        <script src="../js/base.js"></script>
+    </body>
+</html>
