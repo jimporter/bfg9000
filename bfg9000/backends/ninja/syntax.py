@@ -115,10 +115,9 @@ def var(v):
     return v if isinstance(v, Variable) else Variable(v)
 
 class Commands(object):
-    def __init__(self, commands, env=None, needs_shell=False):
-        self.__always_needs_shell = needs_shell
-        self.env = env or {}
+    def __init__(self, commands, env=None):
         self.commands = iterutils.listify(commands)
+        self.env = env or {}
 
     def use(self):
         out = Writer(StringIO())
@@ -136,7 +135,6 @@ class Commands(object):
     @property
     def __needs_shell(self):
         return (
-            self.__always_needs_shell or
             len(self.commands) + len(self.env) > 1 or
             any(not iterutils.isiterable(i) for i in self.commands)
         )

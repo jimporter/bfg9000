@@ -38,7 +38,7 @@ def write(env, build_inputs):
         buildfile.write(out)
 
 def command_build(buildfile, output, inputs=None, implicit=None,
-                  order_only=None, commands=None, env=None, needs_shell=False):
+                  order_only=None, commands=None, env=None):
     # XXX: Only make some command builds use the console pool?
     extra_kwargs = {}
     if version in SpecifierSet('>=1.5'):
@@ -55,7 +55,7 @@ def command_build(buildfile, output, inputs=None, implicit=None,
         inputs=inputs,
         implicit=iterutils.listify(implicit) + ['PHONY'],
         order_only=order_only,
-        variables={'cmd': Commands(commands, env, needs_shell)}
+        variables={'cmd': Commands(commands, env)}
     )
 
 def cmd_var(cmd, buildfile):
@@ -168,7 +168,6 @@ def test_rule(tests, buildfile, env):
         output='test',
         inputs=deps + moredeps,
         commands=commands,
-        needs_shell=True # TODO: Remove this
     )
 
 def regenerate_rule(find_dirs, buildfile, env):
