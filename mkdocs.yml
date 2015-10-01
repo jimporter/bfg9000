@@ -6,6 +6,9 @@ theme: yeti
 extra_css:
 - css/extra.css
 
+markdown_extensions:
+- admonition
+
 pages:
 - Home: index.md
 - User Guide:
