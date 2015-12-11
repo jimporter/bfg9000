@@ -101,8 +101,8 @@ class Alias(Edge):
         Edge.__init__(self, build, Phony(name), deps)
 
 class Command(Edge):
-    def __init__(self, build, name, cmd=None, cmds=None, extra_deps=None,
-                 environment=None):
+    def __init__(self, build, name, cmd=None, cmds=None, environment=None,
+                 extra_deps=None):
         if (cmd is None) == (cmds is None):
             raise ValueError('exactly one of "cmd" or "cmds" must be specified')
         elif cmds is None:

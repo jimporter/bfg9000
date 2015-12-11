@@ -13,5 +13,6 @@ pages:
 - Home: index.md
 - User Guide:
   - Building with bfg9000: building.md
+  - Reference: reference.md
 - Developer Guide: developer.md
 - License: license.md
