@@ -46,6 +46,151 @@
             "title": "Setting options"
         }, 
         {
+            "location": "/reference/", 
+            "text": "Reference\n\n\nBuild steps\n\n\nalias(\nname\n, [\ndeps\n])\n\n\ncommand(\nname\n, [\ncmd\n|\ncmds\n], [\nenvironment\n], [\nextra_deps\n])\n\n\nexecutable(\nname\n, [\nfiles\n, [\ninclude\n], [\nlibs\n], [\npackages\n], [\ncompile_options\n], [\nlink_options\n], [\nlang\n], [\nextra_deps\n]])\n\n\nheader(\nname\n)\n\n\nheader_directory(\ndirectory\n)\n\n\nobject_file([\nname\n], [\nfile\n, [\ninclude\n], [\npackages\n], [\noptions\n], [\nlang\n], [\nextra_deps\n]])\n\n\nobject_files(\nfiles\n[, \ninclude\n], [\npackages\n], [\noptions\n], [\nlang\n], [\nextra_deps\n])\n\n\nshared_library(\nname\n[, \nfiles\n, [\ninclude\n], [\nlibs\n], [\npackages\n], [\ncompile_options\n], [\nlink_options\n], [\nlang\n], [\nextra_deps\n]])\n\n\nsource_file(\nname\n[, \nlang\n])\n\n\nstatic_library(\nname\n[, \nfiles\n, [\ninclude\n], [\nlibs\n], [\npackages\n], [\ncompile_options\n], [\nlink_options\n], [\nlang\n], [\nextra_deps\n]])\n\n\nOther rules\n\n\ndefault(\n...\n)\n\n\nglobal_options(\noptions\n, \nlang\n)\n\n\nglobal_link_options(\noptions\n)\n\n\ninstall(\n...\n, [\nall\n])\n\n\ntest(\ntest\n, [\noptions\n], [\nenvironment\n], [\ndriver\n])\n\n\ntest_driver(\ndriver\n, [\noptions\n], [\nenvironment\n], [\nparent\n])\n\n\ntest_deps(\n...\n)\n\n\nPackage finders\n\n\nboost_package([\nname\n], [\nversion\n])\n\n\nsystem_executable(\nname\n)\n\n\nsystem_package(\nname\n)\n\n\nMiscellaneous\n\n\nbfg9000_required_version([\nversion\n], [\npython_version\n])\n\n\nfilter_by_platform(\nname\n, \ntype\n)\n\n\nfind_files([\npath\n], [\nname\n], [\ntype\n], [\nflat\n], [\nfilter\n], [\ncache\n])", 
+            "title": "Reference"
+        }, 
+        {
+            "location": "/reference/#reference", 
+            "text": "", 
+            "title": "Reference"
+        }, 
+        {
+            "location": "/reference/#build-steps", 
+            "text": "", 
+            "title": "Build steps"
+        }, 
+        {
+            "location": "/reference/#aliasname-deps", 
+            "text": "", 
+            "title": "alias(name, [deps])"
+        }, 
+        {
+            "location": "/reference/#commandname-cmdcmds-environment-extra_deps", 
+            "text": "", 
+            "title": "command(name, [cmd|cmds], [environment], [extra_deps])"
+        }, 
+        {
+            "location": "/reference/#executablename-files-include-libs-packages-compile_options-link_options-lang-extra_deps", 
+            "text": "", 
+            "title": "executable(name, [files, [include], [libs], [packages], [compile_options], [link_options], [lang], [extra_deps]])"
+        }, 
+        {
+            "location": "/reference/#headername", 
+            "text": "", 
+            "title": "header(name)"
+        }, 
+        {
+            "location": "/reference/#header_directorydirectory", 
+            "text": "", 
+            "title": "header_directory(directory)"
+        }, 
+        {
+            "location": "/reference/#object_filename-file-include-packages-options-lang-extra_deps", 
+            "text": "", 
+            "title": "object_file([name], [file, [include], [packages], [options], [lang], [extra_deps]])"
+        }, 
+        {
+            "location": "/reference/#object_filesfiles-include-packages-options-lang-extra_deps", 
+            "text": "", 
+            "title": "object_files(files[, include], [packages], [options], [lang], [extra_deps])"
+        }, 
+        {
+            "location": "/reference/#shared_libraryname-files-include-libs-packages-compile_options-link_options-lang-extra_deps", 
+            "text": "", 
+            "title": "shared_library(name[, files, [include], [libs], [packages], [compile_options], [link_options], [lang], [extra_deps]])"
+        }, 
+        {
+            "location": "/reference/#source_filename-lang", 
+            "text": "", 
+            "title": "source_file(name[, lang])"
+        }, 
+        {
+            "location": "/reference/#static_libraryname-files-include-libs-packages-compile_options-link_options-lang-extra_deps", 
+            "text": "", 
+            "title": "static_library(name[, files, [include], [libs], [packages], [compile_options], [link_options], [lang], [extra_deps]])"
+        }, 
+        {
+            "location": "/reference/#other-rules", 
+            "text": "", 
+            "title": "Other rules"
+        }, 
+        {
+            "location": "/reference/#default", 
+            "text": "", 
+            "title": "default(...)"
+        }, 
+        {
+            "location": "/reference/#global_optionsoptions-lang", 
+            "text": "", 
+            "title": "global_options(options, lang)"
+        }, 
+        {
+            "location": "/reference/#global_link_optionsoptions", 
+            "text": "", 
+            "title": "global_link_options(options)"
+        }, 
+        {
+            "location": "/reference/#install-all", 
+            "text": "", 
+            "title": "install(..., [all])"
+        }, 
+        {
+            "location": "/reference/#testtest-options-environment-driver", 
+            "text": "", 
+            "title": "test(test, [options], [environment], [driver])"
+        }, 
+        {
+            "location": "/reference/#test_driverdriver-options-environment-parent", 
+            "text": "", 
+            "title": "test_driver(driver, [options], [environment], [parent])"
+        }, 
+        {
+            "location": "/reference/#test_deps", 
+            "text": "", 
+            "title": "test_deps(...)"
+        }, 
+        {
+            "location": "/reference/#package-finders", 
+            "text": "", 
+            "title": "Package finders"
+        }, 
+        {
+            "location": "/reference/#boost_packagename-version", 
+            "text": "", 
+            "title": "boost_package([name], [version])"
+        }, 
+        {
+            "location": "/reference/#system_executablename", 
+            "text": "", 
+            "title": "system_executable(name)"
+        }, 
+        {
+            "location": "/reference/#system_packagename", 
+            "text": "", 
+            "title": "system_package(name)"
+        }, 
+        {
+            "location": "/reference/#miscellaneous", 
+            "text": "", 
+            "title": "Miscellaneous"
+        }, 
+        {
+            "location": "/reference/#bfg9000_required_versionversion-python_version", 
+            "text": "", 
+            "title": "bfg9000_required_version([version], [python_version])"
+        }, 
+        {
+            "location": "/reference/#filter_by_platformname-type", 
+            "text": "", 
+            "title": "filter_by_platform(name, type)"
+        }, 
+        {
+            "location": "/reference/#find_filespath-name-type-flat-filter-cache", 
+            "text": "", 
+            "title": "find_files([path], [name], [type], [flat], [filter], [cache])"
+        }, 
+        {
             "location": "/developer/", 
             "text": "Developer Documentation\n\n\nAt its core, a build file is just a DAG (directed acyclic graph) that gets\nwalked through by the build system, where the nodes are files and the edges are\nbuild steps. A bfg9000 build file is no different.\n\n\nHow a build.bfg file is compiled\n\n\nSnapshot the environment\n\n\nWhen bfg9000 is invoked, it first takes a snapshot of the current environment\n(the operating system, environment variables, compiler to use, etc). This is\nimportant to provide a stable state for regeneration of the build file if\nnecessary (e.g. if build.bfg is changed).\n\n\nBuild an internal dependency graph\n\n\nNext, it executes the build.bfg file. Most bfg9000 functions represent build\nsteps or other related parts of the dependency graph. When called, these build\nup an internal DAG structure with all the backend-agnostic data filled in (e.g.\nvirtual filenames are resolved to real ones, such as \"foo\" to \"libfoo.so\").\n\n\nEmit the final build file\n\n\nOnce this is complete, the DAG is passed to the appropriate backend, which\niterates over all the known edges (build steps) and emits the backend-specific\ncode for them. Since all the backends handle walking the DAG on their own,\nbfg9000 can safely avoid worrying about trying to do this efficiently in Python.", 
             "title": "Developer Guide"
