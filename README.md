@@ -37,7 +37,7 @@ is much the same as any other Python package. Just run:
 python setup.py install
 ```
 
-From there, you can start using bfg9000 to build your software!
+From there, you can start using bfg to build your software!
 
 ## License
 
