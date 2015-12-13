@@ -47,7 +47,7 @@
         }, 
         {
             "location": "/reference/", 
-            "text": "Reference\n\n\nBuild steps\n\n\nalias(\nname\n, [\ndeps\n])\n\n\ncommand(\nname\n, [\ncmd\n|\ncmds\n], [\nenvironment\n], [\nextra_deps\n])\n\n\nexecutable(\nname\n, [\nfiles\n, [\ninclude\n], [\nlibs\n], [\npackages\n], [\ncompile_options\n], [\nlink_options\n], [\nlang\n], [\nextra_deps\n]])\n\n\nheader(\nname\n)\n\n\nheader_directory(\ndirectory\n)\n\n\nobject_file([\nname\n], [\nfile\n, [\ninclude\n], [\npackages\n], [\noptions\n], [\nlang\n], [\nextra_deps\n]])\n\n\nobject_files(\nfiles\n[, \ninclude\n], [\npackages\n], [\noptions\n], [\nlang\n], [\nextra_deps\n])\n\n\nshared_library(\nname\n[, \nfiles\n, [\ninclude\n], [\nlibs\n], [\npackages\n], [\ncompile_options\n], [\nlink_options\n], [\nlang\n], [\nextra_deps\n]])\n\n\nsource_file(\nname\n[, \nlang\n])\n\n\nstatic_library(\nname\n[, \nfiles\n, [\ninclude\n], [\nlibs\n], [\npackages\n], [\ncompile_options\n], [\nlink_options\n], [\nlang\n], [\nextra_deps\n]])\n\n\nOther rules\n\n\ndefault(\n...\n)\n\n\nglobal_options(\noptions\n, \nlang\n)\n\n\nglobal_link_options(\noptions\n)\n\n\ninstall(\n...\n, [\nall\n])\n\n\ntest(\ntest\n, [\noptions\n], [\nenvironment\n], [\ndriver\n])\n\n\ntest_driver(\ndriver\n, [\noptions\n], [\nenvironment\n], [\nparent\n])\n\n\ntest_deps(\n...\n)\n\n\nPackage finders\n\n\nboost_package([\nname\n], [\nversion\n])\n\n\nsystem_executable(\nname\n)\n\n\nsystem_package(\nname\n)\n\n\nMiscellaneous\n\n\nbfg9000_required_version([\nversion\n], [\npython_version\n])\n\n\nfilter_by_platform(\nname\n, \ntype\n)\n\n\nfind_files([\npath\n], [\nname\n], [\ntype\n], [\nflat\n], [\nfilter\n], [\ncache\n])", 
+            "text": "Reference\n\n\nFile types\n\n\nheader(\nname\n)\n\n\nheader_directory(\ndirectory\n)\n\n\nsource_file(\nname\n[, \nlang\n])\n\n\nBuild steps\n\n\n\n\nNote\n\n\nFor build steps which produce an actual file, the exact name of the output\nfile is determined by the platform you're running on. For instance, when\nbuilding an executable file named \"foo\" on Windows, the resulting file will\nbe \nfoo.exe\n.\n\n\n\n\nalias(\nname\n, [\ndeps\n])\n\n\nCreate a build step named \nname\n that performs no actions on its own. Instead,\nit just runs its dependencies listed in \ndeps\n as necessary. This build step is\nuseful for grouping common steps together, e.g. the common \nmake all\n command.\n\n\ncommand(\nname\n, \ncmd\n|\ncmds\n, [\nenvironment\n], [\nextra_deps\n])\n\n\nCreate a build step that runs a list of arbitrary commands, specified in either\n\ncmd\n or \ncmds\n; \ncmd\n takes a single command, whereas \ncmds\n takes a list of\ncommands. Each command may either be a string to be parsed according to shell\nrules or a list of arguments to be passed directly to the process.\n\n\nYou may also pass a dict to \nenvironment\n to set environment variables for the\ncommands. These override any environment variables set on the command line.\n\n\nexecutable(\nname\n, [\nfiles\n, [\ninclude\n], [\nlibs\n], [\npackages\n], [\ncompile_options\n], [\nlink_options\n], [\nlang\n], [\nextra_deps\n]])\n\n\nCreate a build step that builds an executable file named \nname\n. \nfiles\n is the\nlist of source (or object) files to link. Library files can be specified in\n\nlibs\n, while libraries from external packages can be specified in \npackages\n\n(see \nPackage finders\n below). You can also pass command-line\noptions for the linker in \nlink_options\n. The arguments \ninclude\n,\n\ncompile_options\n, \npackages\n, and \nlang\n are all forwarded on to the\n\nobject_file()\n step (with \ncompile_options\n mapping to \noptions\n) for any\nsource files listed in \nfiles\n.\n\n\nIf \nfiles\n isn't specified, this function merely references an \nexisting\n\nexecutable file (a precompiled binary, a shell script, etc) somewhere on the\nfilesystem. In this case, \nname\n is the exact name of the file. This allows\nyou to refer to existing executables for other functions.\n\n\nobject_file([\nname\n], [\nfile\n, [\ninclude\n], [\npackages\n], [\noptions\n], [\nlang\n], [\nextra_deps\n]])\n\n\nobject_files(\nfiles\n[, \ninclude\n], [\npackages\n], [\noptions\n], [\nlang\n], [\nextra_deps\n])\n\n\nshared_library(\nname\n[, \nfiles\n, [\ninclude\n], [\nlibs\n], [\npackages\n], [\ncompile_options\n], [\nlink_options\n], [\nlang\n], [\nextra_deps\n]])\n\n\nstatic_library(\nname\n[, \nfiles\n, [\ninclude\n], [\nlibs\n], [\npackages\n], [\ncompile_options\n], [\nlink_options\n], [\nlang\n], [\nextra_deps\n]])\n\n\nOther rules\n\n\ndefault(\n...\n)\n\n\nglobal_options(\noptions\n, \nlang\n)\n\n\nglobal_link_options(\noptions\n)\n\n\ninstall(\n...\n, [\nall\n])\n\n\ntest(\ntest\n, [\noptions\n], [\nenvironment\n], [\ndriver\n])\n\n\ntest_driver(\ndriver\n, [\noptions\n], [\nenvironment\n], [\nparent\n])\n\n\ntest_deps(\n...\n)\n\n\nPackage finders\n\n\nboost_package([\nname\n], [\nversion\n])\n\n\nsystem_executable(\nname\n)\n\n\nsystem_package(\nname\n)\n\n\nMiscellaneous\n\n\nbfg9000_required_version([\nversion\n], [\npython_version\n])\n\n\nfilter_by_platform(\nname\n, \ntype\n)\n\n\nfind_files([\npath\n], [\nname\n], [\ntype\n], [\nflat\n], [\nfilter\n], [\ncache\n])", 
             "title": "Reference"
         }, 
         {
@@ -56,24 +56,9 @@
             "title": "Reference"
         }, 
         {
-            "location": "/reference/#build-steps", 
+            "location": "/reference/#file-types", 
             "text": "", 
-            "title": "Build steps"
-        }, 
-        {
-            "location": "/reference/#aliasname-deps", 
-            "text": "", 
-            "title": "alias(name, [deps])"
-        }, 
-        {
-            "location": "/reference/#commandname-cmdcmds-environment-extra_deps", 
-            "text": "", 
-            "title": "command(name, [cmd|cmds], [environment], [extra_deps])"
-        }, 
-        {
-            "location": "/reference/#executablename-files-include-libs-packages-compile_options-link_options-lang-extra_deps", 
-            "text": "", 
-            "title": "executable(name, [files, [include], [libs], [packages], [compile_options], [link_options], [lang], [extra_deps]])"
+            "title": "File types"
         }, 
         {
             "location": "/reference/#headername", 
@@ -84,6 +69,31 @@
             "location": "/reference/#header_directorydirectory", 
             "text": "", 
             "title": "header_directory(directory)"
+        }, 
+        {
+            "location": "/reference/#source_filename-lang", 
+            "text": "", 
+            "title": "source_file(name[, lang])"
+        }, 
+        {
+            "location": "/reference/#build-steps", 
+            "text": "Note  For build steps which produce an actual file, the exact name of the output\nfile is determined by the platform you're running on. For instance, when\nbuilding an executable file named \"foo\" on Windows, the resulting file will\nbe  foo.exe .", 
+            "title": "Build steps"
+        }, 
+        {
+            "location": "/reference/#aliasname-deps", 
+            "text": "Create a build step named  name  that performs no actions on its own. Instead,\nit just runs its dependencies listed in  deps  as necessary. This build step is\nuseful for grouping common steps together, e.g. the common  make all  command.", 
+            "title": "alias(name, [deps])"
+        }, 
+        {
+            "location": "/reference/#commandname-cmdcmds-environment-extra_deps", 
+            "text": "Create a build step that runs a list of arbitrary commands, specified in either cmd  or  cmds ;  cmd  takes a single command, whereas  cmds  takes a list of\ncommands. Each command may either be a string to be parsed according to shell\nrules or a list of arguments to be passed directly to the process.  You may also pass a dict to  environment  to set environment variables for the\ncommands. These override any environment variables set on the command line.", 
+            "title": "command(name, cmd|cmds, [environment], [extra_deps])"
+        }, 
+        {
+            "location": "/reference/#executablename-files-include-libs-packages-compile_options-link_options-lang-extra_deps", 
+            "text": "Create a build step that builds an executable file named  name .  files  is the\nlist of source (or object) files to link. Library files can be specified in libs , while libraries from external packages can be specified in  packages \n(see  Package finders  below). You can also pass command-line\noptions for the linker in  link_options . The arguments  include , compile_options ,  packages , and  lang  are all forwarded on to the object_file()  step (with  compile_options  mapping to  options ) for any\nsource files listed in  files .  If  files  isn't specified, this function merely references an  existing \nexecutable file (a precompiled binary, a shell script, etc) somewhere on the\nfilesystem. In this case,  name  is the exact name of the file. This allows\nyou to refer to existing executables for other functions.", 
+            "title": "executable(name, [files, [include], [libs], [packages], [compile_options], [link_options], [lang], [extra_deps]])"
         }, 
         {
             "location": "/reference/#object_filename-file-include-packages-options-lang-extra_deps", 
@@ -99,11 +109,6 @@
             "location": "/reference/#shared_libraryname-files-include-libs-packages-compile_options-link_options-lang-extra_deps", 
             "text": "", 
             "title": "shared_library(name[, files, [include], [libs], [packages], [compile_options], [link_options], [lang], [extra_deps]])"
-        }, 
-        {
-            "location": "/reference/#source_filename-lang", 
-            "text": "", 
-            "title": "source_file(name[, lang])"
         }, 
         {
             "location": "/reference/#static_libraryname-files-include-libs-packages-compile_options-link_options-lang-extra_deps", 

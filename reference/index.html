@@ -120,6 +120,8 @@
     
         <li class="main active"><a href="#reference">Reference</a></li>
         
+            <li><a href="#file-types">File types</a></li>
+        
             <li><a href="#build-steps">Build steps</a></li>
         
             <li><a href="#other-rules">Other rules</a></li>
@@ -134,16 +136,45 @@
             <div class="col-md-9" role="main">
 
 <h1 id="reference">Reference</h1>
-<h2 id="build-steps">Build steps</h2>
-<h3 id="aliasname-deps">alias(<em>name</em>, [<em>deps</em>])</h3>
-<h3 id="commandname-cmdcmds-environment-extra_deps">command(<em>name</em>, [<em>cmd</em>|<em>cmds</em>], [<em>environment</em>], [<em>extra_deps</em>])</h3>
-<h3 id="executablename-files-include-libs-packages-compile_options-link_options-lang-extra_deps">executable(<em>name</em>, [<em>files</em>, [<em>include</em>], [<em>libs</em>], [<em>packages</em>], [<em>compile_options</em>], [<em>link_options</em>], [<em>lang</em>], [<em>extra_deps</em>]])</h3>
+<h2 id="file-types">File types</h2>
 <h3 id="headername">header(<em>name</em>)</h3>
 <h3 id="header_directorydirectory">header_directory(<em>directory</em>)</h3>
+<h3 id="source_filename-lang">source_file(<em>name</em>[, <em>lang</em>])</h3>
+<h2 id="build-steps">Build steps</h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>For build steps which produce an actual file, the exact name of the output
+file is determined by the platform you're running on. For instance, when
+building an executable file named "foo" on Windows, the resulting file will
+be <code>foo.exe</code>.</p>
+</div>
+<h3 id="aliasname-deps">alias(<em>name</em>, [<em>deps</em>])</h3>
+<p>Create a build step named <em>name</em> that performs no actions on its own. Instead,
+it just runs its dependencies listed in <em>deps</em> as necessary. This build step is
+useful for grouping common steps together, e.g. the common <code>make all</code> command.</p>
+<h3 id="commandname-cmdcmds-environment-extra_deps">command(<em>name</em>, <em>cmd</em>|<em>cmds</em>, [<em>environment</em>], [<em>extra_deps</em>])</h3>
+<p>Create a build step that runs a list of arbitrary commands, specified in either
+<em>cmd</em> or <em>cmds</em>; <em>cmd</em> takes a single command, whereas <em>cmds</em> takes a list of
+commands. Each command may either be a string to be parsed according to shell
+rules or a list of arguments to be passed directly to the process.</p>
+<p>You may also pass a dict to <em>environment</em> to set environment variables for the
+commands. These override any environment variables set on the command line.</p>
+<h3 id="executablename-files-include-libs-packages-compile_options-link_options-lang-extra_deps">executable(<em>name</em>, [<em>files</em>, [<em>include</em>], [<em>libs</em>], [<em>packages</em>], [<em>compile_options</em>], [<em>link_options</em>], [<em>lang</em>], [<em>extra_deps</em>]])</h3>
+<p>Create a build step that builds an executable file named <em>name</em>. <em>files</em> is the
+list of source (or object) files to link. Library files can be specified in
+<em>libs</em>, while libraries from external packages can be specified in <em>packages</em>
+(see <a href="#package-finders">Package finders</a> below). You can also pass command-line
+options for the linker in <em>link_options</em>. The arguments <em>include</em>,
+<em>compile_options</em>, <em>packages</em>, and <em>lang</em> are all forwarded on to the
+<em>object_file()</em> step (with <em>compile_options</em> mapping to <em>options</em>) for any
+source files listed in <em>files</em>.</p>
+<p>If <em>files</em> isn't specified, this function merely references an <em>existing</em>
+executable file (a precompiled binary, a shell script, etc) somewhere on the
+filesystem. In this case, <em>name</em> is the exact name of the file. This allows
+you to refer to existing executables for other functions.</p>
 <h3 id="object_filename-file-include-packages-options-lang-extra_deps">object_file([<em>name</em>], [<em>file</em>, [<em>include</em>], [<em>packages</em>], [<em>options</em>], [<em>lang</em>], [<em>extra_deps</em>]])</h3>
 <h3 id="object_filesfiles-include-packages-options-lang-extra_deps">object_files(<em>files</em>[, <em>include</em>], [<em>packages</em>], [<em>options</em>], [<em>lang</em>], [<em>extra_deps</em>])</h3>
 <h3 id="shared_libraryname-files-include-libs-packages-compile_options-link_options-lang-extra_deps">shared_library(<em>name</em>[, <em>files</em>, [<em>include</em>], [<em>libs</em>], [<em>packages</em>], [<em>compile_options</em>], [<em>link_options</em>], [<em>lang</em>], [<em>extra_deps</em>]])</h3>
-<h3 id="source_filename-lang">source_file(<em>name</em>[, <em>lang</em>])</h3>
 <h3 id="static_libraryname-files-include-libs-packages-compile_options-link_options-lang-extra_deps">static_library(<em>name</em>[, <em>files</em>, [<em>include</em>], [<em>libs</em>], [<em>packages</em>], [<em>compile_options</em>], [<em>link_options</em>], [<em>lang</em>], [<em>extra_deps</em>]])</h3>
 <h2 id="other-rules">Other rules</h2>
 <h3 id="default">default(<em>...</em>)</h3>
