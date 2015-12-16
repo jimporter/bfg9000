@@ -4,9 +4,23 @@
 
 ### header(*name*)
 
+Create a reference to an existing header named *name*. This is useful if you'd
+like to [install](#install-all) a single header file for your project.
+
 ### header_directory(*directory*)
 
-### source_file(*name*[, *lang*])
+Create a reference to a *directory* containing header files for the project.
+This can then be used in the *include* argument when
+[compiling](#object_filename-file-extra_deps) a source file.
+
+### source_file(*name*, [*lang*])
+
+Create a reference to an existing source file named *name*. If *lang* is not
+specified, the language of the file is inferred from its extension. Generally,
+this function is only necessary when running commands that take a source file
+as an argument, e.g. running a Python script; this allows you to specify that
+the file is found in the *source directory*. In other cases, a plain string will
+automatically get converted to a *source_file*.
 
 ## Build steps
 
@@ -100,7 +114,7 @@ the same as [*executable*](#executablename-files-extra_deps).
 ### default(*...*)
 
 Specify a list of build steps that should be run by default when building. These
-are all accumulated into the `"all"` target.
+are all accumulated into the `all` target.
 
 ### global_options(*options*, *lang*)
 
