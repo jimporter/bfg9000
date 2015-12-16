@@ -138,8 +138,19 @@
 <h1 id="reference">Reference</h1>
 <h2 id="file-types">File types</h2>
 <h3 id="headername">header(<em>name</em>)</h3>
+<p>Create a reference to an existing header named <em>name</em>. This is useful if you'd
+like to <a href="#install-all">install</a> a single header file for your project.</p>
 <h3 id="header_directorydirectory">header_directory(<em>directory</em>)</h3>
-<h3 id="source_filename-lang">source_file(<em>name</em>[, <em>lang</em>])</h3>
+<p>Create a reference to a <em>directory</em> containing header files for the project.
+This can then be used in the <em>include</em> argument when
+<a href="#object_filename-file-extra_deps">compiling</a> a source file.</p>
+<h3 id="source_filename-lang">source_file(<em>name</em>, [<em>lang</em>])</h3>
+<p>Create a reference to an existing source file named <em>name</em>. If <em>lang</em> is not
+specified, the language of the file is inferred from its extension. Generally,
+this function is only necessary when running commands that take a source file
+as an argument, e.g. running a Python script; this allows you to specify that
+the file is found in the <em>source directory</em>. In other cases, a plain string will
+automatically get converted to a <em>source_file</em>.</p>
 <h2 id="build-steps">Build steps</h2>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -214,7 +225,7 @@ the same as <a href="#executablename-files-extra_deps"><em>executable</em></a>.<
 <h2 id="other-rules">Other rules</h2>
 <h3 id="default">default(<em>...</em>)</h3>
 <p>Specify a list of build steps that should be run by default when building. These
-are all accumulated into the <code>"all"</code> target.</p>
+are all accumulated into the <code>all</code> target.</p>
 <h3 id="global_optionsoptions-lang">global_options(<em>options</em>, <em>lang</em>)</h3>
 <h3 id="global_link_optionsoptions">global_link_options(<em>options</em>)</h3>
 <h3 id="install-all">install(<em>...</em>, [<em>all</em>])</h3>
