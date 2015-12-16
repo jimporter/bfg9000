@@ -50,21 +50,62 @@ you to refer to existing executables for other functions.
 
 ### object_file([*name*], [*file*, [*include*], [*packages*], [*options*], [*lang*], [*extra_deps*]])
 
+Create a build step that compiles a source file named *file* to an object file
+named *name*; if *name* is not specified, it takes the file name in *file*
+without the extension. You can specify directories to search for header files in
+*include* (see [header_directory](#header_directorydirectory)), while external
+[packages](#package-finders) can be specified in *packages*. Command-line
+compiler options may be specified in *options*. *lang* can be used to specify
+the source language for the executable; this is useful if the source file's
+extension isn't recognized by bfg9000.
+
+If *file* isn't specified, this function merely references an *existing*
+object file somewhere on the filesystem. In this case, *name* must be specified
+and is the exact name of the file.
+
 ### object_files(*files*[, *include*], [*packages*], [*options*], [*lang*], [*extra_deps*])
+
+Create a compilation build step for each of the files in *files*; this is
+equivalent to calling
+[object_file](object_filename-file-include-packages-options-lang-extra_deps)
+for each element in *files*.
 
 ### shared_library(*name*[, *files*, [*include*], [*libs*], [*packages*], [*compile_options*], [*link_options*], [*lang*], [*extra_deps*]])
 
+Create a build step that builds a shared library named *name*. Its arguments are
+the same as [executable](#executablename-files-include-libs-packages-compile_options-link_options-lang-extra_deps).
+
+!!! note
+    On Windows, this produces *two* files: `name.dll` and `name.lib`. The latter
+    is the *import library*, used when linking to this library. As a result,
+    `my_lib.all` returns a list containing two files.
+
 ### static_library(*name*[, *files*, [*include*], [*libs*], [*packages*], [*compile_options*], [*link_options*], [*lang*], [*extra_deps*]])
+
+Create a build step that builds a static library named *name*. Its arguments are
+the same as [executable](#executablename-files-include-libs-packages-compile_options-link_options-lang-extra_deps).
 
 ## Other rules
 
 ### default(*...*)
+
+Specify a list of build steps that should be run by default when building. These
+are all accumulated into the `"all"` target.
 
 ### global_options(*options*, *lang*)
 
 ### global_link_options(*options*)
 
 ### install(*...*, [*all*])
+
+Specify a list of files that need to be installed for the project to work. Each
+will be installed to the appropriate location based on its type (e.g. header
+files will go in `$PREFIX/include` by default on POSIX systems).
+
+If *all* is `True`, all the files will be installed; otherwise, only the primary
+file for each argument will be. For instance, on Windows, this means that
+setting *all* to `True` installs the import libraries as well as the DLLs for
+shared libraries.
 
 ### test(*test*, [*options*], [*environment*], [*driver*])
 
