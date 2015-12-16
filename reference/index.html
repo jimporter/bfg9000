@@ -159,48 +159,58 @@ commands. Each command may either be a string to be parsed according to shell
 rules or a list of arguments to be passed directly to the process.</p>
 <p>You may also pass a dict to <em>environment</em> to set environment variables for the
 commands. These override any environment variables set on the command line.</p>
-<h3 id="executablename-files-include-libs-packages-compile_options-link_options-lang-extra_deps">executable(<em>name</em>, [<em>files</em>, [<em>include</em>], [<em>libs</em>], [<em>packages</em>], [<em>compile_options</em>], [<em>link_options</em>], [<em>lang</em>], [<em>extra_deps</em>]])</h3>
+<h3 id="executablename-files-extra_deps">executable(<em>name</em>, [<em>files</em>, ..., [<em>extra_deps</em>]])</h3>
 <p>Create a build step that builds an executable file named <em>name</em>. <em>files</em> is the
-list of source (or object) files to link. Library files can be specified in
-<em>libs</em>, while libraries from external packages can be specified in <em>packages</em>
-(see <a href="#package-finders">Package finders</a> below). You can also pass command-line
-options for the linker in <em>link_options</em>. The arguments <em>include</em>,
-<em>compile_options</em>, <em>packages</em>, and <em>lang</em> are all forwarded on to the
-<em>object_file()</em> step (with <em>compile_options</em> mapping to <em>options</em>) for any
-source files listed in <em>files</em>.</p>
+list of source (or object) files to link. If an element of <em>files</em> is a source
+file (or a plain string), this function will implicitly call
+<a href="../object_filename-file-extra_deps"><em>object_file</em></a> on it.</p>
+<p>The following arguments may also be specified:</p>
+<ul>
+<li><em>include</em>: Forwarded on to <a href="../object_filename-file-extra_deps"><em>object_file</em></a></li>
+<li><em>libs</em>: A list of library files (see <em>shared_library</em> and <em>static_library</em>)</li>
+<li><em>packages</em>: A list of external <a href="#package-finders">packages</a>; also forwarded on
+  to <em>object_file</em></li>
+<li><em>compile_options</em>: Forwarded on to
+  <a href="../object_filename-file-extra_deps"><em>object_file</em></a> as <em>options</em></li>
+<li><em>link_options</em>: Command-line options to pass to the linker</li>
+<li><em>lang</em>: Forwarded on to <a href="../object_filename-file-extra_deps"><em>object_file</em></a></li>
+</ul>
 <p>If <em>files</em> isn't specified, this function merely references an <em>existing</em>
 executable file (a precompiled binary, a shell script, etc) somewhere on the
 filesystem. In this case, <em>name</em> is the exact name of the file. This allows
 you to refer to existing executables for other functions.</p>
-<h3 id="object_filename-file-include-packages-options-lang-extra_deps">object_file([<em>name</em>], [<em>file</em>, [<em>include</em>], [<em>packages</em>], [<em>options</em>], [<em>lang</em>], [<em>extra_deps</em>]])</h3>
+<h3 id="object_filename-file-extra_deps">object_file([<em>name</em>], [<em>file</em>, ..., [<em>extra_deps</em>]])</h3>
 <p>Create a build step that compiles a source file named <em>file</em> to an object file
 named <em>name</em>; if <em>name</em> is not specified, it takes the file name in <em>file</em>
-without the extension. You can specify directories to search for header files in
-<em>include</em> (see <a href="#header_directorydirectory">header_directory</a>), while external
-<a href="#package-finders">packages</a> can be specified in <em>packages</em>. Command-line
-compiler options may be specified in <em>options</em>. <em>lang</em> can be used to specify
-the source language for the executable; this is useful if the source file's
-extension isn't recognized by bfg9000.</p>
+without the extension.</p>
+<p>The following arguments may also be specified:</p>
+<ul>
+<li><em>include</em>: A list of <a href="#header_directorydirectory">directories</a> to search for
+  header files</li>
+<li><em>packages</em>: A list of external <a href="#package-finders">packages</a></li>
+<li><em>options</em>: Command-line options to pass to the compiler</li>
+<li><em>lang</em>: The language of the source file; useful if the source file's extension
+  isn't recognized by bfg9000</li>
+</ul>
 <p>If <em>file</em> isn't specified, this function merely references an <em>existing</em>
 object file somewhere on the filesystem. In this case, <em>name</em> must be specified
 and is the exact name of the file.</p>
-<h3 id="object_filesfiles-include-packages-options-lang-extra_deps">object_files(<em>files</em>[, <em>include</em>], [<em>packages</em>], [<em>options</em>], [<em>lang</em>], [<em>extra_deps</em>])</h3>
+<h3 id="object_filesfiles-extra_deps">object_files(<em>files</em>, ..., [<em>extra_deps</em>])</h3>
 <p>Create a compilation build step for each of the files in <em>files</em>; this is
-equivalent to calling
-<a href="../object_filename-file-include-packages-options-lang-extra_deps">object_file</a>
-for each element in <em>files</em>.</p>
-<h3 id="shared_libraryname-files-include-libs-packages-compile_options-link_options-lang-extra_deps">shared_library(<em>name</em>[, <em>files</em>, [<em>include</em>], [<em>libs</em>], [<em>packages</em>], [<em>compile_options</em>], [<em>link_options</em>], [<em>lang</em>], [<em>extra_deps</em>]])</h3>
+equivalent to calling <a href="#object_filename-file-extra_deps"><em>object_file</em></a> for each
+element in <em>files</em>.</p>
+<h3 id="shared_libraryname-files-extra_deps">shared_library(<em>name</em>, [<em>files</em>, ..., [<em>extra_deps</em>]])</h3>
 <p>Create a build step that builds a shared library named <em>name</em>. Its arguments are
-the same as <a href="#executablename-files-include-libs-packages-compile_options-link_options-lang-extra_deps">executable</a>.</p>
+the same as <a href="#executablename-files-extra_deps"><em>executable</em></a>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>On Windows, this produces <em>two</em> files: <code>name.dll</code> and <code>name.lib</code>. The latter
 is the <em>import library</em>, used when linking to this library. As a result,
 <code>my_lib.all</code> returns a list containing two files.</p>
 </div>
-<h3 id="static_libraryname-files-include-libs-packages-compile_options-link_options-lang-extra_deps">static_library(<em>name</em>[, <em>files</em>, [<em>include</em>], [<em>libs</em>], [<em>packages</em>], [<em>compile_options</em>], [<em>link_options</em>], [<em>lang</em>], [<em>extra_deps</em>]])</h3>
+<h3 id="static_libraryname-files-extra_deps">static_library(<em>name</em>, [<em>files</em>, ..., [<em>extra_deps</em>]])</h3>
 <p>Create a build step that builds a static library named <em>name</em>. Its arguments are
-the same as <a href="#executablename-files-include-libs-packages-compile_options-link_options-lang-extra_deps">executable</a>.</p>
+the same as <a href="#executablename-files-extra_deps"><em>executable</em></a>.</p>
 <h2 id="other-rules">Other rules</h2>
 <h3 id="default">default(<em>...</em>)</h3>
 <p>Specify a list of build steps that should be run by default when building. These
