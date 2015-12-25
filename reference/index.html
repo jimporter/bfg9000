@@ -140,10 +140,13 @@
 <h3 id="headername">header(<em>name</em>)</h3>
 <p>Create a reference to an existing header named <em>name</em>. This is useful if you'd
 like to <a href="#install-all">install</a> a single header file for your project.</p>
-<h3 id="header_directorydirectory">header_directory(<em>directory</em>)</h3>
+<h3 id="header_directorydirectory-system">header_directory(<em>directory</em>, [<em>system</em>])</h3>
 <p>Create a reference to a <em>directory</em> containing header files for the project.
 This can then be used in the <em>include</em> argument when
-<a href="#object_filename-file-extra_deps">compiling</a> a source file.</p>
+<a href="#object_filename-file-extra_deps">compiling</a> a source file. If <em>system</em> is
+<em>True</em>, this directory will be treated as a
+<a href="https://gcc.gnu.org/onlinedocs/cpp/System-Headers.html">system directory</a> for
+compilers that support this.</p>
 <h3 id="source_filename-lang">source_file(<em>name</em>, [<em>lang</em>])</h3>
 <p>Create a reference to an existing source file named <em>name</em>. If <em>lang</em> is not
 specified, the language of the file is inferred from its extension. Generally,
@@ -232,9 +235,9 @@ are all accumulated into the <code>all</code> target.</p>
 <p>Specify a list of files that need to be installed for the project to work. Each
 will be installed to the appropriate location based on its type (e.g. header
 files will go in <code>$PREFIX/include</code> by default on POSIX systems).</p>
-<p>If <em>all</em> is <code>True</code>, all the files will be installed; otherwise, only the primary
+<p>If <em>all</em> is <em>True</em>, all the files will be installed; otherwise, only the primary
 file for each argument will be. For instance, on Windows, this means that
-setting <em>all</em> to <code>True</code> installs the import libraries as well as the DLLs for
+setting <em>all</em> to <em>True</em> installs the import libraries as well as the DLLs for
 shared libraries.</p>
 <h3 id="testtest-options-environment-driver">test(<em>test</em>, [<em>options</em>], [<em>environment</em>], [<em>driver</em>])</h3>
 <h3 id="test_driverdriver-options-environment-parent">test_driver(<em>driver</em>, [<em>options</em>], [<em>environment</em>], [<em>parent</em>])</h3>
@@ -248,6 +251,12 @@ shared libraries.</p>
 <h3 id="filter_by_platformname-type">filter_by_platform(<em>name</em>, <em>type</em>)</h3>
 <h3 id="find_filespath-name-type-flat-filter-cache">find_files([<em>path</em>], [<em>name</em>], [<em>type</em>], [<em>flat</em>], [<em>filter</em>], [<em>cache</em>])</h3></div>
         </div>
+
+        <footer class="col-md-12">
+            <hr>
+            
+            <center>Documentation built with <a href="http://www.mkdocs.org/">MkDocs</a>.</center>
+        </footer>
 
         <script src="../js/jquery-1.10.2.min.js"></script>
         <script src="../js/bootstrap-3.0.3.min.js"></script>
