@@ -61,7 +61,7 @@ def boost_package(env, name=None, version=None):
                          if root else None)
 
     if inc_var:
-        headers = [HeaderDirectory(inc_var, path.Root.absolute)]
+        headers = [HeaderDirectory(inc_var, path.Root.absolute, system=True)]
         boost_version = _boost_version(headers[0])
     else:
         # On Windows, check the default install location, which is structured
@@ -70,7 +70,8 @@ def boost_package(env, name=None, version=None):
             dirs = find(r'C:\Boost\include', 'boost-*', type='d', flat=True)
             if dirs:
                 try:
-                    headers = [HeaderDirectory(max(dirs), path.Root.absolute)]
+                    headers = [HeaderDirectory(max(dirs), path.Root.absolute,
+                                               system=True)]
                     boost_version = _boost_version(headers[0])
                     return BoostPackage(headers, lib_dirs=r'C:\Boost\lib',
                                         version=_boost_version(headers[0]))
@@ -81,7 +82,7 @@ def boost_package(env, name=None, version=None):
             raise ValueError('unable to find Boost on system')
         for i in env.platform.include_dirs:
             try:
-                headers = [HeaderDirectory(i, path.Root.absolute)]
+                headers = [HeaderDirectory(i, path.Root.absolute, system=True)]
                 boost_version = _boost_version(headers[0])
                 break
             except IOError as e:

@@ -32,7 +32,10 @@ class CcCompiler(object):
         return 'gcc'
 
     def include_dir(self, directory):
-        return ['-I' + directory.path]
+        if directory.system:
+            return ['-isystem' + directory.path]
+        else:
+            return ['-I' + directory.path]
 
     def link_args(self, name, mode):
         if mode == 'executable':

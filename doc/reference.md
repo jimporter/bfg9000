@@ -7,11 +7,14 @@
 Create a reference to an existing header named *name*. This is useful if you'd
 like to [install](#install-all) a single header file for your project.
 
-### header_directory(*directory*)
+### header_directory(*directory*, [*system*])
 
 Create a reference to a *directory* containing header files for the project.
 This can then be used in the *include* argument when
-[compiling](#object_filename-file-extra_deps) a source file.
+[compiling](#object_filename-file-extra_deps) a source file. If *system* is
+*True*, this directory will be treated as a
+[system directory](https://gcc.gnu.org/onlinedocs/cpp/System-Headers.html) for
+compilers that support this.
 
 ### source_file(*name*, [*lang*])
 
@@ -126,9 +129,9 @@ Specify a list of files that need to be installed for the project to work. Each
 will be installed to the appropriate location based on its type (e.g. header
 files will go in `$PREFIX/include` by default on POSIX systems).
 
-If *all* is `True`, all the files will be installed; otherwise, only the primary
+If *all* is *True*, all the files will be installed; otherwise, only the primary
 file for each argument will be. For instance, on Windows, this means that
-setting *all* to `True` installs the import libraries as well as the DLLs for
+setting *all* to *True* installs the import libraries as well as the DLLs for
 shared libraries.
 
 ### test(*test*, [*options*], [*environment*], [*driver*])

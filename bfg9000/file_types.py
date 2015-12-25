@@ -18,6 +18,10 @@ class HeaderFile(build_inputs.File):
 class HeaderDirectory(build_inputs.Directory):
     install_root = InstallRoot.includedir
 
+    def __init__(self, name, root, system=False):
+        build_inputs.File.__init__(self, name, root)
+        self.system = system
+
 class ObjectFile(build_inputs.File):
     def __init__(self, name, root, lang):
         build_inputs.File.__init__(self, name, root)
