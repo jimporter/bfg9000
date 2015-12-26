@@ -197,6 +197,11 @@ file (or a plain string), this function will implicitly call
 executable file (a precompiled binary, a shell script, etc) somewhere on the
 filesystem. In this case, <em>name</em> is the exact name of the file. This allows
 you to refer to existing executables for other functions.</p>
+<p>This build step recognizes the following environment variables:
+<a href="../environment-vars/#cc"><code>CC</code></a>, <a href="../environment-vars/#cc_link"><code>CC_LINK</code></a>,
+<a href="../environment-vars/#cxx"><code>CXX</code></a>, <a href="../environment-vars/#cxx_link"><code>CXX_LINK</code></a>,
+<a href="../environment-vars/#ldflags"><code>LDFLAGS</code></a>,
+<a href="../environment-vars/#ldlibs"><code>LDLIBS</code></a>.</p>
 <h3 id="object_filename-file-extra_deps">object_file([<em>name</em>], [<em>file</em>, ..., [<em>extra_deps</em>]])</h3>
 <p>Create a build step that compiles a source file named <em>file</em> to an object file
 named <em>name</em>; if <em>name</em> is not specified, it takes the file name in <em>file</em>
@@ -213,6 +218,11 @@ without the extension.</p>
 <p>If <em>file</em> isn't specified, this function merely references an <em>existing</em>
 object file somewhere on the filesystem. In this case, <em>name</em> must be specified
 and is the exact name of the file.</p>
+<p>This build step recognizes the following environment variables:
+<a href="../environment-vars/#cc"><code>CC</code></a>, <a href="../environment-vars/#cflags"><code>CFLAGS</code></a>,
+<a href="../environment-vars/#cppflags"><code>CPPFLAGS</code></a>, <a href="../environment-vars/#cxx"><code>CXX</code></a>,
+<a href="../environment-vars/#cxxflags"><code>CXXFLAGS</code></a>,
+<a href="../environment-vars/#ldlibs"><code>LDLIBS</code></a>.</p>
 <h3 id="object_filesfiles-extra_deps">object_files(<em>files</em>, ..., [<em>extra_deps</em>])</h3>
 <p>Create a compilation build step for each of the files in <em>files</em>; this is
 equivalent to calling <a href="#object_filename-file-extra_deps"><em>object_file</em></a> for each
@@ -220,6 +230,11 @@ element in <em>files</em>.</p>
 <h3 id="shared_libraryname-files-extra_deps">shared_library(<em>name</em>, [<em>files</em>, ..., [<em>extra_deps</em>]])</h3>
 <p>Create a build step that builds a shared library named <em>name</em>. Its arguments are
 the same as <a href="#executablename-files-extra_deps"><em>executable</em></a>.</p>
+<p>This build step recognizes the following environment variables:
+<a href="../environment-vars/#cc"><code>CC</code></a>, <a href="../environment-vars/#cc_link"><code>CC_LINK</code></a>,
+<a href="../environment-vars/#cxx"><code>CXX</code></a>, <a href="../environment-vars/#cxx_link"><code>CXX_LINK</code></a>,
+<a href="../environment-vars/#ldflags"><code>LDFLAGS</code></a>,
+<a href="../environment-vars/#ldlibs"><code>LDLIBS</code></a>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>On Windows, this produces <em>two</em> files: <code>name.dll</code> and <code>name.lib</code>. The latter
@@ -229,6 +244,11 @@ is the <em>import library</em>, used when linking to this library. As a result,
 <h3 id="static_libraryname-files-extra_deps">static_library(<em>name</em>, [<em>files</em>, ..., [<em>extra_deps</em>]])</h3>
 <p>Create a build step that builds a static library named <em>name</em>. Its arguments are
 the same as <a href="#executablename-files-extra_deps"><em>executable</em></a>.</p>
+<p>This build step recognizes the following environment variables:
+<a href="../environment-vars/#ar"><code>AR</code></a>, <a href="../environment-vars/#arflags"><code>ARFLAGS</code></a>,
+<a href="../environment-vars/#cc_lib"><code>CC_LIB</code></a>,
+<a href="../environment-vars/#cxx_lib"><code>CXX_LIB</code></a>,
+<a href="../environment-vars/#libflags"><code>LIBFLAGS</code></a>.</p>
 <h2 id="other-rules">Other rules</h2>
 <h3 id="default">default(<em>...</em>)</h3>
 <p>Specify a list of build steps that should be run by default when building. These
@@ -243,13 +263,25 @@ files will go in <code>$PREFIX/include</code> by default on POSIX systems).</p>
 file for each argument will be. For instance, on Windows, this means that
 setting <em>all</em> to <em>True</em> installs the import libraries as well as the DLLs for
 shared libraries.</p>
+<p>This rule recognizes the following environment variables:
+<a href="../environment-vars/#install"><code>INSTALL</code></a>,
+<a href="../environment-vars/#mkdir_p"><code>MKDIR_P</code></a>,
+<a href="../environment-vars/#patchelf"><code>PATCHELF</code></a>.</p>
 <h3 id="testtest-options-environment-driver">test(<em>test</em>, [<em>options</em>], [<em>environment</em>], [<em>driver</em>])</h3>
 <h3 id="test_driverdriver-options-environment-parent">test_driver(<em>driver</em>, [<em>options</em>], [<em>environment</em>], [<em>parent</em>])</h3>
 <h3 id="test_deps">test_deps(<em>...</em>)</h3>
 <h2 id="package-finders">Package finders</h2>
 <h3 id="boost_packagename-version">boost_package([<em>name</em>], [<em>version</em>])</h3>
+<p>This rule recognizes the following environment variables:
+<a href="../environment-vars/#boost_root"><code>BOOST_ROOT</code></a>,
+<a href="../environment-vars/#boost_includedir"><code>BOOST_INCLUDEDIR</code></a>,
+<a href="../environment-vars/#boost_librarydir"><code>BOOST_LIBRARYDIR</code></a>.</p>
 <h3 id="system_executablename">system_executable(<em>name</em>)</h3>
+<p>This rule recognizes the following environment variables:
+<a href="../environment-vars/#path"><code>PATH</code></a>, <a href="../environment-vars/#pathext"><code>PATHEXT</code></a>.</p>
 <h3 id="system_packagename">system_package(<em>name</em>)</h3>
+<p>This rule recognizes the following environment variables:
+<a href="../environment-vars/#library_path"><code>LIBRARY_PATH</code></a>.</p>
 <h2 id="miscellaneous">Miscellaneous</h2>
 <h3 id="bfg9000_required_versionversion-python_version">bfg9000_required_version([<em>version</em>], [<em>python_version</em>])</h3>
 <h3 id="filter_by_platformname-type">filter_by_platform(<em>name</em>, <em>type</em>)</h3>
