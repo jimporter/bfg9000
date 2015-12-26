@@ -33,20 +33,6 @@ class Environment(object):
         return self.variables.get(key, default)
 
     @property
-    def bin_dirs(self):
-        return self.getvar('PATH', os.defpath).split(os.pathsep)
-
-    @property
-    def bin_exts(self):
-        # XXX: Create something to manage host-platform stuff like this?
-        # (`platforms.Platform` is for targets.)
-        plat = platforms.platform_name()
-        if plat == 'windows' or plat == 'cygwin':
-            return self.getvar('PATHEXT', '').split(os.pathsep)
-        else:
-            return ['']
-
-    @property
     def lib_dirs(self):
         paths = self.getvar('LIBRARY_PATH')
         paths = paths.split(os.pathsep) if paths else []
