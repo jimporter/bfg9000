@@ -28,6 +28,13 @@ pre {
   padding: 4px;
 }
 
+/* Add small subtitles. */
+
+.subtitle {
+  margin-top: -10.5px;
+  color: #BBB;
+}
+
 /* Style the admonitions. */
 
 .admonition {
