@@ -136,22 +136,19 @@ This build step recognizes the following environment variables:
 [`CXX_LIB`](environment-vars.md#cxx_lib),
 [`LIBFLAGS`](environment-vars.md#libflags).
 
-## Other rules
+## Grouping rules
 
 ### default(*...*)
 
 Specify a list of build steps that should be run by default when building. These
 are all accumulated into the `all` target.
 
-### global_options(*options*, *lang*)
-
-### global_link_options(*options*)
-
 ### install(*...*, [*all*])
 
 Specify a list of files that need to be installed for the project to work. Each
 will be installed to the appropriate location based on its type (e.g. header
-files will go in `$PREFIX/include` by default on POSIX systems).
+files will go in `$PREFIX/include` by default on POSIX systems). These are all
+accumulated into the `install` target.
 
 If *all* is *True*, all the files will be installed; otherwise, only the primary
 file for each argument will be. For instance, on Windows, this means that
@@ -163,11 +160,48 @@ This rule recognizes the following environment variables:
 [`MKDIR_P`](environment-vars.md#mkdir_p),
 [`PATCHELF`](environment-vars.md#patchelf).
 
-### test(*test*, [*options*], [*environment*], [*driver*])
+## Global options
 
-### test_driver(*driver*, [*options*], [*environment*], [*parent*])
+### global_options(*options*, *lang*)
+
+Specify some *options* (either as a string or list) to use for all compilation
+steps for the language *lang*.
+
+### global_link_options(*options*)
+
+Specify some *options* (either as a string or list) to use for all link steps
+(i.e. for [executables](#executablename-files-extra_deps) and
+[shared libraries](#shared_libraryname-files-extra_deps)).
+
+## Test rules
+
+These rules help you define automated tests that can all be run via the `test`
+target. For simple cases, you should only need the
+[*test*](#testtest-options-environmentdriver) rule, but you can also wrap your
+tests with a separate driver using
+[*test_driver*](#test_driverdriver-options-environmentparent).
+
+For cases where you only want to *build* the tests, not run them, you can use
+the `tests` target.
+
+### test(*test*, [*options*], [*environment*|*driver*])
+
+Create a test for a single test file named *test*. You may specify additional
+command-line arguments to the test in *options*. You can also pass temporary
+environment variables as a dict via *environment*, or specify a test driver to
+add this test file to via *driver*.
+
+### test_driver(*driver*, [*options*], [*environment*|*parent*])
+
+Create a test driver which can run a series of tests, specified as command-line
+arguments to the driver. You may specify driver-wide command-line arguments via
+*options*. You can also pass temporary environment variables as a dict with
+*environment*, or specify a parent test driver to wrap this driver via *driver*.
 
 ### test_deps(*...*)
+
+Specify a list of dependencies which must be satisfied before the tests can be
+run.
 
 ## Package finders
 
