@@ -128,7 +128,11 @@
         
             <li><a href="#build-steps">Build steps</a></li>
         
-            <li><a href="#other-rules">Other rules</a></li>
+            <li><a href="#grouping-rules">Grouping rules</a></li>
+        
+            <li><a href="#global-options">Global options</a></li>
+        
+            <li><a href="#test-rules">Test rules</a></li>
         
             <li><a href="#package-finders">Package finders</a></li>
         
@@ -249,16 +253,15 @@ the same as <a href="#executablename-files-extra_deps"><em>executable</em></a>.<
 <a href="../environment-vars/#cc_lib"><code>CC_LIB</code></a>,
 <a href="../environment-vars/#cxx_lib"><code>CXX_LIB</code></a>,
 <a href="../environment-vars/#libflags"><code>LIBFLAGS</code></a>.</p>
-<h2 id="other-rules">Other rules</h2>
+<h2 id="grouping-rules">Grouping rules</h2>
 <h3 id="default">default(<em>...</em>)</h3>
 <p>Specify a list of build steps that should be run by default when building. These
 are all accumulated into the <code>all</code> target.</p>
-<h3 id="global_optionsoptions-lang">global_options(<em>options</em>, <em>lang</em>)</h3>
-<h3 id="global_link_optionsoptions">global_link_options(<em>options</em>)</h3>
 <h3 id="install-all">install(<em>...</em>, [<em>all</em>])</h3>
 <p>Specify a list of files that need to be installed for the project to work. Each
 will be installed to the appropriate location based on its type (e.g. header
-files will go in <code>$PREFIX/include</code> by default on POSIX systems).</p>
+files will go in <code>$PREFIX/include</code> by default on POSIX systems). These are all
+accumulated into the <code>install</code> target.</p>
 <p>If <em>all</em> is <em>True</em>, all the files will be installed; otherwise, only the primary
 file for each argument will be. For instance, on Windows, this means that
 setting <em>all</em> to <em>True</em> installs the import libraries as well as the DLLs for
@@ -267,9 +270,23 @@ shared libraries.</p>
 <a href="../environment-vars/#install"><code>INSTALL</code></a>,
 <a href="../environment-vars/#mkdir_p"><code>MKDIR_P</code></a>,
 <a href="../environment-vars/#patchelf"><code>PATCHELF</code></a>.</p>
-<h3 id="testtest-options-environment-driver">test(<em>test</em>, [<em>options</em>], [<em>environment</em>], [<em>driver</em>])</h3>
-<h3 id="test_driverdriver-options-environment-parent">test_driver(<em>driver</em>, [<em>options</em>], [<em>environment</em>], [<em>parent</em>])</h3>
+<h2 id="global-options">Global options</h2>
+<h3 id="global_optionsoptions-lang">global_options(<em>options</em>, <em>lang</em>)</h3>
+<h3 id="global_link_optionsoptions">global_link_options(<em>options</em>)</h3>
+<h2 id="test-rules">Test rules</h2>
+<h3 id="testtest-options-environmentdriver">test(<em>test</em>, [<em>options</em>], [<em>environment</em>|<em>driver</em>])</h3>
+<p>Create a test for a single test file named <em>test</em>. You may specify additional
+command-line arguments to the test in <em>options</em>. You can also pass temporary
+environment variables as a dict via <em>environment</em>, or specify a test driver to
+add this test file to via <em>driver</em>.</p>
+<h3 id="test_driverdriver-options-environmentparent">test_driver(<em>driver</em>, [<em>options</em>], [<em>environment</em>|<em>parent</em>])</h3>
+<p>Create a test driver which can run a series of tests, specified as command-line
+arguments to the driver. You may specify driver-wide command-line arguments via
+<em>options</em>. You can also pass temporary environment variables as a dict with
+<em>environment</em>, or specify a parent test driver to wrap this driver via <em>driver</em>.</p>
 <h3 id="test_deps">test_deps(<em>...</em>)</h3>
+<p>Specify a list of dependencies which must be satisfied before the tests can be
+run.</p>
 <h2 id="package-finders">Package finders</h2>
 <h3 id="boost_packagename-version">boost_package([<em>name</em>], [<em>version</em>])</h3>
 <p>This rule recognizes the following environment variables:
