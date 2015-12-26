@@ -72,6 +72,12 @@ executable file (a precompiled binary, a shell script, etc) somewhere on the
 filesystem. In this case, *name* is the exact name of the file. This allows
 you to refer to existing executables for other functions.
 
+This build step recognizes the following environment variables:
+[`CC`](environment-vars.md#cc), [`CC_LINK`](environment-vars.md#cc_link),
+[`CXX`](environment-vars.md#cxx), [`CXX_LINK`](environment-vars.md#cxx_link),
+[`LDFLAGS`](environment-vars.md#ldflags),
+[`LDLIBS`](environment-vars.md#ldlibs).
+
 ### object_file([*name*], [*file*, ..., [*extra_deps*]])
 
 Create a build step that compiles a source file named *file* to an object file
@@ -91,6 +97,12 @@ If *file* isn't specified, this function merely references an *existing*
 object file somewhere on the filesystem. In this case, *name* must be specified
 and is the exact name of the file.
 
+This build step recognizes the following environment variables:
+[`CC`](environment-vars.md#cc), [`CFLAGS`](environment-vars.md#cflags),
+[`CPPFLAGS`](environment-vars.md#cppflags), [`CXX`](environment-vars.md#cxx),
+[`CXXFLAGS`](environment-vars.md#cxxflags),
+[`LDLIBS`](environment-vars.md#ldlibs).
+
 ### object_files(*files*, ..., [*extra_deps*])
 
 Create a compilation build step for each of the files in *files*; this is
@@ -102,6 +114,12 @@ element in *files*.
 Create a build step that builds a shared library named *name*. Its arguments are
 the same as [*executable*](#executablename-files-extra_deps).
 
+This build step recognizes the following environment variables:
+[`CC`](environment-vars.md#cc), [`CC_LINK`](environment-vars.md#cc_link),
+[`CXX`](environment-vars.md#cxx), [`CXX_LINK`](environment-vars.md#cxx_link),
+[`LDFLAGS`](environment-vars.md#ldflags),
+[`LDLIBS`](environment-vars.md#ldlibs).
+
 !!! note
     On Windows, this produces *two* files: `name.dll` and `name.lib`. The latter
     is the *import library*, used when linking to this library. As a result,
@@ -111,6 +129,12 @@ the same as [*executable*](#executablename-files-extra_deps).
 
 Create a build step that builds a static library named *name*. Its arguments are
 the same as [*executable*](#executablename-files-extra_deps).
+
+This build step recognizes the following environment variables:
+[`AR`](environment-vars.md#ar), [`ARFLAGS`](environment-vars.md#arflags),
+[`CC_LIB`](environment-vars.md#cc_lib),
+[`CXX_LIB`](environment-vars.md#cxx_lib),
+[`LIBFLAGS`](environment-vars.md#libflags).
 
 ## Other rules
 
@@ -134,6 +158,11 @@ file for each argument will be. For instance, on Windows, this means that
 setting *all* to *True* installs the import libraries as well as the DLLs for
 shared libraries.
 
+This rule recognizes the following environment variables:
+[`INSTALL`](environment-vars.md#install),
+[`MKDIR_P`](environment-vars.md#mkdir_p),
+[`PATCHELF`](environment-vars.md#patchelf).
+
 ### test(*test*, [*options*], [*environment*], [*driver*])
 
 ### test_driver(*driver*, [*options*], [*environment*], [*parent*])
@@ -144,9 +173,20 @@ shared libraries.
 
 ### boost_package([*name*], [*version*])
 
+This rule recognizes the following environment variables:
+[`BOOST_ROOT`](environment-vars.md#boost_root),
+[`BOOST_INCLUDEDIR`](environment-vars.md#boost_includedir),
+[`BOOST_LIBRARYDIR`](environment-vars.md#boost_librarydir).
+
 ### system_executable(*name*)
 
+This rule recognizes the following environment variables:
+[`PATH`](environment-vars.md#path), [`PATHEXT`](environment-vars.md#pathext).
+
 ### system_package(*name*)
+
+This rule recognizes the following environment variables:
+[`LIBRARY_PATH`](environment-vars.md#library_path).
 
 ## Miscellaneous
 

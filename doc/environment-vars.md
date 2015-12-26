@@ -140,7 +140,7 @@ the Make backend.
 Default: `patchelf`
 {: .subtitle}
 
-*Linux-only*. The command to use when patching an ELF files rpaths for
+*Linux-only*. The command to use when patching an ELF file's rpath for
 installation.
 
 ### *SETENV*
