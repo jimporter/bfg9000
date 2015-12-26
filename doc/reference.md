@@ -207,6 +207,10 @@ run.
 
 ### boost_package([*name*], [*version*])
 
+Search for a Boost library. You can specify *name* (as a string or a list) to
+specify a specific Boost library (or libraries); for instance,
+`'program_options'`. For header-only libraries, you can omit *name*.
+
 This rule recognizes the following environment variables:
 [`BOOST_ROOT`](environment-vars.md#boost_root),
 [`BOOST_INCLUDEDIR`](environment-vars.md#boost_includedir),
@@ -214,18 +218,54 @@ This rule recognizes the following environment variables:
 
 ### system_executable(*name*)
 
+Search for an executable named *name* somewhere in the system's PATH.
+
 This rule recognizes the following environment variables:
 [`PATH`](environment-vars.md#path), [`PATHEXT`](environment-vars.md#pathext).
 
 ### system_package(*name*)
 
+Search for a library named *name* somewhere in the system's default library
+location.
+
 This rule recognizes the following environment variables:
 [`LIBRARY_PATH`](environment-vars.md#library_path).
+
+!!! note
+    This only finds the library itself, not any required headers. Those are
+    assumed to be somewhere where your compiler can find them automatically; if
+    not, you can set [`CPPFLAGS`](environment-vars.md#cppflags) to add the
+    appropriate header search path.
 
 ## Miscellaneous
 
 ### bfg9000_required_version([*version*], [*python_version*])
 
+Set the required *version* for bfg9000 and/or the required *python_version*.
+Each of these is a standard Python [version
+specifier](https://www.python.org/dev/peps/pep-0440/#version-specifiers).
+
 ### filter_by_platform(*name*, *type*)
 
+Return *True* if *name* is a filename that should be included for the target
+platform, and *False* otherwise. File (or directory) names like `PLATFORM` or
+`foo_PLATFORM.cpp` are excluded if `PLATFORM` is a known platform name that
+*doesn't* match the target platform. Known platform names are: *posix*,
+*linux*, *darwin*, *cygwin*, *windows*.
+
+This is the default *filter* for
+[*find_files*](find_filespath-name-type-flat-filter-cache).
+
 ### find_files([*path*], [*name*], [*type*], [*flat*], [*filter*], [*cache*])
+
+Find files in *path* whose name matches the glob *name*. If *path* is omitted,
+search in the root of the source directory; if *name* is omitted, all files will
+match. *type* may be either `'f'` to find only files or `'d'` to find only
+directories. If *flat* is true, *find_files* will not recurse into
+subdirectories. You can also specify a custom *filter* function to filter the
+list of files; this function takes two arguments: the file's name and its type.
+
+Finally, if *cache* is *True* (the default), this lookup will be cached so that
+any changes to the result of this function will regenerate the build scripts
+for the project. This allows you do add or remove source files and not have to
+worry about manually rerunning bfg9000.
