@@ -272,8 +272,20 @@ shared libraries.</p>
 <a href="../environment-vars/#patchelf"><code>PATCHELF</code></a>.</p>
 <h2 id="global-options">Global options</h2>
 <h3 id="global_optionsoptions-lang">global_options(<em>options</em>, <em>lang</em>)</h3>
+<p>Specify some <em>options</em> (either as a string or list) to use for all compilation
+steps for the language <em>lang</em>.</p>
 <h3 id="global_link_optionsoptions">global_link_options(<em>options</em>)</h3>
+<p>Specify some <em>options</em> (either as a string or list) to use for all link steps
+(i.e. for <a href="#executablename-files-extra_deps">executables</a> and
+<a href="#shared_libraryname-files-extra_deps">shared libraries</a>).</p>
 <h2 id="test-rules">Test rules</h2>
+<p>These rules help you define automated tests that can all be run via the <code>test</code>
+target. For simple cases, you should only need the
+<a href="#testtest-options-environmentdriver"><em>test</em></a> rule, but you can also wrap your
+tests with a separate driver using
+<a href="#test_driverdriver-options-environmentparent"><em>test_driver</em></a>.</p>
+<p>For cases where you only want to <em>build</em> the tests, not run them, you can use
+the <code>tests</code> target.</p>
 <h3 id="testtest-options-environmentdriver">test(<em>test</em>, [<em>options</em>], [<em>environment</em>|<em>driver</em>])</h3>
 <p>Create a test for a single test file named <em>test</em>. You may specify additional
 command-line arguments to the test in <em>options</em>. You can also pass temporary
