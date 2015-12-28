@@ -16,6 +16,10 @@ class ArLinker(object):
 
         self.global_args = shell.split(env.getvar('ARFLAGS', 'cru'))
 
+    @property
+    def flavor(self):
+        return 'ar'
+
     def command(self, cmd, input, output, args=None):
         result = [cmd]
         result.extend(iterutils.iterate(args))

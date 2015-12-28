@@ -1,0 +1,10 @@
+# -*- python -*-
+
+wall = {
+    'cc': ['-Wall', '-DFLAVOR="cc"'],
+    'msvc': ['/W4', '/DFLAVOR="msvc"'],
+}
+
+global_options(wall[ env.compiler('c++').flavor ], 'c++')
+
+executable('program', files=['program.cpp'])

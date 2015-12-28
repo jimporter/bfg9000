@@ -15,6 +15,14 @@ class MsvcCompiler(object):
 
         self.global_args = ['/nologo'] + cflags
 
+    @property
+    def flavor(self):
+        return 'msvc'
+
+    @property
+    def deps_flavor(self):
+        return 'msvc'
+
     def command(self, cmd, input, output, deps=None, args=None):
         result = [cmd]
         result.extend(iterate(args))
@@ -26,10 +34,6 @@ class MsvcCompiler(object):
 
     def output_file(self, name, lang):
         return ObjectFile(name + '.obj', Root.builddir, lang)
-
-    @property
-    def deps_flavor(self):
-        return 'msvc'
 
     @property
     def library_args(self):
@@ -57,6 +61,10 @@ class MsvcLinker(object):
 
         self.global_args = ['/nologo'] + ldflags
         self.global_libs = ldlibs
+
+    @property
+    def flavor(self):
+        return 'msvc'
 
     def command(self, cmd, input, output, libs=None, args=None):
         result = [cmd]
@@ -112,6 +120,10 @@ class MsvcStaticLinker(object):
         self.link_var = 'lib'
 
         self.global_args = shell.split(env.getvar('LIBFLAGS', ''))
+
+    @property
+    def flavor(self):
+        return 'msvc'
 
     def command(self, cmd, input, output, args=None):
         result = [cmd]

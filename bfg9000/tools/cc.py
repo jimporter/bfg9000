@@ -15,6 +15,14 @@ class CcCompiler(object):
 
         self.global_args = cflags
 
+    @property
+    def flavor(self):
+        return 'cc'
+
+    @property
+    def deps_flavor(self):
+        return 'gcc'
+
     def command(self, cmd, input, output, deps=None, args=None):
         result = [cmd]
         result.extend(iterate(args))
@@ -26,10 +34,6 @@ class CcCompiler(object):
 
     def output_file(self, name, lang):
         return ObjectFile(name + '.o', Root.builddir, lang)
-
-    @property
-    def deps_flavor(self):
-        return 'gcc'
 
     def include_dir(self, directory):
         if directory.system:
@@ -71,6 +75,10 @@ class CcLinker(object):
     @property
     def platform(self):
         return self.env.platform
+
+    @property
+    def flavor(self):
+        return 'cc'
 
     def command(self, cmd, input, output, libs=None, args=None):
         result = [cmd]
