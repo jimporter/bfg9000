@@ -43,6 +43,12 @@ class Library(Binary):
 class StaticLibrary(Library):
     pass
 
+class WholeArchive(StaticLibrary):
+    def __init__(self, lib):
+        build_inputs.Node.__init__(self)
+        self.creator = lib
+        self.path = lib.path
+
 class SharedLibrary(Library):
     pass
 

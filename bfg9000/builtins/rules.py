@@ -1,4 +1,5 @@
 import os.path
+from itertools import chain
 
 from . import builtin
 from .packages import system_executable
@@ -76,14 +77,18 @@ class Link(Edge):
         self.files = builtins['object_files'](
             files, include, packages, compile_options, lang
         )
-        if len(self.files) == 0:
+        if (len(self.files) == 0 and
+            not any(isinstance(i, WholeArchive) for i in libs)):
             raise ValueError('need at least one source file')
 
-        self.builder = env.linker((i.lang for i in self.files), mode)
+        langs = chain([lang], (i.lang for i in self.files))
+        self.builder = env.linker(langs, mode)
         self.libs = sum((i.libraries for i in iterate(packages)), libs)
 
-        lib_dirs = (self.builder.lib_dirs(i.lib_dirs)
-                    for i in iterate(packages))
+        lib_dirs = []
+        if mode != 'static_library':
+            lib_dirs = (self.builder.lib_dirs(i.lib_dirs)
+                        for i in iterate(packages))
         self.options = sum(lib_dirs, pshell.listify(link_options))
         self.name = self.__name(name, mode)
 
@@ -126,6 +131,11 @@ def header(name):
 @builtin
 def header_directory(directory, system=False):
     return HeaderDirectory(directory, Root.srcdir, system)
+
+@builtin
+def whole_archive(lib):
+    lib = sourcify(lib, Library, StaticLibrary)
+    return WholeArchive(lib)
 
 @builtin.globals('build_inputs', 'env')
 def object_file(build, env, name=None, file=None, *args, **kwargs):

@@ -5,6 +5,7 @@ from .utils import library_macro
 from ..file_types import *
 from ..iterutils import iterate, uniques
 from ..path import Root
+from ..platforms import platform_name
 
 class CcCompiler(object):
     def __init__(self, env, name, command, cflags):
@@ -130,8 +131,14 @@ class CcLinker(object):
         return ['-L' + i for i in dirs]
 
     def link_lib(self, library):
-        if isinstance(library, StaticLibrary):
+        if isinstance(library, WholeArchive):
+            if platform_name() == 'darwin':
+                return ['-Wl,-force_load', library.link.path]
+            return ['-Wl,--whole-archive', library.link.path,
+                    'Wl,--no-whole-archive']
+        elif isinstance(library, StaticLibrary):
             return [library.link.path]
+        # SharedLibrary
         lib_name = library.link.path.basename()
         m = self._lib_re.match(lib_name)
         if not m:
