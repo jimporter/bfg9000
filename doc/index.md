@@ -38,3 +38,11 @@ $ python setup.py install
 ```
 
 From there, you can start using bfg to build your software!
+
+!!! note
+    Since many users don't need it, MSBuild support is an optional feature.
+    To install all the dependencies required for MSBuild, you can run:
+
+    ```
+    $ pip install -e .[msbuild]
+    ```

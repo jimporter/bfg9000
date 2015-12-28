@@ -39,9 +39,42 @@ Second, simplifies building in multiple configurations, a very useful feature
 for development; you can easily have debug and optimized builds sitting
 side-by-side.
 
+In our example above, we explicitly specified both the source and build
+directories. However, for convenience, only one of them is required. If you're
+already in a source directory (i.e. a directory which contains a `build.bfg`
+file), then you can simply say `bfg9000 builddir`. If you're in a build
+directory (i.e. a directory which does *not* contain a `build.bfg` file), then
+you can instead say `bfg9000 srcdir`.
+
+## Selecting a backend
+
+By default, bfg9000 tries to use the most appropriate build backend for your
+system. In descending order, bfg prefers [`ninja`](https://ninja-build.org/),
+[`make`](https://www.gnu.org/software/make/), and
+[`msbuild`](https://msdn.microsoft.com/en-us/library/dd393574(v=vs.120).aspx).
+If one of these isn't installed, it will try the next best option. However, you
+can explicitly select a backend with the `--backend` option. For instance, to
+build a Makefile even if Ninja is installed:
+
+```sh
+$ bfg9000 --backend make srcdir builddir
+```
+
 ## Setting options
 
 Many options for building can be set via the environment. These generally follow
-the UNIX naming conventions, so you can use `CFLAGS`, `CXXFLAGS`, and `CPPFLAGS`
-for compilation flags, `LDFLAGS` for linker flags, and `LIBRARY_PATH` for the
-list of library search directories.
+the UNIX naming conventions, so you can use, say,
+[`CXX`](environment-vars.md#cxx) to change the C++ compiler that bfg9000 uses.
+For a full listing of the recognized environment variables, see the [Environment
+Variables](environment-vars.md) chapter.
+
+## Installing your software
+
+After building your software, you may wish to install it to another directory on
+your system. By default, bfg9000 will install them into the appropriate place
+for your platform (e.g. `/usr/local/bin` for exectuables on POSIX systems).
+However, you can specify where you'd like to install your project when invoking
+bfg9000. To change the installation prefix (`/usr/local` on POSIX), just specify
+`--prefix /path/to/prefix` when running bfg9000. You can also specify the
+binary, library, and include directories individually, using `--bindir`,
+`--libdir`, and `--includedir`, respectively.
