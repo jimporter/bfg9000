@@ -124,8 +124,8 @@ def header(name):
     return HeaderFile(name, root=Root.srcdir)
 
 @builtin
-def header_directory(directory):
-    return HeaderDirectory(directory, root=Root.srcdir)
+def header_directory(directory, system=False):
+    return HeaderDirectory(directory, Root.srcdir, system)
 
 @builtin.globals('build_inputs', 'env')
 def object_file(build, env, name=None, file=None, *args, **kwargs):
