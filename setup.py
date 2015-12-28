@@ -46,7 +46,7 @@ setup(
     author_email='porterj@alum.rit.edu',
     license='BSD',
 
-    packages=find_packages(exclude=['test'] + extra_exclude),
+    packages=find_packages(exclude=['test', 'test.*'] + extra_exclude),
 
     install_requires=['enum-compat', 'packaging'],
     extras_require={'msbuild': ['lxml']},
