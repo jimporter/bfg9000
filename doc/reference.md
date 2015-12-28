@@ -223,10 +223,12 @@ Search for an executable named *name* somewhere in the system's PATH.
 This rule recognizes the following environment variables:
 [`PATH`](environment-vars.md#path), [`PATHEXT`](environment-vars.md#pathext).
 
-### system_package(*name*)
+### system_package(*name*, [*kind*])
 
 Search for a library named *name* somewhere in the system's default library
-location.
+location. You can specify *kind* to one of `'any'` (the default), `'shared'`,
+or `'static'`. This allows you to restrict the search to find only static
+versions of a library, for example.
 
 This rule recognizes the following environment variables:
 [`LIBRARY_PATH`](environment-vars.md#library_path).

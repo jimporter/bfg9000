@@ -17,12 +17,16 @@ class Package(object):
         self.libraries = libraries or []
         self.lib_dirs = lib_dirs or []
 
-def _find_library(env, name, search_dirs):
+def _find_library(env, name, search_dirs, kind='any'):
     # XXX: Support alternative naming schemes (e.g. libfoo.a vs foo.lib for GCC
     # on Windows)? Also not sure how we'll support other runtimes (e.g. JVM).
-    linkers = [env.linker('c', 'shared_library'),
-               env.linker('c', 'static_library')]
+    linkers = []
+    if kind in ('any', 'shared'):
+        linkers.append(env.linker('c', 'shared_library'))
+    if kind in ('any', 'static'):
+        linkers.append(env.linker('c', 'static_library'))
     for d in search_dirs:
+        d = os.path.abspath(d)
         for i in linkers:
             candidate = i.output_file(os.path.join(d, name))
             if os.path.exists(candidate.link.path.string()):
@@ -30,8 +34,10 @@ def _find_library(env, name, search_dirs):
     raise ValueError("unable to find package '{}'".format(name))
 
 @builtin.globals('env')
-def system_package(env, name):
-    return Package([], [_find_library(env, name, env.lib_dirs)])
+def system_package(env, name, kind='any'):
+    if kind not in ('any', 'shared', 'static'):
+        raise ValueError("kind must be one of 'any', 'shared', or 'static'")
+    return Package([], [_find_library(env, name, env.lib_dirs, kind)])
 
 class BoostPackage(Package):
     def __init__(self, includes=None, libraries=None, lib_dirs=None,
