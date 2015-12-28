@@ -5,7 +5,7 @@ from . import builtin
 from .packages import system_executable
 from ..build_inputs import Directory, Edge, File, Phony, objectify, sourcify
 from ..file_types import *
-from ..iterutils import iterate, listify
+from ..iterutils import iterate, listify, uniques
 from ..path import Path, Root
 from ..shell import posix as pshell
 from .. import version as _version
@@ -45,16 +45,26 @@ class Compile(Edge):
                  packages=None, options=None, lang=None, extra_deps=None):
         if name is None:
             name = os.path.splitext(file)[0]
-        include = [sourcify(i, HeaderDirectory) for i in iterate(include)]
 
         self.file = sourcify(file, SourceFile, lang=lang)
         self.builder = env.compiler(self.file.lang)
-        self.include = sum((i.includes for i in iterate(packages)), include)
-        self.options = pshell.listify(options)
-        self.internal_options = []
+        self.includes = [sourcify(i, HeaderDirectory) for i in iterate(include)]
+        self.packages = listify(packages)
+        self.user_options = pshell.listify(options)
+        self.link_options = []
+
+        pkg_includes = chain.from_iterable(i.includes for i in self.packages)
+        self.all_includes = uniques(chain(pkg_includes, self.includes))
+        self._internal_options = sum(
+            (self.builder.include_dir(i) for i in self.all_includes), []
+        )
 
         target = self.builder.output_file(name, self.file.lang)
         Edge.__init__(self, build, target, extra_deps)
+
+    @property
+    def options(self):
+        return self._internal_options + self.link_options + self.user_options
 
 class Link(Edge):
     __prefixes = {
@@ -71,9 +81,8 @@ class Link(Edge):
     def __init__(self, builtins, build, env, mode, name, files, include=None,
                  libs=None, packages=None, compile_options=None,
                  link_options=None, lang=None, extra_deps=None):
-        # XXX: Try to detect if a string refers to a shared lib?
-        libs = [sourcify(i, Library, StaticLibrary) for i in iterate(libs)]
-
+        self.name = self.__name(name, mode)
+        self.packages = listify(packages)
         self.files = builtins['object_files'](
             files, include, packages, compile_options, lang
         )
@@ -82,24 +91,44 @@ class Link(Edge):
             raise ValueError('need at least one source file')
 
         langs = chain([lang], (i.lang for i in self.files))
-        self.builder = env.linker(langs, mode)
-        self.libs = sum((i.libraries for i in iterate(packages)), libs)
+        self.builder = builder = env.linker(langs, mode)
 
-        lib_dirs = []
-        if mode != 'static_library':
-            lib_dirs = (self.builder.lib_dirs(i.lib_dirs)
-                        for i in iterate(packages))
-        self.options = sum(lib_dirs, pshell.listify(link_options))
-        self.name = self.__name(name, mode)
+        # XXX: Try to detect if a string refers to a shared lib?
+        self.libs = [sourcify(i, Library, StaticLibrary) for i in iterate(libs)]
+        self.all_libs = sum((i.libraries for i in self.packages), self.libs)
+
+        self.user_options = pshell.listify(link_options)
+        self._internal_options = []
 
         target = self.builder.output_file(name)
+
+        if mode == 'static_library':
+            if self.options:
+                raise ValueError('link options are not allowed for static ' +
+                                 'libraries')
+            if self.all_libs:
+                raise ValueError('libraries cannot be linked into static ' +
+                                 'libraries')
+        else:
+            lib_dirs = sum((i.lib_dirs for i in self.packages), self.all_libs)
+            self._internal_options.extend(builder.lib_dirs(lib_dirs, target))
+            self._internal_options.extend(builder.import_lib(target))
+
+            links = sum((builder.link_lib(i) for i in self.all_libs), [])
+            self.lib_options = links
+
         for c in (i.creator for i in self.files if i.creator):
-            c.internal_options.extend(c.builder.link_args(self.name, mode))
+            c.link_options.extend(c.builder.link_args(self.name, mode))
+
         if getattr(self.builder, 'post_install', None):
             target.post_install = self.builder.post_install
 
         build.fallback_default = target
         Edge.__init__(self, build, target, extra_deps)
+
+    @property
+    def options(self):
+        return self._internal_options + self.user_options
 
 class Alias(Edge):
     def __init__(self, build, name, deps=None):
@@ -240,7 +269,7 @@ def test_driver(builtins, build, env, driver, options=None, environment=None,
 def test_deps(build, *args):
     if len(args) == 0:
         raise ValueError('expected at least one argument')
-    build.tests.extra_deps.extend(i for i in args if i.creator)
+    build.tests.extra_deps.extend(args)
 
 @builtin.globals('build_inputs')
 def global_options(build, options, lang):

@@ -21,7 +21,9 @@ def reduce_options(files, global_options):
 
     per_file_opts = []
     for i in files:
-        for opts in [i.creator.internal_options, i.creator.options]:
+        # We intentionally exclude internal_options, since MSBuild handles
+        # these its own way.
+        for opts in [i.creator.link_options, i.creator.user_options]:
             if opts not in per_file_opts:
                 per_file_opts.append(opts)
 
@@ -33,7 +35,7 @@ def reduce_options(files, global_options):
 
 def reduce_includes(files):
     return iterutils.uniques(chain.from_iterable(
-        (i.creator.include for i in files)
+        (i.creator.all_includes for i in files)
     ))
 
 def write(env, build_inputs):
@@ -50,8 +52,6 @@ def write(env, build_inputs):
             # already created.
             dependencies = []
             for dep in e.libs:
-                if not dep.creator:
-                    continue
                 if id(dep.creator.target) not in project_map:
                     raise ValueError('unknown dependency for {!r}'.format(dep))
                 dependencies.append(project_map[id(dep.creator.target)])
@@ -69,9 +69,11 @@ def write(env, build_inputs):
                     e.files, build_inputs.global_options
                 ),
                 includes=reduce_includes(e.files),
+                # We intentionally exclude internal_options from the link step,
+                # since MSBuild handles these its own way.
                 link_options=e.builder.global_args +
-                    build_inputs.global_link_options + e.options,
-                libs=e.libs,
+                    build_inputs.global_link_options + e.user_options,
+                libs=e.all_libs,
                 dependencies=dependencies,
             )
             projects.append(project)

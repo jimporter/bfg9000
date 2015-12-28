@@ -154,7 +154,7 @@ def test_rule(tests, buildfile, env):
         for i in tests:
             if type(i).__name__ == 'TestDriver':
                 args, moredeps = build_commands(i.tests, True)
-                if i.target.creator:
+                if type(i.target).__name__ != 'SystemExecutable':
                     deps.append(i.target)
                 deps.extend(moredeps)
                 cmd.append(command(i, args))
@@ -204,11 +204,7 @@ def emit_object_file(rule, build_inputs, buildfile):
 
     variables = {}
 
-    cflags_value = []
-    cflags_value.extend(chain.from_iterable(
-        compiler.include_dir(i) for i in rule.include
-    ))
-    cflags_value.extend(chain(rule.internal_options, rule.options))
+    cflags_value = rule.options
     if cflags_value:
         variables[cflags] = [global_cflags] + cflags_value
 
@@ -247,26 +243,20 @@ def emit_link(rule, build_inputs, buildfile):
 
     variables = {}
     command_kwargs = {}
-    ldflags_value = list(linker.mode_args)
+
+    ldflags_value = linker.mode_args + rule.options
+    if ldflags_value:
+        variables[ldflags] = [global_ldflags] + ldflags_value
 
     variables[var('output')] = rule.target.path
 
     if linker.mode != 'static_library':
-        ldflags_value.extend(rule.options)
-        ldflags_value.extend(linker.lib_dirs(rule.libs))
-        ldflags_value.extend(linker.rpath(rule.libs, rule.target.path.parent()))
-        ldflags_value.extend(linker.import_lib(rule.target))
-
         global_ldlibs, ldlibs = flags_vars(
             linker.link_var + 'libs', linker.global_libs, buildfile
         )
         command_kwargs['libs'] = ldlibs
-        if rule.libs:
-            libs = sum((linker.link_lib(i) for i in rule.libs), [])
-            variables[ldlibs] = [global_ldlibs] + libs
-
-    if ldflags_value:
-        variables[ldflags] = [global_ldflags] + ldflags_value
+        if rule.lib_options:
+            variables[ldlibs] = [global_ldlibs] + rule.lib_options
 
     if not buildfile.has_rule(linker.name):
         buildfile.rule(name=linker.name, command=linker.command(
@@ -274,12 +264,11 @@ def emit_link(rule, build_inputs, buildfile):
             output=var('output'), args=ldflags, **command_kwargs
         ))
 
-    lib_deps = [i for i in rule.libs if i.creator]
     buildfile.build(
         output=rule.target.all,
         rule=linker.name,
         inputs=rule.files,
-        implicit=lib_deps + rule.extra_deps,
+        implicit=rule.libs + rule.extra_deps,
         variables=variables
     )
 

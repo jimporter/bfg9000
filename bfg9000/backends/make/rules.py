@@ -132,7 +132,7 @@ def test_rule(tests, buildfile, env):
         for i in tests:
             if type(i).__name__ == 'TestDriver':
                 args, moredeps = build_commands(i.tests, True)
-                if i.target.creator:
+                if type(i.target).__name__ != 'SystemExecutable':
                     deps.append(i.target)
                 deps.extend(moredeps)
                 cmd.append(command(i, args))
@@ -196,12 +196,8 @@ def emit_object_file(rule, build_inputs, buildfile, env):
     target_dir = path.parent()
 
     variables = {}
-    cflags_value = []
 
-    cflags_value.extend(chain.from_iterable(
-        compiler.include_dir(i) for i in rule.include
-    ))
-    cflags_value.extend(chain(rule.internal_options, rule.options))
+    cflags_value = rule.options
     if cflags_value:
         variables[cflags] = [global_cflags] + cflags_value
 
@@ -243,24 +239,18 @@ def emit_link(rule, build_inputs, buildfile, env):
 
     variables = {}
     command_kwargs = {}
-    ldflags_value = list(linker.mode_args)
+
+    ldflags_value = linker.mode_args + rule.options
+    if ldflags_value:
+        variables[ldflags] = [global_ldflags] + ldflags_value
 
     if linker.mode != 'static_library':
-        ldflags_value.extend(rule.options)
-        ldflags_value.extend(linker.lib_dirs(rule.libs))
-        ldflags_value.extend(linker.rpath(rule.libs, rule.target.path.parent()))
-        ldflags_value.extend(linker.import_lib(rule.target))
-
         global_ldlibs, ldlibs = flags_vars(
             linker.link_var + 'LIBS', linker.global_libs, buildfile
         )
         command_kwargs['libs'] = ldlibs
-        if rule.libs:
-            libs = sum((linker.link_lib(i) for i in rule.libs), [])
-            variables[ldlibs] = [global_ldlibs] + libs
-
-    if ldflags_value:
-        variables[ldflags] = [global_ldflags] + ldflags_value
+        if rule.lib_options:
+            variables[ldlibs] = [global_ldlibs] + rule.lib_options
 
     if not buildfile.has_variable(recipename):
         buildfile.define(recipename, [
@@ -279,10 +269,9 @@ def emit_link(rule, build_inputs, buildfile, env):
         target = rule.target
 
     dirs = iterutils.uniques(i.path.parent() for i in rule.target.all)
-    lib_deps = [i for i in rule.libs if i.creator]
     buildfile.rule(
         target=target,
-        deps=rule.files + lib_deps + rule.extra_deps,
+        deps=rule.files + rule.libs + rule.extra_deps,
         order_only=[i.append(dir_sentinel) for i in dirs if i],
         recipe=recipe,
         variables=variables

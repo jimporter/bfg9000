@@ -17,6 +17,15 @@ class Package(object):
         self.libraries = libraries or []
         self.lib_dirs = lib_dirs or []
 
+class BoostPackage(Package):
+    def __init__(self, includes=None, libraries=None, lib_dirs=None,
+                 version=None):
+        Package.__init__(self, includes, libraries, lib_dirs)
+        self.version = version
+
+class SystemExecutable(Executable):
+    pass
+
 def _find_library(env, name, search_dirs, kind='any'):
     # XXX: Support alternative naming schemes (e.g. libfoo.a vs foo.lib for GCC
     # on Windows)? Also not sure how we'll support other runtimes (e.g. JVM).
@@ -33,18 +42,6 @@ def _find_library(env, name, search_dirs, kind='any'):
                 return candidate
     raise ValueError("unable to find package '{}'".format(name))
 
-@builtin.globals('env')
-def system_package(env, name, kind='any'):
-    if kind not in ('any', 'shared', 'static'):
-        raise ValueError("kind must be one of 'any', 'shared', or 'static'")
-    return Package([], [_find_library(env, name, env.lib_dirs, kind)])
-
-class BoostPackage(Package):
-    def __init__(self, includes=None, libraries=None, lib_dirs=None,
-                 version=None):
-        Package.__init__(self, includes, libraries, lib_dirs)
-        self.version = version
-
 def _boost_version(headers, required_version=None):
     version_hpp = headers.path.append('boost').append('version.hpp')
     with open(version_hpp.string()) as f:
@@ -55,6 +52,12 @@ def _boost_version(headers, required_version=None):
                 check_version(version, required_version, 'Boost')
                 return version
     raise IOError('unable to parse "boost/version.hpp"')
+
+@builtin.globals('env')
+def system_package(env, name, kind='any'):
+    if kind not in ('any', 'shared', 'static'):
+        raise ValueError("kind must be one of 'any', 'shared', or 'static'")
+    return Package([], [_find_library(env, name, env.lib_dirs, kind)])
 
 @builtin.globals('env')
 def boost_package(env, name=None, version=None):
@@ -110,4 +113,4 @@ def boost_package(env, name=None, version=None):
 
 @builtin.globals('env')
 def system_executable(env, name):
-    return Executable(which(name, env.variables), root=path.Root.absolute)
+    return SystemExecutable(which(name, env.variables), root=path.Root.absolute)

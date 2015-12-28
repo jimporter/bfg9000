@@ -3,7 +3,7 @@ import re
 
 from .utils import library_macro
 from ..file_types import *
-from ..iterutils import iterate, uniques
+from ..iterutils import iterate, listify, uniques
 from ..path import Root
 from ..platforms import platform_name
 
@@ -123,22 +123,36 @@ class CcLinker(object):
     def mode_args(self):
         return ['-shared', '-fPIC'] if self.mode == 'shared_library' else []
 
-    def lib_dirs(self, libraries):
+    def lib_dirs(self, libraries, target):
+        libraries = listify(libraries)
         def get_dir(lib):
             return lib.path.parent() if isinstance(lib, Library) else lib
         dirs = uniques(get_dir(i) for i in iterate(libraries)
                        if not isinstance(i, StaticLibrary))
-        return ['-L' + i for i in dirs]
+        result = ['-L' + i for i in dirs]
+
+        if self.platform.has_rpath:
+            start = target.path.parent()
+            paths = uniques(i.path.parent().relpath(start) for i in libraries
+                            if isinstance(i, SharedLibrary))
+            if paths:
+                base = '$ORIGIN'
+                result.append('-Wl,-rpath={}'.format( ':'.join(
+                    base if i == '.' else os.path.join(base, i) for i in paths
+                ) ))
+
+        return result
 
     def link_lib(self, library):
         if isinstance(library, WholeArchive):
             if platform_name() == 'darwin':
                 return ['-Wl,-force_load', library.link.path]
             return ['-Wl,--whole-archive', library.link.path,
-                    'Wl,--no-whole-archive']
+                    '-Wl,--no-whole-archive']
         elif isinstance(library, StaticLibrary):
             return [library.link.path]
-        # SharedLibrary
+
+        # If we're here, we have a SharedLibrary.
         lib_name = library.link.path.basename()
         m = self._lib_re.match(lib_name)
         if not m:
@@ -148,15 +162,4 @@ class CcLinker(object):
     def import_lib(self, library):
         if self.platform.has_import_library and self.mode == 'shared_library':
             return ['-Wl,--out-implib=' + library.import_lib.path]
-        return []
-
-    def rpath(self, libraries, start):
-        if self.platform.has_rpath:
-            paths = uniques(i.path.parent().relpath(start) for i in libraries
-                            if isinstance(i, SharedLibrary))
-            if paths:
-                base = '$ORIGIN'
-                return ['-Wl,-rpath={}'.format(':'.join(
-                    base if i == '.' else os.path.join(base, i) for i in paths
-                ))]
         return []

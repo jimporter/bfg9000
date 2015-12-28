@@ -93,7 +93,7 @@ class MsvcLinker(object):
     def mode_args(self):
         return ['/DLL'] if self.mode == 'shared_library' else []
 
-    def lib_dirs(self, libraries):
+    def lib_dirs(self, libraries, target):
         def get_dir(lib):
             return lib.path.parent() if isinstance(lib, Library) else lib
         dirs = uniques(get_dir(i) for i in iterate(libraries))
@@ -106,9 +106,6 @@ class MsvcLinker(object):
         if self.mode != 'shared_library':
             return []
         return ['/IMPLIB:' + library.import_lib.path]
-
-    def rpath(self, libraries, start):
-        return []
 
 class MsvcStaticLinker(object):
     def __init__(self, env, name, command):
