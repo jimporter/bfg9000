@@ -100,6 +100,8 @@ class MsvcLinker(object):
         return ['/LIBPATH:' + i for i in dirs]
 
     def link_lib(self, library):
+        if isinstance(library, WholeArchive):
+            raise ValueError('MSVC does not support whole-archives')
         return [library.link.path.basename()]
 
     def import_lib(self, library):
