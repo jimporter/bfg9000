@@ -1,7 +1,7 @@
+import platform
 import subprocess
 from setuptools import setup, find_packages, Command
 from bfg9000.version import version
-from bfg9000.platforms import platform_name
 
 class doc_serve(Command):
     description = 'serve the documentation locally'
@@ -33,7 +33,7 @@ class doc_deploy(Command):
 
 extra_exclude = []
 extra_scripts = []
-if platform_name() == 'windows':
+if platform.system().lower() == 'windows':
     extra_scripts.append('bfg9000-setenv=bfg9000.setenv:main')
 else:
     extra_exclude.append('bfg9000.setenv')
