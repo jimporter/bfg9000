@@ -60,7 +60,7 @@ def command_build(buildfile, output, inputs=None, implicit=None,
 
 def cmd_var(cmd, buildfile):
     name = cmd.command_var
-    return buildfile.variable(name, cmd.command_name, Section.command, True)
+    return buildfile.variable(name, cmd.command, Section.command, True)
 
 def flags_vars(name, value, buildfile):
     gflags = buildfile.variable('global_' + name, value, Section.flags, True)
@@ -93,17 +93,17 @@ def install_rule(install_targets, buildfile, env):
 
         src = file.path
         dst = path.install_path(file.path, file.install_root)
-        return install.command(cmd, src, dst)
+        return install(cmd, src, dst)
 
     def mkdir_line(dir):
         src = dir.path
         dst = path.install_path(dir.path.parent(), dir.install_root)
-        return mkdir_p.copy_command(cmd_var(mkdir_p, buildfile), src, dst)
+        return mkdir_p.copy(cmd_var(mkdir_p, buildfile), src, dst)
 
     def post_install(file):
         if file.post_install:
             cmd = cmd_var(file.post_install, buildfile)
-            return file.post_install.command(cmd, file)
+            return file.post_install(cmd, file)
 
     commands = chain(
         (install_line(i) for i in install_targets.files),
@@ -132,13 +132,15 @@ def test_rule(tests, buildfile, env):
     deps.extend(tests.extra_deps)
 
     try:
-        setenv = cmd_var(env.tool('setenv'), buildfile)
-    except ValueError:
-        setenv = None
+        local_env = shell.local_env
+    except AttributeError:
+        setenv = env.tool('setenv')
+        se_cmd = cmd_var(setenv, buildfile)
+        local_env = lambda x: setenv(se_cmd, x)
 
     def build_commands(tests, collapse=False):
         def command(test, args=None):
-            env_vars = shell.local_env(test.env, setenv)
+            env_vars = local_env(test.env)
             subcmd = env_vars + [test.target] + test.options + (args or [])
 
             if collapse:
@@ -171,7 +173,7 @@ def test_rule(tests, buildfile, env):
     )
 
 def regenerate_rule(find_dirs, buildfile, env):
-    bfg9000 = cmd_var(env.tool('bfg9000'), buildfile)
+    bfg9000 = env.tool('bfg9000')
     bfgpath = Path('build.bfg', path.Root.srcdir)
     depfile = None
 
@@ -182,7 +184,7 @@ def regenerate_rule(find_dirs, buildfile, env):
 
     buildfile.rule(
         name='regenerate',
-        command=[bfg9000, '--regenerate', Path('.')],
+        command=bfg9000.regenerate(cmd_var(bfg9000, buildfile), Path('.')),
         generator=True,
         depfile=depfile,
     )
@@ -208,7 +210,7 @@ def emit_object_file(rule, build_inputs, buildfile):
     if cflags_value:
         variables[cflags] = [global_cflags] + cflags_value
 
-    if not buildfile.has_rule(compiler.name):
+    if not buildfile.has_rule(compiler.rule_name):
         command_kwargs = {}
         depfile = None
         deps = None
@@ -219,14 +221,14 @@ def emit_object_file(rule, build_inputs, buildfile):
             deps = 'msvc'
             command_kwargs['deps'] = True
 
-        buildfile.rule(name=compiler.name, command=compiler.command(
+        buildfile.rule(name=compiler.rule_name, command=compiler(
             cmd=cmd_var(compiler, buildfile), input=var('in'),
             output=var('out'), args=cflags, **command_kwargs
         ), depfile=depfile, deps=deps)
 
     buildfile.build(
         output=rule.target,
-        rule=compiler.name,
+        rule=compiler.rule_name,
         inputs=[rule.file],
         implicit=rule.extra_deps,
         variables=variables
@@ -258,15 +260,15 @@ def emit_link(rule, build_inputs, buildfile):
         if rule.lib_options:
             variables[ldlibs] = [global_ldlibs] + rule.lib_options
 
-    if not buildfile.has_rule(linker.name):
-        buildfile.rule(name=linker.name, command=linker.command(
+    if not buildfile.has_rule(linker.rule_name):
+        buildfile.rule(name=linker.rule_name, command=linker(
             cmd=cmd_var(linker, buildfile), input=var('in'),
             output=var('output'), args=ldflags, **command_kwargs
         ))
 
     buildfile.build(
         output=rule.target.all,
-        rule=linker.name,
+        rule=linker.rule_name,
         inputs=rule.files,
         implicit=rule.libs + rule.extra_deps,
         variables=variables

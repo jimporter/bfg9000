@@ -6,11 +6,12 @@ from ..path import install_path
 
 @tool('patchelf')
 class PatchElf(object):
-    def __init__(self, env):
-        self.command_name = env.getvar('PATCHELF', 'patchelf')
-        self.command_var = 'patchelf'
+    rule_name = command_var = 'patchelf'
 
-    def command(self, cmd, file):
+    def __init__(self, env):
+        self.command = env.getvar('PATCHELF', 'patchelf')
+
+    def __call__(self, cmd, file):
         paths = uniques(
             install_path(i.path, i.install_root).parent()
             for i in file.creator.all_libs if isinstance(i, SharedLibrary)

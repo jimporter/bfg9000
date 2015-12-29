@@ -11,8 +11,8 @@ class MsvcCompiler(object):
         self.platform = env.platform
         self.lang = lang
 
-        self.name = self.command_var = name
-        self.command_name = command
+        self.rule_name = self.command_var = name
+        self.command = command
 
         self.global_args = ['/nologo'] + cflags
 
@@ -24,7 +24,7 @@ class MsvcCompiler(object):
     def deps_flavor(self):
         return 'msvc'
 
-    def command(self, cmd, input, output, deps=None, args=None):
+    def __call__(self, cmd, input, output, deps=None, args=None):
         result = [cmd]
         result.extend(iterate(args))
         if deps:
@@ -57,8 +57,8 @@ class MsvcLinker(object):
         self.mode = mode
         self.lang = lang
 
-        self.name = self.command_var = 'link_' + name
-        self.command_name = command
+        self.rule_name = self.command_var = 'link_' + name
+        self.command = command
         self.link_var = 'ld'
 
         self.global_args = ['/nologo'] + ldflags
@@ -68,7 +68,7 @@ class MsvcLinker(object):
     def flavor(self):
         return 'msvc'
 
-    def command(self, cmd, input, output, libs=None, args=None):
+    def __call__(self, cmd, input, output, libs=None, args=None):
         result = [cmd]
         result.extend(iterate(args))
         result.extend(iterate(input))
@@ -116,8 +116,8 @@ class MsvcStaticLinker(object):
         self.mode = 'static_library'
         self.lang = lang
 
-        self.name = self.command_var = 'lib_' + name
-        self.command_name = command
+        self.rule_name = self.command_var = 'lib_' + name
+        self.command = command
         self.link_var = 'lib'
 
         self.global_args = shell.split(env.getvar('LIBFLAGS', ''))
@@ -126,7 +126,7 @@ class MsvcStaticLinker(object):
     def flavor(self):
         return 'msvc'
 
-    def command(self, cmd, input, output, args=None):
+    def __call__(self, cmd, input, output, args=None):
         result = [cmd]
         result.extend(iterate(args))
         result.extend(iterate(input))

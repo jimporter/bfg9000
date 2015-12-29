@@ -7,7 +7,7 @@ from .. import iterutils
 from ..safe_str import escaped_str, jbos
 
 __all__ = ['split', 'listify', 'escape', 'quote_escaped', 'quote', 'quote_info',
-           'join_commands', 'local_env', 'global_env']
+           'join_commands', 'global_env']
 
 # XXX: We need a way to escape cmd.exe-specific characters.
 
@@ -88,12 +88,6 @@ def quote_info(s):
 
 def join_commands(commands):
     return iterutils.tween(commands, escaped_str(' && '))
-
-def local_env(env, prog):
-    if env:
-        return [prog] + [ jbos(name, escaped_str('='), value)
-                          for name, value in env.iteritems() ] + ['--']
-    return []
 
 def global_env(env):
     # Join the name and value so they get quoted together, if necessary.

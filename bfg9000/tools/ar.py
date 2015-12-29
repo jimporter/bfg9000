@@ -6,22 +6,21 @@ from .. import iterutils
 from ..path import Root
 
 class ArLinker(object):
+    rule_name = command_var = link_var = 'ar'
+
     def __init__(self, env, lang):
         self.platform = env.platform
         self.mode = 'static_library'
         self.lang = lang
 
-        self.name = self.command_var = 'ar'
-        self.command_name = env.getvar('AR', 'ar')
-        self.link_var = 'ar'
-
+        self.command = env.getvar('AR', 'ar')
         self.global_args = shell.split(env.getvar('ARFLAGS', 'cru'))
 
     @property
     def flavor(self):
         return 'ar'
 
-    def command(self, cmd, input, output, args=None):
+    def __call__(self, cmd, input, output, args=None):
         result = [cmd]
         result.extend(iterutils.iterate(args))
         result.append(output)

@@ -40,7 +40,7 @@ def write(env, build_inputs):
 
 def cmd_var(cmd, buildfile):
     name = cmd.command_var.upper()
-    return buildfile.variable(name, cmd.command_name, Section.command, True)
+    return buildfile.variable(name, cmd.command, Section.command, True)
 
 def flags_vars(name, value, buildfile):
     name = name.upper()
@@ -73,17 +73,17 @@ def install_rule(install_targets, buildfile, env):
 
         src = file.path
         dst = path.install_path(file.path, file.install_root)
-        return install.command(cmd, src, dst)
+        return install(cmd, src, dst)
 
     def mkdir_line(dir):
         src = dir.path
         dst = path.install_path(dir.path.parent(), dir.install_root)
-        return mkdir_p.copy_command(cmd_var(mkdir_p, buildfile), src, dst)
+        return mkdir_p.copy(cmd_var(mkdir_p, buildfile), src, dst)
 
     def post_install(file):
         if file.post_install:
             cmd = cmd_var(file.post_install, buildfile)
-            return file.post_install.command(cmd, file)
+            return file.post_install(cmd, file)
 
     recipe = ([install_line(i) for i in install_targets.files] +
               [mkdir_line(i) for i in install_targets.directories] +
@@ -110,14 +110,16 @@ def test_rule(tests, buildfile, env):
     deps.extend(tests.extra_deps)
 
     try:
-        setenv = cmd_var(env.tool('setenv'), buildfile)
-    except ValueError:
-        setenv = None
+        local_env = shell.local_env
+    except AttributeError:
+        setenv = env.tool('setenv')
+        se_cmd = cmd_var(setenv, buildfile)
+        local_env = lambda x: setenv(se_cmd, x)
 
     def build_commands(tests, collapse=False):
         cmd, deps = [], []
         def command(test, args=None):
-            env_vars = shell.local_env(test.env, setenv)
+            env_vars = local_env(test.env)
             subcmd = env_vars + [test.target] + test.options + (args or [])
 
             if collapse:
@@ -151,21 +153,19 @@ def test_rule(tests, buildfile, env):
 dir_sentinel = '.dir'
 def directory_rule(buildfile, env):
     mkdir_p = env.tool('mkdir_p')
-    cmd = cmd_var(mkdir_p, buildfile)
-
     pattern = Pattern(os.path.join('%', dir_sentinel))
     path = Function('patsubst', pattern, Pattern('%'), var('@'), quoted=True)
 
     buildfile.rule(
         target=pattern,
         recipe=[
-            mkdir_p.command(cmd, path),
-            ['touch', qvar('@')]
+            silent(mkdir_p(cmd_var(mkdir_p, buildfile), path)),
+            silent(['touch', qvar('@')])
         ]
     )
 
 def regenerate_rule(find_dirs, buildfile, env):
-    bfg9000 = cmd_var(env.tool('bfg9000'), buildfile)
+    bfg9000 = env.tool('bfg9000')
     bfgpath = Path('build.bfg', path.Root.srcdir)
     extra_deps = []
 
@@ -177,13 +177,13 @@ def regenerate_rule(find_dirs, buildfile, env):
     buildfile.rule(
         target=Path('Makefile'),
         deps=[bfgpath] + extra_deps,
-        recipe=[[bfg9000, '--regenerate', '.']]
+        recipe=[bfg9000.regenerate(cmd_var(bfg9000, buildfile), Path('.'))]
     )
 
 @rule_handler('Compile')
 def emit_object_file(rule, build_inputs, buildfile, env):
     compiler = rule.builder
-    recipename = Variable('RULE_{}'.format(compiler.name.upper()))
+    recipename = Variable('RULE_{}'.format(compiler.rule_name.upper()))
     global_cflags, cflags = flags_vars(
         compiler.command_var + 'FLAGS',
         compiler.global_args +
@@ -206,15 +206,16 @@ def emit_object_file(rule, build_inputs, buildfile, env):
         recipe_extra = []
 
         if compiler.deps_flavor == 'gcc':
-            depfixer = cmd_var(env.tool('depfixer'), buildfile)
+            depfixer = env.tool('depfixer')
             command_kwargs['deps'] = deps = qvar('@') + '.d'
-            recipe_extra = [silent(depfixer + ' < ' + deps + ' >> ' + deps)]
+            df_cmd = cmd_var(env.tool('depfixer'), buildfile)
+            recipe_extra = [silent(depfixer(df_cmd, deps))]
         elif compiler.deps_flavor == 'msvc':
             command_kwargs['deps'] = True
 
         buildfile.define(recipename, [
-            compiler.command( cmd=cmd, input=qvar('<'), output=qvar('@'),
-                              args=cflags, **command_kwargs ),
+            compiler( cmd=cmd, input=qvar('<'), output=qvar('@'), args=cflags,
+                      **command_kwargs ),
         ] + recipe_extra)
 
     buildfile.rule(
@@ -229,7 +230,7 @@ def emit_object_file(rule, build_inputs, buildfile, env):
 @rule_handler('Link')
 def emit_link(rule, build_inputs, buildfile, env):
     linker = rule.builder
-    recipename = Variable('RULE_{}'.format(linker.name.upper()))
+    recipename = Variable('RULE_{}'.format(linker.rule_name.upper()))
     global_ldflags, ldflags = flags_vars(
         linker.link_var + 'FLAGS',
         linker.global_args + build_inputs.global_link_options,
@@ -253,10 +254,8 @@ def emit_link(rule, build_inputs, buildfile, env):
 
     if not buildfile.has_variable(recipename):
         buildfile.define(recipename, [
-            linker.command(
-                cmd=cmd_var(linker, buildfile), input=var('1'), output=var('2'),
-                args=ldflags, **command_kwargs
-            )
+            linker(cmd=cmd_var(linker, buildfile), input=var('1'),
+                   output=var('2'), args=ldflags, **command_kwargs)
         ])
 
     recipe = Call(recipename, rule.files, rule.target.path)
