@@ -164,7 +164,7 @@ def header_directory(directory, system=False):
 
 @builtin
 def whole_archive(lib):
-    lib = sourcify(lib, Library, StaticLibrary)
+    lib = sourcify(lib, StaticLibrary)
     return WholeArchive(lib)
 
 @builtin.globals('build_inputs', 'env')
