@@ -162,6 +162,16 @@ this function is only necessary when running commands that take a source file
 as an argument, e.g. running a Python script; this allows you to specify that
 the file is found in the <em>source directory</em>. In other cases, a plain string will
 automatically get converted to a <em>source_file</em>.</p>
+<h3 id="whole_archivename">whole_archive(<em>name</em>)</h3>
+<p>Create a <a href="http://linux.die.net/man/1/ld">whole-archive</a> from an existing static
+library named <em>name</em>. This ensure that <em>every</em> object file in the library is
+included, rather than just the ones whose symbols are referenced. This is
+typically used to turn a static library into a shared library.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The MSVC linker doesn't have a way of expressing this directive, so
+<em>whole_archive</em> can't be used with it.</p>
+</div>
 <h2 id="build-steps">Build steps</h2>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -301,27 +311,56 @@ arguments to the driver. You may specify driver-wide command-line arguments via
 run.</p>
 <h2 id="package-finders">Package finders</h2>
 <h3 id="boost_packagename-version">boost_package([<em>name</em>], [<em>version</em>])</h3>
+<p>Search for a Boost library. You can specify <em>name</em> (as a string or a list) to
+specify a specific Boost library (or libraries); for instance,
+<code>'program_options'</code>. For header-only libraries, you can omit <em>name</em>.</p>
 <p>This rule recognizes the following environment variables:
 <a href="../environment-vars/#boost_root"><code>BOOST_ROOT</code></a>,
 <a href="../environment-vars/#boost_includedir"><code>BOOST_INCLUDEDIR</code></a>,
 <a href="../environment-vars/#boost_librarydir"><code>BOOST_LIBRARYDIR</code></a>.</p>
 <h3 id="system_executablename">system_executable(<em>name</em>)</h3>
+<p>Search for an executable named <em>name</em> somewhere in the system's PATH.</p>
 <p>This rule recognizes the following environment variables:
 <a href="../environment-vars/#path"><code>PATH</code></a>, <a href="../environment-vars/#pathext"><code>PATHEXT</code></a>.</p>
-<h3 id="system_packagename">system_package(<em>name</em>)</h3>
+<h3 id="system_packagename-kind">system_package(<em>name</em>, [<em>kind</em>])</h3>
+<p>Search for a library named <em>name</em> somewhere in the system's default library
+location. You can specify <em>kind</em> to one of <code>'any'</code> (the default), <code>'shared'</code>,
+or <code>'static'</code>. This allows you to restrict the search to find only static
+versions of a library, for example.</p>
 <p>This rule recognizes the following environment variables:
 <a href="../environment-vars/#library_path"><code>LIBRARY_PATH</code></a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This only finds the library itself, not any required headers. Those are
+assumed to be somewhere where your compiler can find them automatically; if
+not, you can set <a href="../environment-vars/#cppflags"><code>CPPFLAGS</code></a> to add the
+appropriate header search path.</p>
+</div>
 <h2 id="miscellaneous">Miscellaneous</h2>
 <h3 id="bfg9000_required_versionversion-python_version">bfg9000_required_version([<em>version</em>], [<em>python_version</em>])</h3>
+<p>Set the required <em>version</em> for bfg9000 and/or the required <em>python_version</em>.
+Each of these is a standard Python <a href="https://www.python.org/dev/peps/pep-0440/#version-specifiers">version
+specifier</a>.</p>
 <h3 id="filter_by_platformname-type">filter_by_platform(<em>name</em>, <em>type</em>)</h3>
-<h3 id="find_filespath-name-type-flat-filter-cache">find_files([<em>path</em>], [<em>name</em>], [<em>type</em>], [<em>flat</em>], [<em>filter</em>], [<em>cache</em>])</h3></div>
+<p>Return <em>True</em> if <em>name</em> is a filename that should be included for the target
+platform, and <em>False</em> otherwise. File (or directory) names like <code>PLATFORM</code> or
+<code>foo_PLATFORM.cpp</code> are excluded if <code>PLATFORM</code> is a known platform name that
+<em>doesn't</em> match the target platform. Known platform names are: <em>posix</em>,
+<em>linux</em>, <em>darwin</em>, <em>cygwin</em>, <em>windows</em>.</p>
+<p>This is the default <em>filter</em> for
+<a href="../find_filespath-name-type-flat-filter-cache"><em>find_files</em></a>.</p>
+<h3 id="find_filespath-name-type-flat-filter-cache">find_files([<em>path</em>], [<em>name</em>], [<em>type</em>], [<em>flat</em>], [<em>filter</em>], [<em>cache</em>])</h3>
+<p>Find files in <em>path</em> whose name matches the glob <em>name</em>. If <em>path</em> is omitted,
+search in the root of the source directory; if <em>name</em> is omitted, all files will
+match. <em>type</em> may be either <code>'f'</code> to find only files or <code>'d'</code> to find only
+directories. If <em>flat</em> is true, <em>find_files</em> will not recurse into
+subdirectories. You can also specify a custom <em>filter</em> function to filter the
+list of files; this function takes two arguments: the file's name and its type.</p>
+<p>Finally, if <em>cache</em> is <em>True</em> (the default), this lookup will be cached so that
+any changes to the result of this function will regenerate the build scripts
+for the project. This allows you do add or remove source files and not have to
+worry about manually rerunning bfg9000.</p></div>
         </div>
-
-        <footer class="col-md-12">
-            <hr>
-            
-            <center>Documentation built with <a href="http://www.mkdocs.org/">MkDocs</a>.</center>
-        </footer>
 
         <script src="../js/jquery-1.10.2.min.js"></script>
         <script src="../js/bootstrap-3.0.3.min.js"></script>

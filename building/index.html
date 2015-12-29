@@ -128,7 +128,11 @@
         
             <li><a href="#build-directories">Build directories</a></li>
         
+            <li><a href="#selecting-a-backend">Selecting a backend</a></li>
+        
             <li><a href="#setting-options">Setting options</a></li>
+        
+            <li><a href="#installing-your-software">Installing your software</a></li>
         
     
     </ul>
@@ -170,18 +174,39 @@ ensures that cleaning a build is trivial: just remove the build directory.
 Second, simplifies building in multiple configurations, a very useful feature
 for development; you can easily have debug and optimized builds sitting
 side-by-side.</p>
+<p>In our example above, we explicitly specified both the source and build
+directories. However, for convenience, only one of them is required. If you're
+already in a source directory (i.e. a directory which contains a <code>build.bfg</code>
+file), then you can simply say <code>bfg9000 builddir</code>. If you're in a build
+directory (i.e. a directory which does <em>not</em> contain a <code>build.bfg</code> file), then
+you can instead say <code>bfg9000 srcdir</code>.</p>
+<h2 id="selecting-a-backend">Selecting a backend</h2>
+<p>By default, bfg9000 tries to use the most appropriate build backend for your
+system. In descending order, bfg prefers <a href="https://ninja-build.org/"><code>ninja</code></a>,
+<a href="https://www.gnu.org/software/make/"><code>make</code></a>, and
+<a href="https://msdn.microsoft.com/en-us/library/dd393574(v=vs.120).aspx"><code>msbuild</code></a>.
+If one of these isn't installed, it will try the next best option. However, you
+can explicitly select a backend with the <code>--backend</code> option. For instance, to
+build a Makefile even if Ninja is installed:</p>
+<pre><code class="sh">$ bfg9000 --backend make srcdir builddir
+</code></pre>
+
 <h2 id="setting-options">Setting options</h2>
 <p>Many options for building can be set via the environment. These generally follow
-the UNIX naming conventions, so you can use <code>CFLAGS</code>, <code>CXXFLAGS</code>, and <code>CPPFLAGS</code>
-for compilation flags, <code>LDFLAGS</code> for linker flags, and <code>LIBRARY_PATH</code> for the
-list of library search directories.</p></div>
+the UNIX naming conventions, so you can use, say,
+<a href="../environment-vars/#cxx"><code>CXX</code></a> to change the C++ compiler that bfg9000 uses.
+For a full listing of the recognized environment variables, see the <a href="../environment-vars/">Environment
+Variables</a> chapter.</p>
+<h2 id="installing-your-software">Installing your software</h2>
+<p>After building your software, you may wish to install it to another directory on
+your system. By default, bfg9000 will install them into the appropriate place
+for your platform (e.g. <code>/usr/local/bin</code> for exectuables on POSIX systems).
+However, you can specify where you'd like to install your project when invoking
+bfg9000. To change the installation prefix (<code>/usr/local</code> on POSIX), just specify
+<code>--prefix /path/to/prefix</code> when running bfg9000. You can also specify the
+binary, library, and include directories individually, using <code>--bindir</code>,
+<code>--libdir</code>, and <code>--includedir</code>, respectively.</p></div>
         </div>
-
-        <footer class="col-md-12">
-            <hr>
-            
-            <center>Documentation built with <a href="http://www.mkdocs.org/">MkDocs</a>.</center>
-        </footer>
 
         <script src="../js/jquery-1.10.2.min.js"></script>
         <script src="../js/bootstrap-3.0.3.min.js"></script>
