@@ -32,7 +32,7 @@ library named *name*. This ensure that *every* object file in the library is
 included, rather than just the ones whose symbols are referenced. This is
 typically used to turn a static library into a shared library.
 
-!!! note
+!!! warning
     The MSVC linker doesn't have a way of expressing this directive, so
     *whole_archive* can't be used with it.
 
