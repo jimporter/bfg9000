@@ -25,6 +25,17 @@ as an argument, e.g. running a Python script; this allows you to specify that
 the file is found in the *source directory*. In other cases, a plain string will
 automatically get converted to a *source_file*.
 
+### whole_archive(*name*)
+
+Create a [whole-archive](http://linux.die.net/man/1/ld) from an existing static
+library named *name*. This ensure that *every* object file in the library is
+included, rather than just the ones whose symbols are referenced. This is
+typically used to turn a static library into a shared library.
+
+!!! note
+    The MSVC linker doesn't have a way of expressing this directive, so
+    *whole_archive* can't be used with it.
+
 ## Build steps
 
 !!! note
