@@ -120,6 +120,19 @@ Create a compilation build step for each of the files in *files*; this is
 equivalent to calling [*object_file*](#object_filename-file-extra_deps) for each
 element in *files*.
 
+In addition, *object_files* returns a special list that allows you to index into
+it using the filename of one of the source files listed in *files*. This makes
+it easy to extract a single object file to use in other places, e.g. test code.
+For example:
+
+```python
+objs = object_files(['foo.cpp', 'bar.cpp'])
+release_exe = executable('release', objs)
+
+foo_obj = objs['foo.cpp']
+test_exe = executable('test', ['test.cpp', foo_obj])
+```
+
 ### shared_library(*name*, [*files*, ..., [*extra_deps*]])
 
 Create a build step that builds a shared library named *name*. Its arguments are
