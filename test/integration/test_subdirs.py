@@ -19,6 +19,11 @@ class TestSubdirs(IntegrationTest):
         self.build()
         self.assertOutput([executable('sub/program')], 'hello, library!\n')
 
+    @only_if_backend('make')
+    def test_dir_sentinels(self):
+        self.build()
+        self.assertTrue(os.path.isfile('sub/.dir'))
+
     @skip_if_backend('msbuild')
     def test_install(self):
         self.build('install')

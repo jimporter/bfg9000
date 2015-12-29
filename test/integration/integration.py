@@ -57,6 +57,10 @@ def skip_if_backend(backend):
     return skip_pred(lambda x: x.backend == backend,
                      'not supported for backend "{}"'.format(backend))
 
+def only_if_backend(backend):
+    return skip_pred(lambda x: x.backend != backend,
+                     'only supported for backend "{}"'.format(backend))
+
 class SubprocessError(unittest.TestCase.failureException):
     def __init__(self, message):
         unittest.TestCase.failureException.__init__(

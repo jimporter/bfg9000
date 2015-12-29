@@ -162,9 +162,10 @@ def qvar(v):
     return var(v, True)
 
 class Function(Entity):
-    def __init__(self, name, *args):
+    def __init__(self, name, *args, **kwargs):
         Entity.__init__(self, name)
         self.args = args
+        self.quoted = kwargs.get('quoted', False)
 
     def use(self):
         out = Writer(StringIO())
@@ -173,7 +174,10 @@ class Function(Entity):
         prefix = '$(' + self.name + ' '
         for i in iterutils.tween(self.args, esc(','), esc(prefix), esc(')')):
             out.write_each(iterutils.iterate(i), Syntax.function)
-        return safe_str.escaped_str(out.stream.getvalue())
+        result = out.stream.getvalue()
+        if self.quoted:
+            result = shell.quote_escaped(result)
+        return safe_str.escaped_str(result)
 
 class Call(Function):
     def __init__(self, func, *args):

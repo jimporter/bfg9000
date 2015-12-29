@@ -16,6 +16,11 @@ class TestFilesWithSpaces(IntegrationTest):
         self.build(executable('another file'))
         self.assertOutput([executable('another file')], 'hello from sub dir\n')
 
+    @only_if_backend('make')
+    def test_dir_sentinels(self):
+        self.build(executable('another file'))
+        self.assertTrue(os.path.isfile('sub dir/.dir'))
+
     @skip_if_backend('msbuild')
     def test_script(self):
         self.assertRegexpMatches(

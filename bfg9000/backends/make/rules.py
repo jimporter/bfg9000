@@ -154,14 +154,13 @@ def directory_rule(buildfile, env):
     cmd = cmd_var(mkdir_p, buildfile)
 
     pattern = Pattern(os.path.join('%', dir_sentinel))
-    out = qvar('@')
-    path = Function('patsubst', pattern, Pattern('%'), out)
+    path = Function('patsubst', pattern, Pattern('%'), var('@'), quoted=True)
 
     buildfile.rule(
         target=pattern,
         recipe=[
-            silent(mkdir_p.command(cmd, path)),
-            silent(['touch', out])
+            mkdir_p.command(cmd, path),
+            ['touch', qvar('@')]
         ]
     )
 
