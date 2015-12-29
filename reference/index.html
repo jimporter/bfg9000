@@ -241,6 +241,17 @@ and is the exact name of the file.</p>
 <p>Create a compilation build step for each of the files in <em>files</em>; this is
 equivalent to calling <a href="#object_filename-file-extra_deps"><em>object_file</em></a> for each
 element in <em>files</em>.</p>
+<p>In addition, <em>object_files</em> returns a special list that allows you to index into
+it using the filename of one of the source files listed in <em>files</em>. This makes
+it easy to extract a single object file to use in other places, e.g. test code.
+For example:</p>
+<pre><code class="python">objs = object_files(['foo.cpp', 'bar.cpp'])
+release_exe = executable('release', objs)
+
+foo_obj = objs['foo.cpp']
+test_exe = executable('test', ['test.cpp', foo_obj])
+</code></pre>
+
 <h3 id="shared_libraryname-files-extra_deps">shared_library(<em>name</em>, [<em>files</em>, ..., [<em>extra_deps</em>]])</h3>
 <p>Create a build step that builds a shared library named <em>name</em>. Its arguments are
 the same as <a href="#executablename-files-extra_deps"><em>executable</em></a>.</p>
