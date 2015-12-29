@@ -44,16 +44,18 @@ def cleandir(path, recreate=True):
     if recreate:
         makedirs(path)
 
-def skip_if_backend(backend):
+def skip_pred(predicate, msg='skipped'):
     def wrap(fn):
         def inner(self, *args, **kwargs):
-            if self.backend == backend:
-                raise unittest.SkipTest(
-                    "skipped for backend '{}'".format(backend)
-                )
+            if predicate(self):
+                raise unittest.SkipTest(msg)
             return fn(self, *args, **kwargs)
         return inner
     return wrap
+
+def skip_if_backend(backend):
+    return skip_pred(lambda x: x.backend == backend,
+                     'not supported for backend "{}"'.format(backend))
 
 class SubprocessError(unittest.TestCase.failureException):
     def __init__(self, message):

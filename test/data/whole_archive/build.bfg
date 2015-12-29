@@ -1,0 +1,7 @@
+# -*- python -*-
+
+static = static_library('static', files=['library.cpp'])
+shared = shared_library('shared', libs=whole_archive(static))
+
+prog = executable('program', files=['program.cpp'], libs=[shared])
+default(prog)

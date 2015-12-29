@@ -83,19 +83,20 @@ class Link(Edge):
                  link_options=None, lang=None, extra_deps=None):
         self.name = self.__name(name, mode)
         self.packages = listify(packages)
-        self.files = builtins['object_files'](
-            files, include, packages, compile_options, lang
-        )
-        if (len(self.files) == 0 and
-            not any(isinstance(i, WholeArchive) for i in libs)):
-            raise ValueError('need at least one source file')
-
-        langs = chain([lang], (i.lang for i in self.files))
-        self.builder = builder = env.linker(langs, mode)
 
         # XXX: Try to detect if a string refers to a shared lib?
         self.libs = [sourcify(i, Library, StaticLibrary) for i in iterate(libs)]
         self.all_libs = sum((i.libraries for i in self.packages), self.libs)
+
+        self.files = builtins['object_files'](
+            files, include, packages, compile_options, lang
+        )
+        if ( len(self.files) == 0 and
+             not any(isinstance(i, WholeArchive) for i in self.libs) ):
+            raise ValueError('need at least one source file')
+
+        langs = chain([lang], (i.lang for i in self.files))
+        self.builder = builder = env.linker(langs, mode)
 
         self.user_options = pshell.listify(link_options)
         self._internal_options = []
@@ -184,25 +185,25 @@ def object_files(build, env, files, *args, **kwargs):
 
 @builtin.globals('builtins', 'build_inputs', 'env')
 def executable(builtins, build, env, name, files=None, *args, **kwargs):
-    if files is None:
-        return Executable(name, root=Root.srcdir, *args, **kwargs)
+    if files is None and len(args) == 0 and len(kwargs) == 0:
+        return Executable(name, root=Root.srcdir)
     else:
         return Link(builtins, build, env, 'executable', name, files, *args,
                     **kwargs).target
 
 @builtin.globals('builtins', 'build_inputs', 'env')
 def static_library(builtins, build, env, name, files=None, *args, **kwargs):
-    if files is None:
-        return StaticLibrary(name, root=Root.srcdir, *args, **kwargs)
+    if files is None and len(args) == 0 and len(kwargs) == 0:
+        return StaticLibrary(name, root=Root.srcdir)
     else:
         return Link(builtins, build, env, 'static_library', name, files, *args,
                     **kwargs).target
 
 @builtin.globals('builtins', 'build_inputs', 'env')
 def shared_library(builtins, build, env, name, files=None, *args, **kwargs):
-    if files is None:
+    if files is None and len(args) == 0 and len(kwargs) == 0:
         # XXX: What to do here for Windows, which has a separate DLL file?
-        return SharedLibrary(name, root=Root.srcdir, *args, **kwargs)
+        return SharedLibrary(name, root=Root.srcdir)
     else:
         return Link(builtins, build, env, 'shared_library', name, files, *args,
                     **kwargs).target
