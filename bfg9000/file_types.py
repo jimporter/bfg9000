@@ -30,6 +30,10 @@ class ObjectFile(build_inputs.File):
 class Binary(build_inputs.File):
     install_kind = 'program'
 
+    def __init__(self, name, root, lang=None):
+        build_inputs.File.__init__(self, name, root)
+        self.lang = lang
+
 class Executable(Binary):
     install_root = InstallRoot.bindir
 
@@ -46,8 +50,17 @@ class StaticLibrary(Library):
 class WholeArchive(StaticLibrary):
     def __init__(self, lib):
         build_inputs.Node.__init__(self)
-        self.creator = lib
-        self.path = lib.path
+        self.lib = lib
+        self.creator = lib.creator
+        self.post_install = None
+
+    @property
+    def path(self):
+        return self.lib.path
+
+    @property
+    def lang(self):
+        return self.lib.lang
 
 class SharedLibrary(Library):
     pass
@@ -58,9 +71,9 @@ class ImportLibrary(SharedLibrary):
 class DllLibrary(SharedLibrary):
     install_root = InstallRoot.bindir
 
-    def __init__(self, name, import_name, root):
-        SharedLibrary.__init__(self, name, root)
-        self.import_lib = ImportLibrary(import_name, root)
+    def __init__(self, name, import_name, root, lang):
+        SharedLibrary.__init__(self, name, root, lang)
+        self.import_lib = ImportLibrary(import_name, root, lang)
 
     @property
     def all(self):

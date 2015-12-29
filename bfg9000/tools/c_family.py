@@ -36,18 +36,18 @@ class CFamilyBuilder(object):
             link_cmd = env.getvar(var + '_LINK', os.path.join(origin, 'link'))
             lib_cmd  = env.getvar(var + '_LIB',  os.path.join(origin, 'lib'))
 
-            self.compiler = msvc.MsvcCompiler(env, low_var, cmd, cflags)
-            for i in ['executable', 'shared_library']:
-                self.linkers[i] = msvc.MsvcLinker(
-                    env, i, low_var, link_cmd, ldflags, ldlibs
+            self.compiler = msvc.MsvcCompiler(env, lang, low_var, cmd, cflags)
+            for mode in ['executable', 'shared_library']:
+                self.linkers[mode] = msvc.MsvcLinker(
+                    env, mode, lang, low_var, link_cmd, ldflags, ldlibs
                 )
             self.linkers['static_library'] = msvc.MsvcStaticLinker(
-                env, low_var, lib_cmd
+                env, lang, low_var, lib_cmd
             )
         else:
-            self.compiler = cc.CcCompiler(env, low_var, cmd, cflags)
-            for i in ['executable', 'shared_library']:
-                self.linkers[i] = cc.CcLinker(
-                    env, i, low_var, cmd, ldflags, ldlibs
+            self.compiler = cc.CcCompiler(env, lang, low_var, cmd, cflags)
+            for mode in ['executable', 'shared_library']:
+                self.linkers[mode] = cc.CcLinker(
+                    env, mode, lang, low_var, cmd, ldflags, ldlibs
                 )
-            self.linkers['static_library'] = ar.ArLinker(env)
+            self.linkers['static_library'] = ar.ArLinker(env, lang)

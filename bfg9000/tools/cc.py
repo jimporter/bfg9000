@@ -8,8 +8,9 @@ from ..path import Root
 from ..platforms import platform_name
 
 class CcCompiler(object):
-    def __init__(self, env, name, command, cflags):
+    def __init__(self, env, lang, name, command, cflags):
         self.platform = env.platform
+        self.lang = lang
 
         self.name = self.command_var = name
         self.command_name = command
@@ -33,8 +34,8 @@ class CcCompiler(object):
         result.extend(['-o', output])
         return result
 
-    def output_file(self, name, lang):
-        return ObjectFile(name + '.o', Root.builddir, lang)
+    def output_file(self, name):
+        return ObjectFile(name + '.o', Root.builddir, self.lang)
 
     def include_dir(self, directory):
         if directory.system:
@@ -54,9 +55,10 @@ class CcCompiler(object):
             raise ValueError("unknown mode '{}'".format(mode))
 
 class CcLinker(object):
-    def __init__(self, env, mode, name, command, ldflags, ldlibs):
+    def __init__(self, env, mode, lang, name, command, ldflags, ldlibs):
         self.env = env
         self.mode = mode
+        self.lang = lang
 
         self.name = 'link_' + name
         self.command_var = name
@@ -102,7 +104,7 @@ class CcLinker(object):
     def output_file(self, name):
         if self.mode == 'executable':
             return Executable(
-                name + self.platform.executable_ext, Root.builddir
+                name + self.platform.executable_ext, Root.builddir, self.lang
             )
         elif self.mode == 'shared_library':
             head, tail = os.path.split(name)
@@ -113,9 +115,10 @@ class CcLinker(object):
 
             if self.platform.has_import_library:
                 dllprefix = 'cyg' if self.platform.name == 'cygwin' else 'lib'
-                return DllLibrary(lib(dllprefix), lib() + '.a', Root.builddir)
+                return DllLibrary(lib(dllprefix), lib() + '.a', Root.builddir,
+                                  self.lang)
             else:
-                return SharedLibrary(lib(), Root.builddir)
+                return SharedLibrary(lib(), Root.builddir, self.lang)
         else:
             raise ValueError("unknown mode '{}'".format(self.mode))
 

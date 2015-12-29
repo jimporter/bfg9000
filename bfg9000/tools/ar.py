@@ -6,9 +6,10 @@ from .. import iterutils
 from ..path import Root
 
 class ArLinker(object):
-    def __init__(self, env):
+    def __init__(self, env, lang):
         self.platform = env.platform
         self.mode = 'static_library'
+        self.lang = lang
 
         self.name = self.command_var = 'ar'
         self.command_name = env.getvar('AR', 'ar')
@@ -30,7 +31,7 @@ class ArLinker(object):
     def output_file(self, name):
         head, tail = os.path.split(name)
         path = os.path.join(head, 'lib' + tail + '.a')
-        return file_types.StaticLibrary(path, Root.builddir)
+        return file_types.StaticLibrary(path, Root.builddir, self.lang)
 
     @property
     def mode_args(self):

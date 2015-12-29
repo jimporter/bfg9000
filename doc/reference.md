@@ -234,12 +234,16 @@ Search for an executable named *name* somewhere in the system's PATH.
 This rule recognizes the following environment variables:
 [`PATH`](environment-vars.md#path), [`PATHEXT`](environment-vars.md#pathext).
 
-### system_package(*name*, [*kind*])
+### system_package(*name*, [*lang*], [*kind*])
 
 Search for a library named *name* somewhere in the system's default library
-location. You can specify *kind* to one of `'any'` (the default), `'shared'`,
-or `'static'`. This allows you to restrict the search to find only static
-versions of a library, for example.
+location. *lang* is the source language of the library (`'c'` by default); this
+is useful if you need to link a static library written in C++ with a program
+written in C.
+
+You can also specify *kind* to one of `'any'` (the default), `'shared'`, or
+`'static'`. This allows you to restrict the search to find only static versions
+of a library, for example.
 
 This rule recognizes the following environment variables:
 [`LIBRARY_PATH`](environment-vars.md#library_path).

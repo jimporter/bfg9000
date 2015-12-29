@@ -26,14 +26,14 @@ class BoostPackage(Package):
 class SystemExecutable(Executable):
     pass
 
-def _find_library(env, name, search_dirs, kind='any'):
+def _find_library(env, name, search_dirs, lang, kind='any'):
     # XXX: Support alternative naming schemes (e.g. libfoo.a vs foo.lib for GCC
     # on Windows)? Also not sure how we'll support other runtimes (e.g. JVM).
     linkers = []
     if kind in ('any', 'shared'):
-        linkers.append(env.linker('c', 'shared_library'))
+        linkers.append(env.linker(lang, 'shared_library'))
     if kind in ('any', 'static'):
-        linkers.append(env.linker('c', 'static_library'))
+        linkers.append(env.linker(lang, 'static_library'))
     for d in search_dirs:
         d = os.path.abspath(d)
         for i in linkers:
@@ -54,10 +54,10 @@ def _boost_version(headers, required_version=None):
     raise IOError('unable to parse "boost/version.hpp"')
 
 @builtin.globals('env')
-def system_package(env, name, kind='any'):
+def system_package(env, name, lang='c', kind='any'):
     if kind not in ('any', 'shared', 'static'):
         raise ValueError("kind must be one of 'any', 'shared', or 'static'")
-    return Package([], [_find_library(env, name, env.lib_dirs, kind)])
+    return Package([], [_find_library(env, name, env.lib_dirs, lang, kind)])
 
 @builtin.globals('env')
 def boost_package(env, name=None, version=None):
@@ -107,7 +107,7 @@ def boost_package(env, name=None, version=None):
                             version=boost_version)
     else:
         dirs = [lib_var] if lib_var else env.platform.lib_dirs
-        libraries = [_find_library(env, 'boost_' + i, dirs)
+        libraries = [_find_library(env, 'boost_' + i, dirs, 'c++')
                      for i in iterate(name)]
         return BoostPackage(headers, libraries=libraries, version=boost_version)
 

@@ -7,8 +7,9 @@ from ..iterutils import iterate, uniques
 from ..path import Root
 
 class MsvcCompiler(object):
-    def __init__(self, env, name, command, cflags):
+    def __init__(self, env, lang, name, command, cflags):
         self.platform = env.platform
+        self.lang = lang
 
         self.name = self.command_var = name
         self.command_name = command
@@ -32,8 +33,8 @@ class MsvcCompiler(object):
         result.append('/Fo' + output)
         return result
 
-    def output_file(self, name, lang):
-        return ObjectFile(name + '.obj', Root.builddir, lang)
+    def output_file(self, name):
+        return ObjectFile(name + '.obj', Root.builddir, self.lang)
 
     @property
     def library_args(self):
@@ -51,9 +52,10 @@ class MsvcCompiler(object):
             raise ValueError("unknown mode '{}'".format(mode))
 
 class MsvcLinker(object):
-    def __init__(self, env, mode, name, command, ldflags, ldlibs):
+    def __init__(self, env, mode, lang, name, command, ldflags, ldlibs):
         self.platform = env.platform
         self.mode = mode
+        self.lang = lang
 
         self.name = self.command_var = 'link_' + name
         self.command_name = command
@@ -76,12 +78,11 @@ class MsvcLinker(object):
 
     def output_file(self, name):
         if self.mode == 'executable':
-            return Executable(
-                name + self.platform.executable_ext, Root.builddir
-            )
+            return Executable(name + self.platform.executable_ext,
+                              Root.builddir, self.lang)
         elif self.mode == 'shared_library':
-            ext = self.platform.shared_library_ext
-            return DllLibrary(name + ext, name + '.lib', Root.builddir)
+            return DllLibrary(name + self.platform.executable_ext,
+                              name + '.lib', Root.builddir, self.lang)
         else:
             raise ValueError("unknown mode '{}'".format(self.mode))
 
@@ -110,9 +111,10 @@ class MsvcLinker(object):
         return ['/IMPLIB:' + library.import_lib.path]
 
 class MsvcStaticLinker(object):
-    def __init__(self, env, name, command):
+    def __init__(self, env, lang, name, command):
         self.platform = env.platform
         self.mode = 'static_library'
+        self.lang = lang
 
         self.name = self.command_var = 'lib_' + name
         self.command_name = command
@@ -132,7 +134,7 @@ class MsvcStaticLinker(object):
         return result
 
     def output_file(self, name):
-        return StaticLibrary(name + '.lib', Root.builddir)
+        return StaticLibrary(name + '.lib', Root.builddir, self.lang)
 
     @property
     def mode_args(self):

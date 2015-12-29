@@ -59,7 +59,7 @@ class Compile(Edge):
             (self.builder.include_dir(i) for i in self.all_includes), []
         )
 
-        target = self.builder.output_file(name, self.file.lang)
+        target = self.builder.output_file(name)
         Edge.__init__(self, build, target, extra_deps)
 
     @property
@@ -89,13 +89,15 @@ class Link(Edge):
         self.all_libs = sum((i.libraries for i in self.packages), self.libs)
 
         self.files = builtins['object_files'](
-            files, include, packages, compile_options, lang
+            files, include=include, packages=packages, options=compile_options,
+            lang=lang
         )
         if ( len(self.files) == 0 and
              not any(isinstance(i, WholeArchive) for i in self.libs) ):
             raise ValueError('need at least one source file')
 
-        langs = chain([lang], (i.lang for i in self.files))
+        langs = chain([lang], (i.lang for i in self.files),
+                      (i.lang for i in self.all_libs))
         self.builder = builder = env.linker(langs, mode)
 
         self.user_options = pshell.listify(link_options)
@@ -168,44 +170,44 @@ def whole_archive(lib):
     return WholeArchive(lib)
 
 @builtin.globals('build_inputs', 'env')
-def object_file(build, env, name=None, file=None, *args, **kwargs):
+def object_file(build, env, name=None, file=None, **kwargs):
     if file is None:
         if name is None:
             raise TypeError('expected name')
-        return ObjectFile(name, root=Root.srcdir, *args, **kwargs)
+        return ObjectFile(name, root=Root.srcdir, **kwargs)
     else:
-        return Compile(build, env, name, file, *args, **kwargs).target
+        return Compile(build, env, name, file, **kwargs).target
 
 @builtin.globals('build_inputs', 'env')
-def object_files(build, env, files, *args, **kwargs):
-    def _compile(file, *args, **kwargs):
-        return Compile(build, env, None, file, *args, **kwargs).target
-    return ObjectFiles(objectify(i, ObjectFile, _compile, *args, **kwargs)
+def object_files(build, env, files, **kwargs):
+    def _compile(file, **kwargs):
+        return Compile(build, env, None, file, **kwargs).target
+    return ObjectFiles(objectify(i, ObjectFile, _compile, **kwargs)
                        for i in iterate(files))
 
 @builtin.globals('builtins', 'build_inputs', 'env')
-def executable(builtins, build, env, name, files=None, *args, **kwargs):
-    if files is None and len(args) == 0 and len(kwargs) == 0:
-        return Executable(name, root=Root.srcdir)
+def executable(builtins, build, env, name, files=None, **kwargs):
+    if files is None and kwargs.get('libs') is None:
+        return Executable(name, root=Root.srcdir, **kwargs)
     else:
-        return Link(builtins, build, env, 'executable', name, files, *args,
+        return Link(builtins, build, env, 'executable', name, files,
                     **kwargs).target
 
 @builtin.globals('builtins', 'build_inputs', 'env')
-def static_library(builtins, build, env, name, files=None, *args, **kwargs):
-    if files is None and len(args) == 0 and len(kwargs) == 0:
-        return StaticLibrary(name, root=Root.srcdir)
+def static_library(builtins, build, env, name, files=None, **kwargs):
+    if files is None and kwargs.get('libs') is None:
+        return StaticLibrary(name, root=Root.srcdir, **kwargs)
     else:
-        return Link(builtins, build, env, 'static_library', name, files, *args,
+        return Link(builtins, build, env, 'static_library', name, files,
                     **kwargs).target
 
 @builtin.globals('builtins', 'build_inputs', 'env')
-def shared_library(builtins, build, env, name, files=None, *args, **kwargs):
-    if files is None and len(args) == 0 and len(kwargs) == 0:
+def shared_library(builtins, build, env, name, files=None, **kwargs):
+    if files is None and kwargs.get('libs') is None:
         # XXX: What to do here for Windows, which has a separate DLL file?
-        return SharedLibrary(name, root=Root.srcdir)
+        return SharedLibrary(name, root=Root.srcdir, **kwargs)
     else:
-        return Link(builtins, build, env, 'shared_library', name, files, *args,
+        return Link(builtins, build, env, 'shared_library', name, files,
                     **kwargs).target
 
 @builtin.globals('build_inputs')
