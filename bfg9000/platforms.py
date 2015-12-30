@@ -28,7 +28,7 @@ class Platform(object):
 
 class PosixPlatform(Platform):
     @property
-    def kind(self):
+    def flavor(self):
         return 'posix'
 
     @property
@@ -88,7 +88,7 @@ class DarwinPlatform(PosixPlatform):
 
 class WindowsPlatform(Platform):
     @property
-    def kind(self):
+    def flavor(self):
         return 'windows'
 
     @property
@@ -129,7 +129,7 @@ class WindowsPlatform(Platform):
 
 class CygwinPlatform(WindowsPlatform):
     @property
-    def kind(self):
+    def flavor(self):
         return 'posix'
 
 def platform_info(name=None):

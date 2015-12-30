@@ -87,7 +87,7 @@ known_platforms = ['posix', 'linux', 'darwin', 'cygwin', 'windows']
 
 @builtin.globals('env')
 def filter_by_platform(env, name, type):
-    my_plat = set([env.platform.name, env.platform.kind])
+    my_plat = set([env.platform.name, env.platform.flavor])
     ex = '|'.join(re.escape(i) for i in known_platforms if i not in my_plat)
     return re.search(r'(^|_)(' + ex + r')(\.[^\.])?$', name) is None
 
