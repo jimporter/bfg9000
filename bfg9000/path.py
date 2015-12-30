@@ -83,6 +83,9 @@ class Path(safe_str.safe_string):
         return self.root == rhs.root and self.suffix == rhs.suffix
 
     def __nonzero__(self):
+        return self.__bool__()
+
+    def __bool__(self):
         return self.root != Root.builddir or bool(self.suffix)
 
     def __add__(self, rhs):
