@@ -1,6 +1,6 @@
 import unittest
 
-from integration import *
+from .integration import *
 
 
 class TestDefaults(IntegrationTest):

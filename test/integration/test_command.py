@@ -2,7 +2,7 @@ import os.path
 import re
 import unittest
 
-from integration import *
+from .integration import *
 
 
 class TestCommand(IntegrationTest):

@@ -2,7 +2,7 @@ import os.path
 import shutil
 import unittest
 
-from integration import *
+from .integration import *
 
 
 class TestDepfile(IntegrationTest):

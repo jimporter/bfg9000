@@ -2,7 +2,7 @@ import os
 import unittest
 
 from bfg9000.makedirs import makedirs
-from integration import *
+from .integration import *
 pjoin = os.path.join
 
 

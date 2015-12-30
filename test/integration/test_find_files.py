@@ -1,7 +1,7 @@
 import os.path
 import unittest
 
-from integration import *
+from .integration import *
 
 
 class TestFindFiles(IntegrationTest):
