@@ -1,6 +1,6 @@
-from cStringIO import StringIO
-from itertools import chain, ifilter
+from itertools import chain
 from packaging.specifiers import SpecifierSet
+from six.moves import filter as ifilter, cStringIO as StringIO
 
 from . import version
 from .syntax import *
@@ -112,11 +112,11 @@ def install_rule(install_targets, buildfile, env):
             cmd = cmd_var(file.post_install, buildfile)
             return file.post_install(cmd, file)
 
-    commands = chain(
+    commands = list(chain(
         (install_line(i) for i in install_targets.files),
         (mkdir_line(i) for i in install_targets.directories),
         ifilter(None, (post_install(i) for i in install_targets.files))
-    )
+    ))
     command_build(
         buildfile,
         output='install',

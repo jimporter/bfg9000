@@ -4,8 +4,9 @@ import shutil
 import subprocess
 import time
 import unittest
-
 from collections import namedtuple
+
+from six import iteritems
 
 from bfg9000.path import InstallRoot
 from bfg9000.platforms import platform_info
@@ -22,7 +23,7 @@ Target = namedtuple('Target', ['name', 'path'])
 if os.getenv('BACKENDS', '').strip():
     backends = os.getenv('BACKENDS').split(' ')
 else:
-    backends = [k for k, v in get_backends().iteritems() if v.priority > 0]
+    backends = [k for k, v in iteritems(get_backends()) if v.priority > 0]
 
 
 def cleandir(path, recreate=True):

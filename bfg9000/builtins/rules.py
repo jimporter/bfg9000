@@ -1,5 +1,6 @@
 import os.path
 from itertools import chain
+from six import string_types
 
 from . import builtin
 from ..build_inputs import Directory, Edge, File, Phony, objectify, sourcify
@@ -26,7 +27,7 @@ class TestDriver(object):
 
 class ObjectFiles(list):
     def __getitem__(self, key):
-        if isinstance(key, basestring):
+        if isinstance(key, string_types):
             key = Path(key, Root.srcdir)
         elif isinstance(key, File):
             key = key.path

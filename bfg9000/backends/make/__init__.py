@@ -6,7 +6,10 @@ from ...platforms import which
 version = None
 try:
     make = which(['make', 'gmake'])
-    output = subprocess.check_output([make, '--version'])
+    output = subprocess.check_output(
+        [make, '--version'],
+        universal_newlines=True
+    )
     m = re.match(r'GNU Make ([\d\.]+)', output)
     if m:
         version = m.group(1)

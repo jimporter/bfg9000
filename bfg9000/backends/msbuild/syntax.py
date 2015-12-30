@@ -5,6 +5,7 @@ import uuid
 from collections import defaultdict
 from lxml import etree
 from lxml.builder import E
+from six import iteritems
 
 from ... import path
 from ... import shell
@@ -309,12 +310,12 @@ class UUIDMap(object):
             state = json.load(inp)
         if state['version'] > cls.version:
             raise ValueError('saved version exceeds expected version')
-        return { k: uuid.UUID(hex=v) for k, v in state['map'].iteritems() }
+        return { k: uuid.UUID(hex=v) for k, v in iteritems(state['map']) }
 
     def save(self, path=None):
         with open(path or self._path, 'w') as out:
             # Only save the UUIDs we saw this time. Skip ones we didn't see.
-            seenmap = { k: v.hex for k, v in self._map.iteritems()
+            seenmap = { k: v.hex for k, v in iteritems(self._map)
                         if k in self._seen }
             json.dump({
                 'version': self.version,

@@ -1,6 +1,7 @@
 import os.path
 import re
 import unittest
+from six import assertRegex
 
 from .integration import *
 
@@ -15,7 +16,7 @@ class TestEnvVars(IntegrationTest):
 
     @skip_if_backend('msbuild')
     def test_command(self):
-        self.assertRegexpMatches(
+        assertRegex(self,
             self.build('script'),
             re.compile('^hello script$', re.MULTILINE)
         )

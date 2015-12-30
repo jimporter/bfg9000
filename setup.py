@@ -67,7 +67,7 @@ setup(
 
     packages=find_packages(exclude=['test', 'test.*'] + extra_exclude),
 
-    install_requires=['enum-compat', 'packaging'],
+    install_requires=['enum-compat', 'packaging', 'six'],
     extras_require={'msbuild': ['lxml']},
 
     entry_points={

@@ -1,5 +1,6 @@
 import re
 from shlex import shlex
+from six import iteritems, string_types
 
 from .. import iterutils
 from ..safe_str import escaped_str, jbos, safe_str
@@ -11,7 +12,7 @@ _bad_chars = re.compile(r'[^\w@%+:,./-]')
 
 
 def split(s):
-    if not isinstance(s, basestring):
+    if not isinstance(s, string_types):
         raise TypeError('expected a string')
     lexer = shlex(s, posix=True)
     lexer.commenters = ''
@@ -56,10 +57,10 @@ def join_commands(commands):
 def local_env(env):
     eq = escaped_str('=')
     return [ jbos(safe_str(name), eq, safe_str(value))
-             for name, value in env.iteritems() ]
+             for name, value in iteritems(env) ]
 
 
 def global_env(env):
     eq = escaped_str('=')
     return [ ['export', jbos(safe_str(name), eq, safe_str(value))]
-             for name, value in env.iteritems() ]
+             for name, value in iteritems(env) ]

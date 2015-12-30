@@ -1,5 +1,6 @@
 import json
 import os
+from six import iteritems, string_types
 
 from .path import Path, InstallRoot
 from . import platforms
@@ -47,7 +48,7 @@ class Environment(object):
 
     def linker(self, lang, mode):
         # TODO: Be more intelligent about this when we support more languages.
-        if not isinstance(lang, basestring):
+        if not isinstance(lang, string_types):
             lang = 'c++' if 'c++' in lang else 'c'
 
         if lang not in self.__builders:
@@ -72,7 +73,7 @@ class Environment(object):
                     'builddir': self.builddir.to_json(),
                     'install_dirs': {
                         k.name: v.to_json() for k, v in
-                        self.install_dirs.iteritems()
+                        iteritems(self.install_dirs)
                     },
                 }
             }, out)
@@ -99,7 +100,7 @@ class Environment(object):
         env.platform = platforms.platform_info(state['data']['platform'])
         env.install_dirs = {
             InstallRoot[k]: Path.from_json(v) for k, v in
-            data['install_dirs'].iteritems()
+            iteritems(data['install_dirs'])
         }
 
         return env

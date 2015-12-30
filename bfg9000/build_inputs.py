@@ -1,3 +1,5 @@
+from six import string_types
+
 from . import path
 from .iterutils import iterate
 from .safe_str import safe_str
@@ -23,7 +25,7 @@ class Node(object):
 def objectify(thing, valid_type, creator, *args, **kwargs):
     if isinstance(thing, valid_type):
         return thing
-    elif not isinstance(thing, basestring):
+    elif not isinstance(thing, string_types):
         raise TypeError('expected a {} or a string'.format(valid_type))
     else:
         if creator is None:

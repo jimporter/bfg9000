@@ -87,8 +87,8 @@ def main():
     parser.add_argument('builddir', nargs='?', help='build directory')
     parser.add_argument('--version', action='version',
                         version='%(prog)s ' + version)
-    parser.add_argument('--backend', choices=backends.keys(),
-                        default=backends.keys()[0],
+    parser.add_argument('--backend', choices=list(backends.keys()),
+                        default=list(backends.keys())[0],
                         help='backend (default: %(default)s)')
     parser.add_argument('--prefix', type=path_arg, metavar='PATH',
                         default=install_dirs[InstallRoot.prefix],
@@ -134,8 +134,10 @@ def main():
 
     build = BuildInputs()
     os.chdir(env.srcdir.string())
-    execfile(env.srcdir.append(bfgfile).string(), builtins.bind(
-        build_inputs=build, env=env
-    ))
+    bfgpath = env.srcdir.append(bfgfile).string()
+
+    with open(bfgpath, 'r') as fh:
+        code = compile(fh.read(), bfgpath, 'exec')
+        exec(code, builtins.bind(build_inputs=build, env=env))
 
     backends[env.backend].write(env, build)

@@ -1,5 +1,8 @@
+from __future__ import division
+
 import re
 from enum import Enum
+from six import iteritems
 
 from .. import iterutils
 from ..safe_str import escaped_str, safe_str
@@ -22,7 +25,7 @@ def _tokenize(s):
         if c == '\\':
             escapes += 1
         elif c == '"':
-            for i in range(escapes / 2):
+            for i in range(escapes // 2):
                 yield (_Token.char, type(s)('\\'))
             yield (_Token.char, '"') if escapes % 2 else (_Token.quote, None)
             escapes = 0
@@ -102,4 +105,4 @@ def join_commands(commands):
 def global_env(env):
     # Join the name and value so they get quoted together, if necessary.
     return [ ['set', safe_str(name) + '=' + safe_str(value)]
-             for name, value in env.iteritems() ]
+             for name, value in iteritems(env) ]

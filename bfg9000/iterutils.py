@@ -1,8 +1,9 @@
 from collections import Iterable
+from six import string_types
 
 
 def isiterable(thing):
-    return isinstance(thing, Iterable) and not isinstance(thing, basestring)
+    return isinstance(thing, Iterable) and not isinstance(thing, string_types)
 
 
 def iterate(thing):

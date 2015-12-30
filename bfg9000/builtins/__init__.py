@@ -1,6 +1,7 @@
 import functools
 import importlib
 import pkgutil
+from six import iteritems
 
 _all_builtins = {}
 _loaded_builtins = False
@@ -42,7 +43,7 @@ def bind(**kwargs):
     _load_builtins()
 
     builtins = {}
-    for k, v in _all_builtins.iteritems():
+    for k, v in iteritems(_all_builtins):
         builtins[k] = v.bind(builtins=builtins, **kwargs)
 
     # XXX: Make this more generic?

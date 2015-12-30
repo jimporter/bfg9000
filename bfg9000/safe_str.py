@@ -1,4 +1,6 @@
-import iterutils
+from six import string_types
+
+from . import iterutils
 
 
 class safe_string(object):
@@ -6,7 +8,7 @@ class safe_string(object):
 
 
 def safe_str(s):
-    if isinstance(s, basestring) or isinstance(s, safe_string):
+    if isinstance(s, string_types) or isinstance(s, safe_string):
         return s
     elif hasattr(s, '_safe_str'):
         return s._safe_str()
@@ -16,7 +18,7 @@ def safe_str(s):
 
 class escaped_str(safe_string):
     def __init__(self, string):
-        if not isinstance(string, basestring):
+        if not isinstance(string, string_types):
             raise TypeError('expected a string')
         self.string = string
 
@@ -48,7 +50,7 @@ class jbos(safe_string):  # Just a Bunch of Strings
             if isinstance(i, jbos):
                 for j in i.bits:
                     yield j
-            elif isinstance(i, basestring) or isinstance(i, safe_string):
+            elif isinstance(i, string_types) or isinstance(i, safe_string):
                 yield i
             else:
                 raise TypeError(type(i))
