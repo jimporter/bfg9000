@@ -15,7 +15,7 @@ class Environment(object):
     envfile = '.bfg_environ'
 
     def __new__(cls, *args, **kwargs):
-        env = object.__new__(cls, *args, **kwargs)
+        env = object.__new__(cls)
         env.__builders = {}
         env.__tools = {}
         return env
