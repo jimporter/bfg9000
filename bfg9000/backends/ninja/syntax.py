@@ -104,8 +104,8 @@ class Variable(object):
     def __hash__(self):
         return hash(self.name)
 
-    def __cmp__(self, rhs):
-        return cmp(self.name, rhs.name)
+    def __eq__(self, rhs):
+        return self.name == rhs.name
 
     def __add__(self, rhs):
         return self.use() + rhs

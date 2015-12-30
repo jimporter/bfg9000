@@ -26,10 +26,10 @@ class escaped_str(safe_string):
     def __repr__(self):
         return '`{}`'.format(self.string)
 
-    def __cmp__(self, rhs):
+    def __eq__(self, rhs):
         if not isinstance(rhs, escaped_str):
             return NotImplemented
-        return cmp(self.string, rhs.string)
+        return self.string == rhs.string
 
     def __add__(self, rhs):
         return jbos(self, rhs)
