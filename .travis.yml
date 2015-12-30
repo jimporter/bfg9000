@@ -1,0 +1,30 @@
+language: python
+python:
+  - "2.7"
+  - "3.4"
+  - "3.5"
+os:
+  - linux
+sudo: false
+addons:
+  apt:
+    packages:
+      - automake
+      - build-essential
+      - clang
+      - curl
+      - libboost-dev
+      - libboost-program-options-dev
+      - libogg-dev
+      - ninja-build
+before_install:
+  - curl -L -O https://nixos.org/releases/patchelf/patchelf-0.8/patchelf-0.8.tar.gz
+  - tar -xzf patchelf-0.8.tar.gz
+  - pushd patchelf-0.8 && ./configure --prefix=$VIRTUAL_ENV && make && make install && popd
+install:
+  - pip install flake8
+  - pip install .
+script:
+  - CC=gcc CXX=g++ python setup.py test -q
+  - CC=clang CXX=clang++ python setup.py test -q
+  - python setup.py lint
