@@ -124,9 +124,9 @@
     
         <li class="main active"><a href="#reference">Reference</a></li>
         
-            <li><a href="#file-types">File types</a></li>
-        
             <li><a href="#build-steps">Build steps</a></li>
+        
+            <li><a href="#file-types">File types</a></li>
         
             <li><a href="#grouping-rules">Grouping rules</a></li>
         
@@ -136,6 +136,8 @@
         
             <li><a href="#package-finders">Package finders</a></li>
         
+            <li><a href="#environment">Environment</a></li>
+        
             <li><a href="#miscellaneous">Miscellaneous</a></li>
         
     
@@ -144,34 +146,6 @@
             <div class="col-md-9" role="main">
 
 <h1 id="reference">Reference</h1>
-<h2 id="file-types">File types</h2>
-<h3 id="headername">header(<em>name</em>)</h3>
-<p>Create a reference to an existing header named <em>name</em>. This is useful if you'd
-like to <a href="#install-all">install</a> a single header file for your project.</p>
-<h3 id="header_directorydirectory-system">header_directory(<em>directory</em>, [<em>system</em>])</h3>
-<p>Create a reference to a <em>directory</em> containing header files for the project.
-This can then be used in the <em>include</em> argument when
-<a href="#object_filename-file-extra_deps">compiling</a> a source file. If <em>system</em> is
-<em>True</em>, this directory will be treated as a
-<a href="https://gcc.gnu.org/onlinedocs/cpp/System-Headers.html">system directory</a> for
-compilers that support this.</p>
-<h3 id="source_filename-lang">source_file(<em>name</em>, [<em>lang</em>])</h3>
-<p>Create a reference to an existing source file named <em>name</em>. If <em>lang</em> is not
-specified, the language of the file is inferred from its extension. Generally,
-this function is only necessary when running commands that take a source file
-as an argument, e.g. running a Python script; this allows you to specify that
-the file is found in the <em>source directory</em>. In other cases, a plain string will
-automatically get converted to a <em>source_file</em>.</p>
-<h3 id="whole_archivename">whole_archive(<em>name</em>)</h3>
-<p>Create a <a href="http://linux.die.net/man/1/ld">whole-archive</a> from an existing static
-library named <em>name</em>. This ensure that <em>every</em> object file in the library is
-included, rather than just the ones whose symbols are referenced. This is
-typically used to turn a static library into a shared library.</p>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>The MSVC linker doesn't have a way of expressing this directive, so
-<em>whole_archive</em> can't be used with it.</p>
-</div>
 <h2 id="build-steps">Build steps</h2>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -274,6 +248,34 @@ the same as <a href="#executablename-files-extra_deps"><em>executable</em></a>.<
 <a href="../environment-vars/#cc_lib"><code>CC_LIB</code></a>,
 <a href="../environment-vars/#cxx_lib"><code>CXX_LIB</code></a>,
 <a href="../environment-vars/#libflags"><code>LIBFLAGS</code></a>.</p>
+<h2 id="file-types">File types</h2>
+<h3 id="headername">header(<em>name</em>)</h3>
+<p>Create a reference to an existing header named <em>name</em>. This is useful if you'd
+like to <a href="#install-all">install</a> a single header file for your project.</p>
+<h3 id="header_directorydirectory-system">header_directory(<em>directory</em>, [<em>system</em>])</h3>
+<p>Create a reference to a <em>directory</em> containing header files for the project.
+This can then be used in the <em>include</em> argument when
+<a href="#object_filename-file-extra_deps">compiling</a> a source file. If <em>system</em> is
+<em>True</em>, this directory will be treated as a
+<a href="https://gcc.gnu.org/onlinedocs/cpp/System-Headers.html">system directory</a> for
+compilers that support this.</p>
+<h3 id="source_filename-lang">source_file(<em>name</em>, [<em>lang</em>])</h3>
+<p>Create a reference to an existing source file named <em>name</em>. If <em>lang</em> is not
+specified, the language of the file is inferred from its extension. Generally,
+this function is only necessary when running commands that take a source file
+as an argument, e.g. running a Python script; this allows you to specify that
+the file is found in the <em>source directory</em>. In other cases, a plain string will
+automatically get converted to a <em>source_file</em>.</p>
+<h3 id="whole_archivename">whole_archive(<em>name</em>)</h3>
+<p>Create a <a href="http://linux.die.net/man/1/ld">whole-archive</a> from an existing static
+library named <em>name</em>. This ensure that <em>every</em> object file in the library is
+included, rather than just the ones whose symbols are referenced. This is
+typically used to turn a static library into a shared library.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The MSVC linker doesn't have a way of expressing this directive, so
+<em>whole_archive</em> can't be used with it.</p>
+</div>
 <h2 id="grouping-rules">Grouping rules</h2>
 <h3 id="default">default(<em>...</em>)</h3>
 <p>Specify a list of build steps that should be run by default when building. These
@@ -350,6 +352,37 @@ assumed to be somewhere where your compiler can find them automatically; if
 not, you can set <a href="../environment-vars/#cppflags"><code>CPPFLAGS</code></a> to add the
 appropriate header search path.</p>
 </div>
+<h2 id="environment">Environment</h2>
+<p>The <em>environment</em>, <code>env</code>, is a special object that encapsulates information
+about the system outside of bfg9000. It's used internally for nearly all
+platform-specific code, but it can also help in <code>build.bfg</code> files when you
+encounter some unavoidable issue with multiplatform compatibility.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This listing doesn't cover <em>all</em> available functions on the environment,
+since many are only useful to internal code. However, the most relevant ones
+for <code>build.bfg</code> files are shown below.</p>
+</div>
+<h3 id="envcompilerlang">env.compiler(<em>lang</em>)</h3>
+<p>Return the compiler used by bfg9000 for a particular language <em>lang</em>. While
+compiler objects are primarily suited to bfg's internals, there are still a few
+useful properties for <code>build.bfg</code> files:</p>
+<h4 id="compilercommand">compiler.command</h4>
+<p>The command to run when invoking this compiler, e.g. <code>g++-4.9</code>.</p>
+<h4 id="compilerflavor">compiler.flavor</h4>
+<p>The "flavor" of the compiler, i.e. the kind of command-line interface it has.
+Possible values are <code>'cc'</code> and <code>'msvc'</code>.</p>
+<h3 id="envlinkerlangs">env.linker(<em>langs</em>)</h3>
+<p>Return the compiler used by bfg9000 for a particular language (or list of
+languages) <em>lang</em>. Its public properties are the same as
+<a href="#compilercommand"><em>compiler</em></a> above.</p>
+<h3 id="envplatform">env.platform</h3>
+<p>Return the target platform used for the build (currently the same as the host
+platform).</p>
+<h4 id="platformflavor">platform.flavor</h4>
+<p>The "flavor" of the platform. Either <code>'posix'</code> or <code>'windows'</code>.</p>
+<h4 id="platformname">platform.name</h4>
+<p>The name of the platform, e.g. <code>'linux'</code>, <code>'darwin'</code> (OS X), or <code>'windows'</code>.</p>
 <h2 id="miscellaneous">Miscellaneous</h2>
 <h3 id="bfg9000_required_versionversion-python_version">bfg9000_required_version([<em>version</em>], [<em>python_version</em>])</h3>
 <p>Set the required <em>version</em> for bfg9000 and/or the required <em>python_version</em>.
@@ -359,8 +392,8 @@ specifier</a>.</p>
 <p>Return <em>True</em> if <em>name</em> is a filename that should be included for the target
 platform, and <em>False</em> otherwise. File (or directory) names like <code>PLATFORM</code> or
 <code>foo_PLATFORM.cpp</code> are excluded if <code>PLATFORM</code> is a known platform name that
-<em>doesn't</em> match the target platform. Known platform names are: <em>posix</em>,
-<em>linux</em>, <em>darwin</em>, <em>cygwin</em>, <em>windows</em>.</p>
+<em>doesn't</em> match the target platform. Known platform names are: <code>'posix'</code>,
+<code>'linux'</code>, <code>'darwin'</code>, <code>'cygwin'</code>, <code>'windows'</code>.</p>
 <p>This is the default <em>filter</em> for
 <a href="../find_filespath-name-type-flat-filter-cache"><em>find_files</em></a>.</p>
 <h3 id="find_filespath-name-type-flat-filter-cache">find_files([<em>path</em>], [<em>name</em>], [<em>type</em>], [<em>flat</em>], [<em>filter</em>], [<em>cache</em>])</h3>
