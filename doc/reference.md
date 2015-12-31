@@ -1,41 +1,5 @@
 # Reference
 
-## File types
-
-### header(*name*)
-
-Create a reference to an existing header named *name*. This is useful if you'd
-like to [install](#install-all) a single header file for your project.
-
-### header_directory(*directory*, [*system*])
-
-Create a reference to a *directory* containing header files for the project.
-This can then be used in the *include* argument when
-[compiling](#object_filename-file-extra_deps) a source file. If *system* is
-*True*, this directory will be treated as a
-[system directory](https://gcc.gnu.org/onlinedocs/cpp/System-Headers.html) for
-compilers that support this.
-
-### source_file(*name*, [*lang*])
-
-Create a reference to an existing source file named *name*. If *lang* is not
-specified, the language of the file is inferred from its extension. Generally,
-this function is only necessary when running commands that take a source file
-as an argument, e.g. running a Python script; this allows you to specify that
-the file is found in the *source directory*. In other cases, a plain string will
-automatically get converted to a *source_file*.
-
-### whole_archive(*name*)
-
-Create a [whole-archive](http://linux.die.net/man/1/ld) from an existing static
-library named *name*. This ensure that *every* object file in the library is
-included, rather than just the ones whose symbols are referenced. This is
-typically used to turn a static library into a shared library.
-
-!!! warning
-    The MSVC linker doesn't have a way of expressing this directive, so
-    *whole_archive* can't be used with it.
-
 ## Build steps
 
 !!! note
@@ -160,6 +124,42 @@ This build step recognizes the following environment variables:
 [`CXX_LIB`](environment-vars.md#cxx_lib),
 [`LIBFLAGS`](environment-vars.md#libflags).
 
+## File types
+
+### header(*name*)
+
+Create a reference to an existing header named *name*. This is useful if you'd
+like to [install](#install-all) a single header file for your project.
+
+### header_directory(*directory*, [*system*])
+
+Create a reference to a *directory* containing header files for the project.
+This can then be used in the *include* argument when
+[compiling](#object_filename-file-extra_deps) a source file. If *system* is
+*True*, this directory will be treated as a
+[system directory](https://gcc.gnu.org/onlinedocs/cpp/System-Headers.html) for
+compilers that support this.
+
+### source_file(*name*, [*lang*])
+
+Create a reference to an existing source file named *name*. If *lang* is not
+specified, the language of the file is inferred from its extension. Generally,
+this function is only necessary when running commands that take a source file
+as an argument, e.g. running a Python script; this allows you to specify that
+the file is found in the *source directory*. In other cases, a plain string will
+automatically get converted to a *source_file*.
+
+### whole_archive(*name*)
+
+Create a [whole-archive](http://linux.die.net/man/1/ld) from an existing static
+library named *name*. This ensure that *every* object file in the library is
+included, rather than just the ones whose symbols are referenced. This is
+typically used to turn a static library into a shared library.
+
+!!! warning
+    The MSVC linker doesn't have a way of expressing this directive, so
+    *whole_archive* can't be used with it.
+
 ## Grouping rules
 
 ### default(*...*)
@@ -267,6 +267,52 @@ This rule recognizes the following environment variables:
     not, you can set [`CPPFLAGS`](environment-vars.md#cppflags) to add the
     appropriate header search path.
 
+## Environment
+
+The *environment*, `env`, is a special object that encapsulates information
+about the system outside of bfg9000. It's used internally for nearly all
+platform-specific code, but it can also help in `build.bfg` files when you
+encounter some unavoidable issue with multiplatform compatibility.
+
+!!! note
+    This listing doesn't cover *all* available functions on the environment,
+    since many are only useful to internal code. However, the most relevant ones
+    for `build.bfg` files are shown below.
+
+### env.compiler(*lang*)
+
+Return the compiler used by bfg9000 for a particular language *lang*. While
+compiler objects are primarily suited to bfg's internals, there are still a few
+useful properties for `build.bfg` files:
+
+#### compiler.command
+
+The command to run when invoking this compiler, e.g. `g++-4.9`.
+
+#### compiler.flavor
+
+The "flavor" of the compiler, i.e. the kind of command-line interface it has.
+Possible values are `'cc'` and `'msvc'`.
+
+### env.linker(*langs*)
+
+Return the compiler used by bfg9000 for a particular language (or list of
+languages) *lang*. Its public properties are the same as
+[*compiler*](#compilercommand) above.
+
+### env.platform
+
+Return the target platform used for the build (currently the same as the host
+platform).
+
+#### platform.flavor
+
+The "flavor" of the platform. Either `'posix'` or `'windows'`.
+
+#### platform.name
+
+The name of the platform, e.g. `'linux'`, `'darwin'` (OS X), or `'windows'`.
+
 ## Miscellaneous
 
 ### bfg9000_required_version([*version*], [*python_version*])
@@ -280,8 +326,8 @@ specifier](https://www.python.org/dev/peps/pep-0440/#version-specifiers).
 Return *True* if *name* is a filename that should be included for the target
 platform, and *False* otherwise. File (or directory) names like `PLATFORM` or
 `foo_PLATFORM.cpp` are excluded if `PLATFORM` is a known platform name that
-*doesn't* match the target platform. Known platform names are: *posix*,
-*linux*, *darwin*, *cygwin*, *windows*.
+*doesn't* match the target platform. Known platform names are: `'posix'`,
+`'linux'`, `'darwin'`, `'cygwin'`, `'windows'`.
 
 This is the default *filter* for
 [*find_files*](find_filespath-name-type-flat-filter-cache).
