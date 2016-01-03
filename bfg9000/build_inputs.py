@@ -1,5 +1,5 @@
 from . import path
-from .iterutils import iterate, listify
+from .iterutils import iterate
 from .safe_str import safe_str
 
 class Node(object):

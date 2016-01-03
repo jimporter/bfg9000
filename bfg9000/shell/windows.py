@@ -1,10 +1,8 @@
 import re
-import sys
-from array import array
 from enum import Enum
 
 from .. import iterutils
-from ..safe_str import escaped_str, jbos
+from ..safe_str import escaped_str
 
 __all__ = ['split', 'listify', 'escape', 'quote_escaped', 'quote', 'quote_info',
            'join_commands', 'global_env']
@@ -14,6 +12,8 @@ __all__ = ['split', 'listify', 'escape', 'quote_escaped', 'quote', 'quote_info',
 _bad_chars = re.compile(r'(\s|"|\\$)')
 _replace = re.compile(r'(\\*)("|$)')
 
+_Token = Enum('Token', ['char', 'quote', 'space'])
+
 def _tokenize(s):
     escapes = 0
     for c in s:
@@ -21,37 +21,39 @@ def _tokenize(s):
             escapes += 1
         elif c == '"':
             for i in range(escapes / 2):
-                yield ('char', type(s)('\\'))
-            yield ('char', '"') if escapes % 2 else ('quote', None)
+                yield (_Token.char, type(s)('\\'))
+            yield (_Token.char, '"') if escapes % 2 else (_Token.quote, None)
             escapes = 0
         else:
             for i in range(escapes):
-                yield ('char', type(s)('\\'))
-            yield (('space' if c in ' \t' else 'char'), c)
+                yield (_Token.char, type(s)('\\'))
+            yield ((_Token.space if c in ' \t' else _Token.char), c)
             escapes = 0
 
+_State = Enum('State', ['between', 'char', 'word', 'quoted'])
+
 def split(s):
-    state = 'between'
+    state = _State.between
     args = []
 
     for tok, value in _tokenize(s):
-        if state == 'between':
-            if tok == 'char':
+        if state == _State.between:
+            if tok == _Token.char:
                 args.append(value)
-                state = 'word'
-            elif tok == 'quote':
+                state = _State.word
+            elif tok == _Token.quote:
                 args.append('')
-                state = 'quoted'
-        elif state == 'word':
-            if tok == 'quote':
-                state = 'quoted'
-            elif tok == 'char':
+                state = _State.quoted
+        elif state == _State.word:
+            if tok == _Token.quote:
+                state = _State.quoted
+            elif tok == _Token.char:
                 args[-1] += value
-            else: # t[0] == 'space'
-                state = 'between'
-        else: # state == 'quoted'
-            if tok == 'quote':
-                state = 'word'
+            else: # tok == _Token.space
+                state = _State.between
+        else: # state == _State.quoted
+            if tok == _Token.quote:
+                state = _State.word
             else:
                 args[-1] += value
 

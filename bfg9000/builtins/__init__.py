@@ -1,6 +1,5 @@
 import functools
 import importlib
-import os
 import pkgutil
 
 _all_builtins = {}

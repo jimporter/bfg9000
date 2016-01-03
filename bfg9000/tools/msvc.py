@@ -1,5 +1,3 @@
-import os
-
 from .utils import library_macro
 from .. import shell
 from ..file_types import *

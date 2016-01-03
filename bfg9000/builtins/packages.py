@@ -6,7 +6,6 @@ from . import builtin
 from .find import find
 from .version import check_version, make_specifier
 from .. import path
-from ..build_inputs import objectify
 from ..file_types import *
 from ..iterutils import iterate, listify
 from ..platforms import which

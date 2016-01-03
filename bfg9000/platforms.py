@@ -2,7 +2,6 @@ import os
 import platform
 import re
 import subprocess
-from collections import namedtuple
 
 from .iterutils import iterate
 from .path import Path, Root, InstallRoot

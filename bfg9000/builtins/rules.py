@@ -2,13 +2,11 @@ import os.path
 from itertools import chain
 
 from . import builtin
-from .packages import system_executable
 from ..build_inputs import Directory, Edge, File, Phony, objectify, sourcify
 from ..file_types import *
 from ..iterutils import iterate, listify, uniques
 from ..path import Path, Root
 from ..shell import posix as pshell
-from .. import version as _version
 
 class TestCase(object):
     def __init__(self, target, options, env):

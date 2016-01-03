@@ -6,7 +6,6 @@ from collections import defaultdict
 from lxml import etree
 from lxml.builder import E
 
-from ... import iterutils
 from ... import path
 from ... import shell
 from ...safe_str import safe_str
