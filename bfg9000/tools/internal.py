@@ -2,6 +2,7 @@ import os.path
 
 from . import tool
 from ..platforms import platform_name
+from ..safe_str import escaped_str, jbos
 
 @tool('bfg9000')
 class Bfg9000(object):

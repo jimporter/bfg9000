@@ -1,6 +1,7 @@
 import argparse
 import os
 import subprocess
+import sys
 
 from .version import version
 

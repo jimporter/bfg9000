@@ -21,7 +21,7 @@ def check_version(version, specifier, kind):
 
 @builtin
 def bfg9000_required_version(version=None, python_version=None):
-    version = make__specifier(version, prereleases=True)
+    version = make_specifier(version, prereleases=True)
     python_version = make_specifier(python_version, prereleases=True)
 
     check_version(_bfg_version, version, kind='bfg9000')
