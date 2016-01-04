@@ -1,3 +1,4 @@
 *.pyc
 bfg9000.egg-info
 /test/stage/
+/site/
