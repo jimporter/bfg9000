@@ -3,6 +3,7 @@ import unittest
 
 from integration import *
 
+
 class TestTests(IntegrationTest):
     def __init__(self, *args, **kwargs):
         IntegrationTest.__init__(
@@ -12,6 +13,7 @@ class TestTests(IntegrationTest):
     @skip_if_backend('msbuild')
     def test_test(self):
         self.build('test')
+
 
 if __name__ == '__main__':
     unittest.main()

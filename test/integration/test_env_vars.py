@@ -4,6 +4,7 @@ import unittest
 
 from integration import *
 
+
 class TestEnvVars(IntegrationTest):
     def __init__(self, *args, **kwargs):
         IntegrationTest.__init__(self, 'env_vars', *args, **kwargs)
@@ -19,6 +20,7 @@ class TestEnvVars(IntegrationTest):
             re.compile('^hello script$', re.MULTILINE)
         )
         self.assertExists(os.path.join(self.builddir, 'file'))
+
 
 if __name__ == '__main__':
     unittest.main()

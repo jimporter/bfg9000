@@ -4,6 +4,7 @@ from ..file_types import *
 from ..iterutils import iterate, uniques
 from ..path import Root
 
+
 class MsvcCompiler(object):
     def __init__(self, env, lang, name, command, cflags):
         self.platform = env.platform
@@ -48,6 +49,7 @@ class MsvcCompiler(object):
             return ['/D' + library_macro(name, mode)]
         else:
             raise ValueError("unknown mode '{}'".format(mode))
+
 
 class MsvcLinker(object):
     def __init__(self, env, mode, lang, name, command, ldflags, ldlibs):
@@ -107,6 +109,7 @@ class MsvcLinker(object):
         if self.mode != 'shared_library':
             return []
         return ['/IMPLIB:' + library.import_lib.path]
+
 
 class MsvcStaticLinker(object):
     def __init__(self, env, lang, name, command):

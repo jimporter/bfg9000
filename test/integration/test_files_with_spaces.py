@@ -4,6 +4,7 @@ import unittest
 
 from integration import *
 
+
 class TestFilesWithSpaces(IntegrationTest):
     def __init__(self, *args, **kwargs):
         IntegrationTest.__init__(self, 'files_with_spaces', *args, **kwargs)
@@ -27,6 +28,7 @@ class TestFilesWithSpaces(IntegrationTest):
             self.build('script'),
             re.compile('^hello, world!$', re.MULTILINE)
         )
+
 
 if __name__ == '__main__':
     unittest.main()

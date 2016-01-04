@@ -1,7 +1,9 @@
 import iterutils
 
+
 class safe_string(object):
     pass
+
 
 def safe_str(s):
     if isinstance(s, basestring) or isinstance(s, safe_string):
@@ -10,6 +12,7 @@ def safe_str(s):
         return s._safe_str()
     else:
         raise NotImplementedError(type(s))
+
 
 class escaped_str(safe_string):
     def __init__(self, string):
@@ -34,7 +37,8 @@ class escaped_str(safe_string):
     def __radd__(self, lhs):
         return jbos(lhs, self)
 
-class jbos(safe_string): # Just a Bunch of Strings
+
+class jbos(safe_string):  # Just a Bunch of Strings
     def __init__(self, *args):
         self.__bits = tuple(self.__flatten(args))
 
@@ -64,6 +68,7 @@ class jbos(safe_string): # Just a Bunch of Strings
 
     def __radd__(self, lhs):
         return jbos(lhs, self)
+
 
 def join(iterable, delim):
     return sum(iterutils.tween(iterable, delim), jbos())

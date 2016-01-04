@@ -12,8 +12,10 @@ from ...safe_str import safe_str
 
 Path = path.Path
 
+
 def uuid_str(uuid):
     return '{{{}}}'.format(str(uuid).upper())
+
 
 class SlnElement(object):
     def __init__(self, name, arg=None, value=None):
@@ -47,6 +49,7 @@ class SlnElement(object):
 
         out.write('\t' * depth + 'End' + self.name + '\n')
 
+
 class SlnVariable(object):
     def __init__(self, name, value):
         self.name = name
@@ -54,6 +57,7 @@ class SlnVariable(object):
 
     def _write(self, out, depth):
         out.write('\t' * depth + '{} = {}\n'.format(self.name, self.value))
+
 
 class SlnMaker(object):
     def __init__(self):
@@ -67,12 +71,14 @@ class SlnMaker(object):
             return SlnElement(name, *args, **kwargs)
         return closure
 
+
 def sln_write(out, x):
     if isinstance(x, list):
         for i in x:
             i._write(out, 0)
     else:
         x._write(out, 0)
+
 
 def write_solution(out, uuid, projects):
     S = SlnMaker()
@@ -124,6 +130,7 @@ def write_solution(out, uuid, projects):
 
     sln_write(out, sln)
 
+
 _path_vars = {
     False: {
         path.Root.srcdir: '$(SourceDir)',
@@ -134,8 +141,11 @@ _path_vars = {
         path.Root.builddir: '$(OutDir)',
     },
 }
+
+
 def path_str(node, out=False):
     return ntpath.normpath(safe_str(node).realize(_path_vars[out]))
+
 
 class VcxProject(object):
     _XMLNS = 'http://schemas.microsoft.com/developer/msbuild/2003'
@@ -143,9 +153,9 @@ class VcxProject(object):
 
     def __init__(self, name, uuid, version=None, mode='Application',
                  configuration=None, platform=None, output_file=None,
-                 import_lib=None, srcdir=None, files=None, compile_options=None,
-                 includes=None, link_options=None, libs=None, libdirs=None,
-                 dependencies=None):
+                 import_lib=None, srcdir=None, files=None,
+                 compile_options=None, includes=None, link_options=None,
+                 libs=None, libdirs=None, dependencies=None):
         self.name = name
         self.uuid = uuid
         self.version = version or '14.0'
@@ -271,6 +281,7 @@ class VcxProject(object):
 
         out.write(etree.tostring(project, doctype=self._DOCTYPE,
                                  pretty_print=True))
+
 
 class UUIDMap(object):
     version = 1

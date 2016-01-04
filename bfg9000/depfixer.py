@@ -5,6 +5,7 @@ import sys
 from .backends.make.syntax import Writer, Syntax
 from .version import version
 
+
 def main():
     # Munge the depfile so that it works a little better under Make.
     # Specifically, we need all the dependencies in the depfile to also be

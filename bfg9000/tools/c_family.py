@@ -8,6 +8,7 @@ from .. import shell
 # compiler. However, linkers can generally take object files made from multiple
 # source languages. We should figure out what the correct thing to do here is.
 
+
 @builder('c', 'c++')
 class CFamilyBuilder(object):
     __langs = {
@@ -34,7 +35,7 @@ class CFamilyBuilder(object):
         if re.search(r'cl(\.exe)?$', cmd):
             origin = os.path.dirname(cmd)
             link_cmd = env.getvar(var + '_LINK', os.path.join(origin, 'link'))
-            lib_cmd  = env.getvar(var + '_LIB',  os.path.join(origin, 'lib'))
+            lib_cmd = env.getvar(var + '_LIB', os.path.join(origin, 'lib'))
 
             self.compiler = msvc.MsvcCompiler(env, lang, low_var, cmd, cflags)
             for mode in ['executable', 'shared_library']:

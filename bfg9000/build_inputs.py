@@ -2,6 +2,7 @@ from . import path
 from .iterutils import iterate
 from .safe_str import safe_str
 
+
 class Node(object):
     def __init__(self):
         self.creator = None
@@ -18,6 +19,7 @@ class Node(object):
             type=type(self).__name__, name=repr(self.path)
         )
 
+
 def objectify(thing, valid_type, creator, *args, **kwargs):
     if isinstance(thing, valid_type):
         return thing
@@ -29,9 +31,11 @@ def objectify(thing, valid_type, creator, *args, **kwargs):
         # XXX: Come up with a way to provide args to prepend?
         return creator(thing, *args, **kwargs)
 
+
 def sourcify(thing, valid_type, make_type=None, **kwargs):
     return objectify(thing, valid_type, make_type, root=path.Root.srcdir,
                      **kwargs)
+
 
 class File(Node):
     install_kind = None
@@ -42,13 +46,16 @@ class File(Node):
         self.path = path.Path(name, root)
         self.post_install = None
 
+
 class Directory(File):
     pass
+
 
 class Phony(Node):
     def __init__(self, name):
         Node.__init__(self)
         self.path = name
+
 
 class Edge(object):
     def __init__(self, build, target, extra_deps=None):
@@ -56,8 +63,10 @@ class Edge(object):
             t.creator = self
         self.target = target
 
-        self.extra_deps = [sourcify(i, Node, File) for i in iterate(extra_deps)]
+        self.extra_deps = [sourcify(i, Node, File)
+                           for i in iterate(extra_deps)]
         build.add_edge(self)
+
 
 class InstallInputs(object):
     def __init__(self):
@@ -67,6 +76,7 @@ class InstallInputs(object):
     def __nonzero__(self):
         return bool(self.files or self.directories)
 
+
 class TestInputs(object):
     def __init__(self):
         self.tests = []
@@ -75,6 +85,7 @@ class TestInputs(object):
 
     def __nonzero__(self):
         return bool(self.tests)
+
 
 class BuildInputs(object):
     def __init__(self):

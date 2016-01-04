@@ -5,6 +5,7 @@ from .. import file_types
 from .. import iterutils
 from ..path import Root
 
+
 class ArLinker(object):
     rule_name = command_var = link_var = 'ar'
 

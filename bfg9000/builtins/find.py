@@ -8,6 +8,8 @@ from ..iterutils import iterate
 from ..backends.make.syntax import Writer, Syntax
 
 depfile_name = '.bfg_find_deps'
+
+
 def write_depfile(path, output, seen_dirs, makeify=False):
     with open(path, 'w') as f:
         out = Writer(f)
@@ -22,6 +24,7 @@ def write_depfile(path, output, seen_dirs, makeify=False):
                 out.write(os.path.abspath(i), Syntax.target)
                 out.write_literal(':\n')
 
+
 def _listdir(path):
     dirs, nondirs = [], []
     try:
@@ -35,8 +38,10 @@ def _listdir(path):
         pass
     return dirs, nondirs
 
+
 def _walk_flat(top):
     yield (top,) + _listdir(top)
+
 
 def _walk_recursive(top):
     dirs, nondirs = _listdir(top)
@@ -46,6 +51,7 @@ def _walk_recursive(top):
         if not os.path.islink(path):
             for i in _walk_recursive(path):
                 yield i
+
 
 def _find_files(paths, name, type, flat, filter):
     results = []
@@ -80,16 +86,19 @@ def _find_files(paths, name, type, flat, filter):
 
     return results, seen_dirs
 
+
 def find(path='.', name='*', type=None, flat=False):
     return _find_files(path, name, type, flat, None)[0]
 
 known_platforms = ['posix', 'linux', 'darwin', 'cygwin', 'windows']
+
 
 @builtin.globals('env')
 def filter_by_platform(env, name, type):
     my_plat = set([env.platform.name, env.platform.flavor])
     ex = '|'.join(re.escape(i) for i in known_platforms if i not in my_plat)
     return re.search(r'(^|_)(' + ex + r')(\.[^\.])?$', name) is None
+
 
 @builtin.globals('builtins', 'build_inputs', 'env')
 def find_files(builtins, build_inputs, env, path='.', name='*', type=None,

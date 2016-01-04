@@ -2,6 +2,7 @@ import unittest
 
 from bfg9000.safe_str import *
 
+
 class TestSafeStr(unittest.TestCase):
     def test_construct_from_strings(self):
         s = jbos('foo', 'bar', escaped_str('baz'))
@@ -52,6 +53,7 @@ class TestSafeStr(unittest.TestCase):
 
         s = join([escaped_str('foo'), 'bar'], ',')
         self.assertEqual(s.bits, (escaped_str('foo'), ',', 'bar'))
+
 
 if __name__ == '__main__':
     unittest.main()

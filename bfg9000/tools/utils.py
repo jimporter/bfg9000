@@ -5,6 +5,7 @@ _modes = {
     'static_library': 'STATIC',
 }
 
+
 def library_macro(name, mode):
     # Since the name always begins with "lib", this always produces a valid
     # macro name.

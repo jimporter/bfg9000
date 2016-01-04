@@ -11,12 +11,12 @@ global_options(['-DPRE="hello"'], lang='c++')
 
 global_link_options('-static-libstdc++')
 
-# Targets may also have their own options. For linking steps (e.g. executables),
-# options can be set for compilation or linking, using `compile_options` and
-# `link_options`, respectively.
+# Targets may also have their own options. For linking steps (e.g.
+# executables), options can be set for compilation or linking, using
+# `compile_options` and `link_options`, respectively.
 
 executable('program', compile_options=['-DPOST="world!"'],
            files=['program.cpp'])
 
-# Finally, individual builds can set various options using the usual environment
-# variables, such as CXXFLAGS, CPPFLAGS, and LDFLAGS.
+# Finally, individual builds can set various options using the usual
+# environment variables, such as CXXFLAGS, CPPFLAGS, and LDFLAGS.

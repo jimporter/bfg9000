@@ -4,7 +4,8 @@
 # executable. First, create the shared_library and give it a name; like
 # executables, this name will be transformed to match the conventions for your
 # platform (e.g. `liblibrary.so`). The return value of shared_library() is a
-# reference to the built library, which can be used elsewhere in the build file.
+# reference to the built library, which can be used elsewhere in the build
+# file.
 
 lib = shared_library('library', files=['library.cpp'])
 

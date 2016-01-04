@@ -21,6 +21,7 @@ Build = namedtuple('Build', ['outputs', 'rule', 'inputs', 'implicit',
 Syntax = Enum('Syntax', ['output', 'input', 'shell', 'clean'])
 Section = Enum('Section', ['path', 'command', 'flags', 'other'])
 
+
 class Writer(object):
     def __init__(self, stream):
         self.stream = stream
@@ -83,6 +84,7 @@ class Writer(object):
         else:
             self.write(thing, syntax, shell_quote=None)
 
+
 class Variable(object):
     def __init__(self, name):
         self.name = re.sub('\W', '_', name)
@@ -111,8 +113,10 @@ class Variable(object):
     def __radd__(self, lhs):
         return lhs + self.use()
 
+
 def var(v):
     return v if isinstance(v, Variable) else Variable(v)
+
 
 class Commands(object):
     def __init__(self, commands, env=None):
@@ -139,11 +143,13 @@ class Commands(object):
             any(not iterutils.isiterable(i) for i in self.commands)
         )
 
+
 path_vars = {
     path.Root.srcdir:   Variable('srcdir'),
     path.Root.builddir: None,
 }
 path_vars.update({i: Variable(i.name) for i in path.InstallRoot})
+
 
 class NinjaFile(object):
     def __init__(self):

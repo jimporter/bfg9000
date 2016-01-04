@@ -3,6 +3,7 @@ import unittest
 
 from integration import *
 
+
 class TestSimple(IntegrationTest):
     def __init__(self, *args, **kwargs):
         IntegrationTest.__init__(self, os.path.join(examples_dir, '01_simple'),
@@ -20,6 +21,7 @@ class TestSimple(IntegrationTest):
     def test_default(self):
         self.build()
         self.assertOutput([executable('simple')], 'hello, world!\n')
+
 
 if __name__ == '__main__':
     unittest.main()

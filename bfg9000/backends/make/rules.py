@@ -12,14 +12,17 @@ from ...builtins import find
 
 Path = path.Path
 
+priority = 2 if version is not None else 0
 _rule_handlers = {}
+_dir_sentinel = '.dir'
+
+
 def rule_handler(rule_name):
     def decorator(fn):
         _rule_handlers[rule_name] = fn
         return fn
     return decorator
 
-priority = 2 if version is not None else 0
 
 def write(env, build_inputs):
     buildfile = Makefile()
@@ -38,9 +41,11 @@ def write(env, build_inputs):
     with open(env.builddir.append('Makefile').string(), 'w') as out:
         buildfile.write(out)
 
+
 def cmd_var(cmd, buildfile):
     name = cmd.command_var.upper()
     return buildfile.variable(name, cmd.command, Section.command, True)
+
 
 def flags_vars(name, value, buildfile):
     name = name.upper()
@@ -48,12 +53,14 @@ def flags_vars(name, value, buildfile):
     flags = buildfile.target_variable(name, gflags, True)
     return gflags, flags
 
+
 def all_rule(default_targets, buildfile):
     buildfile.rule(
         target='all',
         deps=default_targets,
         phony=True
     )
+
 
 def install_rule(install_targets, buildfile, env):
     if not install_targets:
@@ -95,6 +102,7 @@ def install_rule(install_targets, buildfile, env):
         phony=True
     )
 
+
 def test_rule(tests, buildfile, env):
     if not tests:
         return
@@ -117,7 +125,6 @@ def test_rule(tests, buildfile, env):
         local_env = lambda x: setenv(se_cmd, x)
 
     def build_commands(tests, collapse=False):
-        cmd, deps = [], []
         def command(test, args=None):
             env_vars = local_env(test.env)
             subcmd = env_vars + [test.target] + test.options + (args or [])
@@ -131,6 +138,7 @@ def test_rule(tests, buildfile, env):
                 return safe_str.escaped_str(s)
             return subcmd
 
+        cmd, deps = [], []
         for i in tests:
             if type(i).__name__ == 'TestDriver':
                 args, moredeps = build_commands(i.tests, True)
@@ -150,10 +158,10 @@ def test_rule(tests, buildfile, env):
         phony=True
     )
 
-dir_sentinel = '.dir'
+
 def directory_rule(buildfile, env):
     mkdir_p = env.tool('mkdir_p')
-    pattern = Pattern(os.path.join('%', dir_sentinel))
+    pattern = Pattern(os.path.join('%', _dir_sentinel))
     path = Function('patsubst', pattern, Pattern('%'), var('@'), quoted=True)
 
     buildfile.rule(
@@ -163,6 +171,7 @@ def directory_rule(buildfile, env):
             silent(['touch', qvar('@')])
         ]
     )
+
 
 def regenerate_rule(find_dirs, buildfile, env):
     bfg9000 = env.tool('bfg9000')
@@ -180,14 +189,15 @@ def regenerate_rule(find_dirs, buildfile, env):
         recipe=[bfg9000.regenerate(cmd_var(bfg9000, buildfile), Path('.'))]
     )
 
+
 @rule_handler('Compile')
 def emit_object_file(rule, build_inputs, buildfile, env):
     compiler = rule.builder
     recipename = Variable('RULE_{}'.format(compiler.rule_name.upper()))
     global_cflags, cflags = flags_vars(
         compiler.command_var + 'FLAGS',
-        compiler.global_args +
-          build_inputs.global_options.get(rule.file.lang, []),
+        ( compiler.global_args +
+          build_inputs.global_options.get(rule.file.lang, []) ),
         buildfile
     )
 
@@ -214,18 +224,19 @@ def emit_object_file(rule, build_inputs, buildfile, env):
             command_kwargs['deps'] = True
 
         buildfile.define(recipename, [
-            compiler( cmd=cmd, input=qvar('<'), output=qvar('@'), args=cflags,
-                      **command_kwargs ),
+            compiler(cmd=cmd, input=qvar('<'), output=qvar('@'), args=cflags,
+                     **command_kwargs),
         ] + recipe_extra)
 
     buildfile.rule(
         target=path,
         deps=[rule.file] + rule.extra_deps,
-        order_only=[target_dir.append(dir_sentinel)] if target_dir else None,
+        order_only=[target_dir.append(_dir_sentinel)] if target_dir else None,
         recipe=recipename,
         variables=variables
     )
     buildfile.include(path.addext('.d'), optional=True)
+
 
 @rule_handler('Link')
 def emit_link(rule, build_inputs, buildfile, env):
@@ -270,10 +281,11 @@ def emit_link(rule, build_inputs, buildfile, env):
     buildfile.rule(
         target=target,
         deps=rule.files + rule.libs + rule.extra_deps,
-        order_only=[i.append(dir_sentinel) for i in dirs if i],
+        order_only=[i.append(_dir_sentinel) for i in dirs if i],
         recipe=recipe,
         variables=variables
     )
+
 
 @rule_handler('Alias')
 def emit_alias(rule, build_inputs, buildfile, env):
@@ -282,6 +294,7 @@ def emit_alias(rule, build_inputs, buildfile, env):
         deps=rule.extra_deps,
         phony=True
     )
+
 
 @rule_handler('Command')
 def emit_command(rule, build_inputs, buildfile, env):

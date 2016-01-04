@@ -5,11 +5,13 @@ import sys
 
 from .version import version
 
+
 def main():
     parser = argparse.ArgumentParser(
         prog='bfg9000-setenv',
         usage='%(prog)s [OPTION]... [NAME=VALUE]... COMMAND [ARG]...',
-        description='Set each NAME to VALUE in the environment and run COMMAND.'
+        description='Set each NAME to VALUE in the environment and run ' +
+                    'COMMAND.'
     )
 
     parser.add_argument('args', metavar='ARGS', nargs='*',

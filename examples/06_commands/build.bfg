@@ -8,15 +8,15 @@
 hello = command('hello', cmd=['python', '-c', 'print("hello")'])
 
 # It's also possible to pass the command as a string, which allows for more
-# shell syntax, such as piping. However, quoting each arg is then left up to the
-# user:
+# shell syntax, such as piping. However, quoting each arg is then left up to
+# the user:
 
 world = command('world', cmd='python -c "print(\'world\')"')
 
 # The command() function also supports multiple commands, passed via `cmds`
-# instead of `cmd`, as well as automatically converting other targets into their
-# path names. This makes it simple to reference files from the source directory
-# for your commands:
+# instead of `cmd`, as well as automatically converting other targets into
+# their path names. This makes it simple to reference files from the source
+# directory for your commands:
 
 script = source_file('script.py')
 command('script', cmds=[

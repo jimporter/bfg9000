@@ -5,7 +5,7 @@
 
 ogg = system_package('ogg')
 
-# Packages can be passed to the build functions, which will link the object with
-# the package and add the appropriate include directories:
+# Packages can be passed to the build functions, which will link the object
+# with the package and add the appropriate include directories:
 
 executable('program', files=['program.cpp'], packages=[ogg])

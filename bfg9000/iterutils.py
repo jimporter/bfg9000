@@ -1,12 +1,15 @@
 from collections import Iterable
 
+
 def isiterable(thing):
     return isinstance(thing, Iterable) and not isinstance(thing, basestring)
+
 
 def iterate(thing):
     def generate_none():
         return
         yield
+
     def generate_one(x):
         yield x
 
@@ -16,6 +19,7 @@ def iterate(thing):
         return iter(thing)
     else:
         return generate_one(thing)
+
 
 def tween(iterable, delim, prefix=None, suffix=None):
     first = True
@@ -30,6 +34,7 @@ def tween(iterable, delim, prefix=None, suffix=None):
     if not first and suffix is not None:
         yield suffix
 
+
 def uniques(iterable):
     def generate_uniques(iterable):
         seen = set()
@@ -38,6 +43,7 @@ def uniques(iterable):
                 seen.add(item)
                 yield item
     return list(generate_uniques(iterable))
+
 
 def listify(thing, always_copy=False):
     if not always_copy and type(thing) == list:

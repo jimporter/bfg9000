@@ -3,6 +3,7 @@ import unittest
 
 from integration import *
 
+
 class TestExtraDeps(IntegrationTest):
     def __init__(self, *args, **kwargs):
         IntegrationTest.__init__(self, 'extra_deps', *args, **kwargs)
@@ -22,6 +23,7 @@ class TestExtraDeps(IntegrationTest):
 
         self.assertExists(os.path.join(self.builddir, '2'))
         self.assertExists(os.path.join(self.builddir, '3'))
+
 
 if __name__ == '__main__':
     unittest.main()

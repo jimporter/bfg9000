@@ -1,6 +1,7 @@
 from collections import OrderedDict
 from pkg_resources import iter_entry_points, DistributionNotFound
 
+
 def get_backends():
     backends = []
     for i in iter_entry_points('bfg9000.backends'):

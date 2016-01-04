@@ -3,7 +3,8 @@ import subprocess
 from setuptools import setup, find_packages, Command
 from bfg9000.version import version
 
-class doc_serve(Command):
+
+class DocServe(Command):
     description = 'serve the documentation locally'
     user_options = [
         ('dev-addr=', None, 'address to host the documentation on'),
@@ -18,7 +19,8 @@ class doc_serve(Command):
     def run(self):
         subprocess.call(['mkdocs', 'serve', '--dev-addr=' + self.dev_addr])
 
-class doc_deploy(Command):
+
+class DocDeploy(Command):
     description = 'push the documentation to GitHub'
     user_options = []
 
@@ -30,6 +32,23 @@ class doc_deploy(Command):
 
     def run(self):
         subprocess.call(['mkdocs', 'gh-deploy', '--clean'])
+
+
+custom_cmds = {
+    'doc_serve': DocServe,
+    'doc_deploy': DocDeploy,
+}
+
+try:
+    from flake8.main import Flake8Command
+
+    class LintCommand(Flake8Command):
+        def distribution_files(self):
+            return ['setup.py', 'bfg9000', 'examples', 'test']
+
+    custom_cmds['lint'] = LintCommand
+except:
+    pass
 
 extra_exclude = []
 extra_scripts = []
@@ -64,9 +83,5 @@ setup(
     },
 
     test_suite='test',
-
-    cmdclass={
-        'doc_serve': doc_serve,
-        'doc_deploy': doc_deploy,
-    },
+    cmdclass=custom_cmds,
 )

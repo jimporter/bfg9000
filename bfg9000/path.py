@@ -7,6 +7,7 @@ from . import safe_str
 Root = Enum('Root', ['srcdir', 'builddir', 'absolute'])
 InstallRoot = Enum('InstallRoot', ['prefix', 'bindir', 'libdir', 'includedir'])
 
+
 class Path(safe_str.safe_string):
     def __init__(self, path, root=Root.builddir):
         self.suffix = os.path.normpath(path)
@@ -71,8 +72,8 @@ class Path(safe_str.safe_string):
         raise NotImplementedError()
 
     def __repr__(self):
-        variables = { i: '$({})'.format(i.name) for i in
-                      chain(Root, InstallRoot) }
+        variables = {i: '$({})'.format(i.name) for i in
+                     chain(Root, InstallRoot)}
         return '`{}`'.format(self.realize(variables))
 
     def __hash__(self):
@@ -89,6 +90,7 @@ class Path(safe_str.safe_string):
 
     def __radd__(self, lhs):
         return safe_str.jbos(lhs, self)
+
 
 def install_path(path, install_root):
     if path.root == Root.srcdir:

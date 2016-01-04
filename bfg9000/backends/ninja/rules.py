@@ -12,14 +12,16 @@ from ...builtins import find
 
 Path = path.Path
 
+priority = 3 if version is not None else 0
 _rule_handlers = {}
+
+
 def rule_handler(rule_name):
     def decorator(fn):
         _rule_handlers[rule_name] = fn
         return fn
     return decorator
 
-priority = 3 if version is not None else 0
 
 def write(env, build_inputs):
     buildfile = NinjaFile()
@@ -36,6 +38,7 @@ def write(env, build_inputs):
 
     with open(env.builddir.append('build.ninja').string(), 'w') as out:
         buildfile.write(out)
+
 
 def command_build(buildfile, output, inputs=None, implicit=None,
                   order_only=None, commands=None, env=None):
@@ -58,14 +61,17 @@ def command_build(buildfile, output, inputs=None, implicit=None,
         variables={'cmd': Commands(commands, env)}
     )
 
+
 def cmd_var(cmd, buildfile):
     name = cmd.command_var
     return buildfile.variable(name, cmd.command, Section.command, True)
+
 
 def flags_vars(name, value, buildfile):
     gflags = buildfile.variable('global_' + name, value, Section.flags, True)
     flags = buildfile.variable(name, gflags, Section.other, True)
     return gflags, flags
+
 
 def all_rule(default_targets, buildfile):
     buildfile.default(['all'])
@@ -74,6 +80,7 @@ def all_rule(default_targets, buildfile):
         rule='phony',
         inputs=default_targets
     )
+
 
 def install_rule(install_targets, buildfile, env):
     if not install_targets:
@@ -116,6 +123,7 @@ def install_rule(install_targets, buildfile, env):
         inputs=['all'],
         commands=commands
     )
+
 
 def test_rule(tests, buildfile, env):
     if not tests:
@@ -172,6 +180,7 @@ def test_rule(tests, buildfile, env):
         commands=commands,
     )
 
+
 def regenerate_rule(find_dirs, buildfile, env):
     bfg9000 = env.tool('bfg9000')
     bfgpath = Path('build.bfg', path.Root.srcdir)
@@ -194,13 +203,14 @@ def regenerate_rule(find_dirs, buildfile, env):
         implicit=[bfgpath]
     )
 
+
 @rule_handler('Compile')
 def emit_object_file(rule, build_inputs, buildfile):
     compiler = rule.builder
     global_cflags, cflags = flags_vars(
         compiler.command_var + 'flags',
-        compiler.global_args +
-          build_inputs.global_options.get(rule.file.lang, []),
+        ( compiler.global_args +
+          build_inputs.global_options.get(rule.file.lang, []) ),
         buildfile
     )
 
@@ -233,6 +243,7 @@ def emit_object_file(rule, build_inputs, buildfile):
         implicit=rule.extra_deps,
         variables=variables
     )
+
 
 @rule_handler('Link')
 def emit_link(rule, build_inputs, buildfile):
@@ -274,6 +285,7 @@ def emit_link(rule, build_inputs, buildfile):
         variables=variables
     )
 
+
 @rule_handler('Alias')
 def emit_alias(rule, build_inputs, buildfile):
     buildfile.build(
@@ -281,6 +293,7 @@ def emit_alias(rule, build_inputs, buildfile):
         rule='phony',
         inputs=rule.extra_deps
     )
+
 
 @rule_handler('Command')
 def emit_command(rule, build_inputs, buildfile):

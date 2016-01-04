@@ -2,13 +2,12 @@ import errno
 import os
 import shutil
 import subprocess
-import sys
 import time
 import unittest
 
 from collections import namedtuple
 
-from bfg9000.path import Path, InstallRoot
+from bfg9000.path import InstallRoot
 from bfg9000.platforms import platform_info
 from bfg9000.makedirs import makedirs
 from bfg9000.backends import get_backends
@@ -24,6 +23,7 @@ if os.getenv('BACKENDS', '').strip():
     backends = os.getenv('BACKENDS').split(' ')
 else:
     backends = [k for k, v in get_backends().iteritems() if v.priority > 0]
+
 
 def cleandir(path, recreate=True):
     if os.path.exists(path):
@@ -44,6 +44,7 @@ def cleandir(path, recreate=True):
     if recreate:
         makedirs(path)
 
+
 def skip_pred(predicate, msg='skipped'):
     def wrap(fn):
         def inner(self, *args, **kwargs):
@@ -53,19 +54,23 @@ def skip_pred(predicate, msg='skipped'):
         return inner
     return wrap
 
+
 def skip_if_backend(backend):
     return skip_pred(lambda x: x.backend == backend,
                      'not supported for backend "{}"'.format(backend))
 
+
 def only_if_backend(backend):
     return skip_pred(lambda x: x.backend != backend,
                      'only supported for backend "{}"'.format(backend))
+
 
 class SubprocessError(unittest.TestCase.failureException):
     def __init__(self, message):
         unittest.TestCase.failureException.__init__(
             self, '\n{line}\n{msg}\n{line}'.format(line='-' * 60, msg=message)
         )
+
 
 class IntegrationTest(unittest.TestCase):
     def __init__(self, srcdir, *args, **kwargs):
@@ -132,8 +137,8 @@ class IntegrationTest(unittest.TestCase):
         os.chdir(self.srcdir)
         cleandir(self.builddir)
         self.assertPopen(
-            ['bfg9000', self.srcdir, self.builddir, '--backend', self.backend] +
-            self.extra_args
+            ['bfg9000', self.srcdir, self.builddir, '--backend',
+             self.backend] + self.extra_args
         )
         os.chdir(self.builddir)
 
@@ -169,11 +174,13 @@ class IntegrationTest(unittest.TestCase):
                 "'{}' does not exist".format(os.path.normpath(path))
             )
 
+
 def executable(name):
     info = platform_info()
     return Target(name, os.path.normpath(os.path.join(
         '.', name + info.executable_ext
     )))
+
 
 def shared_library(name):
     info = platform_info()
@@ -184,6 +191,7 @@ def shared_library(name):
         '.', head, prefix + tail + info.shared_library_ext
     )))
 
+
 def static_library(name):
     info = platform_info()
     prefix = '' if info.name == 'windows' else 'lib'
@@ -193,6 +201,7 @@ def static_library(name):
     return Target(name, os.path.normpath(os.path.join(
         '.', head, prefix + tail + suffix
     )))
+
 
 def load_tests(loader, standard_tests, pattern):
     all_tests = unittest.TestSuite()

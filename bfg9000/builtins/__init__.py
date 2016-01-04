@@ -5,6 +5,7 @@ import pkgutil
 _all_builtins = {}
 _loaded_builtins = False
 
+
 class Binder(object):
     def __init__(self, args, fn):
         self.__args = args
@@ -14,6 +15,7 @@ class Binder(object):
         # XXX: partial doesn't forward the docstring of the function.
         return functools.partial(self.__fn, *[kwargs[i] for i in self.__args])
 
+
 def _decorate_builtin(*args):
     def wrapper(fn):
         bound = Binder(args, fn)
@@ -21,8 +23,10 @@ def _decorate_builtin(*args):
         return bound
     return wrapper
 
+
 builtin = _decorate_builtin()
 builtin.globals = _decorate_builtin
+
 
 def _load_builtins():
     global _loaded_builtins
@@ -32,6 +36,7 @@ def _load_builtins():
         for _, name, _ in pkgutil.walk_packages(__path__, '.'):
             importlib.import_module(name, __package__)
         _loaded_builtins = True
+
 
 def bind(**kwargs):
     _load_builtins()

@@ -3,6 +3,7 @@ import unittest
 
 from integration import *
 
+
 class TestFindFiles(IntegrationTest):
     def __init__(self, *args, **kwargs):
         IntegrationTest.__init__(
@@ -17,6 +18,7 @@ class TestFindFiles(IntegrationTest):
         self.build(executable('goodbye'))
         self.assertOutput([executable('goodbye')],
                           'Goodbye!\nAuf Wiedersehen!\n')
+
 
 if __name__ == '__main__':
     unittest.main()

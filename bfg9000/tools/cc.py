@@ -7,6 +7,7 @@ from ..iterutils import iterate, listify, uniques
 from ..path import Root
 from ..platforms import platform_name
 
+
 class CcCompiler(object):
     def __init__(self, env, lang, name, command, cflags):
         self.platform = env.platform
@@ -53,6 +54,7 @@ class CcCompiler(object):
             return args
         else:
             raise ValueError("unknown mode '{}'".format(mode))
+
 
 class CcLinker(object):
     def __init__(self, env, mode, lang, name, command, ldflags, ldlibs):
@@ -108,6 +110,7 @@ class CcLinker(object):
             )
         elif self.mode == 'shared_library':
             head, tail = os.path.split(name)
+
             def lib(prefix='lib'):
                 return os.path.join(
                     head, prefix + tail + self.platform.shared_library_ext
@@ -127,9 +130,10 @@ class CcLinker(object):
         return ['-shared', '-fPIC'] if self.mode == 'shared_library' else []
 
     def lib_dirs(self, libraries, target):
-        libraries = listify(libraries)
         def get_dir(lib):
             return lib.path.parent() if isinstance(lib, Library) else lib
+
+        libraries = listify(libraries)
         dirs = uniques(get_dir(i) for i in iterate(libraries)
                        if not isinstance(i, StaticLibrary))
         result = ['-L' + i for i in dirs]

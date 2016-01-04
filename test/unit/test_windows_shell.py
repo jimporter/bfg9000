@@ -1,7 +1,7 @@
-import os
 import unittest
 
 from bfg9000.shell.windows import *
+
 
 class TestSplit(unittest.TestCase):
     def test_single(self):
@@ -20,6 +20,7 @@ class TestSplit(unittest.TestCase):
         self.assertEqual(split('foo "it\'s \\"good\\""'),
                          ['foo', 'it\'s "good"'])
 
+
 class TestQuote(unittest.TestCase):
     def test_simple(self):
         self.assertEqual(quote('foo'), 'foo')
@@ -36,6 +37,7 @@ class TestQuote(unittest.TestCase):
 
     def test_escaped_quote(self):
         self.assertEqual(quote(r'foo\"bar'), r'"foo\\\"bar"')
+
 
 if __name__ == '__main__':
     unittest.main()

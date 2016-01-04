@@ -1,5 +1,6 @@
 from . import tool
 
+
 @tool('mkdir_p')
 class MkdirP(object):
     rule_name = command_var = 'mkdir_p'

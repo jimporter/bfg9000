@@ -5,6 +5,7 @@ from bfg9000.makedirs import makedirs
 from integration import *
 pjoin = os.path.join
 
+
 class TestInstall(IntegrationTest):
     def __init__(self, *args, **kwargs):
         IntegrationTest.__init__(self, 'install', dist=True, *args, **kwargs)
@@ -45,6 +46,7 @@ class TestInstall(IntegrationTest):
         cleandir(self.builddir)
         self.assertOutput([pjoin(self.bindir, executable('program').path)],
                           'hello, library!\n')
+
 
 if __name__ == '__main__':
     unittest.main()

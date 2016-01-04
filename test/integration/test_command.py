@@ -4,6 +4,7 @@ import unittest
 
 from integration import *
 
+
 class TestCommand(IntegrationTest):
     def __init__(self, *args, **kwargs):
         IntegrationTest.__init__(
@@ -37,6 +38,7 @@ class TestCommand(IntegrationTest):
         output = self.build('hello-world')
         self.assertRegexpMatches(output, re.compile('^hello$', re.MULTILINE))
         self.assertRegexpMatches(output, re.compile('^world$', re.MULTILINE))
+
 
 if __name__ == '__main__':
     unittest.main()

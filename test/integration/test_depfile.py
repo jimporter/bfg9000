@@ -4,6 +4,7 @@ import unittest
 
 from integration import *
 
+
 class TestDepfile(IntegrationTest):
     def __init__(self, *args, **kwargs):
         IntegrationTest.__init__(self, 'depfile', stage_src=True,
@@ -19,6 +20,7 @@ class TestDepfile(IntegrationTest):
 
         self.build(executable('program'))
         self.assertOutput([executable('program')], 'goodbye\n')
+
 
 if __name__ == '__main__':
     unittest.main()

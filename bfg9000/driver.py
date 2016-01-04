@@ -13,8 +13,10 @@ from .version import version
 
 bfgfile = 'build.bfg'
 
+
 def is_srcdir(path):
     return os.path.exists(os.path.join(path, bfgfile))
+
 
 def samefile(path1, path2):
     if hasattr(os.path, 'samefile'):
@@ -23,6 +25,7 @@ def samefile(path1, path2):
         # This isn't entirely accurate, but it's close enough, and should only
         # be necessary for Windows with Python 2.x.
         return os.path.realpath(path1) == os.path.realpath(path2)
+
 
 def parse_args(parser, args=None, namespace=None):
     def check_dir(path, check_exist=False):
@@ -70,11 +73,12 @@ def parse_args(parser, args=None, namespace=None):
 
     return args
 
+
 def main():
     backends = get_backends()
     install_dirs = platform_info().install_dirs
-
     path_help = 'installation path for {} (default: %(default)r)'
+
     def path_arg(value):
         return Path(os.path.abspath(value))
 

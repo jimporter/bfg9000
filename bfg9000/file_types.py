@@ -4,16 +4,19 @@ from . import build_inputs
 from .languages import ext2lang
 from .path import InstallRoot
 
+
 class SourceFile(build_inputs.File):
     def __init__(self, name, root, lang=None):
         build_inputs.File.__init__(self, name, root)
         if lang is None:
-            lang = ext2lang.get( os.path.splitext(name)[1] )
+            lang = ext2lang.get(os.path.splitext(name)[1])
         self.lang = lang
+
 
 class HeaderFile(build_inputs.File):
     install_kind = 'data'
     install_root = InstallRoot.includedir
+
 
 class HeaderDirectory(build_inputs.Directory):
     install_root = InstallRoot.includedir
@@ -22,10 +25,12 @@ class HeaderDirectory(build_inputs.Directory):
         build_inputs.File.__init__(self, name, root)
         self.system = system
 
+
 class ObjectFile(build_inputs.File):
     def __init__(self, name, root, lang):
         build_inputs.File.__init__(self, name, root)
         self.lang = lang
+
 
 class Binary(build_inputs.File):
     install_kind = 'program'
@@ -34,8 +39,10 @@ class Binary(build_inputs.File):
         build_inputs.File.__init__(self, name, root)
         self.lang = lang
 
+
 class Executable(Binary):
     install_root = InstallRoot.bindir
+
 
 class Library(Binary):
     install_root = InstallRoot.libdir
@@ -44,8 +51,10 @@ class Library(Binary):
     def link(self):
         return self
 
+
 class StaticLibrary(Library):
     pass
+
 
 class WholeArchive(StaticLibrary):
     def __init__(self, lib):
@@ -62,11 +71,14 @@ class WholeArchive(StaticLibrary):
     def lang(self):
         return self.lib.lang
 
+
 class SharedLibrary(Library):
     pass
 
+
 class ImportLibrary(SharedLibrary):
     pass
+
 
 class DllLibrary(SharedLibrary):
     install_root = InstallRoot.bindir
@@ -82,4 +94,3 @@ class DllLibrary(SharedLibrary):
     @property
     def link(self):
         return self.import_lib
-

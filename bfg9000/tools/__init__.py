@@ -5,6 +5,7 @@ _builders = {}
 _tools = {}
 _loaded_tools = False
 
+
 def _load_tools():
     global _loaded_tools
     if not _loaded_tools:
@@ -13,6 +14,7 @@ def _load_tools():
         for _, name, _ in pkgutil.walk_packages(__path__, '.'):
             importlib.import_module(name, __package__)
         _loaded_tools = True
+
 
 def builder(*args):
     if len(args) == 0:
@@ -25,6 +27,7 @@ def builder(*args):
         return fn
     return wrapper
 
+
 def get_builder(lang, env):
     _load_tools()
     try:
@@ -33,11 +36,13 @@ def get_builder(lang, env):
     except KeyError:
         raise ValueError('unknown language "{}"'.format(lang))
 
+
 def tool(name):
     def wrapper(fn):
         _tools[name] = fn
         return fn
     return wrapper
+
 
 def get_tool(name, env):
     _load_tools()

@@ -6,6 +6,7 @@ import subprocess
 from .iterutils import iterate
 from .path import Path, Root, InstallRoot
 
+
 def platform_name():
     name = platform.system().lower()
     if name == 'windows':
@@ -17,6 +18,7 @@ def platform_name():
             pass
     return name
 
+
 # XXX: How much information should be stored in Platforms vs the Environment?
 # For instance, should the Platforms know how to fetch platform-specific
 # environment variables (implying a circular dependency between Environment and
@@ -24,6 +26,7 @@ def platform_name():
 class Platform(object):
     def __init__(self, name):
         self.name = name
+
 
 class PosixPlatform(Platform):
     @property
@@ -63,6 +66,7 @@ class PosixPlatform(Platform):
             InstallRoot.includedir: Path('include', InstallRoot.prefix),
         }
 
+
 class LinuxPlatform(PosixPlatform):
     @property
     def has_rpath(self):
@@ -80,10 +84,12 @@ class LinuxPlatform(PosixPlatform):
             pass
         return PosixPlatform.lib_dirs(self)
 
+
 class DarwinPlatform(PosixPlatform):
     @property
     def shared_library_ext(self):
         return '.dylib'
+
 
 class WindowsPlatform(Platform):
     @property
@@ -126,10 +132,12 @@ class WindowsPlatform(Platform):
             InstallRoot.includedir: Path('', InstallRoot.prefix),
         }
 
+
 class CygwinPlatform(WindowsPlatform):
     @property
     def flavor(self):
         return 'posix'
+
 
 def platform_info(name=None):
     if name is None:
@@ -143,8 +151,9 @@ def platform_info(name=None):
         return DarwinPlatform(name)
     elif name == 'linux':
         return LinuxPlatform(name)
-    else: # Probably some POSIX system
+    else:  # Probably some POSIX system
         return PosixPlatform(name)
+
 
 def which(names, env=None):
     if not env:
@@ -165,8 +174,8 @@ def which(names, env=None):
         else:
             for path in ['.'] if os.path.dirname(name) else paths:
                 for ext in exts:
-                    candidate = os.path.normpath(os.path.join(path, name + ext))
-                    if os.path.exists(candidate):
-                        return candidate
+                    fullpath = os.path.normpath(os.path.join(path, name + ext))
+                    if os.path.exists(fullpath):
+                        return fullpath
 
     raise IOError("unable to find executable '{}'".format(name))

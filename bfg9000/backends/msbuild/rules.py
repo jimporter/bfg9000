@@ -8,12 +8,14 @@ from ...makedirs import makedirs
 
 priority = 1 if version is not None else 0
 
+
 def link_mode(mode):
     return {
         'executable'    : 'Application',
         'static_library': 'StaticLibrary',
         'shared_library': 'DynamicLibrary',
     }[mode]
+
 
 def reduce_options(files, global_options):
     compilers = iterutils.uniques(i.creator.builder for i in files)
@@ -33,10 +35,12 @@ def reduce_options(files, global_options):
         chain.from_iterable(per_file_opts)
     ))
 
+
 def reduce_includes(files):
     return iterutils.uniques(chain.from_iterable(
         (i.creator.all_includes for i in files)
     ))
+
 
 def write(env, build_inputs):
     uuids = UUIDMap(env.builddir.append('.bfg_uuid').string())
@@ -46,10 +50,10 @@ def write(env, build_inputs):
     # TODO: Handle default().
     for e in build_inputs.edges:
         if type(e).__name__ == 'Link':
-            # By definition, a dependency for an edge must already be defined by
-            # the time the edge is created, so we can map *all* the dependencies
-            # to their associated projects by looking at the projects we've
-            # already created.
+            # By definition, a dependency for an edge must already be defined
+            # by the time the edge is created, so we can map *all* the
+            # dependencies to their associated projects by looking at the
+            # projects we've already created.
             dependencies = []
             for dep in e.libs:
                 if id(dep.creator.target) not in project_map:
@@ -71,8 +75,10 @@ def write(env, build_inputs):
                 includes=reduce_includes(e.files),
                 # We intentionally exclude internal_options from the link step,
                 # since MSBuild handles these its own way.
-                link_options=e.builder.global_args +
-                    build_inputs.global_link_options + e.user_options,
+                link_options=(
+                    e.builder.global_args +
+                    build_inputs.global_link_options + e.user_options
+                ),
                 libs=e.all_libs,
                 dependencies=dependencies,
             )

@@ -3,6 +3,7 @@ import unittest
 
 from integration import *
 
+
 class TestSystemLibrary(IntegrationTest):
     def __init__(self, *args, **kwargs):
         IntegrationTest.__init__(
@@ -14,13 +15,16 @@ class TestSystemLibrary(IntegrationTest):
         self.build()
         self.assertOutput([executable('program')], '')
 
+
 class TestBoostLibrary(IntegrationTest):
     def __init__(self, *args, **kwargs):
         IntegrationTest.__init__(self, 'boost', *args, **kwargs)
 
     def test_build(self):
         self.build()
-        self.assertOutput([executable('program'), '--hello'], 'Hello, world!\n')
+        self.assertOutput([executable('program'), '--hello'],
+                          'Hello, world!\n')
+
 
 if __name__ == '__main__':
     unittest.main()

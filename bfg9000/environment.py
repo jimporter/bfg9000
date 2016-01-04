@@ -5,8 +5,10 @@ from .path import Path, InstallRoot
 from . import platforms
 from . import tools
 
+
 class EnvVersionError(RuntimeError):
     pass
+
 
 class Environment(object):
     version = 5

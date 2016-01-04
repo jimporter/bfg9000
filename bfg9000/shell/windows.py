@@ -4,8 +4,8 @@ from enum import Enum
 from .. import iterutils
 from ..safe_str import escaped_str
 
-__all__ = ['split', 'listify', 'escape', 'quote_escaped', 'quote', 'quote_info',
-           'join_commands', 'global_env']
+__all__ = ['split', 'listify', 'escape', 'quote_escaped', 'quote',
+           'quote_info', 'join_commands', 'global_env']
 
 # XXX: We need a way to escape cmd.exe-specific characters.
 
@@ -13,6 +13,8 @@ _bad_chars = re.compile(r'(\s|"|\\$)')
 _replace = re.compile(r'(\\*)("|$)')
 
 _Token = Enum('Token', ['char', 'quote', 'space'])
+_State = Enum('State', ['between', 'char', 'word', 'quoted'])
+
 
 def _tokenize(s):
     escapes = 0
@@ -30,7 +32,6 @@ def _tokenize(s):
             yield ((_Token.space if c in ' \t' else _Token.char), c)
             escapes = 0
 
-_State = Enum('State', ['between', 'char', 'word', 'quoted'])
 
 def split(s):
     state = _State.between
@@ -49,15 +50,16 @@ def split(s):
                 state = _State.quoted
             elif tok == _Token.char:
                 args[-1] += value
-            else: # tok == _Token.space
+            else:  # tok == _Token.space
                 state = _State.between
-        else: # state == _State.quoted
+        else:  # state == _State.quoted
             if tok == _Token.quote:
                 state = _State.word
             else:
                 args[-1] += value
 
     return args
+
 
 def listify(thing):
     if thing is None:
@@ -66,6 +68,7 @@ def listify(thing):
         return list(thing)
     else:
         return split(thing)
+
 
 def escape(s):
     if not s:
@@ -78,18 +81,23 @@ def escape(s):
         return m.group(1) * 2 + quote
     return _replace.sub(repl, s), True
 
+
 def quote_escaped(s, escaped=True):
     return '"' + s + '"' if escaped else s
 
+
 def quote(s):
     return quote_escaped(*escape(s))
+
 
 def quote_info(s):
     s, esc = escape(s)
     return quote_escaped(s, esc), esc
 
+
 def join_commands(commands):
     return iterutils.tween(commands, escaped_str(' && '))
+
 
 def global_env(env):
     # Join the name and value so they get quoted together, if necessary.

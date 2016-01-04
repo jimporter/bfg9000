@@ -1,10 +1,10 @@
 import os.path
 import shutil
-import time
 import unittest
 
 from integration import *
 pjoin = os.path.join
+
 
 class TestRegenerate(IntegrationTest):
     def __init__(self, *args, **kwargs):
@@ -24,6 +24,7 @@ class TestRegenerate(IntegrationTest):
 
         self.build('bar')
         self.assertExists(pjoin(self.builddir, 'bar'))
+
 
 class TestRegenerateGlob(IntegrationTest):
     def __init__(self, *args, **kwargs):
@@ -80,6 +81,7 @@ class TestRegenerateGlob(IntegrationTest):
 
         self.build(executable('goodbye'))
         self.assertOutput([executable('goodbye')], 'Goodbye!\n')
+
 
 if __name__ == '__main__':
     unittest.main()

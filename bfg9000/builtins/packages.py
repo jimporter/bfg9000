@@ -10,11 +10,13 @@ from ..file_types import *
 from ..iterutils import iterate, listify
 from ..platforms import which
 
+
 class Package(object):
     def __init__(self, includes=None, libraries=None, lib_dirs=None):
         self.includes = includes or []
         self.libraries = libraries or []
         self.lib_dirs = lib_dirs or []
+
 
 class BoostPackage(Package):
     def __init__(self, includes=None, libraries=None, lib_dirs=None,
@@ -22,8 +24,10 @@ class BoostPackage(Package):
         Package.__init__(self, includes, libraries, lib_dirs)
         self.version = version
 
+
 class SystemExecutable(Executable):
     pass
+
 
 def _find_library(env, name, search_dirs, lang, kind='any'):
     # XXX: Support alternative naming schemes (e.g. libfoo.a vs foo.lib for GCC
@@ -41,6 +45,7 @@ def _find_library(env, name, search_dirs, lang, kind='any'):
                 return candidate
     raise ValueError("unable to find package '{}'".format(name))
 
+
 def _boost_version(headers, required_version=None):
     version_hpp = headers.path.append('boost').append('version.hpp')
     with open(version_hpp.string()) as f:
@@ -52,11 +57,13 @@ def _boost_version(headers, required_version=None):
                 return version
     raise IOError('unable to parse "boost/version.hpp"')
 
+
 @builtin.globals('env')
 def system_package(env, name, lang='c', kind='any'):
     if kind not in ('any', 'shared', 'static'):
         raise ValueError("kind must be one of 'any', 'shared', or 'static'")
     return Package([], [_find_library(env, name, env.lib_dirs, lang, kind)])
+
 
 @builtin.globals('env')
 def boost_package(env, name=None, version=None):
@@ -108,8 +115,10 @@ def boost_package(env, name=None, version=None):
         dirs = [lib_var] if lib_var else env.platform.lib_dirs
         libraries = [_find_library(env, 'boost_' + i, dirs, 'c++')
                      for i in iterate(name)]
-        return BoostPackage(headers, libraries=libraries, version=boost_version)
+        return BoostPackage(headers, libraries=libraries,
+                            version=boost_version)
+
 
 @builtin.globals('env')
 def system_executable(env, name):
-    return SystemExecutable(which(name, env.variables), root=path.Root.absolute)
+    return SystemExecutable(which(name, env.variables), path.Root.absolute)

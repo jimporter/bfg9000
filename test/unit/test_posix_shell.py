@@ -1,7 +1,7 @@
-import os
 import unittest
 
 from bfg9000.shell.posix import *
+
 
 class TestSplit(unittest.TestCase):
     def test_single(self):
@@ -13,6 +13,7 @@ class TestSplit(unittest.TestCase):
     def test_quote(self):
         self.assertEqual(split('foo "bar baz"'), ['foo', 'bar baz'])
         self.assertEqual(split('foo"bar baz"'), ['foobar baz'])
+
 
 class TestQuote(unittest.TestCase):
     def test_simple(self):
@@ -28,6 +29,7 @@ class TestQuote(unittest.TestCase):
         self.assertEqual(quote('&&'), "'&&'")
         self.assertEqual(quote('>'), "'>'")
         self.assertEqual(quote('|'), "'|'")
+
 
 if __name__ == '__main__':
     unittest.main()

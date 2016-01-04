@@ -1,5 +1,6 @@
 from . import tool
 
+
 @tool('install')
 class Install(object):
     rule_name = command_var = 'install'

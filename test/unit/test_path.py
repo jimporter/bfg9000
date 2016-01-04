@@ -10,6 +10,7 @@ path_variables = {
     InstallRoot.prefix: '$(prefix)',
 }
 
+
 class TestPath(unittest.TestCase):
     def test_realize_srcdir(self):
         p = Path('foo', Root.srcdir)
@@ -91,6 +92,7 @@ class TestPath(unittest.TestCase):
         p = Path('foo/bar', Root.builddir)
         self.assertEqual(install_path(p, InstallRoot.bindir),
                          Path('foo/bar', InstallRoot.bindir))
+
 
 if __name__ == '__main__':
     unittest.main()

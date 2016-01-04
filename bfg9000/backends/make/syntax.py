@@ -17,6 +17,7 @@ Include = namedtuple('Include', ['name', 'optional'])
 Syntax = Enum('Syntax', ['target', 'dependency', 'function', 'shell', 'clean'])
 Section = Enum('Section', ['path', 'command', 'flags', 'other'])
 
+
 class Writer(object):
     def __init__(self, stream):
         self.stream = stream
@@ -85,6 +86,7 @@ class Writer(object):
         else:
             self.write(thing, syntax, shell_quote=None)
 
+
 class Pattern(object):
     def __init__(self, path):
         if len(re.findall(r'([^\\]|^)(\\\\)*%', path)) != 1:
@@ -116,6 +118,7 @@ class Pattern(object):
     def __radd__(self, lhs):
         return lhs + self.use()
 
+
 class Entity(object):
     def __init__(self, name):
         self.name = name
@@ -144,6 +147,7 @@ class Entity(object):
     def __radd__(self, lhs):
         return lhs + self.use()
 
+
 class Variable(Entity):
     def __init__(self, name, quoted=False):
         Entity.__init__(self, re.sub(r'[\s:#=]', '_', name))
@@ -155,11 +159,14 @@ class Variable(Entity):
             fmt = shell.quote_escaped(fmt)
         return safe_str.escaped_str(fmt.format(self.name))
 
+
 def var(v, quoted=False):
     return v if isinstance(v, Variable) else Variable(v, quoted)
 
+
 def qvar(v):
     return var(v, True)
+
 
 class Function(Entity):
     def __init__(self, name, *args, **kwargs):
@@ -179,9 +186,11 @@ class Function(Entity):
             result = shell.quote_escaped(result)
         return safe_str.escaped_str(result)
 
+
 class Call(Function):
     def __init__(self, func, *args):
         Function.__init__(self, 'call', var(func).name, *args)
+
 
 def silent(command):
     if isinstance(command, list):
@@ -189,11 +198,13 @@ def silent(command):
     else:
         return '@' + command
 
+
 path_vars = {
     path.Root.srcdir:   Variable('srcdir'),
     path.Root.builddir: None,
 }
 path_vars.update({i: Variable(i.name) for i in path.InstallRoot})
+
 
 class Makefile(object):
     def __init__(self):
