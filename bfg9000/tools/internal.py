@@ -2,7 +2,7 @@ import os.path
 
 from . import tool
 from ..platforms import platform_name
-from ..safe_str import escaped_str, jbos
+from ..safe_str import escaped_str, jbos, safe_str
 
 
 @tool('bfg9000')
@@ -40,6 +40,7 @@ if platform_name() == 'windows':
 
         def __call__(self, cmd, env):
             if env:
-                return [cmd] + [jbos(name, escaped_str('='), value)
+                eq = escaped_str('=')
+                return [cmd] + [jbos(safe_str(name), eq, safe_str(value))
                                 for name, value in env.iteritems()] + ['--']
             return []

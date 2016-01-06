@@ -2,7 +2,7 @@ import re
 from enum import Enum
 
 from .. import iterutils
-from ..safe_str import escaped_str
+from ..safe_str import escaped_str, safe_str
 
 __all__ = ['split', 'listify', 'escape', 'quote_escaped', 'quote',
            'quote_info', 'join_commands', 'global_env']
@@ -101,4 +101,5 @@ def join_commands(commands):
 
 def global_env(env):
     # Join the name and value so they get quoted together, if necessary.
-    return [ ['set', name + '=' + value] for name, value in env.iteritems() ]
+    return [ ['set', safe_str(name) + '=' + safe_str(value)]
+             for name, value in env.iteritems() ]

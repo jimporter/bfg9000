@@ -2,7 +2,7 @@ import re
 from shlex import shlex
 
 from .. import iterutils
-from ..safe_str import escaped_str, jbos
+from ..safe_str import escaped_str, jbos, safe_str
 
 __all__ = ['split', 'listify', 'escape', 'quote_escaped', 'quote',
            'quote_info', 'join_commands', 'local_env', 'global_env']
@@ -54,10 +54,12 @@ def join_commands(commands):
 
 
 def local_env(env):
-    return [ jbos(name, escaped_str('='), value)
+    eq = escaped_str('=')
+    return [ jbos(safe_str(name), eq, safe_str(value))
              for name, value in env.iteritems() ]
 
 
 def global_env(env):
-    return [ ['export', jbos(name, escaped_str('='), value)]
+    eq = escaped_str('=')
+    return [ ['export', jbos(safe_str(name), eq, safe_str(value))]
              for name, value in env.iteritems() ]
