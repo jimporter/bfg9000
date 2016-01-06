@@ -165,17 +165,20 @@ class Command(Edge):
 @builtin
 def source_file(name, lang=None):
     # XXX: Add a way to make a generic File object instead of a SourceFile?
-    return SourceFile(name, root=Root.srcdir, lang=lang)
+    return SourceFile(name, Root.srcdir, lang)
 
+@builtin
+def directory(name):
+    return Directory(name, Root.srcdir)
 
 @builtin
 def header(name):
-    return HeaderFile(name, root=Root.srcdir)
+    return HeaderFile(name, Root.srcdir)
 
 
 @builtin
-def header_directory(directory, system=False):
-    return HeaderDirectory(directory, Root.srcdir, system)
+def header_directory(name, system=False):
+    return HeaderDirectory(name, Root.srcdir, system)
 
 
 @builtin

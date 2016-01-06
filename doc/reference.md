@@ -126,15 +126,20 @@ This build step recognizes the following environment variables:
 
 ## File types
 
+### directory(*name*)
+
+Create a reference to an existing directory named *name*. This allows you to
+refer to an arbitrary subfolder of your source directory.
+
 ### header(*name*)
 
 Create a reference to an existing header named *name*. This is useful if you'd
 like to [install](#install-all) a single header file for your project.
 
-### header_directory(*directory*, [*system*])
+### header_directory(*name*, [*system*])
 
-Create a reference to a *directory* containing header files for the project.
-This can then be used in the *include* argument when
+Create a reference to a directory named *name* containing header files for the
+project. This can then be used in the *include* argument when
 [compiling](#object_filename-file-extra_deps) a source file. If *system* is
 *True*, this directory will be treated as a
 [system directory](https://gcc.gnu.org/onlinedocs/cpp/System-Headers.html) for
