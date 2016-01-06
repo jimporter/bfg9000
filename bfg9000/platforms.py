@@ -11,7 +11,9 @@ def platform_name():
     name = platform.system().lower()
     if name == 'windows':
         try:
-            uname = subprocess.check_output('uname').lower()
+            uname = subprocess.check_output(
+                'uname', universal_newlines=True
+            ).lower()
             if uname.startswith('cygwin'):
                 name = 'cygwin'
         except WindowsError:
@@ -76,13 +78,16 @@ class LinuxPlatform(PosixPlatform):
     def lib_dirs(self):
         try:
             # XXX: This probably won't work very well for cross-compilation.
-            output = subprocess.check_output(['ld', '--verbose'])
+            output = subprocess.check_output(
+                ['ld', '--verbose'],
+                universal_newlines=True
+            )
             paths = re.findall(r'SEARCH_DIR\("=?(.*?)"\);', output)
             if paths:
                 return paths
         except:
             pass
-        return PosixPlatform.lib_dirs(self)
+        return PosixPlatform.lib_dirs.fget(self)
 
 
 class DarwinPlatform(PosixPlatform):
