@@ -249,12 +249,15 @@ the same as <a href="#executablename-files-extra_deps"><em>executable</em></a>.<
 <a href="../environment-vars/#cxx_lib"><code>CXX_LIB</code></a>,
 <a href="../environment-vars/#libflags"><code>LIBFLAGS</code></a>.</p>
 <h2 id="file-types">File types</h2>
+<h3 id="directoryname">directory(<em>name</em>)</h3>
+<p>Create a reference to an existing directory named <em>name</em>. This allows you to
+refer to an arbitrary subfolder of your source directory.</p>
 <h3 id="headername">header(<em>name</em>)</h3>
 <p>Create a reference to an existing header named <em>name</em>. This is useful if you'd
 like to <a href="#install-all">install</a> a single header file for your project.</p>
-<h3 id="header_directorydirectory-system">header_directory(<em>directory</em>, [<em>system</em>])</h3>
-<p>Create a reference to a <em>directory</em> containing header files for the project.
-This can then be used in the <em>include</em> argument when
+<h3 id="header_directoryname-system">header_directory(<em>name</em>, [<em>system</em>])</h3>
+<p>Create a reference to a directory named <em>name</em> containing header files for the
+project. This can then be used in the <em>include</em> argument when
 <a href="#object_filename-file-extra_deps">compiling</a> a source file. If <em>system</em> is
 <em>True</em>, this directory will be treated as a
 <a href="https://gcc.gnu.org/onlinedocs/cpp/System-Headers.html">system directory</a> for
