@@ -74,6 +74,12 @@ def parse_args(parser, args=None, namespace=None):
     return args
 
 
+def execute_script(filename, build, env):
+    with open(filename, 'r') as f:
+        code = compile(f.read(), filename, 'exec')
+        exec(code, builtins.bind(build_inputs=build, env=env))
+
+
 def main():
     backends = get_backends()
     install_dirs = platform_info().install_dirs
@@ -136,8 +142,5 @@ def main():
     os.chdir(env.srcdir.string())
     bfgpath = env.srcdir.append(bfgfile).string()
 
-    with open(bfgpath, 'r') as fh:
-        code = compile(fh.read(), bfgpath, 'exec')
-        exec(code, builtins.bind(build_inputs=build, env=env))
-
+    execute_script(bfgpath, build, env)
     backends[env.backend].write(env, build)
