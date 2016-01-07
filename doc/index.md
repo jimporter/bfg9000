@@ -44,5 +44,5 @@ From there, you can start using bfg to build your software!
     To install all the dependencies required for MSBuild, you can run:
 
     ```
-    $ pip install -e .[msbuild]
+    $ pip install .[msbuild]
     ```
