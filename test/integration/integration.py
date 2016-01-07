@@ -9,7 +9,7 @@ from collections import namedtuple
 from six import iteritems
 
 from bfg9000.path import InstallRoot
-from bfg9000.platforms import platform_info
+from bfg9000.platforms import platform_info, platform_name
 from bfg9000.makedirs import makedirs
 from bfg9000.backends import get_backends
 
@@ -64,6 +64,19 @@ def skip_if_backend(backend):
 def only_if_backend(backend):
     return skip_pred(lambda x: x.backend != backend,
                      'only supported for backend "{}"'.format(backend))
+
+
+def xfail_if(xfail):
+    def wrap(fn):
+        if xfail:
+            return unittest.expectedFailure(fn)
+        else:
+            return fn
+    return wrap
+
+
+def xfail_if_platform(platform):
+    return xfail_if(platform_name() == platform)
 
 
 class SubprocessError(unittest.TestCase.failureException):
