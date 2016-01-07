@@ -1,11 +1,21 @@
 language: python
+sudo: false
+
 python:
   - "2.7"
   - "3.4"
   - "3.5"
 os:
   - linux
-sudo: false
+env:
+  - CC=gcc CXX=g++
+  - CC=clang CXX=clang++
+
+matrix:
+  include:
+    - python: "2.7"
+      env: TEST_COMMAND=lint
+
 addons:
   apt:
     packages:
@@ -17,6 +27,7 @@ addons:
       - libboost-program-options-dev
       - libogg-dev
       - ninja-build
+
 before_install:
   - curl -L -O https://nixos.org/releases/patchelf/patchelf-0.8/patchelf-0.8.tar.gz
   - tar -xzf patchelf-0.8.tar.gz
@@ -25,6 +36,4 @@ install:
   - pip install flake8
   - pip install .
 script:
-  - CC=gcc CXX=g++ python setup.py test -q
-  - CC=clang CXX=clang++ python setup.py test -q
-  - python setup.py lint
+  - python setup.py ${TEST_COMMAND-test -q}
