@@ -2,9 +2,9 @@ language: python
 sudo: false
 
 python:
-  - "2.7"
-  - "3.4"
-  - "3.5"
+  - 2.7
+  - 3.4
+  - 3.5
 os:
   - linux
 env:
@@ -13,7 +13,12 @@ env:
 
 matrix:
   include:
-    - python: "2.7"
+    - language: generic
+      python: 2.7
+      os: osx
+      env: CC=gcc CXX=g++
+    - python: 2.7
+      os: linux
       env: TEST_COMMAND=lint
 
 addons:
@@ -25,9 +30,7 @@ addons:
       - ninja-build
 
 before_install:
-  - wget https://nixos.org/releases/patchelf/patchelf-0.8/patchelf-0.8.tar.gz
-  - tar -xzf patchelf-0.8.tar.gz
-  - pushd patchelf-0.8 && ./configure --prefix=$VIRTUAL_ENV && make && make install && popd
+  - ./scripts/travis_before_install.sh
 install:
   - pip install flake8
   - pip install .
