@@ -16,5 +16,7 @@ pages:
   - Building with bfg9000: user/building.md
   - Reference: user/reference.md
   - Environment Variables: user/environment-vars.md
-- Developer Guide: developer.md
+- Developer Guide:
+  - Internals: developer/internals.md
+  - Contributing: developer/contributing.md
 - License: license.md
