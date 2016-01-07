@@ -1,5 +1,7 @@
 # bfg9000 - build file generator
 
+[![Build Status][travis-image]][travis-link]
+
 **bfg9000** is a cross-platform *build configuration system* with an emphasis on
 making it easy to define how to build your software. It converts a Python-based
 build script into the appropriate files for your underlying build system of
@@ -42,3 +44,6 @@ From there, you can start using bfg to build your software!
 ## License
 
 This project is licensed under the BSD 3-clause license.
+
+[travis-image]: https://travis-ci.org/jimporter/bfg9000.svg?branch=master
+[travis-link]: https://travis-ci.org/jimporter/bfg9000
