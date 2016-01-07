@@ -71,6 +71,7 @@ setup(
     description='A cross-platform build file generator',
     long_description=long_desc,
     keywords='build file generator',
+    url='http://jimporter.github.io/bfg9000/',
 
     author='Jim Porter',
     author_email='porterj@alum.rit.edu',
