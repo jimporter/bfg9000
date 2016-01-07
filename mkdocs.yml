@@ -13,8 +13,8 @@ markdown_extensions:
 pages:
 - Home: index.md
 - User Guide:
-  - Building with bfg9000: building.md
-  - Reference: reference.md
-  - Environment Variables: environment-vars.md
+  - Building with bfg9000: user/building.md
+  - Reference: user/reference.md
+  - Environment Variables: user/environment-vars.md
 - Developer Guide: developer.md
 - License: license.md
