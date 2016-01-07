@@ -12,19 +12,19 @@
     
         
     <url>
-     <loc>None/building/</loc>
+     <loc>None/user/building/</loc>
      <lastmod>2016-01-07</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
-     <loc>None/reference/</loc>
+     <loc>None/user/reference/</loc>
      <lastmod>2016-01-07</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
-     <loc>None/environment-vars/</loc>
+     <loc>None/user/environment-vars/</loc>
      <lastmod>2016-01-07</lastmod>
      <changefreq>daily</changefreq>
     </url>

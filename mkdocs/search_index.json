@@ -21,412 +21,412 @@
             "title": "Installation"
         }, 
         {
-            "location": "/building/", 
+            "location": "/user/building/", 
             "text": "Building With bfg9000\n\n\nLike some other tools (e.g. \nCMake\n or\n\nautotools\n), bfg9000 isn't actually a\nbuild system; it's a \nbuild configuration system\n or, if you prefer, a\n\nmeta-build system\n. That is, bfg9000 builds build files which you then use to\nrun your actual builds.\n\n\nYour first build\n\n\nInvoking bfg9000 is simple. Assuming you have an existing project that uses\nbfg9000, just call \nbfg9000 srcdir builddir\n and it will generate the final\nbuild script (\nbuild.ninja\n in this case) in \nbuilddir\n to use for\nbuilding your project:\n\n\n$ bfg9000 path/to/src/ build/\n$ cd build\n$ ninja\n\n\n\n\n\n\nNote\n\n\nOn Windows, using bfg9000 requires a bit more care. Since the MSVC tools\naren't in the \nPATH\n by default, you can't just open any command prompt.\nYou need to pick the \ncorrect\n prompt. Thankfully, Visual Studio provides\nStart Menu items such as \"VS2015 Developer Command Prompt\". These add the\nappropiate directories to the \nPATH\n, allowing you to use whichever version\nof the MSVC tools that you'd like.\n\n\n\n\nBuild directories\n\n\nYou might have noticed above that \nbuild.ninja\n was placed in a separate\ndirectory. This is because bfg9000 exclusively uses \nout-of-tree builds\n; that\nis, the build directory must be different from the source directory. While\nslightly more inconvenient for one-off builds (users will have to \ncd\n into\nanother directory to start the build), the benefits are significant. First, it\nensures that cleaning a build is trivial: just remove the build directory.\nSecond, simplifies building in multiple configurations, a very useful feature\nfor development; you can easily have debug and optimized builds sitting\nside-by-side.\n\n\nIn our example above, we explicitly specified both the source and build\ndirectories. However, for convenience, only one of them is required. If you're\nalready in a source directory (i.e. a directory which contains a \nbuild.bfg\n\nfile), then you can simply say \nbfg9000 builddir\n. If you're in a build\ndirectory (i.e. a directory which does \nnot\n contain a \nbuild.bfg\n file), then\nyou can instead say \nbfg9000 srcdir\n.\n\n\nSelecting a backend\n\n\nBy default, bfg9000 tries to use the most appropriate build backend for your\nsystem. In descending order, bfg prefers \nninja\n,\n\nmake\n, and\n\nmsbuild\n.\nIf one of these isn't installed, it will try the next best option. However, you\ncan explicitly select a backend with the \n--backend\n option. For instance, to\nbuild a Makefile even if Ninja is installed:\n\n\n$ bfg9000 --backend make srcdir builddir\n\n\n\n\nSetting options\n\n\nMany options for building can be set via the environment. These generally follow\nthe UNIX naming conventions, so you can use, say,\n\nCXX\n to change the C++ compiler that bfg9000 uses.\nFor a full listing of the recognized environment variables, see the \nEnvironment\nVariables\n chapter.\n\n\nInstalling your software\n\n\nAfter building your software, you may wish to install it to another directory on\nyour system. By default, bfg9000 will install them into the appropriate place\nfor your platform (e.g. \n/usr/local/bin\n for exectuables on POSIX systems).\nHowever, you can specify where you'd like to install your project when invoking\nbfg9000. To change the installation prefix (\n/usr/local\n on POSIX), just specify\n\n--prefix /path/to/prefix\n when running bfg9000. You can also specify the\nbinary, library, and include directories individually, using \n--bindir\n,\n\n--libdir\n, and \n--includedir\n, respectively.", 
             "title": "Building with bfg9000"
         }, 
         {
-            "location": "/building/#building-with-bfg9000", 
+            "location": "/user/building/#building-with-bfg9000", 
             "text": "Like some other tools (e.g.  CMake  or autotools ), bfg9000 isn't actually a\nbuild system; it's a  build configuration system  or, if you prefer, a meta-build system . That is, bfg9000 builds build files which you then use to\nrun your actual builds.", 
             "title": "Building With bfg9000"
         }, 
         {
-            "location": "/building/#your-first-build", 
+            "location": "/user/building/#your-first-build", 
             "text": "Invoking bfg9000 is simple. Assuming you have an existing project that uses\nbfg9000, just call  bfg9000 srcdir builddir  and it will generate the final\nbuild script ( build.ninja  in this case) in  builddir  to use for\nbuilding your project:  $ bfg9000 path/to/src/ build/\n$ cd build\n$ ninja   Note  On Windows, using bfg9000 requires a bit more care. Since the MSVC tools\naren't in the  PATH  by default, you can't just open any command prompt.\nYou need to pick the  correct  prompt. Thankfully, Visual Studio provides\nStart Menu items such as \"VS2015 Developer Command Prompt\". These add the\nappropiate directories to the  PATH , allowing you to use whichever version\nof the MSVC tools that you'd like.", 
             "title": "Your first build"
         }, 
         {
-            "location": "/building/#build-directories", 
+            "location": "/user/building/#build-directories", 
             "text": "You might have noticed above that  build.ninja  was placed in a separate\ndirectory. This is because bfg9000 exclusively uses  out-of-tree builds ; that\nis, the build directory must be different from the source directory. While\nslightly more inconvenient for one-off builds (users will have to  cd  into\nanother directory to start the build), the benefits are significant. First, it\nensures that cleaning a build is trivial: just remove the build directory.\nSecond, simplifies building in multiple configurations, a very useful feature\nfor development; you can easily have debug and optimized builds sitting\nside-by-side.  In our example above, we explicitly specified both the source and build\ndirectories. However, for convenience, only one of them is required. If you're\nalready in a source directory (i.e. a directory which contains a  build.bfg \nfile), then you can simply say  bfg9000 builddir . If you're in a build\ndirectory (i.e. a directory which does  not  contain a  build.bfg  file), then\nyou can instead say  bfg9000 srcdir .", 
             "title": "Build directories"
         }, 
         {
-            "location": "/building/#selecting-a-backend", 
+            "location": "/user/building/#selecting-a-backend", 
             "text": "By default, bfg9000 tries to use the most appropriate build backend for your\nsystem. In descending order, bfg prefers  ninja , make , and msbuild .\nIf one of these isn't installed, it will try the next best option. However, you\ncan explicitly select a backend with the  --backend  option. For instance, to\nbuild a Makefile even if Ninja is installed:  $ bfg9000 --backend make srcdir builddir", 
             "title": "Selecting a backend"
         }, 
         {
-            "location": "/building/#setting-options", 
+            "location": "/user/building/#setting-options", 
             "text": "Many options for building can be set via the environment. These generally follow\nthe UNIX naming conventions, so you can use, say, CXX  to change the C++ compiler that bfg9000 uses.\nFor a full listing of the recognized environment variables, see the  Environment\nVariables  chapter.", 
             "title": "Setting options"
         }, 
         {
-            "location": "/building/#installing-your-software", 
+            "location": "/user/building/#installing-your-software", 
             "text": "After building your software, you may wish to install it to another directory on\nyour system. By default, bfg9000 will install them into the appropriate place\nfor your platform (e.g.  /usr/local/bin  for exectuables on POSIX systems).\nHowever, you can specify where you'd like to install your project when invoking\nbfg9000. To change the installation prefix ( /usr/local  on POSIX), just specify --prefix /path/to/prefix  when running bfg9000. You can also specify the\nbinary, library, and include directories individually, using  --bindir , --libdir , and  --includedir , respectively.", 
             "title": "Installing your software"
         }, 
         {
-            "location": "/reference/", 
+            "location": "/user/reference/", 
             "text": "Reference\n\n\nBuild steps\n\n\n\n\nNote\n\n\nFor build steps which produce an actual file, the exact name of the output\nfile is determined by the platform you're running on. For instance, when\nbuilding an executable file named \"foo\" on Windows, the resulting file will\nbe \nfoo.exe\n.\n\n\n\n\nalias(\nname\n, [\ndeps\n])\n\n\nCreate a build step named \nname\n that performs no actions on its own. Instead,\nit just runs its dependencies listed in \ndeps\n as necessary. This build step is\nuseful for grouping common steps together, e.g. the common \nmake all\n command.\n\n\ncommand(\nname\n, \ncmd\n|\ncmds\n, [\nenvironment\n], [\nextra_deps\n])\n\n\nCreate a build step that runs a list of arbitrary commands, specified in either\n\ncmd\n or \ncmds\n; \ncmd\n takes a single command, whereas \ncmds\n takes a list of\ncommands. Each command may either be a string to be parsed according to shell\nrules or a list of arguments to be passed directly to the process.\n\n\nYou may also pass a dict to \nenvironment\n to set environment variables for the\ncommands. These override any environment variables set on the command line.\n\n\nexecutable(\nname\n, [\nfiles\n, ..., [\nextra_deps\n]])\n\n\nCreate a build step that builds an executable file named \nname\n. \nfiles\n is the\nlist of source (or object) files to link. If an element of \nfiles\n is a source\nfile (or a plain string), this function will implicitly call\n\nobject_file\n on it.\n\n\nThe following arguments may also be specified:\n\n\n\n\ninclude\n: Forwarded on to \nobject_file\n\n\nlibs\n: A list of library files (see \nshared_library\n and \nstatic_library\n)\n\n\npackages\n: A list of external \npackages\n; also forwarded on\n  to \nobject_file\n\n\ncompile_options\n: Forwarded on to\n  \nobject_file\n as \noptions\n\n\nlink_options\n: Command-line options to pass to the linker\n\n\nlang\n: Forwarded on to \nobject_file\n\n\n\n\nIf \nfiles\n isn't specified, this function merely references an \nexisting\n\nexecutable file (a precompiled binary, a shell script, etc) somewhere on the\nfilesystem. In this case, \nname\n is the exact name of the file. This allows\nyou to refer to existing executables for other functions.\n\n\nThis build step recognizes the following environment variables:\n\nCC\n, \nCC_LINK\n,\n\nCXX\n, \nCXX_LINK\n,\n\nLDFLAGS\n,\n\nLDLIBS\n.\n\n\nobject_file([\nname\n], [\nfile\n, ..., [\nextra_deps\n]])\n\n\nCreate a build step that compiles a source file named \nfile\n to an object file\nnamed \nname\n; if \nname\n is not specified, it takes the file name in \nfile\n\nwithout the extension.\n\n\nThe following arguments may also be specified:\n\n\n\n\ninclude\n: A list of \ndirectories\n to search for\n  header files\n\n\npackages\n: A list of external \npackages\n\n\noptions\n: Command-line options to pass to the compiler\n\n\nlang\n: The language of the source file; useful if the source file's extension\n  isn't recognized by bfg9000\n\n\n\n\nIf \nfile\n isn't specified, this function merely references an \nexisting\n\nobject file somewhere on the filesystem. In this case, \nname\n must be specified\nand is the exact name of the file.\n\n\nThis build step recognizes the following environment variables:\n\nCC\n, \nCFLAGS\n,\n\nCPPFLAGS\n, \nCXX\n,\n\nCXXFLAGS\n,\n\nLDLIBS\n.\n\n\nobject_files(\nfiles\n, ..., [\nextra_deps\n])\n\n\nCreate a compilation build step for each of the files in \nfiles\n; this is\nequivalent to calling \nobject_file\n for each\nelement in \nfiles\n.\n\n\nIn addition, \nobject_files\n returns a special list that allows you to index into\nit using the filename of one of the source files listed in \nfiles\n. This makes\nit easy to extract a single object file to use in other places, e.g. test code.\nFor example:\n\n\nobjs = object_files(['foo.cpp', 'bar.cpp'])\nrelease_exe = executable('release', objs)\n\nfoo_obj = objs['foo.cpp']\ntest_exe = executable('test', ['test.cpp', foo_obj])\n\n\n\n\nshared_library(\nname\n, [\nfiles\n, ..., [\nextra_deps\n]])\n\n\nCreate a build step that builds a shared library named \nname\n. Its arguments are\nthe same as \nexecutable\n.\n\n\nThis build step recognizes the following environment variables:\n\nCC\n, \nCC_LINK\n,\n\nCXX\n, \nCXX_LINK\n,\n\nLDFLAGS\n,\n\nLDLIBS\n.\n\n\n\n\nNote\n\n\nOn Windows, this produces \ntwo\n files: \nname.dll\n and \nname.lib\n. The latter\nis the \nimport library\n, used when linking to this library. As a result,\n\nmy_lib.all\n returns a list containing two files.\n\n\n\n\nstatic_library(\nname\n, [\nfiles\n, ..., [\nextra_deps\n]])\n\n\nCreate a build step that builds a static library named \nname\n. Its arguments are\nthe same as \nexecutable\n.\n\n\nThis build step recognizes the following environment variables:\n\nAR\n, \nARFLAGS\n,\n\nCC_LIB\n,\n\nCXX_LIB\n,\n\nLIBFLAGS\n.\n\n\nFile types\n\n\ndirectory(\nname\n)\n\n\nCreate a reference to an existing directory named \nname\n. This allows you to\nrefer to an arbitrary subfolder of your source directory.\n\n\nheader(\nname\n)\n\n\nCreate a reference to an existing header named \nname\n. This is useful if you'd\nlike to \ninstall\n a single header file for your project.\n\n\nheader_directory(\nname\n, [\nsystem\n])\n\n\nCreate a reference to a directory named \nname\n containing header files for the\nproject. This can then be used in the \ninclude\n argument when\n\ncompiling\n a source file. If \nsystem\n is\n\nTrue\n, this directory will be treated as a\n\nsystem directory\n for\ncompilers that support this.\n\n\nsource_file(\nname\n, [\nlang\n])\n\n\nCreate a reference to an existing source file named \nname\n. If \nlang\n is not\nspecified, the language of the file is inferred from its extension. Generally,\nthis function is only necessary when running commands that take a source file\nas an argument, e.g. running a Python script; this allows you to specify that\nthe file is found in the \nsource directory\n. In other cases, a plain string will\nautomatically get converted to a \nsource_file\n.\n\n\nwhole_archive(\nname\n)\n\n\nCreate a \nwhole-archive\n from an existing static\nlibrary named \nname\n. This ensure that \nevery\n object file in the library is\nincluded, rather than just the ones whose symbols are referenced. This is\ntypically used to turn a static library into a shared library.\n\n\n\n\nWarning\n\n\nThe MSVC linker doesn't have a way of expressing this directive, so\n\nwhole_archive\n can't be used with it.\n\n\n\n\nGrouping rules\n\n\ndefault(\n...\n)\n\n\nSpecify a list of build steps that should be run by default when building. These\nare all accumulated into the \nall\n target.\n\n\ninstall(\n...\n, [\nall\n])\n\n\nSpecify a list of files that need to be installed for the project to work. Each\nwill be installed to the appropriate location based on its type (e.g. header\nfiles will go in \n$PREFIX/include\n by default on POSIX systems). These are all\naccumulated into the \ninstall\n target.\n\n\nIf \nall\n is \nTrue\n, all the files will be installed; otherwise, only the primary\nfile for each argument will be. For instance, on Windows, this means that\nsetting \nall\n to \nTrue\n installs the import libraries as well as the DLLs for\nshared libraries.\n\n\nThis rule recognizes the following environment variables:\n\nINSTALL\n,\n\nMKDIR_P\n,\n\nPATCHELF\n.\n\n\nGlobal options\n\n\nglobal_options(\noptions\n, \nlang\n)\n\n\nSpecify some \noptions\n (either as a string or list) to use for all compilation\nsteps for the language \nlang\n.\n\n\nglobal_link_options(\noptions\n)\n\n\nSpecify some \noptions\n (either as a string or list) to use for all link steps\n(i.e. for \nexecutables\n and\n\nshared libraries\n).\n\n\nTest rules\n\n\nThese rules help you define automated tests that can all be run via the \ntest\n\ntarget. For simple cases, you should only need the\n\ntest\n rule, but you can also wrap your\ntests with a separate driver using\n\ntest_driver\n.\n\n\nFor cases where you only want to \nbuild\n the tests, not run them, you can use\nthe \ntests\n target.\n\n\ntest(\ntest\n, [\noptions\n], [\nenvironment\n|\ndriver\n])\n\n\nCreate a test for a single test file named \ntest\n. You may specify additional\ncommand-line arguments to the test in \noptions\n. You can also pass temporary\nenvironment variables as a dict via \nenvironment\n, or specify a test driver to\nadd this test file to via \ndriver\n.\n\n\ntest_driver(\ndriver\n, [\noptions\n], [\nenvironment\n|\nparent\n])\n\n\nCreate a test driver which can run a series of tests, specified as command-line\narguments to the driver. You may specify driver-wide command-line arguments via\n\noptions\n. You can also pass temporary environment variables as a dict with\n\nenvironment\n, or specify a parent test driver to wrap this driver via \ndriver\n.\n\n\ntest_deps(\n...\n)\n\n\nSpecify a list of dependencies which must be satisfied before the tests can be\nrun.\n\n\nPackage finders\n\n\nboost_package([\nname\n], [\nversion\n])\n\n\nSearch for a Boost library. You can specify \nname\n (as a string or a list) to\nspecify a specific Boost library (or libraries); for instance,\n\n'program_options'\n. For header-only libraries, you can omit \nname\n.\n\n\nThis rule recognizes the following environment variables:\n\nBOOST_ROOT\n,\n\nBOOST_INCLUDEDIR\n,\n\nBOOST_LIBRARYDIR\n.\n\n\nsystem_executable(\nname\n)\n\n\nSearch for an executable named \nname\n somewhere in the system's PATH.\n\n\nThis rule recognizes the following environment variables:\n\nPATH\n, \nPATHEXT\n.\n\n\nsystem_package(\nname\n, [\nlang\n], [\nkind\n])\n\n\nSearch for a library named \nname\n somewhere in the system's default library\nlocation. \nlang\n is the source language of the library (\n'c'\n by default); this\nis useful if you need to link a static library written in C++ with a program\nwritten in C.\n\n\nYou can also specify \nkind\n to one of \n'any'\n (the default), \n'shared'\n, or\n\n'static'\n. This allows you to restrict the search to find only static versions\nof a library, for example.\n\n\nThis rule recognizes the following environment variables:\n\nLIBRARY_PATH\n.\n\n\n\n\nNote\n\n\nThis only finds the library itself, not any required headers. Those are\nassumed to be somewhere where your compiler can find them automatically; if\nnot, you can set \nCPPFLAGS\n to add the\nappropriate header search path.\n\n\n\n\nEnvironment\n\n\nThe \nenvironment\n, \nenv\n, is a special object that encapsulates information\nabout the system outside of bfg9000. It's used internally for nearly all\nplatform-specific code, but it can also help in \nbuild.bfg\n files when you\nencounter some unavoidable issue with multiplatform compatibility.\n\n\n\n\nNote\n\n\nThis listing doesn't cover \nall\n available functions on the environment,\nsince many are only useful to internal code. However, the most relevant ones\nfor \nbuild.bfg\n files are shown below.\n\n\n\n\nenv.compiler(\nlang\n)\n\n\nReturn the compiler used by bfg9000 for a particular language \nlang\n. While\ncompiler objects are primarily suited to bfg's internals, there are still a few\nuseful properties for \nbuild.bfg\n files:\n\n\ncompiler.command\n\n\nThe command to run when invoking this compiler, e.g. \ng++-4.9\n.\n\n\ncompiler.flavor\n\n\nThe \"flavor\" of the compiler, i.e. the kind of command-line interface it has.\nPossible values are \n'cc'\n and \n'msvc'\n.\n\n\nenv.linker(\nlangs\n)\n\n\nReturn the compiler used by bfg9000 for a particular language (or list of\nlanguages) \nlang\n. Its public properties are the same as\n\ncompiler\n above.\n\n\nenv.platform\n\n\nReturn the target platform used for the build (currently the same as the host\nplatform).\n\n\nplatform.flavor\n\n\nThe \"flavor\" of the platform. Either \n'posix'\n or \n'windows'\n.\n\n\nplatform.name\n\n\nThe name of the platform, e.g. \n'linux'\n, \n'darwin'\n (OS X), or \n'windows'\n.\n\n\nMiscellaneous\n\n\nbfg9000_required_version([\nversion\n], [\npython_version\n])\n\n\nSet the required \nversion\n for bfg9000 and/or the required \npython_version\n.\nEach of these is a standard Python \nversion\nspecifier\n.\n\n\nfilter_by_platform(\nname\n, \ntype\n)\n\n\nReturn \nTrue\n if \nname\n is a filename that should be included for the target\nplatform, and \nFalse\n otherwise. File (or directory) names like \nPLATFORM\n or\n\nfoo_PLATFORM.cpp\n are excluded if \nPLATFORM\n is a known platform name that\n\ndoesn't\n match the target platform. Known platform names are: \n'posix'\n,\n\n'linux'\n, \n'darwin'\n, \n'cygwin'\n, \n'windows'\n.\n\n\nThis is the default \nfilter\n for\n\nfind_files\n.\n\n\nfind_files([\npath\n], [\nname\n], [\ntype\n], [\nflat\n], [\nfilter\n], [\ncache\n])\n\n\nFind files in \npath\n whose name matches the glob \nname\n. If \npath\n is omitted,\nsearch in the root of the source directory; if \nname\n is omitted, all files will\nmatch. \ntype\n may be either \n'f'\n to find only files or \n'd'\n to find only\ndirectories. If \nflat\n is true, \nfind_files\n will not recurse into\nsubdirectories. You can also specify a custom \nfilter\n function to filter the\nlist of files; this function takes two arguments: the file's name and its type.\n\n\nFinally, if \ncache\n is \nTrue\n (the default), this lookup will be cached so that\nany changes to the result of this function will regenerate the build scripts\nfor the project. This allows you do add or remove source files and not have to\nworry about manually rerunning bfg9000.", 
             "title": "Reference"
         }, 
         {
-            "location": "/reference/#reference", 
+            "location": "/user/reference/#reference", 
             "text": "", 
             "title": "Reference"
         }, 
         {
-            "location": "/reference/#build-steps", 
+            "location": "/user/reference/#build-steps", 
             "text": "Note  For build steps which produce an actual file, the exact name of the output\nfile is determined by the platform you're running on. For instance, when\nbuilding an executable file named \"foo\" on Windows, the resulting file will\nbe  foo.exe .", 
             "title": "Build steps"
         }, 
         {
-            "location": "/reference/#aliasname-deps", 
+            "location": "/user/reference/#aliasname-deps", 
             "text": "Create a build step named  name  that performs no actions on its own. Instead,\nit just runs its dependencies listed in  deps  as necessary. This build step is\nuseful for grouping common steps together, e.g. the common  make all  command.", 
             "title": "alias(name, [deps])"
         }, 
         {
-            "location": "/reference/#commandname-cmdcmds-environment-extra_deps", 
+            "location": "/user/reference/#commandname-cmdcmds-environment-extra_deps", 
             "text": "Create a build step that runs a list of arbitrary commands, specified in either cmd  or  cmds ;  cmd  takes a single command, whereas  cmds  takes a list of\ncommands. Each command may either be a string to be parsed according to shell\nrules or a list of arguments to be passed directly to the process.  You may also pass a dict to  environment  to set environment variables for the\ncommands. These override any environment variables set on the command line.", 
             "title": "command(name, cmd|cmds, [environment], [extra_deps])"
         }, 
         {
-            "location": "/reference/#executablename-files-extra_deps", 
+            "location": "/user/reference/#executablename-files-extra_deps", 
             "text": "Create a build step that builds an executable file named  name .  files  is the\nlist of source (or object) files to link. If an element of  files  is a source\nfile (or a plain string), this function will implicitly call object_file  on it.  The following arguments may also be specified:   include : Forwarded on to  object_file  libs : A list of library files (see  shared_library  and  static_library )  packages : A list of external  packages ; also forwarded on\n  to  object_file  compile_options : Forwarded on to\n   object_file  as  options  link_options : Command-line options to pass to the linker  lang : Forwarded on to  object_file   If  files  isn't specified, this function merely references an  existing \nexecutable file (a precompiled binary, a shell script, etc) somewhere on the\nfilesystem. In this case,  name  is the exact name of the file. This allows\nyou to refer to existing executables for other functions.  This build step recognizes the following environment variables: CC ,  CC_LINK , CXX ,  CXX_LINK , LDFLAGS , LDLIBS .", 
             "title": "executable(name, [files, ..., [extra_deps]])"
         }, 
         {
-            "location": "/reference/#object_filename-file-extra_deps", 
+            "location": "/user/reference/#object_filename-file-extra_deps", 
             "text": "Create a build step that compiles a source file named  file  to an object file\nnamed  name ; if  name  is not specified, it takes the file name in  file \nwithout the extension.  The following arguments may also be specified:   include : A list of  directories  to search for\n  header files  packages : A list of external  packages  options : Command-line options to pass to the compiler  lang : The language of the source file; useful if the source file's extension\n  isn't recognized by bfg9000   If  file  isn't specified, this function merely references an  existing \nobject file somewhere on the filesystem. In this case,  name  must be specified\nand is the exact name of the file.  This build step recognizes the following environment variables: CC ,  CFLAGS , CPPFLAGS ,  CXX , CXXFLAGS , LDLIBS .", 
             "title": "object_file([name], [file, ..., [extra_deps]])"
         }, 
         {
-            "location": "/reference/#object_filesfiles-extra_deps", 
+            "location": "/user/reference/#object_filesfiles-extra_deps", 
             "text": "Create a compilation build step for each of the files in  files ; this is\nequivalent to calling  object_file  for each\nelement in  files .  In addition,  object_files  returns a special list that allows you to index into\nit using the filename of one of the source files listed in  files . This makes\nit easy to extract a single object file to use in other places, e.g. test code.\nFor example:  objs = object_files(['foo.cpp', 'bar.cpp'])\nrelease_exe = executable('release', objs)\n\nfoo_obj = objs['foo.cpp']\ntest_exe = executable('test', ['test.cpp', foo_obj])", 
             "title": "object_files(files, ..., [extra_deps])"
         }, 
         {
-            "location": "/reference/#shared_libraryname-files-extra_deps", 
+            "location": "/user/reference/#shared_libraryname-files-extra_deps", 
             "text": "Create a build step that builds a shared library named  name . Its arguments are\nthe same as  executable .  This build step recognizes the following environment variables: CC ,  CC_LINK , CXX ,  CXX_LINK , LDFLAGS , LDLIBS .   Note  On Windows, this produces  two  files:  name.dll  and  name.lib . The latter\nis the  import library , used when linking to this library. As a result, my_lib.all  returns a list containing two files.", 
             "title": "shared_library(name, [files, ..., [extra_deps]])"
         }, 
         {
-            "location": "/reference/#static_libraryname-files-extra_deps", 
+            "location": "/user/reference/#static_libraryname-files-extra_deps", 
             "text": "Create a build step that builds a static library named  name . Its arguments are\nthe same as  executable .  This build step recognizes the following environment variables: AR ,  ARFLAGS , CC_LIB , CXX_LIB , LIBFLAGS .", 
             "title": "static_library(name, [files, ..., [extra_deps]])"
         }, 
         {
-            "location": "/reference/#file-types", 
+            "location": "/user/reference/#file-types", 
             "text": "", 
             "title": "File types"
         }, 
         {
-            "location": "/reference/#directoryname", 
+            "location": "/user/reference/#directoryname", 
             "text": "Create a reference to an existing directory named  name . This allows you to\nrefer to an arbitrary subfolder of your source directory.", 
             "title": "directory(name)"
         }, 
         {
-            "location": "/reference/#headername", 
+            "location": "/user/reference/#headername", 
             "text": "Create a reference to an existing header named  name . This is useful if you'd\nlike to  install  a single header file for your project.", 
             "title": "header(name)"
         }, 
         {
-            "location": "/reference/#header_directoryname-system", 
+            "location": "/user/reference/#header_directoryname-system", 
             "text": "Create a reference to a directory named  name  containing header files for the\nproject. This can then be used in the  include  argument when compiling  a source file. If  system  is True , this directory will be treated as a system directory  for\ncompilers that support this.", 
             "title": "header_directory(name, [system])"
         }, 
         {
-            "location": "/reference/#source_filename-lang", 
+            "location": "/user/reference/#source_filename-lang", 
             "text": "Create a reference to an existing source file named  name . If  lang  is not\nspecified, the language of the file is inferred from its extension. Generally,\nthis function is only necessary when running commands that take a source file\nas an argument, e.g. running a Python script; this allows you to specify that\nthe file is found in the  source directory . In other cases, a plain string will\nautomatically get converted to a  source_file .", 
             "title": "source_file(name, [lang])"
         }, 
         {
-            "location": "/reference/#whole_archivename", 
+            "location": "/user/reference/#whole_archivename", 
             "text": "Create a  whole-archive  from an existing static\nlibrary named  name . This ensure that  every  object file in the library is\nincluded, rather than just the ones whose symbols are referenced. This is\ntypically used to turn a static library into a shared library.   Warning  The MSVC linker doesn't have a way of expressing this directive, so whole_archive  can't be used with it.", 
             "title": "whole_archive(name)"
         }, 
         {
-            "location": "/reference/#grouping-rules", 
+            "location": "/user/reference/#grouping-rules", 
             "text": "", 
             "title": "Grouping rules"
         }, 
         {
-            "location": "/reference/#default", 
+            "location": "/user/reference/#default", 
             "text": "Specify a list of build steps that should be run by default when building. These\nare all accumulated into the  all  target.", 
             "title": "default(...)"
         }, 
         {
-            "location": "/reference/#install-all", 
+            "location": "/user/reference/#install-all", 
             "text": "Specify a list of files that need to be installed for the project to work. Each\nwill be installed to the appropriate location based on its type (e.g. header\nfiles will go in  $PREFIX/include  by default on POSIX systems). These are all\naccumulated into the  install  target.  If  all  is  True , all the files will be installed; otherwise, only the primary\nfile for each argument will be. For instance, on Windows, this means that\nsetting  all  to  True  installs the import libraries as well as the DLLs for\nshared libraries.  This rule recognizes the following environment variables: INSTALL , MKDIR_P , PATCHELF .", 
             "title": "install(..., [all])"
         }, 
         {
-            "location": "/reference/#global-options", 
+            "location": "/user/reference/#global-options", 
             "text": "", 
             "title": "Global options"
         }, 
         {
-            "location": "/reference/#global_optionsoptions-lang", 
+            "location": "/user/reference/#global_optionsoptions-lang", 
             "text": "Specify some  options  (either as a string or list) to use for all compilation\nsteps for the language  lang .", 
             "title": "global_options(options, lang)"
         }, 
         {
-            "location": "/reference/#global_link_optionsoptions", 
+            "location": "/user/reference/#global_link_optionsoptions", 
             "text": "Specify some  options  (either as a string or list) to use for all link steps\n(i.e. for  executables  and shared libraries ).", 
             "title": "global_link_options(options)"
         }, 
         {
-            "location": "/reference/#test-rules", 
+            "location": "/user/reference/#test-rules", 
             "text": "These rules help you define automated tests that can all be run via the  test \ntarget. For simple cases, you should only need the test  rule, but you can also wrap your\ntests with a separate driver using test_driver .  For cases where you only want to  build  the tests, not run them, you can use\nthe  tests  target.", 
             "title": "Test rules"
         }, 
         {
-            "location": "/reference/#testtest-options-environmentdriver", 
+            "location": "/user/reference/#testtest-options-environmentdriver", 
             "text": "Create a test for a single test file named  test . You may specify additional\ncommand-line arguments to the test in  options . You can also pass temporary\nenvironment variables as a dict via  environment , or specify a test driver to\nadd this test file to via  driver .", 
             "title": "test(test, [options], [environment|driver])"
         }, 
         {
-            "location": "/reference/#test_driverdriver-options-environmentparent", 
+            "location": "/user/reference/#test_driverdriver-options-environmentparent", 
             "text": "Create a test driver which can run a series of tests, specified as command-line\narguments to the driver. You may specify driver-wide command-line arguments via options . You can also pass temporary environment variables as a dict with environment , or specify a parent test driver to wrap this driver via  driver .", 
             "title": "test_driver(driver, [options], [environment|parent])"
         }, 
         {
-            "location": "/reference/#test_deps", 
+            "location": "/user/reference/#test_deps", 
             "text": "Specify a list of dependencies which must be satisfied before the tests can be\nrun.", 
             "title": "test_deps(...)"
         }, 
         {
-            "location": "/reference/#package-finders", 
+            "location": "/user/reference/#package-finders", 
             "text": "", 
             "title": "Package finders"
         }, 
         {
-            "location": "/reference/#boost_packagename-version", 
+            "location": "/user/reference/#boost_packagename-version", 
             "text": "Search for a Boost library. You can specify  name  (as a string or a list) to\nspecify a specific Boost library (or libraries); for instance, 'program_options' . For header-only libraries, you can omit  name .  This rule recognizes the following environment variables: BOOST_ROOT , BOOST_INCLUDEDIR , BOOST_LIBRARYDIR .", 
             "title": "boost_package([name], [version])"
         }, 
         {
-            "location": "/reference/#system_executablename", 
+            "location": "/user/reference/#system_executablename", 
             "text": "Search for an executable named  name  somewhere in the system's PATH.  This rule recognizes the following environment variables: PATH ,  PATHEXT .", 
             "title": "system_executable(name)"
         }, 
         {
-            "location": "/reference/#system_packagename-lang-kind", 
+            "location": "/user/reference/#system_packagename-lang-kind", 
             "text": "Search for a library named  name  somewhere in the system's default library\nlocation.  lang  is the source language of the library ( 'c'  by default); this\nis useful if you need to link a static library written in C++ with a program\nwritten in C.  You can also specify  kind  to one of  'any'  (the default),  'shared' , or 'static' . This allows you to restrict the search to find only static versions\nof a library, for example.  This rule recognizes the following environment variables: LIBRARY_PATH .   Note  This only finds the library itself, not any required headers. Those are\nassumed to be somewhere where your compiler can find them automatically; if\nnot, you can set  CPPFLAGS  to add the\nappropriate header search path.", 
             "title": "system_package(name, [lang], [kind])"
         }, 
         {
-            "location": "/reference/#environment", 
+            "location": "/user/reference/#environment", 
             "text": "The  environment ,  env , is a special object that encapsulates information\nabout the system outside of bfg9000. It's used internally for nearly all\nplatform-specific code, but it can also help in  build.bfg  files when you\nencounter some unavoidable issue with multiplatform compatibility.   Note  This listing doesn't cover  all  available functions on the environment,\nsince many are only useful to internal code. However, the most relevant ones\nfor  build.bfg  files are shown below.", 
             "title": "Environment"
         }, 
         {
-            "location": "/reference/#envcompilerlang", 
+            "location": "/user/reference/#envcompilerlang", 
             "text": "Return the compiler used by bfg9000 for a particular language  lang . While\ncompiler objects are primarily suited to bfg's internals, there are still a few\nuseful properties for  build.bfg  files:", 
             "title": "env.compiler(lang)"
         }, 
         {
-            "location": "/reference/#compilercommand", 
+            "location": "/user/reference/#compilercommand", 
             "text": "The command to run when invoking this compiler, e.g.  g++-4.9 .", 
             "title": "compiler.command"
         }, 
         {
-            "location": "/reference/#compilerflavor", 
+            "location": "/user/reference/#compilerflavor", 
             "text": "The \"flavor\" of the compiler, i.e. the kind of command-line interface it has.\nPossible values are  'cc'  and  'msvc' .", 
             "title": "compiler.flavor"
         }, 
         {
-            "location": "/reference/#envlinkerlangs", 
+            "location": "/user/reference/#envlinkerlangs", 
             "text": "Return the compiler used by bfg9000 for a particular language (or list of\nlanguages)  lang . Its public properties are the same as compiler  above.", 
             "title": "env.linker(langs)"
         }, 
         {
-            "location": "/reference/#envplatform", 
+            "location": "/user/reference/#envplatform", 
             "text": "Return the target platform used for the build (currently the same as the host\nplatform).", 
             "title": "env.platform"
         }, 
         {
-            "location": "/reference/#platformflavor", 
+            "location": "/user/reference/#platformflavor", 
             "text": "The \"flavor\" of the platform. Either  'posix'  or  'windows' .", 
             "title": "platform.flavor"
         }, 
         {
-            "location": "/reference/#platformname", 
+            "location": "/user/reference/#platformname", 
             "text": "The name of the platform, e.g.  'linux' ,  'darwin'  (OS X), or  'windows' .", 
             "title": "platform.name"
         }, 
         {
-            "location": "/reference/#miscellaneous", 
+            "location": "/user/reference/#miscellaneous", 
             "text": "", 
             "title": "Miscellaneous"
         }, 
         {
-            "location": "/reference/#bfg9000_required_versionversion-python_version", 
+            "location": "/user/reference/#bfg9000_required_versionversion-python_version", 
             "text": "Set the required  version  for bfg9000 and/or the required  python_version .\nEach of these is a standard Python  version\nspecifier .", 
             "title": "bfg9000_required_version([version], [python_version])"
         }, 
         {
-            "location": "/reference/#filter_by_platformname-type", 
+            "location": "/user/reference/#filter_by_platformname-type", 
             "text": "Return  True  if  name  is a filename that should be included for the target\nplatform, and  False  otherwise. File (or directory) names like  PLATFORM  or foo_PLATFORM.cpp  are excluded if  PLATFORM  is a known platform name that doesn't  match the target platform. Known platform names are:  'posix' , 'linux' ,  'darwin' ,  'cygwin' ,  'windows' .  This is the default  filter  for find_files .", 
             "title": "filter_by_platform(name, type)"
         }, 
         {
-            "location": "/reference/#find_filespath-name-type-flat-filter-cache", 
+            "location": "/user/reference/#find_filespath-name-type-flat-filter-cache", 
             "text": "Find files in  path  whose name matches the glob  name . If  path  is omitted,\nsearch in the root of the source directory; if  name  is omitted, all files will\nmatch.  type  may be either  'f'  to find only files or  'd'  to find only\ndirectories. If  flat  is true,  find_files  will not recurse into\nsubdirectories. You can also specify a custom  filter  function to filter the\nlist of files; this function takes two arguments: the file's name and its type.  Finally, if  cache  is  True  (the default), this lookup will be cached so that\nany changes to the result of this function will regenerate the build scripts\nfor the project. This allows you do add or remove source files and not have to\nworry about manually rerunning bfg9000.", 
             "title": "find_files([path], [name], [type], [flat], [filter], [cache])"
         }, 
         {
-            "location": "/environment-vars/", 
+            "location": "/user/environment-vars/", 
             "text": "Environment Variables\n\n\nbfg9000 reads from a number of environment variables. These are the primary way\nin which users can customize parts of a specific build, e.g. by changing the\ntools to use or adding compiler flags. Below is a full list of all the\nenvironment variables bfg9000 recognizes.\n\n\nCompilation variables\n\n\nAR\n\n\nDefault: \nar\n\n\nPOSIX-only\n. The command to use when creating static libraries from object\nfiles.\n\n\nARFLAGS\n\n\nDefault: \ncru\n\n\nPOSIX-only\n. The arguments to pass to the static library builder (typically\n\nar\n).\n\n\nCC\n\n\nDefault: \ncc\n (POSIX), \ncl\n (Windows)\n\n\nThe command to use when compiling C source files. Also the command to use with\ncc-style toolchains when linking object files whose source is in C.\n\n\nCC_LIB\n\n\nDefault: \nlib\n\n\nWindows-only\n. The command to use when creating static libraries whose source\nis in C.\n\n\nCC_LINK\n\n\nDefault: \nlink\n\n\nWindows-only\n. The command to use when linking shared libraries whose source\nis in C.\n\n\nCFLAGS\n\n\nDefault: \nnone\n\n\nCommand line arguments to pass to the compiler when compiling any C source file.\n\n\nCPPFLAGS\n\n\nDefault: \nnone\n\n\n\"C preprocessor flags\"; command line arguments to pass to the compiler when\ncompiling any C-family source file (C, C++, Objective-C, etc).\n\n\nCXX\n\n\nDefault: \nc++\n (POSIX), \ncl\n (Windows)\n\n\nThe command to use when compiling C++ source files. Also the command to use with\ncc-style toolchains when linking object files whose source is in C++.\n\n\nCXX_LIB\n\n\nDefault: \nlib\n\n\nWindows-only\n. The command to use when creating static libraries whose source\nis in C++.\n\n\nCXX_LINK\n\n\nDefault: \nlink\n\n\nWindows-only\n. The command to use when linking shared libraries whose source\nis in C++.\n\n\nCXXFLAGS\n\n\nDefault: \nnone\n\n\nCommand line arguments to pass to the compiler when compiling any C++ source\nfile.\n\n\nLDFLAGS\n\n\nDefault: \nnone\n\n\nCommand line arguments to pass to the linker when linking an executable or\nshared library.\n\n\nLDLIBS\n\n\nDefault: \nnone\n\n\nAdditional libraries to link into an executable or shared library. This is\nmainly useful for cases where a system library (e.g. the C++ Standard Library\nimplementation) requires another library to be explicitly linked with it.\n\n\nLIBFLAGS\n\n\nDefault: \nnone\n\n\nWindows-only\n. Command line arguments to pass to the static library builder\n(typically \nlib\n).\n\n\nCommand variables\n\n\nBFG9000\n\n\nDefault: \n/path/to/bfg9000\n\n\nThe command to use when executing bfg9000 (e.g. when regenerating the build\nscripts because the list of source files has changed). This should only be\nnecessary if you run bfg9000 from a wrapper script.\n\n\nDEPFIXER\n\n\nDefault: \n/path/to/bfg9000-depfixer\n\n\nThe command to use when fixing up depfiles generated by your compiler for the\nMake backend. In general, you shouldn't need to touch this.\n\n\nINSTALL\n\n\nDefault: \ninstall\n\n\nThe command to use when installing files.\n\n\nMKDIR_P\n\n\nDefault: \nmkdir -p\n\n\nThe command to use when making a directory tree. This is used both for\ninstalling whole directories of files and for creating build directories under\nthe Make backend.\n\n\nPATCHELF\n\n\nDefault: \npatchelf\n\n\nLinux-only\n. The command to use when patching an ELF file's rpath for\ninstallation.\n\n\nSETENV\n\n\nDefault: \n/path/to/bfg9000-setenv\n\n\nWindows-only\n. The command to use when setting temporary environment variables,\nsimilar to the POSIX \nenv\n command. This is used when setting environment\nvariables for tests.\n\n\nSystem variables\n\n\nBOOST_ROOT\n\n\nDefault: \nnone\n\n\nThe root directory where Boost headers and libraries are stored (as\n\n$BOOST_ROOT/include\n and \n$BOOST_ROOT/lib\n, respectively).\n\n\nBOOST_INCLUDEDIR\n\n\nDefault: \nnone\n\n\nThe root directory where Boost headers are stored. This takes precedence over\n\nBOOST_ROOT\n.\n\n\nBOOST_LIBRARYDIR\n\n\nDefault: \nnone\n\n\nThe root directory where Boost libraries are stored. This takes precedence over\n\nBOOST_ROOT\n.\n\n\nLIBRARY_PATH\n\n\nDefault: \nnone\n\n\nA list of additional directories to search for\n\nsystem libraries\n. On POSIX systems, this is\ndelimited by \n:\n; on Windows, by \n;\n.\n\n\nPATH\n\n\nDefault: \nnone\n\n\nA list of directories to search for\n\nsystem executables\n. On POSIX systems, this\nis delimited by \n:\n; on Windows, by \n;\n.\n\n\nPATHEXT\n\n\nDefault: \nnone\n\n\nWindows-only\n. A list of valid extensions for executable files under Windows,\nseparated by \n;\n.\n\n\nPLATFORM\n\n\nDefault: \nWin32\n\n\nWindows-only\n. The platform type to use when generating MSBuild files.\n\n\nVISUALSTUDIOVERSION\n\n\nDefault: \n14.0\n\n\nWindows-only\n. The version of Visual Studio to target when generating MSBuild\nfiles.", 
             "title": "Environment Variables"
         }, 
         {
-            "location": "/environment-vars/#environment-variables", 
+            "location": "/user/environment-vars/#environment-variables", 
             "text": "bfg9000 reads from a number of environment variables. These are the primary way\nin which users can customize parts of a specific build, e.g. by changing the\ntools to use or adding compiler flags. Below is a full list of all the\nenvironment variables bfg9000 recognizes.", 
             "title": "Environment Variables"
         }, 
         {
-            "location": "/environment-vars/#compilation-variables", 
+            "location": "/user/environment-vars/#compilation-variables", 
             "text": "", 
             "title": "Compilation variables"
         }, 
         {
-            "location": "/environment-vars/#ar", 
+            "location": "/user/environment-vars/#ar", 
             "text": "Default:  ar  POSIX-only . The command to use when creating static libraries from object\nfiles.", 
             "title": "AR"
         }, 
         {
-            "location": "/environment-vars/#arflags", 
+            "location": "/user/environment-vars/#arflags", 
             "text": "Default:  cru  POSIX-only . The arguments to pass to the static library builder (typically ar ).", 
             "title": "ARFLAGS"
         }, 
         {
-            "location": "/environment-vars/#cc", 
+            "location": "/user/environment-vars/#cc", 
             "text": "Default:  cc  (POSIX),  cl  (Windows)  The command to use when compiling C source files. Also the command to use with\ncc-style toolchains when linking object files whose source is in C.", 
             "title": "CC"
         }, 
         {
-            "location": "/environment-vars/#cc_lib", 
+            "location": "/user/environment-vars/#cc_lib", 
             "text": "Default:  lib  Windows-only . The command to use when creating static libraries whose source\nis in C.", 
             "title": "CC_LIB"
         }, 
         {
-            "location": "/environment-vars/#cc_link", 
+            "location": "/user/environment-vars/#cc_link", 
             "text": "Default:  link  Windows-only . The command to use when linking shared libraries whose source\nis in C.", 
             "title": "CC_LINK"
         }, 
         {
-            "location": "/environment-vars/#cflags", 
+            "location": "/user/environment-vars/#cflags", 
             "text": "Default:  none  Command line arguments to pass to the compiler when compiling any C source file.", 
             "title": "CFLAGS"
         }, 
         {
-            "location": "/environment-vars/#cppflags", 
+            "location": "/user/environment-vars/#cppflags", 
             "text": "Default:  none  \"C preprocessor flags\"; command line arguments to pass to the compiler when\ncompiling any C-family source file (C, C++, Objective-C, etc).", 
             "title": "CPPFLAGS"
         }, 
         {
-            "location": "/environment-vars/#cxx", 
+            "location": "/user/environment-vars/#cxx", 
             "text": "Default:  c++  (POSIX),  cl  (Windows)  The command to use when compiling C++ source files. Also the command to use with\ncc-style toolchains when linking object files whose source is in C++.", 
             "title": "CXX"
         }, 
         {
-            "location": "/environment-vars/#cxx_lib", 
+            "location": "/user/environment-vars/#cxx_lib", 
             "text": "Default:  lib  Windows-only . The command to use when creating static libraries whose source\nis in C++.", 
             "title": "CXX_LIB"
         }, 
         {
-            "location": "/environment-vars/#cxx_link", 
+            "location": "/user/environment-vars/#cxx_link", 
             "text": "Default:  link  Windows-only . The command to use when linking shared libraries whose source\nis in C++.", 
             "title": "CXX_LINK"
         }, 
         {
-            "location": "/environment-vars/#cxxflags", 
+            "location": "/user/environment-vars/#cxxflags", 
             "text": "Default:  none  Command line arguments to pass to the compiler when compiling any C++ source\nfile.", 
             "title": "CXXFLAGS"
         }, 
         {
-            "location": "/environment-vars/#ldflags", 
+            "location": "/user/environment-vars/#ldflags", 
             "text": "Default:  none  Command line arguments to pass to the linker when linking an executable or\nshared library.", 
             "title": "LDFLAGS"
         }, 
         {
-            "location": "/environment-vars/#ldlibs", 
+            "location": "/user/environment-vars/#ldlibs", 
             "text": "Default:  none  Additional libraries to link into an executable or shared library. This is\nmainly useful for cases where a system library (e.g. the C++ Standard Library\nimplementation) requires another library to be explicitly linked with it.", 
             "title": "LDLIBS"
         }, 
         {
-            "location": "/environment-vars/#libflags", 
+            "location": "/user/environment-vars/#libflags", 
             "text": "Default:  none  Windows-only . Command line arguments to pass to the static library builder\n(typically  lib ).", 
             "title": "LIBFLAGS"
         }, 
         {
-            "location": "/environment-vars/#command-variables", 
+            "location": "/user/environment-vars/#command-variables", 
             "text": "", 
             "title": "Command variables"
         }, 
         {
-            "location": "/environment-vars/#bfg9000", 
+            "location": "/user/environment-vars/#bfg9000", 
             "text": "Default:  /path/to/bfg9000  The command to use when executing bfg9000 (e.g. when regenerating the build\nscripts because the list of source files has changed). This should only be\nnecessary if you run bfg9000 from a wrapper script.", 
             "title": "BFG9000"
         }, 
         {
-            "location": "/environment-vars/#depfixer", 
+            "location": "/user/environment-vars/#depfixer", 
             "text": "Default:  /path/to/bfg9000-depfixer  The command to use when fixing up depfiles generated by your compiler for the\nMake backend. In general, you shouldn't need to touch this.", 
             "title": "DEPFIXER"
         }, 
         {
-            "location": "/environment-vars/#install", 
+            "location": "/user/environment-vars/#install", 
             "text": "Default:  install  The command to use when installing files.", 
             "title": "INSTALL"
         }, 
         {
-            "location": "/environment-vars/#mkdir_p", 
+            "location": "/user/environment-vars/#mkdir_p", 
             "text": "Default:  mkdir -p  The command to use when making a directory tree. This is used both for\ninstalling whole directories of files and for creating build directories under\nthe Make backend.", 
             "title": "MKDIR_P"
         }, 
         {
-            "location": "/environment-vars/#patchelf", 
+            "location": "/user/environment-vars/#patchelf", 
             "text": "Default:  patchelf  Linux-only . The command to use when patching an ELF file's rpath for\ninstallation.", 
             "title": "PATCHELF"
         }, 
         {
-            "location": "/environment-vars/#setenv", 
+            "location": "/user/environment-vars/#setenv", 
             "text": "Default:  /path/to/bfg9000-setenv  Windows-only . The command to use when setting temporary environment variables,\nsimilar to the POSIX  env  command. This is used when setting environment\nvariables for tests.", 
             "title": "SETENV"
         }, 
         {
-            "location": "/environment-vars/#system-variables", 
+            "location": "/user/environment-vars/#system-variables", 
             "text": "", 
             "title": "System variables"
         }, 
         {
-            "location": "/environment-vars/#boost_root", 
+            "location": "/user/environment-vars/#boost_root", 
             "text": "Default:  none  The root directory where Boost headers and libraries are stored (as $BOOST_ROOT/include  and  $BOOST_ROOT/lib , respectively).", 
             "title": "BOOST_ROOT"
         }, 
         {
-            "location": "/environment-vars/#boost_includedir", 
+            "location": "/user/environment-vars/#boost_includedir", 
             "text": "Default:  none  The root directory where Boost headers are stored. This takes precedence over BOOST_ROOT .", 
             "title": "BOOST_INCLUDEDIR"
         }, 
         {
-            "location": "/environment-vars/#boost_librarydir", 
+            "location": "/user/environment-vars/#boost_librarydir", 
             "text": "Default:  none  The root directory where Boost libraries are stored. This takes precedence over BOOST_ROOT .", 
             "title": "BOOST_LIBRARYDIR"
         }, 
         {
-            "location": "/environment-vars/#library_path", 
+            "location": "/user/environment-vars/#library_path", 
             "text": "Default:  none  A list of additional directories to search for system libraries . On POSIX systems, this is\ndelimited by  : ; on Windows, by  ; .", 
             "title": "LIBRARY_PATH"
         }, 
         {
-            "location": "/environment-vars/#path", 
+            "location": "/user/environment-vars/#path", 
             "text": "Default:  none  A list of directories to search for system executables . On POSIX systems, this\nis delimited by  : ; on Windows, by  ; .", 
             "title": "PATH"
         }, 
         {
-            "location": "/environment-vars/#pathext", 
+            "location": "/user/environment-vars/#pathext", 
             "text": "Default:  none  Windows-only . A list of valid extensions for executable files under Windows,\nseparated by  ; .", 
             "title": "PATHEXT"
         }, 
         {
-            "location": "/environment-vars/#platform", 
+            "location": "/user/environment-vars/#platform", 
             "text": "Default:  Win32  Windows-only . The platform type to use when generating MSBuild files.", 
             "title": "PLATFORM"
         }, 
         {
-            "location": "/environment-vars/#visualstudioversion", 
+            "location": "/user/environment-vars/#visualstudioversion", 
             "text": "Default:  14.0  Windows-only . The version of Visual Studio to target when generating MSBuild\nfiles.", 
             "title": "VISUALSTUDIOVERSION"
         }, 
