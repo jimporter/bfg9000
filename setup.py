@@ -57,13 +57,39 @@ if platform.system().lower() == 'windows':
 else:
     extra_exclude.append('bfg9000.setenv')
 
+try:
+    import pypandoc
+    long_desc = pypandoc.convert('README.md', 'rst')
+except ImportError:
+    with open('README.md', 'r') as f:
+        long_desc = f.read()
+
 setup(
     name='bfg9000',
     version=version,
 
+    description='A cross-platform build file generator',
+    long_description=long_desc,
+    keywords='build file generator',
+
     author='Jim Porter',
     author_email='porterj@alum.rit.edu',
     license='BSD',
+
+    classifiers=[
+        'Development Status :: 3 - Alpha',
+
+        'Intended Audience :: Developers',
+
+        'Topic :: Software Development :: Build Tools',
+        'License :: OSI Approved :: BSD License',
+
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
+    ],
 
     packages=find_packages(exclude=['test', 'test.*'] + extra_exclude),
 
