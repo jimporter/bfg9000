@@ -3,7 +3,7 @@
 **bfg9000** is a cross-platform *build configuration system* with an emphasis on
 making it easy to define how to build your software. It converts a Python-based
 build script into the appropriate files for your underlying build system of
-choice (Make, Ninja, or MSBuild).
+choice (Ninja, Make, or MSBuild).
 
 ## A brief example
 
@@ -19,7 +19,7 @@ run them:
 ```sh
 bfg9000 path/to/src/ build/
 cd build
-make
+ninja
 ```
 
 From there, you can run your newly-created executable: `./simple`. Hooray!
