@@ -1,4 +1,5 @@
 import platform
+import re
 import subprocess
 from setuptools import setup, find_packages, Command
 from bfg9000.version import version
@@ -57,12 +58,15 @@ if platform.system().lower() == 'windows':
 else:
     extra_exclude.append('bfg9000.setenv')
 
+with open('README.md', 'r') as f:
+    # Read from the file and strip out the badges.
+    long_desc = re.sub(r'(^# bfg9000.*)\n\n.*', r'\1', f.read())
+
 try:
     import pypandoc
-    long_desc = pypandoc.convert('README.md', 'rst')
+    long_desc = pypandoc.convert(long_desc, 'rst', format='md')
 except ImportError:
-    with open('README.md', 'r') as f:
-        long_desc = f.read()
+    pass
 
 setup(
     name='bfg9000',
