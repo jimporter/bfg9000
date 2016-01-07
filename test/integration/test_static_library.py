@@ -1,5 +1,3 @@
-import unittest
-
 from .integration import *
 
 
@@ -10,7 +8,3 @@ class TestStaticLibrary(IntegrationTest):
     def test_build(self):
         self.build()
         self.assertOutput([executable('program')], 'hello, library!\n')
-
-
-if __name__ == '__main__':
-    unittest.main()

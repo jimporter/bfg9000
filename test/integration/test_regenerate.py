@@ -1,6 +1,5 @@
 import os.path
 import shutil
-import unittest
 
 from .integration import *
 pjoin = os.path.join
@@ -81,7 +80,3 @@ class TestRegenerateGlob(IntegrationTest):
 
         self.build(executable('goodbye'))
         self.assertOutput([executable('goodbye')], 'Goodbye!\n')
-
-
-if __name__ == '__main__':
-    unittest.main()

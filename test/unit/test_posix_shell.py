@@ -29,7 +29,3 @@ class TestQuote(unittest.TestCase):
         self.assertEqual(quote('&&'), "'&&'")
         self.assertEqual(quote('>'), "'>'")
         self.assertEqual(quote('|'), "'|'")
-
-
-if __name__ == '__main__':
-    unittest.main()

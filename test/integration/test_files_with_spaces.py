@@ -1,6 +1,5 @@
 import os.path
 import re
-import unittest
 from six import assertRegex
 
 from .integration import *
@@ -29,7 +28,3 @@ class TestFilesWithSpaces(IntegrationTest):
             self.build('script'),
             re.compile('^hello, world!$', re.MULTILINE)
         )
-
-
-if __name__ == '__main__':
-    unittest.main()

@@ -53,7 +53,3 @@ class TestSafeStr(unittest.TestCase):
 
         s = join([escaped_str('foo'), 'bar'], ',')
         self.assertEqual(s.bits, (escaped_str('foo'), ',', 'bar'))
-
-
-if __name__ == '__main__':
-    unittest.main()

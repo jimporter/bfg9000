@@ -1,6 +1,5 @@
 import os.path
 import re
-import unittest
 from six import assertRegex
 
 from .integration import *
@@ -39,7 +38,3 @@ class TestCommand(IntegrationTest):
         output = self.build('hello-world')
         assertRegex(self, output, re.compile('^hello$', re.MULTILINE))
         assertRegex(self, output, re.compile('^world$', re.MULTILINE))
-
-
-if __name__ == '__main__':
-    unittest.main()

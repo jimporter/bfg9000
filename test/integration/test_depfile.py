@@ -1,6 +1,5 @@
 import os.path
 import shutil
-import unittest
 
 from .integration import *
 
@@ -20,7 +19,3 @@ class TestDepfile(IntegrationTest):
 
         self.build(executable('program'))
         self.assertOutput([executable('program')], 'goodbye\n')
-
-
-if __name__ == '__main__':
-    unittest.main()

@@ -1,5 +1,3 @@
-import unittest
-
 from .integration import *
 
 
@@ -12,7 +10,3 @@ class TestDefaults(IntegrationTest):
         self.build()
         self.assertOutput([executable('a')], 'hello, a!\n')
         self.assertOutput([executable('b')], 'hello, b!\n')
-
-
-if __name__ == '__main__':
-    unittest.main()

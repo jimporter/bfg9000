@@ -1,5 +1,4 @@
 import os.path
-import unittest
 
 from .integration import *
 
@@ -13,7 +12,3 @@ class TestTests(IntegrationTest):
     @skip_if_backend('msbuild')
     def test_test(self):
         self.build('test')
-
-
-if __name__ == '__main__':
-    unittest.main()

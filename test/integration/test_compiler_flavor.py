@@ -1,5 +1,3 @@
-import unittest
-
 from .integration import *
 
 
@@ -10,7 +8,3 @@ class TestCompilerFlavor(IntegrationTest):
     def test_build(self):
         self.build(executable('program'))
         self.assertOutput([executable('program')], 'hello, cc!\n')
-
-
-if __name__ == '__main__':
-    unittest.main()

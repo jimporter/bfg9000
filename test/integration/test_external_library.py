@@ -1,5 +1,4 @@
 import os.path
-import unittest
 
 from .integration import *
 
@@ -24,7 +23,3 @@ class TestBoostLibrary(IntegrationTest):
         self.build()
         self.assertOutput([executable('program'), '--hello'],
                           'Hello, world!\n')
-
-
-if __name__ == '__main__':
-    unittest.main()

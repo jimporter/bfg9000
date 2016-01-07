@@ -37,7 +37,3 @@ class TestQuote(unittest.TestCase):
 
     def test_escaped_quote(self):
         self.assertEqual(quote(r'foo\"bar'), r'"foo\\\"bar"')
-
-
-if __name__ == '__main__':
-    unittest.main()

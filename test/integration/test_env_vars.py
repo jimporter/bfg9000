@@ -1,6 +1,5 @@
 import os.path
 import re
-import unittest
 from six import assertRegex
 
 from .integration import *
@@ -21,7 +20,3 @@ class TestEnvVars(IntegrationTest):
             re.compile('^hello script$', re.MULTILINE)
         )
         self.assertExists(os.path.join(self.builddir, 'file'))
-
-
-if __name__ == '__main__':
-    unittest.main()

@@ -1,5 +1,4 @@
 import os.path
-import unittest
 
 from .integration import *
 
@@ -13,7 +12,3 @@ class TestOptions(IntegrationTest):
     def test_build(self):
         self.build()
         self.assertOutput([executable('program')], 'hello, world!\n')
-
-
-if __name__ == '__main__':
-    unittest.main()
