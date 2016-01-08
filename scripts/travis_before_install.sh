@@ -12,4 +12,5 @@ else
     brew update
     brew install python
     brew install libogg
+    brew install ninja
 fi
