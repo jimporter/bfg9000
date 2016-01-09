@@ -6,7 +6,8 @@ class Install(object):
     rule_name = command_var = 'install'
 
     def __init__(self, env):
-        self.command = env.getvar('INSTALL', 'install')
+        default = 'ginstall' if env.platform.name == 'darwin' else 'install'
+        self.command = env.getvar('INSTALL', default)
 
     @property
     def data_args(self):

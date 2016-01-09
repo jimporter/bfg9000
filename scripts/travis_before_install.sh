@@ -11,6 +11,7 @@ if [ "${TRAVIS_OS_NAME}" = "linux" ]; then
 else
     brew update
     brew install python
-    brew install libogg
+    brew install coreutils
     brew install ninja
+    brew install libogg
 fi
