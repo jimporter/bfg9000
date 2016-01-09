@@ -1,0 +1,6 @@
+# -*- python -*-
+
+executable('program', files=['prog.cpp'])
+exit()
+
+alias('postexit', 'program')

@@ -77,7 +77,10 @@ def parse_args(parser, args=None, namespace=None):
 def execute_script(filename, build, env):
     with open(filename, 'r') as f:
         code = compile(f.read(), filename, 'exec')
-        exec(code, builtins.bind(build_inputs=build, env=env), {})
+        try:
+            exec(code, builtins.bind(build_inputs=build, env=env), {})
+        except SystemExit:
+            pass
 
 
 def main():
