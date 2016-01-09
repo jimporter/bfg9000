@@ -3,26 +3,11 @@ from itertools import chain
 from six import string_types
 
 from . import builtin
-from ..build_inputs import Directory, Edge, File, Phony, objectify, sourcify
+from ..build_inputs import Edge
 from ..file_types import *
 from ..iterutils import iterate, listify, uniques
 from ..path import Path, Root
 from ..shell import posix as pshell
-
-
-class TestCase(object):
-    def __init__(self, target, options, env):
-        self.target = target
-        self.options = options
-        self.env = env
-
-
-class TestDriver(object):
-    def __init__(self, target, options, env):
-        self.target = target
-        self.options = options
-        self.env = env
-        self.tests = []
 
 
 class ObjectFiles(list):
@@ -247,65 +232,6 @@ def command(build, *args, **kwargs):
 
 
 #####
-
-
-@builtin.globals('build_inputs')
-def default(build, *args):
-    if len(args) == 0:
-        raise ValueError('expected at least one argument')
-    build.default_targets.extend(i for i in args if i.creator)
-
-
-@builtin.globals('builtins', 'build_inputs')
-def install(builtins, build, *args, **kwargs):
-    def _flatten(args):
-        for i in args:
-            for j in i.all:
-                yield j
-
-    if len(args) == 0:
-        raise ValueError('expected at least one argument')
-    all_files = kwargs.pop('all', True)
-
-    for i in _flatten(args) if all_files else args:
-        if isinstance(i, Directory):
-            build.install_targets.directories.append(i)
-        else:
-            builtins['default'](i)
-            build.install_targets.files.append(i)
-
-
-@builtin.globals('build_inputs')
-def test(build, test, options=None, environment=None, driver=None):
-    if driver and environment:
-        raise TypeError('only one of "driver" and "environment" may be ' +
-                        'specified')
-
-    test = sourcify(test, File)
-    build.tests.targets.append(test)
-    case = TestCase(test, pshell.listify(options), environment or {})
-    (driver or build.tests).tests.append(case)
-    return case
-
-
-@builtin.globals('builtins', 'build_inputs', 'env')
-def test_driver(builtins, build, env, driver, options=None, environment=None,
-                parent=None):
-    if parent and environment:
-        raise TypeError('only one of "parent" and "environment" may be ' +
-                        'specified')
-
-    driver = objectify(driver, Executable, builtins['system_executable'])
-    result = TestDriver(driver, pshell.listify(options), environment or {})
-    (parent or build.tests).tests.append(result)
-    return result
-
-
-@builtin.globals('build_inputs')
-def test_deps(build, *args):
-    if len(args) == 0:
-        raise ValueError('expected at least one argument')
-    build.tests.extra_deps.extend(args)
 
 
 @builtin.globals('build_inputs')

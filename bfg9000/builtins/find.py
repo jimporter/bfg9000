@@ -4,7 +4,10 @@ import posixpath
 import re
 
 from . import builtin
+from .. import path
 from ..iterutils import iterate
+from ..backends.make import writer as make
+from ..backends.ninja import writer as ninja
 from ..backends.make.syntax import Writer, Syntax
 
 depfile_name = '.bfg_find_deps'
@@ -73,16 +76,16 @@ def _find_files(paths, name, type, flat, filter):
             results.append(p)
 
         generator = walker(p)
-        for path, dirs, files in generator:
+        for base, dirs, files in generator:
             if filter:
                 _filter_in_place(dirs, 'd', filter)
                 _filter_in_place(files, 'f', filter)
 
-            seen_dirs.append(path)
+            seen_dirs.append(base)
             if type != 'f':
-                results.extend(_filter_join(path, dirs, name))
+                results.extend(_filter_join(base, dirs, name))
             if type != 'd':
-                results.extend(_filter_join(path, files, name))
+                results.extend(_filter_join(base, files, name))
 
     return results, seen_dirs
 
@@ -110,3 +113,46 @@ def find_files(builtins, build_inputs, env, path='.', name='*', type=None,
     if cache:
         build_inputs.find_dirs.update(seen_dirs)
     return results
+
+
+@make.post_rule
+def make_regenerate_rule(build_inputs, buildfile, env):
+    bfg9000 = env.tool('bfg9000')
+    bfgcmd = make.cmd_var(bfg9000, buildfile)
+    bfgpath = path.Path('build.bfg', path.Root.srcdir)
+
+    if build_inputs.find_dirs:
+        write_depfile(env.builddir.append(depfile_name).string(),
+                      'Makefile', build_inputs.find_dirs, makeify=True)
+        buildfile.include(depfile_name)
+
+    buildfile.rule(
+        target=path.Path('Makefile'),
+        deps=[bfgpath],
+        recipe=[bfg9000.regenerate(bfgcmd, path.Path('.'))]
+    )
+
+
+@ninja.post_rule
+def ninja_regenerate_rule(build_inputs, buildfile, env):
+    bfg9000 = env.tool('bfg9000')
+    bfgcmd = ninja.cmd_var(bfg9000, buildfile)
+    bfgpath = path.Path('build.bfg', path.Root.srcdir)
+    depfile = None
+
+    if build_inputs.find_dirs:
+        write_depfile(env.builddir.append(depfile_name).string(),
+                      'build.ninja', build_inputs.find_dirs)
+        depfile = depfile_name
+
+    buildfile.rule(
+        name='regenerate',
+        command=bfg9000.regenerate(bfgcmd, path.Path('.')),
+        generator=True,
+        depfile=depfile,
+    )
+    buildfile.build(
+        output=path.Path('build.ninja'),
+        rule='regenerate',
+        implicit=[bfgpath]
+    )

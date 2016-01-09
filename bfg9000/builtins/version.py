@@ -4,7 +4,7 @@ from packaging.version import Version
 
 from . import builtin
 from ..version import version as _bfg_version
-from ..build_inputs import objectify
+from ..file_types import objectify
 
 _bfg_version = Version(_bfg_version)
 _python_version = Version(platform.python_version())

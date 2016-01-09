@@ -107,8 +107,8 @@ setup(
             'bfg9000-depfixer=bfg9000.depfixer:main',
         ] + extra_scripts,
         'bfg9000.backends': [
-            'make=bfg9000.backends.make.rules',
-            'ninja=bfg9000.backends.ninja.rules',
+            'make=bfg9000.backends.make.writer',
+            'ninja=bfg9000.backends.ninja.writer',
             'msbuild=bfg9000.backends.msbuild.rules [msbuild]',
         ],
     },

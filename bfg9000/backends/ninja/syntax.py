@@ -1,7 +1,6 @@
 import re
 from collections import namedtuple, OrderedDict
 from enum import Enum
-from itertools import chain
 from packaging.version import Version
 from six import iteritems, string_types
 from six.moves import cStringIO as StringIO
@@ -10,7 +9,6 @@ from ... import path
 from ... import safe_str
 from ... import shell
 from ... import iterutils
-from ...platforms import platform_name
 
 Path = path.Path
 
@@ -117,32 +115,6 @@ class Variable(object):
 
 def var(v):
     return v if isinstance(v, Variable) else Variable(v)
-
-
-class Commands(object):
-    def __init__(self, commands, env=None):
-        self.commands = iterutils.listify(commands)
-        self.env = env or {}
-
-    def use(self):
-        out = Writer(StringIO())
-        if self.__needs_shell and platform_name() == 'windows':
-            out.write_literal('cmd /c ')
-
-        env_vars = shell.global_env(self.env)
-        for line in shell.join_commands(chain(env_vars, self.commands)):
-            out.write_shell(line)
-        return safe_str.escaped_str(out.stream.getvalue())
-
-    def _safe_str(self):
-        return self.use()
-
-    @property
-    def __needs_shell(self):
-        return (
-            len(self.commands) + len(self.env) > 1 or
-            any(not iterutils.isiterable(i) for i in self.commands)
-        )
 
 
 path_vars = {

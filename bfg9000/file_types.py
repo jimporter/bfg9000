@@ -1,42 +1,96 @@
 import os.path
+from six import string_types
 
-from . import build_inputs
 from .languages import ext2lang
-from .path import InstallRoot
+from .path import InstallRoot, Path, Root
+from .safe_str import safe_str
 
 
-class SourceFile(build_inputs.File):
+class Node(object):
+    def __init__(self):
+        self.creator = None
+
+    @property
+    def all(self):
+        return [self]
+
+    def _safe_str(self):
+        return safe_str(self.path)
+
+    def __repr__(self):
+        return '<{type} {name}>'.format(
+            type=type(self).__name__, name=repr(self.path)
+        )
+
+
+def objectify(thing, valid_type, creator, *args, **kwargs):
+    if isinstance(thing, valid_type):
+        return thing
+    elif not isinstance(thing, string_types):
+        raise TypeError('expected a {} or a string'.format(valid_type))
+    else:
+        if creator is None:
+            creator = valid_type
+        # XXX: Come up with a way to provide args to prepend?
+        return creator(thing, *args, **kwargs)
+
+
+def sourcify(thing, valid_type, make_type=None, **kwargs):
+    return objectify(thing, valid_type, make_type, root=Root.srcdir, **kwargs)
+
+
+class File(Node):
+    install_kind = None
+    install_root = None
+
+    def __init__(self, name, root):
+        Node.__init__(self)
+        self.path = Path(name, root)
+        self.post_install = None
+
+
+class Directory(File):
+    pass
+
+
+class Phony(Node):
+    def __init__(self, name):
+        Node.__init__(self)
+        self.path = name
+
+
+class SourceFile(File):
     def __init__(self, name, root, lang=None):
-        build_inputs.File.__init__(self, name, root)
+        File.__init__(self, name, root)
         if lang is None:
             lang = ext2lang.get(os.path.splitext(name)[1])
         self.lang = lang
 
 
-class HeaderFile(build_inputs.File):
+class HeaderFile(File):
     install_kind = 'data'
     install_root = InstallRoot.includedir
 
 
-class HeaderDirectory(build_inputs.Directory):
+class HeaderDirectory(Directory):
     install_root = InstallRoot.includedir
 
     def __init__(self, name, root, system=False):
-        build_inputs.File.__init__(self, name, root)
+        Directory.__init__(self, name, root)
         self.system = system
 
 
-class ObjectFile(build_inputs.File):
+class ObjectFile(File):
     def __init__(self, name, root, lang):
-        build_inputs.File.__init__(self, name, root)
+        File.__init__(self, name, root)
         self.lang = lang
 
 
-class Binary(build_inputs.File):
+class Binary(File):
     install_kind = 'program'
 
     def __init__(self, name, root, lang=None):
-        build_inputs.File.__init__(self, name, root)
+        File.__init__(self, name, root)
         self.lang = lang
 
 
@@ -58,7 +112,7 @@ class StaticLibrary(Library):
 
 class WholeArchive(StaticLibrary):
     def __init__(self, lib):
-        build_inputs.Node.__init__(self)
+        Node.__init__(self)
         self.lib = lib
         self.creator = lib.creator
         self.post_install = None
