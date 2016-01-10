@@ -9,7 +9,9 @@ from ... import safe_str
 from ... import shell
 from ... import iterutils
 
-Path = path.Path
+__all__ = ['Call', 'Entity', 'Function', 'Makefile', 'Pattern', 'Section',
+           'Syntax', 'Writer', 'Variable', 'var', 'qvar', 'silent',
+           'path_vars']
 
 Rule = namedtuple('Rule', ['targets', 'deps', 'order_only', 'recipe',
                            'variables', 'phony'])
@@ -61,7 +63,7 @@ class Writer(object):
         elif isinstance(thing, safe_str.jbos):
             for i in thing.bits:
                 escaped |= self.write(i, syntax, shell_quote)
-        elif isinstance(thing, Path):
+        elif isinstance(thing, path.Path):
             out = Writer(StringIO())
             thing = thing.realize(path_vars, shelly)
             escaped = out.write(thing, syntax, shell.escape)

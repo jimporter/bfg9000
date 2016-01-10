@@ -4,11 +4,11 @@ from packaging.specifiers import SpecifierSet
 from packaging.version import Version
 from six.moves import cStringIO as StringIO
 
-from . import syntax
 from ... import iterutils
 from ... import path
 from ... import safe_str
 from ... import shell
+from .syntax import *
 from ...platforms import platform_name, which
 
 
@@ -47,20 +47,15 @@ def post_rule(fn):
 
 
 def write(env, build_inputs):
-    # XXX: Remove this once the rules are moved elsewhere.
-    from . import rules  # noqa
-
-    buildfile = syntax.NinjaFile()
-    buildfile.variable(syntax.path_vars[path.Root.srcdir], env.srcdir,
-                       syntax.Section.path)
+    buildfile = NinjaFile()
+    buildfile.variable(path_vars[path.Root.srcdir], env.srcdir, Section.path)
     for i in path.InstallRoot:
-        buildfile.variable(syntax.path_vars[i], env.install_dirs[i],
-                           syntax.Section.path)
+        buildfile.variable(path_vars[i], env.install_dirs[i], Section.path)
 
     for i in _pre_rules:
         i(build_inputs, buildfile, env)
     for e in build_inputs.edges:
-        _rule_handlers[type(e).__name__](e, build_inputs, buildfile)
+        _rule_handlers[type(e)](e, build_inputs, buildfile)
     for i in _post_rules:
         i(build_inputs, buildfile, env)
 
@@ -70,13 +65,12 @@ def write(env, build_inputs):
 
 def cmd_var(cmd, buildfile):
     name = cmd.command_var
-    return buildfile.variable(name, cmd.command, syntax.Section.command, True)
+    return buildfile.variable(name, cmd.command, Section.command, True)
 
 
 def flags_vars(name, value, buildfile):
-    gflags = buildfile.variable('global_' + name, value, syntax.Section.flags,
-                                True)
-    flags = buildfile.variable(name, gflags, syntax.Section.other, True)
+    gflags = buildfile.variable('global_' + name, value, Section.flags, True)
+    flags = buildfile.variable(name, gflags, Section.other, True)
     return gflags, flags
 
 
@@ -86,7 +80,7 @@ class Commands(object):
         self.env = env or {}
 
     def use(self):
-        out = syntax.Writer(StringIO())
+        out = Writer(StringIO())
         if self.__needs_shell and platform_name() == 'windows':
             out.write_literal('cmd /c ')
 
@@ -114,8 +108,7 @@ def command_build(buildfile, output, inputs=None, implicit=None,
         extra_kwargs['pool'] = 'console'
 
     if not buildfile.has_rule('command'):
-        buildfile.rule(name='command', command=syntax.var('cmd'),
-                       **extra_kwargs)
+        buildfile.rule(name='command', command=var('cmd'), **extra_kwargs)
     if not buildfile.has_build('PHONY'):
         buildfile.build(output='PHONY', rule='phony')
 

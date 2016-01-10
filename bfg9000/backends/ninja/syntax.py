@@ -10,7 +10,8 @@ from ... import safe_str
 from ... import shell
 from ... import iterutils
 
-Path = path.Path
+__all__ = ['NinjaFile', 'Section', 'Syntax', 'Writer', 'Variable', 'var',
+           'path_vars']
 
 Rule = namedtuple('Rule', ['command', 'depfile', 'deps', 'generator', 'pool',
                            'restat'])
@@ -57,7 +58,7 @@ class Writer(object):
         elif isinstance(thing, safe_str.jbos):
             for i in thing.bits:
                 escaped |= self.write(i, syntax, shell_quote)
-        elif isinstance(thing, Path):
+        elif isinstance(thing, path.Path):
             out = Writer(StringIO())
             thing = thing.realize(path_vars, shelly)
             escaped = out.write(thing, syntax, shell.escape)

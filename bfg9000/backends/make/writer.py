@@ -2,8 +2,8 @@ import os
 import re
 import subprocess
 
-from . import syntax
 from ... import path
+from .syntax import *
 from ...platforms import which
 
 version = None
@@ -46,20 +46,15 @@ def post_rule(fn):
 
 
 def write(env, build_inputs):
-    # XXX: Remove this once the rules are moved elsewhere.
-    from . import rules  # noqa
-
-    buildfile = syntax.Makefile()
-    buildfile.variable(syntax.path_vars[path.Root.srcdir], env.srcdir,
-                       syntax.Section.path)
+    buildfile = Makefile()
+    buildfile.variable(path_vars[path.Root.srcdir], env.srcdir, Section.path)
     for i in path.InstallRoot:
-        buildfile.variable(syntax.path_vars[i], env.install_dirs[i],
-                           syntax.Section.path)
+        buildfile.variable(path_vars[i], env.install_dirs[i], Section.path)
 
     for i in _pre_rules:
         i(build_inputs, buildfile, env)
     for e in build_inputs.edges:
-        _rule_handlers[type(e).__name__](e, build_inputs, buildfile, env)
+        _rule_handlers[type(e)](e, build_inputs, buildfile, env)
     for i in _post_rules:
         i(build_inputs, buildfile, env)
 
@@ -69,13 +64,12 @@ def write(env, build_inputs):
 
 def cmd_var(cmd, buildfile):
     name = cmd.command_var.upper()
-    return buildfile.variable(name, cmd.command, syntax.Section.command, True)
+    return buildfile.variable(name, cmd.command, Section.command, True)
 
 
 def flags_vars(name, value, buildfile):
     name = name.upper()
-    gflags = buildfile.variable('GLOBAL_' + name, value, syntax.Section.flags,
-                                True)
+    gflags = buildfile.variable('GLOBAL_' + name, value, Section.flags, True)
     flags = buildfile.target_variable(name, gflags, True)
     return gflags, flags
 
@@ -83,14 +77,13 @@ def flags_vars(name, value, buildfile):
 @post_rule
 def directory_rule(build_inputs, buildfile, env):
     mkdir_p = env.tool('mkdir_p')
-    pattern = syntax.Pattern(os.path.join('%', dir_sentinel))
-    path = syntax.Function('patsubst', pattern, syntax.Pattern('%'),
-                           syntax.var('@'), quoted=True)
+    pattern = Pattern(os.path.join('%', dir_sentinel))
+    path = Function('patsubst', pattern, Pattern('%'), var('@'), quoted=True)
 
     buildfile.rule(
         target=pattern,
         recipe=[
-            syntax.silent(mkdir_p(cmd_var(mkdir_p, buildfile), path)),
-            syntax.silent(['touch', syntax.qvar('@')])
+            silent(mkdir_p(cmd_var(mkdir_p, buildfile), path)),
+            silent(['touch', qvar('@')])
         ]
     )

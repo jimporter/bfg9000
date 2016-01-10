@@ -107,8 +107,7 @@ def make_test_rule(build_inputs, buildfile, env):
         setenv = env.tool('setenv')
         local_env = lambda x: setenv(make.cmd_var(setenv, buildfile), x)
 
-    recipe, moredeps = _build_commands(tests.tests, make.syntax.Writer,
-                                       local_env)
+    recipe, moredeps = _build_commands(tests.tests, make.Writer, local_env)
     buildfile.rule(
         target='test',
         deps=deps + moredeps,
@@ -139,8 +138,7 @@ def ninja_test_rule(build_inputs, buildfile, env):
         setenv = env.tool('setenv')
         local_env = lambda x: setenv(ninja.cmd_var(setenv, buildfile), x)
 
-    commands, moredeps = _build_commands(tests.tests, ninja.syntax.Writer,
-                                         local_env)
+    commands, moredeps = _build_commands(tests.tests, ninja.Writer, local_env)
     ninja.command_build(
         buildfile,
         output='test',

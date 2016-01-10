@@ -1,60 +1,14 @@
 import os.path
 from itertools import chain
-from six import string_types
 
 from . import builtin
+from ..backends.make import writer as make
+from ..backends.ninja import writer as ninja
 from ..build_inputs import Edge
 from ..file_types import *
 from ..iterutils import iterate, listify, uniques
-from ..path import Path, Root
+from ..path import Root
 from ..shell import posix as pshell
-
-
-class ObjectFiles(list):
-    def __getitem__(self, key):
-        if isinstance(key, string_types):
-            key = Path(key, Root.srcdir)
-        elif isinstance(key, File):
-            key = key.path
-
-        if isinstance(key, Path):
-            for i in self:
-                if i.creator and i.creator.file.path == key:
-                    return i
-            raise ValueError("{!r} not found".format(key))
-        else:
-            return list.__getitem__(self, key)
-
-
-#####
-
-
-class Compile(Edge):
-    def __init__(self, build, env, name, file, include=None,
-                 packages=None, options=None, lang=None, extra_deps=None):
-        if name is None:
-            name = os.path.splitext(file)[0]
-
-        self.file = sourcify(file, SourceFile, lang=lang)
-        self.builder = env.compiler(self.file.lang)
-        self.includes = [sourcify(i, HeaderDirectory)
-                         for i in iterate(include)]
-        self.packages = listify(packages)
-        self.user_options = pshell.listify(options)
-        self.link_options = []
-
-        pkg_includes = chain.from_iterable(i.includes for i in self.packages)
-        self.all_includes = uniques(chain(pkg_includes, self.includes))
-        self._internal_options = sum(
-            (self.builder.include_dir(i) for i in self.all_includes), []
-        )
-
-        target = self.builder.output_file(name)
-        Edge.__init__(self, build, target, extra_deps)
-
-    @property
-    def options(self):
-        return self._internal_options + self.link_options + self.user_options
 
 
 class Link(Edge):
@@ -126,73 +80,6 @@ class Link(Edge):
         return self._internal_options + self.user_options
 
 
-class Alias(Edge):
-    def __init__(self, build, name, deps=None):
-        Edge.__init__(self, build, Phony(name), deps)
-
-
-class Command(Edge):
-    def __init__(self, build, name, cmd=None, cmds=None, environment=None,
-                 extra_deps=None):
-        if (cmd is None) == (cmds is None):
-            raise ValueError('exactly one of "cmd" or "cmds" must be ' +
-                             'specified')
-        elif cmds is None:
-            cmds = [cmd]
-
-        self.cmds = cmds
-        self.env = environment or {}
-        Edge.__init__(self, build, Phony(name), extra_deps)
-
-
-#####
-
-
-@builtin
-def source_file(name, lang=None):
-    # XXX: Add a way to make a generic File object instead of a SourceFile?
-    return SourceFile(name, Root.srcdir, lang)
-
-
-@builtin
-def directory(name):
-    return Directory(name, Root.srcdir)
-
-
-@builtin
-def header(name):
-    return HeaderFile(name, Root.srcdir)
-
-
-@builtin
-def header_directory(name, system=False):
-    return HeaderDirectory(name, Root.srcdir, system)
-
-
-@builtin
-def whole_archive(lib):
-    lib = sourcify(lib, StaticLibrary)
-    return WholeArchive(lib)
-
-
-@builtin.globals('build_inputs', 'env')
-def object_file(build, env, name=None, file=None, **kwargs):
-    if file is None:
-        if name is None:
-            raise TypeError('expected name')
-        return ObjectFile(name, root=Root.srcdir, **kwargs)
-    else:
-        return Compile(build, env, name, file, **kwargs).target
-
-
-@builtin.globals('build_inputs', 'env')
-def object_files(build, env, files, **kwargs):
-    def _compile(file, **kwargs):
-        return Compile(build, env, None, file, **kwargs).target
-    return ObjectFiles(objectify(i, ObjectFile, _compile, **kwargs)
-                       for i in iterate(files))
-
-
 @builtin.globals('builtins', 'build_inputs', 'env')
 def executable(builtins, build, env, name, files=None, **kwargs):
     if files is None and kwargs.get('libs') is None:
@@ -221,26 +108,88 @@ def shared_library(builtins, build, env, name, files=None, **kwargs):
                     **kwargs).target
 
 
-@builtin.globals('build_inputs')
-def alias(build, *args, **kwargs):
-    return Alias(build, *args, **kwargs).target
-
-
-@builtin.globals('build_inputs')
-def command(build, *args, **kwargs):
-    return Command(build, *args, **kwargs).target
-
-
-#####
-
-
-@builtin.globals('build_inputs')
-def global_options(build, options, lang):
-    if lang not in build.global_options:
-        build.global_options[lang] = []
-    build.global_options[lang].extend(pshell.listify(options))
+@builtin
+def whole_archive(lib):
+    lib = sourcify(lib, StaticLibrary)
+    return WholeArchive(lib)
 
 
 @builtin.globals('build_inputs')
 def global_link_options(build, options):
     build.global_link_options.extend(pshell.listify(options))
+
+
+def _get_flags(backend, rule, build_inputs, buildfile):
+    global_ldflags, ldflags = backend.flags_vars(
+        rule.builder.link_var + 'flags',
+        rule.builder.global_args + build_inputs.global_link_options,
+        buildfile
+    )
+
+    variables = {}
+    cmd_kwargs = {'args': ldflags}
+
+    ldflags_value = rule.builder.mode_args + rule.options
+    if ldflags_value:
+        variables[ldflags] = [global_ldflags] + ldflags_value
+
+    if rule.builder.mode != 'static_library':
+        global_ldlibs, ldlibs = backend.flags_vars(
+            rule.builder.link_var + 'libs', rule.builder.global_libs, buildfile
+        )
+        cmd_kwargs['libs'] = ldlibs
+        if rule.lib_options:
+            variables[ldlibs] = [global_ldlibs] + rule.lib_options
+
+    return variables, cmd_kwargs
+
+
+@make.rule_handler(Link)
+def make_link(rule, build_inputs, buildfile, env):
+    linker = rule.builder
+    variables, cmd_kwargs = _get_flags(make, rule, build_inputs, buildfile)
+
+    recipename = make.var('RULE_{}'.format(linker.rule_name.upper()))
+    if not buildfile.has_variable(recipename):
+        buildfile.define(recipename, [
+            linker(cmd=make.cmd_var(linker, buildfile), input=make.var('1'),
+                   output=make.var('2'), **cmd_kwargs)
+        ])
+
+    recipe = make.Call(recipename, rule.files, rule.target.path)
+    if len(rule.target.all) > 1:
+        target = rule.target.path.addext('.stamp')
+        buildfile.rule(target=rule.target.all, deps=[target])
+        recipe = [recipe, make.silent([ 'touch', var('@') ])]
+    else:
+        target = rule.target
+
+    dirs = uniques(i.path.parent() for i in rule.target.all)
+    buildfile.rule(
+        target=target,
+        deps=rule.files + rule.libs + rule.extra_deps,
+        order_only=[i.append(make.dir_sentinel) for i in dirs if i],
+        recipe=recipe,
+        variables=variables
+    )
+
+
+@ninja.rule_handler(Link)
+def ninja_link(rule, build_inputs, buildfile):
+    linker = rule.builder
+    variables, cmd_kwargs = _get_flags(ninja, rule, build_inputs, buildfile)
+    variables[ninja.var('output')] = rule.target.path
+
+    if not buildfile.has_rule(linker.rule_name):
+        buildfile.rule(name=linker.rule_name, command=linker(
+            cmd=ninja.cmd_var(linker, buildfile), input=ninja.var('in'),
+            output=ninja.var('output'), **cmd_kwargs
+        ))
+
+    buildfile.build(
+        output=rule.target.all,
+        rule=linker.rule_name,
+        inputs=rule.files,
+        implicit=rule.libs + rule.extra_deps,
+        variables=variables
+    )

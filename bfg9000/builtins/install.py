@@ -43,7 +43,7 @@ def _install_commands(backend, build_inputs, buildfile, env):
             kind = 'DATA'
             cmd = [cmd] + install.data_args
         cmd = buildfile.variable('INSTALL_' + kind, cmd,
-                                 backend.syntax.Section.command, True)
+                                 backend.Section.command, True)
 
         src = file.path
         dst = path.install_path(file.path, file.install_root)
