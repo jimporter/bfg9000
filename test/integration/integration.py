@@ -178,9 +178,9 @@ class IntegrationTest(unittest.TestCase):
 
     def assertOutput(self, args, output):
         args = [self._target_path(i) for i in args]
-        self.assertEqual(
-            subprocess.check_output(args, universal_newlines=True), output
-        )
+        self.assertEqual(subprocess.check_output(
+            args, stderr=subprocess.STDOUT, universal_newlines=True
+        ), output)
 
     def assertExists(self, path):
         if not os.path.exists(self._target_path(path)):
