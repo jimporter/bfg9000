@@ -193,3 +193,71 @@ def ninja_link(rule, build_inputs, buildfile):
         implicit=rule.libs + rule.extra_deps,
         variables=variables
     )
+
+try:
+    from ..backends.msbuild import writer as msbuild
+
+    def _reduce_options(files, global_options):
+        compilers = uniques(i.creator.builder for i in files)
+        langs = uniques(i.lang for i in files)
+
+        per_file_opts = []
+        for i in files:
+            # We intentionally exclude internal_options, since MSBuild handles
+            # these its own way.
+            for opts in [i.creator.link_options, i.creator.user_options]:
+                if opts not in per_file_opts:
+                    per_file_opts.append(opts)
+
+        return list(chain(
+            chain.from_iterable(i.global_args for i in compilers),
+            chain.from_iterable(global_options.get(i, []) for i in langs),
+            chain.from_iterable(per_file_opts)
+        ))
+
+    @msbuild.rule_handler(Link)
+    def msbuild_link(rule, build_inputs, solution, env):
+        # By definition, a dependency for an edge must already be defined by
+        # the time the edge is created, so we can map *all* the dependencies to
+        # their associated projects by looking at the projects we've already
+        # created.
+        dependencies = []
+        for dep in rule.libs:
+            if dep.creator.target not in solution:
+                raise ValueError('unknown dependency for {!r}'.format(dep))
+            dependencies.append(solution[dep.creator.target])
+
+        mode = {
+            'executable'    : 'Application',
+            'static_library': 'StaticLibrary',
+            'shared_library': 'DynamicLibrary',
+        }[rule.builder.mode]
+
+        includes = uniques(chain.from_iterable(
+            i.creator.all_includes for i in rule.files
+        ))
+
+        project = msbuild.VcxProject(
+            name=rule.name,
+            version=env.getvar('VISUALSTUDIOVERSION'),
+            mode=mode,
+            platform=env.getvar('PLATFORM'),
+            output_file=rule.target,
+            srcdir=env.srcdir.string(),
+            files=[i.creator.file for i in rule.files],
+            compile_options=_reduce_options(
+                rule.files, build_inputs.global_options
+            ),
+            includes=includes,
+            # We intentionally exclude internal_options from the link step,
+            # since MSBuild handles these its own way.
+            link_options=(
+                rule.builder.global_args +
+                build_inputs.global_link_options + rule.user_options
+            ),
+            libs=rule.all_libs,
+            dependencies=dependencies,
+        )
+        solution[rule.target] = project
+except:
+    pass

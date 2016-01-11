@@ -11,7 +11,7 @@ from ... import path
 from ... import shell
 from ...safe_str import safe_str
 
-Path = path.Path
+__all__ = ['Solution', 'UuidMap', 'VcxProject']
 
 
 def uuid_str(uuid):
@@ -38,7 +38,7 @@ class SlnElement(object):
         self.children.extend(args)
         return self
 
-    def _write(self, out, depth):
+    def write(self, out, depth=0):
         out.write('\t' * depth)
         out.write(self.name)
         if self.arg:
@@ -46,7 +46,7 @@ class SlnElement(object):
         out.write('\n')
 
         for i in self.children:
-            i._write(out, depth + 1)
+            i.write(out, depth + 1)
 
         out.write('\t' * depth + 'End' + self.name + '\n')
 
@@ -56,11 +56,11 @@ class SlnVariable(object):
         self.name = name
         self.value = value
 
-    def _write(self, out, depth):
+    def write(self, out, depth=0):
         out.write('\t' * depth + '{} = {}\n'.format(self.name, self.value))
 
 
-class SlnMaker(object):
+class SlnBuilder(object):
     def __init__(self):
         pass
 
@@ -73,63 +73,77 @@ class SlnMaker(object):
         return closure
 
 
-def sln_write(out, x):
-    if isinstance(x, list):
-        for i in x:
-            i._write(out, 0)
-    else:
-        x._write(out, 0)
+class Solution(object):
+    def __init__(self, uuids):
+        self.uuid = uuids['']
+        self._uuids = uuids
+        self._projects = []
+        self._project_map = {}
 
+    def __setitem__(self, key, value):
+        value.set_uuid(self._uuids)
+        self._projects.append(value)
+        self._project_map[id(key)] = value
 
-def write_solution(out, uuid, projects):
-    S = SlnMaker()
-    Var = SlnVariable
+    def __getitem__(self, key):
+        return self._project_map[id(key)]
 
-    uuid = uuid_str(uuid)
-    out.write('Microsoft Visual Studio Solution File, Format Version 12.00\n')
-    out.write('# Visual Studio 14\n')
+    def __iter__(self):
+        return iter(self._projects)
 
-    sln = [
-        Var('VisualStudioVersion', '14.0.22609.0'),
-        Var('MinimumVisualStudioVersion', '10.0.40219.1')
-    ]
+    def __contains__(self, key):
+        return id(key) in self._project_map
 
-    configs = set()
-    project_info = []
+    @property
+    def uuid_str(self):
+        return uuid_str(self.uuid)
 
-    for p in projects:
-        proj = S.Project(
-            '"{}"'.format(uuid),
-            '"{name}", "{path}", "{uuid}"'.format(
-                name=p.name, path=p.path, uuid=p.uuid_str
+    def write(self, out):
+        S = SlnBuilder()
+        Var = SlnVariable
+
+        out.write('Microsoft Visual Studio Solution File, Format Version ' +
+                  '12.00\n')
+        out.write('# Visual Studio 14\n')
+
+        Var('VisualStudioVersion', '14.0.22609.0').write(out)
+        Var('MinimumVisualStudioVersion', '10.0.40219.1').write(out)
+
+        configs = set()
+        project_info = []
+
+        for p in self._projects:
+            proj = S.Project(
+                '"{}"'.format(self.uuid_str),
+                '"{name}", "{path}", "{uuid}"'.format(
+                    name=p.name, path=p.path, uuid=p.uuid_str
+                )
             )
-        )
-        if p.dependencies:
-            proj.append(
-                S.ProjectSection('ProjectDependencies', 'postProject')
-                 .extend(Var(i.uuid_str, i.uuid_str) for i in p.dependencies)
+            if p.dependencies:
+                proj.append(
+                    S.ProjectSection('ProjectDependencies', 'postProject')
+                     .extend(Var(i.uuid_str, i.uuid_str)
+                             for i in p.dependencies)
+                )
+            proj.write(out)
+
+            configs.add(p.config_plat)
+            project_info.append(Var('{uuid}.{cfg}.ActiveCfg'.format(
+                uuid=p.uuid_str, cfg=p.config_plat
+            ), p.config_plat))
+            project_info.append(Var('{uuid}.{cfg}.Build.0'.format(
+                uuid=p.uuid_str, cfg=p.config_plat
+            ), p.config_plat))
+
+        S.Global()(
+            S.GlobalSection('SolutionConfigurationPlatforms', 'preSolution')
+             .extend(Var(i, i) for i in configs),
+            S.GlobalSection('ProjectConfigurationPlatforms', 'postSolution')
+             .extend(project_info),
+            S.GlobalSection('SolutionProperties', 'preSolution')(
+                Var('HideSolutionNode', 'FALSE')
             )
-        sln.append(proj)
-
-        configs.add(p.config_plat)
-        project_info.append(Var('{uuid}.{cfg}.ActiveCfg'.format(
-            uuid=p.uuid_str, cfg=p.config_plat
-        ), p.config_plat))
-        project_info.append(Var('{uuid}.{cfg}.Build.0'.format(
-            uuid=p.uuid_str, cfg=p.config_plat
-        ), p.config_plat))
-
-    sln.append(S.Global()(
-        S.GlobalSection('SolutionConfigurationPlatforms', 'preSolution')
-         .extend(Var(i, i) for i in configs),
-        S.GlobalSection('ProjectConfigurationPlatforms', 'postSolution')
-         .extend(project_info),
-        S.GlobalSection('SolutionProperties', 'preSolution')(
-            Var('HideSolutionNode', 'FALSE')
-        )
-    ))
-
-    sln_write(out, sln)
+        ).write(out)
 
 
 _path_vars = {
@@ -152,7 +166,7 @@ class VcxProject(object):
     _XMLNS = 'http://schemas.microsoft.com/developer/msbuild/2003'
     _DOCTYPE = '<?xml version="1.0" encoding="utf-8"?>'
 
-    def __init__(self, name, uuid, version=None, mode='Application',
+    def __init__(self, name, uuid=None, version=None, mode='Application',
                  configuration=None, platform=None, output_file=None,
                  import_lib=None, srcdir=None, files=None,
                  compile_options=None, includes=None, link_options=None,
@@ -185,6 +199,10 @@ class VcxProject(object):
             config=self.configuration,
             platform=self.platform
         )
+
+    def set_uuid(self, uuids):
+        if not self.uuid:
+            self.uuid = uuids[self.name]
 
     @property
     def uuid_str(self):
@@ -284,7 +302,7 @@ class VcxProject(object):
                                  pretty_print=True))
 
 
-class UUIDMap(object):
+class UuidMap(object):
     version = 1
 
     def __init__(self, path):

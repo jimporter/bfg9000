@@ -109,7 +109,7 @@ setup(
         'bfg9000.backends': [
             'make=bfg9000.backends.make.writer',
             'ninja=bfg9000.backends.ninja.writer',
-            'msbuild=bfg9000.backends.msbuild.rules [msbuild]',
+            'msbuild=bfg9000.backends.msbuild.writer [msbuild]',
         ],
     },
 
