@@ -160,10 +160,7 @@ def platform_info(name=None):
         return PosixPlatform(name)
 
 
-def which(names, env=None):
-    if not env:
-        env = os.environ
-
+def which(names, env=os.environ):
     # XXX: Create something to manage host-platform stuff like this?
     # (`Platform` is for targets.)
     paths = env.get('PATH', os.defpath).split(os.pathsep)

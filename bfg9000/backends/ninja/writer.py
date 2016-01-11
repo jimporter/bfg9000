@@ -1,3 +1,4 @@
+import os
 import subprocess
 from itertools import chain
 from packaging.specifiers import SpecifierSet
@@ -12,17 +13,18 @@ from .syntax import *
 from ...platforms import platform_name, which
 
 
-try:
-    ninja = which(['ninja', 'ninja-build'])
-    output = subprocess.check_output(
-        [ninja, '--version'],
-        universal_newlines=True
-    )
-    version = Version(output.strip())
-except IOError:
-    version = None
+def version(env=os.environ):
+    try:
+        ninja = which(env.get('NINJA', ['ninja', 'ninja-build']), env)
+        output = subprocess.check_output(
+            [ninja, '--version'],
+            universal_newlines=True
+        )
+        return Version(output.strip())
+    except IOError:
+        return None
 
-priority = 3 if version is not None else 0
+priority = 3
 
 _rule_handlers = {}
 _pre_rules = []
@@ -55,7 +57,7 @@ def write(env, build_inputs):
     for i in _pre_rules:
         i(build_inputs, buildfile, env)
     for e in build_inputs.edges:
-        _rule_handlers[type(e)](e, build_inputs, buildfile)
+        _rule_handlers[type(e)](e, build_inputs, buildfile, env)
     for i in _post_rules:
         i(build_inputs, buildfile, env)
 
@@ -75,16 +77,16 @@ def flags_vars(name, value, buildfile):
 
 
 class Commands(object):
-    def __init__(self, commands, env=None):
+    def __init__(self, commands, environ=None):
         self.commands = iterutils.listify(commands)
-        self.env = env or {}
+        self.environ = environ or {}
 
     def use(self):
         out = Writer(StringIO())
         if self.__needs_shell and platform_name() == 'windows':
             out.write_literal('cmd /c ')
 
-        env_vars = shell.global_env(self.env)
+        env_vars = shell.global_env(self.environ)
         for line in shell.join_commands(chain(env_vars, self.commands)):
             out.write_shell(line)
         return safe_str.escaped_str(out.stream.getvalue())
@@ -95,16 +97,16 @@ class Commands(object):
     @property
     def __needs_shell(self):
         return (
-            len(self.commands) + len(self.env) > 1 or
+            len(self.commands) + len(self.environ) > 1 or
             any(not iterutils.isiterable(i) for i in self.commands)
         )
 
 
-def command_build(buildfile, output, inputs=None, implicit=None,
-                  order_only=None, commands=None, env=None):
+def command_build(buildfile, env, output, inputs=None, implicit=None,
+                  order_only=None, commands=None, environ=None):
     # XXX: Only make some command builds use the console pool?
     extra_kwargs = {}
-    if version in SpecifierSet('>=1.5'):
+    if env.backend_version in SpecifierSet('>=1.5'):
         extra_kwargs['pool'] = 'console'
 
     if not buildfile.has_rule('command'):
@@ -118,5 +120,5 @@ def command_build(buildfile, output, inputs=None, implicit=None,
         inputs=inputs,
         implicit=iterutils.listify(implicit) + ['PHONY'],
         order_only=order_only,
-        variables={'cmd': Commands(commands, env)}
+        variables={'cmd': Commands(commands, environ)}
     )

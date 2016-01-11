@@ -1,7 +1,9 @@
 import json
 import os
+from packaging.version import Version
 from six import iteritems, string_types
 
+from .backends import get_backends
 from .path import Path, InstallRoot
 from . import platforms
 from . import tools
@@ -21,9 +23,11 @@ class Environment(object):
         env.__tools = {}
         return env
 
-    def __init__(self, bfgpath, backend, srcdir, builddir, install_dirs):
+    def __init__(self, bfgpath, backend, backend_version, srcdir, builddir,
+                 install_dirs):
         self.bfgpath = bfgpath
         self.backend = backend
+        self.backend_version = backend_version
 
         self.srcdir = srcdir
         self.builddir = builddir
@@ -68,6 +72,7 @@ class Environment(object):
                     'bfgpath': self.bfgpath,
                     'platform': self.platform.name,
                     'backend': self.backend,
+                    'backend_version': str(self.backend_version),
                     'variables': self.variables,
                     'srcdir': self.srcdir.to_json(),
                     'builddir': self.builddir.to_json(),
@@ -91,13 +96,19 @@ class Environment(object):
         for i in ['bfgpath', 'backend', 'variables']:
             setattr(env, i, data[i])
 
+        if version <= 5:
+            backend_version = get_backends()[data['backend']].version()
+        else:
+            backend_version = Version(data['backend_version'])
+        setattr(env, 'backend_version', backend_version)
+
         for i in ['srcdir', 'builddir']:
             if version <= 4:
                 setattr(env, i, Path(data[i]))
             else:
                 setattr(env, i, Path.from_json(data[i]))
 
-        env.platform = platforms.platform_info(state['data']['platform'])
+        env.platform = platforms.platform_info(data['platform'])
         env.install_dirs = {
             InstallRoot[k]: Path.from_json(v) for k, v in
             iteritems(data['install_dirs'])

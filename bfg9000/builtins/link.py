@@ -175,7 +175,7 @@ def make_link(rule, build_inputs, buildfile, env):
 
 
 @ninja.rule_handler(Link)
-def ninja_link(rule, build_inputs, buildfile):
+def ninja_link(rule, build_inputs, buildfile, env):
     linker = rule.builder
     variables, cmd_kwargs = _get_flags(ninja, rule, build_inputs, buildfile)
     variables[ninja.var('output')] = rule.target.path

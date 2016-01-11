@@ -130,6 +130,7 @@ def main():
         env = Environment(
             bfgpath=bfgpath,
             backend=args.backend,
+            backend_version=backends[args.backend].version(),
             srcdir=args.srcdir,
             builddir=args.builddir,
             install_dirs={

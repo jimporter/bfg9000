@@ -46,11 +46,11 @@ def make_command(rule, build_inputs, buildfile, env):
 
 
 @ninja.rule_handler(Command)
-def ninja_command(rule, build_inputs, buildfile):
+def ninja_command(rule, build_inputs, buildfile, env):
     ninja.command_build(
-        buildfile,
+        buildfile, env,
         output=rule.target,
         inputs=rule.extra_deps,
         commands=rule.cmds,
-        env=rule.env
+        environ=rule.env
     )

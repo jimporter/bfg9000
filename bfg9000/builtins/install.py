@@ -83,7 +83,7 @@ def ninja_install_rule(build_inputs, buildfile, env):
     commands = _install_commands(ninja, build_inputs, buildfile, env)
     if commands:
         ninja.command_build(
-            buildfile,
+            buildfile, env,
             output='install',
             inputs=['all'],
             commands=commands

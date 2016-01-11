@@ -1,25 +1,28 @@
 import os
 import re
 import subprocess
+from packaging.version import Version
 
 from ... import path
 from .syntax import *
 from ...platforms import which
 
-version = None
-try:
-    make = which(['make', 'gmake'])
-    output = subprocess.check_output(
-        [make, '--version'],
-        universal_newlines=True
-    )
-    m = re.match(r'GNU Make ([\d\.]+)', output)
-    if m:
-        version = m.group(1)
-except IOError:
-    pass
 
-priority = 2 if version is not None else 0
+def version(env=os.environ):
+    try:
+        make = which(env.get('MAKE', ['make', 'gmake']), env)
+        output = subprocess.check_output(
+            [make, '--version'],
+            universal_newlines=True
+        )
+        m = re.match(r'GNU Make ([\d\.]+)', output)
+        if m:
+            return Version(m.group(1))
+    except IOError:
+        pass
+    return None
+
+priority = 2
 
 _rule_handlers = {}
 _pre_rules = []

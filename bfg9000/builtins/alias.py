@@ -25,7 +25,7 @@ def make_alias(rule, build_inputs, buildfile, env):
 
 
 @ninja.rule_handler(Alias)
-def ninja_alias(rule, build_inputs, buildfile):
+def ninja_alias(rule, build_inputs, buildfile, env):
     buildfile.build(
         output=rule.target,
         rule='phony',

@@ -7,10 +7,11 @@ def get_backends():
     for i in iter_entry_points('bfg9000.backends'):
         try:
             backend = i.load()
-            if backend.priority >= 0:
-                backends.append((i.name, backend))
+            backends.append((i.name, backend))
         except DistributionNotFound:
             pass
 
-    backends.sort(key=lambda x: x[1].priority, reverse=True)
+    def sort_key(x):
+        return x[1].priority if x[1].version() else 0
+    backends.sort(key=sort_key, reverse=True)
     return OrderedDict(backends)

@@ -7,19 +7,20 @@ from ...makedirs import makedirs
 from ...platforms import which
 
 
-try:
-    msbuild = which('msbuild')
-    output = subprocess.check_output(
-        [msbuild, '/version'],
-        universal_newlines=True
-    )
-    m = re.search(r'([\d\.]+)$', output)
-    if m:
-        version = m.group(1)
-except IOError:
-    version = None
+def version(env=os.environ):
+    try:
+        msbuild = which(env.get('MSBUILD', ['msbuild', 'xbuild']), env)
+        output = subprocess.check_output(
+            [msbuild, '/version'],
+            universal_newlines=True
+        )
+        m = re.search(r'([\d\.]+)$', output)
+        if m:
+            return Version(m.group(1))
+    except IOError:
+        return None
 
-priority = 1 if version is not None else 0
+priority = 1
 
 _rule_handlers = {}
 

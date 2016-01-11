@@ -132,7 +132,7 @@ def make_object_file(rule, build_inputs, buildfile, env):
 
 
 @ninja.rule_handler(Compile)
-def ninja_object_file(rule, build_inputs, buildfile):
+def ninja_object_file(rule, build_inputs, buildfile, env):
     compiler = rule.builder
     variables, cmd_kwargs = _get_flags(ninja, rule, build_inputs, buildfile)
 

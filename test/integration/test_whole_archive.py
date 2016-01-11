@@ -3,7 +3,7 @@ import unittest
 from .integration import *
 from bfg9000.environment import Environment
 
-env = Environment(None, None, None, None, None)
+env = Environment(None, None, None, None, None, None)
 flavor = env.compiler('c++').flavor
 
 

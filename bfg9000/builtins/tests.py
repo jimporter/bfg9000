@@ -140,7 +140,7 @@ def ninja_test_rule(build_inputs, buildfile, env):
 
     commands, moredeps = _build_commands(tests.tests, ninja.Writer, local_env)
     ninja.command_build(
-        buildfile,
+        buildfile, env,
         output='test',
         inputs=deps + moredeps,
         commands=commands,
