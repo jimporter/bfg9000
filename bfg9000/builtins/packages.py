@@ -106,7 +106,7 @@ def boost_package(env, name=None, version=None):
             raise e
 
     if env.platform.name == 'windows':
-        if not env.linker('c++').auto_link:
+        if not env.linker('c++', 'shared_library').auto_link:
             # XXX: Don't require auto-link.
             raise ValueError('Boost on Windows requires auto-link')
         return BoostPackage(headers, lib_dirs=listify(lib_var),
