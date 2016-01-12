@@ -14,7 +14,8 @@ install:
   - cinst gnuwin32-coreutils.portable
   - call "%VS%" x86
   - set PATH=%PYTHON%;%PYTHON%\Scripts;%PATH%
-  - python -m pip install .
+  - easy_install lxml
+  - pip install .
 test_script:
-  - set BACKENDS=ninja
+  - set BACKENDS=ninja msbuild
   - python setup.py test
