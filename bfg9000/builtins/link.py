@@ -256,6 +256,7 @@ try:
                 build_inputs.global_link_options + rule.user_options
             ),
             libs=rule.all_libs,
+            lib_dirs=sum((i.lib_dirs for i in rule.packages), []),
             dependencies=dependencies,
         )
         solution[rule.target] = project

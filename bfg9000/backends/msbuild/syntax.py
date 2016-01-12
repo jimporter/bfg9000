@@ -170,7 +170,7 @@ class VcxProject(object):
                  configuration=None, platform=None, output_file=None,
                  import_lib=None, srcdir=None, files=None,
                  compile_options=None, includes=None, link_options=None,
-                 libs=None, libdirs=None, dependencies=None):
+                 libs=None, lib_dirs=None, dependencies=None):
         self.name = name
         self.uuid = uuid
         self.version = version or '14.0'
@@ -184,7 +184,7 @@ class VcxProject(object):
         self.includes = includes or []
         self.link_options = link_options or []
         self.libs = libs or []
-        self.libdirs = libdirs or []
+        self.lib_dirs = lib_dirs or []
         self.dependencies = dependencies or []
 
     @property
@@ -214,9 +214,9 @@ class VcxProject(object):
 
     def write(self, out):
         override_props = E.PropertyGroup()
-        if self.libdirs:
+        if self.lib_dirs:
             override_props.append(E.LibraryPath(
-                ';'.join(self.libdirs + ['$(LibraryPath)'])
+                ';'.join(self.lib_dirs + ['$(LibraryPath)'])
             ))
         override_props.append(E.TargetPath(
             path_str(self.output_file, out=True)
