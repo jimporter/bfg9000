@@ -1,4 +1,3 @@
-import errno
 import os
 import shutil
 import subprocess
@@ -35,13 +34,10 @@ def cleandir(path, recreate=True):
             try:
                 shutil.rmtree(path)
                 break
-            except Exception as e:
-                if e.errno == errno.ENOTEMPTY:
-                    if t is None:
-                        raise RuntimeError('unable to remove {}'.format(path))
-                    time.sleep(t)
-                elif e.errno != errno.ENOENT:
-                    raise
+            except OSError:
+                if t is None:
+                    raise RuntimeError('unable to remove {}'.format(path))
+                time.sleep(t)
     if recreate:
         makedirs(path)
 
