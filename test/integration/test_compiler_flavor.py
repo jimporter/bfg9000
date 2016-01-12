@@ -1,4 +1,8 @@
 from .integration import *
+from bfg9000.environment import Environment
+
+env = Environment(None, None, None, None, None, None)
+flavor = env.compiler('c++').flavor
 
 
 class TestCompilerFlavor(IntegrationTest):
@@ -7,4 +11,5 @@ class TestCompilerFlavor(IntegrationTest):
 
     def test_build(self):
         self.build(executable('program'))
-        self.assertOutput([executable('program')], 'hello, cc!\n')
+        self.assertOutput([executable('program')],
+                          'hello, {}!\n'.format(flavor))
