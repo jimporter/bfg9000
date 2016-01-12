@@ -1,3 +1,4 @@
+from functools import partial
 from six.moves import cStringIO as StringIO
 
 from . import builtin
@@ -105,7 +106,7 @@ def make_test_rule(build_inputs, buildfile, env):
         local_env = shell.local_env
     except AttributeError:
         setenv = env.tool('setenv')
-        local_env = lambda x: setenv(make.cmd_var(setenv, buildfile), x)
+        local_env = partial(setenv, make.cmd_var(setenv, buildfile))
 
     recipe, moredeps = _build_commands(tests.tests, make.Writer, local_env)
     buildfile.rule(
@@ -136,7 +137,7 @@ def ninja_test_rule(build_inputs, buildfile, env):
         local_env = shell.local_env
     except AttributeError:
         setenv = env.tool('setenv')
-        local_env = lambda x: setenv(ninja.cmd_var(setenv, buildfile), x)
+        local_env = partial(setenv, ninja.cmd_var(setenv, buildfile))
 
     commands, moredeps = _build_commands(tests.tests, ninja.Writer, local_env)
     ninja.command_build(
