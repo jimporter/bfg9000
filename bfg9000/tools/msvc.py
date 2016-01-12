@@ -81,7 +81,7 @@ class MsvcLinker(object):
             return Executable(name + self.platform.executable_ext,
                               Root.builddir, self.lang)
         elif self.mode == 'shared_library':
-            return DllLibrary(name + self.platform.executable_ext,
+            return DllLibrary(name + self.platform.shared_library_ext,
                               name + '.lib', Root.builddir, self.lang)
         else:
             raise ValueError("unknown mode '{}'".format(self.mode))
