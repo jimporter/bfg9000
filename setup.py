@@ -60,7 +60,7 @@ else:
 
 with open('README.md', 'r') as f:
     # Read from the file and strip out the badges.
-    long_desc = re.sub(r'(^# bfg9000.*)\n\n.*', r'\1', f.read())
+    long_desc = re.sub(r'(^# bfg9000.*)\n\n(.+\n)*', r'\1', f.read())
 
 try:
     import pypandoc
