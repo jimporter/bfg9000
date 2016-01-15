@@ -14,6 +14,7 @@ pages:
 - Home: index.md
 - User Guide:
   - Building with bfg9000: user/building.md
+  - Writing a Build File: user/writing.md
   - Reference: user/reference.md
   - Environment Variables: user/environment-vars.md
 - Developer Guide:

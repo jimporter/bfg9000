@@ -18,5 +18,5 @@ global_link_options('-static-libstdc++')
 executable('program', compile_options=['-DPOST="world!"'],
            files=['program.cpp'])
 
-# Finally, individual builds can set various options using the usual
-# environment variables, such as CXXFLAGS, CPPFLAGS, and LDFLAGS.
+# Finally, individual builds can set various options using the standard POSIX-
+# style environment variables, such as CXXFLAGS, CPPFLAGS, and LDFLAGS.
