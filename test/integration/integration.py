@@ -11,11 +11,14 @@ from bfg9000.path import InstallRoot
 from bfg9000.platforms import platform_info, platform_name
 from bfg9000.makedirs import makedirs
 from bfg9000.backends import get_backends
+from bfg9000.environment import Environment
 
 this_dir = os.path.abspath(os.path.dirname(__file__))
 examples_dir = os.path.join(this_dir, '..', '..', 'examples')
 test_data_dir = os.path.join(this_dir, '..', 'data')
 test_stage_dir = os.path.join(this_dir, '..', 'stage')
+
+env = Environment(None, None, None, None, None, None)
 
 Target = namedtuple('Target', ['name', 'path'])
 
@@ -192,30 +195,29 @@ class IntegrationTest(unittest.TestCase):
 
 
 def executable(name):
-    info = platform_info()
     return Target(name, os.path.normpath(os.path.join(
-        '.', name + info.executable_ext
+        '.', name + platform_info().executable_ext
     )))
 
 
-def shared_library(name):
-    info = platform_info()
-    prefix = '' if info.name == 'windows' else 'lib'
+if platform_info().name == 'windows' and env.compiler('c++').flavor == 'msvc':
+    _library_prefix = ''
+else:
+    _library_prefix = 'lib'
 
+
+def shared_library(name):
     head, tail = os.path.split(name)
     return Target(name, os.path.normpath(os.path.join(
-        '.', head, prefix + tail + info.shared_library_ext
+        '.', head, _library_prefix + tail + platform_info().shared_library_ext
     )))
 
 
 def static_library(name):
-    info = platform_info()
-    prefix = '' if info.name == 'windows' else 'lib'
-    suffix = '.lib' if info.name == 'windows' else '.a'
-
+    suffix = '.lib' if platform_info().name == 'windows' else '.a'
     head, tail = os.path.split(name)
     return Target(name, os.path.normpath(os.path.join(
-        '.', head, prefix + tail + suffix
+        '.', head, _library_prefix + tail + suffix
     )))
 
 

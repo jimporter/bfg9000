@@ -9,6 +9,8 @@ class TestDepfile(IntegrationTest):
         IntegrationTest.__init__(self, 'depfile', stage_src=True,
                                  *args, **kwargs)
 
+    @skip_pred(lambda x: x.backend == 'make' and
+               env.platform.name == 'windows', 'xfail on windows + make')
     def test_build(self):
         self.build(executable('program'))
         self.assertOutput([executable('program')], 'hello\n')

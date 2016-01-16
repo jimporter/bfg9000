@@ -38,6 +38,8 @@ class TestRegenerateGlob(IntegrationTest):
                     pjoin(self.srcdir, dest))
 
     @skip_if_backend('msbuild')
+    @skip_pred(lambda x: x.backend == 'make' and
+               env.platform.name == 'windows', 'xfail on windows + make')
     def test_add_file(self):
         self.wait()
         self.copyfile(pjoin('src', 'hello', 'bonjour.hpp'))
@@ -62,6 +64,8 @@ class TestRegenerateGlob(IntegrationTest):
                           'Goodbye!\nAuf Wiedersehen!\nAu revoir!\n')
 
     @skip_if_backend('msbuild')
+    @skip_pred(lambda x: x.backend == 'make' and
+               env.platform.name == 'windows', 'xfail on windows + make')
     def test_remove_file(self):
         self.wait()
         os.unlink(pjoin(self.srcdir, 'src', 'hello', 'hello.cpp'))

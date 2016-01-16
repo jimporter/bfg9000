@@ -2,27 +2,33 @@ build: false
 version: "{branch}-{build}"
 
 environment:
-  CPPFLAGS: /IC:\projects\bfg9000\libogg-1.3.2\include
+  BOOST_INCLUDEDIR: C:\Libraries\boost
+  BOOST_LIBRARYDIR: C:\Libraries\boost\lib32-msvc-12.0
   LIBRARY_PATH: C:\projects\bfg9000\libogg-1.3.2\lib
+  PYTHON: C:\Python27
 
   matrix:
-    - PYTHON: C:\Python27
-      VS: C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall.bat
-      BOOST_INCLUDEDIR: C:\Libraries\boost
-      BOOST_LIBRARYDIR: C:\Libraries\boost\lib32-msvc-12.0
-    - PYTHON: C:\Python27
-      VS: C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat
+    - BACKENDS: ninja make
+      CC: gcc
+      CXX: g++
+      CPPFLAGS: -IC:\projects\bfg9000\libogg-1.3.2\include
+      MAKE: mingw32-make
+      MINGW_PATH: C:\msys64\mingw64\bin
+    - VS: C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall.bat
+      CHOCO_EXTRAS: gnuwin32-make.portable
+      CPPFLAGS: /IC:\projects\bfg9000\libogg-1.3.2\include
+    - VS: C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat
+      CHOCO_EXTRAS: gnuwin32-make.portable
+      CPPFLAGS: /IC:\projects\bfg9000\libogg-1.3.2\include
       BOOST_INCLUDEDIR: C:\Libraries\boost_1_59_0
       BOOST_LIBRARYDIR: C:\Libraries\boost_1_59_0\lib32-msvc-14.0
 
 install:
   - call scripts\appveyor_install_libogg.bat
-  - cinst ninja
-  - cinst gnuwin32-coreutils.portable
-  - call "%VS%" x86
-  - set PATH=%PYTHON%;%PYTHON%\Scripts;%PATH%
+  - cinst ninja gnuwin32-coreutils.portable %CHOCO_EXTRAS%
+  - if defined VS call "%VS%" x86
+  - set PATH=%PYTHON%;%PYTHON%\Scripts;%MINGW_PATH%;%PATH%
   - easy_install lxml
   - pip install .
 test_script:
-  - set BACKENDS=ninja msbuild
   - python setup.py test -q
