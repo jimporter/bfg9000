@@ -297,7 +297,9 @@ typically used to turn a static library into a shared library.</p>
 <h2 id="grouping-rules">Grouping rules</h2>
 <h3 id="default">default(<em>...</em>)</h3>
 <p>Specify a list of build steps that should be run by default when building. These
-are all accumulated into the <code>all</code> target.</p>
+are all accumulated into the <code>all</code> target. If <em>default</em> is never called, all
+executables and libraries <em>not</em> passed to
+<a href="#testtest-options-environmentdriver"><em>test</em></a> will be built by default.</p>
 <h3 id="install-all">install(<em>...</em>, [<em>all</em>])</h3>
 <p>Specify a list of files that need to be installed for the project to work. Each
 will be installed to the appropriate location based on its type (e.g. header
