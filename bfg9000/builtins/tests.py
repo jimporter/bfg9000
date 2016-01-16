@@ -34,6 +34,8 @@ def test(build, test, options=None, environment=None, driver=None):
 
     test = sourcify(test, File)
     build.tests.targets.append(test)
+    build.defaults.remove(test)
+
     case = TestCase(test, pshell.listify(options), environment or {})
     (driver or build.tests).tests.append(case)
     return case

@@ -72,7 +72,7 @@ class Link(Edge):
         if getattr(self.builder, 'post_install', None):
             target.post_install = self.builder.post_install
 
-        build.fallback_default = target
+        build.defaults.add(target)
         Edge.__init__(self, build, target, extra_deps)
 
     @property

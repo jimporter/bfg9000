@@ -170,7 +170,9 @@ typically used to turn a static library into a shared library.
 ### default(*...*)
 
 Specify a list of build steps that should be run by default when building. These
-are all accumulated into the `all` target.
+are all accumulated into the `all` target. If *default* is never called, all
+executables and libraries *not* passed to
+[*test*](#testtest-options-environmentdriver) will be built by default.
 
 ### install(*...*, [*all*])
 

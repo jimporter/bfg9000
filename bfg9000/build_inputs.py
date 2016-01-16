@@ -13,7 +13,7 @@ class Edge(object):
         build.add_edge(self)
 
 
-class InstallInputs(object):
+class InstallTargets(object):
     def __init__(self):
         self.files = []
         self.directories = []
@@ -32,12 +32,30 @@ class TestInputs(object):
         return bool(self.tests)
 
 
+class DefaultTargets(object):
+    def __init__(self):
+        self.default_targets = []
+        self.fallback_defaults = []
+
+    def add(self, target, explicit=False):
+        targets = self.default_targets if explicit else self.fallback_defaults
+        targets.append(target)
+
+    def remove(self, target):
+        for i, fallback in enumerate(self.fallback_defaults):
+            if target is fallback:
+                self.fallback_defaults.pop(i)
+
+    @property
+    def targets(self):
+        return self.default_targets or self.fallback_defaults
+
+
 class BuildInputs(object):
     def __init__(self):
         self.edges = []
-        self.default_targets = []
-        self.fallback_default = None
-        self.install_targets = InstallInputs()
+        self.defaults = DefaultTargets()
+        self.install_targets = InstallTargets()
         self.tests = TestInputs()
         self.global_options = {}
         self.global_link_options = []
@@ -45,11 +63,3 @@ class BuildInputs(object):
 
     def add_edge(self, edge):
         self.edges.append(edge)
-
-    def get_default_targets(self):
-        if self.default_targets:
-            return self.default_targets
-        elif self.fallback_default:
-            return [self.fallback_default]
-        else:
-            return []

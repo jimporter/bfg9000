@@ -2,4 +2,5 @@
 
 a = executable('a', files=['a.cpp'])
 b = executable('b', files=['b.cpp'])
-default(a, b)
+
+test(executable('test', files=['test.cpp']))

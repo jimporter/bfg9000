@@ -184,6 +184,12 @@ class IntegrationTest(unittest.TestCase):
                 "'{}' does not exist".format(os.path.normpath(path))
             )
 
+    def assertNotExists(self, path):
+        if os.path.exists(self._target_path(path)):
+            raise unittest.TestCase.failureException(
+                "'{}' exists".format(os.path.normpath(path))
+            )
+
 
 def executable(name):
     info = platform_info()
