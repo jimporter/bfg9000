@@ -5,7 +5,18 @@ from . import builtin
 from .. import path
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
+from ..build_inputs import build_input
 from ..file_types import Directory
+
+
+@build_input('install')
+class InstallTargets(object):
+    def __init__(self):
+        self.files = []
+        self.directories = []
+
+    def __nonzero__(self):
+        return bool(self.files or self.directories)
 
 
 @builtin.globals('builtins', 'build_inputs')
@@ -21,14 +32,14 @@ def install(builtins, build, *args, **kwargs):
 
     for i in _flatten(args) if all_files else args:
         if isinstance(i, Directory):
-            build.install_targets.directories.append(i)
+            build['install'].directories.append(i)
         else:
             builtins['default'](i)
-            build.install_targets.files.append(i)
+            build['install'].files.append(i)
 
 
 def _install_commands(backend, build_inputs, buildfile, env):
-    install_targets = build_inputs.install_targets
+    install_targets = build_inputs['install']
     if not install_targets:
         return None
 

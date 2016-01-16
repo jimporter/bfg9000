@@ -1,15 +1,19 @@
 import os.path
+from collections import defaultdict
 from itertools import chain
 from six import string_types
 
 from . import builtin
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
-from ..build_inputs import Edge
+from ..build_inputs import build_input, Edge
 from ..file_types import *
 from ..iterutils import iterate, listify, uniques
 from ..path import Path, Root
 from ..shell import posix as pshell
+
+
+build_input('compile_options')(lambda: defaultdict(list))
 
 
 class ObjectFiles(list):
@@ -76,16 +80,14 @@ def object_files(build, env, files, **kwargs):
 
 @builtin.globals('build_inputs')
 def global_options(build, options, lang):
-    if lang not in build.global_options:
-        build.global_options[lang] = []
-    build.global_options[lang].extend(pshell.listify(options))
+    build['compile_options'][lang].extend(pshell.listify(options))
 
 
 def _get_flags(backend, rule, build_inputs, buildfile):
     global_cflags, cflags = backend.flags_vars(
         rule.builder.command_var + 'flags',
         ( rule.builder.global_args +
-          build_inputs.global_options.get(rule.file.lang, []) ),
+          build_inputs['compile_options'][rule.file.lang] ),
         buildfile
     )
 

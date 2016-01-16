@@ -4,11 +4,14 @@ from itertools import chain
 from . import builtin
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
-from ..build_inputs import Edge
+from ..build_inputs import build_input, Edge
 from ..file_types import *
 from ..iterutils import iterate, listify, uniques
 from ..path import Root
 from ..shell import posix as pshell
+
+
+build_input('link_options')(list)
 
 
 class Link(Edge):
@@ -72,7 +75,7 @@ class Link(Edge):
         if getattr(self.builder, 'post_install', None):
             target.post_install = self.builder.post_install
 
-        build.defaults.add(target)
+        build['defaults'].add(target)
         Edge.__init__(self, build, target, extra_deps)
 
     @property
@@ -116,13 +119,13 @@ def whole_archive(lib):
 
 @builtin.globals('build_inputs')
 def global_link_options(build, options):
-    build.global_link_options.extend(pshell.listify(options))
+    build['link_options'].extend(pshell.listify(options))
 
 
 def _get_flags(backend, rule, build_inputs, buildfile):
     global_ldflags, ldflags = backend.flags_vars(
         rule.builder.link_var + 'flags',
-        rule.builder.global_args + build_inputs.global_link_options,
+        rule.builder.global_args + build_inputs['link_options'],
         buildfile
     )
 
@@ -211,7 +214,7 @@ try:
 
         return list(chain(
             chain.from_iterable(i.global_args for i in compilers),
-            chain.from_iterable(global_options.get(i, []) for i in langs),
+            chain.from_iterable(global_options[i] for i in langs),
             chain.from_iterable(per_file_opts)
         ))
 
@@ -246,14 +249,14 @@ try:
             srcdir=env.srcdir.string(),
             files=[i.creator.file for i in rule.files],
             compile_options=_reduce_options(
-                rule.files, build_inputs.global_options
+                rule.files, build_inputs['compile_options']
             ),
             includes=includes,
             # We intentionally exclude internal_options from the link step,
             # since MSBuild handles these its own way.
             link_options=(
-                rule.builder.global_args +
-                build_inputs.global_link_options + rule.user_options
+                rule.user_options + rule.builder.global_args +
+                build_inputs['link_options']
             ),
             libs=rule.all_libs,
             lib_dirs=sum((i.lib_dirs for i in rule.packages), []),

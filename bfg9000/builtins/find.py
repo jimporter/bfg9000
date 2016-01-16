@@ -9,7 +9,10 @@ from ..iterutils import iterate
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..backends.make.syntax import Writer, Syntax
+from ..build_inputs import build_input
 
+
+build_input('find_dirs')(set)
 depfile_name = '.bfg_find_deps'
 
 
@@ -111,7 +114,7 @@ def find_files(builtins, build_inputs, env, path='.', name='*', type=None,
 
     results, seen_dirs = _find_files(path, name, type, flat, filter)
     if cache:
-        build_inputs.find_dirs.update(seen_dirs)
+        build_inputs['find_dirs'].update(seen_dirs)
     return results
 
 
@@ -121,9 +124,9 @@ def make_regenerate_rule(build_inputs, buildfile, env):
     bfgcmd = make.cmd_var(bfg9000, buildfile)
     bfgpath = path.Path('build.bfg', path.Root.srcdir)
 
-    if build_inputs.find_dirs:
+    if build_inputs['find_dirs']:
         write_depfile(env.builddir.append(depfile_name).string(),
-                      'Makefile', build_inputs.find_dirs, makeify=True)
+                      'Makefile', build_inputs['find_dirs'], makeify=True)
         buildfile.include(depfile_name)
 
     buildfile.rule(
@@ -140,9 +143,9 @@ def ninja_regenerate_rule(build_inputs, buildfile, env):
     bfgpath = path.Path('build.bfg', path.Root.srcdir)
     depfile = None
 
-    if build_inputs.find_dirs:
+    if build_inputs['find_dirs']:
         write_depfile(env.builddir.append(depfile_name).string(),
-                      'build.ninja', build_inputs.find_dirs)
+                      'build.ninja', build_inputs['find_dirs'])
         depfile = depfile_name
 
     buildfile.rule(

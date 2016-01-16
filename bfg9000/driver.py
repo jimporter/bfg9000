@@ -74,13 +74,21 @@ def parse_args(parser, args=None, namespace=None):
     return args
 
 
-def execute_script(filename, build, env):
-    with open(filename, 'r') as f:
+def execute_script(env, filename=bfgfile):
+    builtins.load()
+    build = BuildInputs()
+    builtin_dict = builtins.bind(build_inputs=build, env=env)
+
+    bfgpath = env.srcdir.append(filename).string()
+    with open(bfgpath, 'r') as f:
+        os.chdir(env.srcdir.string())
         code = compile(f.read(), filename, 'exec')
         try:
-            exec(code, builtins.bind(build_inputs=build, env=env), {})
+            exec(code, builtin_dict, {})
         except SystemExit:
             pass
+
+    return build
 
 
 def main():
@@ -142,9 +150,5 @@ def main():
         )
         env.save(args.builddir.string())
 
-    build = BuildInputs()
-    os.chdir(env.srcdir.string())
-    bfgpath = env.srcdir.append(bfgfile).string()
-
-    execute_script(bfgpath, build, env)
+    build = execute_script(env)
     backends[env.backend].write(env, build)

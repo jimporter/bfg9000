@@ -29,7 +29,7 @@ builtin = _decorate_builtin()
 builtin.globals = _decorate_builtin
 
 
-def _load_builtins():
+def load():
     global _loaded_builtins
     if not _loaded_builtins:
         # Lazily load the builtins so we don't get cyclic imports.
@@ -40,8 +40,6 @@ def _load_builtins():
 
 
 def bind(**kwargs):
-    _load_builtins()
-
     builtins = {}
     for k, v in iteritems(_all_builtins):
         builtins[k] = v.bind(builtins=builtins, **kwargs)

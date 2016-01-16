@@ -7,8 +7,20 @@ from .. import shell
 from .packages import SystemExecutable
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
+from ..build_inputs import build_input
 from ..file_types import Executable, File, objectify, sourcify
 from ..shell import posix as pshell
+
+
+@build_input('tests')
+class TestInputs(object):
+    def __init__(self):
+        self.tests = []
+        self.targets = []
+        self.extra_deps = []
+
+    def __nonzero__(self):
+        return bool(self.tests)
 
 
 class TestCase(object):
@@ -33,11 +45,11 @@ def test(build, test, options=None, environment=None, driver=None):
                         'specified')
 
     test = sourcify(test, File)
-    build.tests.targets.append(test)
-    build.defaults.remove(test)
+    build['tests'].targets.append(test)
+    build['defaults'].remove(test)
 
     case = TestCase(test, pshell.listify(options), environment or {})
-    (driver or build.tests).tests.append(case)
+    (driver or build['tests']).tests.append(case)
     return case
 
 
@@ -50,7 +62,7 @@ def test_driver(builtins, build, env, driver, options=None, environment=None,
 
     driver = objectify(driver, Executable, builtins['system_executable'])
     result = TestDriver(driver, pshell.listify(options), environment or {})
-    (parent or build.tests).tests.append(result)
+    (parent or build['tests']).tests.append(result)
     return result
 
 
@@ -58,7 +70,7 @@ def test_driver(builtins, build, env, driver, options=None, environment=None,
 def test_deps(build, *args):
     if len(args) == 0:
         raise ValueError('expected at least one argument')
-    build.tests.extra_deps.extend(args)
+    build['tests'].extra_deps.extend(args)
 
 
 def _build_commands(tests, writer, local_env, collapse=False):
@@ -90,7 +102,7 @@ def _build_commands(tests, writer, local_env, collapse=False):
 
 @make.post_rule
 def make_test_rule(build_inputs, buildfile, env):
-    tests = build_inputs.tests
+    tests = build_inputs['tests']
     if not tests:
         return
 
@@ -121,7 +133,7 @@ def make_test_rule(build_inputs, buildfile, env):
 
 @ninja.post_rule
 def ninja_test_rule(build_inputs, buildfile, env):
-    tests = build_inputs.tests
+    tests = build_inputs['tests']
     if not tests:
         return
 

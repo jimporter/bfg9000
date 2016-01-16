@@ -1,5 +1,19 @@
+from six import iteritems
+
 from .file_types import File, Node, sourcify
 from .iterutils import iterate
+
+
+_build_inputs = {}
+
+
+def build_input(name):
+    def wrapper(fn):
+        if name in _build_inputs:
+            raise ValueError('"{}" already registered'.format(name))
+        _build_inputs[name] = fn
+        return fn
+    return wrapper
 
 
 class Edge(object):
@@ -13,53 +27,16 @@ class Edge(object):
         build.add_edge(self)
 
 
-class InstallTargets(object):
-    def __init__(self):
-        self.files = []
-        self.directories = []
-
-    def __nonzero__(self):
-        return bool(self.files or self.directories)
-
-
-class TestInputs(object):
-    def __init__(self):
-        self.tests = []
-        self.targets = []
-        self.extra_deps = []
-
-    def __nonzero__(self):
-        return bool(self.tests)
-
-
-class DefaultTargets(object):
-    def __init__(self):
-        self.default_targets = []
-        self.fallback_defaults = []
-
-    def add(self, target, explicit=False):
-        targets = self.default_targets if explicit else self.fallback_defaults
-        targets.append(target)
-
-    def remove(self, target):
-        for i, fallback in enumerate(self.fallback_defaults):
-            if target is fallback:
-                self.fallback_defaults.pop(i)
-
-    @property
-    def targets(self):
-        return self.default_targets or self.fallback_defaults
-
-
 class BuildInputs(object):
     def __init__(self):
         self.edges = []
-        self.defaults = DefaultTargets()
-        self.install_targets = InstallTargets()
-        self.tests = TestInputs()
-        self.global_options = {}
-        self.global_link_options = []
-        self.find_dirs = set()
+        self.extra_inputs = {}
+
+        for name, fn in iteritems(_build_inputs):
+            self.extra_inputs[name] = fn()
 
     def add_edge(self, edge):
         self.edges.append(edge)
+
+    def __getitem__(self, key):
+        return self.extra_inputs[key]
