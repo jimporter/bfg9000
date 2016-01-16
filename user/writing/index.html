@@ -235,6 +235,18 @@ can determine the kind of compiler being used by consulting the build's
 <a href="../reference/#environment">Environment</a> and checking the compiler's
 <a href="../reference/#compilerflavor"><em>flavor</em></a>.</p>
 <h2 id="building-libraries">Building libraries</h2>
+<p>Similar to building executables, you can also build
+<a href="../reference/#shared_libraryname-files-extra_deps">shared</a> and
+<a href="../reference/#static_libraryname-files-extra_deps">static</a> libraries. These take
+the same arguments as above, although static libraries have no use for the
+<em>link_options</em> argument.</p>
+<p>Once you've defined rules to build a library, you can pass it along to an
+executable or other shared library via the <em>libs</em> argument:</p>
+<pre><code class="python">shared = shared_library('shared', files=['shared.cpp'])
+static = static_library('shared', files=['static.cpp'])
+executable('program', files=['program.cpp'], libs=[shared, static])
+</code></pre>
+
 <h2 id="default-build">Default build</h2>
 <h2 id="external-packages">External packages</h2>
 <h2 id="installation">Installation</h2>
