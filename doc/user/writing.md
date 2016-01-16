@@ -94,6 +94,21 @@ can determine the kind of compiler being used by consulting the build's
 
 ## Building libraries
 
+Similar to building executables, you can also build
+[shared](reference.md#shared_libraryname-files-extra_deps) and
+[static](reference.md#static_libraryname-files-extra_deps) libraries. These take
+the same arguments as above, although static libraries have no use for the
+*link_options* argument.
+
+Once you've defined rules to build a library, you can pass it along to an
+executable or other shared library via the *libs* argument:
+
+```python
+shared = shared_library('shared', files=['shared.cpp'])
+static = static_library('shared', files=['static.cpp'])
+executable('program', files=['program.cpp'], libs=[shared, static])
+```
+
 ## Default build
 
 ## External packages
