@@ -153,7 +153,7 @@ class IntegrationTest(unittest.TestCase):
         os.chdir(self.builddir)
 
     def build(self, target=None):
-        args = [self.backend]
+        args = [os.getenv(self.backend.upper(), self.backend)]
         if target:
             args.append(self._target_name(target))
         return self.assertPopen(args, True)
