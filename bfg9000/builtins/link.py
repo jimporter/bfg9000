@@ -163,7 +163,7 @@ def make_link(rule, build_inputs, buildfile, env):
     if len(rule.target.all) > 1:
         target = rule.target.path.addext('.stamp')
         buildfile.rule(target=rule.target.all, deps=[target])
-        recipe = [recipe, make.silent([ 'touch', var('@') ])]
+        recipe = [recipe, make.silent([ 'touch', make.var('@') ])]
     else:
         target = rule.target
 
