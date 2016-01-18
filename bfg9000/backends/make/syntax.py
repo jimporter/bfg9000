@@ -7,6 +7,7 @@ from six.moves import cStringIO as StringIO
 from ... import path
 from ... import safe_str
 from ... import iterutils
+from ...platforms import platform_name
 from ...shell import posix as pshell
 
 __all__ = ['Call', 'Entity', 'Function', 'Makefile', 'Pattern', 'Section',
@@ -22,11 +23,16 @@ Section = Enum('Section', ['path', 'command', 'flags', 'other'])
 
 
 class Writer(object):
+    # Don't escape ":" if we're using Windows paths.
+    __extra_escapes = '' if platform_name() == 'windows' else ':'
+    __target_ex = re.compile(r'(\\*)([#?*\[\]~\s%{}])'.format(__extra_escapes))
+    __dep_ex = re.compile(r'(\\*)([#?*\[\]~\s|%{}])'.format(__extra_escapes))
+
     def __init__(self, stream):
         self.stream = stream
 
-    @staticmethod
-    def escape_str(string, syntax):
+    @classmethod
+    def escape_str(cls, string, syntax):
         def repl(match):
             return match.group(1) * 2 + '\\' + match.group(2)
 
@@ -35,11 +41,11 @@ class Writer(object):
         result = string.replace('$', '$$')
 
         if syntax == Syntax.target:
-            return re.sub(r'(\\*)([#?*\[\]~\s%])', repl, result)
+            return cls.__target_ex.sub(repl, result)
         elif syntax == Syntax.dependency:
-            return re.sub(r'(\\*)([#?*\[\]~\s|%])', repl, result)
+            return cls.__dep_ex.sub(repl, result)
         elif syntax == Syntax.function:
-            return re.sub(',', '$,', result)
+            return result.replace(',', '$,')
         elif syntax in [Syntax.shell, Syntax.clean]:
             return result
         else:
