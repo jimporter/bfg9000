@@ -134,7 +134,9 @@ def main():
             return 1
     else:
         # De-munge the entry point if we're on Windows.
-        bfgpath = os.path.realpath(re.sub('-script.py$', '.exe', sys.argv[0]))
+        bfgpath = Path(os.path.realpath(
+            re.sub('-script.py$', '.exe', sys.argv[0])
+        ))
         env = Environment(
             bfgpath=bfgpath,
             backend=args.backend,

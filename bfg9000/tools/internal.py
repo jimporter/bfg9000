@@ -1,5 +1,3 @@
-import os.path
-
 from . import tool
 from ..platforms import platform_name
 from ..safe_str import escaped_str, jbos, safe_str
@@ -21,8 +19,8 @@ class Depfixer(object):
     rule_name = command_var = 'depfixer'
 
     def __init__(self, env):
-        path = os.path.join(os.path.dirname(env.bfgpath), 'bfg9000-depfixer')
-        self.command = env.getvar('DEPFIXER', path)
+        default = env.bfgpath.parent().append('bfg9000-depfixer')
+        self.command = env.getvar('DEPFIXER', default)
 
     def __call__(self, cmd, depfile):
         return cmd + ' < ' + depfile + ' >> ' + depfile
@@ -34,8 +32,7 @@ if platform_name() == 'windows':
         rule_name = command_var = 'setenv'
 
         def __init__(self, env):
-            default = os.path.join(os.path.dirname(env.bfgpath),
-                                   'bfg9000-setenv')
+            default = env.bfgpath.parent().append('bfg9000-setenv')
             self.command = env.getvar('SETENV', default)
 
         def __call__(self, cmd, env):

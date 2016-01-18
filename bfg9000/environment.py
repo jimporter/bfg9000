@@ -14,7 +14,7 @@ class EnvVersionError(RuntimeError):
 
 
 class Environment(object):
-    version = 5
+    version = 6
     envfile = '.bfg_environ'
 
     def __new__(cls, *args, **kwargs):
@@ -69,7 +69,7 @@ class Environment(object):
             json.dump({
                 'version': self.version,
                 'data': {
-                    'bfgpath': self.bfgpath,
+                    'bfgpath': self.bfgpath.to_json(),
                     'platform': self.platform.name,
                     'backend': self.backend,
                     'backend_version': str(self.backend_version),
@@ -93,7 +93,7 @@ class Environment(object):
 
         env = Environment.__new__(Environment)
 
-        for i in ['bfgpath', 'backend', 'variables']:
+        for i in ['backend', 'variables']:
             setattr(env, i, data[i])
 
         if version <= 5:
@@ -102,8 +102,8 @@ class Environment(object):
             backend_version = Version(data['backend_version'])
         setattr(env, 'backend_version', backend_version)
 
-        for i in ['srcdir', 'builddir']:
-            if version <= 4:
+        for i in ['bfgpath', 'srcdir', 'builddir']:
+            if version <= 4 or (version <= 5 and i == 'bfgpath'):
                 setattr(env, i, Path(data[i]))
             else:
                 setattr(env, i, Path.from_json(data[i]))
