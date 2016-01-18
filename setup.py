@@ -51,12 +51,12 @@ try:
 except:
     pass
 
-extra_exclude = []
 extra_scripts = []
 if platform.system().lower() == 'windows':
-    extra_scripts.append('bfg9000-setenv=bfg9000.setenv:main')
-else:
-    extra_exclude.append('bfg9000.setenv')
+    extra_scripts.extend([
+        'bfg9000-setenv=bfg9000.setenv:main',
+        'bfg9000-makedirs=bfg9000.makedirs:main'
+    ])
 
 with open('README.md', 'r') as f:
     # Read from the file and strip out the badges.
@@ -96,7 +96,7 @@ setup(
         'Programming Language :: Python :: 3.5',
     ],
 
-    packages=find_packages(exclude=['test', 'test.*'] + extra_exclude),
+    packages=find_packages(exclude=['test', 'test.*']),
 
     install_requires=['enum-compat', 'packaging', 'six'],
     extras_require={'msbuild': ['lxml']},
