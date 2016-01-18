@@ -8,6 +8,7 @@ from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..build_inputs import Edge
 from ..file_types import Phony
+from ..shell import posix as pshell
 
 
 class Command(Edge):
@@ -33,7 +34,8 @@ def command(build, *args, **kwargs):
 def make_command(rule, build_inputs, buildfile, env):
     # Join all the commands onto one line so that users can use 'cd' and such.
     out = make.Writer(StringIO())
-    env_vars = shell.global_env(rule.env)
+    env_vars = pshell.global_env(rule.env)
+
     for line in shell.join_commands(chain(env_vars, rule.cmds)):
         out.write_shell(line)
 

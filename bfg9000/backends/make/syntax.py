@@ -6,8 +6,8 @@ from six.moves import cStringIO as StringIO
 
 from ... import path
 from ... import safe_str
-from ... import shell
 from ... import iterutils
+from ...shell import posix as pshell
 
 __all__ = ['Call', 'Entity', 'Function', 'Makefile', 'Pattern', 'Section',
            'Syntax', 'Writer', 'Variable', 'var', 'qvar', 'silent',
@@ -48,7 +48,7 @@ class Writer(object):
     def write_literal(self, string):
         self.stream.write(string)
 
-    def write(self, thing, syntax, shell_quote=shell.quote_info):
+    def write(self, thing, syntax, shell_quote=pshell.quote_info):
         thing = safe_str.safe_str(thing)
         shelly = syntax in [Syntax.function, Syntax.shell]
         escaped = False
@@ -66,11 +66,11 @@ class Writer(object):
         elif isinstance(thing, path.Path):
             out = Writer(StringIO())
             thing = thing.realize(path_vars, shelly)
-            escaped = out.write(thing, syntax, shell.escape)
+            escaped = out.write(thing, syntax, pshell.escape)
 
             thing = out.stream.getvalue()
             if shelly and escaped:
-                thing = shell.quote_escaped(thing)
+                thing = pshell.quote_escaped(thing)
             self.write_literal(thing)
         else:
             raise TypeError(type(thing))
@@ -78,9 +78,9 @@ class Writer(object):
         return escaped
 
     def write_each(self, things, syntax, delim=safe_str.escaped_str(' '),
-                   prefix=None, suffix=None):
+                   prefix=None, suffix=None, shell_quote=pshell.quote_info):
         for i in iterutils.tween(things, delim, prefix, suffix):
-            self.write(i, syntax)
+            self.write(i, syntax, shell_quote)
 
     def write_shell(self, thing, clean=False):
         syntax = Syntax.clean if clean else Syntax.shell
@@ -159,7 +159,7 @@ class Variable(Entity):
     def use(self):
         fmt = '${}' if len(self.name) == 1 else '$({})'
         if self.quoted:
-            fmt = shell.quote_escaped(fmt)
+            fmt = pshell.quote_escaped(fmt)
         return safe_str.escaped_str(fmt.format(self.name))
 
 
@@ -178,15 +178,17 @@ class Function(Entity):
         self.quoted = kwargs.get('quoted', False)
 
     def use(self):
-        out = Writer(StringIO())
-
         esc = safe_str.escaped_str
+        kwargs = {'shell_quote': None} if self.quoted else {}
+
+        out = Writer(StringIO())
         prefix = '$(' + self.name + ' '
         for i in iterutils.tween(self.args, esc(','), esc(prefix), esc(')')):
-            out.write_each(iterutils.iterate(i), Syntax.function)
+            out.write_each(iterutils.iterate(i), Syntax.function, **kwargs)
         result = out.stream.getvalue()
+
         if self.quoted:
-            result = shell.quote_escaped(result)
+            result = pshell.quote_escaped(result)
         return safe_str.escaped_str(result)
 
 

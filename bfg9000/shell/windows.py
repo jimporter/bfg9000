@@ -11,7 +11,6 @@ __all__ = ['split', 'listify', 'escape', 'quote_escaped', 'quote',
            'quote_info', 'join_commands', 'global_env']
 
 # XXX: We need a way to escape cmd.exe-specific characters.
-
 _bad_chars = re.compile(r'(\s|"|\\$)')
 _replace = re.compile(r'(\\*)("|$)')
 
