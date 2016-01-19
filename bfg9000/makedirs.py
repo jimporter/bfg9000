@@ -1,17 +1,8 @@
 import argparse
-import errno
-import os
 import sys
 
+from .pathutils import makedirs
 from .version import version
-
-
-def makedirs(path, mode=0o777, exist_ok=False):
-    try:
-        os.makedirs(path)
-    except OSError as e:
-        if not exist_ok or e.errno != errno.EEXIST or not os.path.isdir(path):
-            raise
 
 
 def main():

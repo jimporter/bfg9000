@@ -1,6 +1,5 @@
 import os.path
 
-from bfg9000.makedirs import makedirs
 from .integration import *
 pjoin = os.path.join
 
