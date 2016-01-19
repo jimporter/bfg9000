@@ -1,5 +1,7 @@
 import os.path
 import re
+import subprocess
+from itertools import chain
 
 from .utils import library_macro
 from ..file_types import *
@@ -170,3 +172,53 @@ class CcLinker(object):
         if self.platform.has_import_library and self.mode == 'shared_library':
             return ['-Wl,--out-implib=' + library.import_lib.path]
         return []
+
+
+class CcLibFinder(object):
+    def __init__(self, env, lang, cmd):
+        try:
+            # XXX: Will this work for cross-compilation?
+            output = subprocess.check_output(
+                [cmd, '-print-search-dirs'],
+                universal_newlines=True
+            )
+            m = re.search(r'^libraries: (.*)', output, re.MULTILINE)
+            system_dirs = re.split(os.pathsep, m.group(1))
+        except:
+            system_dirs = []
+
+        value = env.getvar('LIBRARY_PATH')
+        user_dirs = value.split(os.pathsep) if value else []
+
+        # XXX: Handle sysroot one day?
+        all_dirs = ( os.path.abspath(re.sub('^=', '', i))
+                     for i in chain(user_dirs, system_dirs) )
+        self.search_dirs = [i for i in uniques(
+            chain(all_dirs, env.platform.lib_dirs)
+        ) if os.path.exists(i)]
+
+        self.lang = lang
+        self.platform = env.platform
+
+    def __call__(self, name, kind='any', search_dirs=None):
+        if search_dirs is None:
+            search_dirs = self.search_dirs
+
+        # XXX: Support alternative naming schemes (e.g. libfoo.a vs foo.lib for
+        # GCC on Windows).
+        libnames = []
+        if kind in ('any', 'shared'):
+            libname = 'lib' + name + self.platform.shared_library_ext
+            if self.platform.has_import_library:
+                libnames.append((libname + '.a', ImportLibrary))
+            else:
+                libnames.append((libname, SharedLibrary))
+        if kind in ('any', 'static'):
+            libnames.append(('lib' + name + '.a', StaticLibrary))
+
+        for base in search_dirs:
+            for name, lib_kind in libnames:
+                fullpath = os.path.join(base, name)
+                if os.path.exists(fullpath):
+                    return lib_kind(fullpath, Root.absolute, self.lang)
+        raise ValueError("unable to find library '{}'".format(name))

@@ -39,25 +39,22 @@ class Environment(object):
     def getvar(self, key, default=None):
         return self.variables.get(key, default)
 
-    @property
-    def lib_dirs(self):
-        paths = self.getvar('LIBRARY_PATH')
-        paths = paths.split(os.pathsep) if paths else []
-        return paths + self.platform.lib_dirs
-
-    def compiler(self, lang):
-        if lang not in self.__builders:
-            self.__builders[lang] = tools.get_builder(lang, self)
-        return self.__builders[lang].compiler
-
-    def linker(self, lang, mode):
+    def builder(self, lang):
         # TODO: Be more intelligent about this when we support more languages.
         if not isinstance(lang, string_types):
             lang = 'c++' if 'c++' in lang else 'c'
 
         if lang not in self.__builders:
             self.__builders[lang] = tools.get_builder(lang, self)
-        return self.__builders[lang].linkers[mode]
+        return self.__builders[lang]
+
+    def compiler(self, lang):
+        if not isinstance(lang, string_types):
+            raise TypeError('only one lang supported')
+        return self.builder(lang).compiler
+
+    def linker(self, lang, mode):
+        return self.builder(lang).linkers[mode]
 
     def tool(self, name):
         if name not in self.__tools:

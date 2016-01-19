@@ -29,23 +29,6 @@ class SystemExecutable(Executable):
     pass
 
 
-def _find_library(env, name, search_dirs, lang, kind='any'):
-    # XXX: Support alternative naming schemes (e.g. libfoo.a vs foo.lib for GCC
-    # on Windows)? Also not sure how we'll support other runtimes (e.g. JVM).
-    linkers = []
-    if kind in ('any', 'shared'):
-        linkers.append(env.linker(lang, 'shared_library'))
-    if kind in ('any', 'static'):
-        linkers.append(env.linker(lang, 'static_library'))
-    for d in search_dirs:
-        d = os.path.abspath(d)
-        for i in linkers:
-            candidate = i.output_file(os.path.join(d, name))
-            if os.path.exists(candidate.link.path.string()):
-                return candidate
-    raise ValueError("unable to find package '{}'".format(name))
-
-
 def _boost_version(headers, required_version=None):
     version_hpp = headers.path.append('boost').append('version.hpp')
     with open(version_hpp.string()) as f:
@@ -62,7 +45,7 @@ def _boost_version(headers, required_version=None):
 def system_package(env, name, lang='c', kind='any'):
     if kind not in ('any', 'shared', 'static'):
         raise ValueError("kind must be one of 'any', 'shared', or 'static'")
-    return Package([], [_find_library(env, name, env.lib_dirs, lang, kind)])
+    return Package([], [env.builder(lang).lib_finder(name, kind)])
 
 
 @builtin.globals('env')
@@ -70,14 +53,14 @@ def boost_package(env, name=None, version=None):
     version = make_specifier(version)
 
     root = env.getvar('BOOST_ROOT')
-    inc_var = env.getvar('BOOST_INCLUDEDIR', os.path.join(root, 'include')
-                         if root else None)
-    lib_var = env.getvar('BOOST_LIBRARYDIR', os.path.join(root, 'lib')
-                         if root else None)
+    incdir = env.getvar('BOOST_INCLUDEDIR', os.path.join(root, 'include')
+                        if root else None)
+    libdir = env.getvar('BOOST_LIBRARYDIR', os.path.join(root, 'lib')
+                        if root else None)
 
-    if inc_var:
-        headers = [HeaderDirectory(inc_var, path.Root.absolute, system=True)]
-        boost_version = _boost_version(headers[0])
+    if incdir:
+        headers = [HeaderDirectory(incdir, path.Root.absolute, system=True)]
+        boost_version = _boost_version(headers[0], version)
     else:
         # On Windows, check the default install location, which is structured
         # differently from other install locations.
@@ -87,7 +70,7 @@ def boost_package(env, name=None, version=None):
                 try:
                     headers = [HeaderDirectory(max(dirs), path.Root.absolute,
                                                system=True)]
-                    boost_version = _boost_version(headers[0])
+                    boost_version = _boost_version(headers[0], version)
                     return BoostPackage(headers, lib_dirs=r'C:\Boost\lib',
                                         version=_boost_version(headers[0]))
                 except IOError:
@@ -98,7 +81,7 @@ def boost_package(env, name=None, version=None):
         for i in env.platform.include_dirs:
             try:
                 headers = [HeaderDirectory(i, path.Root.absolute, system=True)]
-                boost_version = _boost_version(headers[0])
+                boost_version = _boost_version(headers[0], version)
                 break
             except IOError as e:
                 pass
@@ -109,14 +92,20 @@ def boost_package(env, name=None, version=None):
         if not env.linker('c++', 'shared_library').auto_link:
             # XXX: Don't require auto-link.
             raise ValueError('Boost on Windows requires auto-link')
-        return BoostPackage(headers, lib_dirs=listify(lib_var),
-                            version=boost_version)
+        return BoostPackage(
+            includes=headers,
+            lib_dirs=listify(libdir),
+            version=boost_version
+        )
     else:
-        dirs = [lib_var] if lib_var else env.platform.lib_dirs
-        libraries = [_find_library(env, 'boost_' + i, dirs, 'c++')
-                     for i in iterate(name)]
-        return BoostPackage(headers, libraries=libraries,
-                            version=boost_version)
+        finder = env.builder('c++').lib_finder
+        dirs = [libdir] if libdir else None
+        return BoostPackage(
+            includes=headers,
+            libraries=[ finder('boost_' + i, search_dirs=dirs)
+                        for i in iterate(name) ],
+            version=boost_version
+        )
 
 
 @builtin.globals('env')

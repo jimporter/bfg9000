@@ -45,6 +45,7 @@ class CFamilyBuilder(object):
             self.linkers['static_library'] = msvc.MsvcStaticLinker(
                 env, lang, low_var, lib_cmd
             )
+            self.lib_finder = msvc.MsvcLibFinder(env, lang)
         else:
             self.compiler = cc.CcCompiler(env, lang, low_var, cmd, cflags)
             for mode in ['executable', 'shared_library']:
@@ -52,3 +53,4 @@ class CFamilyBuilder(object):
                     env, mode, lang, low_var, cmd, ldflags, ldlibs
                 )
             self.linkers['static_library'] = ar.ArLinker(env, lang)
+            self.lib_finder = cc.CcLibFinder(env, lang, cmd)

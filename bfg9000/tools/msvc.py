@@ -1,3 +1,6 @@
+import os.path
+from itertools import chain
+
 from .utils import library_macro
 from .. import shell
 from ..file_types import *
@@ -140,3 +143,33 @@ class MsvcStaticLinker(object):
     @property
     def mode_args(self):
         return []
+
+
+class MsvcLibFinder(object):
+    def __init__(self, env, lang):
+        system = env.getvar('LIB')
+        system_dirs = system.split(os.pathsep) if system else []
+
+        user = env.getvar('LIBRARY_PATH')
+        user_dirs = user.split(os.pathsep) if user else []
+
+        all_dirs = [os.path.abspath(i) for i in chain(user_dirs, system_dirs)]
+        self.search_dirs = [i for i in uniques(
+            chain(all_dirs, env.platform.lib_dirs)
+        ) if os.path.exists(i)]
+
+        self.lang = lang
+
+    def __call__(self, name, kind='any', search_dirs=None):
+        if search_dirs is None:
+            search_dirs = self.search_dirs
+        libname = name + '.lib'
+
+        for base in search_dirs:
+            fullpath = os.path.join(base, libname)
+            if os.path.exists(fullpath):
+                # We don't actually know what kind of library this is. It could
+                # it could be a static library or an import library (which we
+                # classify as a kind of shared lib).
+                return Library(fullpath, Root.absolute, self.lang)
+        raise ValueError("unable to find library '{}'".format(name))

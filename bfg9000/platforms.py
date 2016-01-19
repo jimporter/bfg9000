@@ -1,6 +1,5 @@
 import os
 import platform
-import re
 import subprocess
 
 from .iterutils import iterate
@@ -73,21 +72,6 @@ class LinuxPlatform(PosixPlatform):
     @property
     def has_rpath(self):
         return True
-
-    @property
-    def lib_dirs(self):
-        try:
-            # XXX: This probably won't work very well for cross-compilation.
-            output = subprocess.check_output(
-                ['ld', '--verbose'],
-                universal_newlines=True
-            )
-            paths = re.findall(r'SEARCH_DIR\("=?(.*?)"\);', output)
-            if paths:
-                return paths
-        except:
-            pass
-        return PosixPlatform.lib_dirs.fget(self)
 
 
 class DarwinPlatform(PosixPlatform):
