@@ -245,7 +245,11 @@ specify a specific Boost library (or libraries); for instance,
 This rule recognizes the following environment variables:
 [`BOOST_ROOT`](environment-vars.md#boost_root),
 [`BOOST_INCLUDEDIR`](environment-vars.md#boost_includedir),
-[`BOOST_LIBRARYDIR`](environment-vars.md#boost_librarydir).
+[`BOOST_LIBRARYDIR`](environment-vars.md#boost_librarydir),
+[`CPATH`](environment-vars.md#cpath),
+[`INCLUDE`](environment-vars.md#include),
+[`LIB`](environment-vars.md#lib),
+[`LIBRARY_PATH`](environment-vars.md#library_path).
 
 ### system_executable(*name*)
 
@@ -266,6 +270,7 @@ You can also specify *kind* to one of `'any'` (the default), `'shared'`, or
 of a library, for example.
 
 This rule recognizes the following environment variables:
+[`LIB`](environment-vars.md#lib),
 [`LIBRARY_PATH`](environment-vars.md#library_path).
 
 !!! note

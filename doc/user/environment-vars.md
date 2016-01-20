@@ -48,6 +48,13 @@ Default: *none*
 
 Command line arguments to pass to the compiler when compiling any C source file.
 
+### *CPATH*
+Default: *none*
+{: .subtitle}
+
+A list of additional directories to search for headers. On POSIX systems, this
+is delimited by `:`; on Windows, by `;`.
+
 ### *CPPFLAGS*
 Default: *none*
 {: .subtitle}
@@ -83,6 +90,12 @@ Default: *none*
 Command line arguments to pass to the compiler when compiling any C++ source
 file.
 
+### *INCLUDE*
+Default: *none*
+{: .subtitle}
+
+*MSVC-only* A list of directories to search for headers, delimited by  `;`.
+
 ### *LDFLAGS*
 Default: *none*
 {: .subtitle}
@@ -97,6 +110,12 @@ Default: *none*
 Additional libraries to link into an executable or shared library. This is
 mainly useful for cases where a system library (e.g. the C++ Standard Library
 implementation) requires another library to be explicitly linked with it.
+
+### *LIB*
+Default: *none*
+{: .subtitle}
+
+*MSVC-only* A list of directories to search for libraries, delimited by  `;`.
 
 ### *LIBFLAGS*
 Default: *none*
