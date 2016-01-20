@@ -17,7 +17,7 @@
         }, 
         {
             "location": "/install/", 
-            "text": "Installation\n\n\nbfg9000 uses \nsetuptools\n, so installation\nis much the same as any other Python package. After you've downloaded bfg, just\nrun this from the source directory:\n\n\n$ pip install .\n\n\n\n\n(Equivalently, you can run \npython setup.py install\n.) From there, you can start\nusing bfg to build your software!\n\n\nInstalling patchelf\n\n\nOn Linux, bfg9000 requires \npatchelf\n in order\nto modify \nrpath\ns of executables and\nshared libraries when installing. The setup script will automatically download\nand install patchelf when installing the rest of bfg9000. If you're installing\nbfg into a \nvirtualenv\n, patchelf\nwill go into \n$VIRTUAL_ENV/bin\n. You can also manually install patchelf from the\nsetup script with the following command:\n\n\n$ python setup.py install_patchelf\n\n\n\n\nIf you'd prefer not to install patchelf at all, simply set the environment\nvariable \nNO_PATCHELF\n to \n1\n before installing bfg9000:\n\n\n$ NO_PATCHELF=1 pip install .\n\n\n\n\nInstalling MSBuild\n\n\nSince many users don't need it, MSBuild support is an optional feature. To\ninstall all the dependencies required for MSBuild, you can run the following:\n\n\n$ pip install .[msbuild]", 
+            "text": "Installation\n\n\nbfg9000 uses \nsetuptools\n, so installation\nis much the same as any other Python package. After you've downloaded bfg, just\nrun this from the source directory:\n\n\n$ pip install .\n\n\n\n\n(Equivalently, you can run \npython setup.py install\n.) From there, you can start\nusing bfg to build your software!\n\n\nInstalling patchelf\n\n\nOn Linux, bfg9000 requires \npatchelf\n in order\nto modify \nrpath\ns of executables and\nshared libraries when installing. The setup script will automatically download\nand install patchelf when installing the rest of bfg9000. If you're installing\nbfg into a \nvirtualenv\n, patchelf\nwill go into \n$VIRTUAL_ENV/bin\n. You can also manually install patchelf from the\nsetup script with the following command:\n\n\n$ python setup.py install_patchelf\n\n\n\n\nIf you'd prefer not to install patchelf at all, simply set the environment\nvariable \nNO_PATCHELF\n to \n1\n before installing bfg9000:\n\n\n$ NO_PATCHELF=1 pip install .\n\n\n\n\nInstalling MSBuild support\n\n\nSince many users don't need it, MSBuild support is an optional feature. To\ninstall all the dependencies required for MSBuild, you can run the following:\n\n\n$ pip install .[msbuild]", 
             "title": "Installation"
         }, 
         {
@@ -31,9 +31,9 @@
             "title": "Installing patchelf"
         }, 
         {
-            "location": "/install/#installing-msbuild", 
+            "location": "/install/#installing-msbuild-support", 
             "text": "Since many users don't need it, MSBuild support is an optional feature. To\ninstall all the dependencies required for MSBuild, you can run the following:  $ pip install .[msbuild]", 
-            "title": "Installing MSBuild"
+            "title": "Installing MSBuild support"
         }, 
         {
             "location": "/user/building/", 
