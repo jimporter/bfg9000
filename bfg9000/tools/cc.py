@@ -2,6 +2,7 @@ import os.path
 import re
 import subprocess
 from itertools import chain
+from six.moves import filter as ifilter
 
 from .utils import library_macro
 from ..file_types import *
@@ -73,11 +74,25 @@ class CcLinker(object):
         self.global_libs = ldlibs
 
         # Create a regular expression to extract the library name for linking
-        # with -l. TODO: Support .lib as an extension on Windows/Cygwin?
-        exts = [r'\.a']
+        # with -l.
+        lib_formats = [r'lib(.*)\.a']
         if not self.platform.has_import_library:
-            exts.append(re.escape(self.platform.shared_library_ext))
-        self._lib_re = re.compile('lib(.*)(?:' + '|'.join(exts) + ')$')
+            so_ext = re.escape(self.platform.shared_library_ext)
+            lib_formats.append(r'lib(.*)' + so_ext)
+        # XXX: Include Cygwin here too?
+        if self.platform.name == 'windows':
+            lib_formats.append(r'(.*)\.lib')
+        self._lib_re = re.compile('(?:' + '|'.join(lib_formats) + ')$')
+
+    def _extract_lib_name(self, library):
+        basename = library.link.path.basename()
+        m = self._lib_re.match(basename)
+        if not m:
+            raise ValueError("'{}' is not a valid library name"
+                             .format(basename))
+
+        # Get the first non-None group from the match.
+        return next(ifilter( None, m.groups() ))
 
     @property
     def platform(self):
@@ -161,12 +176,9 @@ class CcLinker(object):
         elif isinstance(library, StaticLibrary):
             return [library.link.path]
 
-        # If we're here, we have a SharedLibrary.
-        lib_name = library.link.path.basename()
-        m = self._lib_re.match(lib_name)
-        if not m:
-            raise ValueError("'{}' is not a valid library".format(lib_name))
-        return ['-l' + m.group(1)]
+        # If we're here, we have a SharedLibrary (or possibly just a Library
+        # in the case of MinGW).
+        return ['-l' + self._extract_lib_name(library)]
 
     def import_lib(self, library):
         if self.platform.has_import_library and self.mode == 'shared_library':
@@ -204,8 +216,6 @@ class CcLibFinder(object):
         if search_dirs is None:
             search_dirs = self.search_dirs
 
-        # XXX: Support alternative naming schemes (e.g. libfoo.a vs foo.lib for
-        # GCC on Windows).
         libnames = []
         if kind in ('any', 'shared'):
             libname = 'lib' + name + self.platform.shared_library_ext
@@ -215,6 +225,13 @@ class CcLibFinder(object):
                 libnames.append((libname, SharedLibrary))
         if kind in ('any', 'static'):
             libnames.append(('lib' + name + '.a', StaticLibrary))
+
+        # XXX: Include Cygwin here too?
+        if self.platform.name == 'windows':
+            # We don't actually know what kind of library this is. It could be
+            # a static library or an import library (which we classify as a
+            # kind of shared lib).
+            libnames.append((name + '.lib', Library))
 
         for base in search_dirs:
             for name, lib_kind in libnames:

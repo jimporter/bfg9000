@@ -169,7 +169,7 @@ class MsvcLibFinder(object):
             fullpath = os.path.join(base, libname)
             if os.path.exists(fullpath):
                 # We don't actually know what kind of library this is. It could
-                # it could be a static library or an import library (which we
-                # classify as a kind of shared lib).
+                # be a static library or an import library (which we classify
+                # as a kind of shared lib).
                 return Library(fullpath, Root.absolute, self.lang)
         raise ValueError("unable to find library '{}'".format(name))
