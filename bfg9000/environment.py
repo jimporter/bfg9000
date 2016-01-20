@@ -40,7 +40,7 @@ class Environment(object):
         return self.variables.get(key, default)
 
     def builder(self, lang):
-        # TODO: Be more intelligent about this when we support more languages.
+        # XXX: Be more intelligent about this when we support more languages.
         if not isinstance(lang, string_types):
             lang = 'c++' if 'c++' in lang else 'c'
 

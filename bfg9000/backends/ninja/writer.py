@@ -104,7 +104,6 @@ class Commands(object):
 
 def command_build(buildfile, env, output, inputs=None, implicit=None,
                   order_only=None, commands=None, environ=None):
-    # XXX: Only make some command builds use the console pool?
     extra_kwargs = {}
     if env.backend_version in SpecifierSet('>=1.5'):
         extra_kwargs['pool'] = 'console'

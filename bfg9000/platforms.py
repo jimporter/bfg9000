@@ -20,10 +20,10 @@ def platform_name():
     return name
 
 
-# XXX: How much information should be stored in Platforms vs the Environment?
-# For instance, should the Platforms know how to fetch platform-specific
-# environment variables (implying a circular dependency between Environment and
-# Platform), or should it just hand off the var name to the Environment?
+# Platform objects are primarily intended to represent information about the
+# target platform for a build. Currently, we store some source platform
+# information here as well (e.g. include/library dirs). In the future, when we
+# support cross-compilation, stuff like that should be moved elsewhere.
 class Platform(object):
     def __init__(self, name):
         self.name = name
@@ -103,18 +103,20 @@ class WindowsPlatform(Platform):
 
     @property
     def include_dirs(self):
-        # TODO: Provide a list of include paths
+        # Windows doesn't have standard include dirs; for MSVC, this will get
+        # pulled in from the $INCLUDE environment variable.
         return []
 
     @property
     def lib_dirs(self):
-        # TODO: Provide a list of lib paths
+        # Windows doesn't have standard library dirs; for MSVC, this will get
+        # pulled in from the $LIB environment variable.
         return []
 
     @property
     def install_dirs(self):
         return {
-            # TODO: Pick a better prefix
+            # XXX: Pick a better prefix. Maybe install to C:\<project-name>?
             InstallRoot.prefix:     Path('C:\\', Root.absolute),
             InstallRoot.bindir:     Path('', InstallRoot.prefix),
             InstallRoot.libdir:     Path('', InstallRoot.prefix),
@@ -145,8 +147,6 @@ def platform_info(name=None):
 
 
 def which(names, env=os.environ):
-    # XXX: Create something to manage host-platform stuff like this?
-    # (`Platform` is for targets.)
     paths = env.get('PATH', os.defpath).split(os.pathsep)
     if platform_name() in ['windows', 'cygwin']:
         exts = env.get('PATHEXT', '').split(os.pathsep)

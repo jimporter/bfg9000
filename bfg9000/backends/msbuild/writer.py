@@ -37,11 +37,13 @@ def write(env, build_inputs):
     uuids = UuidMap(env.builddir.append('.bfg_uuid').string())
     solution = Solution(uuids)
 
-    # TODO: Handle default().
     for e in build_inputs.edges:
         if type(e) in _rule_handlers:
             _rule_handlers[type(e)](e, build_inputs, solution, env)
 
+    # XXX: Handle default builds. Default builds go first in the solution. This
+    # also means we'd need to support aliases so that we can have multiple
+    # builds be the default.
     with open(env.builddir.append('project.sln').string(), 'w') as out:
         solution.write(out)
     for p in solution:
