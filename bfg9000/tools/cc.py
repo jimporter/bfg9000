@@ -234,8 +234,8 @@ class CcLibFinder(object):
             libnames.append((name + '.lib', Library))
 
         for base in search_dirs:
-            for name, lib_kind in libnames:
-                fullpath = os.path.join(base, name)
+            for libname, libkind in libnames:
+                fullpath = os.path.join(base, libname)
                 if os.path.exists(fullpath):
-                    return lib_kind(fullpath, Root.absolute, self.lang)
+                    return libkind(fullpath, Root.absolute, self.lang)
         raise ValueError("unable to find library '{}'".format(name))
