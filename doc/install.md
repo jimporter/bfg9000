@@ -32,7 +32,7 @@ variable `NO_PATCHELF` to `1` before installing bfg9000:
 $ NO_PATCHELF=1 pip install .
 ```
 
-## Installing MSBuild
+## Installing MSBuild support
 
 Since many users don't need it, MSBuild support is an optional feature. To
 install all the dependencies required for MSBuild, you can run the following:
