@@ -75,7 +75,6 @@ def parse_args(parser, args=None, namespace=None):
 
 
 def execute_script(env, filename=bfgfile):
-    builtins.load()
     build = BuildInputs()
     builtin_dict = builtins.bind(build_inputs=build, env=env)
 

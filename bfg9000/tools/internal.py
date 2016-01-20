@@ -1,4 +1,4 @@
-from . import tool
+from .hooks import tool
 from ..platforms import platform_name
 from ..safe_str import escaped_str, jbos, safe_str
 

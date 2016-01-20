@@ -1,7 +1,7 @@
 from itertools import chain
 from six.moves import cStringIO as StringIO
 
-from . import builtin
+from .hooks import builtin
 from .. import safe_str
 from .. import shell
 from ..backends.make import writer as make

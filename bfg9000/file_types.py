@@ -98,6 +98,10 @@ class Executable(Binary):
     install_root = InstallRoot.bindir
 
 
+class SystemExecutable(Executable):
+    install_root = None
+
+
 class Library(Binary):
     install_root = InstallRoot.libdir
 

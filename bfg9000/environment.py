@@ -21,7 +21,6 @@ class Environment(object):
         env = object.__new__(cls)
         env.__builders = {}
         env.__tools = {}
-        tools.load()
         return env
 
     def __init__(self, bfgpath, backend, backend_version, srcdir, builddir,

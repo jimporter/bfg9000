@@ -3,7 +3,7 @@ import os
 import posixpath
 import re
 
-from . import builtin
+from .hooks import builtin
 from .. import path
 from ..iterutils import iterate
 from ..backends.make import writer as make

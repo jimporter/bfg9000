@@ -1,5 +1,5 @@
-from . import tool
 from .. import safe_str
+from .hooks import tool
 from ..file_types import SharedLibrary
 from ..iterutils import uniques
 from ..path import install_path

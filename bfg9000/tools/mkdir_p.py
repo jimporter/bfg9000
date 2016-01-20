@@ -1,4 +1,4 @@
-from . import tool
+from .hooks import tool
 
 
 @tool('mkdir_p')

@@ -2,7 +2,7 @@ import platform
 from packaging.specifiers import SpecifierSet
 from packaging.version import Version
 
-from . import builtin
+from .hooks import builtin
 from ..version import version as _bfg_version
 from ..file_types import objectify
 

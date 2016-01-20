@@ -2,11 +2,11 @@ import os.path
 import re
 from packaging.version import Version
 
-from . import builtin
+from .hooks import builtin
 from .find import find
 from .version import check_version, make_specifier
 from .. import path
-from ..file_types import *
+from ..file_types import SystemExecutable
 from ..iterutils import iterate, listify
 from ..platforms import which
 
@@ -23,10 +23,6 @@ class BoostPackage(Package):
                  version=None):
         Package.__init__(self, includes, libraries, lib_dirs)
         self.version = version
-
-
-class SystemExecutable(Executable):
-    pass
 
 
 def _boost_version(header, required_version=None):

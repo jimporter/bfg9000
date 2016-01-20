@@ -1,4 +1,4 @@
-from . import builtin
+from .hooks import builtin
 from ..file_types import *
 
 

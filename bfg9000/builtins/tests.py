@@ -1,10 +1,10 @@
 from functools import partial
 from six.moves import cStringIO as StringIO
 
-from . import builtin
+from .hooks import builtin
+from .packages import SystemExecutable
 from .. import safe_str
 from .. import shell
-from .packages import SystemExecutable
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..build_inputs import build_input
