@@ -145,24 +145,45 @@ class MsvcStaticLinker(object):
         return []
 
 
-class MsvcLibFinder(object):
+class MsvcPackageResolver(object):
     def __init__(self, env, lang):
-        system = env.getvar('LIB')
-        system_dirs = system.split(os.pathsep) if system else []
+        value = env.getvar('CPATH')
+        user_include_dirs = value.split(os.pathsep) if value else []
 
-        user = env.getvar('LIBRARY_PATH')
-        user_dirs = user.split(os.pathsep) if user else []
+        value = env.getvar('INCLUDE')
+        system_include_dirs = value.split(os.pathsep) if value else []
 
-        all_dirs = [os.path.abspath(i) for i in chain(user_dirs, system_dirs)]
-        self.search_dirs = [i for i in uniques(
-            chain(all_dirs, env.platform.lib_dirs)
-        ) if os.path.exists(i)]
+        self.include_dirs = [i for i in uniques(chain(
+            user_include_dirs, system_include_dirs, env.platform.include_dirs
+        )) if os.path.exists(i)]
+
+        value = env.getvar('LIB')
+        system_lib_dirs = value.split(os.pathsep) if value else []
+
+        value = env.getvar('LIBRARY_PATH')
+        user_lib_dirs = value.split(os.pathsep) if value else []
+
+        all_lib_dirs = ( os.path.abspath(i) for i in
+                         chain(user_lib_dirs, system_lib_dirs) )
+        self.lib_dirs = [i for i in uniques(chain(
+            all_lib_dirs, env.platform.lib_dirs
+        )) if os.path.exists(i)]
 
         self.lang = lang
 
-    def __call__(self, name, kind='any', search_dirs=None):
+    def header(self, name, search_dirs=None):
         if search_dirs is None:
-            search_dirs = self.search_dirs
+            search_dirs = self.include_dirs
+
+        for base in search_dirs:
+            if os.path.exists(os.path.join(base, name)):
+                return HeaderDirectory(base, Root.absolute, system=True)
+
+        raise ValueError("unable to find header '{}'".format(name))
+
+    def library(self, name, kind='any', search_dirs=None):
+        if search_dirs is None:
+            search_dirs = self.lib_dirs
         libname = name + '.lib'
 
         for base in search_dirs:

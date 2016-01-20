@@ -29,8 +29,8 @@ class SystemExecutable(Executable):
     pass
 
 
-def _boost_version(headers, required_version=None):
-    version_hpp = headers.path.append('boost').append('version.hpp')
+def _boost_version(header, required_version=None):
+    version_hpp = header.path.append('boost').append('version.hpp')
     with open(version_hpp.string()) as f:
         for line in f:
             m = re.match(r'#\s*define\s+BOOST_LIB_VERSION\s+"([\d_]+)"', line)
@@ -45,12 +45,14 @@ def _boost_version(headers, required_version=None):
 def system_package(env, name, lang='c', kind='any'):
     if kind not in ('any', 'shared', 'static'):
         raise ValueError("kind must be one of 'any', 'shared', or 'static'")
-    return Package([], [env.builder(lang).lib_finder(name, kind)])
+    return Package([], [env.builder(lang).packages.library(name, kind)])
 
 
 @builtin.globals('env')
 def boost_package(env, name=None, version=None):
     version = make_specifier(version)
+    pack = env.builder('c++').packages
+    version_hpp = os.path.join('boost', 'version.hpp')
 
     root = env.getvar('BOOST_ROOT')
     incdir = env.getvar('BOOST_INCLUDEDIR', os.path.join(root, 'include')
@@ -59,8 +61,8 @@ def boost_package(env, name=None, version=None):
                         if root else None)
 
     if incdir:
-        headers = [HeaderDirectory(incdir, path.Root.absolute, system=True)]
-        boost_version = _boost_version(headers[0], version)
+        header = pack.header(version_hpp, [incdir])
+        boost_version = _boost_version(header, version)
     else:
         # On Windows, check the default install location, which is structured
         # differently from other install locations.
@@ -68,41 +70,33 @@ def boost_package(env, name=None, version=None):
             dirs = find(r'C:\Boost\include', 'boost-*', type='d', flat=True)
             if dirs:
                 try:
-                    headers = [HeaderDirectory(max(dirs), path.Root.absolute,
-                                               system=True)]
-                    boost_version = _boost_version(headers[0], version)
-                    return BoostPackage(headers, lib_dirs=r'C:\Boost\lib',
-                                        version=_boost_version(headers[0]))
+                    header = pack.header(version_hpp, max(dirs))
+                    boost_version = _boost_version(header, version)
+                    return BoostPackage(
+                        includes=[header],
+                        lib_dirs=r'C:\Boost\lib',
+                        version=boost_version
+                    )
                 except IOError:
                     pass
 
-        if not env.platform.include_dirs:
-            raise ValueError('unable to find Boost on system')
-        for i in env.platform.include_dirs:
-            try:
-                headers = [HeaderDirectory(i, path.Root.absolute, system=True)]
-                boost_version = _boost_version(headers[0], version)
-                break
-            except IOError as e:
-                pass
-        else:
-            raise e
+        header = pack.header(version_hpp)
+        boost_version = _boost_version(header, version)
 
     if env.platform.name == 'windows':
         if not env.linker('c++', 'shared_library').auto_link:
             # XXX: Don't require auto-link.
             raise ValueError('Boost on Windows requires auto-link')
         return BoostPackage(
-            includes=headers,
+            includes=[header],
             lib_dirs=listify(libdir),
             version=boost_version
         )
     else:
-        finder = env.builder('c++').lib_finder
         dirs = [libdir] if libdir else None
         return BoostPackage(
-            includes=headers,
-            libraries=[ finder('boost_' + i, search_dirs=dirs)
+            includes=[header],
+            libraries=[ pack.library('boost_' + i, search_dirs=dirs)
                         for i in iterate(name) ],
             version=boost_version
         )

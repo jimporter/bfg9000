@@ -186,8 +186,15 @@ class CcLinker(object):
         return []
 
 
-class CcLibFinder(object):
+class CcPackageResolver(object):
     def __init__(self, env, lang, cmd):
+        value = env.getvar('CPATH')
+        include_dirs = value.split(os.pathsep) if value else []
+
+        self.include_dirs = [i for i in uniques(chain(
+            include_dirs, env.platform.include_dirs
+        )) if os.path.exists(i)]
+
         try:
             # XXX: Will this work for cross-compilation?
             output = subprocess.check_output(
@@ -195,26 +202,36 @@ class CcLibFinder(object):
                 universal_newlines=True
             )
             m = re.search(r'^libraries: (.*)', output, re.MULTILINE)
-            system_dirs = re.split(os.pathsep, m.group(1))
+            system_lib_dirs = re.split(os.pathsep, m.group(1))
         except:
-            system_dirs = []
+            system_lib_dirs = []
 
         value = env.getvar('LIBRARY_PATH')
-        user_dirs = value.split(os.pathsep) if value else []
+        user_lib_dirs = value.split(os.pathsep) if value else []
 
         # XXX: Handle sysroot one day?
-        all_dirs = ( os.path.abspath(re.sub('^=', '', i))
-                     for i in chain(user_dirs, system_dirs) )
-        self.search_dirs = [i for i in uniques(
-            chain(all_dirs, env.platform.lib_dirs)
-        ) if os.path.exists(i)]
+        all_lib_dirs = ( os.path.abspath(re.sub('^=', '', i))
+                         for i in chain(user_lib_dirs, system_lib_dirs) )
+        self.lib_dirs = [i for i in uniques(chain(
+            all_lib_dirs, env.platform.lib_dirs
+        )) if os.path.exists(i)]
 
         self.lang = lang
         self.platform = env.platform
 
-    def __call__(self, name, kind='any', search_dirs=None):
+    def header(self, name, search_dirs=None):
         if search_dirs is None:
-            search_dirs = self.search_dirs
+            search_dirs = self.include_dirs
+
+        for base in search_dirs:
+            if os.path.exists(os.path.join(base, name)):
+                return HeaderDirectory(base, Root.absolute, system=True)
+
+        raise ValueError("unable to find header '{}'".format(name))
+
+    def library(self, name, kind='any', search_dirs=None):
+        if search_dirs is None:
+            search_dirs = self.lib_dirs
 
         libnames = []
         if kind in ('any', 'shared'):
@@ -238,4 +255,5 @@ class CcLibFinder(object):
                 fullpath = os.path.join(base, libname)
                 if os.path.exists(fullpath):
                     return libkind(fullpath, Root.absolute, self.lang)
+
         raise ValueError("unable to find library '{}'".format(name))
