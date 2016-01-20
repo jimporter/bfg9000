@@ -6,7 +6,7 @@ _tools = {}
 _loaded_tools = False
 
 
-def _load_tools():
+def load():
     global _loaded_tools
     if not _loaded_tools:
         # Lazily load the tools so we don't get cyclic imports.
@@ -29,7 +29,6 @@ def builder(*args):
 
 
 def get_builder(lang, env):
-    _load_tools()
     try:
         fn, multi = _builders[lang]
         return fn(env, lang) if multi else fn(env)
@@ -45,7 +44,6 @@ def tool(name):
 
 
 def get_tool(name, env):
-    _load_tools()
     try:
         return _tools[name](env)
     except KeyError:

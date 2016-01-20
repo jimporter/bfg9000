@@ -3,6 +3,11 @@ import re
 
 from . import builder, ar, cc, msvc
 from .. import shell
+from ..languages import lang_exts
+
+
+lang_exts('c', ['.c'])
+lang_exts('c++', ['.cpp', '.cc', '.cp', '.cxx', '.CPP', '.c++', '.C'])
 
 # XXX: Currently, we tie the linker to a single language, much like the
 # compiler. However, linkers can generally take object files made from multiple
