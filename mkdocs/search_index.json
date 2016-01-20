@@ -2,7 +2,7 @@
     "docs": [
         {
             "location": "/", 
-            "text": "bfg9000\n\n\nbfg9000\n (\n\"build file generator\"\n) is a cross-platform \nbuild configuration\nsystem\n with an emphasis on making it easy to define how to build your software.\nIt converts a Python-based build script into the appropriate files for your\nunderlying build system of choice.\n\n\nA brief example\n\n\nYou can't get much simpler than the simplest \nbuild.bfg\n file:\n\n\nexecutable('simple', files=['simple.cpp'])\n\n\n\n\nTo build this executable, we need to create the actual build files and then\nrun them:\n\n\n$ bfg9000 path/to/src/ build/\n$ cd build\n$ ninja\n\n\n\n\nFrom there, you can run your newly-created executable: \n./simple\n. Hooray!\n\n\nFor further examples, please see the\n\nexamples/\n\nsubdirectory.\n\n\nInstallation\n\n\nbfg9000 uses \nsetuptools\n, so installation\nis much the same as any other Python package. Just run:\n\n\n$ python setup.py install\n\n\n\n\nFrom there, you can start using bfg to build your software!\n\n\n\n\nNote\n\n\nSince many users don't need it, MSBuild support is an optional feature.\nTo install all the dependencies required for MSBuild, you can run:\n\n\n$ pip install .[msbuild]", 
+            "text": "bfg9000\n\n\nbfg9000\n (\n\"build file generator\"\n) is a cross-platform \nbuild configuration\nsystem\n with an emphasis on making it easy to define how to build your software.\nIt converts a Python-based build script into the appropriate files for your\nunderlying build system of choice.\n\n\nA brief example\n\n\nYou can't get much simpler than the simplest \nbuild.bfg\n file:\n\n\nexecutable('simple', files=['simple.cpp'])\n\n\n\n\nTo build this executable, we need to create the actual build files and then\nrun them:\n\n\n$ bfg9000 path/to/src/ build/\n$ cd build\n$ ninja\n\n\n\n\nFrom there, you can run your newly-created executable: \n./simple\n. Hooray!\n\n\nFor further examples, please see the\n\nexamples/\n\nsubdirectory.", 
             "title": "Home"
         }, 
         {
@@ -16,9 +16,24 @@
             "title": "A brief example"
         }, 
         {
-            "location": "/#installation", 
-            "text": "bfg9000 uses  setuptools , so installation\nis much the same as any other Python package. Just run:  $ python setup.py install  From there, you can start using bfg to build your software!   Note  Since many users don't need it, MSBuild support is an optional feature.\nTo install all the dependencies required for MSBuild, you can run:  $ pip install .[msbuild]", 
+            "location": "/install/", 
+            "text": "Installation\n\n\nbfg9000 uses \nsetuptools\n, so installation\nis much the same as any other Python package. After you've downloaded bfg, just\nrun this from the source directory:\n\n\n$ pip install .\n\n\n\n\n(Equivalently, you can run \npython setup.py install\n.) From there, you can start\nusing bfg to build your software!\n\n\nInstalling patchelf\n\n\nOn Linux, bfg9000 requires \npatchelf\n in order\nto modify \nrpath\ns of executables and\nshared libraries when installing. The setup script will automatically download\nand install patchelf when installing the rest of bfg9000. If you're installing\nbfg into a \nvirtualenv\n, patchelf\nwill go into \n$VIRTUAL_ENV/bin\n. You can also manually install patchelf from the\nsetup script with the following command:\n\n\n$ python setup.py install_patchelf\n\n\n\n\nIf you'd prefer not to install patchelf at all, simply set the environment\nvariable \nNO_PATCHELF\n to \n1\n before installing bfg9000:\n\n\n$ NO_PATCHELF=1 pip install .\n\n\n\n\nInstalling MSBuild\n\n\nSince many users don't need it, MSBuild support is an optional feature. To\ninstall all the dependencies required for MSBuild, you can run the following:\n\n\n$ pip install .[msbuild]", 
             "title": "Installation"
+        }, 
+        {
+            "location": "/install/#installation", 
+            "text": "bfg9000 uses  setuptools , so installation\nis much the same as any other Python package. After you've downloaded bfg, just\nrun this from the source directory:  $ pip install .  (Equivalently, you can run  python setup.py install .) From there, you can start\nusing bfg to build your software!", 
+            "title": "Installation"
+        }, 
+        {
+            "location": "/install/#installing-patchelf", 
+            "text": "On Linux, bfg9000 requires  patchelf  in order\nto modify  rpath s of executables and\nshared libraries when installing. The setup script will automatically download\nand install patchelf when installing the rest of bfg9000. If you're installing\nbfg into a  virtualenv , patchelf\nwill go into  $VIRTUAL_ENV/bin . You can also manually install patchelf from the\nsetup script with the following command:  $ python setup.py install_patchelf  If you'd prefer not to install patchelf at all, simply set the environment\nvariable  NO_PATCHELF  to  1  before installing bfg9000:  $ NO_PATCHELF=1 pip install .", 
+            "title": "Installing patchelf"
+        }, 
+        {
+            "location": "/install/#installing-msbuild", 
+            "text": "Since many users don't need it, MSBuild support is an optional feature. To\ninstall all the dependencies required for MSBuild, you can run the following:  $ pip install .[msbuild]", 
+            "title": "Installing MSBuild"
         }, 
         {
             "location": "/user/building/", 
