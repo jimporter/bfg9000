@@ -4,7 +4,7 @@
     
     <url>
      <loc>None/</loc>
-     <lastmod>2016-01-20</lastmod>
+     <lastmod>2016-01-21</lastmod>
      <changefreq>daily</changefreq>
     </url>
     
@@ -12,7 +12,7 @@
     
     <url>
      <loc>None/install/</loc>
-     <lastmod>2016-01-20</lastmod>
+     <lastmod>2016-01-21</lastmod>
      <changefreq>daily</changefreq>
     </url>
     
@@ -21,25 +21,25 @@
         
     <url>
      <loc>None/user/building/</loc>
-     <lastmod>2016-01-20</lastmod>
+     <lastmod>2016-01-21</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>None/user/writing/</loc>
-     <lastmod>2016-01-20</lastmod>
+     <lastmod>2016-01-21</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>None/user/reference/</loc>
-     <lastmod>2016-01-20</lastmod>
+     <lastmod>2016-01-21</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>None/user/environment-vars/</loc>
-     <lastmod>2016-01-20</lastmod>
+     <lastmod>2016-01-21</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
@@ -49,13 +49,13 @@
         
     <url>
      <loc>None/developer/internals/</loc>
-     <lastmod>2016-01-20</lastmod>
+     <lastmod>2016-01-21</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>None/developer/contributing/</loc>
-     <lastmod>2016-01-20</lastmod>
+     <lastmod>2016-01-21</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
@@ -64,7 +64,7 @@
     
     <url>
      <loc>None/license/</loc>
-     <lastmod>2016-01-20</lastmod>
+     <lastmod>2016-01-21</lastmod>
      <changefreq>daily</changefreq>
     </url>
     

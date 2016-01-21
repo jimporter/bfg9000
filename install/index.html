@@ -156,12 +156,12 @@
 
 <h1 id="installation">Installation</h1>
 <p>bfg9000 uses <a href="http://pythonhosted.org/setuptools/">setuptools</a>, so installation
-is much the same as any other Python package. After you've downloaded bfg, just
-run this from the source directory:</p>
+is much the same as any other Python package:</p>
 <pre><code class="sh">$ pip install .
 </code></pre>
 
-<p>(Equivalently, you can run <code>python setup.py install</code>.) From there, you can start
+<p>If you've downloaded bfg, just run <code>pip install .</code> from the source directory.
+(Equivalently, you can run <code>python setup.py install</code>.) From there, you can start
 using bfg to build your software!</p>
 <h2 id="installing-patchelf">Installing patchelf</h2>
 <p>On Linux, bfg9000 requires <a href="https://nixos.org/patchelf.html">patchelf</a> in order
@@ -170,19 +170,20 @@ shared libraries when installing. The setup script will automatically download
 and install patchelf when installing the rest of bfg9000. If you're installing
 bfg into a <a href="http://virtualenv.readthedocs.org/en/latest/">virtualenv</a>, patchelf
 will go into <code>$VIRTUAL_ENV/bin</code>. You can also manually install patchelf from the
-setup script with the following command:</p>
+setup script with the following command (assuming you've downloaded bfg's
+source):</p>
 <pre><code class="sh">$ python setup.py install_patchelf
 </code></pre>
 
 <p>If you'd prefer not to install patchelf at all, simply set the environment
 variable <code>NO_PATCHELF</code> to <code>1</code> before installing bfg9000:</p>
-<pre><code class="sh">$ NO_PATCHELF=1 pip install .
+<pre><code class="sh">$ NO_PATCHELF=1 pip install bfg9000
 </code></pre>
 
 <h2 id="installing-msbuild-support">Installing MSBuild support</h2>
 <p>Since many users don't need it, MSBuild support is an optional feature. To
 install all the dependencies required for MSBuild, you can run the following:</p>
-<pre><code class="sh">$ pip install .[msbuild]
+<pre><code class="sh">$ pip install bfg9000[msbuild]
 </code></pre></div>
         </div>
 
