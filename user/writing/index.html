@@ -265,6 +265,20 @@ and they'll be set as the default, overriding the normal behavior. This makes it
 easy to provide your users with a standard build that gets them all the bits
 they need, and none they don't.</p>
 <h2 id="external-packages">External packages</h2>
+<p>Most projects have external packages that they depend on. There are lots of
+different ways these packages are organized, and bfg9000 currently supports two
+of them: <a href="../reference/#system_packagename-lang-kind">"system" packages</a>
+(libraries installed into the default location for your system) and <a href="../reference/#boost_packagename-version">Boost
+packages</a>:</p>
+<pre><code class="python">ogg = system_package('ogg', kind='static')
+prog_opts = boost_package('program_options', version='&gt;=1.55')
+</code></pre>
+
+<p>Each of these returns an object representing the package that can be used when
+building binaries by passing them in the <em>packages</em> argument:</p>
+<pre><code class="python">executable('program', files=['main.cpp'], packages=[ogg, prog_opts])
+</code></pre>
+
 <h2 id="installation">Installation</h2>
 <h2 id="commands">Commands</h2>
 <h2 id="aliases">Aliases</h2>

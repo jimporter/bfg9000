@@ -155,7 +155,7 @@
         
             <li><a href="#test-rules">Test rules</a></li>
         
-            <li><a href="#package-finders">Package finders</a></li>
+            <li><a href="#package-resolvers">Package resolvers</a></li>
         
             <li><a href="#environment">Environment</a></li>
         
@@ -348,11 +348,11 @@ arguments to the driver. You may specify driver-wide command-line arguments via
 <h3 id="test_deps">test_deps(<em>...</em>)</h3>
 <p>Specify a list of dependencies which must be satisfied before the tests can be
 run.</p>
-<h2 id="package-finders">Package finders</h2>
+<h2 id="package-resolvers">Package resolvers</h2>
 <h3 id="boost_packagename-version">boost_package([<em>name</em>], [<em>version</em>])</h3>
-<p>Search for a Boost library. You can specify <em>name</em> (as a string or a list) to
-specify a specific Boost library (or libraries); for instance,
-<code>'program_options'</code>. For header-only libraries, you can omit <em>name</em>.</p>
+<p>Search for a <a href="http://www.boost.org/">Boost</a> library. You can specify <em>name</em> (as
+a string or a list) to specify a specific Boost library (or libraries); for
+instance, <code>'program_options'</code>. For header-only libraries, you can omit <em>name</em>.</p>
 <p>This rule recognizes the following environment variables:
 <a href="../environment-vars/#boost_root"><code>BOOST_ROOT</code></a>,
 <a href="../environment-vars/#boost_includedir"><code>BOOST_INCLUDEDIR</code></a>,
