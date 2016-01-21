@@ -55,11 +55,10 @@ subdirectory.
 # Installation
 
 bfg9000 uses [setuptools](http://pythonhosted.org/setuptools/), so installation
-is much the same as any other Python package. After you've downloaded bfg, just
-run this from the source directory:
+is much the same as any other Python package:
 
 ```sh
-$ pip install .
+$ pip install bfg9000
 ```
 
 From there, you can start using bfg to build your software! For more information
