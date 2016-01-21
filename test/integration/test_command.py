@@ -8,7 +8,7 @@ from .integration import *
 class TestCommand(IntegrationTest):
     def __init__(self, *args, **kwargs):
         IntegrationTest.__init__(
-            self, os.path.join(examples_dir, '06_commands'), *args, **kwargs
+            self, os.path.join(examples_dir, '07_commands'), *args, **kwargs
         )
 
     @skip_if_backend('msbuild')

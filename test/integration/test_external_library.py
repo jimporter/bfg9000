@@ -8,7 +8,7 @@ is_mingw = platform_name() == 'windows' and env.compiler('c++').flavor == 'cc'
 class TestSystemLibrary(IntegrationTest):
     def __init__(self, *args, **kwargs):
         IntegrationTest.__init__(
-            self, os.path.join(examples_dir, '05_external_library'),
+            self, os.path.join(examples_dir, '04_external_library'),
             *args, **kwargs
         )
 
