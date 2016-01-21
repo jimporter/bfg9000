@@ -175,10 +175,6 @@ file is determined by the platform you're running on. For instance, when
 building an executable file named "foo" on Windows, the resulting file will
 be <code>foo.exe</code>.</p>
 </div>
-<h3 id="aliasname-deps">alias(<em>name</em>, [<em>deps</em>])</h3>
-<p>Create a build step named <em>name</em> that performs no actions on its own. Instead,
-it just runs its dependencies listed in <em>deps</em> as necessary. This build step is
-useful for grouping common steps together, e.g. the common <code>make all</code> command.</p>
 <h3 id="commandname-cmdcmds-environment-extra_deps">command(<em>name</em>, <em>cmd</em>|<em>cmds</em>, [<em>environment</em>], [<em>extra_deps</em>])</h3>
 <p>Create a build step that runs a list of arbitrary commands, specified in either
 <em>cmd</em> or <em>cmds</em>; <em>cmd</em> takes a single command, whereas <em>cmds</em> takes a list of
@@ -301,6 +297,10 @@ typically used to turn a static library into a shared library.</p>
 <em>whole_archive</em> can't be used with it.</p>
 </div>
 <h2 id="grouping-rules">Grouping rules</h2>
+<h3 id="aliasname-deps">alias(<em>name</em>, [<em>deps</em>])</h3>
+<p>Create a build step named <em>name</em> that performs no actions on its own. Instead,
+it just runs its dependencies listed in <em>deps</em> as necessary. This build step is
+useful for grouping common steps together.</p>
 <h3 id="default">default(<em>...</em>)</h3>
 <p>Specify a list of build steps that should be run by default when building. These
 are all accumulated into the <code>all</code> target. If <em>default</em> is never called, all
