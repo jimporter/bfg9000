@@ -8,12 +8,6 @@
     building an executable file named "foo" on Windows, the resulting file will
     be `foo.exe`.
 
-### alias(*name*, [*deps*])
-
-Create a build step named *name* that performs no actions on its own. Instead,
-it just runs its dependencies listed in *deps* as necessary. This build step is
-useful for grouping common steps together, e.g. the common `make all` command.
-
 ### command(*name*, *cmd*|*cmds*, [*environment*], [*extra_deps*])
 
 Create a build step that runs a list of arbitrary commands, specified in either
@@ -166,6 +160,12 @@ typically used to turn a static library into a shared library.
     *whole_archive* can't be used with it.
 
 ## Grouping rules
+
+### alias(*name*, [*deps*])
+
+Create a build step named *name* that performs no actions on its own. Instead,
+it just runs its dependencies listed in *deps* as necessary. This build step is
+useful for grouping common steps together.
 
 ### default(*...*)
 

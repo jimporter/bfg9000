@@ -109,7 +109,29 @@ static = static_library('shared', files=['static.cpp'])
 executable('program', files=['program.cpp'], libs=[shared, static])
 ```
 
-## Default build
+## Finding files
+
+For projects with many source files, it can be inconvenient to manually list all
+of them. Since `build.bfg` files are just Python scripts, you *could* use
+Python's standard library to examine the file system and build the list.
+However, there's a better way: bfg9000 provides a
+[*find_files()*](reference.md#find_filespath-name-type-flat-filter-cache)
+function to fetch the list; if the list ever changes, the build files will be
+regenerated *automatically* the next time they're run.
+
+*find_files()* starts at a base directory and searches recursively for any files
+matching a particular glob:
+
+```python
+hello_files = find_files('src/hello', '*.cpp')
+executable('hello', files=hello_files)
+```
+
+There are lots of options you can pass to *find_files()* to tweak its behavior.
+For instance, you can search only for files or only for directories by passing
+`'f'` or `'d'`, respectively to the *type* argument.
+
+## Default targets
 
 When you're building multiple binaries, you might want to be able to specify
 what gets built by default, i.e. when calling `make` (or `ninja`) with no
@@ -142,10 +164,79 @@ executable('program', files=['main.cpp'], packages=[ogg, prog_opts])
 
 ## Installation
 
+After building, you might want to allow your project to be installed onto the
+user's system somewhere. Most files (headers, executables, libraries) can be
+added to the list of installed files via the
+[*install()*](reference.md#install-all) rule. You can also install entire
+directories of headers:
+
+```python
+include_dir = header_directory('include')
+lib = static_library('program', files=['src/prog.cpp'], include=[include_dir])
+install(lib, include_dir)
+```
+
 ## Commands
+
+In addition to ordinary build rules, it can be useful to provide other common
+commands that apply to a project's source, such as linting the code or building
+documentation. Normally, you should pass the command to be run as an array of
+arguments. This will automatically handle escaping any quotes in each argument.
+This is especially important for cross-platform compatibility, since different
+shells have different quoting rules:
+
+```python
+command('hello', cmd=['python', '-c', 'print("hello")'])
+```
+
+Of course, if you need to use your shell's special characters (like `&&`), you
+can simply pass a string to the *cmd* argument. In addition, you can supply
+multiple commands to this function via the *cmds* argument:
+
+```python
+command('script', cmds=[
+    'touch file',
+    ['python', script.py']
+])
+```
 
 ## Aliases
 
+Sometimes, you just want to group a set of targets together to make it easier to
+build all of them at once. This automatically happens for [default
+targets](#default-targets) by creating an `all` alias, but you can do this
+yourself for any collection of targets:
+
+```python
+foo = executable('foo', files=['foo.cpp'])
+bar = executable('bar', files=['bar.cpp'])
+alias('foobar', [foo, bar])
+```
+
 ## Tests
 
-## Finding files
+All good projects should have tests. Since your project is good (isn't it?),
+yours has tests too, and you should have a good way to execute those tests from
+your build system. bfg9000 provides a [set of
+functions](reference.md#test-rules) for running tests. The most important of
+these is aptly named
+[*test()*](reference.md#testtest-options-environmentdriver). Any executable can
+be passed to this function, and it will be executed as a test; an exit status of
+0 marks success, and non-zero marks failure:
+
+```python
+test( executable('test_foo', files=['test_foo.cpp']) )
+```
+
+In addition, you can provide a [test
+driver](reference.md#test_driverdriver-options-environmentparent) that collects
+all of your tests together and runs them as one. *test_driver()* takes an
+executable (a [*system_executable*](reference.md#system_executablename) by
+default) that runs all the test files. This allows you to aggregate multiple
+test files into a single run, which is very useful for reporting:
+
+```python
+mettle = test_driver('mettle')
+test( executable('test_foo', files=['test_foo.cpp']), driver=mettle )
+test( executable('test_bar', files=['test_bar.cpp']), driver=mettle )
+```
