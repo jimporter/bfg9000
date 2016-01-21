@@ -111,11 +111,22 @@ executable('program', files=['program.cpp'], libs=[shared, static])
 
 ## Default build
 
+When you're building multiple binaries, you might want to be able to specify
+what gets built by default, i.e. when calling `make` (or `ninja`) with no
+arguments. Normally, every executable and library (except those passed to
+[*test()*](reference.md#testtest-options-environmentdriver)) will get built.
+However, you can pass any build rule(s) to [*default()*](reference.md#default),
+and they'll be set as the default, overriding the normal behavior. This makes it
+easy to provide your users with a standard build that gets them all the bits
+they need, and none they don't.
+
 ## External packages
 
 ## Installation
 
 ## Commands
+
+## Aliases
 
 ## Tests
 
