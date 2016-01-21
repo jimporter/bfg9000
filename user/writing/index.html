@@ -159,6 +159,8 @@
         
             <li><a href="#commands">Commands</a></li>
         
+            <li><a href="#aliases">Aliases</a></li>
+        
             <li><a href="#tests">Tests</a></li>
         
             <li><a href="#finding-files">Finding files</a></li>
@@ -254,9 +256,18 @@ executable('program', files=['program.cpp'], libs=[shared, static])
 </code></pre>
 
 <h2 id="default-build">Default build</h2>
+<p>When you're building multiple binaries, you might want to be able to specify
+what gets built by default, i.e. when calling <code>make</code> (or <code>ninja</code>) with no
+arguments. Normally, every executable and library (except those passed to
+<a href="../reference/#testtest-options-environmentdriver"><em>test()</em></a>) will get built.
+However, you can pass any build rule(s) to <a href="../reference/#default"><em>default()</em></a>,
+and they'll be set as the default, overriding the normal behavior. This makes it
+easy to provide your users with a standard build that gets them all the bits
+they need, and none they don't.</p>
 <h2 id="external-packages">External packages</h2>
 <h2 id="installation">Installation</h2>
 <h2 id="commands">Commands</h2>
+<h2 id="aliases">Aliases</h2>
 <h2 id="tests">Tests</h2>
 <h2 id="finding-files">Finding files</h2></div>
         </div>

@@ -356,7 +356,11 @@ specify a specific Boost library (or libraries); for instance,
 <p>This rule recognizes the following environment variables:
 <a href="../environment-vars/#boost_root"><code>BOOST_ROOT</code></a>,
 <a href="../environment-vars/#boost_includedir"><code>BOOST_INCLUDEDIR</code></a>,
-<a href="../environment-vars/#boost_librarydir"><code>BOOST_LIBRARYDIR</code></a>.</p>
+<a href="../environment-vars/#boost_librarydir"><code>BOOST_LIBRARYDIR</code></a>,
+<a href="../environment-vars/#cpath"><code>CPATH</code></a>,
+<a href="../environment-vars/#include"><code>INCLUDE</code></a>,
+<a href="../environment-vars/#lib"><code>LIB</code></a>,
+<a href="../environment-vars/#library_path"><code>LIBRARY_PATH</code></a>.</p>
 <h3 id="system_executablename">system_executable(<em>name</em>)</h3>
 <p>Search for an executable named <em>name</em> somewhere in the system's PATH.</p>
 <p>This rule recognizes the following environment variables:
@@ -370,6 +374,7 @@ written in C.</p>
 <code>'static'</code>. This allows you to restrict the search to find only static versions
 of a library, for example.</p>
 <p>This rule recognizes the following environment variables:
+<a href="../environment-vars/#lib"><code>LIB</code></a>,
 <a href="../environment-vars/#library_path"><code>LIBRARY_PATH</code></a>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>

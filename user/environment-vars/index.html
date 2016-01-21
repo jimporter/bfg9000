@@ -185,6 +185,10 @@ is in C.</p>
 <h3 id="cflags"><em>CFLAGS</em></h3>
 <p class="subtitle">Default: <em>none</em></p>
 <p>Command line arguments to pass to the compiler when compiling any C source file.</p>
+<h3 id="cpath"><em>CPATH</em></h3>
+<p class="subtitle">Default: <em>none</em></p>
+<p>A list of additional directories to search for headers. On POSIX systems, this
+is delimited by <code>:</code>; on Windows, by <code>;</code>.</p>
 <h3 id="cppflags"><em>CPPFLAGS</em></h3>
 <p class="subtitle">Default: <em>none</em></p>
 <p>"C preprocessor flags"; command line arguments to pass to the compiler when
@@ -205,6 +209,9 @@ is in C++.</p>
 <p class="subtitle">Default: <em>none</em></p>
 <p>Command line arguments to pass to the compiler when compiling any C++ source
 file.</p>
+<h3 id="include"><em>INCLUDE</em></h3>
+<p class="subtitle">Default: <em>none</em></p>
+<p><em>MSVC-only</em> A list of directories to search for headers, delimited by  <code>;</code>.</p>
 <h3 id="ldflags"><em>LDFLAGS</em></h3>
 <p class="subtitle">Default: <em>none</em></p>
 <p>Command line arguments to pass to the linker when linking an executable or
@@ -214,6 +221,9 @@ shared library.</p>
 <p>Additional libraries to link into an executable or shared library. This is
 mainly useful for cases where a system library (e.g. the C++ Standard Library
 implementation) requires another library to be explicitly linked with it.</p>
+<h3 id="lib"><em>LIB</em></h3>
+<p class="subtitle">Default: <em>none</em></p>
+<p><em>MSVC-only</em> A list of directories to search for libraries, delimited by  <code>;</code>.</p>
 <h3 id="libflags"><em>LIBFLAGS</em></h3>
 <p class="subtitle">Default: <em>none</em></p>
 <p><em>Windows-only</em>. Command line arguments to pass to the static library builder
