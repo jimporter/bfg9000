@@ -2,13 +2,33 @@
     "docs": [
         {
             "location": "/", 
-            "text": "bfg9000\n\n\nbfg9000\n (\n\"build file generator\"\n) is a cross-platform \nbuild configuration\nsystem\n with an emphasis on making it easy to define how to build your software.\nIt converts a Python-based build script into the appropriate files for your\nunderlying build system of choice.\n\n\nA brief example\n\n\nYou can't get much simpler than the simplest \nbuild.bfg\n file:\n\n\nexecutable('simple', files=['simple.cpp'])\n\n\n\n\nTo build this executable, we need to create the actual build files and then\nrun them:\n\n\n$ bfg9000 path/to/src/ build/\n$ cd build\n$ ninja\n\n\n\n\nFrom there, you can run your newly-created executable: \n./simple\n. Hooray!\n\n\nFor further examples, please see the\n\nexamples/\n\nsubdirectory.", 
+            "text": "bfg9000\n\n\nbfg9000\n (\n\"build file generator\"\n) is a cross-platform \nbuild configuration\nsystem\n with an emphasis on making it easy to define how to build your software.\nIt converts a Python-based build script into the appropriate files for your\nunderlying build system of choice.\n\n\nWhy bfg9000?\n\n\n\n\nAlready familiar\n\n\nbuild.bfg\n files are just Python scripts with some new functions added, so you\nmay already know how to write them; and when your build gets complicated, you\ncan rely on the existing Python ecosystem to get you out of trouble.\n\n\nBuild fast\n\n\nPython may be slow, but bfg9000 gets out of the way as quickly as possible and\nrelies on existing, mature build systems like Make and Ninja to do the heavy\nlifting of building your software.\n\n\nStay sane\n\n\nBuilding your code shouldn't be the hard part of developing your project. Above\nall else, bfg9000 strives to make it easy to write your build scripts.\n\n\n\n\nA brief example\n\n\nYou can't get much simpler than the simplest \nbuild.bfg\n file:\n\n\nexecutable('simple', files=['simple.cpp'])\n\n\n\n\nTo build this executable, we need to create the actual build files and then\nrun them:\n\n\n$ bfg9000 path/to/src/ build/\n$ cd build\n$ ninja\n\n\n\n\nFrom there, you can run your newly-created executable: \n./simple\n. Hooray!\n\n\nFor further examples, please see the\n\nexamples/\n\nsubdirectory.", 
             "title": "Home"
         }, 
         {
             "location": "/#bfg9000", 
             "text": "bfg9000  ( \"build file generator\" ) is a cross-platform  build configuration\nsystem  with an emphasis on making it easy to define how to build your software.\nIt converts a Python-based build script into the appropriate files for your\nunderlying build system of choice.", 
             "title": "bfg9000"
+        }, 
+        {
+            "location": "/#why-bfg9000", 
+            "text": "", 
+            "title": "Why bfg9000?"
+        }, 
+        {
+            "location": "/#already-familiar", 
+            "text": "build.bfg  files are just Python scripts with some new functions added, so you\nmay already know how to write them; and when your build gets complicated, you\ncan rely on the existing Python ecosystem to get you out of trouble.", 
+            "title": "Already familiar"
+        }, 
+        {
+            "location": "/#build-fast", 
+            "text": "Python may be slow, but bfg9000 gets out of the way as quickly as possible and\nrelies on existing, mature build systems like Make and Ninja to do the heavy\nlifting of building your software.", 
+            "title": "Build fast"
+        }, 
+        {
+            "location": "/#stay-sane", 
+            "text": "Building your code shouldn't be the hard part of developing your project. Above\nall else, bfg9000 strives to make it easy to write your build scripts.", 
+            "title": "Stay sane"
         }, 
         {
             "location": "/#a-brief-example", 
