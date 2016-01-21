@@ -234,13 +234,13 @@ arguments to the driver. You may specify driver-wide command-line arguments via
 Specify a list of dependencies which must be satisfied before the tests can be
 run.
 
-## Package finders
+## Package resolvers
 
 ### boost_package([*name*], [*version*])
 
-Search for a Boost library. You can specify *name* (as a string or a list) to
-specify a specific Boost library (or libraries); for instance,
-`'program_options'`. For header-only libraries, you can omit *name*.
+Search for a [Boost](http://www.boost.org/) library. You can specify *name* (as
+a string or a list) to specify a specific Boost library (or libraries); for
+instance, `'program_options'`. For header-only libraries, you can omit *name*.
 
 This rule recognizes the following environment variables:
 [`BOOST_ROOT`](environment-vars.md#boost_root),

@@ -122,6 +122,24 @@ they need, and none they don't.
 
 ## External packages
 
+Most projects have external packages that they depend on. There are lots of
+different ways these packages are organized, and bfg9000 currently supports two
+of them: ["system" packages](reference.md#system_packagename-lang-kind)
+(libraries installed into the default location for your system) and [Boost
+packages](reference.md#boost_packagename-version):
+
+```python
+ogg = system_package('ogg', kind='static')
+prog_opts = boost_package('program_options', version='>=1.55')
+```
+
+Each of these returns an object representing the package that can be used when
+building binaries by passing them in the *packages* argument:
+
+```python
+executable('program', files=['main.cpp'], packages=[ogg, prog_opts])
+```
+
 ## Installation
 
 ## Commands
