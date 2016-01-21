@@ -1,6 +1,6 @@
 # bfg9000 - build file generator
 
-[![PyPi version][pypi-image][pypi-link]
+[![PyPi version][pypi-image]][pypi-link]
 [![Documentation][documentation-image]][documentation-link]
 [![Travis build status][travis-image]][travis-link]
 [![Appveyor build status][appveyor-image]][appveyor-link]
