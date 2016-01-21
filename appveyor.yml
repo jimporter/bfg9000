@@ -4,27 +4,36 @@ version: "{branch}-{build}"
 environment:
   BOOST_INCLUDEDIR: C:\Libraries\boost
   BOOST_LIBRARYDIR: C:\Libraries\boost\lib32-msvc-12.0
-  LIBRARY_PATH: C:\projects\bfg9000\libogg-1.3.2\lib
+  LIBOGG: libogg-1.3.2
+  LIBOGG_CONFIG: Release
+  LIBOGG_PLAT: Win32
+  LIBRARY_PATH: C:\projects\bfg9000\lib
   PYTHON: C:\Python27
 
   matrix:
     - BACKENDS: ninja make
       CC: gcc
       CXX: g++
-      CPPFLAGS: -IC:\projects\bfg9000\libogg-1.3.2\include
+      CPPFLAGS: -IC:\projects\bfg9000\include
       MAKE: mingw32-make
       MINGW_PATH: C:\msys64\mingw64\bin
     - VS: C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall.bat
       CHOCO_EXTRAS: gnuwin32-make.portable
-      CPPFLAGS: /IC:\projects\bfg9000\libogg-1.3.2\include
+      CPPFLAGS: /IC:\projects\bfg9000\include
     - VS: C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat
       CHOCO_EXTRAS: gnuwin32-make.portable
-      CPPFLAGS: /IC:\projects\bfg9000\libogg-1.3.2\include
+      CPPFLAGS: /IC:\projects\bfg9000\include
       BOOST_INCLUDEDIR: C:\Libraries\boost_1_59_0
       BOOST_LIBRARYDIR: C:\Libraries\boost_1_59_0\lib32-msvc-14.0
 
 install:
-  - call scripts\appveyor_install_libogg.bat
+  - |
+    curl -LO http://downloads.xiph.org/releases/ogg/%LIBOGG%.zip
+    7z x -y %LIBOGG%.zip > nul
+    msbuild %LIBOGG%\win32\VS2010\libogg_static.sln /p:Configuration=%LIBOGG_CONFIG% /p:Platform=%LIBOGG_PLAT%
+    mkdir lib
+    copy %LIBOGG%\win32\VS2010\%LIBOGG_PLAT%\%LIBOGG_CONFIG%\libogg_static.lib lib\ogg.lib
+    robocopy %LIBOGG%\include include *.h /E & exit 0
   - cinst ninja gnuwin32-coreutils.portable %CHOCO_EXTRAS%
   - if defined VS call "%VS%" x86
   - set PATH=%PYTHON%;%PYTHON%\Scripts;%MINGW_PATH%;%PATH%

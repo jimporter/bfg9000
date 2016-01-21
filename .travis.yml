@@ -30,7 +30,14 @@ addons:
       - ninja-build
 
 before_install:
-  - ./scripts/travis_before_install.sh
+  - |
+    if [ "${TRAVIS_OS_NAME}" = "osx" ]; then
+      brew update
+      brew install python
+      brew install coreutils
+      brew install ninja
+      brew install libogg
+    fi
 install:
   - pip install flake8
   - pip install .
