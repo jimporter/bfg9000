@@ -11,8 +11,6 @@ choice (Ninja, Make, or MSBuild).
 
 ## Why bfg9000?
 
----
-
 #### Already familiar
 
 `build.bfg` files are just Python scripts with some new functions added, so you
@@ -29,8 +27,6 @@ lifting of building your software.
 
 Building your code shouldn't be the hard part of developing your project. Above
 all else, bfg9000 strives to make it easy to write your build scripts.
-
----
 
 ## A brief example
 
