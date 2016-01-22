@@ -28,6 +28,8 @@ addons:
       - libboost-program-options-dev
       - libogg-dev
       - ninja-build
+cache:
+  - apt
 
 before_install:
   - |
