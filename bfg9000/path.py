@@ -63,7 +63,11 @@ class Path(safe_str.safe_string):
             return self.suffix or '.'
         if not self.suffix:
             return root
-        return root + os.path.sep + self.suffix
+
+        # Join the separator and the suffix first so that we don't end up with
+        # unnecessarily-escaped backslashes on Windows. (It doesn't hurt
+        # anything; it just looks weird.)
+        return root + (os.path.sep + self.suffix)
 
     def string(self):
         return self.realize(None)
