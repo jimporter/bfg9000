@@ -1,6 +1,6 @@
 # Building With bfg9000
 
-Like some other tools (e.g. [CMake](http://www.cmake.org/) or
+Like some other tools (e.g. [CMake](https://www.cmake.org/) or
 [autotools](https://www.gnu.org/software/automake/)), bfg9000 isn't actually a
 build system; it's a *build configuration system* or, if you prefer, a
 *meta-build system*. That is, bfg9000 builds build files which you then use to

@@ -54,7 +54,7 @@ subdirectory.
 
 # Installation
 
-bfg9000 uses [setuptools](http://pythonhosted.org/setuptools/), so installation
+bfg9000 uses [setuptools](https://pythonhosted.org/setuptools/), so installation
 is much the same as any other Python package:
 
 ```sh
@@ -63,7 +63,7 @@ $ pip install bfg9000
 
 From there, you can start using bfg to build your software! For more information
 about how to install bfg9000, see the
-[documentation](http://jimporter.github.io/bfg9000/install).
+[documentation](https://jimporter.github.io/bfg9000/install).
 
 ## License
 
@@ -72,7 +72,7 @@ This project is licensed under the BSD 3-clause license.
 [pypi-image]: https://img.shields.io/pypi/v/bfg9000.svg
 [pypi-link]: https://pypi.python.org/pypi/bfg9000
 [documentation-image]: https://img.shields.io/badge/docs-bfg9000-blue.svg
-[documentation-link]: http://jimporter.github.io/bfg9000/
+[documentation-link]: https://jimporter.github.io/bfg9000/
 [travis-image]: https://travis-ci.org/jimporter/bfg9000.svg?branch=master
 [travis-link]: https://travis-ci.org/jimporter/bfg9000
 [appveyor-image]: https://ci.appveyor.com/api/projects/status/hxvbggf6exq8i2k6/branch/master?svg=true

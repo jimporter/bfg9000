@@ -238,7 +238,7 @@ run.
 
 ### boost_package([*name*], [*version*])
 
-Search for a [Boost](http://www.boost.org/) library. You can specify *name* (as
+Search for a [Boost](https://www.boost.org/) library. You can specify *name* (as
 a string or a list) to specify a specific Boost library (or libraries); for
 instance, `'program_options'`. For header-only libraries, you can omit *name*.
 

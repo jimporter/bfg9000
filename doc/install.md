@@ -1,6 +1,6 @@
 # Installation
 
-bfg9000 uses [setuptools](http://pythonhosted.org/setuptools/), so installation
+bfg9000 uses [setuptools](https://pythonhosted.org/setuptools/), so installation
 is much the same as any other Python package:
 
 ```sh
@@ -17,7 +17,7 @@ On Linux, bfg9000 requires [patchelf](https://nixos.org/patchelf.html) in order
 to modify [rpath](https://en.wikipedia.org/wiki/Rpath)s of executables and
 shared libraries when installing. The setup script will automatically download
 and install patchelf when installing the rest of bfg9000. If you're installing
-bfg into a [virtualenv](http://virtualenv.readthedocs.org/en/latest/), patchelf
+bfg into a [virtualenv](https://virtualenv.readthedocs.org/en/latest/), patchelf
 will go into `$VIRTUAL_ENV/bin`. You can also manually install patchelf from the
 setup script with the following command (assuming you've downloaded bfg's
 source):
