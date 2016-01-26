@@ -7,8 +7,9 @@ from .safe_str import safe_str
 
 
 class Node(object):
-    def __init__(self):
+    def __init__(self, path):
         self.creator = None
+        self.path = path
 
     @property
     def all(self):
@@ -21,6 +22,12 @@ class Node(object):
         return '<{type} {name}>'.format(
             type=type(self).__name__, name=repr(self.path)
         )
+
+    def __hash__(self):
+        return hash(self.path)
+
+    def __eq__(self, rhs):
+        return type(self) == type(rhs) and self.path == rhs.path
 
 
 def objectify(thing, valid_type, creator, *args, **kwargs):
@@ -44,8 +51,7 @@ class File(Node):
     install_root = None
 
     def __init__(self, name, root):
-        Node.__init__(self)
-        self.path = Path(name, root)
+        Node.__init__(self, Path(name, root))
         self.post_install = None
 
 
@@ -55,8 +61,7 @@ class Directory(File):
 
 class Phony(Node):
     def __init__(self, name):
-        Node.__init__(self)
-        self.path = name
+        Node.__init__(self, name)
 
 
 class SourceFile(File):
@@ -116,14 +121,10 @@ class StaticLibrary(Library):
 
 class WholeArchive(StaticLibrary):
     def __init__(self, lib):
-        Node.__init__(self)
+        Node.__init__(self, lib.path)
         self.lib = lib
         self.creator = lib.creator
         self.post_install = None
-
-    @property
-    def path(self):
-        return self.lib.path
 
     @property
     def lang(self):
