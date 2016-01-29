@@ -100,9 +100,11 @@ def main():
     parser.add_argument('builddir', nargs='?', help='build directory')
     parser.add_argument('--version', action='version',
                         version='%(prog)s ' + version)
-    parser.add_argument('--backend', choices=list(backends.keys()),
+    parser.add_argument('--backend', metavar='BACKEND',
+                        choices=list(backends.keys()),
                         default=list(backends.keys())[0],
-                        help='backend (default: %(default)s)')
+                        help=('build backend (one of %(choices)s; default: ' +
+                              '%(default)s)'))
     parser.add_argument('--prefix', type=path_arg, metavar='PATH',
                         default=install_dirs[InstallRoot.prefix],
                         help='installation prefix (default: %(default)r)')
@@ -115,10 +117,17 @@ def main():
     parser.add_argument('--includedir', type=path_arg, metavar='PATH',
                         default=install_dirs[InstallRoot.includedir],
                         help=path_help.format('headers'))
+    parser.add_argument('-c', '--color', nargs='?', metavar='WHEN',
+                        choices=['always', 'never', 'auto'],
+                        default='auto', const='always',
+                        help=('show colored output (one of: %(choices)s; ' +
+                              'default: %(default)s)'))
     parser.add_argument('--regenerate', action='store_true',
                         help='regenerate build files')
 
     args = parse_args(parser)
+    log.init(args.color)
+
     if args.regenerate:
         try:
             env = Environment.load(args.builddir.string())

@@ -1,26 +1,39 @@
+import colorama
 import logging
 import os
 import sys
 import traceback
 import warnings
 
-logging.basicConfig(format='%(levelname)s: %(message)s')
-logging.addLevelName(logging.CRITICAL, 'critical')
-logging.addLevelName(logging.ERROR,    'error')
-logging.addLevelName(logging.WARNING,  'warning')
-logging.addLevelName(logging.INFO,     'info')
-logging.addLevelName(logging.DEBUG,    'debug')
-
 getLogger = logging.getLogger
 
 basiclog = logging.getLogger('bfg9000')
 tracelog = logging.getLogger('bfg9000.trace')
-tracelog.propagate = False
-console = logging.StreamHandler()
-formatter = logging.Formatter('%(levelname)s: %(file)s:%(line)d: ' +
-                              '%(message)s\n%(traceback)s')
-console.setFormatter(formatter)
-tracelog.addHandler(console)
+
+
+def init(color='auto'):
+    if color == 'always':
+        colorama.init(strip=False)
+    elif color == 'never':
+        colorama.init(strip=True, convert=False)
+    else:  # color == 'auto'
+        colorama.init()
+
+    logging.basicConfig(format='%(levelname)s: %(message)s')
+
+    logging.addLevelName(logging.CRITICAL,
+                         '\033[1;41;37m' + 'critical' + '\033[0m')
+    logging.addLevelName(logging.ERROR, '\033[1;31m' + 'error' + '\033[0m')
+    logging.addLevelName(logging.WARNING, '\033[1;33m' + 'warning' + '\033[0m')
+    logging.addLevelName(logging.INFO, '\033[1;34m' + 'info' + '\033[0m')
+    logging.addLevelName(logging.DEBUG, '\033[1;35m' + 'debug' + '\033[0m')
+
+    tracelog.propagate = False
+    console = logging.StreamHandler()
+    formatter = logging.Formatter('%(levelname)s: %(file)s:%(line)d: ' +
+                                  '%(message)s\n%(traceback)s')
+    console.setFormatter(formatter)
+    tracelog.addHandler(console)
 
 
 def _showwarning(message, category, filename, lineno, file=None, line=None):
