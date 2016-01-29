@@ -4,6 +4,7 @@ import re
 import sys
 
 from . import builtins
+from . import log
 from .backends import get_backends
 from .build_inputs import BuildInputs
 from .environment import Environment, EnvVersionError
@@ -12,6 +13,7 @@ from .platforms import platform_info
 from .version import version
 
 bfgfile = 'build.bfg'
+logger = log.getLogger(__name__)
 
 
 def is_srcdir(path):
@@ -86,6 +88,9 @@ def execute_script(env, filename=bfgfile):
             exec(code, builtin_dict, {})
         except SystemExit:
             pass
+        except Exception as e:
+            log.exception(e)
+            raise SystemExit(1)
 
     return build
 
@@ -126,10 +131,12 @@ def main():
         try:
             env = Environment.load(args.builddir.string())
         except Exception as e:
-            sys.stderr.write('{prog}: error loading environment: {msg}\n'
-                             .format(prog=parser.prog, msg=e))
+            msg = 'Unable to reload environment'
+            if str(e):
+                msg += ': {}'.format(str(e))
             if isinstance(e, EnvVersionError):
-                sys.stderr.write('Please re-run bfg9000 manually.\n')
+                msg += '\n  Please re-run bfg9000 manually'
+            logger.error(msg)
             return 1
     else:
         # De-munge the entry point if we're on Windows.
