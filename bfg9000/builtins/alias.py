@@ -31,3 +31,14 @@ def ninja_alias(rule, build_inputs, buildfile, env):
         rule='phony',
         inputs=rule.extra_deps
     )
+
+try:
+    from ..backends.msbuild import writer as msbuild
+
+    import warnings
+
+    @msbuild.rule_handler(Alias)
+    def msbuild_alias(rule, build_inputs, solution, env):
+        warnings.warn('alias rules not currently supported with msbuild')
+except:
+    pass

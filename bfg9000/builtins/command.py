@@ -56,3 +56,14 @@ def ninja_command(rule, build_inputs, buildfile, env):
         commands=rule.cmds,
         environ=rule.env
     )
+
+try:
+    from ..backends.msbuild import writer as msbuild
+
+    import warnings
+
+    @msbuild.rule_handler(Command)
+    def msbuild_command(rule, build_inputs, solution, env):
+        warnings.warn('command rules not currently supported with msbuild')
+except:
+    pass

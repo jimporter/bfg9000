@@ -161,3 +161,13 @@ def ninja_object_file(rule, build_inputs, buildfile, env):
         implicit=rule.extra_deps,
         variables=variables
     )
+
+try:
+    from ..backends.msbuild import writer as msbuild
+
+    @msbuild.rule_handler(Compile)
+    def msbuild_object_file(rule, build_inputs, solution, env):
+        # MSBuild does compilation and linking in one unit; see link.py.
+        pass
+except:
+    pass

@@ -38,8 +38,7 @@ def write(env, build_inputs):
     solution = Solution(uuids)
 
     for e in build_inputs.edges:
-        if type(e) in _rule_handlers:
-            _rule_handlers[type(e)](e, build_inputs, solution, env)
+        _rule_handlers[type(e)](e, build_inputs, solution, env)
 
     # XXX: Handle default builds. Default builds go first in the solution. This
     # also means we'd need to support aliases so that we can have multiple
