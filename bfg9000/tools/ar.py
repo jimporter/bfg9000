@@ -3,6 +3,7 @@ import os
 from .. import shell
 from .. import file_types
 from .. import iterutils
+from .utils import check_which
 from ..path import Root
 
 
@@ -15,6 +16,8 @@ class ArLinker(object):
         self.lang = lang
 
         self.command = env.getvar('AR', 'ar')
+        check_which(self.command, kind='static linker')
+
         self.global_args = shell.split(env.getvar('ARFLAGS', 'cru'))
 
     @property

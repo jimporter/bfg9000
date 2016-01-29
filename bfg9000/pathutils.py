@@ -21,3 +21,12 @@ class pushd(object):
 
     def __exit__(self, type, value, traceback):
         os.chdir(self.old)
+
+
+def samefile(path1, path2):
+    if hasattr(os.path, 'samefile'):
+        return os.path.samefile(path1, path2)
+    else:
+        # This isn't entirely accurate, but it's close enough, and should only
+        # be necessary for Windows with Python 2.x.
+        return os.path.realpath(path1) == os.path.realpath(path2)

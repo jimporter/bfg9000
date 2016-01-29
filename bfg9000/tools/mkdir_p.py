@@ -1,4 +1,5 @@
 from .hooks import tool
+from .utils import check_which
 
 
 @tool('mkdir_p')
@@ -11,6 +12,7 @@ class MkdirP(object):
         else:
             default = 'mkdir -p'
         self.command = env.getvar('MKDIR_P', default)
+        check_which(self.command)
 
     def __call__(self, cmd, path):
         return [cmd, path]

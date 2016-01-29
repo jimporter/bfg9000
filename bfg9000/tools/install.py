@@ -1,4 +1,5 @@
 from .hooks import tool
+from .utils import check_which
 
 
 @tool('install')
@@ -8,6 +9,7 @@ class Install(object):
     def __init__(self, env):
         default = 'ginstall' if env.platform.name == 'darwin' else 'install'
         self.command = env.getvar('INSTALL', default)
+        check_which(self.command)
 
     @property
     def data_args(self):

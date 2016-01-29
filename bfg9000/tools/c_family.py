@@ -4,6 +4,7 @@ import re
 from . import ar, cc, msvc
 from .. import shell
 from .hooks import builder
+from .utils import check_which
 from ..languages import lang_exts
 
 
@@ -30,6 +31,7 @@ class CFamilyBuilder(object):
         if env.platform.name == 'windows':
             default_cmd = 'cl'
         cmd = env.getvar(var, default_cmd)
+        check_which(cmd, kind='{} compiler'.format(lang))
 
         cflags = (
             shell.split(env.getvar(var + 'FLAGS', '')) +
@@ -42,6 +44,8 @@ class CFamilyBuilder(object):
             origin = os.path.dirname(cmd)
             link_cmd = env.getvar(var + '_LINK', os.path.join(origin, 'link'))
             lib_cmd = env.getvar(var + '_LIB', os.path.join(origin, 'lib'))
+            check_which(link_cmd, kind='{} linker'.format(lang))
+            check_which(lib_cmd, kind='{} static linker'.format(lang))
 
             self.compiler = msvc.MsvcCompiler(env, lang, low_var, cmd, cflags)
             for mode in ['executable', 'shared_library']:

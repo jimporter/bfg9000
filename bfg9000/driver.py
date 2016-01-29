@@ -9,6 +9,7 @@ from .backends import get_backends
 from .build_inputs import BuildInputs
 from .environment import Environment, EnvVersionError
 from .path import Path, InstallRoot
+from .pathutils import samefile
 from .platforms import platform_info
 from .version import version
 
@@ -18,15 +19,6 @@ logger = log.getLogger(__name__)
 
 def is_srcdir(path):
     return os.path.exists(os.path.join(path, bfgfile))
-
-
-def samefile(path1, path2):
-    if hasattr(os.path, 'samefile'):
-        return os.path.samefile(path1, path2)
-    else:
-        # This isn't entirely accurate, but it's close enough, and should only
-        # be necessary for Windows with Python 2.x.
-        return os.path.realpath(path1) == os.path.realpath(path2)
 
 
 def parse_args(parser, args=None, namespace=None):

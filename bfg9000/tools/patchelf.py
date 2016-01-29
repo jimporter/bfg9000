@@ -1,5 +1,6 @@
 from .. import safe_str
 from .hooks import tool
+from .utils import check_which
 from ..file_types import SharedLibrary
 from ..iterutils import uniques
 from ..path import install_path
@@ -11,6 +12,7 @@ class PatchElf(object):
 
     def __init__(self, env):
         self.command = env.getvar('PATCHELF', 'patchelf')
+        check_which(self.command)
 
     def __call__(self, cmd, file):
         paths = uniques(
