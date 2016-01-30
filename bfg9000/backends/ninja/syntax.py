@@ -77,8 +77,7 @@ class Writer(object):
         for i in iterutils.tween(things, delim, prefix, suffix):
             self.write(i, syntax)
 
-    def write_shell(self, thing, clean=False):
-        syntax = Syntax.clean if clean else Syntax.shell
+    def write_shell(self, thing, syntax=Syntax.shell):
         if iterutils.isiterable(thing):
             self.write_each(thing, syntax)
         else:
@@ -196,9 +195,9 @@ class NinjaFile(object):
     def default(self, paths):
         self._defaults.extend(paths)
 
-    def _write_variable(self, out, name, value, clean=False, indent=0):
+    def _write_variable(self, out, name, value, syntax=Syntax.shell, indent=0):
         out.write_literal(('  ' * indent) + name.name + ' = ')
-        out.write_shell(value, clean)
+        out.write_shell(value, syntax)
         out.write_literal('\n')
 
     def _write_rule(self, out, name, rule):
@@ -241,11 +240,11 @@ class NinjaFile(object):
             out.write_literal('\n')
 
         for section in Section:
-            # Paths are inherently clean (read: don't need shell quoting).
-            # XXX: This behavior is a bit strange and maybe should be reworked.
-            clean = section == Section.path
+            # The built-in paths don't need shell quoting because they're used
+            # by other paths, which *are* quoted.
+            syntax = Syntax.clean if section == Section.path else Syntax.shell
             for name, value in self._variables[section]:
-                self._write_variable(out, name, value, clean)
+                self._write_variable(out, name, value, syntax)
             if self._variables[section]:
                 out.write_literal('\n')
 
