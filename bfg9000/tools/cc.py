@@ -60,9 +60,8 @@ class CcCompiler(object):
 
 
 class CcLinker(object):
-    def __init__(self, env, mode, lang, name, command, ldflags, ldlibs):
+    def __init__(self, env, lang, name, command, ldflags, ldlibs):
         self.env = env
-        self.mode = mode
         self.lang = lang
 
         self.rule_name = 'link_' + name
@@ -120,31 +119,9 @@ class CcLinker(object):
     def auto_link(self):
         return False
 
-    def output_file(self, name):
-        if self.mode == 'executable':
-            return Executable(
-                name + self.platform.executable_ext, Root.builddir, self.lang
-            )
-        elif self.mode == 'shared_library':
-            head, tail = os.path.split(name)
-
-            def lib(prefix='lib'):
-                return os.path.join(
-                    head, prefix + tail + self.platform.shared_library_ext
-                )
-
-            if self.platform.has_import_library:
-                dllprefix = 'cyg' if self.platform.name == 'cygwin' else 'lib'
-                return DllLibrary(lib(dllprefix), lib() + '.a', Root.builddir,
-                                  self.lang)
-            else:
-                return SharedLibrary(lib(), Root.builddir, self.lang)
-        else:
-            raise ValueError("unknown mode '{}'".format(self.mode))
-
     @property
     def mode_args(self):
-        return ['-shared', '-fPIC'] if self.mode == 'shared_library' else []
+        return []
 
     def lib_dirs(self, libraries, target):
         def get_dir(lib):
@@ -180,8 +157,40 @@ class CcLinker(object):
         # in the case of MinGW).
         return ['-l' + self._extract_lib_name(library)]
 
+
+class CcExecutableLinker(CcLinker):
+    mode = 'executable'
+
+    def output_file(self, name):
+        return Executable(
+            name + self.platform.executable_ext, Root.builddir, self.lang
+        )
+
+
+class CcSharedLibraryLinker(CcLinker):
+    mode = 'shared_library'
+
+    def output_file(self, name):
+        head, tail = os.path.split(name)
+
+        def lib(prefix='lib'):
+            return os.path.join(
+                head, prefix + tail + self.platform.shared_library_ext
+            )
+
+        if self.platform.has_import_library:
+            dllprefix = 'cyg' if self.platform.name == 'cygwin' else 'lib'
+            return DllLibrary(lib(dllprefix), lib() + '.a', Root.builddir,
+                              self.lang)
+        else:
+            return SharedLibrary(lib(), Root.builddir, self.lang)
+
+    @property
+    def mode_args(self):
+        return ['-shared', '-fPIC']
+
     def import_lib(self, library):
-        if self.platform.has_import_library and self.mode == 'shared_library':
+        if self.platform.has_import_library:
             return ['-Wl,--out-implib=' + library.import_lib.path]
         return []
 

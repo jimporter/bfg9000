@@ -55,9 +55,8 @@ class MsvcCompiler(object):
 
 
 class MsvcLinker(object):
-    def __init__(self, env, mode, lang, name, command, ldflags, ldlibs):
+    def __init__(self, env, lang, name, command, ldflags, ldlibs):
         self.platform = env.platform
-        self.mode = mode
         self.lang = lang
 
         self.rule_name = self.command_var = 'link_' + name
@@ -79,23 +78,13 @@ class MsvcLinker(object):
         result.append('/OUT:' + output)
         return result
 
-    def output_file(self, name):
-        if self.mode == 'executable':
-            return Executable(name + self.platform.executable_ext,
-                              Root.builddir, self.lang)
-        elif self.mode == 'shared_library':
-            return DllLibrary(name + self.platform.shared_library_ext,
-                              name + '.lib', Root.builddir, self.lang)
-        else:
-            raise ValueError("unknown mode '{}'".format(self.mode))
-
     @property
     def auto_link(self):
         return True
 
     @property
     def mode_args(self):
-        return ['/DLL'] if self.mode == 'shared_library' else []
+        return []
 
     def lib_dirs(self, libraries, target):
         def get_dir(lib):
@@ -108,21 +97,40 @@ class MsvcLinker(object):
             raise ValueError('MSVC does not support whole-archives')
         return [library.link.path.basename()]
 
+
+class MsvcExecutableLinker(MsvcLinker):
+    mode = 'executable'
+
+    def output_file(self, name):
+        return Executable(name + self.platform.executable_ext,
+                          Root.builddir, self.lang)
+
+
+class MsvcSharedLibraryLinker(MsvcLinker):
+    mode = 'shared_library'
+
+    def output_file(self, name):
+        return DllLibrary(name + self.platform.shared_library_ext,
+                          name + '.lib', Root.builddir, self.lang)
+
+    @property
+    def mode_args(self):
+        return ['/DLL']
+
     def import_lib(self, library):
-        if self.mode != 'shared_library':
-            return []
         return ['/IMPLIB:' + library.import_lib.path]
 
 
 class MsvcStaticLinker(object):
+    mode = 'static_library'
+    link_var = 'lib'
+
     def __init__(self, env, lang, name, command):
         self.platform = env.platform
-        self.mode = 'static_library'
         self.lang = lang
 
         self.rule_name = self.command_var = 'lib_' + name
         self.command = command
-        self.link_var = 'lib'
 
         self.global_args = shell.split(env.getvar('LIBFLAGS', ''))
 

@@ -64,7 +64,8 @@ class Link(Edge):
         else:
             lib_dirs = sum((i.lib_dirs for i in self.packages), self.all_libs)
             self._internal_options.extend(builder.lib_dirs(lib_dirs, target))
-            self._internal_options.extend(builder.import_lib(target))
+            if mode == 'shared_library':
+                self._internal_options.extend(builder.import_lib(target))
 
             links = sum((builder.link_lib(i) for i in self.all_libs), [])
             self.lib_options = links
@@ -136,7 +137,7 @@ def _get_flags(backend, rule, build_inputs, buildfile):
     if ldflags_value:
         variables[ldflags] = [global_ldflags] + ldflags_value
 
-    if rule.builder.mode != 'static_library':
+    if hasattr(rule, 'lib_options'):
         global_ldlibs, ldlibs = backend.flags_vars(
             rule.builder.link_var + 'libs', rule.builder.global_libs, buildfile
         )

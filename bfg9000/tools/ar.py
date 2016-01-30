@@ -8,11 +8,11 @@ from ..path import Root
 
 
 class ArLinker(object):
+    mode = 'static_library'
     rule_name = command_var = link_var = 'ar'
 
     def __init__(self, env, lang):
         self.platform = env.platform
-        self.mode = 'static_library'
         self.lang = lang
 
         self.command = env.getvar('AR', 'ar')

@@ -24,8 +24,6 @@ class CFamilyBuilder(object):
     }
 
     def __init__(self, env, lang):
-        self.linkers = {}
-
         var, default_cmd = self.__langs[lang]
         low_var = var.lower()
         if env.platform.name == 'windows':
@@ -48,19 +46,27 @@ class CFamilyBuilder(object):
             check_which(lib_cmd, kind='{} static linker'.format(lang))
 
             self.compiler = msvc.MsvcCompiler(env, lang, low_var, cmd, cflags)
-            for mode in ['executable', 'shared_library']:
-                self.linkers[mode] = msvc.MsvcLinker(
-                    env, mode, lang, low_var, link_cmd, ldflags, ldlibs
-                )
-            self.linkers['static_library'] = msvc.MsvcStaticLinker(
-                env, lang, low_var, lib_cmd
-            )
+            self.linkers = {
+                'executable': msvc.MsvcExecutableLinker(
+                    env, lang, low_var, link_cmd, ldflags, ldlibs
+                ),
+                'shared_library': msvc.MsvcSharedLibraryLinker(
+                    env, lang, low_var, link_cmd, ldflags, ldlibs
+                ),
+                'static_library': msvc.MsvcStaticLinker(
+                    env, lang, low_var, lib_cmd
+                ),
+            }
             self.packages = msvc.MsvcPackageResolver(env, lang)
         else:
             self.compiler = cc.CcCompiler(env, lang, low_var, cmd, cflags)
-            for mode in ['executable', 'shared_library']:
-                self.linkers[mode] = cc.CcLinker(
-                    env, mode, lang, low_var, cmd, ldflags, ldlibs
-                )
-            self.linkers['static_library'] = ar.ArLinker(env, lang)
+            self.linkers = {
+                'executable': cc.CcExecutableLinker(
+                    env, lang, low_var, cmd, ldflags, ldlibs
+                ),
+                'shared_library': cc.CcSharedLibraryLinker(
+                    env, lang, low_var, cmd, ldflags, ldlibs
+                ),
+                'static_library': ar.ArLinker(env, lang),
+            }
             self.packages = cc.CcPackageResolver(env, lang, cmd)
