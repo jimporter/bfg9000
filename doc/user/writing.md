@@ -167,7 +167,7 @@ executable('program', files=['main.cpp'], packages=[ogg, prog_opts])
 After building, you might want to allow your project to be installed onto the
 user's system somewhere. Most files (headers, executables, libraries) can be
 added to the list of installed files via the
-[*install()*](reference.md#install-all) rule. You can also install entire
+[*install()*](reference.md#install) rule. You can also install entire
 directories of headers:
 
 ```python

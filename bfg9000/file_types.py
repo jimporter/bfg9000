@@ -53,6 +53,7 @@ class File(Node):
     def __init__(self, name, root):
         Node.__init__(self, Path(name, root))
         self.post_install = None
+        self.runtime_deps = None
 
 
 class Directory(File):

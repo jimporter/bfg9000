@@ -20,22 +20,20 @@ class InstallTargets(object):
 
 
 @builtin.globals('builtins', 'build_inputs')
-def install(builtins, build, *args, **kwargs):
-    def _flatten(args):
+def install(builtins, build, *args):
+    def _install(args, all):
         for i in args:
-            for j in i.all:
-                yield j
+            if isinstance(i, Directory):
+                build['install'].directories.append(i)
+            else:
+                builtins['default'](i)
+                build['install'].files.append(i)
+                if i.runtime_deps:
+                    _install(i.runtime_deps, all=False)
 
     if len(args) == 0:
         raise ValueError('expected at least one argument')
-    all_files = kwargs.pop('all', True)
-
-    for i in _flatten(args) if all_files else args:
-        if isinstance(i, Directory):
-            build['install'].directories.append(i)
-        else:
-            builtins['default'](i)
-            build['install'].files.append(i)
+    _install(args, all=True)
 
 
 def _install_commands(backend, build_inputs, buildfile, env):

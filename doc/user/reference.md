@@ -128,7 +128,7 @@ refer to an arbitrary subfolder of your source directory.
 ### header(*name*)
 
 Create a reference to an existing header named *name*. This is useful if you'd
-like to [install](#install-all) a single header file for your project.
+like to [install](#install) a single header file for your project.
 
 ### header_directory(*name*, [*system*])
 
@@ -174,17 +174,19 @@ are all accumulated into the `all` target. If *default* is never called, all
 executables and libraries *not* passed to
 [*test*](#testtest-options-environmentdriver) will be built by default.
 
-### install(*...*, [*all*])
+### install(*...*)
 
 Specify a list of files that need to be installed for the project to work. Each
-will be installed to the appropriate location based on its type (e.g. header
-files will go in `$PREFIX/include` by default on POSIX systems). These are all
-accumulated into the `install` target.
+will be installed to the appropriate location based on its type, e.g. header
+files will go in `$PREFIX/include` by default on POSIX systems. These are all
+accumulated into the `install` target. If there are any runtime dependencies for
+a file (such as shared libraries you just built), they will be installed as
+well.
 
-If *all* is *True*, all the files will be installed; otherwise, only the primary
-file for each argument will be. For instance, on Windows, this means that
-setting *all* to *True* installs the import libraries as well as the DLLs for
-shared libraries.
+!!! note
+    When explicitly listing a target, *all* the files for that target will be
+    installed. For instance, on Windows, this means that passing in a shared
+    library will install the DLL *and* the import library.
 
 This rule recognizes the following environment variables:
 [`INSTALL`](environment-vars.md#install),

@@ -73,6 +73,8 @@ class Link(Edge):
         for c in (i.creator for i in self.files if i.creator):
             c.link_options.extend(c.builder.link_args(self.name, mode))
 
+        target.runtime_deps = [ i for i in self.libs
+                                if isinstance(i, SharedLibrary) ]
         if getattr(self.builder, 'post_install', None):
             target.post_install = self.builder.post_install
 
