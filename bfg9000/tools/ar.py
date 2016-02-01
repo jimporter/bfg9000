@@ -8,7 +8,6 @@ from ..path import Root
 
 
 class ArLinker(object):
-    mode = 'static_library'
     rule_name = command_var = link_var = 'ar'
 
     def __init__(self, env, lang):

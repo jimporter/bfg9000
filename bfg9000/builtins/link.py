@@ -15,21 +15,15 @@ build_input('link_options')(list)
 
 
 class Link(Edge):
-    __prefixes = {
-        'executable': '',
-        'static_library': 'lib',
-        'shared_library': 'lib',
-    }
-
     @classmethod
-    def __name(cls, name, mode):
+    def __name(cls, name):
         head, tail = os.path.split(name)
-        return os.path.join(head, cls.__prefixes[mode] + tail)
+        return os.path.join(head, cls._prefix + tail)
 
-    def __init__(self, builtins, build, env, mode, name, files, include=None,
+    def __init__(self, builtins, build, env, name, files, include=None,
                  libs=None, packages=None, compile_options=None,
                  link_options=None, lang=None, extra_deps=None):
-        self.name = self.__name(name, mode)
+        self.name = self.__name(name)
         self.packages = listify(packages)
 
         # XXX: Try to detect if a string refers to a shared lib?
@@ -47,36 +41,19 @@ class Link(Edge):
 
         langs = chain([lang], (i.lang for i in self.files),
                       (i.lang for i in self.all_libs))
-        self.builder = builder = env.linker(langs, mode)
+        self.builder = env.linker(langs, self.mode)
 
         self.user_options = pshell.listify(link_options)
         self._internal_options = []
 
         target = self.builder.output_file(name)
-
-        if mode == 'static_library':
-            if self.options:
-                raise ValueError('link options are not allowed for static ' +
-                                 'libraries')
-            if self.all_libs:
-                raise ValueError('libraries cannot be linked into static ' +
-                                 'libraries')
-        else:
-            lib_dirs = sum((i.lib_dirs for i in self.packages), self.all_libs)
-            self._internal_options.extend(builder.lib_dirs(lib_dirs, target))
-            if mode == 'shared_library':
-                self._internal_options.extend(builder.import_lib(target))
-
-            links = sum((builder.link_lib(i) for i in self.all_libs), [])
-            self.lib_options = links
-
-        for c in (i.creator for i in self.files if i.creator):
-            c.link_options.extend(c.builder.link_args(self.name, mode))
-
         target.runtime_deps = [ i for i in self.libs
                                 if isinstance(i, SharedLibrary) ]
-        if getattr(self.builder, 'post_install', None):
+        if hasattr(self.builder, 'post_install'):
             target.post_install = self.builder.post_install
+
+        for c in (i.creator for i in self.files if i.creator):
+            c.link_options.extend(c.builder.link_args(self.name, self.mode))
 
         build['defaults'].add(target)
         Edge.__init__(self, build, target, extra_deps)
@@ -86,13 +63,52 @@ class Link(Edge):
         return self._internal_options + self.user_options
 
 
+class StaticLink(Link):
+    mode = 'static_library'
+    msbuild_mode = 'StaticLibrary'
+    _prefix = 'lib'
+
+    def __init__(self, *args, **kwargs):
+        Link.__init__(self, *args, **kwargs)
+        if self.options:
+            raise ValueError('link options are not allowed for static ' +
+                             'libraries')
+        if self.all_libs:
+            raise ValueError('libraries cannot be linked into static ' +
+                             'libraries')
+
+
+class DynamicLink(Link):
+    mode = 'executable'
+    msbuild_mode = 'Application'
+    _prefix = ''
+
+    def __init__(self, *args, **kwargs):
+        Link.__init__(self, *args, **kwargs)
+        links = sum((self.builder.link_lib(i) for i in self.all_libs), [])
+        self.lib_options = links
+
+        dirs = sum((i.lib_dirs for i in self.packages), self.all_libs)
+        lib_dirs = self.builder.lib_dirs(dirs, self.target)
+        self._internal_options.extend(lib_dirs)
+
+
+class SharedLink(DynamicLink):
+    mode = 'shared_library'
+    msbuild_mode = 'DynamicLibrary'
+    _prefix = 'lib'
+
+    def __init__(self, *args, **kwargs):
+        DynamicLink.__init__(self, *args, **kwargs)
+        self._internal_options.extend(self.builder.import_lib(self.target))
+
+
 @builtin.globals('builtins', 'build_inputs', 'env')
 def executable(builtins, build, env, name, files=None, **kwargs):
     if files is None and kwargs.get('libs') is None:
         return Executable(name, root=Root.srcdir, **kwargs)
     else:
-        return Link(builtins, build, env, 'executable', name, files,
-                    **kwargs).target
+        return DynamicLink(builtins, build, env, name, files, **kwargs).target
 
 
 @builtin.globals('builtins', 'build_inputs', 'env')
@@ -100,8 +116,7 @@ def static_library(builtins, build, env, name, files=None, **kwargs):
     if files is None and kwargs.get('libs') is None:
         return StaticLibrary(name, root=Root.srcdir, **kwargs)
     else:
-        return Link(builtins, build, env, 'static_library', name, files,
-                    **kwargs).target
+        return StaticLink(builtins, build, env, name, files, **kwargs).target
 
 
 @builtin.globals('builtins', 'build_inputs', 'env')
@@ -110,8 +125,7 @@ def shared_library(builtins, build, env, name, files=None, **kwargs):
         # XXX: What to do here for Windows, which has a separate DLL file?
         return SharedLibrary(name, root=Root.srcdir, **kwargs)
     else:
-        return Link(builtins, build, env, 'shared_library', name, files,
-                    **kwargs).target
+        return SharedLink(builtins, build, env, name, files, **kwargs).target
 
 
 @builtin
@@ -150,7 +164,7 @@ def _get_flags(backend, rule, build_inputs, buildfile):
     return variables, cmd_kwargs
 
 
-@make.rule_handler(Link)
+@make.rule_handler(StaticLink, DynamicLink, SharedLink)
 def make_link(rule, build_inputs, buildfile, env):
     linker = rule.builder
     variables, cmd_kwargs = _get_flags(make, rule, build_inputs, buildfile)
@@ -180,7 +194,7 @@ def make_link(rule, build_inputs, buildfile, env):
     )
 
 
-@ninja.rule_handler(Link)
+@ninja.rule_handler(StaticLink, DynamicLink, SharedLink)
 def ninja_link(rule, build_inputs, buildfile, env):
     linker = rule.builder
     variables, cmd_kwargs = _get_flags(ninja, rule, build_inputs, buildfile)
@@ -221,7 +235,7 @@ try:
             chain.from_iterable(per_file_opts)
         ))
 
-    @msbuild.rule_handler(Link)
+    @msbuild.rule_handler(StaticLink, DynamicLink, SharedLink)
     def msbuild_link(rule, build_inputs, solution, env):
         # By definition, a dependency for an edge must already be defined by
         # the time the edge is created, so we can map *all* the dependencies to
@@ -233,12 +247,6 @@ try:
                 raise ValueError('unknown dependency for {!r}'.format(dep))
             dependencies.append(solution[dep.creator.target])
 
-        mode = {
-            'executable'    : 'Application',
-            'static_library': 'StaticLibrary',
-            'shared_library': 'DynamicLibrary',
-        }[rule.builder.mode]
-
         includes = uniques(chain.from_iterable(
             i.creator.all_includes for i in rule.files
         ))
@@ -246,7 +254,7 @@ try:
         project = msbuild.VcxProject(
             name=rule.name,
             version=env.getvar('VISUALSTUDIOVERSION'),
-            mode=mode,
+            mode=rule.msbuild_mode,
             platform=env.getvar('PLATFORM'),
             output_file=rule.target,
             srcdir=env.srcdir.string(),

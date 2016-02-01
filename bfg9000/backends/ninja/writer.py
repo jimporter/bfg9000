@@ -31,9 +31,10 @@ _pre_rules = []
 _post_rules = []
 
 
-def rule_handler(rule_name):
+def rule_handler(*args):
     def decorator(fn):
-        _rule_handlers[rule_name] = fn
+        for i in args:
+            _rule_handlers[i] = fn
         return fn
     return decorator
 

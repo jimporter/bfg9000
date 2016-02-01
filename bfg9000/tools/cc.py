@@ -159,8 +159,6 @@ class CcLinker(object):
 
 
 class CcExecutableLinker(CcLinker):
-    mode = 'executable'
-
     def output_file(self, name):
         return Executable(
             name + self.platform.executable_ext, Root.builddir, self.lang
@@ -168,8 +166,6 @@ class CcExecutableLinker(CcLinker):
 
 
 class CcSharedLibraryLinker(CcLinker):
-    mode = 'shared_library'
-
     def output_file(self, name):
         head, tail = os.path.split(name)
 

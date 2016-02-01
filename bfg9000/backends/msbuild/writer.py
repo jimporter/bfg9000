@@ -26,9 +26,10 @@ priority = 1
 _rule_handlers = {}
 
 
-def rule_handler(rule_name):
+def rule_handler(*args):
     def decorator(fn):
-        _rule_handlers[rule_name] = fn
+        for i in args:
+            _rule_handlers[i] = fn
         return fn
     return decorator
 

@@ -99,16 +99,12 @@ class MsvcLinker(object):
 
 
 class MsvcExecutableLinker(MsvcLinker):
-    mode = 'executable'
-
     def output_file(self, name):
         return Executable(name + self.platform.executable_ext,
                           Root.builddir, self.lang)
 
 
 class MsvcSharedLibraryLinker(MsvcLinker):
-    mode = 'shared_library'
-
     def output_file(self, name):
         return DllLibrary(name + self.platform.shared_library_ext,
                           name + '.lib', Root.builddir, self.lang)
@@ -122,7 +118,6 @@ class MsvcSharedLibraryLinker(MsvcLinker):
 
 
 class MsvcStaticLinker(object):
-    mode = 'static_library'
     link_var = 'lib'
 
     def __init__(self, env, lang, name, command):
