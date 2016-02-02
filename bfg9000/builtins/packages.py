@@ -5,9 +5,9 @@ from packaging.version import Version
 from .hooks import builtin
 from .find import find
 from .version import check_version, make_specifier
-from .. import path
 from ..file_types import SystemExecutable
 from ..iterutils import iterate, listify
+from ..path import Path, Root
 from ..platforms import which
 
 
@@ -47,7 +47,7 @@ def system_package(env, name, lang='c', kind='any'):
 @builtin.globals('env')
 def boost_package(env, name=None, version=None):
     version = make_specifier(version)
-    pack = env.builder('c++').packages
+    pkg = env.builder('c++').packages
     version_hpp = os.path.join('boost', 'version.hpp')
 
     root = env.getvar('BOOST_ROOT')
@@ -57,7 +57,7 @@ def boost_package(env, name=None, version=None):
                         if root else None)
 
     if incdir:
-        header = pack.header(version_hpp, [incdir])
+        header = pkg.header(version_hpp, [incdir])
         boost_version = _boost_version(header, version)
     else:
         # On Windows, check the default install location, which is structured
@@ -66,7 +66,7 @@ def boost_package(env, name=None, version=None):
             dirs = find(r'C:\Boost\include', 'boost-*', type='d', flat=True)
             if dirs:
                 try:
-                    header = pack.header(version_hpp, max(dirs))
+                    header = pkg.header(version_hpp, max(dirs))
                     boost_version = _boost_version(header, version)
                     return BoostPackage(
                         includes=[header],
@@ -76,7 +76,7 @@ def boost_package(env, name=None, version=None):
                 except IOError:
                     pass
 
-        header = pack.header(version_hpp)
+        header = pkg.header(version_hpp)
         boost_version = _boost_version(header, version)
 
     if env.platform.name == 'windows':
@@ -92,12 +92,12 @@ def boost_package(env, name=None, version=None):
         dirs = [libdir] if libdir else None
         return BoostPackage(
             includes=[header],
-            libraries=[ pack.library('boost_' + i, search_dirs=dirs)
-                        for i in iterate(name) ],
+            libraries=[pkg.library('boost_' + i, search_dirs=dirs)
+                       for i in iterate(name)],
             version=boost_version
         )
 
 
 @builtin.globals('env')
 def system_executable(env, name):
-    return SystemExecutable(which(name, env.variables), path.Root.absolute)
+    return SystemExecutable(Path(which(name, env.variables), Root.absolute))

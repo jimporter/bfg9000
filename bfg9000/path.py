@@ -29,6 +29,9 @@ class Path(safe_str.safe_string):
     def append(self, path):
         return Path(os.path.join(self.suffix, path), self.root)
 
+    def ext(self):
+        return os.path.splitext(self.suffix)[1]
+
     def addext(self, ext):
         return Path(self.suffix + ext, self.root)
 

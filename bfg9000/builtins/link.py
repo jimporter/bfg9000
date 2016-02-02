@@ -106,7 +106,7 @@ class SharedLink(DynamicLink):
 @builtin.globals('builtins', 'build_inputs', 'env')
 def executable(builtins, build, env, name, files=None, **kwargs):
     if files is None and kwargs.get('libs') is None:
-        return Executable(name, root=Root.srcdir, **kwargs)
+        return Executable(Path(name, Root.srcdir), **kwargs)
     else:
         return DynamicLink(builtins, build, env, name, files, **kwargs).target
 
@@ -114,7 +114,7 @@ def executable(builtins, build, env, name, files=None, **kwargs):
 @builtin.globals('builtins', 'build_inputs', 'env')
 def static_library(builtins, build, env, name, files=None, **kwargs):
     if files is None and kwargs.get('libs') is None:
-        return StaticLibrary(name, root=Root.srcdir, **kwargs)
+        return StaticLibrary(Path(name, Root.srcdir), **kwargs)
     else:
         return StaticLink(builtins, build, env, name, files, **kwargs).target
 
@@ -123,15 +123,14 @@ def static_library(builtins, build, env, name, files=None, **kwargs):
 def shared_library(builtins, build, env, name, files=None, **kwargs):
     if files is None and kwargs.get('libs') is None:
         # XXX: What to do here for Windows, which has a separate DLL file?
-        return SharedLibrary(name, root=Root.srcdir, **kwargs)
+        return SharedLibrary(Path(name, Root.srcdir), **kwargs)
     else:
         return SharedLink(builtins, build, env, name, files, **kwargs).target
 
 
 @builtin
 def whole_archive(lib):
-    lib = sourcify(lib, StaticLibrary)
-    return WholeArchive(lib)
+    return WholeArchive(sourcify(lib, StaticLibrary))
 
 
 @builtin.globals('build_inputs')

@@ -7,7 +7,7 @@ from six.moves import filter as ifilter
 from .utils import library_macro
 from ..file_types import *
 from ..iterutils import iterate, listify, uniques
-from ..path import Root
+from ..path import Path, Root
 from ..platforms import platform_name
 
 
@@ -39,7 +39,7 @@ class CcCompiler(object):
         return result
 
     def output_file(self, name):
-        return ObjectFile(name + '.o', Root.builddir, self.lang)
+        return ObjectFile(Path(name + '.o', Root.builddir), self.lang)
 
     def include_dir(self, directory):
         if directory.system:
@@ -160,26 +160,25 @@ class CcLinker(object):
 
 class CcExecutableLinker(CcLinker):
     def output_file(self, name):
-        return Executable(
-            name + self.platform.executable_ext, Root.builddir, self.lang
-        )
+        path = Path(name + self.platform.executable_ext, Root.builddir)
+        return Executable(path, self.lang)
 
 
 class CcSharedLibraryLinker(CcLinker):
     def output_file(self, name):
         head, tail = os.path.split(name)
 
-        def lib(prefix='lib'):
-            return os.path.join(
-                head, prefix + tail + self.platform.shared_library_ext
-            )
+        def lib(prefix='lib', suffix=''):
+            return Path(os.path.join(
+                head, prefix + tail + self.platform.shared_library_ext + suffix
+            ), Root.builddir)
 
         if self.platform.has_import_library:
             dllprefix = 'cyg' if self.platform.name == 'cygwin' else 'lib'
-            return DllLibrary(lib(dllprefix), lib() + '.a', Root.builddir,
-                              self.lang)
+            implib = ImportLibrary(lib(suffix='.a'), self.lang)
+            return DllLibrary(lib(dllprefix), self.lang, implib)
         else:
-            return SharedLibrary(lib(), Root.builddir, self.lang)
+            return SharedLibrary(lib(), self.lang)
 
     @property
     def mode_args(self):
@@ -230,7 +229,7 @@ class CcPackageResolver(object):
 
         for base in search_dirs:
             if os.path.exists(os.path.join(base, name)):
-                return HeaderDirectory(base, Root.absolute, system=True)
+                return HeaderDirectory(Path(base, Root.absolute), system=True)
 
         raise ValueError("unable to find header '{}'".format(name))
 
@@ -259,6 +258,6 @@ class CcPackageResolver(object):
             for libname, libkind in libnames:
                 fullpath = os.path.join(base, libname)
                 if os.path.exists(fullpath):
-                    return libkind(fullpath, Root.absolute, self.lang)
+                    return libkind(Path(fullpath, Root.absolute), self.lang)
 
         raise ValueError("unable to find library '{}'".format(name))

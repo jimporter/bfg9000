@@ -5,7 +5,7 @@ from .utils import library_macro
 from .. import shell
 from ..file_types import *
 from ..iterutils import iterate, uniques
-from ..path import Root
+from ..path import Path, Root
 
 
 class MsvcCompiler(object):
@@ -36,7 +36,7 @@ class MsvcCompiler(object):
         return result
 
     def output_file(self, name):
-        return ObjectFile(name + '.obj', Root.builddir, self.lang)
+        return ObjectFile(Path(name + '.obj', Root.builddir), self.lang)
 
     @property
     def library_args(self):
@@ -100,14 +100,15 @@ class MsvcLinker(object):
 
 class MsvcExecutableLinker(MsvcLinker):
     def output_file(self, name):
-        return Executable(name + self.platform.executable_ext,
-                          Root.builddir, self.lang)
+        path = Path(name + self.platform.executable_ext, Root.builddir)
+        return Executable(path, self.lang)
 
 
 class MsvcSharedLibraryLinker(MsvcLinker):
     def output_file(self, name):
-        return DllLibrary(name + self.platform.shared_library_ext,
-                          name + '.lib', Root.builddir, self.lang)
+        implib = ImportLibrary(Path(name + '.lib', Root.builddir), self.lang)
+        path = Path(name + self.platform.shared_library_ext, Root.builddir)
+        return DllLibrary(path, self.lang, implib)
 
     @property
     def mode_args(self):
@@ -141,7 +142,7 @@ class MsvcStaticLinker(object):
         return result
 
     def output_file(self, name):
-        return StaticLibrary(name + '.lib', Root.builddir, self.lang)
+        return StaticLibrary(Path(name + '.lib', Root.builddir), self.lang)
 
     @property
     def mode_args(self):
@@ -180,7 +181,7 @@ class MsvcPackageResolver(object):
 
         for base in search_dirs:
             if os.path.exists(os.path.join(base, name)):
-                return HeaderDirectory(base, Root.absolute, system=True)
+                return HeaderDirectory(Path(base, Root.absolute), system=True)
 
         raise ValueError("unable to find header '{}'".format(name))
 
@@ -195,5 +196,5 @@ class MsvcPackageResolver(object):
                 # We don't actually know what kind of library this is. It could
                 # be a static library or an import library (which we classify
                 # as a kind of shared lib).
-                return Library(fullpath, Root.absolute, self.lang)
+                return Library(Path(fullpath, Root.absolute), self.lang)
         raise ValueError("unable to find library '{}'".format(name))

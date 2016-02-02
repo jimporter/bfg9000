@@ -4,7 +4,7 @@ from .. import shell
 from .. import file_types
 from .. import iterutils
 from .utils import check_which
-from ..path import Root
+from ..path import Path, Root
 
 
 class ArLinker(object):
@@ -33,7 +33,7 @@ class ArLinker(object):
     def output_file(self, name):
         head, tail = os.path.split(name)
         path = os.path.join(head, 'lib' + tail + '.a')
-        return file_types.StaticLibrary(path, Root.builddir, self.lang)
+        return file_types.StaticLibrary(Path(path, Root.builddir), self.lang)
 
     @property
     def mode_args(self):

@@ -65,7 +65,7 @@ def object_file(build, env, name=None, file=None, **kwargs):
     if file is None:
         if name is None:
             raise TypeError('expected name')
-        return ObjectFile(name, root=Root.srcdir, **kwargs)
+        return ObjectFile(Path(name, Root.srcdir), **kwargs)
     else:
         return Compile(build, env, name, file, **kwargs).target
 
