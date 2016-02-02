@@ -24,6 +24,10 @@ class TestInstall(IntegrationTest):
         self.assertExists(pjoin(self.includedir, 'library.hpp'))
         self.assertExists(pjoin(self.bindir, executable('program').path))
         self.assertExists(pjoin(self.libdir, shared_library('library').path))
+        if platform_info().has_import_library:
+            self.assertNotExists(pjoin(
+                self.libdir, static_library('library').path
+            ))
 
         os.chdir(self.srcdir)
         cleandir(self.builddir)
@@ -41,6 +45,10 @@ class TestInstall(IntegrationTest):
         self.assertExists(pjoin(self.includedir, 'library.hpp'))
         self.assertExists(pjoin(self.bindir, executable('program').path))
         self.assertExists(pjoin(self.libdir, shared_library('library').path))
+        if platform_info().has_import_library:
+            self.assertNotExists(pjoin(
+                self.libdir, static_library('library').path
+            ))
 
         os.chdir(self.srcdir)
         cleandir(self.builddir)

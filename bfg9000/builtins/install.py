@@ -15,25 +15,34 @@ class InstallTargets(object):
         self.files = []
         self.directories = []
 
+    def add_file(self, file, all=False):
+        if all:
+            for i in file.all:
+                self.add_file(i)
+        else:
+            if file not in self.files:
+                self.files.append(file)
+            for i in file.runtime_deps:
+                self.add_file(i)
+
+    def add_dir(self, dir):
+        if dir not in self.directories:
+            self.directories.append(dir)
+
     def __nonzero__(self):
         return bool(self.files or self.directories)
 
 
 @builtin.globals('builtins', 'build_inputs')
 def install(builtins, build, *args):
-    def _install(args, all):
-        for i in args:
-            if isinstance(i, Directory):
-                build['install'].directories.append(i)
-            else:
-                builtins['default'](i)
-                build['install'].files.append(i)
-                if i.runtime_deps:
-                    _install(i.runtime_deps, all=False)
-
     if len(args) == 0:
         raise ValueError('expected at least one argument')
-    _install(args, all=True)
+    for i in args:
+        if isinstance(i, Directory):
+            build['install'].add_dir(i)
+        else:
+            builtins['default'](i)
+            build['install'].add_file(i, all=True)
 
 
 def _install_commands(backend, build_inputs, buildfile, env):
@@ -45,15 +54,17 @@ def _install_commands(backend, build_inputs, buildfile, env):
     mkdir_p = env.tool('mkdir_p')
 
     def install_line(file):
-        kind = file.install_kind.upper()
+        kind = file.install_kind
         cmd = backend.cmd_var(install, buildfile)
 
-        if kind != 'PROGRAM':
-            kind = 'DATA'
+        if kind != 'program':
+            kind = 'data'
             cmd = [cmd] + install.data_args
-        cmd = buildfile.variable('INSTALL_' + kind, cmd,
-                                 backend.Section.command, True)
+        cmdname = 'install_' + kind
+        if backend == make:
+            cmdname = cmdname.upper()
 
+        cmd = buildfile.variable(cmdname, cmd, backend.Section.command, True)
         src = file.path
         dst = path.install_path(file.path, file.install_root)
         return install(cmd, src, dst)
