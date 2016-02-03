@@ -76,8 +76,9 @@ def _install_commands(backend, build_inputs, buildfile, env):
 
     def post_install(file):
         if file.post_install:
-            cmd = backend.cmd_var(file.post_install, buildfile)
-            return file.post_install(cmd, file)
+            line = file.post_install
+            line[0] = backend.cmd_var(line[0], buildfile)
+            return line
 
     return list(chain(
         (install_line(i) for i in install_targets.files),

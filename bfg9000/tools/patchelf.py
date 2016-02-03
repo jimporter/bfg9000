@@ -14,11 +14,9 @@ class PatchElf(object):
         self.command = env.getvar('PATCHELF', 'patchelf')
         check_which(self.command)
 
-    def __call__(self, cmd, file):
-        paths = uniques(
-            install_path(i.path, i.install_root).parent()
-            for i in file.creator.all_libs if isinstance(i, SharedLibrary)
-        )
+    def __call__(self, cmd, file, libraries):
+        paths = uniques(install_path(i.path, i.install_root).parent()
+                        for i in libraries)
         if paths:
             return [cmd, '--set-rpath', safe_str.join(paths, ':'),
                     install_path(file.path, file.install_root)]

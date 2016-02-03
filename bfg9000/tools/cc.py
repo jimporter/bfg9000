@@ -113,12 +113,6 @@ class CcLinker(object):
         return result
 
     @property
-    def post_install(self):
-        if self.platform.has_rpath:
-            return self.env.tool('patchelf')
-        return None
-
-    @property
     def auto_link(self):
         return False
 
@@ -165,6 +159,12 @@ class CcLinker(object):
 
     def libs(self, libraries):
         return sum((self._link_lib(i) for i in libraries), [])
+
+    def post_install(self, target):
+        if self.platform.has_rpath:
+            patchelf = self.env.tool('patchelf')
+            return patchelf(patchelf, target, target.runtime_deps)
+        return None
 
 
 class CcExecutableLinker(CcLinker):

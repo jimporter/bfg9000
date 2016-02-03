@@ -49,7 +49,7 @@ class Link(Edge):
         target.runtime_deps = [ i for i in self.libs
                                 if isinstance(i, SharedLibrary) ]
         if hasattr(self.builder, 'post_install'):
-            target.post_install = self.builder.post_install
+            target.post_install = self.builder.post_install(target)
 
         # XXX: Create a LinkOptions named tuple for managing these args?
         pkg_dirs = chain.from_iterable(i.lib_dirs for i in self.packages)
