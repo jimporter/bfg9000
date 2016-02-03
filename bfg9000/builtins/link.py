@@ -44,13 +44,18 @@ class Link(Edge):
         self.builder = env.linker(langs, self.mode)
 
         self.user_options = pshell.listify(link_options)
-        self._internal_options = []
 
         target = self.builder.output_file(name)
         target.runtime_deps = [ i for i in self.libs
                                 if isinstance(i, SharedLibrary) ]
         if hasattr(self.builder, 'post_install'):
             target.post_install = self.builder.post_install
+
+        # XXX: Create a LinkOptions named tuple for managing these args?
+        pkg_dirs = chain.from_iterable(i.lib_dirs for i in self.packages)
+        self._internal_options = self.builder.args(
+            self.all_libs, pkg_dirs, target
+        )
 
         for c in (i.creator for i in self.files if i.creator):
             c.link_options.extend(c.builder.link_args(self.name, self.mode))
@@ -70,6 +75,8 @@ class StaticLink(Link):
 
     def __init__(self, *args, **kwargs):
         Link.__init__(self, *args, **kwargs)
+        # XXX: Allow these options, and forward them to whatever links with
+        # this library.
         if self.options:
             raise ValueError('link options are not allowed for static ' +
                              'libraries')
@@ -85,22 +92,13 @@ class DynamicLink(Link):
 
     def __init__(self, *args, **kwargs):
         Link.__init__(self, *args, **kwargs)
-        links = sum((self.builder.link_lib(i) for i in self.all_libs), [])
-        self.lib_options = links
-
-        dirs = sum((i.lib_dirs for i in self.packages), self.all_libs)
-        lib_dirs = self.builder.lib_dirs(dirs, self.target)
-        self._internal_options.extend(lib_dirs)
+        self.lib_options = self.builder.libs(self.all_libs)
 
 
 class SharedLink(DynamicLink):
     mode = 'shared_library'
     msbuild_mode = 'DynamicLibrary'
     _prefix = 'lib'
-
-    def __init__(self, *args, **kwargs):
-        DynamicLink.__init__(self, *args, **kwargs)
-        self._internal_options.extend(self.builder.import_lib(self.target))
 
 
 @builtin.globals('builtins', 'build_inputs', 'env')

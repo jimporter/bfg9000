@@ -6,7 +6,7 @@ from six.moves import filter as ifilter
 
 from .utils import library_macro
 from ..file_types import *
-from ..iterutils import iterate, listify, uniques
+from ..iterutils import iterate, uniques
 from ..path import Path, Root
 from ..platforms import platform_name
 
@@ -41,11 +41,14 @@ class CcCompiler(object):
     def output_file(self, name):
         return ObjectFile(Path(name + '.o', Root.builddir), self.lang)
 
-    def include_dir(self, directory):
+    def _include_dir(self, directory):
         if directory.system:
             return ['-isystem' + directory.path]
         else:
             return ['-I' + directory.path]
+
+    def args(self, includes):
+        return sum((self._include_dir(i) for i in includes), [])
 
     def link_args(self, name, mode):
         if mode == 'executable':
@@ -123,28 +126,31 @@ class CcLinker(object):
     def mode_args(self):
         return []
 
-    def lib_dirs(self, libraries, target):
-        def get_dir(lib):
-            return lib.path.parent() if isinstance(lib, Library) else lib
+    def _lib_dirs(self, libraries, extra_dirs):
+        dirs = uniques(chain(
+            (i.path.parent() for i in iterate(libraries)
+             if not isinstance(i, StaticLibrary)),
+            extra_dirs
+        ))
+        return ['-L' + i for i in dirs]
 
-        libraries = listify(libraries)
-        dirs = uniques(get_dir(i) for i in iterate(libraries)
-                       if not isinstance(i, StaticLibrary))
-        result = ['-L' + i for i in dirs]
-
+    def _rpath(self, libraries, start):
         if self.platform.has_rpath:
-            start = target.path.parent()
             paths = uniques(i.path.parent().relpath(start) for i in libraries
                             if isinstance(i, SharedLibrary))
             if paths:
                 base = '$ORIGIN'
-                result.append('-Wl,-rpath={}'.format( ':'.join(
+                return ['-Wl,-rpath={}'.format(':'.join(
                     base if i == '.' else os.path.join(base, i) for i in paths
-                ) ))
+                ))]
 
-        return result
+        return []
 
-    def link_lib(self, library):
+    def args(self, libraries, extra_dirs, target):
+        return ( self._lib_dirs(libraries, extra_dirs) +
+                 self._rpath(libraries, target.path.parent()) )
+
+    def _link_lib(self, library):
         if isinstance(library, WholeArchive):
             if platform_name() == 'darwin':
                 return ['-Wl,-force_load', library.link.path]
@@ -156,6 +162,9 @@ class CcLinker(object):
         # If we're here, we have a SharedLibrary (or possibly just a Library
         # in the case of MinGW).
         return ['-l' + self._extract_lib_name(library)]
+
+    def libs(self, libraries):
+        return sum((self._link_lib(i) for i in libraries), [])
 
 
 class CcExecutableLinker(CcLinker):
@@ -184,10 +193,14 @@ class CcSharedLibraryLinker(CcLinker):
     def mode_args(self):
         return ['-shared', '-fPIC']
 
-    def import_lib(self, library):
+    def _import_lib(self, library):
         if self.platform.has_import_library:
             return ['-Wl,--out-implib=' + library.import_lib.path]
         return []
+
+    def args(self, libraries, extra_dirs, target):
+        return (CcLinker.args(self, libraries, extra_dirs, target) +
+                self._import_lib(target))
 
 
 class CcPackageResolver(object):

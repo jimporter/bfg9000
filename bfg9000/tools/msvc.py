@@ -42,8 +42,11 @@ class MsvcCompiler(object):
     def library_args(self):
         return []
 
-    def include_dir(self, directory):
+    def _include_dir(self, directory):
         return ['/I' + directory.path]
+
+    def args(self, includes):
+        return sum((self._include_dir(i) for i in includes), [])
 
     def link_args(self, name, mode):
         if mode == 'executable':
@@ -86,16 +89,23 @@ class MsvcLinker(object):
     def mode_args(self):
         return []
 
-    def lib_dirs(self, libraries, target):
-        def get_dir(lib):
-            return lib.path.parent() if isinstance(lib, Library) else lib
-        dirs = uniques(get_dir(i) for i in iterate(libraries))
+    def _lib_dirs(self, libraries, extra_dirs):
+        dirs = uniques(chain(
+            (i.path.parent() for i in iterate(libraries)),
+            extra_dirs
+        ))
         return ['/LIBPATH:' + i for i in dirs]
 
-    def link_lib(self, library):
+    def args(self, libraries, extra_dirs, target):
+        return self._lib_dirs(libraries, extra_dirs)
+
+    def _link_lib(self, library):
         if isinstance(library, WholeArchive):
             raise ValueError('MSVC does not support whole-archives')
         return [library.link.path.basename()]
+
+    def libs(self, libraries):
+        return sum((self._link_lib(i) for i in libraries), [])
 
 
 class MsvcExecutableLinker(MsvcLinker):
@@ -114,8 +124,12 @@ class MsvcSharedLibraryLinker(MsvcLinker):
     def mode_args(self):
         return ['/DLL']
 
-    def import_lib(self, library):
+    def _import_lib(self, library):
         return ['/IMPLIB:' + library.import_lib.path]
+
+    def args(self, libraries, extra_dirs, target):
+        return (MsvcLinker.args(self, libraries, extra_dirs, target) +
+                self._import_lib(target))
 
 
 class MsvcStaticLinker(object):
@@ -146,6 +160,9 @@ class MsvcStaticLinker(object):
 
     @property
     def mode_args(self):
+        return []
+
+    def args(self, libraries, extra_dirs, target):
         return []
 
 

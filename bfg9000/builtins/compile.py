@@ -46,13 +46,12 @@ class Compile(Edge):
         self.user_options = pshell.listify(options)
         self.link_options = []
 
+        target = self.builder.output_file(name)
+
         pkg_includes = chain.from_iterable(i.includes for i in self.packages)
         self.all_includes = uniques(chain(pkg_includes, self.includes))
-        self._internal_options = sum(
-            (self.builder.include_dir(i) for i in self.all_includes), []
-        )
+        self._internal_options = self.builder.args(self.all_includes)
 
-        target = self.builder.output_file(name)
         Edge.__init__(self, build, target, extra_deps)
 
     @property
