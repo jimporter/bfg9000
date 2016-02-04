@@ -187,7 +187,7 @@ class CcLinker(object):
 class CcExecutableLinker(CcLinker):
     def output_file(self, name):
         path = Path(name + self.platform.executable_ext, Root.builddir)
-        return Executable(path, self.lang)
+        return Executable(path)
 
 
 class CcSharedLibraryLinker(CcLinker):

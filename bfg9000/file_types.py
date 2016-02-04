@@ -68,7 +68,7 @@ class Phony(Node):
 
 
 class SourceFile(File):
-    def __init__(self, path, lang=None):
+    def __init__(self, path, lang):
         File.__init__(self, path)
         if lang is None:
             lang = ext2lang.get(path.ext())
@@ -83,7 +83,7 @@ class HeaderFile(File):
 class HeaderDirectory(Directory):
     install_root = InstallRoot.includedir
 
-    def __init__(self, path, system=False):
+    def __init__(self, path, system):
         Directory.__init__(self, path)
         self.system = system
 
@@ -97,10 +97,6 @@ class ObjectFile(File):
 class Binary(File):
     install_kind = 'program'
 
-    def __init__(self, path, lang=None):
-        File.__init__(self, path)
-        self.lang = lang
-
 
 class Executable(Binary):
     install_root = InstallRoot.bindir
@@ -112,6 +108,10 @@ class SystemExecutable(Executable):
 
 class Library(Binary):
     install_root = InstallRoot.libdir
+
+    def __init__(self, path, lang):
+        Binary.__init__(self, path)
+        self.lang = lang
 
     @property
     def link(self):
@@ -139,7 +139,7 @@ class ImportLibrary(SharedLibrary):
 class DllLibrary(SharedLibrary):
     install_root = InstallRoot.bindir
 
-    def __init__(self, path, lang=None, import_lib=None):
+    def __init__(self, path, lang, import_lib):
         SharedLibrary.__init__(self, path, lang)
         self.import_lib = import_lib
 
