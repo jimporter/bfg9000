@@ -8,7 +8,6 @@ from .utils import darwin_install_name, library_macro
 from ..file_types import *
 from ..iterutils import iterate, uniques
 from ..path import Path, Root
-from ..platforms import platform_name
 
 
 class CcCompiler(object):
@@ -157,7 +156,7 @@ class CcLinker(object):
 
     def _link_lib(self, library):
         if isinstance(library, WholeArchive):
-            if platform_name() == 'darwin':
+            if self.platform.name == 'darwin':
                 return ['-Wl,-force_load', library.link.path]
             return ['-Wl,--whole-archive', library.link.path,
                     '-Wl,--no-whole-archive']
@@ -209,7 +208,8 @@ class CcSharedLibraryLinker(CcLinker):
 
     @property
     def mode_args(self):
-        return ['-shared', '-fPIC']
+        shared = '-dynamiclib' if self.platform.name == 'darwin' else '-shared'
+        return [shared, '-fPIC']
 
     def _import_lib(self, library):
         if self.platform.has_import_library:
