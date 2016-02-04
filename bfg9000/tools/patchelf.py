@@ -1,7 +1,6 @@
 from .. import safe_str
 from .hooks import tool
 from .utils import check_which
-from ..file_types import SharedLibrary
 from ..iterutils import uniques
 from ..path import install_path
 

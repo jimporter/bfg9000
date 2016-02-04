@@ -35,3 +35,7 @@ def check_which(name, env=os.environ, kind='executable'):
         warnings.warn("unable to find {kind} '{name}'".format(
             kind=kind, name=name
         ))
+
+
+def darwin_install_name(library):
+    return os.path.join('@rpath', library.path.basename())

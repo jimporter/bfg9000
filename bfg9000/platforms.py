@@ -47,8 +47,8 @@ class PosixPlatform(Platform):
         return False
 
     @property
-    def has_rpath(self):
-        return False
+    def rpath_flavor(self):
+        return None
 
     @property
     def include_dirs(self):
@@ -70,14 +70,18 @@ class PosixPlatform(Platform):
 
 class LinuxPlatform(PosixPlatform):
     @property
-    def has_rpath(self):
-        return True
+    def rpath_flavor(self):
+        return 'elf'
 
 
 class DarwinPlatform(PosixPlatform):
     @property
     def shared_library_ext(self):
         return '.dylib'
+
+    @property
+    def rpath_flavor(self):
+        return 'mach'
 
 
 class WindowsPlatform(Platform):
@@ -98,8 +102,8 @@ class WindowsPlatform(Platform):
         return True
 
     @property
-    def has_rpath(self):
-        return False
+    def rpath_flavor(self):
+        return None
 
     @property
     def include_dirs(self):

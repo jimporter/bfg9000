@@ -4,7 +4,7 @@ import subprocess
 from itertools import chain
 from six.moves import filter as ifilter
 
-from .utils import library_macro
+from .utils import darwin_install_name, library_macro
 from ..file_types import *
 from ..iterutils import iterate, uniques
 from ..path import Path, Root
@@ -129,16 +129,27 @@ class CcLinker(object):
         return ['-L' + i for i in dirs]
 
     def _rpath(self, libraries, start):
-        if self.platform.has_rpath:
-            paths = uniques(i.path.parent().relpath(start) for i in libraries
-                            if isinstance(i, SharedLibrary))
-            if paths:
-                base = '$ORIGIN'
-                return ['-Wl,-rpath={}'.format(':'.join(
-                    base if i == '.' else os.path.join(base, i) for i in paths
-                ))]
+        if not self.platform.rpath_flavor:
+            return []
 
-        return []
+        paths = uniques(i.path.parent().relpath(start) for i in libraries
+                        if isinstance(i, SharedLibrary))
+        if not paths:
+            return []
+
+        if self.platform.rpath_flavor == 'elf':
+            base = '$ORIGIN'
+            return ['-Wl,-rpath,{}'.format(':'.join(
+                base if i == '.' else os.path.join(base, i) for i in paths
+            ))]
+        elif self.platform.rpath_flavor == 'mach':
+            base = '@executable_path'
+            return ( ['-Wl,-headerpad_max_install_names'] +
+                     ['-Wl,-rpath,{}'.format(os.path.join(base, i))
+                      for i in paths] )
+        else:
+            raise ValueError('unrecognized rpath flavor "{}"'
+                             .format(self.platform.rpath_flavor))
 
     def args(self, libraries, extra_dirs, target):
         return ( self._lib_dirs(libraries, extra_dirs) +
@@ -161,10 +172,17 @@ class CcLinker(object):
         return sum((self._link_lib(i) for i in libraries), [])
 
     def post_install(self, target):
-        if self.platform.has_rpath:
-            patchelf = self.env.tool('patchelf')
-            return patchelf(patchelf, target, target.runtime_deps)
-        return None
+        if self.platform.rpath_flavor is None:
+            return None
+
+        if self.platform.rpath_flavor == 'elf':
+            tool = self.env.tool('patchelf')
+        elif self.platform.rpath_flavor == 'mach':
+            tool = self.env.tool('install_name_tool')
+        else:
+            raise ValueError('unrecognized rpath flavor "{}"'
+                             .format(self.platform.rpath_flavor))
+        return tool(tool, target, target.runtime_deps)
 
 
 class CcExecutableLinker(CcLinker):
@@ -198,9 +216,14 @@ class CcSharedLibraryLinker(CcLinker):
             return ['-Wl,--out-implib=' + library.import_lib.path]
         return []
 
+    def _soname(self, library):
+        if self.platform.name == 'darwin':
+            return ['-install_name', darwin_install_name(library)]
+        return []
+
     def args(self, libraries, extra_dirs, target):
         return (CcLinker.args(self, libraries, extra_dirs, target) +
-                self._import_lib(target))
+                self._import_lib(target) + self._soname(target))
 
 
 class CcPackageResolver(object):
