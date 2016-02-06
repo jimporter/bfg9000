@@ -5,4 +5,4 @@ touch_2 = command('touch2', cmd=['touch', '2'])
 touch_3 = command('touch3', cmd=['touch', '3'], extra_deps=touch_2)
 
 obj = object_file(file='program.cpp', extra_deps=touch_1)
-exe = executable('program', obj, extra_deps=touch_3)
+exe = executable('program', files=obj, extra_deps=touch_3)

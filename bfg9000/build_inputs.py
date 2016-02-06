@@ -18,7 +18,7 @@ def build_input(name):
 
 class Edge(object):
     def __init__(self, build, target, extra_deps=None):
-        for t in target.all:
+        for t in iterate(target):
             t.creator = self
         self.target = target
 

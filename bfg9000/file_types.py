@@ -10,10 +10,6 @@ class Node(object):
         self.creator = None
         self.path = path
 
-    @property
-    def all(self):
-        return [self]
-
     def _safe_str(self):
         return safe_str(self.path)
 
@@ -55,6 +51,7 @@ class File(Node):
     def __init__(self, path):
         Node.__init__(self, path)
         self.post_install = None
+        self.install_deps = []
         self.runtime_deps = []
 
 
@@ -142,10 +139,7 @@ class DllLibrary(SharedLibrary):
     def __init__(self, path, lang, import_lib):
         SharedLibrary.__init__(self, path, lang)
         self.import_lib = import_lib
-
-    @property
-    def all(self):
-        return [self, self.import_lib]
+        self.install_deps = [import_lib]
 
     @property
     def link(self):

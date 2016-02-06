@@ -6,7 +6,7 @@ from six.moves import filter as ifilter
 
 from .utils import darwin_install_name, library_macro
 from ..file_types import *
-from ..iterutils import iterate, uniques
+from ..iterutils import first, iterate, uniques
 from ..path import Path, Root
 
 
@@ -150,9 +150,9 @@ class CcLinker(object):
             raise ValueError('unrecognized rpath flavor "{}"'
                              .format(self.platform.rpath_flavor))
 
-    def args(self, libraries, extra_dirs, target):
+    def args(self, libraries, extra_dirs, output):
         return ( self._lib_dirs(libraries, extra_dirs) +
-                 self._rpath(libraries, target.path.parent()) )
+                 self._rpath(libraries, first(output).path.parent()) )
 
     def _link_lib(self, library):
         if isinstance(library, WholeArchive):
@@ -170,7 +170,7 @@ class CcLinker(object):
     def libs(self, libraries):
         return sum((self._link_lib(i) for i in libraries), [])
 
-    def post_install(self, target):
+    def post_install(self, output):
         if self.platform.rpath_flavor is None:
             return None
 
@@ -181,7 +181,7 @@ class CcLinker(object):
         else:
             raise ValueError('unrecognized rpath flavor "{}"'
                              .format(self.platform.rpath_flavor))
-        return tool(tool, target, target.runtime_deps)
+        return tool(tool, output, output.runtime_deps)
 
 
 class CcExecutableLinker(CcLinker):
@@ -202,7 +202,7 @@ class CcSharedLibraryLinker(CcLinker):
         if self.platform.has_import_library:
             dllprefix = 'cyg' if self.platform.name == 'cygwin' else 'lib'
             implib = ImportLibrary(lib(suffix='.a'), self.lang)
-            return DllLibrary(lib(dllprefix), self.lang, implib)
+            return DllLibrary(lib(dllprefix), self.lang, implib), implib
         else:
             return SharedLibrary(lib(), self.lang)
 
@@ -211,19 +211,19 @@ class CcSharedLibraryLinker(CcLinker):
         shared = '-dynamiclib' if self.platform.name == 'darwin' else '-shared'
         return [shared, '-fPIC']
 
-    def _import_lib(self, library):
+    def _import_lib(self, output):
         if self.platform.has_import_library:
-            return ['-Wl,--out-implib=' + library.import_lib.path]
+            return ['-Wl,--out-implib=' + output[1].path]
         return []
 
-    def _soname(self, library):
+    def _soname(self, output):
         if self.platform.name == 'darwin':
-            return ['-install_name', darwin_install_name(library)]
+            return ['-install_name', darwin_install_name(output)]
         return []
 
-    def args(self, libraries, extra_dirs, target):
-        return (CcLinker.args(self, libraries, extra_dirs, target) +
-                self._import_lib(target) + self._soname(target))
+    def args(self, libraries, extra_dirs, output):
+        return (CcLinker.args(self, libraries, extra_dirs, output) +
+                self._import_lib(output) + self._soname(output))
 
 
 class CcPackageResolver(object):

@@ -96,7 +96,7 @@ class MsvcLinker(object):
         ))
         return ['/LIBPATH:' + i for i in dirs]
 
-    def args(self, libraries, extra_dirs, target):
+    def args(self, libraries, extra_dirs, output):
         return self._lib_dirs(libraries, extra_dirs)
 
     def _link_lib(self, library):
@@ -118,18 +118,18 @@ class MsvcSharedLibraryLinker(MsvcLinker):
     def output_file(self, name):
         implib = ImportLibrary(Path(name + '.lib', Root.builddir), self.lang)
         path = Path(name + self.platform.shared_library_ext, Root.builddir)
-        return DllLibrary(path, self.lang, implib)
+        return DllLibrary(path, self.lang, implib), implib
 
     @property
     def mode_args(self):
         return ['/DLL']
 
     def _import_lib(self, library):
-        return ['/IMPLIB:' + library.import_lib.path]
+        return ['/IMPLIB:' + library[1].path]
 
-    def args(self, libraries, extra_dirs, target):
-        return (MsvcLinker.args(self, libraries, extra_dirs, target) +
-                self._import_lib(target))
+    def args(self, libraries, extra_dirs, output):
+        return (MsvcLinker.args(self, libraries, extra_dirs, output) +
+                self._import_lib(output))
 
 
 class MsvcStaticLinker(object):
@@ -162,7 +162,7 @@ class MsvcStaticLinker(object):
     def mode_args(self):
         return []
 
-    def args(self, libraries, extra_dirs, target):
+    def args(self, libraries, extra_dirs, output):
         return []
 
 

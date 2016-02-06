@@ -13,24 +13,21 @@ from ..file_types import Directory
 class InstallTargets(object):
     def __init__(self):
         self.files = []
-        self.directories = []
+        self.dirs = []
 
-    def add_file(self, file, all=False):
-        if all:
-            for i in file.all:
-                self.add_file(i)
-        else:
-            if file not in self.files:
-                self.files.append(file)
-            for i in file.runtime_deps:
-                self.add_file(i)
+    def add(self, item, explicit=True):
+        group = self.dirs if isinstance(item, Directory) else self.files
+        if item not in group:
+            group.append(item)
 
-    def add_dir(self, dir):
-        if dir not in self.directories:
-            self.directories.append(dir)
+        for i in item.runtime_deps:
+            self.add(i, explicit=False)
+        if explicit:
+            for i in item.install_deps:
+                self.add(i, explicit=False)
 
     def __nonzero__(self):
-        return bool(self.files or self.directories)
+        return bool(self.files or self.dirs)
 
 
 @builtin.globals('builtins', 'build_inputs')
@@ -38,11 +35,8 @@ def install(builtins, build, *args):
     if len(args) == 0:
         raise ValueError('expected at least one argument')
     for i in args:
-        if isinstance(i, Directory):
-            build['install'].add_dir(i)
-        else:
-            builtins['default'](i)
-            build['install'].add_file(i, all=True)
+        builtins['default'](i)
+        build['install'].add(i)
 
 
 def _install_commands(backend, build_inputs, buildfile, env):
@@ -82,7 +76,7 @@ def _install_commands(backend, build_inputs, buildfile, env):
 
     return list(chain(
         (install_line(i) for i in install_targets.files),
-        (mkdir_line(i) for i in install_targets.directories),
+        (mkdir_line(i) for i in install_targets.dirs),
         ifilter(None, (post_install(i) for i in install_targets.files))
     ))
 

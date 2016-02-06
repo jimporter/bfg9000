@@ -22,6 +22,16 @@ def iterate(thing):
         return generate_one(thing)
 
 
+def listify(thing, always_copy=False):
+    if not always_copy and type(thing) == list:
+        return thing
+    return list(iterate(thing))
+
+
+def first(thing):
+    return next(iterate(thing))
+
+
 def tween(iterable, delim, prefix=None, suffix=None):
     first = True
     for i in iterable:
@@ -44,9 +54,3 @@ def uniques(iterable):
                 seen.add(item)
                 yield item
     return list(generate_uniques(iterable))
-
-
-def listify(thing, always_copy=False):
-    if not always_copy and type(thing) == list:
-        return thing
-    return list(iterate(thing))

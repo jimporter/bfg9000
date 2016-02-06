@@ -6,7 +6,7 @@ from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..build_inputs import build_input, Edge
 from ..file_types import *
-from ..iterutils import iterate, listify, uniques
+from ..iterutils import first, iterate, listify, uniques
 from ..path import Root
 from ..shell import posix as pshell
 
@@ -20,7 +20,7 @@ class Link(Edge):
         head, tail = os.path.split(name)
         return os.path.join(head, cls._prefix + tail)
 
-    def __init__(self, builtins, build, env, name, files, include=None,
+    def __init__(self, builtins, build, env, name, files=None, include=None,
                  libs=None, packages=None, compile_options=None,
                  link_options=None, lang=None, extra_deps=None):
         self.name = self.__name(name)
@@ -39,6 +39,9 @@ class Link(Edge):
              not any(isinstance(i, WholeArchive) for i in self.libs) ):
             raise ValueError('need at least one source file')
 
+        for c in (i.creator for i in self.files if i.creator):
+            c.link_options.extend(c.builder.link_args(self.name, self.mode))
+
         langs = chain([lang], (i.lang for i in self.files),
                       (i.lang for i in self.all_libs))
         self.builder = env.linker(langs, self.mode)
@@ -46,10 +49,7 @@ class Link(Edge):
         self.user_options = pshell.listify(link_options)
 
         target = self.builder.output_file(name)
-        target.runtime_deps = [ i for i in self.libs
-                                if isinstance(i, SharedLibrary) ]
-        if hasattr(self.builder, 'post_install'):
-            target.post_install = self.builder.post_install(target)
+        primary = first(target)
 
         # XXX: Create a LinkOptions named tuple for managing these args?
         pkg_dirs = chain.from_iterable(i.lib_dirs for i in self.packages)
@@ -57,10 +57,12 @@ class Link(Edge):
             self.all_libs, pkg_dirs, target
         )
 
-        for c in (i.creator for i in self.files if i.creator):
-            c.link_options.extend(c.builder.link_args(self.name, self.mode))
+        primary.runtime_deps = [ i for i in self.libs
+                                 if isinstance(i, SharedLibrary) ]
+        if hasattr(self.builder, 'post_install'):
+            primary.post_install = self.builder.post_install(target)
 
-        build['defaults'].add(target)
+        build['defaults'].add(primary)
         Edge.__init__(self, build, target, extra_deps)
 
     @property
@@ -106,7 +108,8 @@ def executable(builtins, build, env, name, files=None, **kwargs):
     if files is None and kwargs.get('libs') is None:
         return Executable(Path(name, Root.srcdir), **kwargs)
     else:
-        return DynamicLink(builtins, build, env, name, files, **kwargs).target
+        return first(DynamicLink(builtins, build, env, name, files,
+                                 **kwargs).target)
 
 
 @builtin.globals('builtins', 'build_inputs', 'env')
@@ -114,7 +117,8 @@ def static_library(builtins, build, env, name, files=None, **kwargs):
     if files is None and kwargs.get('libs') is None:
         return StaticLibrary(Path(name, Root.srcdir), **kwargs)
     else:
-        return StaticLink(builtins, build, env, name, files, **kwargs).target
+        return first(StaticLink(builtins, build, env, name, files,
+                                **kwargs).target)
 
 
 @builtin.globals('builtins', 'build_inputs', 'env')
@@ -123,7 +127,8 @@ def shared_library(builtins, build, env, name, files=None, **kwargs):
         # XXX: What to do here for Windows, which has a separate DLL file?
         return SharedLibrary(Path(name, Root.srcdir), **kwargs)
     else:
-        return SharedLink(builtins, build, env, name, files, **kwargs).target
+        return first(SharedLink(builtins, build, env, name, files,
+                                **kwargs).target)
 
 
 @builtin
@@ -173,15 +178,16 @@ def make_link(rule, build_inputs, buildfile, env):
                    output=make.var('2'), **cmd_kwargs)
         ])
 
-    recipe = make.Call(recipename, rule.files, rule.target.path)
-    if len(rule.target.all) > 1:
-        target = rule.target.path.addext('.stamp')
-        buildfile.rule(target=rule.target.all, deps=[target])
+    all_targets = listify(rule.target)
+    recipe = make.Call(recipename, rule.files, all_targets[0].path)
+    if len(all_targets) > 1:
+        target = all_targets[0].path.addext('.stamp')
+        buildfile.rule(target=all_targets, deps=[target])
         recipe = [recipe, make.silent([ 'touch', make.var('@') ])]
     else:
         target = rule.target
 
-    dirs = uniques(i.path.parent() for i in rule.target.all)
+    dirs = uniques(i.path.parent() for i in all_targets)
     buildfile.rule(
         target=target,
         deps=rule.files + rule.libs + rule.extra_deps,
@@ -195,7 +201,7 @@ def make_link(rule, build_inputs, buildfile, env):
 def ninja_link(rule, build_inputs, buildfile, env):
     linker = rule.builder
     variables, cmd_kwargs = _get_flags(ninja, rule, build_inputs, buildfile)
-    variables[ninja.var('output')] = rule.target.path
+    variables[ninja.var('output')] = first(rule.target).path
 
     if not buildfile.has_rule(linker.rule_name):
         buildfile.rule(name=linker.rule_name, command=linker(
@@ -204,7 +210,7 @@ def ninja_link(rule, build_inputs, buildfile, env):
         ))
 
     buildfile.build(
-        output=rule.target.all,
+        output=rule.target,
         rule=linker.rule_name,
         inputs=rule.files,
         implicit=rule.libs + rule.extra_deps,
@@ -240,20 +246,22 @@ try:
         # created.
         dependencies = []
         for dep in rule.libs:
-            if dep.creator.target not in solution:
+            dep_target = first(dep.creator.target)
+            if dep_target not in solution:
                 raise ValueError('unknown dependency for {!r}'.format(dep))
-            dependencies.append(solution[dep.creator.target])
+            dependencies.append(solution[dep_target])
 
         includes = uniques(chain.from_iterable(
             i.creator.all_includes for i in rule.files
         ))
 
+        target = first(rule.target)
         project = msbuild.VcxProject(
             name=rule.name,
             version=env.getvar('VISUALSTUDIOVERSION'),
             mode=rule.msbuild_mode,
             platform=env.getvar('PLATFORM'),
-            output_file=rule.target,
+            output_file=target,
             srcdir=env.srcdir.string(),
             files=[i.creator.file for i in rule.files],
             compile_options=_reduce_options(
@@ -263,13 +271,13 @@ try:
             # We intentionally exclude internal_options from the link step,
             # since MSBuild handles these its own way.
             link_options=(
-                rule.user_options + rule.builder.global_args +
+                rule.builder.global_args + rule.user_options +
                 build_inputs['link_options']
             ),
-            libs=rule.all_libs,
+            libs=getattr(rule.builder, 'global_libs', []) + rule.all_libs,
             lib_dirs=sum((i.lib_dirs for i in rule.packages), []),
             dependencies=dependencies,
         )
-        solution[rule.target] = project
+        solution[target] = project
 except:
     pass

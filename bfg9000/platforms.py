@@ -121,7 +121,7 @@ class WindowsPlatform(Platform):
     def install_dirs(self):
         return {
             # XXX: Pick a better prefix. Maybe install to C:\<project-name>?
-            InstallRoot.prefix:     Path('C:\\', Root.absolute),
+            InstallRoot.prefix:     Path('/C:\\', Root.absolute),
             InstallRoot.bindir:     Path('', InstallRoot.prefix),
             InstallRoot.libdir:     Path('', InstallRoot.prefix),
             InstallRoot.includedir: Path('', InstallRoot.prefix),

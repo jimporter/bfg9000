@@ -39,5 +39,5 @@ class ArLinker(object):
     def mode_args(self):
         return []
 
-    def args(self, libraries, extra_dirs, target):
+    def args(self, libraries, extra_dirs, output):
         return []
