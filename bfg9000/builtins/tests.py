@@ -2,7 +2,6 @@ from functools import partial
 from six.moves import cStringIO as StringIO
 
 from .hooks import builtin
-from .packages import SystemExecutable
 from .. import safe_str
 from .. import shell
 from ..backends.make import writer as make
@@ -91,7 +90,7 @@ def _build_commands(tests, writer, local_env, collapse=False):
     for i in tests:
         if type(i) == TestDriver:
             args, moredeps = _build_commands(i.tests, writer, local_env, True)
-            if type(i.target) != SystemExecutable:
+            if i.target.creator:
                 deps.append(i.target)
             deps.extend(moredeps)
             cmd.append(command(i, args))

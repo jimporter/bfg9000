@@ -198,7 +198,8 @@ class MsvcPackageResolver(object):
 
         for base in search_dirs:
             if os.path.exists(os.path.join(base, name)):
-                return HeaderDirectory(Path(base, Root.absolute), system=True)
+                return HeaderDirectory(Path(base, Root.absolute), system=True,
+                                       external=True)
 
         raise ValueError("unable to find header '{}'".format(name))
 
@@ -213,5 +214,6 @@ class MsvcPackageResolver(object):
                 # We don't actually know what kind of library this is. It could
                 # be a static library or an import library (which we classify
                 # as a kind of shared lib).
-                return Library(Path(fullpath, Root.absolute), self.lang)
+                return Library(Path(fullpath, Root.absolute), self.lang,
+                               external=True)
         raise ValueError("unable to find library '{}'".format(name))

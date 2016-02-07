@@ -5,7 +5,7 @@ from packaging.version import Version
 from .hooks import builtin
 from .find import find
 from .version import check_version, make_specifier
-from ..file_types import SystemExecutable
+from ..file_types import Executable
 from ..iterutils import iterate, listify
 from ..path import Path, Root
 from ..platforms import which
@@ -100,4 +100,5 @@ def boost_package(env, name=None, version=None):
 
 @builtin.globals('env')
 def system_executable(env, name):
-    return SystemExecutable(Path(which(name, env.variables), Root.absolute))
+    return Executable(Path(which(name, env.variables), Root.absolute),
+                      external=True)

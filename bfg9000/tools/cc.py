@@ -265,7 +265,8 @@ class CcPackageResolver(object):
 
         for base in search_dirs:
             if os.path.exists(os.path.join(base, name)):
-                return HeaderDirectory(Path(base, Root.absolute), system=True)
+                return HeaderDirectory(Path(base, Root.absolute), system=True,
+                                       external=True)
 
         raise ValueError("unable to find header '{}'".format(name))
 
@@ -294,6 +295,7 @@ class CcPackageResolver(object):
             for libname, libkind in libnames:
                 fullpath = os.path.join(base, libname)
                 if os.path.exists(fullpath):
-                    return libkind(Path(fullpath, Root.absolute), self.lang)
+                    return libkind(Path(fullpath, Root.absolute), self.lang,
+                                   external=True)
 
         raise ValueError("unable to find library '{}'".format(name))

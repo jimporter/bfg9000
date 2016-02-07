@@ -6,7 +6,7 @@ from .. import path
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..build_inputs import build_input
-from ..file_types import Directory
+from ..file_types import Directory, File
 
 
 @build_input('install')
@@ -35,8 +35,13 @@ def install(builtins, build, *args):
     if len(args) == 0:
         raise ValueError('expected at least one argument')
     for i in args:
-        builtins['default'](i)
+        if not isinstance(i, File):
+            raise TypeError('expected a file or directory')
+        if i.external:
+            raise ValueError('external files are not installable')
+
         build['install'].add(i)
+        builtins['default'](i)
 
 
 def _install_commands(backend, build_inputs, buildfile, env):
