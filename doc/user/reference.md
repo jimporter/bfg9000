@@ -335,6 +335,11 @@ Set the required *version* for bfg9000 and/or the required *python_version*.
 Each of these is a standard Python [version
 specifier](https://www.python.org/dev/peps/pep-0440/#version-specifiers).
 
+### bfg9000_version
+
+Return the current version of bfg9000. This can be useful if you want to
+optionally support a feature only available in certain versions of bfg.
+
 ### filter_by_platform(*name*, *type*)
 
 Return *True* if *name* is a filename that should be included for the target

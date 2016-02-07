@@ -29,3 +29,8 @@ def bfg9000_required_version(version=None, python_version=None):
 
     check_version(_bfg_version, version, kind='bfg9000')
     check_version(_python_version, python_version, kind='python')
+
+
+@builtin.variable()
+def bfg9000_version():
+    return _bfg_version
