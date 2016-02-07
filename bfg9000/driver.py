@@ -124,9 +124,10 @@ def main():
                               'default: %(default)s)'))
     parser.add_argument('--regenerate', action='store_true',
                         help='regenerate build files')
+    parser.add_argument('--debug', action='store_true', help=argparse.SUPPRESS)
 
     args = parse_args(parser)
-    log.init(args.color)
+    log.init(args.color, debug=args.debug)
 
     if args.regenerate:
         try:

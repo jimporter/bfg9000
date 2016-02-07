@@ -11,7 +11,7 @@ basiclog = logging.getLogger('bfg9000')
 tracelog = logging.getLogger('bfg9000.trace')
 
 
-def init(color='auto'):
+def init(color='auto', debug=False):
     if color == 'always':
         colorama.init(strip=False)
     elif color == 'never':
@@ -19,7 +19,8 @@ def init(color='auto'):
     else:  # color == 'auto'
         colorama.init()
 
-    logging.basicConfig(format='%(levelname)s: %(message)s')
+    logging.basicConfig(format='%(levelname)s: %(message)s',
+                        level=logging.DEBUG if debug else logging.WARNING)
 
     logging.addLevelName(logging.CRITICAL,
                          '\033[1;41;37m' + 'critical' + '\033[0m')
@@ -50,21 +51,23 @@ def _is_bfg_src(filename):
 
 
 def _log_trace(lvl, msg, summary):
-    # Find where the user's stack frames begin and end
-    gen = enumerate(summary)
-    for start, line in gen:
-        if not _is_bfg_src(line[0]):
-            break
-    else:
-        start = len(summary)
+    if tracelog.getEffectiveLevel() > logging.DEBUG:
+        # Find where the user's stack frames begin and end.
+        gen = enumerate(summary)
+        for start, line in gen:
+            if not _is_bfg_src(line[0]):
+                break
+        else:
+            start = len(summary)
 
-    for end, line in gen:
-        if _is_bfg_src(line[0]):
-            break
-    else:
-        end = len(summary)
+        for end, line in gen:
+            if _is_bfg_src(line[0]):
+                break
+        else:
+            end = len(summary)
 
-    summary = summary[start:end]
+        summary = summary[start:end]
+
     if len(summary):
         tracelog.log(lvl, msg, extra={
             'file': summary[-1][0], 'line': summary[-1][1],
