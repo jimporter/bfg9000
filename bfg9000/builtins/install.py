@@ -10,7 +10,7 @@ from ..file_types import Directory, File
 
 
 @build_input('install')
-class InstallTargets(object):
+class InstallOutputs(object):
     def __init__(self):
         self.files = []
         self.dirs = []
@@ -45,8 +45,8 @@ def install(builtins, build, *args):
 
 
 def _install_commands(backend, build_inputs, buildfile, env):
-    install_targets = build_inputs['install']
-    if not install_targets:
+    install_outputs = build_inputs['install']
+    if not install_outputs:
         return None
 
     install = env.tool('install')
@@ -80,9 +80,9 @@ def _install_commands(backend, build_inputs, buildfile, env):
             return line
 
     return list(chain(
-        (install_line(i) for i in install_targets.files),
-        (mkdir_line(i) for i in install_targets.dirs),
-        ifilter(None, (post_install(i) for i in install_targets.files))
+        (install_line(i) for i in install_outputs.files),
+        (mkdir_line(i) for i in install_outputs.dirs),
+        ifilter(None, (post_install(i) for i in install_outputs.files))
     ))
 
 

@@ -46,13 +46,13 @@ class Compile(Edge):
         self.user_options = pshell.listify(options)
         self.link_options = []
 
-        target = self.builder.output_file(name)
+        output = self.builder.output_file(name)
 
         pkg_includes = chain.from_iterable(i.includes for i in self.packages)
         self.all_includes = uniques(chain(pkg_includes, self.includes))
         self._internal_options = self.builder.args(self.all_includes)
 
-        Edge.__init__(self, build, target, extra_deps)
+        Edge.__init__(self, build, output, extra_deps)
 
     @property
     def options(self):
@@ -66,13 +66,13 @@ def object_file(build, env, name=None, file=None, **kwargs):
             raise TypeError('expected name')
         return ObjectFile(Path(name, Root.srcdir), **kwargs)
     else:
-        return Compile(build, env, name, file, **kwargs).target
+        return Compile(build, env, name, file, **kwargs).public_output
 
 
 @builtin.globals('build_inputs', 'env')
 def object_files(build, env, files, **kwargs):
     def _compile(file, **kwargs):
-        return Compile(build, env, None, file, **kwargs).target
+        return Compile(build, env, None, file, **kwargs).public_output
     return ObjectFiles(objectify(i, ObjectFile, _compile, **kwargs)
                        for i in iterate(files))
 
@@ -120,10 +120,10 @@ def make_object_file(rule, build_inputs, buildfile, env):
             output=make.qvar('@'), **cmd_kwargs
         )] + recipe_extra)
 
-    path = rule.target.path
+    path = rule.output.path
     out_dir = path.parent()
     buildfile.rule(
-        target=path,
+        target=rule.output,
         deps=[rule.file] + rule.extra_deps,
         order_only=[out_dir.append(make.dir_sentinel)] if out_dir else None,
         recipe=recipename,
@@ -154,7 +154,7 @@ def ninja_object_file(rule, build_inputs, buildfile, env):
         ), depfile=depfile, deps=deps)
 
     buildfile.build(
-        output=rule.target,
+        output=rule.output,
         rule=compiler.rule_name,
         inputs=[rule.file],
         implicit=rule.extra_deps,

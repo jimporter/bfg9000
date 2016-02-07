@@ -12,13 +12,13 @@ class Alias(Edge):
 
 @builtin.globals('build_inputs')
 def alias(build, *args, **kwargs):
-    return Alias(build, *args, **kwargs).target
+    return Alias(build, *args, **kwargs).public_output
 
 
 @make.rule_handler(Alias)
 def make_alias(rule, build_inputs, buildfile, env):
     buildfile.rule(
-        target=rule.target,
+        target=rule.output,
         deps=rule.extra_deps,
         phony=True
     )
@@ -27,7 +27,7 @@ def make_alias(rule, build_inputs, buildfile, env):
 @ninja.rule_handler(Alias)
 def ninja_alias(rule, build_inputs, buildfile, env):
     buildfile.build(
-        output=rule.target,
+        output=rule.output,
         rule='phony',
         inputs=rule.extra_deps
     )

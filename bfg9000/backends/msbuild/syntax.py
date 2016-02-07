@@ -178,6 +178,7 @@ class VcxProject(object):
         self.configuration = configuration or 'Debug'
         self.platform = platform or 'Win32'
         self.output_file = output_file
+        self.import_lib = import_lib
         self.srcdir = srcdir
         self.files = files or []
         self.compile_options = compile_options or []
@@ -238,9 +239,9 @@ class VcxProject(object):
 
         link_opts = E.Lib() if self.mode == 'StaticLibrary' else E.Link()
         link_opts.append(E.OutputFile('$(TargetPath)'))
-        if hasattr(self.output_file, 'import_lib'):
+        if self.import_lib:
             link_opts.append(E.ImportLibrary(
-                path_str(self.output_file.import_lib, out=True)
+                path_str(self.import_lib, out=True)
             ))
         if self.link_options:
             link_opts.append(E.AdditionalOptions(
@@ -249,7 +250,7 @@ class VcxProject(object):
             ))
         if self.libs:
             link_opts.append(E.AdditionalDependencies(
-                ';'.join(path_str(i.link, out=True) for i in self.libs) +
+                ';'.join(path_str(i, out=True) for i in self.libs) +
                 ';%(AdditionalDependencies)'
             ))
 

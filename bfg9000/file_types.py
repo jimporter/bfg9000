@@ -106,10 +106,6 @@ class Library(Binary):
         Binary.__init__(self, path, external)
         self.lang = lang
 
-    @property
-    def link(self):
-        return self
-
 
 class StaticLibrary(Library):
     pass
@@ -125,18 +121,18 @@ class SharedLibrary(Library):
     pass
 
 
-class ImportLibrary(SharedLibrary):
-    pass
+class LinkLibrary(SharedLibrary):
+    def __init__(self, path, lang, library, external=False):
+        SharedLibrary.__init__(self, path, lang, external)
+        self.runtime_deps = [library]
 
 
 class DllLibrary(SharedLibrary):
     install_root = InstallRoot.bindir
+    # XXX: When adding support for .NET, this might need to become an instance
+    # variable, since .NET DLLs aren't "private".
+    private = True
 
-    def __init__(self, path, lang, import_lib, external=False):
+    def __init__(self, path, lang, import_name, external=False):
         SharedLibrary.__init__(self, path, lang, external)
-        self.import_lib = import_lib
-        self.install_deps = [import_lib]
-
-    @property
-    def link(self):
-        return self.import_lib
+        self.import_lib = LinkLibrary(import_name, lang, self, external)

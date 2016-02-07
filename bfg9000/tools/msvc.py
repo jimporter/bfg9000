@@ -102,7 +102,7 @@ class MsvcLinker(object):
     def _link_lib(self, library):
         if isinstance(library, WholeArchive):
             raise ValueError('MSVC does not support whole-archives')
-        return [library.link.path.basename()]
+        return [library.path.basename()]
 
     def libs(self, libraries):
         return sum((self._link_lib(i) for i in libraries), [])
@@ -116,9 +116,10 @@ class MsvcExecutableLinker(MsvcLinker):
 
 class MsvcSharedLibraryLinker(MsvcLinker):
     def output_file(self, name):
-        implib = ImportLibrary(Path(name + '.lib', Root.builddir), self.lang)
-        path = Path(name + self.platform.shared_library_ext, Root.builddir)
-        return DllLibrary(path, self.lang, implib), implib
+        dllpath = Path(name + self.platform.shared_library_ext, Root.builddir)
+        imppath = Path(name + '.lib', Root.builddir)
+        dll = DllLibrary(dllpath, self.lang, imppath)
+        return [dll, dll.import_lib]
 
     @property
     def mode_args(self):

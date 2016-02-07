@@ -86,7 +86,7 @@ class CcLinker(object):
         self._lib_re = re.compile('(?:' + '|'.join(lib_formats) + ')$')
 
     def _extract_lib_name(self, library):
-        basename = library.link.path.basename()
+        basename = library.path.basename()
         m = self._lib_re.match(basename)
         if not m:
             raise ValueError("'{}' is not a valid library name"
@@ -157,11 +157,11 @@ class CcLinker(object):
     def _link_lib(self, library):
         if isinstance(library, WholeArchive):
             if self.platform.name == 'darwin':
-                return ['-Wl,-force_load', library.link.path]
-            return ['-Wl,--whole-archive', library.link.path,
+                return ['-Wl,-force_load', library.path]
+            return ['-Wl,--whole-archive', library.path,
                     '-Wl,--no-whole-archive']
         elif isinstance(library, StaticLibrary):
-            return [library.link.path]
+            return [library.path]
 
         # If we're here, we have a SharedLibrary (or possibly just a Library
         # in the case of MinGW).
@@ -201,8 +201,8 @@ class CcSharedLibraryLinker(CcLinker):
 
         if self.platform.has_import_library:
             dllprefix = 'cyg' if self.platform.name == 'cygwin' else 'lib'
-            implib = ImportLibrary(lib(suffix='.a'), self.lang)
-            return DllLibrary(lib(dllprefix), self.lang, implib), implib
+            dll = DllLibrary(lib(dllprefix), self.lang, lib(suffix='.a'))
+            return [dll, dll.import_lib]
         else:
             return SharedLibrary(lib(), self.lang)
 

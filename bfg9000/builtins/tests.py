@@ -15,7 +15,7 @@ from ..shell import posix as pshell
 class TestInputs(object):
     def __init__(self):
         self.tests = []
-        self.targets = []
+        self.inputs = []
         self.extra_deps = []
 
     def __nonzero__(self):
@@ -23,15 +23,15 @@ class TestInputs(object):
 
 
 class TestCase(object):
-    def __init__(self, target, options, env):
-        self.target = target
+    def __init__(self, output, options, env):
+        self.output = output
         self.options = options
         self.env = env
 
 
 class TestDriver(object):
-    def __init__(self, target, options, env):
-        self.target = target
+    def __init__(self, output, options, env):
+        self.output = output
         self.options = options
         self.env = env
         self.tests = []
@@ -44,7 +44,7 @@ def test(build, test, options=None, environment=None, driver=None):
                         'specified')
 
     test = sourcify(test, File)
-    build['tests'].targets.append(test)
+    build['tests'].inputs.append(test)
     build['defaults'].remove(test)
 
     case = TestCase(test, pshell.listify(options), environment or {})
@@ -75,7 +75,7 @@ def test_deps(build, *args):
 def _build_commands(tests, writer, local_env, collapse=False):
     def command(test, args=None):
         env_vars = local_env(test.env)
-        subcmd = env_vars + [test.target] + test.options + (args or [])
+        subcmd = env_vars + [test.output] + test.options + (args or [])
 
         if collapse:
             out = writer(StringIO())
@@ -90,8 +90,8 @@ def _build_commands(tests, writer, local_env, collapse=False):
     for i in tests:
         if type(i) == TestDriver:
             args, moredeps = _build_commands(i.tests, writer, local_env, True)
-            if i.target.creator:
-                deps.append(i.target)
+            if i.output.creator:
+                deps.append(i.output)
             deps.extend(moredeps)
             cmd.append(command(i, args))
         else:
@@ -106,10 +106,10 @@ def make_test_rule(build_inputs, buildfile, env):
         return
 
     deps = []
-    if tests.targets:
+    if tests.inputs:
         buildfile.rule(
             target='tests',
-            deps=tests.targets,
+            deps=tests.inputs,
             phony=True
         )
         deps.append('tests')
@@ -137,11 +137,11 @@ def ninja_test_rule(build_inputs, buildfile, env):
         return
 
     deps = []
-    if tests.targets:
+    if tests.inputs:
         buildfile.build(
             output='tests',
             rule='phony',
-            inputs=tests.targets
+            inputs=tests.inputs
         )
         deps.append('tests')
     deps.extend(tests.extra_deps)

@@ -32,6 +32,15 @@ def first(thing):
     return next(iterate(thing))
 
 
+def unlistify(thing):
+    if len(thing) == 0:
+        return None
+    elif len(thing) == 1:
+        return thing[0]
+    else:
+        return thing
+
+
 def tween(iterable, delim, prefix=None, suffix=None):
     first = True
     for i in iterable:

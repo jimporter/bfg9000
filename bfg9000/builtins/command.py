@@ -27,7 +27,7 @@ class Command(Edge):
 
 @builtin.globals('build_inputs')
 def command(build, *args, **kwargs):
-    return Command(build, *args, **kwargs).target
+    return Command(build, *args, **kwargs).public_output
 
 
 @make.rule_handler(Command)
@@ -40,7 +40,7 @@ def make_command(rule, build_inputs, buildfile, env):
         out.write_shell(line)
 
     buildfile.rule(
-        target=rule.target,
+        target=rule.output,
         deps=rule.extra_deps,
         recipe=[safe_str.escaped_str(out.stream.getvalue())],
         phony=True
@@ -51,7 +51,7 @@ def make_command(rule, build_inputs, buildfile, env):
 def ninja_command(rule, build_inputs, buildfile, env):
     ninja.command_build(
         buildfile, env,
-        output=rule.target,
+        output=rule.output,
         inputs=rule.extra_deps,
         commands=rule.cmds,
         environ=rule.env

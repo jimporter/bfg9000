@@ -15,11 +15,6 @@ build_input('link_options')(list)
 
 
 class Link(Edge):
-    @classmethod
-    def __name(cls, name):
-        head, tail = os.path.split(name)
-        return os.path.join(head, cls._prefix + tail)
-
     def __init__(self, builtins, build, env, name, files=None, include=None,
                  libs=None, packages=None, compile_options=None,
                  link_options=None, lang=None, extra_deps=None):
@@ -48,26 +43,41 @@ class Link(Edge):
 
         self.user_options = pshell.listify(link_options)
 
-        target = self.builder.output_file(name)
-        primary = first(target)
+        output = self.builder.output_file(name)
 
         # XXX: Create a LinkOptions named tuple for managing these args?
         pkg_dirs = chain.from_iterable(i.lib_dirs for i in self.packages)
         self._internal_options = self.builder.args(
-            self.all_libs, pkg_dirs, target
+            self.all_libs, pkg_dirs, output
         )
 
-        primary.runtime_deps = [ i for i in self.libs
-                                 if isinstance(i, SharedLibrary) ]
+        primary = first(output)
+        primary.runtime_deps = sum(
+            (self.__get_runtime_deps(i) for i in self.libs), []
+        )
         if hasattr(self.builder, 'post_install'):
-            primary.post_install = self.builder.post_install(target)
+            primary.post_install = self.builder.post_install(output)
 
         build['defaults'].add(primary)
-        Edge.__init__(self, build, target, extra_deps)
+        Edge.__init__(self, build, output, extra_deps)
 
     @property
     def options(self):
         return self._internal_options + self.user_options
+
+    @classmethod
+    def __name(cls, name):
+        head, tail = os.path.split(name)
+        return os.path.join(head, cls._prefix + tail)
+
+    @staticmethod
+    def __get_runtime_deps(library):
+        if isinstance(library, LinkLibrary):
+            return library.runtime_deps
+        elif isinstance(library, SharedLibrary):
+            return [library]
+        else:
+            return []
 
 
 class StaticLink(Link):
@@ -108,8 +118,8 @@ def executable(builtins, build, env, name, files=None, **kwargs):
     if files is None and kwargs.get('libs') is None:
         return Executable(Path(name, Root.srcdir), **kwargs)
     else:
-        return first(DynamicLink(builtins, build, env, name, files,
-                                 **kwargs).target)
+        return DynamicLink(builtins, build, env, name, files,
+                           **kwargs).public_output
 
 
 @builtin.globals('builtins', 'build_inputs', 'env')
@@ -117,8 +127,8 @@ def static_library(builtins, build, env, name, files=None, **kwargs):
     if files is None and kwargs.get('libs') is None:
         return StaticLibrary(Path(name, Root.srcdir), **kwargs)
     else:
-        return first(StaticLink(builtins, build, env, name, files,
-                                **kwargs).target)
+        return StaticLink(builtins, build, env, name, files,
+                          **kwargs).public_output
 
 
 @builtin.globals('builtins', 'build_inputs', 'env')
@@ -127,8 +137,8 @@ def shared_library(builtins, build, env, name, files=None, **kwargs):
         # XXX: What to do here for Windows, which has a separate DLL file?
         return SharedLibrary(Path(name, Root.srcdir), **kwargs)
     else:
-        return first(SharedLink(builtins, build, env, name, files,
-                                **kwargs).target)
+        return SharedLink(builtins, build, env, name, files,
+                          **kwargs).public_output
 
 
 @builtin
@@ -178,18 +188,18 @@ def make_link(rule, build_inputs, buildfile, env):
                    output=make.var('2'), **cmd_kwargs)
         ])
 
-    all_targets = listify(rule.target)
-    recipe = make.Call(recipename, rule.files, all_targets[0].path)
-    if len(all_targets) > 1:
-        target = all_targets[0].path.addext('.stamp')
-        buildfile.rule(target=all_targets, deps=[target])
+    all_outputs = listify(rule.output)
+    recipe = make.Call(recipename, rule.files, all_outputs[0].path)
+    if len(all_outputs) > 1:
+        output = all_outputs[0].path.addext('.stamp')
+        buildfile.rule(target=all_outputs, deps=[output])
         recipe = [recipe, make.silent([ 'touch', make.var('@') ])]
     else:
-        target = rule.target
+        output = rule.output
 
-    dirs = uniques(i.path.parent() for i in all_targets)
+    dirs = uniques(i.path.parent() for i in all_outputs)
     buildfile.rule(
-        target=target,
+        target=output,
         deps=rule.files + rule.libs + rule.extra_deps,
         order_only=[i.append(make.dir_sentinel) for i in dirs if i],
         recipe=recipe,
@@ -201,7 +211,7 @@ def make_link(rule, build_inputs, buildfile, env):
 def ninja_link(rule, build_inputs, buildfile, env):
     linker = rule.builder
     variables, cmd_kwargs = _get_flags(ninja, rule, build_inputs, buildfile)
-    variables[ninja.var('output')] = first(rule.target).path
+    variables[ninja.var('output')] = first(rule.output).path
 
     if not buildfile.has_rule(linker.rule_name):
         buildfile.rule(name=linker.rule_name, command=linker(
@@ -210,7 +220,7 @@ def ninja_link(rule, build_inputs, buildfile, env):
         ))
 
     buildfile.build(
-        output=rule.target,
+        output=rule.output,
         rule=linker.rule_name,
         inputs=rule.files,
         implicit=rule.libs + rule.extra_deps,
@@ -246,22 +256,24 @@ try:
         # created.
         dependencies = []
         for dep in rule.libs:
-            dep_target = first(dep.creator.target)
-            if dep_target not in solution:
+            dep_output = first(dep.creator.output)
+            if dep_output not in solution:
                 raise ValueError('unknown dependency for {!r}'.format(dep))
-            dependencies.append(solution[dep_target])
+            dependencies.append(solution[dep_output])
 
         includes = uniques(chain.from_iterable(
             i.creator.all_includes for i in rule.files
         ))
 
-        target = first(rule.target)
+        output = first(rule.output)
+        import_lib = rule.output[1] if rule.mode == 'shared_library' else None
         project = msbuild.VcxProject(
             name=rule.name,
             version=env.getvar('VISUALSTUDIOVERSION'),
             mode=rule.msbuild_mode,
             platform=env.getvar('PLATFORM'),
-            output_file=target,
+            output_file=output,
+            import_lib=import_lib,
             srcdir=env.srcdir.string(),
             files=[i.creator.file for i in rule.files],
             compile_options=_reduce_options(
@@ -278,6 +290,6 @@ try:
             lib_dirs=sum((i.lib_dirs for i in rule.packages), []),
             dependencies=dependencies,
         )
-        solution[target] = project
+        solution[output] = project
 except:
     pass
