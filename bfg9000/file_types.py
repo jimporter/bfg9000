@@ -127,6 +127,13 @@ class LinkLibrary(SharedLibrary):
         self.runtime_deps = [library]
 
 
+class VersionedSharedLibrary(SharedLibrary):
+    def __init__(self, path, lang, soname, linkname, external=False):
+        SharedLibrary.__init__(self, path, lang, external)
+        self.soname = LinkLibrary(soname, lang, self, external)
+        self.link = LinkLibrary(linkname, lang, self.soname, external)
+
+
 class DllLibrary(SharedLibrary):
     install_root = InstallRoot.bindir
     # XXX: When adding support for .NET, this might need to become an instance

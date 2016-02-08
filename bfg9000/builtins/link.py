@@ -2,6 +2,7 @@ import os.path
 from itertools import chain
 
 from .hooks import builtin
+from .symlink import Symlink
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..build_inputs import build_input, Edge
@@ -43,7 +44,7 @@ class Link(Edge):
 
         self.user_options = pshell.listify(link_options)
 
-        output = self.builder.output_file(name)
+        output = self._output_file(name)
 
         # XXX: Create a LinkOptions named tuple for managing these args?
         pkg_dirs = chain.from_iterable(i.lib_dirs for i in self.packages)
@@ -64,6 +65,9 @@ class Link(Edge):
     @property
     def options(self):
         return self._internal_options + self.user_options
+
+    def _output_file(self, name):
+        return self.builder.output_file(name)
 
     @classmethod
     def __name(cls, name):
@@ -112,6 +116,16 @@ class SharedLink(DynamicLink):
     msbuild_mode = 'DynamicLibrary'
     _prefix = 'lib'
 
+    def __init__(self, *args, **kwargs):
+        self.version = kwargs.pop('version', None)
+        self.soversion = kwargs.pop('soversion', None)
+        if (self.version is None) != (self.soversion is None):
+            raise ValueError('specify both version and soversion or neither')
+        DynamicLink.__init__(self, *args, **kwargs)
+
+    def _output_file(self, name):
+        return self.builder.output_file(name, self.version, self.soversion)
+
 
 @builtin.globals('builtins', 'build_inputs', 'env')
 def executable(builtins, build, env, name, files=None, **kwargs):
@@ -137,8 +151,15 @@ def shared_library(builtins, build, env, name, files=None, **kwargs):
         # XXX: What to do here for Windows, which has a separate DLL file?
         return SharedLibrary(Path(name, Root.srcdir), **kwargs)
     else:
-        return SharedLink(builtins, build, env, name, files,
-                          **kwargs).public_output
+        output = SharedLink(builtins, build, env, name, files,
+                            **kwargs).public_output
+        if not isinstance(output, VersionedSharedLibrary):
+            return output
+
+        # Make symlinks for the various versions of the shared lib.
+        Symlink(build, output.soname, output)
+        Symlink(build, output.link, output.soname)
+        return output.link
 
 
 @builtin

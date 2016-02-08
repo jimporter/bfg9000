@@ -115,10 +115,10 @@ class MsvcExecutableLinker(MsvcLinker):
 
 
 class MsvcSharedLibraryLinker(MsvcLinker):
-    def output_file(self, name):
-        dllpath = Path(name + self.platform.shared_library_ext, Root.builddir)
-        imppath = Path(name + '.lib', Root.builddir)
-        dll = DllLibrary(dllpath, self.lang, imppath)
+    def output_file(self, name, version=None, soversion=None):
+        dllname = Path(name + self.platform.shared_library_ext, Root.builddir)
+        impname = Path(name + '.lib', Root.builddir)
+        dll = DllLibrary(dllname, self.lang, impname)
         return [dll, dll.import_lib]
 
     @property

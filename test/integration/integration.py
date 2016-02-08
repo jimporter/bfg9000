@@ -115,6 +115,8 @@ class IntegrationTest(unittest.TestCase):
             path_vars = {InstallRoot.prefix: self.distdir}
             for i in InstallRoot:
                 setattr(self, i.name, install_dirs[i].realize(path_vars))
+        else:
+            self.distdir = None
 
     def parameterize(self):
         return [ self.__class__(backend=i, *self._args, **self._kwargs)
@@ -149,6 +151,9 @@ class IntegrationTest(unittest.TestCase):
             shutil.copytree(self.orig_srcdir, self.srcdir)
         os.chdir(self.srcdir)
         cleandir(self.builddir)
+        if self.distdir:
+            cleandir(self.distdir)
+
         self.assertPopen(
             ['bfg9000', self.srcdir, self.builddir, '--backend',
              self.backend, '--debug'] + self.extra_args
@@ -200,16 +205,24 @@ def executable(name):
     )))
 
 
-if platform_info().name == 'windows' and env.compiler('c++').flavor == 'msvc':
+if env.compiler('c++').flavor == 'msvc':
     _library_prefix = ''
 else:
     _library_prefix = 'lib'
 
 
-def shared_library(name):
+def shared_library(name, version=None):
     head, tail = os.path.split(name)
+    ext = platform_info().shared_library_ext
+    if version:
+        if not platform_info().has_versioned_library:
+            raise ValueError('no versioned libraries on this platform')
+        if platform_name() == 'darwin':
+            tail += '.' + version
+        else:
+            ext += '.' + version
     return Target(name, os.path.normpath(os.path.join(
-        '.', head, _library_prefix + tail + platform_info().shared_library_ext
+        '.', head, _library_prefix + tail + ext
     )))
 
 

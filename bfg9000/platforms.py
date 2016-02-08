@@ -47,6 +47,10 @@ class PosixPlatform(Platform):
         return False
 
     @property
+    def has_versioned_library(self):
+        return True
+
+    @property
     def rpath_flavor(self):
         return None
 
@@ -100,6 +104,10 @@ class WindowsPlatform(Platform):
     @property
     def has_import_library(self):
         return True
+
+    @property
+    def has_versioned_library(self):
+        return False
 
     @property
     def rpath_flavor(self):

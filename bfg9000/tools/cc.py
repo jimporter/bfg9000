@@ -191,20 +191,31 @@ class CcExecutableLinker(CcLinker):
 
 
 class CcSharedLibraryLinker(CcLinker):
-    def output_file(self, name):
+    def output_file(self, name, version=None, soversion=None):
         head, tail = os.path.split(name)
 
-        def lib(prefix='lib', suffix=''):
+        def lib(head, tail, prefix='lib', suffix=''):
             return Path(os.path.join(
                 head, prefix + tail + self.platform.shared_library_ext + suffix
             ), Root.builddir)
 
         if self.platform.has_import_library:
             dllprefix = 'cyg' if self.platform.name == 'cygwin' else 'lib'
-            dll = DllLibrary(lib(dllprefix), self.lang, lib(suffix='.a'))
+            dllname = lib(head, tail, dllprefix)
+            impname = lib(head, tail, suffix='.a')
+            dll = DllLibrary(dllname, self.lang, impname)
             return [dll, dll.import_lib]
+        elif version and self.platform.has_versioned_library:
+            if self.platform.name == 'darwin':
+                real = lib(head, '{}.{}'.format(tail, version))
+                soname = lib(head, '{}.{}'.format(tail, soversion))
+            else:
+                real = lib(head, tail, suffix='.{}'.format(version))
+                soname = lib(head, tail, suffix='.{}'.format(soversion))
+            link = lib(head, tail)
+            return VersionedSharedLibrary(real, self.lang, soname, link)
         else:
-            return SharedLibrary(lib(), self.lang)
+            return SharedLibrary(lib(head, tail), self.lang)
 
     @property
     def mode_args(self):
@@ -216,14 +227,20 @@ class CcSharedLibraryLinker(CcLinker):
             return ['-Wl,--out-implib=' + output[1].path]
         return []
 
-    def _soname(self, output):
+    def _soname(self, library):
+        if isinstance(library, VersionedSharedLibrary):
+            soname = library.soname
+        else:
+            soname = library
+
         if self.platform.name == 'darwin':
-            return ['-install_name', darwin_install_name(output)]
-        return []
+            return ['-install_name', darwin_install_name(soname)]
+        else:
+            return ['-Wl,-soname,' + soname.path.basename()]
 
     def args(self, libraries, extra_dirs, output):
         return (CcLinker.args(self, libraries, extra_dirs, output) +
-                self._import_lib(output) + self._soname(output))
+                self._import_lib(output) + self._soname(first(output)))
 
 
 class CcPackageResolver(object):

@@ -94,7 +94,11 @@ test_exe = executable('test', ['test.cpp', foo_obj])
 ### shared_library(*name*, [*files*, ..., [*extra_deps*]])
 
 Create a build step that builds a shared library named *name*. Its arguments are
-the same as [*executable*](#executablename-files-extra_deps).
+the same as [*executable*](#executablename-files-extra_deps), with the following
+additional options:
+
+* *version*: The version number of the library, e.g. `1.2.3`.
+* *soversion*: The API version of the library (used in its soname), e.g. `1`.
 
 This build step recognizes the following environment variables:
 [`CC`](environment-vars.md#cc), [`CC_LINK`](environment-vars.md#cc_link),

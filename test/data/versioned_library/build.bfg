@@ -1,0 +1,8 @@
+# -*- python -*-
+
+lib = shared_library('library', files=['library.cpp'],
+                     version='1.2.3', soversion='1')
+prog = executable('program', files=['program.cpp'], libs=[lib])
+
+default(prog)
+install(prog)
