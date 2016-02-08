@@ -26,6 +26,10 @@ environment:
       BOOST_INCLUDEDIR: C:\Libraries\boost_1_59_0
       BOOST_LIBRARYDIR: C:\Libraries\boost_1_59_0\lib32-msvc-14.0
 
+cache:
+  - C:\ProgramData\chocolatey\bin -> appveyor.yml
+  - C:\ProgramData\chocolatey\lib -> appveyor.yml
+
 install:
   - |
     curl -LO http://downloads.xiph.org/releases/ogg/%LIBOGG%.zip
