@@ -300,7 +300,7 @@ building binaries by passing them in the <em>packages</em> argument:</p>
 <p>After building, you might want to allow your project to be installed onto the
 user's system somewhere. Most files (headers, executables, libraries) can be
 added to the list of installed files via the
-<a href="../reference/#install-all"><em>install()</em></a> rule. You can also install entire
+<a href="../reference/#install"><em>install()</em></a> rule. You can also install entire
 directories of headers:</p>
 <pre><code class="python">include_dir = header_directory('include')
 lib = static_library('program', files=['src/prog.cpp'], include=[include_dir])
