@@ -25,7 +25,7 @@ class TestInstall(IntegrationTest):
         self.assertExists(pjoin(self.libdir, shared_library('library').path))
         if platform_info().has_import_library:
             self.assertNotExists(pjoin(
-                self.libdir, static_library('library').path
+                self.libdir, import_library('library').path
             ))
 
         os.chdir(self.srcdir)
@@ -45,7 +45,7 @@ class TestInstall(IntegrationTest):
         self.assertExists(pjoin(self.libdir, shared_library('library').path))
         if platform_info().has_import_library:
             self.assertNotExists(pjoin(
-                self.libdir, static_library('library').path
+                self.libdir, import_library('library').path
             ))
 
         os.chdir(self.srcdir)

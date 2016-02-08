@@ -234,6 +234,15 @@ def static_library(name):
     )))
 
 
+def import_library(name):
+    if not platform_info().has_import_library:
+        raise ValueError('no import libraries on this platform')
+    if env.compiler('c++').flavor == 'msvc':
+        return static_library(name)
+    else:
+        return Target(name, shared_library(name).path + '.a')
+
+
 def load_tests(loader, standard_tests, pattern):
     all_tests = unittest.TestSuite()
     for suite in standard_tests:
