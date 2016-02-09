@@ -116,7 +116,7 @@ class CcLinker(object):
         return False
 
     @property
-    def mode_args(self):
+    def _always_args(self):
         return []
 
     def _lib_dirs(self, libraries, extra_dirs):
@@ -151,8 +151,12 @@ class CcLinker(object):
                              .format(self.platform.rpath_flavor))
 
     def args(self, libraries, extra_dirs, output):
-        return ( self._lib_dirs(libraries, extra_dirs) +
+        return ( self._always_args + self._lib_dirs(libraries, extra_dirs) +
                  self._rpath(libraries, first(output).path.parent()) )
+
+    @property
+    def _always_libs(self):
+        return ['-lobjc'] if self.lang in ('objc', 'objc++') else []
 
     def _link_lib(self, library):
         if isinstance(library, WholeArchive):
@@ -168,7 +172,7 @@ class CcLinker(object):
         return ['-l' + self._extract_lib_name(library)]
 
     def libs(self, libraries):
-        return sum((self._link_lib(i) for i in libraries), [])
+        return sum((self._link_lib(i) for i in libraries), self._always_libs)
 
     def post_install(self, output):
         if self.platform.rpath_flavor is None:
@@ -218,9 +222,9 @@ class CcSharedLibraryLinker(CcLinker):
             return SharedLibrary(lib(head, tail), self.lang)
 
     @property
-    def mode_args(self):
+    def _always_args(self):
         shared = '-dynamiclib' if self.platform.name == 'darwin' else '-shared'
-        return [shared, '-fPIC']
+        return CcLinker._always_args.fget(self) + [shared, '-fPIC']
 
     def _import_lib(self, output):
         if self.platform.has_import_library:

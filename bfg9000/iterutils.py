@@ -63,3 +63,7 @@ def uniques(iterable):
                 seen.add(item)
                 yield item
     return list(generate_uniques(iterable))
+
+
+def intersect(a, b):
+    return [i for i in a if i in b]

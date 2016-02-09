@@ -16,7 +16,7 @@ matrix:
     - language: generic
       python: 2.7
       os: osx
-      env: CC=gcc CXX=g++
+      env: CC=clang CXX=clang++
     - python: 2.7
       os: linux
       env: TEST_COMMAND=lint
@@ -24,6 +24,8 @@ matrix:
 addons:
   apt:
     packages:
+      - gobjc
+      - gobjc++
       - libboost-dev
       - libboost-program-options-dev
       - libogg-dev

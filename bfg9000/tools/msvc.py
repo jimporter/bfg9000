@@ -86,7 +86,7 @@ class MsvcLinker(object):
         return True
 
     @property
-    def mode_args(self):
+    def _always_args(self):
         return []
 
     def _lib_dirs(self, libraries, extra_dirs):
@@ -97,7 +97,7 @@ class MsvcLinker(object):
         return ['/LIBPATH:' + i for i in dirs]
 
     def args(self, libraries, extra_dirs, output):
-        return self._lib_dirs(libraries, extra_dirs)
+        return self._always_args + self._lib_dirs(libraries, extra_dirs)
 
     def _link_lib(self, library):
         if isinstance(library, WholeArchive):
@@ -122,7 +122,7 @@ class MsvcSharedLibraryLinker(MsvcLinker):
         return [dll, dll.import_lib]
 
     @property
-    def mode_args(self):
+    def _always_args(self):
         return ['/DLL']
 
     def _import_lib(self, library):

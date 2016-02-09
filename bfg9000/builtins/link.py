@@ -182,9 +182,8 @@ def _get_flags(backend, rule, build_inputs, buildfile):
     variables = {}
     cmd_kwargs = {'args': ldflags}
 
-    ldflags_value = rule.builder.mode_args + rule.options
-    if ldflags_value:
-        variables[ldflags] = [global_ldflags] + ldflags_value
+    if rule.options:
+        variables[ldflags] = [global_ldflags] + rule.options
 
     if hasattr(rule, 'lib_options'):
         global_ldlibs, ldlibs = backend.flags_vars(

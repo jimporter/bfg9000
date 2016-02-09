@@ -2,8 +2,11 @@ import json
 import os
 from packaging.version import Version
 from six import iteritems, string_types
+from six.moves import reduce
 
 from .backends import get_backends
+from .iterutils import intersect, isiterable, iterate
+from .languages import lang_link
 from .path import Path, InstallRoot
 from . import platforms
 from . import tools
@@ -40,9 +43,13 @@ class Environment(object):
         return self.variables.get(key, default)
 
     def builder(self, lang):
-        # XXX: Be more intelligent about this when we support more languages.
-        if not isinstance(lang, string_types):
-            lang = 'c++' if 'c++' in lang else 'c'
+        if isiterable(lang):
+            langs = reduce(
+                intersect, (lang_link[i] for i in iterate(lang) if i)
+            )
+            if len(langs) == 0:
+                raise ValueError('unable to find a valid linker')
+            lang = langs[0]
 
         if lang not in self.__builders:
             self.__builders[lang] = tools.get_builder(lang, self)
