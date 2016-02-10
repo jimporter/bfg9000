@@ -21,14 +21,14 @@ language('objc++', exts=['.mm', '.M'], link=['objc++'])
 @builder('c', 'c++', 'objc', 'objc++')
 class CFamilyBuilder(object):
     __langs = {
-        'c'     : ('CC'    , 'cc' ),
-        'c++'   : ('CXX'   , 'c++'),
-        'objc'  : ('OBJC'  , 'cc' ),
-        'objc++': ('OBJCXX', 'c++'),
+        'c'     : ('CC'    , 'cc' , 'CFLAGS'     ),
+        'c++'   : ('CXX'   , 'c++', 'CXXFLAGS'   ),
+        'objc'  : ('OBJC'  , 'cc' , 'OBJCFLAGS'  ),
+        'objc++': ('OBJCXX', 'c++', 'OBJCXXFLAGS'),
     }
 
     def __init__(self, env, lang):
-        var, default_cmd = self.__langs[lang]
+        var, default_cmd, flags_var = self.__langs[lang]
         low_var = var.lower()
         if env.platform.name == 'windows' and lang in ('c', 'c++'):
             default_cmd = 'cl'
@@ -36,7 +36,7 @@ class CFamilyBuilder(object):
         check_which(cmd, kind='{} compiler'.format(lang))
 
         cflags = (
-            shell.split(env.getvar(var + 'FLAGS', '')) +
+            shell.split(env.getvar(flags_var, '')) +
             shell.split(env.getvar('CPPFLAGS', ''))
         )
         ldflags = shell.split(env.getvar('LDFLAGS', ''))
