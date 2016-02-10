@@ -147,6 +147,10 @@
         
             <li><a href="#compilation-variables">Compilation variables</a></li>
         
+            <li><a href="#linking-variables">Linking variables</a></li>
+        
+            <li><a href="#packaging-variables">Packaging variables</a></li>
+        
             <li><a href="#command-variables">Command variables</a></li>
         
             <li><a href="#system-variables">System variables</a></li>
@@ -162,130 +166,172 @@ in which users can customize parts of a specific build, e.g. by changing the
 tools to use or adding compiler flags. Below is a full list of all the
 environment variables bfg9000 recognizes.</p>
 <h2 id="compilation-variables">Compilation variables</h2>
-<h3 id="ar"><em>AR</em></h3>
-<p class="subtitle">Default: <code>ar</code></p>
-<p><em>POSIX-only</em>. The command to use when creating static libraries from object
-files.</p>
-<h3 id="arflags"><em>ARFLAGS</em></h3>
-<p class="subtitle">Default: <code>cru</code></p>
-<p><em>POSIX-only</em>. The arguments to pass to the static library builder (typically
-<code>ar</code>).</p>
-<h3 id="cc"><em>CC</em></h3>
+<h3 id="generic">Generic</h3>
+<hr />
+<h4 id="cppflags"><em>CPPFLAGS</em></h4>
+<p class="subtitle">Default: <em>none</em></p>
+<p>"C preprocessor flags"; command line arguments to pass to the compiler when
+compiling any C-family source file (C, C++, Objective C/C++).</p>
+<h3 id="c">C</h3>
+<hr />
+<h4 id="cc"><em>CC</em></h4>
 <p class="subtitle">Default: <code>cc</code> (POSIX), <code>cl</code> (Windows)</p>
 <p>The command to use when compiling C source files. Also the command to use with
 cc-style toolchains when linking object files whose source is in C.</p>
-<h3 id="cc_lib"><em>CC_LIB</em></h3>
-<p class="subtitle">Default: <code>lib</code></p>
-<p><em>Windows-only</em>. The command to use when creating static libraries whose source
-is in C.</p>
-<h3 id="cc_link"><em>CC_LINK</em></h3>
-<p class="subtitle">Default: <code>link</code></p>
-<p><em>Windows-only</em>. The command to use when linking shared libraries whose source
-is in C.</p>
-<h3 id="cflags"><em>CFLAGS</em></h3>
+<h4 id="cflags"><em>CFLAGS</em></h4>
 <p class="subtitle">Default: <em>none</em></p>
 <p>Command line arguments to pass to the compiler when compiling any C source file.</p>
-<h3 id="cpath"><em>CPATH</em></h3>
-<p class="subtitle">Default: <em>none</em></p>
-<p>A list of additional directories to search for headers. On POSIX systems, this
-is delimited by <code>:</code>; on Windows, by <code>;</code>.</p>
-<h3 id="cppflags"><em>CPPFLAGS</em></h3>
-<p class="subtitle">Default: <em>none</em></p>
-<p>"C preprocessor flags"; command line arguments to pass to the compiler when
-compiling any C-family source file (C, C++, Objective-C, etc).</p>
-<h3 id="cxx"><em>CXX</em></h3>
+<h3 id="c_1">C++</h3>
+<hr />
+<h4 id="cxx"><em>CXX</em></h4>
 <p class="subtitle">Default: <code>c++</code> (POSIX), <code>cl</code> (Windows)</p>
 <p>The command to use when compiling C++ source files. Also the command to use with
 cc-style toolchains when linking object files whose source is in C++.</p>
-<h3 id="cxx_lib"><em>CXX_LIB</em></h3>
-<p class="subtitle">Default: <code>lib</code></p>
-<p><em>Windows-only</em>. The command to use when creating static libraries whose source
-is in C++.</p>
-<h3 id="cxx_link"><em>CXX_LINK</em></h3>
-<p class="subtitle">Default: <code>link</code></p>
-<p><em>Windows-only</em>. The command to use when linking shared libraries whose source
-is in C++.</p>
-<h3 id="cxxflags"><em>CXXFLAGS</em></h3>
+<h4 id="cxxflags"><em>CXXFLAGS</em></h4>
 <p class="subtitle">Default: <em>none</em></p>
 <p>Command line arguments to pass to the compiler when compiling any C++ source
 file.</p>
-<h3 id="include"><em>INCLUDE</em></h3>
+<h3 id="objective-c">Objective C</h3>
+<hr />
+<h4 id="objc"><em>OBJC</em></h4>
+<p class="subtitle">Default: <code>cc</code></p>
+<p>The command to use when compiling Objective C source files. Also the command to
+use with cc-style toolchains when linking object files whose source is in
+Objective C.</p>
+<h4 id="objcflags"><em>OBJCFLAGS</em></h4>
 <p class="subtitle">Default: <em>none</em></p>
-<p><em>MSVC-only</em> A list of directories to search for headers, delimited by  <code>;</code>.</p>
-<h3 id="ldflags"><em>LDFLAGS</em></h3>
+<p>Command line arguments to pass to the compiler when compiling any Objective C
+source file.</p>
+<h3 id="objective-c_1">Objective C++</h3>
+<hr />
+<h4 id="objcxx"><em>OBJCXX</em></h4>
+<p class="subtitle">Default: <code>c++</code></p>
+<p>The command to use when compiling Objective C++ source files. Also the command
+to use with cc-style toolchains when linking object files whose source is in
+Objective C++.</p>
+<h4 id="objcxxflags"><em>OBJCXXFLAGS</em></h4>
+<p class="subtitle">Default: <em>none</em></p>
+<p>Command line arguments to pass to the compiler when compiling any Objective C++
+source file.</p>
+<h2 id="linking-variables">Linking variables</h2>
+<h3 id="static-linking">Static linking</h3>
+<hr />
+<h4 id="ar"><em>AR</em></h4>
+<p class="subtitle">Default: <code>ar</code></p>
+<p><em>POSIX-only</em>. The command to use when creating static libraries from object
+files.</p>
+<h4 id="arflags"><em>ARFLAGS</em></h4>
+<p class="subtitle">Default: <code>cru</code></p>
+<p><em>POSIX-only</em>. The arguments to pass to the static library builder (typically
+<code>ar</code>).</p>
+<h4 id="cc_lib"><em>CC_LIB</em></h4>
+<p class="subtitle">Default: <code>lib</code></p>
+<p><em>MSVC-only</em>. The command to use when creating static libraries whose source
+is in C.</p>
+<h4 id="cxx_lib"><em>CXX_LIB</em></h4>
+<p class="subtitle">Default: <code>lib</code></p>
+<p><em>MSVC-only</em>. The command to use when creating static libraries whose source
+is in C++.</p>
+<h4 id="libflags"><em>LIBFLAGS</em></h4>
+<p class="subtitle">Default: <em>none</em></p>
+<p><em>Windows-only</em>. Command line arguments to pass to the static library builder
+(typically <code>lib</code>).</p>
+<h3 id="dynamic-linking">Dynamic linking</h3>
+<hr />
+<h4 id="cc_link"><em>CC_LINK</em></h4>
+<p class="subtitle">Default: <code>link</code></p>
+<p><em>MSVC-only</em>. The command to use when linking shared libraries whose source
+is in C.</p>
+<h4 id="cxx_link"><em>CXX_LINK</em></h4>
+<p class="subtitle">Default: <code>link</code></p>
+<p><em>MSVC-only</em>. The command to use when linking shared libraries whose source
+is in C++.</p>
+<h4 id="ldflags"><em>LDFLAGS</em></h4>
 <p class="subtitle">Default: <em>none</em></p>
 <p>Command line arguments to pass to the linker when linking an executable or
 shared library.</p>
-<h3 id="ldlibs"><em>LDLIBS</em></h3>
+<h4 id="ldlibs"><em>LDLIBS</em></h4>
 <p class="subtitle">Default: <em>none</em></p>
 <p>Additional libraries to link into an executable or shared library. This is
 mainly useful for cases where a system library (e.g. the C++ Standard Library
 implementation) requires another library to be explicitly linked with it.</p>
-<h3 id="lib"><em>LIB</em></h3>
+<h2 id="packaging-variables">Packaging variables</h2>
+<hr />
+<h4 id="boost_root"><em>BOOST_ROOT</em></h4>
 <p class="subtitle">Default: <em>none</em></p>
-<p><em>MSVC-only</em> A list of directories to search for libraries, delimited by  <code>;</code>.</p>
-<h3 id="libflags"><em>LIBFLAGS</em></h3>
+<p>The root directory where Boost headers and libraries are stored (as
+<code>$BOOST_ROOT/include</code> and <code>$BOOST_ROOT/lib</code>, respectively).</p>
+<h4 id="boost_includedir"><em>BOOST_INCLUDEDIR</em></h4>
 <p class="subtitle">Default: <em>none</em></p>
-<p><em>Windows-only</em>. Command line arguments to pass to the static library builder
-(typically <code>lib</code>).</p>
+<p>The root directory where Boost headers are stored. This takes precedence over
+<a href="#boost_root"><em>BOOST_ROOT</em></a>.</p>
+<h4 id="boost_librarydir"><em>BOOST_LIBRARYDIR</em></h4>
+<p class="subtitle">Default: <em>none</em></p>
+<p>The root directory where Boost libraries are stored. This takes precedence over
+<a href="#boost_root"><em>BOOST_ROOT</em></a>.</p>
+<h4 id="cpath"><em>CPATH</em></h4>
+<p class="subtitle">Default: <em>none</em></p>
+<p>A list of additional directories to search for headers. On POSIX systems, this
+is delimited by <code>:</code>; on Windows, by <code>;</code>.</p>
+<h4 id="include"><em>INCLUDE</em></h4>
+<p class="subtitle">Default: <em>none</em></p>
+<p><em>MSVC-only</em> A list of directories to search for headers, delimited by  <code>;</code>.</p>
+<h4 id="lib"><em>LIB</em></h4>
+<p class="subtitle">Default: <em>none</em></p>
+<p><em>MSVC-only</em> A list of directories to search for <a href="../reference/#system_packagename">system
+libraries</a>, delimited by  <code>;</code>.</p>
+<h4 id="library_path"><em>LIBRARY_PATH</em></h4>
+<p class="subtitle">Default: <em>none</em></p>
+<p>A list of additional directories to search for <a href="../reference/#system_packagename">system
+libraries</a>. On POSIX systems, this is delimited
+by <code>:</code>; on Windows, by <code>;</code>.</p>
+<h4 id="path"><em>PATH</em></h4>
+<p class="subtitle">Default: <em>none</em></p>
+<p>A list of directories to search for <a href="../reference/#system_executablename">system
+executables</a>. On POSIX systems, this is
+delimited by <code>:</code>; on Windows, by <code>;</code>.</p>
+<h4 id="pathext"><em>PATHEXT</em></h4>
+<p class="subtitle">Default: <em>none</em></p>
+<p><em>Windows-only</em>. A list of valid extensions for executable files under Windows,
+separated by <code>;</code>.</p>
 <h2 id="command-variables">Command variables</h2>
-<h3 id="bfg9000"><em>BFG9000</em></h3>
+<hr />
+<h4 id="bfg9000"><em>BFG9000</em></h4>
 <p class="subtitle">Default: <code>/path/to/bfg9000</code></p>
 <p>The command to use when executing bfg9000 (e.g. when regenerating the build
 scripts because the list of source files has changed). This should only be
 necessary if you run bfg9000 from a wrapper script.</p>
-<h3 id="depfixer"><em>DEPFIXER</em></h3>
+<h4 id="depfixer"><em>DEPFIXER</em></h4>
 <p class="subtitle">Default: <code>/path/to/bfg9000-depfixer</code></p>
 <p>The command to use when fixing up depfiles generated by your compiler for the
 Make backend. In general, you shouldn't need to touch this.</p>
-<h3 id="install"><em>INSTALL</em></h3>
-<p class="subtitle">Default: <code>install</code></p>
+<h4 id="install"><em>INSTALL</em></h4>
+<p class="subtitle">Default: <code>install</code> (Linux, Windows), <code>ginstall</code> (Darwin)</p>
 <p>The command to use when installing files.</p>
-<h3 id="mkdir_p"><em>MKDIR_P</em></h3>
+<h4 id="install_name_tool"><em>INSTALL_NAME_TOOL</em></h4>
+<p class="subtitle">Default: <code>install_name_tool</code></p>
+<p><em>Darwin-only</em> The command to use when modifying the paths of the shared
+libraries linked to during installation.</p>
+<h4 id="mkdir_p"><em>MKDIR_P</em></h4>
 <p class="subtitle">Default: <code>mkdir -p</code></p>
 <p>The command to use when making a directory tree. This is used both for
 installing whole directories of files and for creating build directories under
 the Make backend.</p>
-<h3 id="patchelf"><em>PATCHELF</em></h3>
+<h4 id="patchelf"><em>PATCHELF</em></h4>
 <p class="subtitle">Default: <code>patchelf</code></p>
 <p><em>Linux-only</em>. The command to use when patching an ELF file's rpath for
 installation.</p>
-<h3 id="setenv"><em>SETENV</em></h3>
+<h4 id="setenv"><em>SETENV</em></h4>
 <p class="subtitle">Default: <code>/path/to/bfg9000-setenv</code></p>
 <p><em>Windows-only</em>. The command to use when setting temporary environment variables,
 similar to the POSIX <code>env</code> command. This is used when setting environment
 variables for tests.</p>
 <h2 id="system-variables">System variables</h2>
-<h3 id="boost_root"><em>BOOST_ROOT</em></h3>
-<p class="subtitle">Default: <em>none</em></p>
-<p>The root directory where Boost headers and libraries are stored (as
-<code>$BOOST_ROOT/include</code> and <code>$BOOST_ROOT/lib</code>, respectively).</p>
-<h3 id="boost_includedir"><em>BOOST_INCLUDEDIR</em></h3>
-<p class="subtitle">Default: <em>none</em></p>
-<p>The root directory where Boost headers are stored. This takes precedence over
-<a href="#boost_root"><em>BOOST_ROOT</em></a>.</p>
-<h3 id="boost_librarydir"><em>BOOST_LIBRARYDIR</em></h3>
-<p class="subtitle">Default: <em>none</em></p>
-<p>The root directory where Boost libraries are stored. This takes precedence over
-<a href="#boost_root"><em>BOOST_ROOT</em></a>.</p>
-<h3 id="library_path"><em>LIBRARY_PATH</em></h3>
-<p class="subtitle">Default: <em>none</em></p>
-<p>A list of additional directories to search for
-<a href="../reference/#system_packagename">system libraries</a>. On POSIX systems, this is
-delimited by <code>:</code>; on Windows, by <code>;</code>.</p>
-<h3 id="path"><em>PATH</em></h3>
-<p class="subtitle">Default: <em>none</em></p>
-<p>A list of directories to search for
-<a href="../reference/#system_executablename">system executables</a>. On POSIX systems, this
-is delimited by <code>:</code>; on Windows, by <code>;</code>.</p>
-<h3 id="pathext"><em>PATHEXT</em></h3>
-<p class="subtitle">Default: <em>none</em></p>
-<p><em>Windows-only</em>. A list of valid extensions for executable files under Windows,
-separated by <code>;</code>.</p>
-<h3 id="platform"><em>PLATFORM</em></h3>
+<hr />
+<h4 id="platform"><em>PLATFORM</em></h4>
 <p class="subtitle">Default: <code>Win32</code></p>
 <p><em>Windows-only</em>. The platform type to use when generating MSBuild files.</p>
-<h3 id="visualstudioversion"><em>VISUALSTUDIOVERSION</em></h3>
+<h4 id="visualstudioversion"><em>VISUALSTUDIOVERSION</em></h4>
 <p class="subtitle">Default: <code>14.0</code></p>
 <p><em>Windows-only</em>. The version of Visual Studio to target when generating MSBuild
 files.</p></div>

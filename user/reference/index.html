@@ -202,11 +202,10 @@ file (or a plain string), this function will implicitly call
 executable file (a precompiled binary, a shell script, etc) somewhere on the
 filesystem. In this case, <em>name</em> is the exact name of the file. This allows
 you to refer to existing executables for other functions.</p>
-<p>This build step recognizes the following environment variables:
-<a href="../environment-vars/#cc"><code>CC</code></a>, <a href="../environment-vars/#cc_link"><code>CC_LINK</code></a>,
-<a href="../environment-vars/#cxx"><code>CXX</code></a>, <a href="../environment-vars/#cxx_link"><code>CXX_LINK</code></a>,
-<a href="../environment-vars/#ldflags"><code>LDFLAGS</code></a>,
-<a href="../environment-vars/#ldlibs"><code>LDLIBS</code></a>.</p>
+<p>This build step recognizes the <a href="../environment-vars/#dynamic-linking">dynamic linking environment
+variables</a> and the <a href="../environment-vars/#compilation-variables">compiler environment
+variable</a> (e.g. <code>CC</code>) for the
+relevant language.</p>
 <h3 id="object_filename-file-extra_deps">object_file([<em>name</em>], [<em>file</em>, ..., [<em>extra_deps</em>]])</h3>
 <p>Create a build step that compiles a source file named <em>file</em> to an object file
 named <em>name</em>; if <em>name</em> is not specified, it takes the file name in <em>file</em>
@@ -223,11 +222,8 @@ without the extension.</p>
 <p>If <em>file</em> isn't specified, this function merely references an <em>existing</em>
 object file somewhere on the filesystem. In this case, <em>name</em> must be specified
 and is the exact name of the file.</p>
-<p>This build step recognizes the following environment variables:
-<a href="../environment-vars/#cc"><code>CC</code></a>, <a href="../environment-vars/#cflags"><code>CFLAGS</code></a>,
-<a href="../environment-vars/#cppflags"><code>CPPFLAGS</code></a>, <a href="../environment-vars/#cxx"><code>CXX</code></a>,
-<a href="../environment-vars/#cxxflags"><code>CXXFLAGS</code></a>,
-<a href="../environment-vars/#ldlibs"><code>LDLIBS</code></a>.</p>
+<p>This build step recognizes the <a href="../environment-vars/#compilation-variables">compilation environment
+variables</a> for the relevant language.</p>
 <h3 id="object_filesfiles-extra_deps">object_files(<em>files</em>, ..., [<em>extra_deps</em>])</h3>
 <p>Create a compilation build step for each of the files in <em>files</em>; this is
 equivalent to calling <a href="#object_filename-file-extra_deps"><em>object_file</em></a> for each
@@ -251,11 +247,10 @@ additional options:</p>
 <li><em>version</em>: The version number of the library, e.g. <code>1.2.3</code>.</li>
 <li><em>soversion</em>: The API version of the library (used in its soname), e.g. <code>1</code>.</li>
 </ul>
-<p>This build step recognizes the following environment variables:
-<a href="../environment-vars/#cc"><code>CC</code></a>, <a href="../environment-vars/#cc_link"><code>CC_LINK</code></a>,
-<a href="../environment-vars/#cxx"><code>CXX</code></a>, <a href="../environment-vars/#cxx_link"><code>CXX_LINK</code></a>,
-<a href="../environment-vars/#ldflags"><code>LDFLAGS</code></a>,
-<a href="../environment-vars/#ldlibs"><code>LDLIBS</code></a>.</p>
+<p>This build step recognizes the <a href="../environment-vars/#dynamic-linking">dynamic linking environment
+variables</a> and the <a href="../environment-vars/#compilation-variables">compiler environment
+variable</a> (e.g. <code>CC</code>) for the
+relevant language.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>On Windows, this produces <em>two</em> files: <code>name.dll</code> and <code>name.lib</code>. The latter
@@ -265,11 +260,8 @@ is the <em>import library</em>, used when linking to this library. As a result,
 <h3 id="static_libraryname-files-extra_deps">static_library(<em>name</em>, [<em>files</em>, ..., [<em>extra_deps</em>]])</h3>
 <p>Create a build step that builds a static library named <em>name</em>. Its arguments are
 the same as <a href="#executablename-files-extra_deps"><em>executable</em></a>.</p>
-<p>This build step recognizes the following environment variables:
-<a href="../environment-vars/#ar"><code>AR</code></a>, <a href="../environment-vars/#arflags"><code>ARFLAGS</code></a>,
-<a href="../environment-vars/#cc_lib"><code>CC_LIB</code></a>,
-<a href="../environment-vars/#cxx_lib"><code>CXX_LIB</code></a>,
-<a href="../environment-vars/#libflags"><code>LIBFLAGS</code></a>.</p>
+<p>This build step recognizes the <a href="../environment-vars/#static-linking">static linking environment
+variables</a>.</p>
 <h2 id="file-types">File types</h2>
 <h3 id="directoryname">directory(<em>name</em>)</h3>
 <p>Create a reference to an existing directory named <em>name</em>. This allows you to
@@ -326,6 +318,7 @@ library will install the DLL <em>and</em> the import library.</p>
 </div>
 <p>This rule recognizes the following environment variables:
 <a href="../environment-vars/#install"><code>INSTALL</code></a>,
+<a href="../environment-vars/#install_name_tool"><code>INSTALL_NAME_TOOL</code></a>,
 <a href="../environment-vars/#mkdir_p"><code>MKDIR_P</code></a>,
 <a href="../environment-vars/#patchelf"><code>PATCHELF</code></a>.</p>
 <h2 id="global-options">Global options</h2>
@@ -362,14 +355,8 @@ run.</p>
 <p>Search for a <a href="https://www.boost.org/">Boost</a> library. You can specify <em>name</em> (as
 a string or a list) to specify a specific Boost library (or libraries); for
 instance, <code>'program_options'</code>. For header-only libraries, you can omit <em>name</em>.</p>
-<p>This rule recognizes the following environment variables:
-<a href="../environment-vars/#boost_root"><code>BOOST_ROOT</code></a>,
-<a href="../environment-vars/#boost_includedir"><code>BOOST_INCLUDEDIR</code></a>,
-<a href="../environment-vars/#boost_librarydir"><code>BOOST_LIBRARYDIR</code></a>,
-<a href="../environment-vars/#cpath"><code>CPATH</code></a>,
-<a href="../environment-vars/#include"><code>INCLUDE</code></a>,
-<a href="../environment-vars/#lib"><code>LIB</code></a>,
-<a href="../environment-vars/#library_path"><code>LIBRARY_PATH</code></a>.</p>
+<p>This rule recognizes the <a href="../environment-vars/#packaging-variables">packaging environment
+variables</a>.</p>
 <h3 id="system_executablename">system_executable(<em>name</em>)</h3>
 <p>Search for an executable named <em>name</em> somewhere in the system's PATH.</p>
 <p>This rule recognizes the following environment variables:
