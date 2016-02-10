@@ -41,11 +41,10 @@ executable file (a precompiled binary, a shell script, etc) somewhere on the
 filesystem. In this case, *name* is the exact name of the file. This allows
 you to refer to existing executables for other functions.
 
-This build step recognizes the following environment variables:
-[`CC`](environment-vars.md#cc), [`CC_LINK`](environment-vars.md#cc_link),
-[`CXX`](environment-vars.md#cxx), [`CXX_LINK`](environment-vars.md#cxx_link),
-[`LDFLAGS`](environment-vars.md#ldflags),
-[`LDLIBS`](environment-vars.md#ldlibs).
+This build step recognizes the [dynamic linking environment
+variables](environment-vars.md#dynamic-linking) and the [compiler environment
+variable](environment-vars.md#compilation-variables) (e.g. `CC`) for the
+relevant language.
 
 ### object_file([*name*], [*file*, ..., [*extra_deps*]])
 
@@ -66,11 +65,8 @@ If *file* isn't specified, this function merely references an *existing*
 object file somewhere on the filesystem. In this case, *name* must be specified
 and is the exact name of the file.
 
-This build step recognizes the following environment variables:
-[`CC`](environment-vars.md#cc), [`CFLAGS`](environment-vars.md#cflags),
-[`CPPFLAGS`](environment-vars.md#cppflags), [`CXX`](environment-vars.md#cxx),
-[`CXXFLAGS`](environment-vars.md#cxxflags),
-[`LDLIBS`](environment-vars.md#ldlibs).
+This build step recognizes the [compilation environment
+variables](environment-vars.md#compilation-variables) for the relevant language.
 
 ### object_files(*files*, ..., [*extra_deps*])
 
@@ -100,11 +96,10 @@ additional options:
 * *version*: The version number of the library, e.g. `1.2.3`.
 * *soversion*: The API version of the library (used in its soname), e.g. `1`.
 
-This build step recognizes the following environment variables:
-[`CC`](environment-vars.md#cc), [`CC_LINK`](environment-vars.md#cc_link),
-[`CXX`](environment-vars.md#cxx), [`CXX_LINK`](environment-vars.md#cxx_link),
-[`LDFLAGS`](environment-vars.md#ldflags),
-[`LDLIBS`](environment-vars.md#ldlibs).
+This build step recognizes the [dynamic linking environment
+variables](environment-vars.md#dynamic-linking) and the [compiler environment
+variable](environment-vars.md#compilation-variables) (e.g. `CC`) for the
+relevant language.
 
 !!! note
     On Windows, this produces *two* files: `name.dll` and `name.lib`. The latter
@@ -116,11 +111,8 @@ This build step recognizes the following environment variables:
 Create a build step that builds a static library named *name*. Its arguments are
 the same as [*executable*](#executablename-files-extra_deps).
 
-This build step recognizes the following environment variables:
-[`AR`](environment-vars.md#ar), [`ARFLAGS`](environment-vars.md#arflags),
-[`CC_LIB`](environment-vars.md#cc_lib),
-[`CXX_LIB`](environment-vars.md#cxx_lib),
-[`LIBFLAGS`](environment-vars.md#libflags).
+This build step recognizes the [static linking environment
+variables](environment-vars.md#static-linking).
 
 ## File types
 
@@ -194,6 +186,7 @@ well.
 
 This rule recognizes the following environment variables:
 [`INSTALL`](environment-vars.md#install),
+[`INSTALL_NAME_TOOL`](environment-vars.md#install_name_tool),
 [`MKDIR_P`](environment-vars.md#mkdir_p),
 [`PATCHELF`](environment-vars.md#patchelf).
 
@@ -248,14 +241,8 @@ Search for a [Boost](https://www.boost.org/) library. You can specify *name* (as
 a string or a list) to specify a specific Boost library (or libraries); for
 instance, `'program_options'`. For header-only libraries, you can omit *name*.
 
-This rule recognizes the following environment variables:
-[`BOOST_ROOT`](environment-vars.md#boost_root),
-[`BOOST_INCLUDEDIR`](environment-vars.md#boost_includedir),
-[`BOOST_LIBRARYDIR`](environment-vars.md#boost_librarydir),
-[`CPATH`](environment-vars.md#cpath),
-[`INCLUDE`](environment-vars.md#include),
-[`LIB`](environment-vars.md#lib),
-[`LIBRARY_PATH`](environment-vars.md#library_path).
+This rule recognizes the [packaging environment
+variables](environment-vars.md#packaging-variables).
 
 ### system_executable(*name*)
 
