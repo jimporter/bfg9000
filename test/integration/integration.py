@@ -198,6 +198,17 @@ class IntegrationTest(unittest.TestCase):
                 "'{}' exists".format(os.path.normpath(path))
             )
 
+    def assertDirectory(self, path, contents):
+        actual = set(os.path.normpath(os.path.join(path, base, f))
+                     for base, dirs, files in os.walk(path) for f in files)
+        expected = set(os.path.normpath(i) for i in contents)
+        if actual != expected:
+            missing = [os.path.relpath(i, path) for i in (expected - actual)]
+            extra = [os.path.relpath(i, path) for i in (actual - expected)]
+            raise unittest.TestCase.failureException(
+                'missing: {}, extra: {}'.format(missing, extra)
+            )
+
 
 def executable(name):
     return Target(name, os.path.normpath(os.path.join(
@@ -227,7 +238,7 @@ def shared_library(name, version=None):
 
 
 def static_library(name):
-    suffix = '.lib' if platform_info().name == 'windows' else '.a'
+    suffix = '.lib' if env.compiler('c++').flavor == 'msvc' else '.a'
     head, tail = os.path.split(name)
     return Target(name, os.path.normpath(os.path.join(
         '.', head, _library_prefix + tail + suffix

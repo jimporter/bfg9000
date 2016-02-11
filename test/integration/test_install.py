@@ -14,24 +14,36 @@ class TestInstall(IntegrationTest):
 
     def test_default(self):
         self.build()
-        self.assertOutput([executable('program')], 'hello, library!\n')
+        self.assertOutput(
+            [executable('program')],
+            'hello from shared a!\nhello from shared b!\n' +
+            'hello from static a!\nhello from static b!\n'
+        )
 
     @skip_if_backend('msbuild')
     def test_install(self):
         self.build('install')
 
-        self.assertExists(pjoin(self.includedir, 'library.hpp'))
-        self.assertExists(pjoin(self.bindir, executable('program').path))
-        self.assertExists(pjoin(self.libdir, shared_library('library').path))
+        extra = []
         if platform_info().has_import_library:
-            self.assertNotExists(pjoin(
-                self.libdir, import_library('library').path
-            ))
+            extra = [pjoin(self.libdir, import_library('shared_a').path)]
+
+        self.assertDirectory(self.distdir, [
+            pjoin(self.includedir, 'shared_a.hpp'),
+            pjoin(self.includedir, 'static_a.hpp'),
+            pjoin(self.bindir, executable('program').path),
+            pjoin(self.libdir, shared_library('shared_a').path),
+            pjoin(self.libdir, shared_library('shared_b').path),
+            pjoin(self.libdir, static_library('static_a').path),
+        ] + extra)
 
         os.chdir(self.srcdir)
         cleandir(self.builddir)
-        self.assertOutput([pjoin(self.bindir, executable('program').path)],
-                          'hello, library!\n')
+        self.assertOutput(
+            [os.path.join(self.bindir, executable('program').path)],
+            'hello from shared a!\nhello from shared b!\n' +
+            'hello from static a!\nhello from static b!\n'
+        )
 
     @skip_if_backend('msbuild')
     def test_install_existing_paths(self):
@@ -40,15 +52,23 @@ class TestInstall(IntegrationTest):
         makedirs(self.libdir, exist_ok=True)
         self.build('install')
 
-        self.assertExists(pjoin(self.includedir, 'library.hpp'))
-        self.assertExists(pjoin(self.bindir, executable('program').path))
-        self.assertExists(pjoin(self.libdir, shared_library('library').path))
+        extra = []
         if platform_info().has_import_library:
-            self.assertNotExists(pjoin(
-                self.libdir, import_library('library').path
-            ))
+            extra = [pjoin(self.libdir, import_library('shared_a').path)]
+
+        self.assertDirectory(self.distdir, [
+            pjoin(self.includedir, 'shared_a.hpp'),
+            pjoin(self.includedir, 'static_a.hpp'),
+            pjoin(self.bindir, executable('program').path),
+            pjoin(self.libdir, shared_library('shared_a').path),
+            pjoin(self.libdir, shared_library('shared_b').path),
+            pjoin(self.libdir, static_library('static_a').path),
+        ] + extra)
 
         os.chdir(self.srcdir)
         cleandir(self.builddir)
-        self.assertOutput([pjoin(self.bindir, executable('program').path)],
-                          'hello, library!\n')
+        self.assertOutput(
+            [os.path.join(self.bindir, executable('program').path)],
+            'hello from shared a!\nhello from shared b!\n' +
+            'hello from static a!\nhello from static b!\n'
+        )

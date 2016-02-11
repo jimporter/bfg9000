@@ -40,16 +40,11 @@ class TestVersionedLibrary(IntegrationTest):
     def test_install(self):
         self.build('install')
 
-        self.assertExists(pjoin(self.bindir, executable('program').path))
-        self.assertExists(pjoin(
-            self.libdir, shared_library('library', version='1.2.3').path
-        ))
-        self.assertExists(pjoin(
-            self.libdir, shared_library('library', version='1').path
-        ))
-        self.assertNotExists(pjoin(
-            self.libdir, shared_library('library').path
-        ))
+        self.assertDirectory(self.distdir, [
+            pjoin(self.bindir, executable('program').path),
+            pjoin(self.libdir, shared_library('library', '1.2.3').path),
+            pjoin(self.libdir, shared_library('library', '1').path),
+        ])
 
         os.chdir(self.srcdir)
         cleandir(self.builddir)

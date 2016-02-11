@@ -27,11 +27,15 @@ class TestSubdirs(IntegrationTest):
     def test_install(self):
         self.build('install')
 
-        self.assertExists(pjoin(self.includedir, 'library.hpp'))
-        self.assertExists(pjoin(self.bindir, executable('sub/program').path))
-        self.assertExists(pjoin(
-            self.libdir, shared_library('sub/library').path
-        ))
+        extra = []
+        if platform_info().has_import_library:
+            extra = [pjoin(self.libdir, import_library('sub/library').path)]
+
+        self.assertDirectory(self.distdir, [
+            pjoin(self.includedir, 'library.hpp'),
+            pjoin(self.bindir, executable('sub/program').path),
+            pjoin(self.libdir, shared_library('sub/library').path),
+        ] + extra)
 
         os.chdir(self.srcdir)
         cleandir(self.builddir)
@@ -45,11 +49,15 @@ class TestSubdirs(IntegrationTest):
         makedirs(self.libdir, exist_ok=True)
         self.build('install')
 
-        self.assertExists(pjoin(self.includedir, 'library.hpp'))
-        self.assertExists(pjoin(self.bindir, executable('sub/program').path))
-        self.assertExists(pjoin(
-            self.libdir, shared_library('sub/library').path
-        ))
+        extra = []
+        if platform_info().has_import_library:
+            extra = [pjoin(self.libdir, import_library('sub/library').path)]
+
+        self.assertDirectory(self.distdir, [
+            pjoin(self.includedir, 'library.hpp'),
+            pjoin(self.bindir, executable('sub/program').path),
+            pjoin(self.libdir, shared_library('sub/library').path),
+        ] + extra)
 
         os.chdir(self.srcdir)
         cleandir(self.builddir)

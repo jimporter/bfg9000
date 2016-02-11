@@ -1,7 +1,20 @@
 # -*- python -*-
 
-lib = shared_library('library', files=['library.cpp'])
-prog = executable('program', files=['program.cpp'], libs=[lib])
-hdr = header('library.hpp')
+shared_a = shared_library('shared_a', files=['shared_a.cpp'])
+shared_b = shared_library('shared_b', files=['shared_b.cpp'])
+static_a = static_library('static_a', files=['static_a.cpp'])
+static_b = static_library('static_b', files=['static_b.cpp'])
 
-install(prog, hdr)
+prog = executable(
+    'program',
+    files=['program.cpp'],
+    libs=[shared_a, shared_b, static_a, static_b],
+    # XXX: Fix linking to static libs on Windows so this isn't needed.
+    compile_options=['-DLIBSTATIC_A_STATIC', '-DLIBSTATIC_B_STATIC'],
+)
+install(prog, shared_a, static_a)
+
+shared_a_hdr = header('shared_a.hpp')
+static_a_hdr = header('static_a.hpp')
+
+install(shared_a_hdr, static_a_hdr)
