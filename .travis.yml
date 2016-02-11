@@ -8,15 +8,15 @@ python:
 os:
   - linux
 env:
-  - CC=gcc CXX=g++
-  - CC=clang CXX=clang++
+  - CC=gcc CXX=g++ CPPFLAGS="-Wall -Werror"
+  - CC=clang CXX=clang++ CPPFLAGS="-Wall -Werror"
 
 matrix:
   include:
     - language: generic
       python: 2.7
       os: osx
-      env: CC=clang CXX=clang++
+      env: CC=clang CXX=clang++ CPPFLAGS="-Wall -Werror"
     - python: 2.7
       os: linux
       env: TEST_COMMAND=lint

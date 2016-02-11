@@ -53,7 +53,7 @@ class CcCompiler(object):
         if mode == 'executable':
             return []
         elif mode in ['shared_library', 'static_library']:
-            args = ['-fPIC']
+            args = [] if self.platform.flavor == 'windows' else ['-fPIC']
             if self.platform.has_import_library:
                 args.append('-D' + library_macro(name, mode))
             return args
