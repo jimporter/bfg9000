@@ -118,8 +118,9 @@ class MsvcSharedLibraryLinker(MsvcLinker):
     def output_file(self, name, version=None, soversion=None):
         dllname = Path(name + self.platform.shared_library_ext, Root.builddir)
         impname = Path(name + '.lib', Root.builddir)
-        dll = DllLibrary(dllname, self.lang, impname)
-        return [dll, dll.import_lib]
+        expname = Path(name + '.exp', Root.builddir)
+        dll = DllLibrary(dllname, self.lang, impname, expname)
+        return [dll, dll.import_lib, dll.export_file]
 
     @property
     def _always_args(self):

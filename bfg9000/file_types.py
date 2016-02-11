@@ -134,12 +134,18 @@ class VersionedSharedLibrary(SharedLibrary):
         self.link = LinkLibrary(linkname, lang, self.soname, external)
 
 
+class ExportFile(File):
+    private = True
+
+
 class DllLibrary(SharedLibrary):
     install_root = InstallRoot.bindir
     # XXX: When adding support for .NET, this might need to become an instance
     # variable, since .NET DLLs aren't "private".
     private = True
 
-    def __init__(self, path, lang, import_name, external=False):
+    def __init__(self, path, lang, import_name, export_name=None,
+                 external=False):
         SharedLibrary.__init__(self, path, lang, external)
         self.import_lib = LinkLibrary(import_name, lang, self, external)
+        self.export_file = ExportFile(export_name, external)
