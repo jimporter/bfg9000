@@ -1,5 +1,5 @@
 from collections import Iterable
-from six import string_types
+from six import iteritems, string_types
 
 
 def isiterable(thing):
@@ -67,3 +67,21 @@ def uniques(iterable):
 
 def intersect(a, b):
     return [i for i in a if i in b]
+
+
+def merge_dicts(a, b):
+    for k, v in iteritems(b):
+        curr = a.get(k)
+        if curr is None:
+            a[k] = listify(v) if isiterable(v) else v
+        elif v is None:
+            continue
+        elif isiterable(curr):
+            if not isiterable(v):
+                raise TypeError('type mismatch for {}'.format(k))
+            curr.extend(v)
+        else:
+            if isiterable(v):
+                raise TypeError('type mismatch for {}'.format(k))
+            a[k] = v
+    return a

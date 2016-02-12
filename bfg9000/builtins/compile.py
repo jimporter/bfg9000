@@ -49,8 +49,8 @@ class Compile(Edge):
         output = self.builder.output_file(name)
 
         pkg_includes = chain.from_iterable(i.includes for i in self.packages)
-        self.all_includes = uniques(chain(pkg_includes, self.includes))
-        self._internal_options = self.builder.args(self.all_includes)
+        all_includes = uniques(chain(pkg_includes, self.includes))
+        self._internal_options = self.builder.args(all_includes)
 
         Edge.__init__(self, build, output, extra_deps)
 

@@ -1,6 +1,7 @@
 import os.path
 from itertools import chain
 
+from .winargparse import ArgumentParser
 from .utils import library_macro
 from .. import shell
 from ..file_types import *
@@ -56,6 +57,16 @@ class MsvcCompiler(object):
         else:
             raise ValueError("unknown mode '{}'".format(mode))
 
+    def parse_args(self, args):
+        parser = ArgumentParser()
+        parser.add('/I', '-I', type=list, dest='includes')
+        parser.add('/D', '-D', type=list, dest='defines')
+        parser.add('/nologo')
+
+        result, other = parser.parse_known(args)
+        result['other'] = other
+        return result
+
 
 class MsvcLinker(object):
     def __init__(self, env, lang, name, command, ldflags, ldlibs):
@@ -98,6 +109,16 @@ class MsvcLinker(object):
 
     def args(self, libraries, extra_dirs, output):
         return self._always_args + self._lib_dirs(libraries, extra_dirs)
+
+    def parse_args(self, args):
+        parser = ArgumentParser()
+        parser.add('/DLL')
+        parser.add('/IMPLIB', type=str, dest='implib')
+        parser.add('/nologo')
+
+        result, other = parser.parse_known(args)
+        result['other'] = other
+        return result
 
     def _link_lib(self, library):
         if isinstance(library, WholeArchive):
@@ -160,12 +181,8 @@ class MsvcStaticLinker(object):
     def output_file(self, name):
         return StaticLibrary(Path(name + '.lib', Root.builddir), self.lang)
 
-    @property
-    def mode_args(self):
-        return []
-
-    def args(self, libraries, extra_dirs, output):
-        return []
+    def parse_args(self, args):
+        return {'other': args}
 
 
 class MsvcPackageResolver(object):

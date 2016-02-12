@@ -34,10 +34,3 @@ class ArLinker(object):
         head, tail = os.path.split(name)
         path = os.path.join(head, 'lib' + tail + '.a')
         return file_types.StaticLibrary(Path(path, Root.builddir), self.lang)
-
-    @property
-    def mode_args(self):
-        return []
-
-    def args(self, libraries, extra_dirs, output):
-        return []

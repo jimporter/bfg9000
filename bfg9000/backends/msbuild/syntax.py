@@ -3,15 +3,16 @@ import ntpath
 import os
 import uuid
 from collections import defaultdict
+from itertools import chain
 from lxml import etree
 from lxml.builder import E
-from six import iteritems
+from six import iteritems, string_types
 
 from ... import path
+from ... import safe_str
 from ... import shell
-from ...safe_str import safe_str
 
-__all__ = ['Solution', 'UuidMap', 'VcxProject']
+__all__ = ['Solution', 'UuidMap', 'VcxProject', 'textify', 'textify_each']
 
 
 def uuid_str(uuid):
@@ -158,8 +159,23 @@ _path_vars = {
 }
 
 
-def path_str(node, out=False):
-    return ntpath.normpath(safe_str(node).realize(_path_vars[out]))
+def textify(thing, quoted=False, out=False):
+    thing = safe_str.safe_str(thing)
+
+    if isinstance(thing, safe_str.escaped_str):
+        return thing.string
+    elif isinstance(thing, string_types):
+        return shell.quote(thing) if quoted else thing
+    elif isinstance(thing, safe_str.jbos):
+        return ''.join(textify(i, quoted, out) for i in thing.bits)
+    elif isinstance(thing, path.Path):
+        return ntpath.normpath(thing.realize(_path_vars[out]))
+    else:
+        raise TypeError(type(thing))
+
+
+def textify_each(thing, quoted=False, out=False):
+    return (textify(i, quoted, out) for i in thing)
 
 
 class VcxProject(object):
@@ -168,9 +184,8 @@ class VcxProject(object):
 
     def __init__(self, name, uuid=None, version=None, mode='Application',
                  configuration=None, platform=None, output_file=None,
-                 import_lib=None, srcdir=None, files=None,
-                 compile_options=None, includes=None, link_options=None,
-                 libs=None, lib_dirs=None, dependencies=None):
+                 import_lib=None, srcdir=None, files=None, libs=None,
+                 options=None, dependencies=None):
         self.name = name
         self.uuid = uuid
         self.version = version or '14.0'
@@ -181,11 +196,8 @@ class VcxProject(object):
         self.import_lib = import_lib
         self.srcdir = srcdir
         self.files = files or []
-        self.compile_options = compile_options or []
-        self.includes = includes or []
-        self.link_options = link_options or []
         self.libs = libs or []
-        self.lib_dirs = lib_dirs or []
+        self.options = options or {}
         self.dependencies = dependencies or []
 
     @property
@@ -215,44 +227,42 @@ class VcxProject(object):
 
     def write(self, out):
         override_props = E.PropertyGroup()
-        if self.lib_dirs:
-            override_props.append(E.LibraryPath(
-                ';'.join(self.lib_dirs + ['$(LibraryPath)'])
-            ))
         override_props.append(E.TargetPath(
-            path_str(self.output_file, out=True)
+            textify(self.output_file, out=True)
         ))
 
-        compile_opts = E.ClCompile(
-            E.WarningLevel('Level3')
-        )
-        if self.compile_options:
-            compile_opts.append(E.AdditionalOptions(
-                ' '.join(shell.quote(i) for i in self.compile_options) +
-                ' %(AdditionalOptions)'
+        compile_opts = E.ClCompile()
+        if self.options.get('includes'):
+            compile_opts.append(E.AdditionalIncludeDirectories( ';'.join(chain(
+                textify_each(self.options['includes']),
+                ['%(AdditionalIncludeDirectories)']
+            )) ))
+        if self.options.get('defines'):
+            compile_opts.append(E.PreprocessorDefinitions(
+                ';'.join(textify_each(self.options['defines']))
             ))
-        if self.includes:
-            compile_opts.append(E.AdditionalIncludeDirectories(
-                ';'.join(path_str(i) for i in self.includes) +
-                ';%(AdditionalIncludeDirectories)'
-            ))
+        if self.options.get('compile'):
+            compile_opts.append(E.AdditionalOptions( ' '.join(chain(
+                textify_each(self.options['compile'], quoted=True),
+                ['%(AdditionalOptions)']
+            )) ))
 
         link_opts = E.Lib() if self.mode == 'StaticLibrary' else E.Link()
         link_opts.append(E.OutputFile('$(TargetPath)'))
         if self.import_lib:
             link_opts.append(E.ImportLibrary(
-                path_str(self.import_lib, out=True)
+                textify(self.import_lib, out=True)
             ))
-        if self.link_options:
-            link_opts.append(E.AdditionalOptions(
-                ' '.join(shell.quote(i) for i in self.link_options) +
-                ' %(AdditionalOptions)'
-            ))
+        if self.options.get('link'):
+            link_opts.append(E.AdditionalOptions( ' '.join(chain(
+                textify_each(self.options['link'], quoted=True, out=True),
+                ['%(AdditionalOptions)']
+            )) ))
         if self.libs:
-            link_opts.append(E.AdditionalDependencies(
-                ';'.join(path_str(i, out=True) for i in self.libs) +
-                ';%(AdditionalDependencies)'
-            ))
+            link_opts.append(E.AdditionalDependencies( ';'.join(chain(
+                textify_each(self.libs, out=True),
+                ['%(AdditionalDependencies)']
+            )) ))
 
         names = defaultdict(lambda: [])
         for i in self.files:
@@ -261,14 +271,14 @@ class VcxProject(object):
 
         compiles = E.ItemGroup()
         for i in self.files:
-            c = E.ClCompile(Include=path_str(i))
+            c = E.ClCompile(Include=textify(i))
             dupes = names[ ntpath.splitext(i.path.basename())[0] ]
             if len(dupes) > 1:
                 # XXX: This can still fail rarely if the paths' bases are
                 # different.
                 prefix = ntpath.commonprefix([j.suffix for j in dupes])
                 suffix = path.Path(i.path.parent().suffix[len(prefix):])
-                c.append(E.ObjectFileName(path_str(suffix) + '\\'))
+                c.append(E.ObjectFileName(textify(suffix) + '\\'))
             compiles.append(c)
 
         project = E.Project({'DefaultTargets': 'Build',

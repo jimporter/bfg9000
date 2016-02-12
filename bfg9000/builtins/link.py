@@ -1,5 +1,6 @@
 import os.path
 from itertools import chain
+from six.moves import reduce
 
 from .hooks import builtin
 from .symlink import Symlink
@@ -7,7 +8,7 @@ from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..build_inputs import build_input, Edge
 from ..file_types import *
-from ..iterutils import first, iterate, listify, uniques
+from ..iterutils import first, iterate, listify, merge_dicts, uniques
 from ..path import Root
 from ..shell import posix as pshell
 
@@ -43,24 +44,17 @@ class Link(Edge):
         self.builder = env.linker(langs, self.mode)
 
         self.user_options = pshell.listify(link_options)
+        self._internal_options = []
 
         output = self._output_file(name)
+        Edge.__init__(self, build, output, extra_deps)
 
-        # XXX: Create a LinkOptions named tuple for managing these args?
-        pkg_dirs = chain.from_iterable(i.lib_dirs for i in self.packages)
-        self._internal_options = self.builder.args(
-            self.all_libs, pkg_dirs, output
-        )
+        self._fill_options()
 
         primary = first(output)
-        primary.runtime_deps = sum(
-            (self.__get_runtime_deps(i) for i in self.libs), []
-        )
         if hasattr(self.builder, 'post_install'):
             primary.post_install = self.builder.post_install(output)
-
         build['defaults'].add(primary)
-        Edge.__init__(self, build, output, extra_deps)
 
     @property
     def options(self):
@@ -74,15 +68,6 @@ class Link(Edge):
         head, tail = os.path.split(name)
         return os.path.join(head, cls._prefix + tail)
 
-    @staticmethod
-    def __get_runtime_deps(library):
-        if isinstance(library, LinkLibrary):
-            return library.runtime_deps
-        elif isinstance(library, SharedLibrary):
-            return [library]
-        else:
-            return []
-
 
 class StaticLink(Link):
     mode = 'static_library'
@@ -91,6 +76,8 @@ class StaticLink(Link):
 
     def __init__(self, *args, **kwargs):
         Link.__init__(self, *args, **kwargs)
+
+    def _fill_options(self):
         # XXX: Allow these options, and forward them to whatever links with
         # this library.
         if self.options:
@@ -106,9 +93,25 @@ class DynamicLink(Link):
     msbuild_mode = 'Application'
     _prefix = ''
 
-    def __init__(self, *args, **kwargs):
-        Link.__init__(self, *args, **kwargs)
+    def _fill_options(self):
+        # XXX: Create a LinkOptions namedtuple for managing these args?
+        pkg_dirs = chain.from_iterable(i.lib_dirs for i in self.packages)
+        self._internal_options = self.builder.args(
+            self.all_libs, pkg_dirs, self.output
+        )
         self.lib_options = self.builder.libs(self.all_libs)
+        first(self.output).runtime_deps = sum(
+            (self.__get_runtime_deps(i) for i in self.libs), []
+        )
+
+    @staticmethod
+    def __get_runtime_deps(library):
+        if isinstance(library, LinkLibrary):
+            return library.runtime_deps
+        elif isinstance(library, SharedLibrary):
+            return [library]
+        else:
+            return []
 
 
 class SharedLink(DynamicLink):
@@ -250,22 +253,17 @@ def ninja_link(rule, build_inputs, buildfile, env):
 try:
     from ..backends.msbuild import writer as msbuild
 
-    def _reduce_options(files, global_options):
-        compilers = uniques(i.creator.builder for i in files)
-        langs = uniques(i.lang for i in files)
+    def _reduce_compile_options(files, global_cflags):
+        creators = [i.creator for i in files if i.creator]
+        compilers = uniques(i.builder for i in creators)
 
-        per_file_opts = []
-        for i in files:
-            # We intentionally exclude internal_options, since MSBuild handles
-            # these its own way.
-            for opts in [i.creator.link_options, i.creator.user_options]:
-                if opts not in per_file_opts:
-                    per_file_opts.append(opts)
-
-        return list(chain(
-            chain.from_iterable(i.global_args for i in compilers),
-            chain.from_iterable(global_options[i] for i in langs),
-            chain.from_iterable(per_file_opts)
+        return reduce(merge_dicts, chain(
+            (i.parse_args(msbuild.textify_each(
+                i.global_args + global_cflags[i.lang]
+            )) for i in compilers),
+            (i.builder.parse_args(msbuild.textify_each(
+                i.options
+            )) for i in creators)
         ))
 
     @msbuild.rule_handler(StaticLink, DynamicLink, SharedLink)
@@ -281,12 +279,16 @@ try:
                 raise ValueError('unknown dependency for {!r}'.format(dep))
             dependencies.append(solution[dep_output])
 
-        includes = uniques(chain.from_iterable(
-            i.creator.all_includes for i in rule.files
+        output = first(rule.output)
+        import_lib = getattr(output, 'import_lib', None)
+        cflags = _reduce_compile_options(
+            rule.files, build_inputs['compile_options']
+        )
+        ldflags = rule.builder.parse_args(msbuild.textify_each(
+            (rule.builder.global_args + build_inputs['link_options'] +
+             rule.options), out=True
         ))
 
-        output = first(rule.output)
-        import_lib = rule.output[1] if rule.mode == 'shared_library' else None
         project = msbuild.VcxProject(
             name=rule.name,
             version=env.getvar('VISUALSTUDIOVERSION'),
@@ -296,18 +298,16 @@ try:
             import_lib=import_lib,
             srcdir=env.srcdir.string(),
             files=[i.creator.file for i in rule.files],
-            compile_options=_reduce_options(
-                rule.files, build_inputs['compile_options']
+            libs=(
+                getattr(rule.builder, 'global_libs', []) +
+                getattr(rule, 'lib_options', [])
             ),
-            includes=includes,
-            # We intentionally exclude internal_options from the link step,
-            # since MSBuild handles these its own way.
-            link_options=(
-                rule.builder.global_args + rule.user_options +
-                build_inputs['link_options']
-            ),
-            libs=getattr(rule.builder, 'global_libs', []) + rule.all_libs,
-            lib_dirs=sum((i.lib_dirs for i in rule.packages), []),
+            options={
+                'includes': cflags['includes'],
+                'defines' : cflags['defines'],
+                'compile' : cflags['other'],
+                'link'    : ldflags['other'],
+            },
             dependencies=dependencies,
         )
         solution[output] = project
