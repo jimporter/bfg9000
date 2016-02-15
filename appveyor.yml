@@ -11,12 +11,6 @@ environment:
   PYTHON: C:\Python27
 
   matrix:
-    - BACKENDS: ninja make
-      CC: gcc
-      CXX: g++
-      CPPFLAGS: -IC:\projects\bfg9000\include -Wall -Werror
-      MAKE: mingw32-make
-      MINGW_PATH: C:\msys64\mingw64\bin
     - VS: C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall.bat
       CHOCO_EXTRAS: gnuwin32-make.portable
       CPPFLAGS: /IC:\projects\bfg9000\include /WX /EHsc
@@ -25,6 +19,12 @@ environment:
       CPPFLAGS: /IC:\projects\bfg9000\include /WX /EHsc
       BOOST_INCLUDEDIR: C:\Libraries\boost_1_59_0
       BOOST_LIBRARYDIR: C:\Libraries\boost_1_59_0\lib32-msvc-14.0
+    - BACKENDS: ninja make
+      CC: gcc
+      CXX: g++
+      CPPFLAGS: -IC:\projects\bfg9000\include -Wall -Werror
+      MAKE: mingw32-make
+      MINGW_PATH: C:\msys64\mingw64\bin
 
 cache:
   - C:\ProgramData\chocolatey\bin -> appveyor.yml
