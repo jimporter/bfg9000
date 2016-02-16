@@ -5,10 +5,10 @@ from .integration import *
 is_mingw = platform_name() == 'windows' and env.compiler('c++').flavor == 'cc'
 
 
-class TestSystemLibrary(IntegrationTest):
+class TestSystemPackage(IntegrationTest):
     def __init__(self, *args, **kwargs):
         IntegrationTest.__init__(
-            self, os.path.join(examples_dir, '04_external_library'),
+            self, os.path.join(examples_dir, '04_package'),
             *args, **kwargs
         )
 
@@ -18,7 +18,7 @@ class TestSystemLibrary(IntegrationTest):
         self.assertOutput([executable('program')], '')
 
 
-class TestBoostLibrary(IntegrationTest):
+class TestBoostPackage(IntegrationTest):
     def __init__(self, *args, **kwargs):
         IntegrationTest.__init__(self, 'boost', *args, **kwargs)
 
