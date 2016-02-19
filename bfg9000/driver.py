@@ -77,7 +77,7 @@ def execute_script(env, filename=bfgfile):
         os.chdir(env.srcdir.string())
         code = compile(f.read(), filename, 'exec')
         try:
-            exec(code, builtin_dict, {})
+            exec(code, builtin_dict)
         except SystemExit:
             pass
         except Exception as e:
