@@ -109,7 +109,9 @@ elif platform_name == 'Linux':
         def run(self):
             if not self.force:
                 try:
-                    output = subprocess.check_output(['which', 'patchelf'])
+                    output = subprocess.check_output(
+                        ['which', 'patchelf'], universal_newlines=True
+                    )
                     print('Found patchelf at {}'.format(output.strip()))
                     return
                 except:
