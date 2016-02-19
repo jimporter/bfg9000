@@ -1,6 +1,5 @@
 import os.path
 from collections import defaultdict
-from itertools import chain
 from six import string_types
 
 from .hooks import builtin
@@ -8,7 +7,7 @@ from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..build_inputs import build_input, Edge
 from ..file_types import *
-from ..iterutils import iterate, listify, uniques
+from ..iterutils import iterate, listify
 from ..path import Path, Root
 from ..shell import posix as pshell
 
@@ -48,9 +47,8 @@ class Compile(Edge):
 
         output = self.builder.output_file(name)
 
-        pkg_includes = chain.from_iterable(i.includes for i in self.packages)
-        all_includes = uniques(chain(pkg_includes, self.includes))
-        self._internal_options = self.builder.args(all_includes)
+        pkg_cflags = sum((i.cflags(self.builder) for i in self.packages), [])
+        self._internal_options = self.builder.args(self.includes) + pkg_cflags
 
         Edge.__init__(self, build, output, extra_deps)
 

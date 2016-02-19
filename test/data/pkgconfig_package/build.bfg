@@ -1,0 +1,4 @@
+# -*- python -*-
+
+ogg = pkgconfig_package('ogg')
+executable('program', files=['program.cpp'], packages=[ogg])

@@ -100,15 +100,15 @@ class MsvcLinker(object):
     def _always_args(self):
         return []
 
-    def _lib_dirs(self, libraries, extra_dirs):
+    def lib_dirs(self, libraries, extra_dirs=[]):
         dirs = uniques(chain(
             (i.path.parent() for i in iterate(libraries)),
             extra_dirs
         ))
         return ['/LIBPATH:' + i for i in dirs]
 
-    def args(self, libraries, extra_dirs, output):
-        return self._always_args + self._lib_dirs(libraries, extra_dirs)
+    def args(self, libraries, output):
+        return self._always_args + self.lib_dirs(libraries)
 
     def parse_args(self, args):
         parser = ArgumentParser()
@@ -125,7 +125,7 @@ class MsvcLinker(object):
             raise ValueError('MSVC does not support whole-archives')
         return [library.path.basename()]
 
-    def libs(self, libraries):
+    def libs(self, libraries, always_libs=True):
         return sum((self._link_lib(i) for i in libraries), [])
 
 
@@ -150,8 +150,8 @@ class MsvcSharedLibraryLinker(MsvcLinker):
     def _import_lib(self, library):
         return ['/IMPLIB:' + library[1].path]
 
-    def args(self, libraries, extra_dirs, output):
-        return (MsvcLinker.args(self, libraries, extra_dirs, output) +
+    def args(self, libraries, output):
+        return (MsvcLinker.args(self, libraries, output) +
                 self._import_lib(output))
 
 

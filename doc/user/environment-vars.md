@@ -225,6 +225,12 @@ Default: *none*
 *Windows-only*. A list of valid extensions for executable files under Windows,
 separated by `;`.
 
+#### *PKG_CONFIG*
+Default: `pkg_config`
+{: .subtitle}
+
+The command to use when fetching pkg-config package information.
+
 ## Command variables
 ---
 

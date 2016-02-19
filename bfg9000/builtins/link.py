@@ -12,7 +12,6 @@ from ..iterutils import first, iterate, listify, merge_dicts, uniques
 from ..path import Root
 from ..shell import posix as pshell
 
-
 build_input('link_options')(list)
 
 
@@ -26,7 +25,6 @@ class Link(Edge):
         # XXX: Try to detect if a string refers to a shared lib?
         self.libs = [sourcify(i, Library, StaticLibrary)
                      for i in iterate(libs)]
-        self.all_libs = sum((i.libraries for i in self.packages), self.libs)
 
         self.files = builtins['object_files'](
             files, include=include, packages=packages, options=compile_options,
@@ -39,8 +37,9 @@ class Link(Edge):
         for c in (i.creator for i in self.files if i.creator):
             c.link_options.extend(c.builder.link_args(self.name, self.mode))
 
-        langs = chain([lang], (i.lang for i in self.files),
-                      (i.lang for i in self.all_libs))
+        langs = chain([lang], (i.lang for i in chain(
+            self.files, self.libs, self.packages
+        )))
         self.builder = env.linker(langs, self.mode)
 
         self.user_options = pshell.listify(link_options)
@@ -83,7 +82,7 @@ class StaticLink(Link):
         if self.options:
             raise ValueError('link options are not allowed for static ' +
                              'libraries')
-        if self.all_libs:
+        if self.libs:
             raise ValueError('libraries cannot be linked into static ' +
                              'libraries')
 
@@ -95,11 +94,12 @@ class DynamicLink(Link):
 
     def _fill_options(self):
         # XXX: Create a LinkOptions namedtuple for managing these args?
-        pkg_dirs = chain.from_iterable(i.lib_dirs for i in self.packages)
-        self._internal_options = self.builder.args(
-            self.all_libs, pkg_dirs, self.output
-        )
-        self.lib_options = self.builder.libs(self.all_libs)
+        pkg_ldflags = sum((i.ldflags(self.builder) for i in self.packages), [])
+        pkg_ldlibs = sum((i.ldlibs(self.builder) for i in self.packages), [])
+
+        self._internal_options = (self.builder.args(self.libs, self.output) +
+                                  pkg_ldflags)
+        self.lib_options = self.builder.libs(self.libs) + pkg_ldlibs
         first(self.output).runtime_deps = sum(
             (self.__get_runtime_deps(i) for i in self.libs), []
         )

@@ -1,10 +1,12 @@
 import os.path
 import re
 from packaging.version import Version
+import subprocess
 
 from .hooks import builtin
 from .find import find
 from .version import check_version, make_specifier
+from .. import shell
 from ..file_types import Executable
 from ..iterutils import iterate, listify
 from ..path import Path, Root
@@ -12,17 +14,53 @@ from ..platforms import which
 
 
 class Package(object):
-    def __init__(self, includes=None, libraries=None, lib_dirs=None):
-        self.includes = includes or []
-        self.libraries = libraries or []
-        self.lib_dirs = lib_dirs or []
+    pass
 
 
-class BoostPackage(Package):
-    def __init__(self, includes=None, libraries=None, lib_dirs=None,
-                 version=None):
-        Package.__init__(self, includes, libraries, lib_dirs)
+class SystemPackage(Package):
+    def __init__(self, includes=None, lib_dirs=None, libraries=None,
+                 lang=None, version=None):
+        self._includes = includes or []
+        self._lib_dirs = lib_dirs or []
+        self._libraries = libraries or []
+        self.lang = lang
         self.version = version
+
+    def cflags(self, builder):
+        return builder.args(self._includes)
+
+    def ldflags(self, builder):
+        return builder.lib_dirs(self._libraries, self._lib_dirs)
+
+    def ldlibs(self, builder):
+        return builder.libs(self._libraries, always_libs=False)
+
+
+class PkgConfigPackage(Package):
+    def __init__(self, name, pkg_config, lang=None):
+        self.name = name
+        self._pkg_config = pkg_config
+        self.lang = lang
+
+    def _call(self, command, *args):
+        return subprocess.check_output(
+            getattr(self._pkg_config, command)(
+                self._pkg_config.command, self.name, *args
+            ), universal_newlines=True
+        ).strip()
+
+    @property
+    def version(self):
+        return Version(self._call('version'))
+
+    def cflags(self, builder):
+        return shell.split(self._call('cflags', builder.flavor == 'msvc'))
+
+    def ldflags(self, builder):
+        return shell.split(self._call('ldflags', builder.flavor == 'msvc'))
+
+    def ldlibs(self, builder):
+        return shell.split(self._call('ldlibs', builder.flavor == 'msvc'))
 
 
 def _boost_version(header, required_version=None):
@@ -41,7 +79,8 @@ def _boost_version(header, required_version=None):
 def system_package(env, name, lang='c', kind='any'):
     if kind not in ('any', 'shared', 'static'):
         raise ValueError("kind must be one of 'any', 'shared', or 'static'")
-    return Package([], [env.builder(lang).packages.library(name, kind)])
+    lib = env.builder(lang).packages.library(name, kind)
+    return SystemPackage(libraries=[lib], lang=lang)
 
 
 @builtin.globals('env')
@@ -68,9 +107,10 @@ def boost_package(env, name=None, version=None):
                 try:
                     header = pkg.header(version_hpp, max(dirs))
                     boost_version = _boost_version(header, version)
-                    return BoostPackage(
+                    return SystemPackage(
                         includes=[header],
                         lib_dirs=r'C:\Boost\lib',
+                        lang='c++',
                         version=boost_version
                     )
                 except IOError:
@@ -83,19 +123,29 @@ def boost_package(env, name=None, version=None):
         if not env.linker('c++', 'shared_library').auto_link:
             # XXX: Don't require auto-link.
             raise ValueError('Boost on Windows requires auto-link')
-        return BoostPackage(
+        return SystemPackage(
             includes=[header],
             lib_dirs=listify(libdir),
+            lang='c++',
             version=boost_version
         )
     else:
         dirs = [libdir] if libdir else None
-        return BoostPackage(
+        return SystemPackage(
             includes=[header],
             libraries=[pkg.library('boost_' + i, search_dirs=dirs)
                        for i in iterate(name)],
+            lang='c++',
             version=boost_version
         )
+
+
+@builtin.globals('env')
+def pkgconfig_package(env, name, version=None, lang='c'):
+    pkg = PkgConfigPackage(name, env.tool('pkg_config'), lang)
+    version = make_specifier(version)
+    check_version(pkg.version, version, name)
+    return pkg
 
 
 @builtin.globals('env')

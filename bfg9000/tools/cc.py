@@ -119,7 +119,7 @@ class CcLinker(object):
     def _always_args(self):
         return []
 
-    def _lib_dirs(self, libraries, extra_dirs):
+    def lib_dirs(self, libraries, extra_dirs=[]):
         dirs = uniques(chain(
             (i.path.parent() for i in iterate(libraries)
              if not isinstance(i, StaticLibrary)),
@@ -150,8 +150,8 @@ class CcLinker(object):
             raise ValueError('unrecognized rpath flavor "{}"'
                              .format(self.platform.rpath_flavor))
 
-    def args(self, libraries, extra_dirs, output):
-        return ( self._always_args + self._lib_dirs(libraries, extra_dirs) +
+    def args(self, libraries, output):
+        return ( self._always_args + self.lib_dirs(libraries) +
                  self._rpath(libraries, first(output).path.parent()) )
 
     @property
@@ -171,8 +171,9 @@ class CcLinker(object):
         # in the case of MinGW).
         return ['-l' + self._extract_lib_name(library)]
 
-    def libs(self, libraries):
-        return sum((self._link_lib(i) for i in libraries), self._always_libs)
+    def libs(self, libraries, always_libs=True):
+        base = self._always_libs if always_libs else []
+        return sum((self._link_lib(i) for i in libraries), base)
 
     def post_install(self, output):
         if self.platform.rpath_flavor is None:
@@ -242,8 +243,8 @@ class CcSharedLibraryLinker(CcLinker):
         else:
             return ['-Wl,-soname,' + soname.path.basename()]
 
-    def args(self, libraries, extra_dirs, output):
-        return (CcLinker.args(self, libraries, extra_dirs, output) +
+    def args(self, libraries, output):
+        return (CcLinker.args(self, libraries, output) +
                 self._import_lib(output) + self._soname(first(output)))
 
 

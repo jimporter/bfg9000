@@ -240,9 +240,25 @@ run.
 Search for a [Boost](https://www.boost.org/) library. You can specify *name* (as
 a string or a list) to specify a specific Boost library (or libraries); for
 instance, `'program_options'`. For header-only libraries, you can omit *name*.
+If *version* is specified, it will ensure that the installed version of Boost
+meets the version requirement; it must be formatted as a Python [version
+specifier](https://www.python.org/dev/peps/pep-0440/#version-specifiers).
 
 This rule recognizes the [packaging environment
 variables](environment-vars.md#packaging-variables).
+
+### pkgconfig_package(*name*, [*version*], [*lang*])
+
+Search for a package named *name* via
+[pkg-config](https://www.freedesktop.org/wiki/Software/pkg-config/). If
+*version* is specified, it will ensure that the installed version of the package
+meets the version requirement; it must be formatted as a Python [version
+specifier](https://www.python.org/dev/peps/pep-0440/#version-specifiers). *lang*
+is the source language of the library (`'c'` by default); this is useful if you
+need to link a static library written in C++ with a program written in C.
+
+This rule recognizes the following environment variable:
+[`PKG_CONFIG`](environment-vars.md#pkg_config),
 
 ### system_executable(*name*)
 
