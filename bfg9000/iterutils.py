@@ -66,7 +66,7 @@ def uniques(iterable):
 
 
 def intersect(a, b):
-    return [i for i in a if i in b]
+    return (i for i in a if i in b)
 
 
 def merge_dicts(a, b):
@@ -76,6 +76,8 @@ def merge_dicts(a, b):
             a[k] = listify(v) if isiterable(v) else v
         elif v is None:
             continue
+        elif isinstance(curr, dict):
+            merge_dicts(curr, v)
         elif isiterable(curr):
             if not isiterable(v):
                 raise TypeError('type mismatch for {}'.format(k))

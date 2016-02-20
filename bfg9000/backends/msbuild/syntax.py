@@ -182,6 +182,15 @@ class VcxProject(object):
     _XMLNS = 'http://schemas.microsoft.com/developer/msbuild/2003'
     _DOCTYPE = '<?xml version="1.0" encoding="utf-8"?>'
 
+    _warning_levels = {
+        '0'  : 'TurnOffAllWarnings',
+        '1'  : 'Level1',
+        '2'  : 'Level2',
+        '3'  : 'Level3',
+        '4'  : 'Level4',
+        'all': 'EnableAllWarnings',
+    }
+
     def __init__(self, name, uuid=None, version=None, mode='Application',
                  configuration=None, platform=None, output_file=None,
                  import_lib=None, srcdir=None, files=None, libs=None,
@@ -233,6 +242,15 @@ class VcxProject(object):
         )
 
         compile_opts = E.ClCompile()
+        warnings = self.options.get('warnings', {})
+        if warnings.get('level') is not None:
+            compile_opts.append(E.WarningLevel(
+                self._warning_levels[warnings['level']]
+            ))
+        if warnings.get('as_error') is not None:
+            compile_opts.append(E.TreatWarningAsError(
+                'true' if warnings['as_error'] else 'false'
+            ))
         if self.options.get('includes'):
             compile_opts.append(E.AdditionalIncludeDirectories( ';'.join(chain(
                 textify_each(self.options['includes']),

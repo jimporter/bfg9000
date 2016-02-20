@@ -322,8 +322,9 @@ try:
                 getattr(rule, 'lib_options', [])
             ),
             options={
-                'includes': cflags['includes'],
                 'defines' : cflags['defines'],
+                'includes': cflags['includes'],
+                'warnings': cflags['warnings'],
                 'compile' : cflags['other'],
                 'link'    : ldflags['other'],
             },
