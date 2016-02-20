@@ -9,8 +9,6 @@ prog = executable(
     'program',
     files=['program.cpp'],
     libs=[shared_a, shared_b, static_a, static_b],
-    # XXX: Fix linking to static libs on Windows so this isn't needed.
-    compile_options=['-DLIBSTATIC_A_STATIC', '-DLIBSTATIC_B_STATIC'],
 )
 install(prog, shared_a, static_a)
 

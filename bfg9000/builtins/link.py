@@ -41,7 +41,15 @@ class Link(Edge):
                                 self.packages)
 
         for c in (i.creator for i in self.files if i.creator):
-            c.link_options.extend(c.builder.link_args(self.name, self.mode))
+            # XXX: Passing all the static libs' names to the compiler to add
+            # the appropriate macros is a bit convoluted. Perhaps this could be
+            # simplified when we add support for "semantic options" (i.e.
+            # options that are specified like define('FOO') instead of
+            # '-DFOO'). Then the linkers could generate those options in a
+            # generic way.
+            c.link_options.extend(c.builder.link_args(
+                self.name, self.mode, (f['name'] for f in fwd if 'name' in f)
+            ))
 
         langs = chain([lang], (i.lang for i in chain(
             self.files, self.libs, self.packages
@@ -49,7 +57,7 @@ class Link(Edge):
         self.builder = env.linker(langs, self.mode)
 
         self.user_options = pshell.listify(link_options)
-        self._extra_options = sum((i.get('options', []) for i in fwd), [])
+        self._extra_options = sum((i.get('link_options', []) for i in fwd), [])
         self._internal_options = []
 
         output = self._output_file(name)
@@ -86,6 +94,7 @@ class StaticLink(Link):
     def _fill_options(self):
         primary = first(self.output)
         primary.forward_args = {
+            'name': self.name,
             'options': self.options,
             'libs': self.libs,
             'packages': self.packages,

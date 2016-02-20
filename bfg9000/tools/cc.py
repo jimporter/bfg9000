@@ -49,16 +49,20 @@ class CcCompiler(object):
     def args(self, includes):
         return sum((self._include_dir(i) for i in includes), [])
 
-    def link_args(self, name, mode):
-        if mode == 'executable':
-            return []
-        elif mode in ['shared_library', 'static_library']:
-            args = [] if self.platform.flavor == 'windows' else ['-fPIC']
+    def link_args(self, name, mode, static_libs):
+        args = []
+        if mode in ['shared_library', 'static_library']:
+            if self.platform.flavor != 'windows':
+                args.append('-fPIC')
             if self.platform.has_import_library:
                 args.append('-D' + library_macro(name, mode))
-            return args
-        else:
+        elif mode != 'executable':
             raise ValueError("unknown mode '{}'".format(mode))
+
+        if self.platform.has_import_library:
+            args.extend('-D' + library_macro(i, 'static_library')
+                        for i in static_libs)
+        return args
 
 
 class CcLinker(object):

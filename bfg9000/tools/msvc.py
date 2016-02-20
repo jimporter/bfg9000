@@ -39,23 +39,22 @@ class MsvcCompiler(object):
     def output_file(self, name):
         return ObjectFile(Path(name + '.obj', Root.builddir), self.lang)
 
-    @property
-    def library_args(self):
-        return []
-
     def _include_dir(self, directory):
         return ['/I' + directory.path]
 
     def args(self, includes):
         return sum((self._include_dir(i) for i in includes), [])
 
-    def link_args(self, name, mode):
-        if mode == 'executable':
-            return []
-        elif mode in ['shared_library', 'static_library']:
-            return ['/D' + library_macro(name, mode)]
-        else:
+    def link_args(self, name, mode, static_libs):
+        args = []
+        if mode in ['shared_library', 'static_library']:
+            args.append('/D' + library_macro(name, mode))
+        elif mode != 'executable':
             raise ValueError("unknown mode '{}'".format(mode))
+
+        args.extend('/D' + library_macro(i, 'static_library')
+                    for i in static_libs)
+        return args
 
     def parse_args(self, args):
         parser = ArgumentParser()
