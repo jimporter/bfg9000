@@ -42,27 +42,25 @@ pre {
   margin-bottom: 10.5px;
 }
 
-.admonition-title {
+.admonition > .admonition-title {
   margin: 0;
-  padding-top: 10px;
-  padding-bottom: 10px;
+  padding: 10px 15px;
   border-bottom: 1px solid;
   font-size: 17px;
 }
 
-.admonition > p {
-  padding-left: 15px;
-  padding-right: 15px;
+.admonition > * {
+  margin-left: 15px;
+  margin-right: 15px;
 }
 
-.admonition > p:not(.admonition-title):first-of-type,
-.admonition > .admonition-title + p {
-  padding-top: 15px;
+.admonition > *:not(.admonition-title):first-of-type,
+.admonition > .admonition-title + * {
+  margin-top: 15px;
 }
 
-.admonition > p:last-child {
-  margin-bottom: 0;
-  padding-bottom: 15px;
+.admonition > *:last-child {
+  margin-bottom: 15px;
 }
 
 /* Style each kind of admonition. */

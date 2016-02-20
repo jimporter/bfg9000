@@ -9,6 +9,8 @@ extra_css:
 markdown_extensions:
 - admonition
 - attr_list
+- codehilite:
+    use_pygments: false
 
 pages:
 - Home: index.md

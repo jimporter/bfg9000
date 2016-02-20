@@ -106,19 +106,38 @@ relevant language.
     is the *import library*, used when linking to this library. As a result,
     `my_lib.all` returns a list containing two files.
 
+    Additionally, this step will add a preprocessor macro on Windows named
+    `LIB<NAME>_EXPORTS` that can be used for declaring public symbols. The
+    following snippet shows how you can use this macro (and `LIB<NAME>_STATIC`)
+    to set the appropriate attributes for your public symbols:
+
+        :::c
+        #if defined(_WIN32) && !defined(LIBLIBRARY_STATIC)
+        #  ifdef LIBLIBRARY_EXPORTS
+        #    define LIB_PUBLIC __declspec(dllexport)
+        #  else
+        #    define LIB_PUBLIC __declspec(dllimport)
+        #  endif
+        #else
+        #  define LIB_PUBLIC
+        #endif
+
 ### static_library(*name*, [*files*, ..., [*extra_deps*]])
 
 Create a build step that builds a static library named *name*. Its arguments are
-the same as [*executable*](#executablename-files-extra_deps).
+the same as [*executable*](#executablename-files-extra_deps). Link-related
+arguments (*link_options*, *libs*, and libraries from *packages*) have no direct
+effect on this build step. Instead, they're cached and forwarded on to any
+dynamic linking step that uses this static library.
 
 This build step recognizes the [static linking environment
 variables](environment-vars.md#static-linking).
 
 !!! note
-    Link-related arguments (*link_options*, *libs*, and libraries from
-    *packages*) have no direct effect on this build step. Instead, they're
-    cached and forwarded on to any dynamic linking step that uses this static
-    library.
+    On Windows, this step will add a preprocessor macro on Windows named
+    `LIB<NAME>_STATIC` that can be used for declaring public symbols. See
+    [*shared_library*](#shared_libraryname-files-extra_deps) for more details on
+    how to use this macro.
 
 ## File types
 
