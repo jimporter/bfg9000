@@ -160,22 +160,21 @@ provide you with some useful information to help you get started.</p>
 <h2 id="running-tests">Running tests</h2>
 <p>bfg9000 has a suite of tests to ensure that everything works properly. (Well,
 everything that has tests!) As you may expect, you can run these via:</p>
-<pre><code class="sh">$ python setup.py test
-</code></pre>
+<pre class="codehilite"><code class="language-sh">$ python setup.py test</code></pre>
+
 
 <p>If you'd like to run a subset of tests, such as when trying to fix a bug in a
 specific area of the code, you can limit the tests that get run. For instance,
 to run only the tests in <code>test/integration/test_simple.py</code>, you can type:</p>
-<pre><code class="sh">$ python setup.py test -s test.integration.test_simple
-</code></pre>
+<pre class="codehilite"><code class="language-sh">$ python setup.py test -s test.integration.test_simple</code></pre>
+
 
 <h2 id="linting-code">Linting code</h2>
 <p>bfg9000 uses <a href="https://flake8.readthedocs.org/en/latest/">flake8</a> for linting.
 Since users generally don't need to worry about linting the codebase, this isn't
 automatically installed by setup.py. You'll need to install it yourself. Once
 installed, you can use the <code>lint</code> command like so:</p>
-<pre><code class="sh">$ python setup.py lint
-</code></pre></div>
+<pre class="codehilite"><code class="language-sh">$ python setup.py lint</code></pre></div>
         </div>
 
         <script src="../../js/jquery-1.10.2.min.js"></script>
