@@ -1,7 +1,7 @@
 #include "library.hpp"
 
-#include <iostream>
+#include "inner_library.hpp"
 
 void hello() {
-  std::cout << "hello, library!" << std::endl;
+  hello_impl();
 }

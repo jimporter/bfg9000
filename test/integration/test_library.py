@@ -22,7 +22,8 @@ class TestStaticLibrary(IntegrationTest):
 
     def test_build(self):
         self.build()
-        self.assertOutput([executable('program')], 'hello, library!\n')
+        self.assertOutput([executable('program')],
+                          'hello, library!\n')
 
 
 @unittest.skipIf(env.platform.name == 'windows',

@@ -20,19 +20,25 @@ class Link(Edge):
                  libs=None, packages=None, compile_options=None,
                  link_options=None, lang=None, extra_deps=None):
         self.name = self.__name(name)
-        self.packages = listify(packages)
-
-        # XXX: Try to detect if a string refers to a shared lib?
-        self.libs = [sourcify(i, Library, StaticLibrary)
-                     for i in iterate(libs)]
 
         self.files = builtins['object_files'](
             files, include=include, packages=packages, options=compile_options,
             lang=lang
         )
+
+        # XXX: Try to detect if a string refers to a shared lib?
+        self.libs = [sourcify(i, Library, StaticLibrary)
+                     for i in iterate(libs)]
+        fwd = [i.forward_args for i in self.libs if hasattr(i, 'forward_args')]
+        self.all_libs = sum((i.get('libs', []) for i in fwd), self.libs)
+
         if ( len(self.files) == 0 and
              not any(isinstance(i, WholeArchive) for i in self.libs) ):
             raise ValueError('need at least one source file')
+
+        self.packages = listify(packages)
+        self.all_packages = sum((i.get('packages', []) for i in fwd),
+                                self.packages)
 
         for c in (i.creator for i in self.files if i.creator):
             c.link_options.extend(c.builder.link_args(self.name, self.mode))
@@ -43,6 +49,7 @@ class Link(Edge):
         self.builder = env.linker(langs, self.mode)
 
         self.user_options = pshell.listify(link_options)
+        self._extra_options = sum((i.get('options', []) for i in fwd), [])
         self._internal_options = []
 
         output = self._output_file(name)
@@ -57,7 +64,7 @@ class Link(Edge):
 
     @property
     def options(self):
-        return self._internal_options + self.user_options
+        return self._internal_options + self._extra_options + self.user_options
 
     def _output_file(self, name):
         return self.builder.output_file(name)
@@ -77,14 +84,12 @@ class StaticLink(Link):
         Link.__init__(self, *args, **kwargs)
 
     def _fill_options(self):
-        # XXX: Allow these options, and forward them to whatever links with
-        # this library.
-        if self.options:
-            raise ValueError('link options are not allowed for static ' +
-                             'libraries')
-        if self.libs:
-            raise ValueError('libraries cannot be linked into static ' +
-                             'libraries')
+        primary = first(self.output)
+        primary.forward_args = {
+            'options': self.options,
+            'libs': self.libs,
+            'packages': self.packages,
+        }
 
 
 class DynamicLink(Link):
@@ -94,12 +99,17 @@ class DynamicLink(Link):
 
     def _fill_options(self):
         # XXX: Create a LinkOptions namedtuple for managing these args?
-        pkg_ldflags = sum((i.ldflags(self.builder) for i in self.packages), [])
-        pkg_ldlibs = sum((i.ldlibs(self.builder) for i in self.packages), [])
+        pkg_ldflags = sum(
+            (i.ldflags(self.builder) for i in self.all_packages), []
+        )
+        pkg_ldlibs = sum(
+            (i.ldlibs(self.builder) for i in self.all_packages), []
+        )
 
-        self._internal_options = (self.builder.args(self.libs, self.output) +
-                                  pkg_ldflags)
-        self.lib_options = self.builder.libs(self.libs) + pkg_ldlibs
+        self._internal_options = (
+            self.builder.args(self.all_libs, self.output) + pkg_ldflags
+        )
+        self.lib_options = self.builder.libs(self.all_libs) + pkg_ldlibs
         first(self.output).runtime_deps = sum(
             (self.__get_runtime_deps(i) for i in self.libs), []
         )
