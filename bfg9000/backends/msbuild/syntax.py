@@ -226,10 +226,11 @@ class VcxProject(object):
         return 'v' + self.version.replace('.', '')
 
     def write(self, out):
-        override_props = E.PropertyGroup()
-        override_props.append(E.TargetPath(
-            textify(self.output_file, out=True)
-        ))
+        target_name = safe_str.safe_str(self.output_file).basename()
+        override_props = E.PropertyGroup(
+            E.TargetName(os.path.splitext(target_name)[0]),
+            E.TargetPath(textify(self.output_file, out=True))
+        )
 
         compile_opts = E.ClCompile()
         if self.options.get('includes'):
