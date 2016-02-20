@@ -114,6 +114,12 @@ the same as [*executable*](#executablename-files-extra_deps).
 This build step recognizes the [static linking environment
 variables](environment-vars.md#static-linking).
 
+!!! note
+    Link-related arguments (*link_options*, *libs*, and libraries from
+    *packages*) have no direct effect on this build step. Instead, they're
+    cached and forwarded on to any dynamic linking step that uses this static
+    library.
+
 ## File types
 
 ### directory(*name*)
