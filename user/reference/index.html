@@ -262,6 +262,13 @@ is the <em>import library</em>, used when linking to this library. As a result,
 the same as <a href="#executablename-files-extra_deps"><em>executable</em></a>.</p>
 <p>This build step recognizes the <a href="../environment-vars/#static-linking">static linking environment
 variables</a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Link-related arguments (<em>link_options</em>, <em>libs</em>, and libraries from
+<em>packages</em>) have no direct effect on this build step. Instead, they're
+cached and forwarded on to any dynamic linking step that uses this static
+library.</p>
+</div>
 <h2 id="file-types">File types</h2>
 <h3 id="directoryname">directory(<em>name</em>)</h3>
 <p>Create a reference to an existing directory named <em>name</em>. This allows you to
@@ -354,9 +361,22 @@ run.</p>
 <h3 id="boost_packagename-version">boost_package([<em>name</em>], [<em>version</em>])</h3>
 <p>Search for a <a href="https://www.boost.org/">Boost</a> library. You can specify <em>name</em> (as
 a string or a list) to specify a specific Boost library (or libraries); for
-instance, <code>'program_options'</code>. For header-only libraries, you can omit <em>name</em>.</p>
+instance, <code>'program_options'</code>. For header-only libraries, you can omit <em>name</em>.
+If <em>version</em> is specified, it will ensure that the installed version of Boost
+meets the version requirement; it must be formatted as a Python <a href="https://www.python.org/dev/peps/pep-0440/#version-specifiers">version
+specifier</a>.</p>
 <p>This rule recognizes the <a href="../environment-vars/#packaging-variables">packaging environment
 variables</a>.</p>
+<h3 id="pkgconfig_packagename-version-lang">pkgconfig_package(<em>name</em>, [<em>version</em>], [<em>lang</em>])</h3>
+<p>Search for a package named <em>name</em> via
+<a href="https://www.freedesktop.org/wiki/Software/pkg-config/">pkg-config</a>. If
+<em>version</em> is specified, it will ensure that the installed version of the package
+meets the version requirement; it must be formatted as a Python <a href="https://www.python.org/dev/peps/pep-0440/#version-specifiers">version
+specifier</a>. <em>lang</em>
+is the source language of the library (<code>'c'</code> by default); this is useful if you
+need to link a static library written in C++ with a program written in C.</p>
+<p>This rule recognizes the following environment variable:
+<a href="../environment-vars/#pkg_config"><code>PKG_CONFIG</code></a>,</p>
 <h3 id="system_executablename">system_executable(<em>name</em>)</h3>
 <p>Search for an executable named <em>name</em> somewhere in the system's PATH.</p>
 <p>This rule recognizes the following environment variables:
