@@ -38,7 +38,9 @@ class CcCompiler(object):
         return result
 
     def output_file(self, name):
-        return ObjectFile(Path(name + '.o', Root.builddir), self.lang)
+        # XXX: MinGW's object format doesn't appear to be COFF...
+        return ObjectFile(Path(name + '.o', Root.builddir),
+                          self.platform.object_format, self.lang)
 
     def _include_dir(self, directory):
         if directory.system:
@@ -66,6 +68,15 @@ class CcCompiler(object):
 
 
 class CcLinker(object):
+    __allowed_langs = {
+        'c'     : {'c'},
+        'c++'   : {'c', 'c++', 'f77', 'f95'},
+        'objc'  : {'c', 'objc', 'f77', 'f95'},
+        'objc++': {'c', 'c++', 'objc', 'objc++', 'f77', 'f95'},
+        'f77'   : {'c', 'f77', 'f95'},
+        'f95'   : {'c', 'f77', 'f95'},
+    }
+
     def __init__(self, env, lang, name, command, ldflags, ldlibs):
         self.env = env
         self.lang = lang
@@ -107,16 +118,9 @@ class CcLinker(object):
     def flavor(self):
         return 'cc'
 
-    def can_link(self, langs):
-        allowed = ({
-            'c'     : {'c'},
-            'c++'   : {'c', 'c++', 'f77', 'f95'},
-            'objc'  : {'c', 'objc', 'f77', 'f95'},
-            'objc++': {'c', 'c++', 'objc', 'objc++', 'f77', 'f95'},
-            'f77'   : {'c', 'f77', 'f95'},
-            'f95'   : {'c', 'f77', 'f95'},
-        })[self.lang]
-        return allowed.issuperset(langs)
+    def can_link(self, format, langs):
+        return (format == self.platform.object_format and
+                self.__allowed_langs[self.lang].issuperset(langs))
 
     def __call__(self, cmd, input, output, libs=None, args=None):
         result = [cmd]
@@ -142,32 +146,33 @@ class CcLinker(object):
         ))
         return ['-L' + i for i in dirs]
 
-    def _rpath(self, libraries, start):
-        if not self.platform.rpath_flavor:
+    def _rpath(self, libraries, output):
+        if not self.platform.has_rpath:
             return []
 
+        start = output.path.parent()
         paths = uniques(i.path.parent().relpath(start) for i in libraries
                         if isinstance(i, SharedLibrary))
         if not paths:
             return []
 
-        if self.platform.rpath_flavor == 'elf':
+        if output.format == 'elf':
             base = '$ORIGIN'
             return ['-Wl,-rpath,{}'.format(':'.join(
                 base if i == '.' else os.path.join(base, i) for i in paths
             ))]
-        elif self.platform.rpath_flavor == 'mach':
+        elif output.format == 'mach-o':
             base = '@executable_path'
             return ( ['-Wl,-headerpad_max_install_names'] +
                      ['-Wl,-rpath,{}'.format(os.path.join(base, i))
                       for i in paths] )
         else:
-            raise ValueError('unrecognized rpath flavor "{}"'
-                             .format(self.platform.rpath_flavor))
+            raise ValueError('unrecognized object format "{}"'
+                             .format(output.format))
 
     def args(self, libraries, output):
         return ( self._always_args + self.lib_dirs(libraries) +
-                 self._rpath(libraries, first(output).path.parent()) )
+                 self._rpath(libraries, first(output)) )
 
     def _link_lib(self, library):
         if isinstance(library, WholeArchive):
@@ -198,28 +203,29 @@ class CcLinker(object):
         return sum((self._link_lib(i) for i in libraries), [])
 
     def post_install(self, output):
-        if self.platform.rpath_flavor is None:
+        if not self.platform.has_rpath:
             return None
 
-        if self.platform.rpath_flavor == 'elf':
+        if output.format == 'elf':
             tool = self.env.tool('patchelf')
-        elif self.platform.rpath_flavor == 'mach':
+        elif output.format == 'mach-o':
             tool = self.env.tool('install_name_tool')
         else:
-            raise ValueError('unrecognized rpath flavor "{}"'
-                             .format(self.platform.rpath_flavor))
+            raise ValueError('unrecognized object format "{}"'
+                             .format(output.format))
         return tool(tool, output, output.runtime_deps)
 
 
 class CcExecutableLinker(CcLinker):
     def output_file(self, name):
         path = Path(name + self.platform.executable_ext, Root.builddir)
-        return Executable(path)
+        return Executable(path, self.platform.object_format)
 
 
 class CcSharedLibraryLinker(CcLinker):
     def output_file(self, name, version=None, soversion=None):
         head, tail = os.path.split(name)
+        fmt = self.platform.object_format
 
         def lib(head, tail, prefix='lib', suffix=''):
             return Path(os.path.join(
@@ -230,7 +236,7 @@ class CcSharedLibraryLinker(CcLinker):
             dllprefix = 'cyg' if self.platform.name == 'cygwin' else 'lib'
             dllname = lib(head, tail, dllprefix)
             impname = lib(head, tail, suffix='.a')
-            dll = DllLibrary(dllname, impname)
+            dll = DllLibrary(dllname, fmt, impname)
             return [dll, dll.import_lib]
         elif version and self.platform.has_versioned_library:
             if self.platform.name == 'darwin':
@@ -240,9 +246,9 @@ class CcSharedLibraryLinker(CcLinker):
                 real = lib(head, tail, suffix='.{}'.format(version))
                 soname = lib(head, tail, suffix='.{}'.format(soversion))
             link = lib(head, tail)
-            return VersionedSharedLibrary(real, soname, link)
+            return VersionedSharedLibrary(real, fmt, soname, link)
         else:
-            return SharedLibrary(lib(head, tail))
+            return SharedLibrary(lib(head, tail), fmt)
 
     @property
     def _always_args(self):
@@ -341,6 +347,7 @@ class CcPackageResolver(object):
                 fullpath = os.path.join(base, libname)
                 if os.path.exists(fullpath):
                     return libkind(Path(fullpath, Root.absolute),
+                                   format=self.platform.object_format,
                                    external=True, **extra_kwargs)
 
         raise ValueError("unable to find library '{}'".format(name))

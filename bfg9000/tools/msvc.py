@@ -37,7 +37,8 @@ class MsvcCompiler(object):
         return result
 
     def output_file(self, name):
-        return ObjectFile(Path(name + '.obj', Root.builddir), self.lang)
+        return ObjectFile(Path(name + '.obj', Root.builddir),
+                          self.platform.object_format, self.lang)
 
     def _include_dir(self, directory):
         return ['/I' + directory.path]
@@ -79,6 +80,11 @@ class MsvcCompiler(object):
 
 
 class MsvcLinker(object):
+    __allowed_langs = {
+        'c'     : {'c'},
+        'c++'   : {'c', 'c++'},
+    }
+
     def __init__(self, env, lang, name, command, ldflags, ldlibs):
         self.platform = env.platform
         self.lang = lang
@@ -94,12 +100,9 @@ class MsvcLinker(object):
     def flavor(self):
         return 'msvc'
 
-    def can_link(self, langs):
-        allowed = ({
-            'c'     : {'c'},
-            'c++'   : {'c', 'c++'},
-        })[self.lang]
-        return allowed.issuperset(langs)
+    def can_link(self, format, langs):
+        return (format == self.platform.object_format and
+                self.__allowed_langs[self.lang].issuperset(langs))
 
     def __call__(self, cmd, input, output, libs=None, args=None):
         result = [cmd]
@@ -152,7 +155,7 @@ class MsvcLinker(object):
 class MsvcExecutableLinker(MsvcLinker):
     def output_file(self, name):
         path = Path(name + self.platform.executable_ext, Root.builddir)
-        return Executable(path)
+        return Executable(path, self.platform.object_format)
 
 
 class MsvcSharedLibraryLinker(MsvcLinker):
@@ -160,7 +163,8 @@ class MsvcSharedLibraryLinker(MsvcLinker):
         dllname = Path(name + self.platform.shared_library_ext, Root.builddir)
         impname = Path(name + '.lib', Root.builddir)
         expname = Path(name + '.exp', Root.builddir)
-        dll = DllLibrary(dllname, impname, expname)
+        dll = DllLibrary(dllname, self.platform.object_format, impname,
+                         expname)
         return [dll, dll.import_lib, dll.export_file]
 
     @property
@@ -191,9 +195,8 @@ class MsvcStaticLinker(object):
     def flavor(self):
         return 'msvc'
 
-    def can_link(self, langs):
-        # XXX: Only return true if the object format matches what we expect.
-        return True
+    def can_link(self, format, langs):
+        return format == self.platform.object_format
 
     def __call__(self, cmd, input, output, args=None):
         result = [cmd]
@@ -203,7 +206,8 @@ class MsvcStaticLinker(object):
         return result
 
     def output_file(self, name, langs):
-        return StaticLibrary(Path(name + '.lib', Root.builddir), langs)
+        return StaticLibrary(Path(name + '.lib', Root.builddir),
+                             self.platform.object_format, langs)
 
     def parse_args(self, args):
         return {'other': args}
@@ -234,6 +238,7 @@ class MsvcPackageResolver(object):
         )) if os.path.exists(i)]
 
         self.lang = lang
+        self.platform = env.platform
 
     def header(self, name, search_dirs=None):
         if search_dirs is None:
@@ -258,5 +263,5 @@ class MsvcPackageResolver(object):
                 # be a static library or an import library (which we classify
                 # as a kind of shared lib).
                 return Library(Path(fullpath, Root.absolute),
-                               external=True)
+                               self.platform.object_format, external=True)
         raise ValueError("unable to find library '{}'".format(name))

@@ -144,6 +144,6 @@ def pkgconfig_package(env, name, version=None):
 
 
 @builtin.globals('env')
-def system_executable(env, name):
+def system_executable(env, name, format=None):
     return Executable(Path(which(name, env.variables), Root.absolute),
-                      external=True)
+                      format or env.platform.object_format, external=True)

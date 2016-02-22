@@ -40,7 +40,10 @@ If *files* isn't specified, this function merely references an *existing*
 executable file (a precompiled binary, a shell script, etc) somewhere on the
 filesystem. In this case, *name* is the exact name of the file, relative to the
 source directory. This allows you to refer to existing executables for other
-functions.
+functions. In addition, the following arguments may be specified:
+
+* *format*: The object format of the exectuable; by default, this is the
+  platform's native object format (e.g. `'elf'` on Linux)
 
 This build step recognizes the [dynamic linking environment
 variables](environment-vars.md#dynamic-linking) and the [compiler environment
@@ -64,9 +67,13 @@ The following arguments may also be specified:
 
 If *file* isn't specified, this function merely references an *existing*
 object file somewhere on the filesystem. In this case, *name* must be specified
-and is the exact name of the file, relative to the source directory. You can
-also pass *lang* to indicate the source language of the file; if none is
-specified, it defaults to `'c'`.
+and is the exact name of the file, relative to the source directory. In
+addition, the following arguments may be specified:
+
+* *format*: The object format of the file; by default, this is the platform's
+  native object format (e.g. `'elf'` on Linux)
+* *lang*: The source language of the file; if none is specified, defaults to
+  `'c'`
 
 This build step recognizes the [compilation environment
 variables](environment-vars.md#compilation-variables) for the relevant language.
@@ -102,7 +109,8 @@ additional options:
 Like with *executable*, if *files* isn't specified, this function merely
 references an *existing* shared library somewhere on the filesystem. In this
 case, *name* must be specified and is the exact name of the file, relative to
-the source directory.
+the source directory. You may also pass in the *format* argument as with
+*executable*.
 
 This build step recognizes the [dynamic linking environment
 variables](environment-vars.md#dynamic-linking) and the [compiler environment
@@ -141,8 +149,12 @@ dynamic linking step that uses this static library.
 Like with *executable*, if *files* isn't specified, this function merely
 references an *existing* shared library somewhere on the filesystem. In this
 case, *name* must be specified and is the exact name of the file, relative to
-the source directory. You can also pass *lang* to indicate the source
-language(s) of the library; if none is specified, it defaults to `['c']`.
+the source directory. In addition, the following arguments may be specified:
+
+* *format*: The object format of the exectuable; by default, this is the
+  platform's native object format (e.g. `'elf'` on Linux)
+* *lang*: The source language(s) of the library; if none is specified, defaults
+  to `['c']`
 
 This build step recognizes the [static linking environment
 variables](environment-vars.md#static-linking).

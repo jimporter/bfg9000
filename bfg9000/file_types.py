@@ -90,10 +90,14 @@ class HeaderDirectory(Directory):
 class Binary(File):
     install_kind = 'program'
 
+    def __init__(self, path, format, external=False):
+        File.__init__(self, path, external)
+        self.format = format
+
 
 class ObjectFile(Binary):
-    def __init__(self, path, lang, external=False):
-        Binary.__init__(self, path, external)
+    def __init__(self, path, format, lang, external=False):
+        Binary.__init__(self, path, format, external)
         self.lang = lang
 
 
@@ -106,15 +110,16 @@ class Library(Binary):
 
 
 class StaticLibrary(Library):
-    def __init__(self, path, lang, external=False):
-        Library.__init__(self, path, external)
+    def __init__(self, path, format, lang, external=False):
+        Library.__init__(self, path, format, external)
         self.lang = listify(lang)
 
 
 class WholeArchive(StaticLibrary):
-    def __init__(self, lib, external=False):
-        StaticLibrary.__init__(self, lib.path, lib.lang, external)
-        self.lib = lib
+    def __init__(self, library, external=False):
+        StaticLibrary.__init__(self, library.path, library.format,
+                               library.lang, external)
+        self.library = library
 
 
 class SharedLibrary(Library):
@@ -123,13 +128,13 @@ class SharedLibrary(Library):
 
 class LinkLibrary(SharedLibrary):
     def __init__(self, path, library, external=False):
-        SharedLibrary.__init__(self, path, external)
+        SharedLibrary.__init__(self, path, library.format, external)
         self.runtime_deps = [library]
 
 
 class VersionedSharedLibrary(SharedLibrary):
-    def __init__(self, path, soname, linkname, external=False):
-        SharedLibrary.__init__(self, path, external)
+    def __init__(self, path, format, soname, linkname, external=False):
+        SharedLibrary.__init__(self, path, format, external)
         self.soname = LinkLibrary(soname, self, external)
         self.link = LinkLibrary(linkname, self.soname, external)
 
@@ -144,7 +149,8 @@ class DllLibrary(SharedLibrary):
     # variable, since .NET DLLs aren't "private".
     private = True
 
-    def __init__(self, path, import_name, export_name=None, external=False):
-        SharedLibrary.__init__(self, path, external)
+    def __init__(self, path, format, import_name, export_name=None,
+                 external=False):
+        SharedLibrary.__init__(self, path, format, external)
         self.import_lib = LinkLibrary(import_name, self, external)
         self.export_file = ExportFile(export_name, external)

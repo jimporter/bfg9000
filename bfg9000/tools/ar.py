@@ -1,9 +1,9 @@
 import os
 
 from .. import shell
-from .. import file_types
 from .. import iterutils
 from .utils import check_which
+from ..file_types import StaticLibrary
 from ..path import Path, Root
 
 
@@ -23,9 +23,8 @@ class ArLinker(object):
     def flavor(self):
         return 'ar'
 
-    def can_link(self, langs):
-        # XXX: Only return true if the object format matches what we expect.
-        return True
+    def can_link(self, format, langs):
+        return format == self.platform.object_format
 
     def __call__(self, cmd, input, output, args=None):
         result = [cmd]
@@ -37,4 +36,5 @@ class ArLinker(object):
     def output_file(self, name, langs):
         head, tail = os.path.split(name)
         path = os.path.join(head, 'lib' + tail + '.a')
-        return file_types.StaticLibrary(Path(path, Root.builddir), langs)
+        return StaticLibrary(Path(path, Root.builddir),
+                             self.platform.object_format, langs)
