@@ -19,11 +19,10 @@ class Package(object):
 
 class SystemPackage(Package):
     def __init__(self, includes=None, lib_dirs=None, libraries=None,
-                 lang=None, version=None):
+                 version=None):
         self._includes = includes or []
         self._lib_dirs = lib_dirs or []
         self._libraries = libraries or []
-        self.lang = lang
         self.version = version
 
     def cflags(self, builder):
@@ -37,10 +36,9 @@ class SystemPackage(Package):
 
 
 class PkgConfigPackage(Package):
-    def __init__(self, name, pkg_config, lang=None):
+    def __init__(self, name, pkg_config):
         self.name = name
         self._pkg_config = pkg_config
-        self.lang = lang
 
     def _call(self, command, *args):
         return subprocess.check_output(
@@ -80,7 +78,7 @@ def system_package(env, name, lang='c', kind='any'):
     if kind not in ('any', 'shared', 'static'):
         raise ValueError("kind must be one of 'any', 'shared', or 'static'")
     lib = env.builder(lang).packages.library(name, kind)
-    return SystemPackage(libraries=[lib], lang=lang)
+    return SystemPackage(libraries=[lib])
 
 
 @builtin.globals('env')
@@ -110,7 +108,6 @@ def boost_package(env, name=None, version=None):
                     return SystemPackage(
                         includes=[header],
                         lib_dirs=r'C:\Boost\lib',
-                        lang='c++',
                         version=boost_version
                     )
                 except IOError:
@@ -126,7 +123,6 @@ def boost_package(env, name=None, version=None):
         return SystemPackage(
             includes=[header],
             lib_dirs=listify(libdir),
-            lang='c++',
             version=boost_version
         )
     else:
@@ -135,14 +131,13 @@ def boost_package(env, name=None, version=None):
             includes=[header],
             libraries=[pkg.library('boost_' + i, search_dirs=dirs)
                        for i in iterate(name)],
-            lang='c++',
             version=boost_version
         )
 
 
 @builtin.globals('env')
-def pkgconfig_package(env, name, version=None, lang='c'):
-    pkg = PkgConfigPackage(name, env.tool('pkg_config'), lang)
+def pkgconfig_package(env, name, version=None):
+    pkg = PkgConfigPackage(name, env.tool('pkg_config'))
     version = make_specifier(version)
     check_version(pkg.version, version, name)
     return pkg

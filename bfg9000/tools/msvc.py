@@ -150,7 +150,7 @@ class MsvcSharedLibraryLinker(MsvcLinker):
         dllname = Path(name + self.platform.shared_library_ext, Root.builddir)
         impname = Path(name + '.lib', Root.builddir)
         expname = Path(name + '.exp', Root.builddir)
-        dll = DllLibrary(dllname, self.lang, impname, expname)
+        dll = DllLibrary(dllname, impname, expname)
         return [dll, dll.import_lib, dll.export_file]
 
     @property
@@ -188,8 +188,8 @@ class MsvcStaticLinker(object):
         result.append('/OUT:' + output)
         return result
 
-    def output_file(self, name):
-        return StaticLibrary(Path(name + '.lib', Root.builddir), self.lang)
+    def output_file(self, name, langs):
+        return StaticLibrary(Path(name + '.lib', Root.builddir), langs)
 
     def parse_args(self, args):
         return {'other': args}
@@ -243,6 +243,6 @@ class MsvcPackageResolver(object):
                 # We don't actually know what kind of library this is. It could
                 # be a static library or an import library (which we classify
                 # as a kind of shared lib).
-                return Library(Path(fullpath, Root.absolute), self.lang,
+                return Library(Path(fullpath, Root.absolute),
                                external=True)
         raise ValueError("unable to find library '{}'".format(name))

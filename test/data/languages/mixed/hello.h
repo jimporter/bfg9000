@@ -1,5 +1,5 @@
-#ifndef INC_LIBRARY_HPP
-#define INC_LIBRARY_HPP
+#ifndef INC_HELLO_H
+#define INC_HELLO_H
 
 #ifdef __cplusplus
 extern "C"

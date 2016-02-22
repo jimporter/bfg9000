@@ -51,16 +51,18 @@ class Link(Edge):
                 self.name, self.mode, (f['name'] for f in fwd if 'name' in f)
             ))
 
-        langs = chain([lang], (i.lang for i in chain(
-            self.files, self.libs, self.packages
-        )))
+        langs = uniques(chain(
+            iterate(lang),
+            (i.lang for i in self.files),
+            chain.from_iterable(getattr(i, 'lang', []) for i in self.all_libs)
+        ))
         self.builder = env.linker(langs, self.mode)
 
         self.user_options = pshell.listify(link_options)
         self._extra_options = sum((i.get('link_options', []) for i in fwd), [])
         self._internal_options = []
 
-        output = self._output_file(name)
+        output = self._output_file(name, lang)
         Edge.__init__(self, build, output, extra_deps)
 
         self._fill_options()
@@ -74,7 +76,7 @@ class Link(Edge):
     def options(self):
         return self._internal_options + self._extra_options + self.user_options
 
-    def _output_file(self, name):
+    def _output_file(self, name, lang):
         return self.builder.output_file(name)
 
     @classmethod
@@ -100,6 +102,12 @@ class StaticLink(Link):
             'packages': self.packages,
         }
 
+    def _output_file(self, name, lang):
+        langs = uniques(chain(
+            iterate(lang), (i.lang for i in self.files)
+        ))
+        return self.builder.output_file(name, langs)
+
 
 class DynamicLink(Link):
     mode = 'executable'
@@ -107,7 +115,6 @@ class DynamicLink(Link):
     _prefix = ''
 
     def _fill_options(self):
-        # XXX: Create a LinkOptions namedtuple for managing these args?
         pkg_ldflags = sum(
             (i.ldflags(self.builder) for i in self.all_packages), []
         )
@@ -115,6 +122,7 @@ class DynamicLink(Link):
             (i.ldlibs(self.builder) for i in self.all_packages), []
         )
 
+        # XXX: Create a LinkOptions namedtuple for managing these args?
         self._internal_options = (
             self.builder.args(self.all_libs, self.output) + pkg_ldflags
         )
@@ -145,7 +153,7 @@ class SharedLink(DynamicLink):
             raise ValueError('specify both version and soversion or neither')
         DynamicLink.__init__(self, *args, **kwargs)
 
-    def _output_file(self, name):
+    def _output_file(self, name, lang):
         return self.builder.output_file(name, self.version, self.soversion)
 
 

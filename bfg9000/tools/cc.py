@@ -212,7 +212,7 @@ class CcSharedLibraryLinker(CcLinker):
             dllprefix = 'cyg' if self.platform.name == 'cygwin' else 'lib'
             dllname = lib(head, tail, dllprefix)
             impname = lib(head, tail, suffix='.a')
-            dll = DllLibrary(dllname, self.lang, impname)
+            dll = DllLibrary(dllname, impname)
             return [dll, dll.import_lib]
         elif version and self.platform.has_versioned_library:
             if self.platform.name == 'darwin':
@@ -222,9 +222,9 @@ class CcSharedLibraryLinker(CcLinker):
                 real = lib(head, tail, suffix='.{}'.format(version))
                 soname = lib(head, tail, suffix='.{}'.format(soversion))
             link = lib(head, tail)
-            return VersionedSharedLibrary(real, self.lang, soname, link)
+            return VersionedSharedLibrary(real, soname, link)
         else:
-            return SharedLibrary(lib(head, tail), self.lang)
+            return SharedLibrary(lib(head, tail))
 
     @property
     def _always_args(self):
@@ -304,11 +304,12 @@ class CcPackageResolver(object):
         if kind in ('any', 'shared'):
             libname = 'lib' + name + self.platform.shared_library_ext
             if self.platform.has_import_library:
-                libnames.append((libname + '.a', ImportLibrary))
+                libnames.append((libname + '.a', ImportLibrary, {}))
             else:
-                libnames.append((libname, SharedLibrary))
+                libnames.append((libname, SharedLibrary, {}))
         if kind in ('any', 'static'):
-            libnames.append(('lib' + name + '.a', StaticLibrary))
+            libnames.append(('lib' + name + '.a', StaticLibrary,
+                             {'lang': self.lang}))
 
         # XXX: Include Cygwin here too?
         if self.platform.name == 'windows':
@@ -318,10 +319,10 @@ class CcPackageResolver(object):
             libnames.append((name + '.lib', Library))
 
         for base in search_dirs:
-            for libname, libkind in libnames:
+            for libname, libkind, extra_kwargs in libnames:
                 fullpath = os.path.join(base, libname)
                 if os.path.exists(fullpath):
-                    return libkind(Path(fullpath, Root.absolute), self.lang,
-                                   external=True)
+                    return libkind(Path(fullpath, Root.absolute),
+                                   external=True, **extra_kwargs)
 
         raise ValueError("unable to find library '{}'".format(name))
