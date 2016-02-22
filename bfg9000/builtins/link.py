@@ -160,7 +160,7 @@ class SharedLink(DynamicLink):
 @builtin.globals('builtins', 'build_inputs', 'env')
 def executable(builtins, build, env, name, files=None, **kwargs):
     if files is None and kwargs.get('libs') is None:
-        return Executable(Path(name, Root.srcdir), **kwargs)
+        return Executable(Path(name, Root.srcdir))
     else:
         return DynamicLink(builtins, build, env, name, files,
                            **kwargs).public_output
@@ -169,7 +169,7 @@ def executable(builtins, build, env, name, files=None, **kwargs):
 @builtin.globals('builtins', 'build_inputs', 'env')
 def static_library(builtins, build, env, name, files=None, **kwargs):
     if files is None and kwargs.get('libs') is None:
-        return StaticLibrary(Path(name, Root.srcdir), **kwargs)
+        return StaticLibrary(Path(name, Root.srcdir), kwargs.get('lang', 'c'))
     else:
         return StaticLink(builtins, build, env, name, files,
                           **kwargs).public_output
@@ -179,7 +179,7 @@ def static_library(builtins, build, env, name, files=None, **kwargs):
 def shared_library(builtins, build, env, name, files=None, **kwargs):
     if files is None and kwargs.get('libs') is None:
         # XXX: What to do here for Windows, which has a separate DLL file?
-        return SharedLibrary(Path(name, Root.srcdir), **kwargs)
+        return SharedLibrary(Path(name, Root.srcdir))
     else:
         output = SharedLink(builtins, build, env, name, files,
                             **kwargs).public_output

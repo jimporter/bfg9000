@@ -62,7 +62,9 @@ def object_file(build, env, name=None, file=None, **kwargs):
     if file is None:
         if name is None:
             raise TypeError('expected name')
-        return ObjectFile(Path(name, Root.srcdir), **kwargs)
+        format = kwargs.get('format', env.platform.object_format)
+        return ObjectFile(Path(name, Root.srcdir), format,
+                          kwargs.get('lang', 'c'))
     else:
         return Compile(build, env, name, file, **kwargs).public_output
 
