@@ -46,7 +46,7 @@ class Environment(object):
         if isiterable(lang):
             langs = reduce(
                 lambda x, y: list(intersect(x, y)),
-                (lang_link[i] for i in iterate(lang) if i)
+                (lang_link[i] for i in iterate(lang))
             )
             if len(langs) == 0:
                 raise ValueError('unable to find a valid linker')
