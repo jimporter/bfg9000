@@ -20,20 +20,35 @@ language('objc++', exts=['.mm', '.M'], link=['objc++'])
 
 @builder('c', 'c++', 'objc', 'objc++')
 class CFamilyBuilder(object):
-    __langs = {
-        'c'     : ('CC'    , 'cc' , 'CFLAGS'     ),
-        'c++'   : ('CXX'   , 'c++', 'CXXFLAGS'   ),
-        'objc'  : ('OBJC'  , 'cc' , 'OBJCFLAGS'  ),
-        'objc++': ('OBJCXX', 'c++', 'OBJCXXFLAGS'),
+    __vars = {
+        'c'     : ('CC'    , 'CFLAGS'     ),
+        'c++'   : ('CXX'   , 'CXXFLAGS'   ),
+        'objc'  : ('OBJC'  , 'OBJCFLAGS'  ),
+        'objc++': ('OBJCXX', 'OBJCXXFLAGS'),
+    }
+    __posix_cmds = {
+        'c'     : 'cc' ,
+        'c++'   : 'c++',
+        'objc'  : 'cc' ,
+        'objc++': 'c++',
+    }
+    __windows_cmds = {
+        'c'     : ['cl', 'clang-cl', 'cc', 'gcc', 'clang'],
+        'c++'   : ['cl', 'clang-cl', 'c++', 'g++', 'clang++'],
+        'objc'  : ['cc', 'gcc', 'clang'],
+        'objc++': ['c++', 'g++', 'clang++'],
     }
 
     def __init__(self, env, lang):
-        var, default_cmd, flags_var = self.__langs[lang]
+        var, flags_var = self.__vars[lang]
         low_var = var.lower()
-        if env.platform.name == 'windows' and lang in ('c', 'c++'):
-            default_cmd = 'cl'
-        cmd = env.getvar(var, default_cmd)
-        check_which(cmd, kind='{} compiler'.format(lang))
+
+        if env.platform.name == 'windows':
+            default_cmds = self.__windows_cmds
+        else:
+            default_cmds = self.__posix_cmds
+        cmd = env.getvar(var, default_cmds[lang])
+        cmd = check_which(cmd, kind='{} compiler'.format(lang))
 
         cflags = (
             shell.split(env.getvar(flags_var, '')) +
@@ -42,7 +57,7 @@ class CFamilyBuilder(object):
         ldflags = shell.split(env.getvar('LDFLAGS', ''))
         ldlibs = shell.split(env.getvar('LDLIBS', ''))
 
-        if re.search(r'cl(\.exe)?$', cmd):
+        if re.match(r'\S*cl(\.exe)?($|\s)', cmd):
             origin = os.path.dirname(cmd)
             link_cmd = env.getvar(var + '_LINK', os.path.join(origin, 'link'))
             lib_cmd = env.getvar(var + '_LIB', os.path.join(origin, 'lib'))
