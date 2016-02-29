@@ -213,7 +213,12 @@ setup(
     packages=find_packages(exclude=['test', 'test.*']),
 
     install_requires=['colorama', 'enum-compat', 'packaging', 'six'],
-    extras_require={'msbuild': ['lxml']},
+    extras_require={
+        'msbuild': ['lxml'],
+        'lint': ['flake8'],
+        'doc': ['mkdocs', 'mkdocs-bootswatch'],
+        'deploy': ['pypandoc'],
+    },
 
     entry_points={
         'console_scripts': [
