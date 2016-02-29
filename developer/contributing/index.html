@@ -67,21 +67,29 @@
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">User Guide <b class="caret"></b></a>
                     <ul class="dropdown-menu">
                     
-                        <li >
-                            <a href="../../user/building/">Building with bfg9000</a>
-                        </li>
+                        
+<li >
+    <a href="../../user/building/">Building with bfg9000</a>
+</li>
+
                     
-                        <li >
-                            <a href="../../user/writing/">Writing a Build File</a>
-                        </li>
+                        
+<li >
+    <a href="../../user/writing/">Writing a Build File</a>
+</li>
+
                     
-                        <li >
-                            <a href="../../user/reference/">Reference</a>
-                        </li>
+                        
+<li >
+    <a href="../../user/reference/">Reference</a>
+</li>
+
                     
-                        <li >
-                            <a href="../../user/environment-vars/">Environment Variables</a>
-                        </li>
+                        
+<li >
+    <a href="../../user/environment-vars/">Environment Variables</a>
+</li>
+
                     
                     </ul>
                 </li>
@@ -92,13 +100,17 @@
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">Developer Guide <b class="caret"></b></a>
                     <ul class="dropdown-menu">
                     
-                        <li >
-                            <a href="../internals/">Internals</a>
-                        </li>
+                        
+<li >
+    <a href="../internals/">Internals</a>
+</li>
+
                     
-                        <li class="active">
-                            <a href="./">Contributing</a>
-                        </li>
+                        
+<li class="active">
+    <a href="./">Contributing</a>
+</li>
+
                     
                     </ul>
                 </li>
@@ -114,6 +126,11 @@
 
             <!-- Search, Navigation and Repo links -->
             <ul class="nav navbar-nav navbar-right">
+                <li>
+                    <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
+                        <i class="fa fa-search"></i> Search
+                    </a>
+                </li>
                 <li >
                     <a rel="next" href="../internals/">
                         <i class="fa fa-arrow-left"></i> Previous
@@ -154,10 +171,10 @@
 </div></div>
             <div class="col-md-9" role="main">
 
-<h1 id="contributing">Contributing</h1>
+<h1 id="contributing">Contributing<a class="headerlink" href="#contributing" title="Permanent link">§</a></h1>
 <p>So, you'd like to help improve bfg9000 by writing a patch? Great! This page will
 provide you with some useful information to help you get started.</p>
-<h2 id="running-tests">Running tests</h2>
+<h2 id="running-tests">Running tests<a class="headerlink" href="#running-tests" title="Permanent link">§</a></h2>
 <p>bfg9000 has a suite of tests to ensure that everything works properly. (Well,
 everything that has tests!) As you may expect, you can run these via:</p>
 <pre class="codehilite"><code class="language-sh">$ python setup.py test</code></pre>
@@ -169,7 +186,7 @@ to run only the tests in <code>test/integration/test_simple.py</code>, you can t
 <pre class="codehilite"><code class="language-sh">$ python setup.py test -s test.integration.test_simple</code></pre>
 
 
-<h2 id="linting-code">Linting code</h2>
+<h2 id="linting-code">Linting code<a class="headerlink" href="#linting-code" title="Permanent link">§</a></h2>
 <p>bfg9000 uses <a href="https://flake8.readthedocs.org/en/latest/">flake8</a> for linting.
 Since users generally don't need to worry about linting the codebase, this isn't
 automatically installed by setup.py. You'll need to install it yourself. Once
@@ -177,9 +194,44 @@ installed, you can use the <code>lint</code> command like so:</p>
 <pre class="codehilite"><code class="language-sh">$ python setup.py lint</code></pre></div>
         </div>
 
+        <footer class="col-md-12">
+            <hr>
+            
+                <center>Copyright &copy; 2015-2016 Jim Porter</center>
+            
+            <center>Documentation built with <a href="http://www.mkdocs.org/">MkDocs</a>.</center>
+        </footer>
+
         <script src="../../js/jquery-1.10.2.min.js"></script>
         <script src="../../js/bootstrap-3.0.3.min.js"></script>
         <script src="../../js/highlight.pack.js"></script>
+        <script>var base_url = '../..';</script>
+        <script data-main="../../mkdocs/js/search.js" src="../../mkdocs/js/require.js"></script>
         <script src="../../js/base.js"></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                        <h4 class="modal-title" id="exampleModalLabel">Search</h4>
+                    </div>
+                    <div class="modal-body">
+                        <p>
+                            From here you can search these documents. Enter
+                            your search terms below.
+                        </p>
+                        <form role="form">
+                            <div class="form-group">
+                                <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query">
+                            </div>
+                        </form>
+                        <div id="mkdocs-search-results"></div>
+                    </div>
+                    <div class="modal-footer">
+                    </div>
+                </div>
+            </div>
+        </div>
     </body>
 </html>

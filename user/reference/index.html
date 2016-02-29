@@ -67,21 +67,29 @@
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">User Guide <b class="caret"></b></a>
                     <ul class="dropdown-menu">
                     
-                        <li >
-                            <a href="../building/">Building with bfg9000</a>
-                        </li>
+                        
+<li >
+    <a href="../building/">Building with bfg9000</a>
+</li>
+
                     
-                        <li >
-                            <a href="../writing/">Writing a Build File</a>
-                        </li>
+                        
+<li >
+    <a href="../writing/">Writing a Build File</a>
+</li>
+
                     
-                        <li class="active">
-                            <a href="./">Reference</a>
-                        </li>
+                        
+<li class="active">
+    <a href="./">Reference</a>
+</li>
+
                     
-                        <li >
-                            <a href="../environment-vars/">Environment Variables</a>
-                        </li>
+                        
+<li >
+    <a href="../environment-vars/">Environment Variables</a>
+</li>
+
                     
                     </ul>
                 </li>
@@ -92,13 +100,17 @@
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">Developer Guide <b class="caret"></b></a>
                     <ul class="dropdown-menu">
                     
-                        <li >
-                            <a href="../../developer/internals/">Internals</a>
-                        </li>
+                        
+<li >
+    <a href="../../developer/internals/">Internals</a>
+</li>
+
                     
-                        <li >
-                            <a href="../../developer/contributing/">Contributing</a>
-                        </li>
+                        
+<li >
+    <a href="../../developer/contributing/">Contributing</a>
+</li>
+
                     
                     </ul>
                 </li>
@@ -114,6 +126,11 @@
 
             <!-- Search, Navigation and Repo links -->
             <ul class="nav navbar-nav navbar-right">
+                <li>
+                    <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
+                        <i class="fa fa-search"></i> Search
+                    </a>
+                </li>
                 <li >
                     <a rel="next" href="../writing/">
                         <i class="fa fa-arrow-left"></i> Previous
@@ -166,8 +183,8 @@
 </div></div>
             <div class="col-md-9" role="main">
 
-<h1 id="reference">Reference</h1>
-<h2 id="build-steps">Build steps</h2>
+<h1 id="reference">Reference<a class="headerlink" href="#reference" title="Permanent link">§</a></h1>
+<h2 id="build-steps">Build steps<a class="headerlink" href="#build-steps" title="Permanent link">§</a></h2>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>For build steps which produce an actual file, the exact name of the output
@@ -175,14 +192,14 @@ file is determined by the platform you're running on. For instance, when
 building an executable file named "foo" on Windows, the resulting file will
 be <code>foo.exe</code>.</p>
 </div>
-<h3 id="commandname-cmdcmds-environment-extra_deps">command(<em>name</em>, <em>cmd</em>|<em>cmds</em>, [<em>environment</em>], [<em>extra_deps</em>])</h3>
+<h3 id="commandname-cmdcmds-environment-extra_deps">command(<em>name</em>, <em>cmd</em>|<em>cmds</em>, [<em>environment</em>], [<em>extra_deps</em>])<a class="headerlink" href="#commandname-cmdcmds-environment-extra_deps" title="Permanent link">§</a></h3>
 <p>Create a build step that runs a list of arbitrary commands, specified in either
 <em>cmd</em> or <em>cmds</em>; <em>cmd</em> takes a single command, whereas <em>cmds</em> takes a list of
 commands. Each command may either be a string to be parsed according to shell
 rules or a list of arguments to be passed directly to the process.</p>
 <p>You may also pass a dict to <em>environment</em> to set environment variables for the
 commands. These override any environment variables set on the command line.</p>
-<h3 id="executablename-files-extra_deps">executable(<em>name</em>, [<em>files</em>, ..., [<em>extra_deps</em>]])</h3>
+<h3 id="executablename-files-extra_deps">executable(<em>name</em>, [<em>files</em>, ..., [<em>extra_deps</em>]])<a class="headerlink" href="#executablename-files-extra_deps" title="Permanent link">§</a></h3>
 <p>Create a build step that builds an executable file named <em>name</em>. <em>files</em> is the
 list of source (or object) files to link. If an element of <em>files</em> is a source
 file (or a plain string), this function will implicitly call
@@ -206,7 +223,7 @@ you to refer to existing executables for other functions.</p>
 variables</a> and the <a href="../environment-vars/#compilation-variables">compiler environment
 variable</a> (e.g. <code>CC</code>) for the
 relevant language.</p>
-<h3 id="object_filename-file-extra_deps">object_file([<em>name</em>], [<em>file</em>, ..., [<em>extra_deps</em>]])</h3>
+<h3 id="object_filename-file-extra_deps">object_file([<em>name</em>], [<em>file</em>, ..., [<em>extra_deps</em>]])<a class="headerlink" href="#object_filename-file-extra_deps" title="Permanent link">§</a></h3>
 <p>Create a build step that compiles a source file named <em>file</em> to an object file
 named <em>name</em>; if <em>name</em> is not specified, it takes the file name in <em>file</em>
 without the extension.</p>
@@ -224,7 +241,7 @@ object file somewhere on the filesystem. In this case, <em>name</em> must be spe
 and is the exact name of the file.</p>
 <p>This build step recognizes the <a href="../environment-vars/#compilation-variables">compilation environment
 variables</a> for the relevant language.</p>
-<h3 id="object_filesfiles-extra_deps">object_files(<em>files</em>, ..., [<em>extra_deps</em>])</h3>
+<h3 id="object_filesfiles-extra_deps">object_files(<em>files</em>, ..., [<em>extra_deps</em>])<a class="headerlink" href="#object_filesfiles-extra_deps" title="Permanent link">§</a></h3>
 <p>Create a compilation build step for each of the files in <em>files</em>; this is
 equivalent to calling <a href="#object_filename-file-extra_deps"><em>object_file</em></a> for each
 element in <em>files</em>.</p>
@@ -239,7 +256,7 @@ foo_obj = objs['foo.cpp']
 test_exe = executable('test', ['test.cpp', foo_obj])</code></pre>
 
 
-<h3 id="shared_libraryname-files-extra_deps">shared_library(<em>name</em>, [<em>files</em>, ..., [<em>extra_deps</em>]])</h3>
+<h3 id="shared_libraryname-files-extra_deps">shared_library(<em>name</em>, [<em>files</em>, ..., [<em>extra_deps</em>]])<a class="headerlink" href="#shared_libraryname-files-extra_deps" title="Permanent link">§</a></h3>
 <p>Create a build step that builds a shared library named <em>name</em>. Its arguments are
 the same as <a href="#executablename-files-extra_deps"><em>executable</em></a>, with the following
 additional options:</p>
@@ -272,7 +289,7 @@ to set the appropriate attributes for your public symbols:</p>
 
 
 </div>
-<h3 id="static_libraryname-files-extra_deps">static_library(<em>name</em>, [<em>files</em>, ..., [<em>extra_deps</em>]])</h3>
+<h3 id="static_libraryname-files-extra_deps">static_library(<em>name</em>, [<em>files</em>, ..., [<em>extra_deps</em>]])<a class="headerlink" href="#static_libraryname-files-extra_deps" title="Permanent link">§</a></h3>
 <p>Create a build step that builds a static library named <em>name</em>. Its arguments are
 the same as <a href="#executablename-files-extra_deps"><em>executable</em></a>. Link-related
 arguments (<em>link_options</em>, <em>libs</em>, and libraries from <em>packages</em>) have no direct
@@ -287,28 +304,28 @@ variables</a>.</p>
 <a href="#shared_libraryname-files-extra_deps"><em>shared_library</em></a> for more details on
 how to use this macro.</p>
 </div>
-<h2 id="file-types">File types</h2>
-<h3 id="directoryname">directory(<em>name</em>)</h3>
+<h2 id="file-types">File types<a class="headerlink" href="#file-types" title="Permanent link">§</a></h2>
+<h3 id="directoryname">directory(<em>name</em>)<a class="headerlink" href="#directoryname" title="Permanent link">§</a></h3>
 <p>Create a reference to an existing directory named <em>name</em>. This allows you to
 refer to an arbitrary subfolder of your source directory.</p>
-<h3 id="headername">header(<em>name</em>)</h3>
+<h3 id="headername">header(<em>name</em>)<a class="headerlink" href="#headername" title="Permanent link">§</a></h3>
 <p>Create a reference to an existing header named <em>name</em>. This is useful if you'd
 like to <a href="#install">install</a> a single header file for your project.</p>
-<h3 id="header_directoryname-system">header_directory(<em>name</em>, [<em>system</em>])</h3>
+<h3 id="header_directoryname-system">header_directory(<em>name</em>, [<em>system</em>])<a class="headerlink" href="#header_directoryname-system" title="Permanent link">§</a></h3>
 <p>Create a reference to a directory named <em>name</em> containing header files for the
 project. This can then be used in the <em>include</em> argument when
 <a href="#object_filename-file-extra_deps">compiling</a> a source file. If <em>system</em> is
 <em>True</em>, this directory will be treated as a
 <a href="https://gcc.gnu.org/onlinedocs/cpp/System-Headers.html">system directory</a> for
 compilers that support this.</p>
-<h3 id="source_filename-lang">source_file(<em>name</em>, [<em>lang</em>])</h3>
+<h3 id="source_filename-lang">source_file(<em>name</em>, [<em>lang</em>])<a class="headerlink" href="#source_filename-lang" title="Permanent link">§</a></h3>
 <p>Create a reference to an existing source file named <em>name</em>. If <em>lang</em> is not
 specified, the language of the file is inferred from its extension. Generally,
 this function is only necessary when running commands that take a source file
 as an argument, e.g. running a Python script; this allows you to specify that
 the file is found in the <em>source directory</em>. In other cases, a plain string will
 automatically get converted to a <em>source_file</em>.</p>
-<h3 id="whole_archivename">whole_archive(<em>name</em>)</h3>
+<h3 id="whole_archivename">whole_archive(<em>name</em>)<a class="headerlink" href="#whole_archivename" title="Permanent link">§</a></h3>
 <p>Create a <a href="http://linux.die.net/man/1/ld">whole-archive</a> from an existing static
 library named <em>name</em>. This ensure that <em>every</em> object file in the library is
 included, rather than just the ones whose symbols are referenced. This is
@@ -318,17 +335,17 @@ typically used to turn a static library into a shared library.</p>
 <p>The MSVC linker doesn't have a way of expressing this directive, so
 <em>whole_archive</em> can't be used with it.</p>
 </div>
-<h2 id="grouping-rules">Grouping rules</h2>
-<h3 id="aliasname-deps">alias(<em>name</em>, [<em>deps</em>])</h3>
+<h2 id="grouping-rules">Grouping rules<a class="headerlink" href="#grouping-rules" title="Permanent link">§</a></h2>
+<h3 id="aliasname-deps">alias(<em>name</em>, [<em>deps</em>])<a class="headerlink" href="#aliasname-deps" title="Permanent link">§</a></h3>
 <p>Create a build step named <em>name</em> that performs no actions on its own. Instead,
 it just runs its dependencies listed in <em>deps</em> as necessary. This build step is
 useful for grouping common steps together.</p>
-<h3 id="default">default(<em>...</em>)</h3>
+<h3 id="default">default(<em>...</em>)<a class="headerlink" href="#default" title="Permanent link">§</a></h3>
 <p>Specify a list of build steps that should be run by default when building. These
 are all accumulated into the <code>all</code> target. If <em>default</em> is never called, all
 executables and libraries <em>not</em> passed to
 <a href="#testtest-options-environmentdriver"><em>test</em></a> will be built by default.</p>
-<h3 id="install">install(<em>...</em>)</h3>
+<h3 id="install">install(<em>...</em>)<a class="headerlink" href="#install" title="Permanent link">§</a></h3>
 <p>Specify a list of files that need to be installed for the project to work. Each
 will be installed to the appropriate location based on its type, e.g. header
 files will go in <code>$PREFIX/include</code> by default on POSIX systems. These are all
@@ -346,15 +363,15 @@ library will install the DLL <em>and</em> the import library.</p>
 <a href="../environment-vars/#install_name_tool"><code>INSTALL_NAME_TOOL</code></a>,
 <a href="../environment-vars/#mkdir_p"><code>MKDIR_P</code></a>,
 <a href="../environment-vars/#patchelf"><code>PATCHELF</code></a>.</p>
-<h2 id="global-options">Global options</h2>
-<h3 id="global_optionsoptions-lang">global_options(<em>options</em>, <em>lang</em>)</h3>
+<h2 id="global-options">Global options<a class="headerlink" href="#global-options" title="Permanent link">§</a></h2>
+<h3 id="global_optionsoptions-lang">global_options(<em>options</em>, <em>lang</em>)<a class="headerlink" href="#global_optionsoptions-lang" title="Permanent link">§</a></h3>
 <p>Specify some <em>options</em> (either as a string or list) to use for all compilation
 steps for the language <em>lang</em>.</p>
-<h3 id="global_link_optionsoptions">global_link_options(<em>options</em>)</h3>
+<h3 id="global_link_optionsoptions">global_link_options(<em>options</em>)<a class="headerlink" href="#global_link_optionsoptions" title="Permanent link">§</a></h3>
 <p>Specify some <em>options</em> (either as a string or list) to use for all link steps
 (i.e. for <a href="#executablename-files-extra_deps">executables</a> and
 <a href="#shared_libraryname-files-extra_deps">shared libraries</a>).</p>
-<h2 id="test-rules">Test rules</h2>
+<h2 id="test-rules">Test rules<a class="headerlink" href="#test-rules" title="Permanent link">§</a></h2>
 <p>These rules help you define automated tests that can all be run via the <code>test</code>
 target. For simple cases, you should only need the
 <a href="#testtest-options-environmentdriver"><em>test</em></a> rule, but you can also wrap your
@@ -362,21 +379,21 @@ tests with a separate driver using
 <a href="#test_driverdriver-options-environmentparent"><em>test_driver</em></a>.</p>
 <p>For cases where you only want to <em>build</em> the tests, not run them, you can use
 the <code>tests</code> target.</p>
-<h3 id="testtest-options-environmentdriver">test(<em>test</em>, [<em>options</em>], [<em>environment</em>|<em>driver</em>])</h3>
+<h3 id="testtest-options-environmentdriver">test(<em>test</em>, [<em>options</em>], [<em>environment</em>|<em>driver</em>])<a class="headerlink" href="#testtest-options-environmentdriver" title="Permanent link">§</a></h3>
 <p>Create a test for a single test file named <em>test</em>. You may specify additional
 command-line arguments to the test in <em>options</em>. You can also pass temporary
 environment variables as a dict via <em>environment</em>, or specify a test driver to
 add this test file to via <em>driver</em>.</p>
-<h3 id="test_driverdriver-options-environmentparent">test_driver(<em>driver</em>, [<em>options</em>], [<em>environment</em>|<em>parent</em>])</h3>
+<h3 id="test_driverdriver-options-environmentparent">test_driver(<em>driver</em>, [<em>options</em>], [<em>environment</em>|<em>parent</em>])<a class="headerlink" href="#test_driverdriver-options-environmentparent" title="Permanent link">§</a></h3>
 <p>Create a test driver which can run a series of tests, specified as command-line
 arguments to the driver. You may specify driver-wide command-line arguments via
 <em>options</em>. You can also pass temporary environment variables as a dict with
 <em>environment</em>, or specify a parent test driver to wrap this driver via <em>driver</em>.</p>
-<h3 id="test_deps">test_deps(<em>...</em>)</h3>
+<h3 id="test_deps">test_deps(<em>...</em>)<a class="headerlink" href="#test_deps" title="Permanent link">§</a></h3>
 <p>Specify a list of dependencies which must be satisfied before the tests can be
 run.</p>
-<h2 id="package-resolvers">Package resolvers</h2>
-<h3 id="boost_packagename-version">boost_package([<em>name</em>], [<em>version</em>])</h3>
+<h2 id="package-resolvers">Package resolvers<a class="headerlink" href="#package-resolvers" title="Permanent link">§</a></h2>
+<h3 id="boost_packagename-version">boost_package([<em>name</em>], [<em>version</em>])<a class="headerlink" href="#boost_packagename-version" title="Permanent link">§</a></h3>
 <p>Search for a <a href="https://www.boost.org/">Boost</a> library. You can specify <em>name</em> (as
 a string or a list) to specify a specific Boost library (or libraries); for
 instance, <code>'program_options'</code>. For header-only libraries, you can omit <em>name</em>.
@@ -385,7 +402,7 @@ meets the version requirement; it must be formatted as a Python <a href="https:/
 specifier</a>.</p>
 <p>This rule recognizes the <a href="../environment-vars/#packaging-variables">packaging environment
 variables</a>.</p>
-<h3 id="pkgconfig_packagename-version-lang">pkgconfig_package(<em>name</em>, [<em>version</em>], [<em>lang</em>])</h3>
+<h3 id="pkgconfig_packagename-version-lang">pkgconfig_package(<em>name</em>, [<em>version</em>], [<em>lang</em>])<a class="headerlink" href="#pkgconfig_packagename-version-lang" title="Permanent link">§</a></h3>
 <p>Search for a package named <em>name</em> via
 <a href="https://www.freedesktop.org/wiki/Software/pkg-config/">pkg-config</a>. If
 <em>version</em> is specified, it will ensure that the installed version of the package
@@ -395,11 +412,11 @@ is the source language of the library (<code>'c'</code> by default); this is use
 need to link a static library written in C++ with a program written in C.</p>
 <p>This rule recognizes the following environment variable:
 <a href="../environment-vars/#pkg_config"><code>PKG_CONFIG</code></a>,</p>
-<h3 id="system_executablename">system_executable(<em>name</em>)</h3>
+<h3 id="system_executablename">system_executable(<em>name</em>)<a class="headerlink" href="#system_executablename" title="Permanent link">§</a></h3>
 <p>Search for an executable named <em>name</em> somewhere in the system's PATH.</p>
 <p>This rule recognizes the following environment variables:
 <a href="../environment-vars/#path"><code>PATH</code></a>, <a href="../environment-vars/#pathext"><code>PATHEXT</code></a>.</p>
-<h3 id="system_packagename-lang-kind">system_package(<em>name</em>, [<em>lang</em>], [<em>kind</em>])</h3>
+<h3 id="system_packagename-lang-kind">system_package(<em>name</em>, [<em>lang</em>], [<em>kind</em>])<a class="headerlink" href="#system_packagename-lang-kind" title="Permanent link">§</a></h3>
 <p>Search for a library named <em>name</em> somewhere in the system's default library
 location. <em>lang</em> is the source language of the library (<code>'c'</code> by default); this
 is useful if you need to link a static library written in C++ with a program
@@ -417,7 +434,7 @@ assumed to be somewhere where your compiler can find them automatically; if
 not, you can set <a href="../environment-vars/#cppflags"><code>CPPFLAGS</code></a> to add the
 appropriate header search path.</p>
 </div>
-<h2 id="environment">Environment</h2>
+<h2 id="environment">Environment<a class="headerlink" href="#environment" title="Permanent link">§</a></h2>
 <p>The <em>environment</em>, <code>env</code>, is a special object that encapsulates information
 about the system outside of bfg9000. It's used internally for nearly all
 platform-specific code, but it can also help in <code>build.bfg</code> files when you
@@ -428,35 +445,35 @@ encounter some unavoidable issue with multiplatform compatibility.</p>
 since many are only useful to internal code. However, the most relevant ones
 for <code>build.bfg</code> files are shown below.</p>
 </div>
-<h3 id="envcompilerlang">env.compiler(<em>lang</em>)</h3>
+<h3 id="envcompilerlang">env.compiler(<em>lang</em>)<a class="headerlink" href="#envcompilerlang" title="Permanent link">§</a></h3>
 <p>Return the compiler used by bfg9000 for a particular language <em>lang</em>. While
 compiler objects are primarily suited to bfg's internals, there are still a few
 useful properties for <code>build.bfg</code> files:</p>
-<h4 id="compilercommand">compiler.command</h4>
+<h4 id="compilercommand">compiler.command<a class="headerlink" href="#compilercommand" title="Permanent link">§</a></h4>
 <p>The command to run when invoking this compiler, e.g. <code>g++-4.9</code>.</p>
-<h4 id="compilerflavor">compiler.flavor</h4>
+<h4 id="compilerflavor">compiler.flavor<a class="headerlink" href="#compilerflavor" title="Permanent link">§</a></h4>
 <p>The "flavor" of the compiler, i.e. the kind of command-line interface it has.
 Possible values are <code>'cc'</code> and <code>'msvc'</code>.</p>
-<h3 id="envlinkerlangs">env.linker(<em>langs</em>)</h3>
+<h3 id="envlinkerlangs">env.linker(<em>langs</em>)<a class="headerlink" href="#envlinkerlangs" title="Permanent link">§</a></h3>
 <p>Return the compiler used by bfg9000 for a particular language (or list of
 languages) <em>lang</em>. Its public properties are the same as
 <a href="#compilercommand"><em>compiler</em></a> above.</p>
-<h3 id="envplatform">env.platform</h3>
+<h3 id="envplatform">env.platform<a class="headerlink" href="#envplatform" title="Permanent link">§</a></h3>
 <p>Return the target platform used for the build (currently the same as the host
 platform).</p>
-<h4 id="platformflavor">platform.flavor</h4>
+<h4 id="platformflavor">platform.flavor<a class="headerlink" href="#platformflavor" title="Permanent link">§</a></h4>
 <p>The "flavor" of the platform. Either <code>'posix'</code> or <code>'windows'</code>.</p>
-<h4 id="platformname">platform.name</h4>
+<h4 id="platformname">platform.name<a class="headerlink" href="#platformname" title="Permanent link">§</a></h4>
 <p>The name of the platform, e.g. <code>'linux'</code>, <code>'darwin'</code> (OS X), or <code>'windows'</code>.</p>
-<h2 id="miscellaneous">Miscellaneous</h2>
-<h3 id="bfg9000_required_versionversion-python_version">bfg9000_required_version([<em>version</em>], [<em>python_version</em>])</h3>
+<h2 id="miscellaneous">Miscellaneous<a class="headerlink" href="#miscellaneous" title="Permanent link">§</a></h2>
+<h3 id="bfg9000_required_versionversion-python_version">bfg9000_required_version([<em>version</em>], [<em>python_version</em>])<a class="headerlink" href="#bfg9000_required_versionversion-python_version" title="Permanent link">§</a></h3>
 <p>Set the required <em>version</em> for bfg9000 and/or the required <em>python_version</em>.
 Each of these is a standard Python <a href="https://www.python.org/dev/peps/pep-0440/#version-specifiers">version
 specifier</a>.</p>
-<h3 id="bfg9000_version">bfg9000_version</h3>
+<h3 id="bfg9000_version">bfg9000_version<a class="headerlink" href="#bfg9000_version" title="Permanent link">§</a></h3>
 <p>Return the current version of bfg9000. This can be useful if you want to
 optionally support a feature only available in certain versions of bfg.</p>
-<h3 id="filter_by_platformname-type">filter_by_platform(<em>name</em>, <em>type</em>)</h3>
+<h3 id="filter_by_platformname-type">filter_by_platform(<em>name</em>, <em>type</em>)<a class="headerlink" href="#filter_by_platformname-type" title="Permanent link">§</a></h3>
 <p>Return <em>True</em> if <em>name</em> is a filename that should be included for the target
 platform, and <em>False</em> otherwise. File (or directory) names like <code>PLATFORM</code> or
 <code>foo_PLATFORM.cpp</code> are excluded if <code>PLATFORM</code> is a known platform name that
@@ -464,7 +481,7 @@ platform, and <em>False</em> otherwise. File (or directory) names like <code>PLA
 <code>'linux'</code>, <code>'darwin'</code>, <code>'cygwin'</code>, <code>'windows'</code>.</p>
 <p>This is the default <em>filter</em> for
 <a href="../find_filespath-name-type-flat-filter-cache"><em>find_files</em></a>.</p>
-<h3 id="find_filespath-name-type-flat-filter-cache">find_files([<em>path</em>], [<em>name</em>], [<em>type</em>], [<em>flat</em>], [<em>filter</em>], [<em>cache</em>])</h3>
+<h3 id="find_filespath-name-type-flat-filter-cache">find_files([<em>path</em>], [<em>name</em>], [<em>type</em>], [<em>flat</em>], [<em>filter</em>], [<em>cache</em>])<a class="headerlink" href="#find_filespath-name-type-flat-filter-cache" title="Permanent link">§</a></h3>
 <p>Find files in <em>path</em> whose name matches the glob <em>name</em>. If <em>path</em> is omitted,
 search in the root of the source directory; if <em>name</em> is omitted, all files will
 match. <em>type</em> may be either <code>'f'</code> to find only files or <code>'d'</code> to find only
@@ -477,9 +494,44 @@ for the project. This allows you do add or remove source files and not have to
 worry about manually rerunning bfg9000.</p></div>
         </div>
 
+        <footer class="col-md-12">
+            <hr>
+            
+                <center>Copyright &copy; 2015-2016 Jim Porter</center>
+            
+            <center>Documentation built with <a href="http://www.mkdocs.org/">MkDocs</a>.</center>
+        </footer>
+
         <script src="../../js/jquery-1.10.2.min.js"></script>
         <script src="../../js/bootstrap-3.0.3.min.js"></script>
         <script src="../../js/highlight.pack.js"></script>
+        <script>var base_url = '../..';</script>
+        <script data-main="../../mkdocs/js/search.js" src="../../mkdocs/js/require.js"></script>
         <script src="../../js/base.js"></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                        <h4 class="modal-title" id="exampleModalLabel">Search</h4>
+                    </div>
+                    <div class="modal-body">
+                        <p>
+                            From here you can search these documents. Enter
+                            your search terms below.
+                        </p>
+                        <form role="form">
+                            <div class="form-group">
+                                <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query">
+                            </div>
+                        </form>
+                        <div id="mkdocs-search-results"></div>
+                    </div>
+                    <div class="modal-footer">
+                    </div>
+                </div>
+            </div>
+        </div>
     </body>
 </html>

@@ -3,16 +3,16 @@
 
     
     <url>
-     <loc>None/</loc>
-     <lastmod>2016-02-20</lastmod>
+     <loc>/</loc>
+     <lastmod>2016-02-29</lastmod>
      <changefreq>daily</changefreq>
     </url>
     
 
     
     <url>
-     <loc>None/install/</loc>
-     <lastmod>2016-02-20</lastmod>
+     <loc>/install/</loc>
+     <lastmod>2016-02-29</lastmod>
      <changefreq>daily</changefreq>
     </url>
     
@@ -20,51 +20,51 @@
     
         
     <url>
-     <loc>None/user/building/</loc>
-     <lastmod>2016-02-20</lastmod>
+     <loc>/user/building/</loc>
+     <lastmod>2016-02-29</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
-     <loc>None/user/writing/</loc>
-     <lastmod>2016-02-20</lastmod>
+     <loc>/user/writing/</loc>
+     <lastmod>2016-02-29</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
-     <loc>None/user/reference/</loc>
-     <lastmod>2016-02-20</lastmod>
+     <loc>/user/reference/</loc>
+     <lastmod>2016-02-29</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
-     <loc>None/user/environment-vars/</loc>
-     <lastmod>2016-02-20</lastmod>
-     <changefreq>daily</changefreq>
-    </url>
-        
-    
-
-    
-        
-    <url>
-     <loc>None/developer/internals/</loc>
-     <lastmod>2016-02-20</lastmod>
-     <changefreq>daily</changefreq>
-    </url>
-        
-    <url>
-     <loc>None/developer/contributing/</loc>
-     <lastmod>2016-02-20</lastmod>
+     <loc>/user/environment-vars/</loc>
+     <lastmod>2016-02-29</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     
 
     
+        
     <url>
-     <loc>None/license/</loc>
-     <lastmod>2016-02-20</lastmod>
+     <loc>/developer/internals/</loc>
+     <lastmod>2016-02-29</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
+    <url>
+     <loc>/developer/contributing/</loc>
+     <lastmod>2016-02-29</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
+    
+
+    
+    <url>
+     <loc>/license/</loc>
+     <lastmod>2016-02-29</lastmod>
      <changefreq>daily</changefreq>
     </url>
     

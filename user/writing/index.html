@@ -67,21 +67,29 @@
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">User Guide <b class="caret"></b></a>
                     <ul class="dropdown-menu">
                     
-                        <li >
-                            <a href="../building/">Building with bfg9000</a>
-                        </li>
+                        
+<li >
+    <a href="../building/">Building with bfg9000</a>
+</li>
+
                     
-                        <li class="active">
-                            <a href="./">Writing a Build File</a>
-                        </li>
+                        
+<li class="active">
+    <a href="./">Writing a Build File</a>
+</li>
+
                     
-                        <li >
-                            <a href="../reference/">Reference</a>
-                        </li>
+                        
+<li >
+    <a href="../reference/">Reference</a>
+</li>
+
                     
-                        <li >
-                            <a href="../environment-vars/">Environment Variables</a>
-                        </li>
+                        
+<li >
+    <a href="../environment-vars/">Environment Variables</a>
+</li>
+
                     
                     </ul>
                 </li>
@@ -92,13 +100,17 @@
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">Developer Guide <b class="caret"></b></a>
                     <ul class="dropdown-menu">
                     
-                        <li >
-                            <a href="../../developer/internals/">Internals</a>
-                        </li>
+                        
+<li >
+    <a href="../../developer/internals/">Internals</a>
+</li>
+
                     
-                        <li >
-                            <a href="../../developer/contributing/">Contributing</a>
-                        </li>
+                        
+<li >
+    <a href="../../developer/contributing/">Contributing</a>
+</li>
+
                     
                     </ul>
                 </li>
@@ -114,6 +126,11 @@
 
             <!-- Search, Navigation and Repo links -->
             <ul class="nav navbar-nav navbar-right">
+                <li>
+                    <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
+                        <i class="fa fa-search"></i> Search
+                    </a>
+                </li>
                 <li >
                     <a rel="next" href="../building/">
                         <i class="fa fa-arrow-left"></i> Previous
@@ -170,14 +187,14 @@
 </div></div>
             <div class="col-md-9" role="main">
 
-<h1 id="writing-a-build-file">Writing a Build File</h1>
+<h1 id="writing-a-build-file">Writing a Build File<a class="headerlink" href="#writing-a-build-file" title="Permanent link">§</a></h1>
 <p>bfg9000's build script is called <code>build.bfg</code> and is (usually) placed in the root
 of your source tree. <code>build.bfg</code> files are just Python scripts with a handful of
 extra built-in functions to define all the rules for building your software.
 While bfg9000's goal is to make writing build scripts easy, sometimes complexity
 is unavoidable. By using a general-purpose language, this complexity can
 (hopefully!) be managed.</p>
-<h2 id="your-first-build-script">Your first build script</h2>
+<h2 id="your-first-build-script">Your first build script<a class="headerlink" href="#your-first-build-script" title="Permanent link">§</a></h2>
 <p>The simplest build script, compiling a single source file into an
 <a href="../reference/#executablename-files-extra_deps">executable</a>, is indeed very
 simple:</p>
@@ -188,20 +205,20 @@ simple:</p>
 backend and platform. The output file's name is automatically converted to the
 appropriate name for the target platform (<code>'simple'</code> on Linux and OS X and
 <code>'simple.exe'</code> on Windows).</p>
-<h2 id="building-executables">Building executables</h2>
+<h2 id="building-executables">Building executables<a class="headerlink" href="#building-executables" title="Permanent link">§</a></h2>
 <p>We've already seen how to build simple executables, but build tools aren't much
 good if that's all they can do! Naturally, it's easy to build an executable from
 multiple source files (just add more elements to the <em>files</em> argument), but
 there are plenty of other things you'd probably like to do with your build
 scripts.</p>
-<h3 id="implicit-conversions">Implicit conversions</h3>
+<h3 id="implicit-conversions">Implicit conversions<a class="headerlink" href="#implicit-conversions" title="Permanent link">§</a></h3>
 <p>bfg9000 tries its best to make your build scripts easy to read and to minimize
 verbosity. First, arguments that normally take a list can take a single item
 instead, e.g. <code>executable('simple', files='simple.cpp')</code>. In addition, bfg9000
 will automatically convert a string argument to an object of the appropriate
 type. In the previous example, <code>'simple.cpp'</code> is automatically converted to a
 <a href="../reference/#source_filename-lang"><em>source_file</em></a>.</p>
-<h3 id="sudirectories">Sudirectories</h3>
+<h3 id="sudirectories">Sudirectories<a class="headerlink" href="#sudirectories" title="Permanent link">§</a></h3>
 <p>Many projects organize their headers and source files into different
 directories. For source files, this is easy to handle: just write out the
 relative path to the file. For header files, you need to let your compiler know
@@ -220,7 +237,7 @@ executable('program', files=['src/prog.cpp'], include=[include_dir])</code></pre
 <p>Of course, bfg9000 also allows you to place built files in subdirectories as
 well. Simply specify the relative path as the name of executable (or whatever
 type of file you're building).</p>
-<h3 id="options">Options</h3>
+<h3 id="options">Options<a class="headerlink" href="#options" title="Permanent link">§</a></h3>
 <p>Build scripts often need to set options when compiling/linking binaries.
 Sometimes, these are specific to a single executable in the project, and other
 times they apply to <em>all</em> the binaries. bfg9000 supports both cases. You can
@@ -242,7 +259,7 @@ used, so it's important to be sure the compiler understands the arguments. You
 can determine the kind of compiler being used by consulting the build's
 <a href="../reference/#environment">Environment</a> and checking the compiler's
 <a href="../reference/#compilerflavor"><em>flavor</em></a>.</p>
-<h2 id="building-libraries">Building libraries</h2>
+<h2 id="building-libraries">Building libraries<a class="headerlink" href="#building-libraries" title="Permanent link">§</a></h2>
 <p>Similar to building executables, you can also build
 <a href="../reference/#shared_libraryname-files-extra_deps">shared</a> and
 <a href="../reference/#static_libraryname-files-extra_deps">static</a> libraries. These take
@@ -255,7 +272,7 @@ static = static_library('shared', files=['static.cpp'])
 executable('program', files=['program.cpp'], libs=[shared, static])</code></pre>
 
 
-<h2 id="finding-files">Finding files</h2>
+<h2 id="finding-files">Finding files<a class="headerlink" href="#finding-files" title="Permanent link">§</a></h2>
 <p>For projects with many source files, it can be inconvenient to manually list all
 of them. Since <code>build.bfg</code> files are just Python scripts, you <em>could</em> use
 Python's standard library to examine the file system and build the list.
@@ -272,7 +289,7 @@ executable('hello', files=hello_files)</code></pre>
 <p>There are lots of options you can pass to <em>find_files()</em> to tweak its behavior.
 For instance, you can search only for files or only for directories by passing
 <code>'f'</code> or <code>'d'</code>, respectively to the <em>type</em> argument.</p>
-<h2 id="default-targets">Default targets</h2>
+<h2 id="default-targets">Default targets<a class="headerlink" href="#default-targets" title="Permanent link">§</a></h2>
 <p>When you're building multiple binaries, you might want to be able to specify
 what gets built by default, i.e. when calling <code>make</code> (or <code>ninja</code>) with no
 arguments. Normally, every executable and library (except those passed to
@@ -281,7 +298,7 @@ However, you can pass any build rule(s) to <a href="../reference/#default"><em>d
 and they'll be set as the default, overriding the normal behavior. This makes it
 easy to provide your users with a standard build that gets them all the bits
 they need, and none they don't.</p>
-<h2 id="external-packages">External packages</h2>
+<h2 id="external-packages">External packages<a class="headerlink" href="#external-packages" title="Permanent link">§</a></h2>
 <p>Most projects have external packages that they depend on. There are lots of
 different ways these packages are organized, and bfg9000 currently supports two
 of them: <a href="../reference/#system_packagename-lang-kind">"system" packages</a>
@@ -296,7 +313,7 @@ building binaries by passing them in the <em>packages</em> argument:</p>
 <pre class="codehilite"><code class="language-python">executable('program', files=['main.cpp'], packages=[ogg, prog_opts])</code></pre>
 
 
-<h2 id="installation">Installation</h2>
+<h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">§</a></h2>
 <p>After building, you might want to allow your project to be installed onto the
 user's system somewhere. Most files (headers, executables, libraries) can be
 added to the list of installed files via the
@@ -307,7 +324,7 @@ lib = static_library('program', files=['src/prog.cpp'], include=[include_dir])
 install(lib, include_dir)</code></pre>
 
 
-<h2 id="commands">Commands</h2>
+<h2 id="commands">Commands<a class="headerlink" href="#commands" title="Permanent link">§</a></h2>
 <p>In addition to ordinary build rules, it can be useful to provide other common
 commands that apply to a project's source, such as linting the code or building
 documentation. Normally, you should pass the command to be run as an array of
@@ -326,7 +343,7 @@ multiple commands to this function via the <em>cmds</em> argument:</p>
 ])</code></pre>
 
 
-<h2 id="aliases">Aliases</h2>
+<h2 id="aliases">Aliases<a class="headerlink" href="#aliases" title="Permanent link">§</a></h2>
 <p>Sometimes, you just want to group a set of targets together to make it easier to
 build all of them at once. This automatically happens for <a href="#default-targets">default
 targets</a> by creating an <code>all</code> alias, but you can do this
@@ -336,7 +353,7 @@ bar = executable('bar', files=['bar.cpp'])
 alias('foobar', [foo, bar])</code></pre>
 
 
-<h2 id="tests">Tests</h2>
+<h2 id="tests">Tests<a class="headerlink" href="#tests" title="Permanent link">§</a></h2>
 <p>All good projects should have tests. Since your project is good (isn't it?),
 yours has tests too, and you should have a good way to execute those tests from
 your build system. bfg9000 provides a <a href="../reference/#test-rules">set of
@@ -359,9 +376,44 @@ test( executable('test_foo', files=['test_foo.cpp']), driver=mettle )
 test( executable('test_bar', files=['test_bar.cpp']), driver=mettle )</code></pre></div>
         </div>
 
+        <footer class="col-md-12">
+            <hr>
+            
+                <center>Copyright &copy; 2015-2016 Jim Porter</center>
+            
+            <center>Documentation built with <a href="http://www.mkdocs.org/">MkDocs</a>.</center>
+        </footer>
+
         <script src="../../js/jquery-1.10.2.min.js"></script>
         <script src="../../js/bootstrap-3.0.3.min.js"></script>
         <script src="../../js/highlight.pack.js"></script>
+        <script>var base_url = '../..';</script>
+        <script data-main="../../mkdocs/js/search.js" src="../../mkdocs/js/require.js"></script>
         <script src="../../js/base.js"></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                        <h4 class="modal-title" id="exampleModalLabel">Search</h4>
+                    </div>
+                    <div class="modal-body">
+                        <p>
+                            From here you can search these documents. Enter
+                            your search terms below.
+                        </p>
+                        <form role="form">
+                            <div class="form-group">
+                                <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query">
+                            </div>
+                        </form>
+                        <div id="mkdocs-search-results"></div>
+                    </div>
+                    <div class="modal-footer">
+                    </div>
+                </div>
+            </div>
+        </div>
     </body>
 </html>
