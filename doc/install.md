@@ -4,7 +4,7 @@ bfg9000 uses [setuptools](https://pythonhosted.org/setuptools/), so installation
 is much the same as any other Python package:
 
 ```sh
-$ pip install .
+$ pip install bfg9000
 ```
 
 If you've downloaded bfg, just run `pip install .` from the source directory.
