@@ -5,11 +5,6 @@ h1 {
   border-bottom: 1px solid #ddd;
 }
 
-/* Reduce the padding for code blocks. */
-pre {
-  padding: 4px;
-}
-
 /* Add small subtitles. */
 
 .subtitle {
