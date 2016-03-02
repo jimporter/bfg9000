@@ -1,26 +1,29 @@
 site_name: bfg9000
 docs_dir: doc
 repo_url: https://github.com/jimporter/bfg9000/
+copyright: Copyright &copy; 2015-2016 Jim Porter
 
 theme: yeti
 extra_css:
-- css/extra.css
+  - css/extra.css
 
 markdown_extensions:
-- admonition
-- attr_list
-- codehilite:
-    use_pygments: false
+  - admonition
+  - attr_list
+  - codehilite:
+      use_pygments: false
+  - toc:
+      permalink: §
 
 pages:
-- Home: index.md
-- Installation: install.md
-- User Guide:
-  - Building with bfg9000: user/building.md
-  - Writing a Build File: user/writing.md
-  - Reference: user/reference.md
-  - Environment Variables: user/environment-vars.md
-- Developer Guide:
-  - Internals: developer/internals.md
-  - Contributing: developer/contributing.md
-- License: license.md
+  - Home: index.md
+  - Installation: install.md
+  - User Guide:
+    - Building with bfg9000: user/building.md
+    - Writing a Build File: user/writing.md
+    - Reference: user/reference.md
+    - Environment Variables: user/environment-vars.md
+  - Developer Guide:
+    - Internals: developer/internals.md
+    - Contributing: developer/contributing.md
+  - License: license.md
