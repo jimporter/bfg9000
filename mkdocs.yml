@@ -19,11 +19,11 @@ pages:
   - Home: index.md
   - Installation: install.md
   - User Guide:
-    - Building with bfg9000: user/building.md
-    - Writing a Build File: user/writing.md
-    - Reference: user/reference.md
-    - Environment Variables: user/environment-vars.md
+      - Building with bfg9000: user/building.md
+      - Writing a Build File: user/writing.md
+      - Reference: user/reference.md
+      - Environment Variables: user/environment-vars.md
   - Developer Guide:
-    - Internals: developer/internals.md
-    - Contributing: developer/contributing.md
+      - Internals: developer/internals.md
+      - Contributing: developer/contributing.md
   - License: license.md
