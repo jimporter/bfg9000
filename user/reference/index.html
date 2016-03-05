@@ -217,8 +217,9 @@ file (or a plain string), this function will implicitly call
 </ul>
 <p>If <em>files</em> isn't specified, this function merely references an <em>existing</em>
 executable file (a precompiled binary, a shell script, etc) somewhere on the
-filesystem. In this case, <em>name</em> is the exact name of the file. This allows
-you to refer to existing executables for other functions.</p>
+filesystem. In this case, <em>name</em> is the exact name of the file, relative to the
+source directory. This allows you to refer to existing executables for other
+functions.</p>
 <p>This build step recognizes the <a href="../environment-vars/#dynamic-linking">dynamic linking environment
 variables</a> and the <a href="../environment-vars/#compilation-variables">compiler environment
 variable</a> (e.g. <code>CC</code>) for the
@@ -238,7 +239,9 @@ without the extension.</p>
 </ul>
 <p>If <em>file</em> isn't specified, this function merely references an <em>existing</em>
 object file somewhere on the filesystem. In this case, <em>name</em> must be specified
-and is the exact name of the file.</p>
+and is the exact name of the file, relative to the source directory. You can
+also pass <em>lang</em> to indicate the source language of the file; if none is
+specified, it defaults to <code>'c'</code>.</p>
 <p>This build step recognizes the <a href="../environment-vars/#compilation-variables">compilation environment
 variables</a> for the relevant language.</p>
 <h3 id="object_filesfiles-extra_deps">object_files(<em>files</em>, ..., [<em>extra_deps</em>])<a class="headerlink" href="#object_filesfiles-extra_deps" title="Permanent link">§</a></h3>
@@ -264,6 +267,10 @@ additional options:</p>
 <li><em>version</em>: The version number of the library, e.g. <code>1.2.3</code>.</li>
 <li><em>soversion</em>: The API version of the library (used in its soname), e.g. <code>1</code>.</li>
 </ul>
+<p>Like with <em>executable</em>, if <em>files</em> isn't specified, this function merely
+references an <em>existing</em> shared library somewhere on the filesystem. In this
+case, <em>name</em> must be specified and is the exact name of the file, relative to
+the source directory.</p>
 <p>This build step recognizes the <a href="../environment-vars/#dynamic-linking">dynamic linking environment
 variables</a> and the <a href="../environment-vars/#compilation-variables">compiler environment
 variable</a> (e.g. <code>CC</code>) for the
@@ -295,6 +302,11 @@ the same as <a href="#executablename-files-extra_deps"><em>executable</em></a>. 
 arguments (<em>link_options</em>, <em>libs</em>, and libraries from <em>packages</em>) have no direct
 effect on this build step. Instead, they're cached and forwarded on to any
 dynamic linking step that uses this static library.</p>
+<p>Like with <em>executable</em>, if <em>files</em> isn't specified, this function merely
+references an <em>existing</em> shared library somewhere on the filesystem. In this
+case, <em>name</em> must be specified and is the exact name of the file, relative to
+the source directory. You can also pass <em>lang</em> to indicate the source
+language(s) of the library; if none is specified, it defaults to <code>['c']</code>.</p>
 <p>This build step recognizes the <a href="../environment-vars/#static-linking">static linking environment
 variables</a>.</p>
 <div class="admonition note">
@@ -303,6 +315,20 @@ variables</a>.</p>
 <code>LIB&lt;NAME&gt;_STATIC</code> that can be used for declaring public symbols. See
 <a href="#shared_libraryname-files-extra_deps"><em>shared_library</em></a> for more details on
 how to use this macro.</p>
+</div>
+<h3 id="whole_archivename-files-extra_deps">whole_archive(<em>name</em>, [<em>files</em>, ..., [<em>extra_deps</em>]])<a class="headerlink" href="#whole_archivename-files-extra_deps" title="Permanent link">§</a></h3>
+<p>Create a build step that builds a <a href="http://linux.die.net/man/1/ld">whole-archive</a>
+named <em>name</em>. Whole archives ensures that <em>every</em> object file in the library is
+included, rather than just the ones whose symbols are referenced. This is
+typically used to turn a static library into a shared library.</p>
+<p><em>whole_archive</em>'s arguments are the same as for
+<a href="#static_libraryname-files-extra_deps"><em>static_library</em></a>. In addition, you can
+pass an existing static library to <em>whole_archive</em> to convert it into a whole
+archive.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The MSVC linker doesn't have a way of expressing the required directives, so
+<em>whole_archive</em> can't be used with it.</p>
 </div>
 <h2 id="file-types">File types<a class="headerlink" href="#file-types" title="Permanent link">§</a></h2>
 <h3 id="directoryname">directory(<em>name</em>)<a class="headerlink" href="#directoryname" title="Permanent link">§</a></h3>
@@ -325,16 +351,6 @@ this function is only necessary when running commands that take a source file
 as an argument, e.g. running a Python script; this allows you to specify that
 the file is found in the <em>source directory</em>. In other cases, a plain string will
 automatically get converted to a <em>source_file</em>.</p>
-<h3 id="whole_archivename">whole_archive(<em>name</em>)<a class="headerlink" href="#whole_archivename" title="Permanent link">§</a></h3>
-<p>Create a <a href="http://linux.die.net/man/1/ld">whole-archive</a> from an existing static
-library named <em>name</em>. This ensure that <em>every</em> object file in the library is
-included, rather than just the ones whose symbols are referenced. This is
-typically used to turn a static library into a shared library.</p>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>The MSVC linker doesn't have a way of expressing this directive, so
-<em>whole_archive</em> can't be used with it.</p>
-</div>
 <h2 id="grouping-rules">Grouping rules<a class="headerlink" href="#grouping-rules" title="Permanent link">§</a></h2>
 <h3 id="aliasname-deps">alias(<em>name</em>, [<em>deps</em>])<a class="headerlink" href="#aliasname-deps" title="Permanent link">§</a></h3>
 <p>Create a build step named <em>name</em> that performs no actions on its own. Instead,
