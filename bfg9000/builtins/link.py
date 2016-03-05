@@ -52,11 +52,10 @@ class Link(Edge):
             ))
 
         langs = uniques(chain(
-            iterate(lang),
             (i.lang for i in self.files),
             chain.from_iterable(getattr(i, 'lang', []) for i in self.all_libs)
         ))
-        self.builder = env.linker(langs, self.mode)
+        self.builder = self.__find_linker(env, langs)
 
         self.user_options = pshell.listify(link_options)
         self._extra_options = sum((i.get('link_options', []) for i in fwd), [])
@@ -83,6 +82,13 @@ class Link(Edge):
     def __name(cls, name):
         head, tail = os.path.split(name)
         return os.path.join(head, cls._prefix + tail)
+
+    def __find_linker(self, env, langs):
+        for i in langs:
+            linker = env.linker(i, self.mode)
+            if linker.can_link(langs):
+                return linker
+        raise ValueError('unable to find linker')
 
 
 class StaticLink(Link):
@@ -192,9 +198,14 @@ def shared_library(builtins, build, env, name, files=None, **kwargs):
         return output.link
 
 
-@builtin
-def whole_archive(lib):
-    return WholeArchive(sourcify(lib, StaticLibrary))
+@builtin.globals('builtins')
+def whole_archive(builtins, name, *args, **kwargs):
+    if isinstance(name, StaticLibrary):
+        if len(args) or len(kwargs):
+            raise TypeError('unexpected arguments')
+        return WholeArchive(name)
+    else:
+        return WholeArchive(builtins['static_library'](name, *args, **kwargs))
 
 
 @builtin.globals('build_inputs')

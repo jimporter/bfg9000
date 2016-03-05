@@ -94,6 +94,13 @@ class MsvcLinker(object):
     def flavor(self):
         return 'msvc'
 
+    def can_link(self, langs):
+        allowed = ({
+            'c'     : {'c'},
+            'c++'   : {'c', 'c++'},
+        })[self.lang]
+        return allowed.issuperset(langs)
+
     def __call__(self, cmd, input, output, libs=None, args=None):
         result = [cmd]
         result.extend(iterate(args))
@@ -180,6 +187,10 @@ class MsvcStaticLinker(object):
     @property
     def flavor(self):
         return 'msvc'
+
+    def can_link(self, langs):
+        # XXX: Only return true if the object format matches what we expect.
+        return True
 
     def __call__(self, cmd, input, output, args=None):
         result = [cmd]

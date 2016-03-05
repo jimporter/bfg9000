@@ -7,11 +7,10 @@ from .hooks import builder
 from .utils import check_which
 from ..languages import language
 
-language('c', exts=['.c'], link=['c', 'c++', 'objc', 'objc++'])
-language('c++', exts=['.cpp', '.cc', '.cp', '.cxx', '.CPP', '.c++', '.C'],
-         link=['c++', 'objc++'])
-language('objc', exts=['.m'], link=['objc', 'objc++'])
-language('objc++', exts=['.mm', '.M'], link=['objc++'])
+language('c', exts=['.c'])
+language('c++', exts=['.cpp', '.cc', '.cp', '.cxx', '.CPP', '.c++', '.C'])
+language('objc', exts=['.m'])
+language('objc++', exts=['.mm', '.M'])
 
 # XXX: Currently, we tie the linker to a single language, much like the
 # compiler. However, linkers can generally take object files made from multiple

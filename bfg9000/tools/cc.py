@@ -107,6 +107,15 @@ class CcLinker(object):
     def flavor(self):
         return 'cc'
 
+    def can_link(self, langs):
+        allowed = ({
+            'c'     : {'c'},
+            'c++'   : {'c', 'c++'},
+            'objc'  : {'c', 'objc'},
+            'objc++': {'c', 'c++', 'objc', 'objc++'},
+        })[self.lang]
+        return allowed.issuperset(langs)
+
     def __call__(self, cmd, input, output, libs=None, args=None):
         result = [cmd]
         result.extend(iterate(args))

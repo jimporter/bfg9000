@@ -23,6 +23,10 @@ class ArLinker(object):
     def flavor(self):
         return 'ar'
 
+    def can_link(self, langs):
+        # XXX: Only return true if the object format matches what we expect.
+        return True
+
     def __call__(self, cmd, input, output, args=None):
         result = [cmd]
         result.extend(iterutils.iterate(args))

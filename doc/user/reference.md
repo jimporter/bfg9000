@@ -38,8 +38,9 @@ The following arguments may also be specified:
 
 If *files* isn't specified, this function merely references an *existing*
 executable file (a precompiled binary, a shell script, etc) somewhere on the
-filesystem. In this case, *name* is the exact name of the file. This allows
-you to refer to existing executables for other functions.
+filesystem. In this case, *name* is the exact name of the file, relative to the
+source directory. This allows you to refer to existing executables for other
+functions.
 
 This build step recognizes the [dynamic linking environment
 variables](environment-vars.md#dynamic-linking) and the [compiler environment
@@ -63,7 +64,9 @@ The following arguments may also be specified:
 
 If *file* isn't specified, this function merely references an *existing*
 object file somewhere on the filesystem. In this case, *name* must be specified
-and is the exact name of the file.
+and is the exact name of the file, relative to the source directory. You can
+also pass *lang* to indicate the source language of the file; if none is
+specified, it defaults to `'c'`.
 
 This build step recognizes the [compilation environment
 variables](environment-vars.md#compilation-variables) for the relevant language.
@@ -95,6 +98,11 @@ additional options:
 
 * *version*: The version number of the library, e.g. `1.2.3`.
 * *soversion*: The API version of the library (used in its soname), e.g. `1`.
+
+Like with *executable*, if *files* isn't specified, this function merely
+references an *existing* shared library somewhere on the filesystem. In this
+case, *name* must be specified and is the exact name of the file, relative to
+the source directory.
 
 This build step recognizes the [dynamic linking environment
 variables](environment-vars.md#dynamic-linking) and the [compiler environment
@@ -130,6 +138,12 @@ arguments (*link_options*, *libs*, and libraries from *packages*) have no direct
 effect on this build step. Instead, they're cached and forwarded on to any
 dynamic linking step that uses this static library.
 
+Like with *executable*, if *files* isn't specified, this function merely
+references an *existing* shared library somewhere on the filesystem. In this
+case, *name* must be specified and is the exact name of the file, relative to
+the source directory. You can also pass *lang* to indicate the source
+language(s) of the library; if none is specified, it defaults to `['c']`.
+
 This build step recognizes the [static linking environment
 variables](environment-vars.md#static-linking).
 
@@ -138,6 +152,22 @@ variables](environment-vars.md#static-linking).
     `LIB<NAME>_STATIC` that can be used for declaring public symbols. See
     [*shared_library*](#shared_libraryname-files-extra_deps) for more details on
     how to use this macro.
+
+### whole_archive(*name*, [*files*, ..., [*extra_deps*]])
+
+Create a build step that builds a [whole-archive](http://linux.die.net/man/1/ld)
+named *name*. Whole archives ensures that *every* object file in the library is
+included, rather than just the ones whose symbols are referenced. This is
+typically used to turn a static library into a shared library.
+
+*whole_archive*'s arguments are the same as for
+[*static_library*](#static_libraryname-files-extra_deps). In addition, you can
+pass an existing static library to *whole_archive* to convert it into a whole
+archive.
+
+!!! warning
+    The MSVC linker doesn't have a way of expressing the required directives, so
+    *whole_archive* can't be used with it.
 
 ## File types
 
@@ -168,17 +198,6 @@ this function is only necessary when running commands that take a source file
 as an argument, e.g. running a Python script; this allows you to specify that
 the file is found in the *source directory*. In other cases, a plain string will
 automatically get converted to a *source_file*.
-
-### whole_archive(*name*)
-
-Create a [whole-archive](http://linux.die.net/man/1/ld) from an existing static
-library named *name*. This ensure that *every* object file in the library is
-included, rather than just the ones whose symbols are referenced. This is
-typically used to turn a static library into a shared library.
-
-!!! warning
-    The MSVC linker doesn't have a way of expressing this directive, so
-    *whole_archive* can't be used with it.
 
 ## Grouping rules
 
