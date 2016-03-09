@@ -9,7 +9,7 @@
         
         <link rel="shortcut icon" href="../../img/favicon.ico">
 
-	<title>Internals - bfg9000</title>
+	<title>License - bfg9000</title>
 
         <link href="../../css/bootstrap-custom.min.css" rel="stylesheet">
         <link href="../../css/font-awesome-4.0.3.css" rel="stylesheet">
@@ -96,19 +96,19 @@
             
             
             
-                <li class="dropdown active">
+                <li class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">Developer Guide <b class="caret"></b></a>
                     <ul class="dropdown-menu">
                     
                         
-<li class="active">
-    <a href="./">Internals</a>
+<li >
+    <a href="../../developer/internals/">Internals</a>
 </li>
 
                     
                         
 <li >
-    <a href="../contributing/">Contributing</a>
+    <a href="../../developer/contributing/">Contributing</a>
 </li>
 
                     
@@ -117,19 +117,19 @@
             
             
             
-                <li class="dropdown">
+                <li class="dropdown active">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">About <b class="caret"></b></a>
                     <ul class="dropdown-menu">
                     
                         
 <li >
-    <a href="../../about/changes/">Changes</a>
+    <a href="../changes/">Changes</a>
 </li>
 
                     
                         
-<li >
-    <a href="../../about/license/">License</a>
+<li class="active">
+    <a href="./">License</a>
 </li>
 
                     
@@ -147,12 +147,12 @@
                     </a>
                 </li>
                 <li >
-                    <a rel="next" href="../../user/environment-vars/">
+                    <a rel="next" href="../changes/">
                         <i class="fa fa-arrow-left"></i> Previous
                     </a>
                 </li>
-                <li >
-                    <a rel="prev" href="../contributing/">
+                <li class="disabled">
+                    <a rel="prev" >
                         Next <i class="fa fa-arrow-right"></i>
                     </a>
                 </li>
@@ -175,35 +175,47 @@
             <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
     
-        <li class="main active"><a href="#developer-documentation">Developer Documentation</a></li>
+        <li class="main active"><a href="#license">License</a></li>
         
-            <li><a href="#how-a-buildbfg-file-is-compiled">How a build.bfg file is compiled</a></li>
+            <li><a href="#bsd-3-clause-license">BSD 3-clause license</a></li>
         
     
     </ul>
 </div></div>
             <div class="col-md-9" role="main">
 
-<h1 id="developer-documentation">Developer Documentation<a class="headerlink" href="#developer-documentation" title="Permanent link">§</a></h1>
-<p>At its core, a build file is just a DAG (directed acyclic graph) that gets
-walked through by the build system, where the nodes are files and the edges are
-build steps. A bfg9000 build file is no different.</p>
-<h2 id="how-a-buildbfg-file-is-compiled">How a build.bfg file is compiled<a class="headerlink" href="#how-a-buildbfg-file-is-compiled" title="Permanent link">§</a></h2>
-<h3 id="snapshot-the-environment">Snapshot the environment<a class="headerlink" href="#snapshot-the-environment" title="Permanent link">§</a></h3>
-<p>When bfg9000 is invoked, it first takes a snapshot of the current environment
-(the operating system, environment variables, compiler to use, etc). This is
-important to provide a stable state for regeneration of the build file if
-necessary (e.g. if build.bfg is changed).</p>
-<h3 id="build-an-internal-dependency-graph">Build an internal dependency graph<a class="headerlink" href="#build-an-internal-dependency-graph" title="Permanent link">§</a></h3>
-<p>Next, it executes the build.bfg file. Most bfg9000 functions represent build
-steps or other related parts of the dependency graph. When called, these build
-up an internal DAG structure with all the backend-agnostic data filled in (e.g.
-virtual filenames are resolved to real ones, such as "foo" to "libfoo.so").</p>
-<h3 id="emit-the-final-build-file">Emit the final build file<a class="headerlink" href="#emit-the-final-build-file" title="Permanent link">§</a></h3>
-<p>Once this is complete, the DAG is passed to the appropriate backend, which
-iterates over all the known edges (build steps) and emits the backend-specific
-code for them. Since all the backends handle walking the DAG on their own,
-bfg9000 can safely avoid worrying about trying to do this efficiently in Python.</p></div>
+<h1 id="license">License<a class="headerlink" href="#license" title="Permanent link">§</a></h1>
+<h2 id="bsd-3-clause-license">BSD 3-clause license<a class="headerlink" href="#bsd-3-clause-license" title="Permanent link">§</a></h2>
+<p>Copyright (c) 2015-2016, Jim Porter
+All rights reserved.</p>
+<p>Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:</p>
+<ol>
+<li>
+<p>Redistributions of source code must retain the above copyright notice, this
+list of conditions and the following disclaimer.</p>
+</li>
+<li>
+<p>Redistributions in binary form must reproduce the above copyright notice,
+this list of conditions and the following disclaimer in the documentation and/or
+other materials provided with the distribution.</p>
+</li>
+<li>
+<p>Neither the name of the copyright holder nor the names of its contributors
+may be used to endorse or promote products derived from this software without
+specific prior written permission.</p>
+</li>
+</ol>
+<p>THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</p></div>
         </div>
 
         <footer class="col-md-12">

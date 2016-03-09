@@ -706,17 +706,52 @@
             "title": "Linting code"
         }, 
         {
-            "location": "/license/", 
+            "location": "/about/changes/", 
+            "text": "Changes\n\u00a7\n\n\nv0.2.0\n\u00a7\n\n\nin progress\n\n\nNew features\n\u00a7\n\n\n\n\nSupport Objective C/C++\n\n\nPartially support Fortran (simple projects work, but more complex things\n  probably don't)\n\n\nImproved error reporting\n\n\nWarn users if necessary build tools can't be found by bfg9000\n\n\nAutomatically include runtime dependencies when installing a binary\n\n\nSupport \n@rpath\n on OS X\n\n\nAllow fetching bfg's version from \nbuild.bfg\n files via \nbfg9000_version\n\n\nSupport versioning of shared libraries on POSIX systems\n\n\nSupport resolving packages via pkg-config\n\n\nLocally-built static libraries now forward their options to binaries that link\n  to them\n\n\nwhole_archive\n now forwards its arguments on to \nstatic_library\n\n\n\n\nBug fixes\n\u00a7\n\n\n\n\nFix fetching \nCFLAGS\n from the environment (it used to try \nCCFLAGS\n)\n\n\nFix execution context of \nbuild.bfg\n files; this caused strange issues with\n  list/generator comprehensions\n\n\n\n\nv0.1.1\n\u00a7\n\n\n2016-01-21\n\n\n\n\nFix an issue with installing the package from PyPI\n\n\n\n\nv0.1.0\n\u00a7\n\n\n2016-01-20\n\n\n\n\nInitial release\n\n\nSupport for C and C++ builds on Linux, Mac, and Windows (MinGW included) via\n  Make, Ninja, and MSBuild.", 
+            "title": "Changes"
+        }, 
+        {
+            "location": "/about/changes/#changes", 
+            "text": "", 
+            "title": "Changes"
+        }, 
+        {
+            "location": "/about/changes/#v020", 
+            "text": "in progress", 
+            "title": "v0.2.0"
+        }, 
+        {
+            "location": "/about/changes/#new-features", 
+            "text": "Support Objective C/C++  Partially support Fortran (simple projects work, but more complex things\n  probably don't)  Improved error reporting  Warn users if necessary build tools can't be found by bfg9000  Automatically include runtime dependencies when installing a binary  Support  @rpath  on OS X  Allow fetching bfg's version from  build.bfg  files via  bfg9000_version  Support versioning of shared libraries on POSIX systems  Support resolving packages via pkg-config  Locally-built static libraries now forward their options to binaries that link\n  to them  whole_archive  now forwards its arguments on to  static_library", 
+            "title": "New features"
+        }, 
+        {
+            "location": "/about/changes/#bug-fixes", 
+            "text": "Fix fetching  CFLAGS  from the environment (it used to try  CCFLAGS )  Fix execution context of  build.bfg  files; this caused strange issues with\n  list/generator comprehensions", 
+            "title": "Bug fixes"
+        }, 
+        {
+            "location": "/about/changes/#v011", 
+            "text": "2016-01-21   Fix an issue with installing the package from PyPI", 
+            "title": "v0.1.1"
+        }, 
+        {
+            "location": "/about/changes/#v010", 
+            "text": "2016-01-20   Initial release  Support for C and C++ builds on Linux, Mac, and Windows (MinGW included) via\n  Make, Ninja, and MSBuild.", 
+            "title": "v0.1.0"
+        }, 
+        {
+            "location": "/about/license/", 
             "text": "License\n\u00a7\n\n\nBSD 3-clause license\n\u00a7\n\n\nCopyright (c) 2015-2016, Jim Porter\nAll rights reserved.\n\n\nRedistribution and use in source and binary forms, with or without modification,\nare permitted provided that the following conditions are met:\n\n\n\n\n\n\nRedistributions of source code must retain the above copyright notice, this\nlist of conditions and the following disclaimer.\n\n\n\n\n\n\nRedistributions in binary form must reproduce the above copyright notice,\nthis list of conditions and the following disclaimer in the documentation and/or\nother materials provided with the distribution.\n\n\n\n\n\n\nNeither the name of the copyright holder nor the names of its contributors\nmay be used to endorse or promote products derived from this software without\nspecific prior written permission.\n\n\n\n\n\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\" AND\nANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED\nWARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE\nDISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR\nANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES\n(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;\nLOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON\nANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT\n(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS\nSOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.", 
             "title": "License"
         }, 
         {
-            "location": "/license/#license", 
+            "location": "/about/license/#license", 
             "text": "", 
             "title": "License"
         }, 
         {
-            "location": "/license/#bsd-3-clause-license", 
+            "location": "/about/license/#bsd-3-clause-license", 
             "text": "Copyright (c) 2015-2016, Jim Porter\nAll rights reserved.  Redistribution and use in source and binary forms, with or without modification,\nare permitted provided that the following conditions are met:    Redistributions of source code must retain the above copyright notice, this\nlist of conditions and the following disclaimer.    Redistributions in binary form must reproduce the above copyright notice,\nthis list of conditions and the following disclaimer in the documentation and/or\nother materials provided with the distribution.    Neither the name of the copyright holder nor the names of its contributors\nmay be used to endorse or promote products derived from this software without\nspecific prior written permission.    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\" AND\nANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED\nWARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE\nDISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR\nANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES\n(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;\nLOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON\nANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT\n(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS\nSOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.", 
             "title": "BSD 3-clause license"
         }

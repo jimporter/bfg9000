@@ -62,11 +62,19 @@
     
 
     
+        
     <url>
-     <loc>/license/</loc>
+     <loc>/about/changes/</loc>
      <lastmod>2016-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url>
+        
+    <url>
+     <loc>/about/license/</loc>
+     <lastmod>2016-03-09</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
     
 
 </urlset>
