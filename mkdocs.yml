@@ -26,4 +26,6 @@ pages:
   - Developer Guide:
       - Internals: developer/internals.md
       - Contributing: developer/contributing.md
-  - License: license.md
+  - About:
+      - Changes: about/changes.md
+      - License: about/license.md
