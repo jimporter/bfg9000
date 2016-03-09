@@ -23,3 +23,17 @@ class TestMixedLibrary(IntegrationTest):
     def test_build(self):
         self.build(executable('program'))
         self.assertOutput([executable('program')], 'hello, library!\n')
+
+
+# This fails on OS X, probably because of a version mismatch somewhere.
+@unittest.skipIf(env.platform.name == 'windows', 'no fortran on windows')
+@unittest.skipIf(env.platform.name == 'darwin', 'fortran on os x is weird')
+class TestMixedFortran(IntegrationTest):
+    def __init__(self, *args, **kwargs):
+        IntegrationTest.__init__(
+            self, os.path.join('languages', 'mixed_fortran'), *args, **kwargs
+        )
+
+    def test_build(self):
+        self.build(executable('program'))
+        self.assertOutput([executable('program')], 'hello from f77!\n')

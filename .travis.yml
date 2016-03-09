@@ -24,6 +24,7 @@ matrix:
 addons:
   apt:
     packages:
+      - gfortran
       - gobjc
       - gobjc++
       - libboost-dev
@@ -37,10 +38,10 @@ before_install:
   - |
     if [ "${TRAVIS_OS_NAME}" = "osx" ]; then
       brew update
-      brew install python
       brew install coreutils
-      brew install ninja
       brew install libogg
+      brew install ninja
+      brew install python
     fi
 install:
   - pip install flake8

@@ -1,0 +1,3 @@
+# -*- python -*-
+
+executable('program', files=['program.f', 'echo.cpp'])

@@ -142,7 +142,10 @@ class MsvcLinker(object):
             raise ValueError('MSVC does not support whole-archives')
         return [library.path.basename()]
 
-    def libs(self, libraries, always_libs=True):
+    def always_libs(self, primary):
+        return []
+
+    def libs(self, libraries):
         return sum((self._link_lib(i) for i in libraries), [])
 
 

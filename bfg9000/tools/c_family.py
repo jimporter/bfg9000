@@ -12,10 +12,6 @@ language('c++', exts=['.cpp', '.cc', '.cp', '.cxx', '.CPP', '.c++', '.C'])
 language('objc', exts=['.m'])
 language('objc++', exts=['.mm', '.M'])
 
-# XXX: Currently, we tie the linker to a single language, much like the
-# compiler. However, linkers can generally take object files made from multiple
-# source languages. We should figure out what the correct thing to do here is.
-
 
 @builder('c', 'c++', 'objc', 'objc++')
 class CFamilyBuilder(object):

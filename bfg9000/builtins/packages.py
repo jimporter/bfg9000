@@ -32,7 +32,7 @@ class SystemPackage(Package):
         return builder.lib_dirs(self._libraries, self._lib_dirs)
 
     def ldlibs(self, builder):
-        return builder.libs(self._libraries, always_libs=False)
+        return builder.libs(self._libraries)
 
 
 class PkgConfigPackage(Package):

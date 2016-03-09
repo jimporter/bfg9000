@@ -50,6 +50,23 @@ Default: *none*
 Command line arguments to pass to the compiler when compiling any C++ source
 file.
 
+### Fortran
+---
+
+#### *FC*
+Default: `gfortran`
+{: .subtitle}
+
+The command to use when compiling Fortran source files. Also the command to use
+when linking object files whose source is in Fortran.
+
+#### *FFLAGS*
+Default: *none*
+{: .subtitle}
+
+Command line arguments to pass to the compiler when compiling any Fortran source
+file.
+
 ### Objective C
 ---
 

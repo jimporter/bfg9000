@@ -26,7 +26,7 @@ class CcCompiler(object):
 
     @property
     def deps_flavor(self):
-        return 'gcc'
+        return None if self.lang in ('f77', 'f95') else 'gcc'
 
     def __call__(self, cmd, input, output, deps=None, args=None):
         result = [cmd]
@@ -110,9 +110,11 @@ class CcLinker(object):
     def can_link(self, langs):
         allowed = ({
             'c'     : {'c'},
-            'c++'   : {'c', 'c++'},
-            'objc'  : {'c', 'objc'},
-            'objc++': {'c', 'c++', 'objc', 'objc++'},
+            'c++'   : {'c', 'c++', 'f77', 'f95'},
+            'objc'  : {'c', 'objc', 'f77', 'f95'},
+            'objc++': {'c', 'c++', 'objc', 'objc++', 'f77', 'f95'},
+            'f77'   : {'c', 'f77', 'f95'},
+            'f95'   : {'c', 'f77', 'f95'},
         })[self.lang]
         return allowed.issuperset(langs)
 
@@ -167,10 +169,6 @@ class CcLinker(object):
         return ( self._always_args + self.lib_dirs(libraries) +
                  self._rpath(libraries, first(output).path.parent()) )
 
-    @property
-    def _always_libs(self):
-        return ['-lobjc'] if self.lang in ('objc', 'objc++') else []
-
     def _link_lib(self, library):
         if isinstance(library, WholeArchive):
             if self.platform.name == 'darwin':
@@ -184,9 +182,20 @@ class CcLinker(object):
         # in the case of MinGW).
         return ['-l' + self._extract_lib_name(library)]
 
-    def libs(self, libraries, always_libs=True):
-        base = self._always_libs if always_libs else []
-        return sum((self._link_lib(i) for i in libraries), base)
+    def always_libs(self, primary):
+        # XXX: Don't just asssume that these are these are the right libraries
+        # to use. For instance, clang users might want to use libc++ instead.
+        libs = []
+        if self.lang in ('c++', 'objc++') and not primary:
+            libs.append('-lstdc++')
+        if self.lang in ('objc', 'objc++'):
+            libs.append('-lobjc')
+        if self.lang in ('f77', 'f95') and not primary:
+            libs.append('-lgfortran')
+        return libs
+
+    def libs(self, libraries):
+        return sum((self._link_lib(i) for i in libraries), [])
 
     def post_install(self, output):
         if self.platform.rpath_flavor is None:

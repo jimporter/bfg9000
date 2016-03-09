@@ -51,20 +51,20 @@ class Link(Edge):
                 self.name, self.mode, (f['name'] for f in fwd if 'name' in f)
             ))
 
-        langs = uniques(chain(
+        self.langs = uniques(chain(
             (i.lang for i in self.files),
             chain.from_iterable(getattr(i, 'lang', []) for i in self.all_libs)
         ))
-        self.builder = self.__find_linker(env, langs)
+        self.builder = self.__find_linker(env, self.langs)
 
         self.user_options = pshell.listify(link_options)
         self._extra_options = sum((i.get('link_options', []) for i in fwd), [])
         self._internal_options = []
 
-        output = self._output_file(name, lang)
+        output = self._output_file(name)
         Edge.__init__(self, build, output, extra_deps)
 
-        self._fill_options()
+        self._fill_options(env)
 
         primary = first(output)
         if hasattr(self.builder, 'post_install'):
@@ -75,7 +75,7 @@ class Link(Edge):
     def options(self):
         return self._internal_options + self._extra_options + self.user_options
 
-    def _output_file(self, name, lang):
+    def _output_file(self, name):
         return self.builder.output_file(name)
 
     @classmethod
@@ -99,7 +99,7 @@ class StaticLink(Link):
     def __init__(self, *args, **kwargs):
         Link.__init__(self, *args, **kwargs)
 
-    def _fill_options(self):
+    def _fill_options(self, env):
         primary = first(self.output)
         primary.forward_args = {
             'name': self.name,
@@ -108,10 +108,8 @@ class StaticLink(Link):
             'packages': self.packages,
         }
 
-    def _output_file(self, name, lang):
-        langs = uniques(chain(
-            iterate(lang), (i.lang for i in self.files)
-        ))
+    def _output_file(self, name):
+        langs = uniques(i.lang for i in self.files)
         return self.builder.output_file(name, langs)
 
 
@@ -120,19 +118,20 @@ class DynamicLink(Link):
     msbuild_mode = 'Application'
     _prefix = ''
 
-    def _fill_options(self):
-        pkg_ldflags = sum(
-            (i.ldflags(self.builder) for i in self.all_packages), []
-        )
-        pkg_ldlibs = sum(
-            (i.ldlibs(self.builder) for i in self.all_packages), []
-        )
-
+    def _fill_options(self, env):
         # XXX: Create a LinkOptions namedtuple for managing these args?
         self._internal_options = (
-            self.builder.args(self.all_libs, self.output) + pkg_ldflags
+            sum((i.ldflags(self.builder) for i in self.all_packages), []) +
+            self.builder.args(self.all_libs, self.output)
         )
-        self.lib_options = self.builder.libs(self.all_libs) + pkg_ldlibs
+
+        linkers = (env.linker(i, self.mode) for i in self.langs)
+        self.lib_options = (
+            sum((i.always_libs(i is self.builder) for i in linkers), []) +
+            sum((i.ldlibs(self.builder) for i in self.all_packages), []) +
+            self.builder.libs(self.all_libs)
+        )
+
         first(self.output).runtime_deps = sum(
             (self.__get_runtime_deps(i) for i in self.libs), []
         )
@@ -159,7 +158,7 @@ class SharedLink(DynamicLink):
             raise ValueError('specify both version and soversion or neither')
         DynamicLink.__init__(self, *args, **kwargs)
 
-    def _output_file(self, name, lang):
+    def _output_file(self, name):
         return self.builder.output_file(name, self.version, self.soversion)
 
 
