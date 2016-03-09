@@ -22,9 +22,13 @@
 - Fix execution context of `build.bfg` files; this caused strange issues with
   list/generator comprehensions
 
+---
+
 ## v0.1.1 (2016-01-21)
 
 - Fix an issue with installing the package from PyPI
+
+---
 
 ## v0.1.0 (2016-01-20)
 
