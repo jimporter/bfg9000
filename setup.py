@@ -57,10 +57,7 @@ extra_scripts = []
 
 if platform_name == 'Windows':
 
-    extra_scripts.extend([
-        'bfg9000-setenv=bfg9000.setenv:main',
-        'bfg9000-makedirs=bfg9000.makedirs:main'
-    ])
+    extra_scripts.append('bfg9000-setenv=bfg9000.setenv:main')
 
 elif platform_name == 'Linux':
 
@@ -212,7 +209,7 @@ setup(
 
     packages=find_packages(exclude=['test', 'test.*']),
 
-    install_requires=['colorama', 'enum-compat', 'packaging', 'six'],
+    install_requires=['colorama', 'doppel', 'enum-compat', 'packaging', 'six'],
     extras_require={
         'msbuild': ['lxml'],
         'lint': ['flake8'],

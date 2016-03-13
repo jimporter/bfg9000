@@ -79,6 +79,7 @@ class HeaderFile(File):
 
 
 class HeaderDirectory(Directory):
+    install_kind = 'data'
     install_root = InstallRoot.includedir
 
     def __init__(self, path, system, external=False):

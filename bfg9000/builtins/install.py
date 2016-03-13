@@ -49,29 +49,28 @@ def _install_commands(backend, build_inputs, buildfile, env):
     if not install_outputs:
         return None
 
-    install = env.tool('install')
-    mkdir_p = env.tool('mkdir_p')
+    doppel = env.tool('doppel')
 
-    def install_line(file):
-        kind = file.install_kind
-        cmd = backend.cmd_var(install, buildfile)
+    def doppel_cmd(kind):
+        cmd = backend.cmd_var(doppel, buildfile)
+        name = cmd.name
 
         if kind != 'program':
             kind = 'data'
-            cmd = [cmd] + install.data_args
-        cmdname = 'install_' + kind
-        if backend == make:
-            cmdname = cmdname.upper()
+            cmd = [cmd] + doppel.data_args
 
-        cmd = buildfile.variable(cmdname, cmd, backend.Section.command, True)
+        cmdname = '{name}_{kind}'.format(name=name, kind=kind)
+        return buildfile.variable(cmdname, cmd, backend.Section.command, True)
+
+    def install_line(file):
         src = file.path
         dst = path.install_path(file.path, file.install_root)
-        return install(cmd, src, dst)
+        return doppel(doppel_cmd(file.install_kind), src, dst)
 
     def mkdir_line(dir):
         src = dir.path
         dst = path.install_path(dir.path.parent(), dir.install_root)
-        return mkdir_p.copy(backend.cmd_var(mkdir_p, buildfile), src, dst)
+        return doppel(doppel_cmd(dir.install_kind), src, dst)
 
     def post_install(file):
         if file.post_install:
