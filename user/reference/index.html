@@ -234,7 +234,11 @@ file (or a plain string), this function will implicitly call
 executable file (a precompiled binary, a shell script, etc) somewhere on the
 filesystem. In this case, <em>name</em> is the exact name of the file, relative to the
 source directory. This allows you to refer to existing executables for other
-functions.</p>
+functions. In addition, the following arguments may be specified:</p>
+<ul>
+<li><em>format</em>: The object format of the exectuable; by default, this is the
+  platform's native object format (e.g. <code>'elf'</code> on Linux)</li>
+</ul>
 <p>This build step recognizes the <a href="../environment-vars/#dynamic-linking">dynamic linking environment
 variables</a> and the <a href="../environment-vars/#compilation-variables">compiler environment
 variable</a> (e.g. <code>CC</code>) for the
@@ -254,9 +258,14 @@ without the extension.</p>
 </ul>
 <p>If <em>file</em> isn't specified, this function merely references an <em>existing</em>
 object file somewhere on the filesystem. In this case, <em>name</em> must be specified
-and is the exact name of the file, relative to the source directory. You can
-also pass <em>lang</em> to indicate the source language of the file; if none is
-specified, it defaults to <code>'c'</code>.</p>
+and is the exact name of the file, relative to the source directory. In
+addition, the following arguments may be specified:</p>
+<ul>
+<li><em>format</em>: The object format of the file; by default, this is the platform's
+  native object format (e.g. <code>'elf'</code> on Linux)</li>
+<li><em>lang</em>: The source language of the file; if none is specified, defaults to
+  <code>'c'</code></li>
+</ul>
 <p>This build step recognizes the <a href="../environment-vars/#compilation-variables">compilation environment
 variables</a> for the relevant language.</p>
 <h3 id="object_filesfiles-extra_deps">object_files(<em>files</em>, ..., [<em>extra_deps</em>])<a class="headerlink" href="#object_filesfiles-extra_deps" title="Permanent link">§</a></h3>
@@ -285,7 +294,8 @@ additional options:</p>
 <p>Like with <em>executable</em>, if <em>files</em> isn't specified, this function merely
 references an <em>existing</em> shared library somewhere on the filesystem. In this
 case, <em>name</em> must be specified and is the exact name of the file, relative to
-the source directory.</p>
+the source directory. You may also pass in the <em>format</em> argument as with
+<em>executable</em>.</p>
 <p>This build step recognizes the <a href="../environment-vars/#dynamic-linking">dynamic linking environment
 variables</a> and the <a href="../environment-vars/#compilation-variables">compiler environment
 variable</a> (e.g. <code>CC</code>) for the
@@ -320,8 +330,13 @@ dynamic linking step that uses this static library.</p>
 <p>Like with <em>executable</em>, if <em>files</em> isn't specified, this function merely
 references an <em>existing</em> shared library somewhere on the filesystem. In this
 case, <em>name</em> must be specified and is the exact name of the file, relative to
-the source directory. You can also pass <em>lang</em> to indicate the source
-language(s) of the library; if none is specified, it defaults to <code>['c']</code>.</p>
+the source directory. In addition, the following arguments may be specified:</p>
+<ul>
+<li><em>format</em>: The object format of the exectuable; by default, this is the
+  platform's native object format (e.g. <code>'elf'</code> on Linux)</li>
+<li><em>lang</em>: The source language(s) of the library; if none is specified, defaults
+  to <code>['c']</code></li>
+</ul>
 <p>This build step recognizes the <a href="../environment-vars/#static-linking">static linking environment
 variables</a>.</p>
 <div class="admonition note">
