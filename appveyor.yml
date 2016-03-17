@@ -41,7 +41,6 @@ install:
   - cinst ninja gnuwin32-coreutils.portable %CHOCO_EXTRAS%
   - if defined VS call "%VS%" x86
   - set PATH=%PYTHON%;%PYTHON%\Scripts;%MINGW_PATH%;%PATH%
-  - easy_install lxml
-  - pip install .
+  - pip install lxml==3.5.0 .
 test_script:
   - python setup.py test -q
