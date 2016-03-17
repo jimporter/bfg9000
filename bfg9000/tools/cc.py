@@ -11,6 +11,15 @@ from ..path import Path, Root
 
 
 class CcCompiler(object):
+    __langs = {
+        'c'     : 'c',
+        'c++'   : 'c++',
+        'objc'  : 'objective-c',
+        'objc++': 'objective-c++',
+        'f77'   : 'f77',
+        'f95'   : 'f95',
+    }
+
     def __init__(self, env, lang, name, command, cflags):
         self.platform = env.platform
         self.lang = lang
@@ -29,7 +38,7 @@ class CcCompiler(object):
         return None if self.lang in ('f77', 'f95') else 'gcc'
 
     def __call__(self, cmd, input, output, deps=None, args=None):
-        result = [cmd]
+        result = [cmd, '-x', self.__langs[self.lang]]
         result.extend(iterate(args))
         result.extend(['-c', input])
         if deps:
