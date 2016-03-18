@@ -315,17 +315,19 @@ easy to provide your users with a standard build that gets them all the bits
 they need, and none they don't.</p>
 <h2 id="external-packages">External packages<a class="headerlink" href="#external-packages" title="Permanent link">§</a></h2>
 <p>Most projects have external packages that they depend on. There are lots of
-different ways these packages are organized, and bfg9000 currently supports two
-of them: <a href="../reference/#system_packagename-lang-kind">"system" packages</a>
-(libraries installed into the default location for your system) and <a href="../reference/#boost_packagename-version">Boost
+different ways these packages are organized, and bfg9000 currently supports
+three of them: <a href="../reference/#system_packagename-lang-kind">"system" packages</a>
+(libraries installed into the default location for your system), <a href="../reference/#pkgconfig_packagename-version-lang">pkg-config
+packages</a>, and <a href="../reference/#boost_packagename-version">Boost
 packages</a>:</p>
 <pre class="codehilite"><code class="language-python">ogg = system_package('ogg', kind='static')
+zlib = pkgconfig_package('zlib', version='&gt;=1.2.8')
 prog_opts = boost_package('program_options', version='&gt;=1.55')</code></pre>
 
 
 <p>Each of these returns an object representing the package that can be used when
 building binaries by passing them in the <em>packages</em> argument:</p>
-<pre class="codehilite"><code class="language-python">executable('program', files=['main.cpp'], packages=[ogg, prog_opts])</code></pre>
+<pre class="codehilite"><code class="language-python">executable('program', files=['main.cpp'], packages=[ogg, zlib, prog_opts])</code></pre>
 
 
 <h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">§</a></h2>
@@ -354,7 +356,7 @@ can simply pass a string to the <em>cmd</em> argument. In addition, you can supp
 multiple commands to this function via the <em>cmds</em> argument:</p>
 <pre class="codehilite"><code class="language-python">command('script', cmds=[
     'touch file',
-    ['python', script.py']
+    ['python', 'script.py']
 ])</code></pre>
 
 
