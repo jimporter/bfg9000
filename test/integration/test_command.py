@@ -11,30 +11,27 @@ class TestCommand(IntegrationTest):
             self, os.path.join(examples_dir, '07_commands'), *args, **kwargs
         )
 
-    @skip_if_backend('msbuild')
     def test_hello(self):
         assertRegex(self,
             self.build('hello'),
-            re.compile('^hello$', re.MULTILINE)
+            re.compile(r'^\s*hello$', re.MULTILINE)
         )
 
-    @skip_if_backend('msbuild')
     def test_world(self):
         assertRegex(self,
             self.build('world'),
-            re.compile('^world$', re.MULTILINE)
+            re.compile(r'^\s*world$', re.MULTILINE)
         )
 
-    @skip_if_backend('msbuild')
     def test_script(self):
         assertRegex(self,
             self.build('script'),
-            re.compile('^hello, world!$', re.MULTILINE)
+            re.compile(r'^\s*hello, world!$', re.MULTILINE)
         )
-        self.assertExists(os.path.join(self.builddir, 'file'))
+        self.assertExists(output_file('file'))
 
     @skip_if_backend('msbuild')
     def test_alias(self):
         output = self.build('hello-world')
-        assertRegex(self, output, re.compile('^hello$', re.MULTILINE))
-        assertRegex(self, output, re.compile('^world$', re.MULTILINE))
+        assertRegex(self, output, re.compile(r'^\s*hello$', re.MULTILINE))
+        assertRegex(self, output, re.compile(r'^\s*world$', re.MULTILINE))

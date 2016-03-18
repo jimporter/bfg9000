@@ -210,6 +210,10 @@ class IntegrationTest(unittest.TestCase):
             )
 
 
+def output_file(name):
+    return Target(name, os.path.normpath(os.path.join('.', name)))
+
+
 def executable(name):
     return Target(name, os.path.normpath(os.path.join(
         '.', name + platform_info().executable_ext

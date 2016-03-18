@@ -60,10 +60,16 @@ def ninja_command(rule, build_inputs, buildfile, env):
 try:
     from ..backends.msbuild import writer as msbuild
 
-    import warnings
-
     @msbuild.rule_handler(Command)
     def msbuild_command(rule, build_inputs, solution, env):
-        warnings.warn('command rules not currently supported with msbuild')
+        # XXX: Support environment variables
+        project = msbuild.ExecProject(
+            name=rule.output.path,
+            version=env.getvar('VISUALSTUDIOVERSION'),
+            platform=env.getvar('PLATFORM'),
+            srcdir=env.srcdir.string(),
+            commands=rule.cmds,
+        )
+        solution[rule.output] = project
 except:
     pass

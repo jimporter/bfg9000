@@ -11,8 +11,10 @@ from six import iteritems, string_types
 from ... import path
 from ... import safe_str
 from ... import shell
+from ...iterutils import isiterable
 
-__all__ = ['Solution', 'UuidMap', 'VcxProject', 'textify', 'textify_each']
+__all__ = ['ExecProject', 'Solution', 'UuidMap', 'VcxProject', 'textify',
+           'textify_each']
 
 
 def uuid_str(uuid):
@@ -178,9 +180,65 @@ def textify_each(thing, quoted=False, out=False):
     return (textify(i, quoted, out) for i in thing)
 
 
-class VcxProject(object):
+class Project(object):
     _XMLNS = 'http://schemas.microsoft.com/developer/msbuild/2003'
     _DOCTYPE = '<?xml version="1.0" encoding="utf-8"?>'
+    _extension = '.proj'
+
+    def __init__(self, name, uuid=None, version=None, configuration=None,
+                 platform=None, srcdir=None, dependencies=None):
+        self.name = name
+        self.uuid = uuid
+        self.version = version or '14.0'
+        self.configuration = configuration or 'Debug'
+        self.platform = platform or 'Win32'
+        self.srcdir = srcdir
+        self.dependencies = dependencies or []
+
+    @property
+    def path(self):
+        return os.path.join(self.name, '{name}{ext}'.format(
+            name=os.path.basename(self.name), ext=self._extension
+        ))
+
+    def set_uuid(self, uuids):
+        if not self.uuid:
+            self.uuid = uuids[self.name]
+
+    @property
+    def uuid_str(self):
+        return uuid_str(self.uuid)
+
+    @property
+    def config_plat(self):
+        return '{config}|{platform}'.format(
+            config=self.configuration,
+            platform=self.platform
+        )
+
+    def _write(self, out, children):
+        project = E.Project({'DefaultTargets': 'Build',
+                             'ToolsVersion': self.version,
+                             'xmlns': self._XMLNS},
+            E.ItemGroup({'Label': 'ProjectConfigurations'},
+                E.ProjectConfiguration({'Include' : self.config_plat},
+                    E.Configuration(self.configuration),
+                    E.Platform(self.platform)
+                )
+            ),
+            E.PropertyGroup({'Label': 'Globals'},
+                E.ProjectGuid(self.uuid_str),
+                E.RootNamespace(self.name),
+                E.SourceDir(ntpath.normpath(self.srcdir))
+            ),
+            *children
+        )
+        out.write(etree.tostring(project, doctype=self._DOCTYPE,
+                                 pretty_print=True))
+
+
+class VcxProject(Project):
+    _extension = '.vcxproj'
 
     _warning_levels = {
         '0'  : 'TurnOffAllWarnings',
@@ -191,44 +249,18 @@ class VcxProject(object):
         'all': 'EnableAllWarnings',
     }
 
-    def __init__(self, name, uuid=None, version=None, mode='Application',
-                 configuration=None, platform=None, output_file=None,
-                 import_lib=None, srcdir=None, files=None, libs=None,
+    def __init__(self, name, uuid=None, version=None, configuration=None,
+                 platform=None, srcdir=None, mode='Application',
+                 output_file=None, import_lib=None, files=None, libs=None,
                  options=None, dependencies=None):
-        self.name = name
-        self.uuid = uuid
-        self.version = version or '14.0'
+        Project.__init__(self, name, uuid, version, configuration, platform,
+                         srcdir, dependencies)
         self.mode = mode
-        self.configuration = configuration or 'Debug'
-        self.platform = platform or 'Win32'
         self.output_file = output_file
         self.import_lib = import_lib
-        self.srcdir = srcdir
         self.files = files or []
         self.libs = libs or []
         self.options = options or {}
-        self.dependencies = dependencies or []
-
-    @property
-    def path(self):
-        return os.path.join(self.name, '{}.vcxproj'.format(
-            os.path.basename(self.name)
-        ))
-
-    @property
-    def config_plat(self):
-        return '{config}|{platform}'.format(
-            config=self.configuration,
-            platform=self.platform
-        )
-
-    def set_uuid(self, uuids):
-        if not self.uuid:
-            self.uuid = uuids[self.name]
-
-    @property
-    def uuid_str(self):
-        return uuid_str(self.uuid)
 
     @property
     def toolset(self):
@@ -300,20 +332,7 @@ class VcxProject(object):
                 c.append(E.ObjectFileName(textify(suffix) + '\\'))
             compiles.append(c)
 
-        project = E.Project({'DefaultTargets': 'Build',
-                             'ToolsVersion': self.version,
-                             'xmlns': self._XMLNS},
-            E.ItemGroup({'Label' : 'ProjectConfigurations'},
-                E.ProjectConfiguration({'Include' : self.config_plat},
-                    E.Configuration(self.configuration),
-                    E.Platform(self.platform)
-                )
-            ),
-            E.PropertyGroup({'Label': 'Globals'},
-                E.ProjectGuid(self.uuid_str),
-                E.RootNamespace(self.name),
-                E.SourceDir(ntpath.normpath(self.srcdir))
-            ),
+        self._write(out, [
             E.Import(Project='$(VCTargetsPath)\Microsoft.Cpp.default.props'),
             E.PropertyGroup({'Label': 'Configuration'},
                 E.ConfigurationType(self.mode),
@@ -326,10 +345,38 @@ class VcxProject(object):
             E.ItemDefinitionGroup(compile_opts, link_opts),
             compiles,
             E.Import(Project='$(VCTargetsPath)\Microsoft.Cpp.Targets')
-        )
+        ])
 
-        out.write(etree.tostring(project, doctype=self._DOCTYPE,
-                                 pretty_print=True))
+
+class ExecProject(Project):
+    def __init__(self, name, uuid=None, version=None, configuration=None,
+                 platform=None, srcdir=None, commands=None, dependencies=None):
+        Project.__init__(self, name, uuid, version, configuration, platform,
+                         srcdir, dependencies)
+        self.commands = commands or []
+
+    def write(self, out):
+        target = E.Target({'Name': 'Build'},
+            E.MakeDir(Directories='$(OutDir)')
+        )
+        for i in self.commands:
+            # XXX: What to do here with the `out` param? It's not clear what
+            # value it should have; do users want to mess with an intermediate
+            # file or an output file?
+            if isiterable(i):
+                cmd = ' '.join(textify_each(i, quoted=True, out=True))
+            else:
+                cmd = textify(i, out=True)
+            target.append(E.Exec({'Command': cmd,
+                                  'WorkingDirectory': '$(OutDir)'}))
+
+        self._write(out, [
+            # Import the C++ properties to get $(OutDir). There might be a
+            # better way to handle this.
+            E.Import(Project='$(VCTargetsPath)\Microsoft.Cpp.default.props'),
+            E.Import(Project='$(VCTargetsPath)\Microsoft.Cpp.props'),
+            target
+        ])
 
 
 class UuidMap(object):

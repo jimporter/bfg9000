@@ -338,11 +338,11 @@ try:
         project = msbuild.VcxProject(
             name=rule.name,
             version=env.getvar('VISUALSTUDIOVERSION'),
-            mode=rule.msbuild_mode,
             platform=env.getvar('PLATFORM'),
+            srcdir=env.srcdir.string(),
+            mode=rule.msbuild_mode,
             output_file=output,
             import_lib=import_lib,
-            srcdir=env.srcdir.string(),
             files=[i.creator.file for i in rule.files],
             libs=(
                 getattr(rule.builder, 'global_libs', []) +
