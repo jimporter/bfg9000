@@ -18,6 +18,7 @@ in progress
 - Locally-built static libraries now forward their options to binaries that link
   to them
 - *whole_archive* now forwards its arguments on to *static_library*
+- Support *command* and *alias* rules under MSBuild
 
 ### Bug fixes
 - Fix fetching `CFLAGS` from the environment (it used to try `CCFLAGS`)
