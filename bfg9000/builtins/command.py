@@ -69,6 +69,7 @@ try:
             platform=env.getvar('PLATFORM'),
             srcdir=env.srcdir.string(),
             commands=rule.cmds,
+            dependencies=solution.dependencies(rule.extra_deps),
         )
         solution[rule.output] = project
 except:

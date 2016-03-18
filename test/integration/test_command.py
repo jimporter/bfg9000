@@ -30,7 +30,6 @@ class TestCommand(IntegrationTest):
         )
         self.assertExists(output_file('file'))
 
-    @skip_if_backend('msbuild')
     def test_alias(self):
         output = self.build('hello-world')
         assertRegex(self, output, re.compile(r'^\s*hello$', re.MULTILINE))

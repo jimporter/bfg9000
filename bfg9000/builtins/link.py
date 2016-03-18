@@ -314,17 +314,6 @@ try:
 
     @msbuild.rule_handler(StaticLink, DynamicLink, SharedLink)
     def msbuild_link(rule, build_inputs, solution, env):
-        # By definition, a dependency for an edge must already be defined by
-        # the time the edge is created, so we can map *all* the dependencies to
-        # their associated projects by looking at the projects we've already
-        # created.
-        dependencies = []
-        for dep in rule.libs:
-            dep_output = first(dep.creator.output)
-            if dep_output not in solution:
-                raise ValueError('unknown dependency for {!r}'.format(dep))
-            dependencies.append(solution[dep_output])
-
         output = first(rule.output)
         import_lib = getattr(output, 'import_lib', None)
         cflags = _reduce_compile_options(
@@ -355,7 +344,10 @@ try:
                 'compile' : cflags['other'],
                 'link'    : ldflags['other'],
             },
-            dependencies=dependencies,
+            dependencies=solution.dependencies(chain(
+                rule.libs, rule.extra_deps,
+                chain.from_iterable(i.creator.extra_deps for i in rule.files)
+            )),
         )
         solution[output] = project
 except:

@@ -187,15 +187,17 @@ class IntegrationTest(unittest.TestCase):
         ), output)
 
     def assertExists(self, path):
-        if not os.path.exists(self._target_path(path)):
+        realpath = self._target_path(path)
+        if not os.path.exists(realpath):
             raise unittest.TestCase.failureException(
-                "'{}' does not exist".format(os.path.normpath(path))
+                "'{}' does not exist".format(realpath)
             )
 
     def assertNotExists(self, path):
-        if os.path.exists(self._target_path(path)):
+        realpath = self._target_path(path)
+        if os.path.exists(realpath):
             raise unittest.TestCase.failureException(
-                "'{}' exists".format(os.path.normpath(path))
+                "'{}' exists".format(os.path.normpath(realpath))
             )
 
     def assertDirectory(self, path, contents):

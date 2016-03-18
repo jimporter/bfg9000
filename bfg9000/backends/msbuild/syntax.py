@@ -11,10 +11,10 @@ from six import iteritems, string_types
 from ... import path
 from ... import safe_str
 from ... import shell
-from ...iterutils import isiterable
+from ...iterutils import first, isiterable
 
-__all__ = ['ExecProject', 'Solution', 'UuidMap', 'VcxProject', 'textify',
-           'textify_each']
+__all__ = ['ExecProject', 'NoopProject', 'Solution', 'UuidMap', 'VcxProject',
+           'textify', 'textify_each']
 
 
 def uuid_str(uuid):
@@ -96,6 +96,19 @@ class Solution(object):
 
     def __contains__(self, key):
         return id(key) in self._project_map
+
+    def dependencies(self, deps):
+        # By definition, a dependency for an edge must already be defined by
+        # the time the edge is created, so we can map *all* the dependencies to
+        # their associated projects by looking at the projects we've already
+        # created.
+        dependencies = []
+        for dep in deps:
+            dep_output = first(dep.creator.output)
+            if dep_output not in self:
+                raise ValueError('unknown dependency for {!r}'.format(dep))
+            dependencies.append(self[dep_output])
+        return dependencies
 
     @property
     def uuid_str(self):
@@ -346,6 +359,16 @@ class VcxProject(Project):
             compiles,
             E.Import(Project='$(VCTargetsPath)\Microsoft.Cpp.Targets')
         ])
+
+
+class NoopProject(Project):
+    def __init__(self, name, uuid=None, version=None, configuration=None,
+                 platform=None, srcdir=None, dependencies=None):
+        Project.__init__(self, name, uuid, version, configuration, platform,
+                         srcdir, dependencies)
+
+    def write(self, out):
+        self._write(out, [E.Target({'Name': 'Build'})])
 
 
 class ExecProject(Project):

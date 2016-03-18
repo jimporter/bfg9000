@@ -35,10 +35,15 @@ def ninja_alias(rule, build_inputs, buildfile, env):
 try:
     from ..backends.msbuild import writer as msbuild
 
-    import warnings
-
     @msbuild.rule_handler(Alias)
     def msbuild_alias(rule, build_inputs, solution, env):
-        warnings.warn('alias rules not currently supported with msbuild')
+        project = msbuild.NoopProject(
+            name=rule.output.path,
+            version=env.getvar('VISUALSTUDIOVERSION'),
+            platform=env.getvar('PLATFORM'),
+            srcdir=env.srcdir.string(),
+            dependencies=solution.dependencies(rule.extra_deps),
+        )
+        solution[rule.output] = project
 except:
     pass
