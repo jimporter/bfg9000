@@ -106,7 +106,7 @@ class Commands(object):
 def command_build(buildfile, env, output, inputs=None, implicit=None,
                   order_only=None, commands=None, environ=None):
     extra_kwargs = {}
-    if env.backend_version in SpecifierSet('>=1.5'):
+    if env.backend_version and env.backend_version in SpecifierSet('>=1.5'):
         extra_kwargs['pool'] = 'console'
 
     if not buildfile.has_rule('command'):
