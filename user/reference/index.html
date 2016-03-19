@@ -276,12 +276,12 @@ element in <em>files</em>.</p>
 it using the filename of one of the source files listed in <em>files</em>. This makes
 it easy to extract a single object file to use in other places, e.g. test code.
 For example:</p>
-<pre class="codehilite"><code class="language-python">objs = object_files(['foo.cpp', 'bar.cpp'])
+<pre><code class="python">objs = object_files(['foo.cpp', 'bar.cpp'])
 release_exe = executable('release', objs)
 
 foo_obj = objs['foo.cpp']
-test_exe = executable('test', ['test.cpp', foo_obj])</code></pre>
-
+test_exe = executable('test', ['test.cpp', foo_obj])
+</code></pre>
 
 <h3 id="shared_libraryname-files-extra_deps">shared_library(<em>name</em>, [<em>files</em>, ..., [<em>extra_deps</em>]])<a class="headerlink" href="#shared_libraryname-files-extra_deps" title="Permanent link">§</a></h3>
 <p>Create a build step that builds a shared library named <em>name</em>. Its arguments are
@@ -302,24 +302,15 @@ variable</a> (e.g. <code>CC</code>) for the
 relevant language.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>On Windows, this produces <em>two</em> files: <code>name.dll</code> and <code>name.lib</code>. The latter
-is the <em>import library</em>, used when linking to this library. As a result,
-<code>my_lib.all</code> returns a list containing two files.</p>
-<p>Additionally, this step will add a preprocessor macro on Windows named
-<code>LIB&lt;NAME&gt;_EXPORTS</code> that can be used for declaring public symbols. The
-following snippet shows how you can use this macro (and <code>LIB&lt;NAME&gt;_STATIC</code>)
-to set the appropriate attributes for your public symbols:</p>
-<pre class="codehilite"><code class="language-c">#if defined(_WIN32) &amp;&amp; !defined(LIBLIBRARY_STATIC)
-#  ifdef LIBLIBRARY_EXPORTS
-#    define LIB_PUBLIC __declspec(dllexport)
-#  else
-#    define LIB_PUBLIC __declspec(dllimport)
-#  endif
-#else
-#  define LIB_PUBLIC
-#endif</code></pre>
-
-
+<p>On Windows, this produces <em>two</em> files for native-runtime languages (e.g. C
+or C++): <code>name.dll</code> and <code>name.lib</code>. The latter is the <em>import library</em>, used
+when linking to this library. As a result, <code>my_lib.all</code> returns a list
+containing <em>two</em> files.</p>
+<p>Additionally for native languages on Windows, this step will add a
+preprocessor macro named <code>LIB&lt;NAME&gt;_EXPORTS</code> that can be used for declaring
+public symbols. See <a href="../writing/#building-libraries-on-windows">Building libraries on
+Windows</a> for an example of how to
+use this macro in your code.</p>
 </div>
 <h3 id="static_libraryname-files-extra_deps">static_library(<em>name</em>, [<em>files</em>, ..., [<em>extra_deps</em>]])<a class="headerlink" href="#static_libraryname-files-extra_deps" title="Permanent link">§</a></h3>
 <p>Create a build step that builds a static library named <em>name</em>. Its arguments are
@@ -343,8 +334,8 @@ variables</a>.</p>
 <p class="admonition-title">Note</p>
 <p>On Windows, this step will add a preprocessor macro on Windows named
 <code>LIB&lt;NAME&gt;_STATIC</code> that can be used for declaring public symbols. See
-<a href="#shared_libraryname-files-extra_deps"><em>shared_library</em></a> for more details on
-how to use this macro.</p>
+<a href="../writing/#building-libraries-on-windows">Building libraries on Windows</a>
+for an example of how to use this macro in your code.</p>
 </div>
 <h3 id="whole_archivename-files-extra_deps">whole_archive(<em>name</em>, [<em>files</em>, ..., [<em>extra_deps</em>]])<a class="headerlink" href="#whole_archivename-files-extra_deps" title="Permanent link">§</a></h3>
 <p>Create a build step that builds a <a href="http://linux.die.net/man/1/ld">whole-archive</a>

@@ -207,15 +207,15 @@ all else, bfg9000 strives to make it easy to write your build scripts.</p>
 <hr />
 <h2 id="a-brief-example">A brief example<a class="headerlink" href="#a-brief-example" title="Permanent link">§</a></h2>
 <p>You can't get much simpler than the simplest <code>build.bfg</code> file:</p>
-<pre class="codehilite"><code class="language-python">executable('simple', files=['simple.cpp'])</code></pre>
-
+<pre><code class="python">executable('simple', files=['simple.cpp'])
+</code></pre>
 
 <p>To build this executable, we need to create the actual build files and then
 run them:</p>
-<pre class="codehilite"><code class="language-sh">$ bfg9000 path/to/src/ build/
+<pre><code class="sh">$ bfg9000 path/to/src/ build/
 $ cd build
-$ ninja</code></pre>
-
+$ ninja
+</code></pre>
 
 <p>From there, you can run your newly-created executable: <code>./simple</code>. Hooray!</p>
 <p>For further examples, please see the

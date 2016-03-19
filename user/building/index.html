@@ -203,10 +203,10 @@ run your actual builds.</p>
 bfg9000, just call <code>bfg9000 srcdir builddir</code> and it will generate the final
 build script (<code>build.ninja</code> in this case) in <code>builddir</code> to use for
 building your project:</p>
-<pre class="codehilite"><code class="language-sh">$ bfg9000 path/to/src/ build/
+<pre><code class="sh">$ bfg9000 path/to/src/ build/
 $ cd build
-$ ninja</code></pre>
-
+$ ninja
+</code></pre>
 
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -241,8 +241,8 @@ system. In descending order, bfg prefers <a href="https://ninja-build.org/"><cod
 If one of these isn't installed, it will try the next best option. However, you
 can explicitly select a backend with the <code>--backend</code> option. For instance, to
 build a Makefile even if Ninja is installed:</p>
-<pre class="codehilite"><code class="language-sh">$ bfg9000 --backend make srcdir builddir</code></pre>
-
+<pre><code class="sh">$ bfg9000 --backend make srcdir builddir
+</code></pre>
 
 <h2 id="setting-options">Setting options<a class="headerlink" href="#setting-options" title="Permanent link">§</a></h2>
 <p>Many options for building can be set via the environment. These generally follow
