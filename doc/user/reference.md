@@ -118,25 +118,16 @@ variable](environment-vars.md#compilation-variables) (e.g. `CC`) for the
 relevant language.
 
 !!! note
-    On Windows, this produces *two* files: `name.dll` and `name.lib`. The latter
-    is the *import library*, used when linking to this library. As a result,
-    `my_lib.all` returns a list containing two files.
+    On Windows, this produces *two* files for native-runtime languages (e.g. C
+    or C++): `name.dll` and `name.lib`. The latter is the *import library*, used
+    when linking to this library. As a result, `my_lib.all` returns a list
+    containing *two* files.
 
-    Additionally, this step will add a preprocessor macro on Windows named
-    `LIB<NAME>_EXPORTS` that can be used for declaring public symbols. The
-    following snippet shows how you can use this macro (and `LIB<NAME>_STATIC`)
-    to set the appropriate attributes for your public symbols:
-
-        :::c
-        #if defined(_WIN32) && !defined(LIBLIBRARY_STATIC)
-        #  ifdef LIBLIBRARY_EXPORTS
-        #    define LIB_PUBLIC __declspec(dllexport)
-        #  else
-        #    define LIB_PUBLIC __declspec(dllimport)
-        #  endif
-        #else
-        #  define LIB_PUBLIC
-        #endif
+    Additionally for native languages on Windows, this step will add a
+    preprocessor macro named `LIB<NAME>_EXPORTS` that can be used for declaring
+    public symbols. See [Building libraries on
+    Windows](writing.md#building-libraries-on-windows) for an example of how to
+    use this macro in your code.
 
 ### static_library(*name*, [*files*, ..., [*extra_deps*]])
 
@@ -162,8 +153,8 @@ variables](environment-vars.md#static-linking).
 !!! note
     On Windows, this step will add a preprocessor macro on Windows named
     `LIB<NAME>_STATIC` that can be used for declaring public symbols. See
-    [*shared_library*](#shared_libraryname-files-extra_deps) for more details on
-    how to use this macro.
+    [Building libraries on Windows](writing.md#building-libraries-on-windows)
+    for an example of how to use this macro in your code.
 
 ### whole_archive(*name*, [*files*, ..., [*extra_deps*]])
 

@@ -109,6 +109,27 @@ static = static_library('shared', files=['static.cpp'])
 executable('program', files=['program.cpp'], libs=[shared, static])
 ```
 
+### Building libraries on Windows
+
+On Windows, native shared libraries need to annotate public symbols so that the
+dynamic linker knows what to do. To facilitate this, bfg9000 automatically
+defines a preprocessor macro named for native-runtime languages (e.g. C or C++)
+when building on Windows. For shared libraries, it defines `LIB<NAME>_EXPORTS`;
+for static, `LIB<NAME>_STATIC`. The following snippet shows how you can use
+these macros to set the appropriate attributes for your public symbols:
+
+```c
+#if defined(_WIN32) && !defined(LIBLIBRARY_STATIC)
+#  ifdef LIBLIBRARY_EXPORTS
+#    define LIB_PUBLIC __declspec(dllexport)
+#  else
+#    define LIB_PUBLIC __declspec(dllimport)
+#  endif
+#else
+#  define LIB_PUBLIC
+#endif
+```
+
 ## Finding files
 
 For projects with many source files, it can be inconvenient to manually list all
