@@ -177,9 +177,9 @@
     
         <li class="main active"><a href="#reference">Reference</a></li>
         
-            <li><a href="#build-steps">Build steps</a></li>
-        
             <li><a href="#file-types">File types</a></li>
+        
+            <li><a href="#build-steps">Build steps</a></li>
         
             <li><a href="#grouping-rules">Grouping rules</a></li>
         
@@ -199,7 +199,37 @@
             <div class="col-md-9" role="main">
 
 <h1 id="reference">Reference<a class="headerlink" href="#reference" title="Permanent link">§</a></h1>
+<h2 id="file-types">File types<a class="headerlink" href="#file-types" title="Permanent link">§</a></h2>
+<h3 id="directoryname">directory(<em>name</em>)<a class="headerlink" href="#directoryname" title="Permanent link">§</a></h3>
+<p>Create a reference to an existing directory named <em>name</em>. This allows you to
+refer to an arbitrary subfolder of your source directory.</p>
+<h3 id="headername">header(<em>name</em>)<a class="headerlink" href="#headername" title="Permanent link">§</a></h3>
+<p>Create a reference to an existing header named <em>name</em>. This is useful if you'd
+like to <a href="#install">install</a> a single header file for your project.</p>
+<h3 id="header_directoryname-system">header_directory(<em>name</em>, [<em>system</em>])<a class="headerlink" href="#header_directoryname-system" title="Permanent link">§</a></h3>
+<p>Create a reference to a directory named <em>name</em> containing header files for the
+project. This can then be used in the <em>include</em> argument when
+<a href="#object_filename-file-extra_deps">compiling</a> a source file. If <em>system</em> is
+<em>True</em>, this directory will be treated as a
+<a href="https://gcc.gnu.org/onlinedocs/cpp/System-Headers.html">system directory</a> for
+compilers that support this.</p>
+<h3 id="source_filename-lang">source_file(<em>name</em>, [<em>lang</em>])<a class="headerlink" href="#source_filename-lang" title="Permanent link">§</a></h3>
+<p>Create a reference to an existing source file named <em>name</em>. If <em>lang</em> is not
+specified, the language of the file is inferred from its extension. Generally,
+this function is only necessary when running commands that take a source file
+as an argument, e.g. running a Python script; this allows you to specify that
+the file is found in the <em>source directory</em>. In other cases, a plain string will
+automatically get converted to a <em>source_file</em>.</p>
 <h2 id="build-steps">Build steps<a class="headerlink" href="#build-steps" title="Permanent link">§</a></h2>
+<p>Build steps define rules to create an output (usually a file) from zero or more
+inputs (also usually files). As you may expect, if the output doesn't exist, the
+step is run to generate it. Each input is a dependency on the output, and any
+changes to an input will result in a rebuild. This includes headers <code>#include</code>d
+by any of the source files, but does <em>not</em> include files external to the project
+(i.e. <a href="#package-resolvers">packages</a>).</p>
+<p>In addition, all build steps have the ability to define extra dependencies via
+the <em>extra_deps</em> argument. These can be files or other build steps, and changes
+to them will trigger a rebuild as with the build's inputs.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>For build steps which produce an actual file, the exact name of the output
@@ -351,27 +381,6 @@ archive.</p>
 <p>The MSVC linker doesn't have a way of expressing the required directives, so
 <em>whole_archive</em> can't be used with it.</p>
 </div>
-<h2 id="file-types">File types<a class="headerlink" href="#file-types" title="Permanent link">§</a></h2>
-<h3 id="directoryname">directory(<em>name</em>)<a class="headerlink" href="#directoryname" title="Permanent link">§</a></h3>
-<p>Create a reference to an existing directory named <em>name</em>. This allows you to
-refer to an arbitrary subfolder of your source directory.</p>
-<h3 id="headername">header(<em>name</em>)<a class="headerlink" href="#headername" title="Permanent link">§</a></h3>
-<p>Create a reference to an existing header named <em>name</em>. This is useful if you'd
-like to <a href="#install">install</a> a single header file for your project.</p>
-<h3 id="header_directoryname-system">header_directory(<em>name</em>, [<em>system</em>])<a class="headerlink" href="#header_directoryname-system" title="Permanent link">§</a></h3>
-<p>Create a reference to a directory named <em>name</em> containing header files for the
-project. This can then be used in the <em>include</em> argument when
-<a href="#object_filename-file-extra_deps">compiling</a> a source file. If <em>system</em> is
-<em>True</em>, this directory will be treated as a
-<a href="https://gcc.gnu.org/onlinedocs/cpp/System-Headers.html">system directory</a> for
-compilers that support this.</p>
-<h3 id="source_filename-lang">source_file(<em>name</em>, [<em>lang</em>])<a class="headerlink" href="#source_filename-lang" title="Permanent link">§</a></h3>
-<p>Create a reference to an existing source file named <em>name</em>. If <em>lang</em> is not
-specified, the language of the file is inferred from its extension. Generally,
-this function is only necessary when running commands that take a source file
-as an argument, e.g. running a Python script; this allows you to specify that
-the file is found in the <em>source directory</em>. In other cases, a plain string will
-automatically get converted to a <em>source_file</em>.</p>
 <h2 id="grouping-rules">Grouping rules<a class="headerlink" href="#grouping-rules" title="Permanent link">§</a></h2>
 <h3 id="aliasname-deps">alias(<em>name</em>, [<em>deps</em>])<a class="headerlink" href="#aliasname-deps" title="Permanent link">§</a></h3>
 <p>Create a build step named <em>name</em> that performs no actions on its own. Instead,
