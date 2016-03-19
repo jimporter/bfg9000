@@ -23,18 +23,18 @@ commands. These override any environment variables set on the command line.
 Create a build step that builds an executable file named *name*. *files* is the
 list of source (or object) files to link. If an element of *files* is a source
 file (or a plain string), this function will implicitly call
-[*object_file*](object_filename-file-extra_deps) on it.
+[*object_file*](#object_filename-file-extra_deps) on it.
 
 The following arguments may also be specified:
 
-* *include*: Forwarded on to [*object_file*](object_filename-file-extra_deps)
+* *include*: Forwarded on to [*object_file*](#object_filename-file-extra_deps)
 * *libs*: A list of library files (see *shared_library* and *static_library*)
 * *packages*: A list of external [packages](#package-finders); also forwarded on
   to *object_file*
 * *compile_options*: Forwarded on to
-  [*object_file*](object_filename-file-extra_deps) as *options*
+  [*object_file*](#object_filename-file-extra_deps) as *options*
 * *link_options*: Command-line options to pass to the linker
-* *lang*: Forwarded on to [*object_file*](object_filename-file-extra_deps)
+* *lang*: Forwarded on to [*object_file*](#object_filename-file-extra_deps)
 
 If *files* isn't specified, this function merely references an *existing*
 executable file (a precompiled binary, a shell script, etc) somewhere on the
