@@ -218,17 +218,17 @@ commands. These override any environment variables set on the command line.</p>
 <p>Create a build step that builds an executable file named <em>name</em>. <em>files</em> is the
 list of source (or object) files to link. If an element of <em>files</em> is a source
 file (or a plain string), this function will implicitly call
-<a href="../object_filename-file-extra_deps"><em>object_file</em></a> on it.</p>
+<a href="#object_filename-file-extra_deps"><em>object_file</em></a> on it.</p>
 <p>The following arguments may also be specified:</p>
 <ul>
-<li><em>include</em>: Forwarded on to <a href="../object_filename-file-extra_deps"><em>object_file</em></a></li>
+<li><em>include</em>: Forwarded on to <a href="#object_filename-file-extra_deps"><em>object_file</em></a></li>
 <li><em>libs</em>: A list of library files (see <em>shared_library</em> and <em>static_library</em>)</li>
 <li><em>packages</em>: A list of external <a href="#package-finders">packages</a>; also forwarded on
   to <em>object_file</em></li>
 <li><em>compile_options</em>: Forwarded on to
-  <a href="../object_filename-file-extra_deps"><em>object_file</em></a> as <em>options</em></li>
+  <a href="#object_filename-file-extra_deps"><em>object_file</em></a> as <em>options</em></li>
 <li><em>link_options</em>: Command-line options to pass to the linker</li>
-<li><em>lang</em>: Forwarded on to <a href="../object_filename-file-extra_deps"><em>object_file</em></a></li>
+<li><em>lang</em>: Forwarded on to <a href="#object_filename-file-extra_deps"><em>object_file</em></a></li>
 </ul>
 <p>If <em>files</em> isn't specified, this function merely references an <em>existing</em>
 executable file (a precompiled binary, a shell script, etc) somewhere on the
