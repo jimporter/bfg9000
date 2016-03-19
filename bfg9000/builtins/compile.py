@@ -47,7 +47,8 @@ class Compile(Edge):
 
         output = self.builder.output_file(name)
 
-        pkg_cflags = sum((i.cflags(self.builder) for i in self.packages), [])
+        pkg_cflags = sum((i.cflags(self.builder, output)
+                          for i in self.packages), [])
         self._internal_options = self.builder.args(self.includes) + pkg_cflags
 
         Edge.__init__(self, build, output, extra_deps)

@@ -147,7 +147,7 @@ class CcLinker(object):
     def _always_args(self):
         return []
 
-    def lib_dirs(self, libraries, extra_dirs=[]):
+    def _lib_dirs(self, libraries, extra_dirs):
         dirs = uniques(chain(
             (i.path.parent() for i in iterate(libraries)
              if not isinstance(i, StaticLibrary)),
@@ -179,9 +179,12 @@ class CcLinker(object):
             raise ValueError('unrecognized object format "{}"'
                              .format(output.format))
 
-    def args(self, libraries, output):
-        return ( self._always_args + self.lib_dirs(libraries) +
+    def pkg_args(self, libraries, output, extra_dirs=[]):
+        return ( self._lib_dirs(libraries, extra_dirs) +
                  self._rpath(libraries, first(output)) )
+
+    def args(self, libraries, output):
+        return self._always_args + self.pkg_args(libraries, output)
 
     def _link_lib(self, library):
         if isinstance(library, WholeArchive):

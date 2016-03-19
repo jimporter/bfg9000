@@ -120,15 +120,18 @@ class MsvcLinker(object):
     def _always_args(self):
         return []
 
-    def lib_dirs(self, libraries, extra_dirs=[]):
+    def _lib_dirs(self, libraries, extra_dirs):
         dirs = uniques(chain(
             (i.path.parent() for i in iterate(libraries)),
             extra_dirs
         ))
         return ['/LIBPATH:' + i for i in dirs]
 
+    def pkg_args(self, libraries, output, extra_dirs=[]):
+        return self._lib_dirs(libraries, extra_dirs)
+
     def args(self, libraries, output):
-        return self._always_args + self.lib_dirs(libraries)
+        return self._always_args + self.pkg_args(libraries, output)
 
     def parse_args(self, args):
         parser = ArgumentParser()

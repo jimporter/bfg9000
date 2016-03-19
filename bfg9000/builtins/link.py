@@ -126,14 +126,16 @@ class DynamicLink(Link):
     def _fill_options(self, env):
         # XXX: Create a LinkOptions namedtuple for managing these args?
         self._internal_options = (
-            sum((i.ldflags(self.builder) for i in self.all_packages), []) +
+            sum((i.ldflags(self.builder, self.output)
+                 for i in self.all_packages), []) +
             self.builder.args(self.all_libs, self.output)
         )
 
         linkers = (env.linker(i, self.mode) for i in self.langs)
         self.lib_options = (
             sum((i.always_libs(i is self.builder) for i in linkers), []) +
-            sum((i.ldlibs(self.builder) for i in self.all_packages), []) +
+            sum((i.ldlibs(self.builder, self.output)
+                 for i in self.all_packages), []) +
             self.builder.libs(self.all_libs)
         )
 

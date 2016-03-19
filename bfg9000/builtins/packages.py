@@ -25,13 +25,13 @@ class SystemPackage(Package):
         self._libraries = libraries or []
         self.version = version
 
-    def cflags(self, builder):
+    def cflags(self, builder, output):
         return builder.args(self._includes)
 
-    def ldflags(self, builder):
-        return builder.lib_dirs(self._libraries, self._lib_dirs)
+    def ldflags(self, builder, output):
+        return builder.pkg_args(self._libraries, output, self._lib_dirs)
 
-    def ldlibs(self, builder):
+    def ldlibs(self, builder, output):
         return builder.libs(self._libraries)
 
 
@@ -51,13 +51,13 @@ class PkgConfigPackage(Package):
     def version(self):
         return Version(self._call('version'))
 
-    def cflags(self, builder):
+    def cflags(self, builder, output):
         return shell.split(self._call('cflags', builder.flavor == 'msvc'))
 
-    def ldflags(self, builder):
+    def ldflags(self, builder, output):
         return shell.split(self._call('ldflags', builder.flavor == 'msvc'))
 
-    def ldlibs(self, builder):
+    def ldlibs(self, builder, output):
         return shell.split(self._call('ldlibs', builder.flavor == 'msvc'))
 
 
