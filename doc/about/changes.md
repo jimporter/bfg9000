@@ -21,6 +21,11 @@ in progress
 - Use *doppel* for installing files instead of *install(1)*
 - Support *command* and *alias* rules under MSBuild
 
+### Breaking changes
+- `env.compiler(lang)` replaced by `env.builder(lang).compiler`
+- `env.linker(lang, mode)` replaced by `env.builder(lang).linker(mode)`
+- `env.compiler(lang).flavor` replaced by `env.builder(lang).flavor`
+
 ### Bug fixes
 - Fix fetching `CFLAGS` from the environment (it used to try `CCFLAGS`)
 - Fix execution context of `build.bfg` files; this caused strange issues with
