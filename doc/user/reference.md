@@ -358,25 +358,29 @@ encounter some unavoidable issue with multiplatform compatibility.
     since many are only useful to internal code. However, the most relevant ones
     for `build.bfg` files are shown below.
 
-### env.compiler(*lang*)
+### env.builder(*lang*)
 
-Return the compiler used by bfg9000 for a particular language *lang*. While
-compiler objects are primarily suited to bfg's internals, there are still a few
+Return the builder used by bfg9000 for a particular language *lang*. While
+builder objects are primarily suited to bfg's internals, there are still a few
 useful properties for `build.bfg` files:
 
-#### compiler.command
+#### builder.flavor
+
+The "flavor" of the builder, i.e. the kind of command-line interface it has.
+Possible values are `'cc'` and `'msvc'`.
+
+#### builder.compiler
+
+The compiler used with this builder.
+
+##### compiler.command
 
 The command to run when invoking this compiler, e.g. `g++-4.9`.
 
-#### compiler.flavor
+### builder.linker(*mode*)
 
-The "flavor" of the compiler, i.e. the kind of command-line interface it has.
-Possible values are `'cc'` and `'msvc'`.
-
-### env.linker(*langs*)
-
-Return the compiler used by bfg9000 for a particular language (or list of
-languages) *lang*. Its public properties are the same as
+The linker used with this builder. *mode* is one of `'executable'`,
+`'shared_library'`, or `'static_library'`. Its public properties are the same as
 [*compiler*](#compilercommand) above.
 
 ### env.platform

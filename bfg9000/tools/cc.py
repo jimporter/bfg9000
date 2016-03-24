@@ -1,13 +1,41 @@
 import os.path
 import re
 import subprocess
+import warnings
 from itertools import chain
 from six.moves import filter as ifilter
 
+from .ar import ArLinker
 from .utils import darwin_install_name, library_macro
 from ..file_types import *
 from ..iterutils import first, iterate, uniques
 from ..path import Path, Root
+
+
+class CcBuilder(object):
+    def __init__(self, env, lang, name, command, cflags, ldflags, ldlibs):
+        self.compiler = CcCompiler(env, lang, name, command, cflags)
+        self._linkers = {
+            'executable': CcExecutableLinker(
+                env, lang, name, command, ldflags, ldlibs
+            ),
+            'shared_library': CcSharedLibraryLinker(
+                env, lang, name, command, ldflags, ldlibs
+            ),
+            'static_library': ArLinker(env, lang),
+        }
+        self.packages = CcPackageResolver(env, lang, command)
+
+    @property
+    def flavor(self):
+        return 'cc'
+
+    @property
+    def auto_link(self):
+        return False
+
+    def linker(self, mode):
+        return self._linkers[mode]
 
 
 class CcCompiler(object):
@@ -31,6 +59,8 @@ class CcCompiler(object):
 
     @property
     def flavor(self):
+        warnings.warn('compiler.flavor is deprecated; please use ' +
+                      'builder.flavor instead', DeprecationWarning)
         return 'cc'
 
     @property
@@ -125,6 +155,8 @@ class CcLinker(object):
 
     @property
     def flavor(self):
+        warnings.warn('compiler.flavor is deprecated; please use ' +
+                      'builder.flavor instead', DeprecationWarning)
         return 'cc'
 
     def can_link(self, format, langs):
@@ -138,10 +170,6 @@ class CcLinker(object):
         result.extend(iterate(libs))
         result.extend(['-o', output])
         return result
-
-    @property
-    def auto_link(self):
-        return False
 
     @property
     def _always_args(self):

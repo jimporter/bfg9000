@@ -2,7 +2,7 @@ import os.path
 
 from .integration import *
 
-is_mingw = platform_name() == 'windows' and env.compiler('c++').flavor == 'cc'
+is_mingw = platform_name() == 'windows' and env.builder('c++').flavor == 'cc'
 
 
 @unittest.skipIf(is_mingw, 'xfail on mingw')

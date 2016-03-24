@@ -222,7 +222,7 @@ def executable(name):
     )))
 
 
-if env.compiler('c++').flavor == 'msvc':
+if env.builder('c++').flavor == 'msvc':
     _library_prefix = ''
 else:
     _library_prefix = 'lib'
@@ -244,7 +244,7 @@ def shared_library(name, version=None):
 
 
 def static_library(name):
-    suffix = '.lib' if env.compiler('c++').flavor == 'msvc' else '.a'
+    suffix = '.lib' if env.builder('c++').flavor == 'msvc' else '.a'
     head, tail = os.path.split(name)
     return Target(name, os.path.normpath(os.path.join(
         '.', head, _library_prefix + tail + suffix
@@ -254,7 +254,7 @@ def static_library(name):
 def import_library(name):
     if not platform_info().has_import_library:
         raise ValueError('no import libraries on this platform')
-    if env.compiler('c++').flavor == 'msvc':
+    if env.builder('c++').flavor == 'msvc':
         return static_library(name)
     else:
         return Target(name, shared_library(name).path + '.a')

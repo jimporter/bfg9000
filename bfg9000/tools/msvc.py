@@ -9,6 +9,35 @@ from ..iterutils import intersect, iterate, uniques
 from ..path import Path, Root
 
 
+class MsvcBuilder(object):
+    def __init__(self, env, lang, name, command, link_command, lib_command,
+                 cflags, ldflags, ldlibs):
+        self.compiler = MsvcCompiler(env, lang, name, command, cflags)
+        self._linkers = {
+            'executable': MsvcExecutableLinker(
+                env, lang, name, link_command, ldflags, ldlibs
+            ),
+            'shared_library': MsvcSharedLibraryLinker(
+                env, lang, name, link_command, ldflags, ldlibs
+            ),
+            'static_library': MsvcStaticLinker(
+                env, lang, name, lib_command
+            ),
+        }
+        self.packages = MsvcPackageResolver(env, lang)
+
+    @property
+    def flavor(self):
+        return 'msvc'
+
+    @property
+    def auto_link(self):
+        return True
+
+    def linker(self, mode):
+        return self._linkers[mode]
+
+
 class MsvcCompiler(object):
     def __init__(self, env, lang, name, command, cflags):
         self.platform = env.platform
@@ -21,6 +50,8 @@ class MsvcCompiler(object):
 
     @property
     def flavor(self):
+        warnings.warn('compiler.flavor is deprecated; please use ' +
+                      'builder.flavor instead', DeprecationWarning)
         return 'msvc'
 
     @property
@@ -98,6 +129,8 @@ class MsvcLinker(object):
 
     @property
     def flavor(self):
+        warnings.warn('compiler.flavor is deprecated; please use ' +
+                      'builder.flavor instead', DeprecationWarning)
         return 'msvc'
 
     def can_link(self, format, langs):
@@ -111,10 +144,6 @@ class MsvcLinker(object):
         result.extend(iterate(libs))
         result.append('/OUT:' + output)
         return result
-
-    @property
-    def auto_link(self):
-        return True
 
     @property
     def _always_args(self):

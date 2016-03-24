@@ -1,5 +1,6 @@
 import json
 import os
+import warnings
 from packaging.version import Version
 from six import iteritems
 
@@ -45,10 +46,15 @@ class Environment(object):
         return self.__builders[lang]
 
     def compiler(self, lang):
+        warnings.warn('env.compiler(lang) is deprecated; please use ' +
+                      'env.builder(lang).compiler instead', DeprecationWarning)
         return self.builder(lang).compiler
 
     def linker(self, lang, mode):
-        return self.builder(lang).linkers[mode]
+        warnings.warn('env.linker(lang, mode) is deprecated; please use ' +
+                      'env.builder(lang).linker(mode) instead',
+                      DeprecationWarning)
+        return self.builder(lang).linker(mode)
 
     def tool(self, name):
         if name not in self.__tools:

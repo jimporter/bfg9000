@@ -90,7 +90,7 @@ class Link(Edge):
 
     def __find_linker(self, env, format, langs):
         for i in langs:
-            linker = env.linker(i, self.mode)
+            linker = env.builder(i).linker(self.mode)
             if linker.can_link(format, langs):
                 return linker
         raise ValueError('unable to find linker')
@@ -131,7 +131,7 @@ class DynamicLink(Link):
             self.builder.args(self.all_libs, self.output)
         )
 
-        linkers = (env.linker(i, self.mode) for i in self.langs)
+        linkers = (env.builder(i).linker(self.mode) for i in self.langs)
         self.lib_options = (
             sum((i.always_libs(i is self.builder) for i in linkers), []) +
             sum((i.ldlibs(self.builder, self.output)

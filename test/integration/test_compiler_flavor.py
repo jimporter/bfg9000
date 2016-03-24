@@ -9,5 +9,5 @@ class TestCompilerFlavor(IntegrationTest):
         self.build(executable('program'))
         self.assertOutput(
             [executable('program')],
-            'hello, {}!\n'.format(env.compiler('c++').flavor)
+            'hello, {}!\n'.format(env.builder('c++').flavor)
         )

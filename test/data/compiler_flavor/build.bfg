@@ -5,6 +5,6 @@ wall = {
     'msvc': ['/W4', '/DFLAVOR="msvc"'],
 }
 
-global_options(wall[ env.compiler('c++').flavor ], 'c++')
+global_options(wall[ env.builder('c++').flavor ], 'c++')
 
 executable('program', files=['program.cpp'])

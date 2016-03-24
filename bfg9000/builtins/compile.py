@@ -38,7 +38,7 @@ class Compile(Edge):
             name = os.path.splitext(file)[0]
 
         self.file = sourcify(file, SourceFile, lang=lang)
-        self.builder = env.compiler(self.file.lang)
+        self.builder = env.builder(self.file.lang).compiler
         self.includes = [sourcify(i, HeaderDirectory)
                          for i in iterate(include)]
         self.packages = listify(packages)
