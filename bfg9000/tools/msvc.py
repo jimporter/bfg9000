@@ -10,21 +10,26 @@ from ..path import Path, Root
 
 
 class MsvcBuilder(object):
-    def __init__(self, env, lang, name, command, link_command, lib_command,
-                 cflags, ldflags, ldlibs):
-        self.compiler = MsvcCompiler(env, lang, name, command, cflags)
+    def __init__(self, env, lang, name, cmd, link_cmd, lib_cmd, cflags,
+                 ldflags, ldlibs):
+        self.compiler = MsvcCompiler(env, lang, name, cmd, cflags)
         self._linkers = {
             'executable': MsvcExecutableLinker(
-                env, lang, name, link_command, ldflags, ldlibs
+                env, lang, name, link_cmd, ldflags, ldlibs
             ),
             'shared_library': MsvcSharedLibraryLinker(
-                env, lang, name, link_command, ldflags, ldlibs
+                env, lang, name, link_cmd, ldflags, ldlibs
             ),
             'static_library': MsvcStaticLinker(
-                env, lang, name, lib_command
+                env, lang, name, lib_cmd
             ),
         }
         self.packages = MsvcPackageResolver(env, lang)
+
+    @property
+    def brand(self):
+        # XXX: Detect clang-cl.
+        return 'msvc'
 
     @property
     def flavor(self):
@@ -39,12 +44,12 @@ class MsvcBuilder(object):
 
 
 class MsvcCompiler(object):
-    def __init__(self, env, lang, name, command, cflags):
+    def __init__(self, env, lang, name, cmd, cflags):
         self.platform = env.platform
         self.lang = lang
 
         self.rule_name = self.command_var = name
-        self.command = command
+        self.command = cmd
 
         self.global_args = ['/nologo'] + cflags
 
@@ -116,12 +121,12 @@ class MsvcLinker(object):
         'c++'   : {'c', 'c++'},
     }
 
-    def __init__(self, env, lang, name, command, ldflags, ldlibs):
+    def __init__(self, env, lang, name, cmd, ldflags, ldlibs):
         self.platform = env.platform
         self.lang = lang
 
         self.rule_name = self.command_var = 'link_' + name
-        self.command = command
+        self.command = cmd
         self.link_var = 'ld'
 
         self.global_args = ['/nologo'] + ldflags
@@ -214,12 +219,12 @@ class MsvcSharedLibraryLinker(MsvcLinker):
 class MsvcStaticLinker(object):
     link_var = 'lib'
 
-    def __init__(self, env, lang, name, command):
+    def __init__(self, env, lang, name, cmd):
         self.platform = env.platform
         self.lang = lang
 
         self.rule_name = self.command_var = 'lib_' + name
-        self.command = command
+        self.command = cmd
 
         self.global_args = shell.split(env.getvar('LIBFLAGS', ''))
 

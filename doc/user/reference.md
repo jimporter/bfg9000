@@ -369,6 +369,11 @@ useful properties for `build.bfg` files:
 The "flavor" of the builder, i.e. the kind of command-line interface it has.
 Possible values are `'cc'` and `'msvc'`.
 
+#### builder.flavor
+
+The brand of the builder, i.e. the commonad name people use for it. Possible
+values are `'gcc'`, `'clang'`, `'msvc'`, and `'unknown'`.
+
 #### builder.compiler
 
 The compiler used with this builder.

@@ -13,18 +13,31 @@ from ..path import Path, Root
 
 
 class CcBuilder(object):
-    def __init__(self, env, lang, name, command, cflags, ldflags, ldlibs):
-        self.compiler = CcCompiler(env, lang, name, command, cflags)
+    def __init__(self, env, lang, name, cmd, cflags, ldflags, ldlibs):
+        self.brand = 'unknown'
+        try:
+            output = subprocess.check_output(
+                '{} --version'.format(cmd),
+                shell=True, universal_newlines=True
+            )
+            if 'Free Software Foundation' in output:
+                self.brand = 'gcc'
+            elif 'clang' in output:
+                self.brand = 'clang'
+        except:
+            pass
+
+        self.compiler = CcCompiler(env, lang, name, cmd, cflags)
         self._linkers = {
             'executable': CcExecutableLinker(
-                env, lang, name, command, ldflags, ldlibs
+                env, lang, name, cmd, ldflags, ldlibs
             ),
             'shared_library': CcSharedLibraryLinker(
-                env, lang, name, command, ldflags, ldlibs
+                env, lang, name, cmd, ldflags, ldlibs
             ),
             'static_library': ArLinker(env, lang),
         }
-        self.packages = CcPackageResolver(env, lang, command)
+        self.packages = CcPackageResolver(env, lang, cmd)
 
     @property
     def flavor(self):
@@ -48,12 +61,12 @@ class CcCompiler(object):
         'f95'   : 'f95',
     }
 
-    def __init__(self, env, lang, name, command, cflags):
+    def __init__(self, env, lang, name, cmd, cflags):
         self.platform = env.platform
         self.lang = lang
 
         self.rule_name = self.command_var = name
-        self.command = command
+        self.command = cmd
 
         self.global_args = cflags
 
@@ -116,13 +129,13 @@ class CcLinker(object):
         'f95'   : {'c', 'f77', 'f95'},
     }
 
-    def __init__(self, env, lang, name, command, ldflags, ldlibs):
+    def __init__(self, env, lang, name, cmd, ldflags, ldlibs):
         self.env = env
         self.lang = lang
 
         self.rule_name = 'link_' + name
         self.command_var = name
-        self.command = command
+        self.command = cmd
         self.link_var = 'ld'
 
         self.global_args = ldflags
@@ -328,8 +341,8 @@ class CcPackageResolver(object):
         try:
             # XXX: Will this work for cross-compilation?
             output = subprocess.check_output(
-                [cmd, '-print-search-dirs'],
-                universal_newlines=True
+                '{} -print-search-dirs'.format(cmd),
+                shell=True, universal_newlines=True
             )
             m = re.search(r'^libraries: (.*)', output, re.MULTILINE)
             system_lib_dirs = re.split(os.pathsep, m.group(1))
