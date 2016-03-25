@@ -2,6 +2,7 @@ import os.path
 from itertools import chain
 from six.moves import reduce
 
+from .compile import ObjectFiles
 from .hooks import builtin
 from .symlink import Symlink
 from ..backends.make import writer as make
@@ -16,15 +17,18 @@ build_input('link_options')(list)
 
 
 class Link(Edge):
-    def __init__(self, builtins, build, env, name, files=None, include=None,
-                 libs=None, packages=None, compile_options=None,
-                 link_options=None, lang=None, extra_deps=None):
+    def __init__(self, build, env, name, files=None, include=None, libs=None,
+                 packages=None, compile_options=None, link_options=None,
+                 lang=None, extra_deps=None):
         self.name = self.__name(name)
 
-        self.files = builtins['object_files'](
-            files, include=include, packages=packages, options=compile_options,
-            lang=lang
-        )
+        if isinstance(files, ObjectFiles):
+            self.files = files
+        else:
+            self.files = ObjectFiles(
+                build, env, files, include=include, packages=packages,
+                options=compile_options, lang=lang
+            )
 
         # XXX: Try to detect if a string refers to a shared lib?
         self.libs = [sourcify(i, Library, StaticLibrary)
@@ -101,9 +105,6 @@ class StaticLink(Link):
     msbuild_mode = 'StaticLibrary'
     _prefix = 'lib'
 
-    def __init__(self, *args, **kwargs):
-        Link.__init__(self, *args, **kwargs)
-
     def _fill_options(self, env):
         primary = first(self.output)
         primary.forward_args = {
@@ -169,36 +170,33 @@ class SharedLink(DynamicLink):
         return self.builder.output_file(name, self.version, self.soversion)
 
 
-@builtin.globals('builtins', 'build_inputs', 'env')
-def executable(builtins, build, env, name, files=None, **kwargs):
+@builtin.globals('build_inputs', 'env')
+def executable(build, env, name, files=None, **kwargs):
     if files is None and kwargs.get('libs') is None:
         object_format = kwargs.get('format', env.platform.object_format)
         return Executable(Path(name, Root.srcdir), object_format)
     else:
-        return DynamicLink(builtins, build, env, name, files,
-                           **kwargs).public_output
+        return DynamicLink(build, env, name, files, **kwargs).public_output
 
 
-@builtin.globals('builtins', 'build_inputs', 'env')
-def static_library(builtins, build, env, name, files=None, **kwargs):
+@builtin.globals('build_inputs', 'env')
+def static_library(build, env, name, files=None, **kwargs):
     if files is None and kwargs.get('libs') is None:
         object_format = kwargs.get('format', env.platform.object_format)
         lang = kwargs.get('lang', 'c')
         return StaticLibrary(Path(name, Root.srcdir), object_format, lang)
     else:
-        return StaticLink(builtins, build, env, name, files,
-                          **kwargs).public_output
+        return StaticLink(build, env, name, files, **kwargs).public_output
 
 
-@builtin.globals('builtins', 'build_inputs', 'env')
-def shared_library(builtins, build, env, name, files=None, **kwargs):
+@builtin.globals('build_inputs', 'env')
+def shared_library(build, env, name, files=None, **kwargs):
     if files is None and kwargs.get('libs') is None:
         # XXX: What to do here for Windows, which has a separate DLL file?
         object_format = kwargs.get('format', env.platform.object_format)
         return SharedLibrary(Path(name, Root.srcdir), object_format)
     else:
-        output = SharedLink(builtins, build, env, name, files,
-                            **kwargs).public_output
+        output = SharedLink(build, env, name, files, **kwargs).public_output
         if not isinstance(output, VersionedSharedLibrary):
             return output
 

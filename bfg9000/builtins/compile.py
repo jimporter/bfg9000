@@ -16,6 +16,12 @@ build_input('compile_options')(lambda: defaultdict(list))
 
 
 class ObjectFiles(list):
+    def __init__(self, build, env, files, **kwargs):
+        def _compile(file, **kwargs):
+            return Compile(build, env, None, file, **kwargs).public_output
+        list.__init__(self, (objectify(i, ObjectFile, _compile, **kwargs)
+                             for i in iterate(files)))
+
     def __getitem__(self, key):
         if isinstance(key, string_types):
             key = Path(key, Root.srcdir)
@@ -72,10 +78,7 @@ def object_file(build, env, name=None, file=None, **kwargs):
 
 @builtin.globals('build_inputs', 'env')
 def object_files(build, env, files, **kwargs):
-    def _compile(file, **kwargs):
-        return Compile(build, env, None, file, **kwargs).public_output
-    return ObjectFiles(objectify(i, ObjectFile, _compile, **kwargs)
-                       for i in iterate(files))
+    return ObjectFiles(build, env, files, **kwargs)
 
 
 @builtin.globals('build_inputs')
