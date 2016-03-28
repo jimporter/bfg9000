@@ -35,6 +35,12 @@ class Path(safe_str.safe_string):
     def addext(self, ext):
         return Path(self.suffix + ext, self.root)
 
+    def stripext(self, replace=None):
+        name = os.path.splitext(self.suffix)[0]
+        if replace:
+            name += replace
+        return Path(name, self.root)
+
     def split(self):
         # This is guaranteed to work since `suffix` is normalized
         return self.suffix.split(os.path.sep)

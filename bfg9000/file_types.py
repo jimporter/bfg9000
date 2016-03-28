@@ -1,12 +1,14 @@
 from six import string_types
 
 from .iterutils import listify
-from .languages import ext2lang
+from .languages import src2lang, hdr2lang
 from .path import InstallRoot, Path, Root
 from .safe_str import safe_str
 
 
 class Node(object):
+    private = False
+
     def __init__(self, path):
         self.creator = None
         self.path = path
@@ -68,14 +70,29 @@ class Phony(Node):
 class SourceFile(File):
     def __init__(self, path, lang, external=False):
         File.__init__(self, path, external)
-        if lang is None:
-            lang = ext2lang.get(path.ext())
-        self.lang = lang
+        self.lang = lang or src2lang.get(path.ext())
 
 
 class HeaderFile(File):
     install_kind = 'data'
     install_root = InstallRoot.includedir
+
+    def __init__(self, path, lang, external=False):
+        File.__init__(self, path, external)
+        self.lang = lang or hdr2lang.get(path.ext())
+
+
+class PrecompiledHeader(HeaderFile):
+    install_kind = None
+
+
+class MsvcPrecompiledHeader(PrecompiledHeader):
+    def __init__(self, path, object_path, header_name, format, lang,
+                 external=False):
+        PrecompiledHeader.__init__(self, path, lang, external)
+        self.object_file = ObjectFile(object_path, format, self.lang, external)
+        self.object_file.private = True
+        self.header_name = header_name
 
 
 class HeaderDirectory(Directory):

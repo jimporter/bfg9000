@@ -21,7 +21,7 @@ class Edge(object):
         for i in self.output:
             i.creator = self
         self.public_output = unlistify([
-            i for i in self.output if not getattr(i, 'private', False)
+            i for i in self.output if not i.private
         ])
 
         self.extra_deps = [sourcify(i, Node, File)

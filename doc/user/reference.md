@@ -43,11 +43,16 @@ In addition, all build steps have the ability to define extra dependencies via
 the *extra_deps* argument. These can be files or other build steps, and changes
 to them will trigger a rebuild as with the build's inputs.
 
+Finally, build steps which produce a file can also be used like the
+[file types](#file-types) described above to refer to prebuilt files already in
+the source tree (e.g. static libraries provided in binary form by a
+vendor). This is described in more detail for each step below.
+
 !!! note
-    For build steps which produce an actual file, the exact name of the output
-    file is determined by the platform you're running on. For instance, when
-    building an executable file named "foo" on Windows, the resulting file will
-    be `foo.exe`.
+    For build steps which produce a file, the exact name of the output file is
+    determined by the platform you're running on. For instance, when building an
+    executable file named "foo" on Windows, the resulting file will be
+    `foo.exe`.
 
 ### command(*name*, *cmd*|*cmds*, [*environment*], [*extra_deps*])
 
@@ -69,6 +74,7 @@ file (or a plain string), this function will implicitly call
 The following arguments may also be specified:
 
 * *include*: Forwarded on to [*object_file*](#object_filename-file-extra_deps)
+* *pch*: Forwarded on to [*object_file*](#object_filename-file-extra_deps)
 * *libs*: A list of library files (see *shared_library* and *static_library*)
 * *packages*: A list of external [packages](#package-finders); also forwarded on
   to *object_file*
@@ -77,11 +83,11 @@ The following arguments may also be specified:
 * *link_options*: Command-line options to pass to the linker
 * *lang*: Forwarded on to [*object_file*](#object_filename-file-extra_deps)
 
-If *files* isn't specified, this function merely references an *existing*
-executable file (a precompiled binary, a shell script, etc) somewhere on the
-filesystem. In this case, *name* is the exact name of the file, relative to the
-source directory. This allows you to refer to existing executables for other
-functions. In addition, the following arguments may be specified:
+If neither *files* nor *libs* is specified, this function merely references an
+*existing* executable file (a precompiled binary, a shell script, etc) somewhere
+on the filesystem. In this case, *name* is the exact name of the file, relative
+to the source directory. This allows you to refer to existing executables for
+other functions. In addition, the following arguments may be specified:
 
 * *format*: The object format of the exectuable; by default, this is the
   platform's native object format (e.g. `'elf'` on Linux)
@@ -101,6 +107,8 @@ The following arguments may also be specified:
 
 * *include*: A list of [directories](#header_directorydirectory) to search for
   header files
+* *pch*: A [precompiled header](#precompiled_headername-file-extra_deps) to use
+  during compilation
 * *packages*: A list of external [packages](#package-finders)
 * *options*: Command-line options to pass to the compiler
 * *lang*: The language of the source file; useful if the source file's extension
@@ -138,11 +146,49 @@ foo_obj = objs['foo.cpp']
 test_exe = executable('test', ['test.cpp', foo_obj])
 ```
 
+### precompiled_header([*name*], [*file*, ..., [*extra_deps*]])
+
+Create a build step that generates a precompiled header, which can be used to
+speed up the compilation of [object files](#object_filename-file-extra_deps).
+If *name* is not specified, it is inferred from the value of *file*; the exact
+name varies based on the compiler being used, but typically looks like
+`header.hpp.pch` for cc-like compilers and `header.pch` for MSVC-like compilers.
+
+The arguments for *precompiled_header* are the same as for
+[*object_file*](#object_filename-file-extra_deps), with the following additional
+argument:
+
+* *pch_source*: The source file to be used when building the precompiled
+  header. If this is not specified, a source file will automatically be created,
+  containing nothing but `#include "header"`, where *header* is the name of the
+  header specified in *file*. This option only applies to MSVC-like compilers;
+  for all others, it is ignored.
+
+If *file* isn't specified, this function merely references an *existing*
+precompiled header somewhere on the filesystem. In this case, *name* must be
+specified and is the exact name of the file, relative to the source directory.
+In addition, the following argument may be specified:
+
+* *lang*: The source language of the file; if none is specified, defaults to
+  `'c'`
+
+!!! warning
+    The exact behavior of precompiled headers varies according to the compiler
+    you're using. In [GCC][gcc-pch] and [Clang][clang-pch], the header to be
+    precompiled must be the *first* file `#include`d in each source file. In
+    [MSVC][msvc-pch], the resulting precompiled header is actually compiled
+    within the context of a particular source file and will contain all the
+    code *up to and including* the header in question.
+
+[gcc-pch]: https://gcc.gnu.org/onlinedocs/gcc/Precompiled-Headers.html
+[clang-pch]: http://clang.llvm.org/docs/UsersManual.html#usersmanual-precompiled-headers
+[msvc-pch]: https://msdn.microsoft.com/en-us/library/szfdksca.aspx
+
 ### shared_library(*name*, [*files*, ..., [*extra_deps*]])
 
 Create a build step that builds a shared library named *name*. Its arguments are
 the same as [*executable*](#executablename-files-extra_deps), with the following
-additional options:
+additional argument:
 
 * *version*: The version number of the library, e.g. `1.2.3`.
 * *soversion*: The API version of the library (used in its soname), e.g. `1`.

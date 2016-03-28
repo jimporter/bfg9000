@@ -47,6 +47,9 @@ def cleandir(path, recreate=True):
 
 def skip_pred(predicate, msg='skipped'):
     def wrap(fn):
+        if isinstance(fn, type):
+            raise TypeError('skip_pred only works on functions')
+
         def inner(self, *args, **kwargs):
             if predicate(self):
                 raise unittest.SkipTest(msg)

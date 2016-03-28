@@ -13,6 +13,7 @@ class MsvcBuilder(object):
     def __init__(self, env, lang, name, command, link_command, lib_command,
                  cflags, ldflags, ldlibs):
         self.compiler = MsvcCompiler(env, lang, name, command, cflags)
+        self.pch_compiler = MsvcPchCompiler(env, lang, name, command, cflags)
         self._linkers = {
             'executable': MsvcExecutableLinker(
                 env, lang, name, link_command, ldflags, ldlibs
@@ -43,12 +44,13 @@ class MsvcBuilder(object):
         return self._linkers[mode]
 
 
-class MsvcCompiler(object):
-    def __init__(self, env, lang, name, command, cflags):
+class MsvcBaseCompiler(object):
+    def __init__(self, env, lang, rule_name, command_var, command, cflags):
         self.platform = env.platform
         self.lang = lang
 
-        self.rule_name = self.command_var = name
+        self.rule_name = rule_name
+        self.command_var = command_var
         self.command = command
 
         self.global_args = ['/nologo'] + cflags
@@ -63,6 +65,10 @@ class MsvcCompiler(object):
     def deps_flavor(self):
         return 'msvc'
 
+    @property
+    def num_outputs(self):
+        return 1
+
     def __call__(self, cmd, input, output, deps=None, args=None):
         result = [cmd]
         result.extend(iterate(args))
@@ -72,15 +78,15 @@ class MsvcCompiler(object):
         result.append('/Fo' + output)
         return result
 
-    def output_file(self, name):
-        return ObjectFile(Path(name + '.obj', Root.builddir),
-                          self.platform.object_format, self.lang)
-
     def _include_dir(self, directory):
         return ['/I' + directory.path]
 
-    def args(self, includes):
-        return sum((self._include_dir(i) for i in includes), [])
+    def _include_pch(self, pch):
+        return ['/Yu' + pch.header_name]
+
+    def args(self, includes, pch=None):
+        return sum((self._include_dir(i) for i in includes),
+                   self._include_pch(pch) if pch else [])
 
     def link_args(self, name, mode, static_libs):
         args = []
@@ -107,6 +113,50 @@ class MsvcCompiler(object):
         result, extra = parser.parse_known(args)
         result['extra'] = extra
         return result
+
+
+class MsvcCompiler(MsvcBaseCompiler):
+    def __init__(self, env, lang, name, command, cflags):
+        MsvcBaseCompiler.__init__(self, env, lang, name, name, command, cflags)
+
+    def output_file(self, name):
+        return ObjectFile(Path(name + '.obj', Root.builddir),
+                          self.platform.object_format, self.lang)
+
+
+class MsvcPchCompiler(MsvcBaseCompiler):
+    def __init__(self, env, lang, name, command, cflags):
+        MsvcBaseCompiler.__init__(self, env, lang, name + '_pch', name,
+                                  command, cflags)
+
+    @property
+    def needs_source(self):
+        return True
+
+    @property
+    def num_outputs(self):
+        return 2
+
+    def __call__(self, cmd, input, output, deps=None, args=None):
+        result = MsvcBaseCompiler.__call__(self, cmd, input, output[1], deps,
+                                           args)
+        result.append('/Fp' + output[0])
+        return result
+
+    def _create_pch(self, header):
+        return ['/Yc' + header.path.suffix]
+
+    def args(self, includes, pch=None, header=None):
+        return ( MsvcBaseCompiler.args(self, includes, pch) +
+                 (self._create_pch(header) if header else []) )
+
+    def output_file(self, name, source_name):
+        pchpath = Path(name, Root.builddir).stripext('.pch')
+        objpath = Path(source_name + '.obj', Root.builddir)
+        pch = MsvcPrecompiledHeader(
+            pchpath, objpath, name, self.platform.object_format, self.lang
+        )
+        return [pch, pch.object_file]
 
 
 class MsvcLinker(object):

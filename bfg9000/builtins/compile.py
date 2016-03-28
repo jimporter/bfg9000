@@ -1,16 +1,17 @@
-import os.path
+import warnings
 from collections import defaultdict
 from six import string_types
 
+from .echo_file import EchoFile
 from .hooks import builtin
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..build_inputs import build_input, Edge
 from ..file_types import *
-from ..iterutils import iterate, listify
+from ..iterutils import iterate, listify, uniques
+from ..languages import lang2src
 from ..path import Path, Root
 from ..shell import posix as pshell
-
 
 build_input('compile_options')(lambda: defaultdict(list))
 
@@ -18,7 +19,8 @@ build_input('compile_options')(lambda: defaultdict(list))
 class ObjectFiles(list):
     def __init__(self, build, env, files, **kwargs):
         def _compile(file, **kwargs):
-            return Compile(build, env, None, file, **kwargs).public_output
+            return CompileSource(build, env, None, file,
+                                 **kwargs).public_output
         list.__init__(self, (objectify(i, ObjectFile, _compile, **kwargs)
                              for i in iterate(files)))
 
@@ -38,30 +40,90 @@ class ObjectFiles(list):
 
 
 class Compile(Edge):
-    def __init__(self, build, env, name, file, include=None,
-                 packages=None, options=None, lang=None, extra_deps=None):
-        if name is None:
-            name = os.path.splitext(file)[0]
-
-        self.file = sourcify(file, SourceFile, lang=lang)
-        self.builder = env.builder(self.file.lang).compiler
-        self.includes = [sourcify(i, HeaderDirectory)
+    def __init__(self, build, env, output, include, pch, packages,
+                 options, lang, extra_deps, extra_args=[]):
+        self.includes = [sourcify(i, HeaderDirectory, system=False)
                          for i in iterate(include)]
+
+        self.pch = objectify(
+            pch, PrecompiledHeader, CompileHeader, build=build, env=env,
+            file=pch, include=include, packages=packages, options=options,
+            lang=lang
+        ) if pch else None
+        if self.pch and isinstance(self.pch, MsvcPrecompiledHeader):
+            output.extra_objects = [self.pch.object_file]
+
         self.packages = listify(packages)
         self.user_options = pshell.listify(options)
-        self.link_options = []
 
-        output = self.builder.output_file(name)
-
-        pkg_cflags = sum((i.cflags(self.builder, output)
-                          for i in self.packages), [])
-        self._internal_options = self.builder.args(self.includes) + pkg_cflags
+        self._internal_options = (
+            self.builder.args(self.includes, self.pch, *extra_args) +
+            sum((i.cflags(self.builder, output) for i in self.packages), [])
+        )
 
         Edge.__init__(self, build, output, extra_deps)
 
+    def add_link_options(self, *args, **kwargs):
+        opts = self.builder.link_args(*args, **kwargs)
+        self._internal_options.extend(opts)
+        if self.pch and self.pch.creator:
+            self.pch.creator.add_link_options(*args, **kwargs)
+
     @property
     def options(self):
-        return self._internal_options + self.link_options + self.user_options
+        return self._internal_options + self.user_options
+
+
+class CompileSource(Compile):
+    def __init__(self, build, env, name, file, include=None, pch=None,
+                 packages=None, options=None, lang=None, extra_deps=None):
+        self.file = sourcify(file, SourceFile, lang=lang)
+        if name is None:
+            name = self.file.path.stripext().suffix
+
+        self.builder = env.builder(self.file.lang).compiler
+        output = self.builder.output_file(name)
+        Compile.__init__(self, build, env, output, include, pch, packages,
+                         options, lang, extra_deps)
+
+
+class CompileHeader(Compile):
+    def __init__(self, build, env, name, file, source=None, include=None,
+                 pch=None, packages=None, options=None, lang=None,
+                 extra_deps=None):
+        self.file = sourcify(file, HeaderFile, lang=lang)
+        if name is None:
+            name = self.file.path.suffix
+
+        self.builder = env.builder(self.file.lang).pch_compiler
+
+        extra_options = []
+        extra_args = []
+        if self.builder.needs_source:
+            if source is None:
+                ext = lang2src[self.file.lang][0]
+                source = SourceFile(self.file.path.stripext(ext),
+                                    self.file.lang)
+                source.path.root = Root.builddir
+
+                text = '#include "{}"'.format(self.file.path.basename())
+                EchoFile(build, source, text)
+                extra_options = self.builder.args([
+                    Directory(self.file.path.parent())
+                ])
+            else:
+                source = sourcify(source, SourceFile, lang=self.file.lang)
+
+            extra_args.append(self.file)
+            self.pch_source = source
+            source_name = self.pch_source.path.stripext().suffix
+            output = self.builder.output_file(name, source_name)
+        else:
+            output = self.builder.output_file(name)
+
+        Compile.__init__(self, build, env, output, include, None, packages,
+                         options, lang, extra_deps, extra_args)
+        self._internal_options.extend(extra_options)
 
 
 @builtin.globals('build_inputs', 'env')
@@ -73,12 +135,23 @@ def object_file(build, env, name=None, file=None, **kwargs):
         lang = kwargs.get('lang', 'c')
         return ObjectFile(Path(name, Root.srcdir), object_format, lang)
     else:
-        return Compile(build, env, name, file, **kwargs).public_output
+        return CompileSource(build, env, name, file, **kwargs).public_output
 
 
 @builtin.globals('build_inputs', 'env')
 def object_files(build, env, files, **kwargs):
     return ObjectFiles(build, env, files, **kwargs)
+
+
+@builtin.globals('build_inputs', 'env')
+def precompiled_header(build, env, name=None, file=None, **kwargs):
+    if file is None:
+        if name is None:
+            raise TypeError('expected name')
+        lang = kwargs.get('lang', 'c')
+        return PrecompiledHeader(Path(name, Root.srcdir), lang)
+    else:
+        return CompileHeader(build, env, name, file, **kwargs).public_output
 
 
 @builtin.globals('build_inputs')
@@ -103,10 +176,20 @@ def _get_flags(backend, rule, build_inputs, buildfile):
     return variables, {'args': cflags}
 
 
-@make.rule_handler(Compile)
-def make_object_file(rule, build_inputs, buildfile, env):
+@make.rule_handler(CompileSource, CompileHeader)
+def make_compile(rule, build_inputs, buildfile, env):
     compiler = rule.builder
     variables, cmd_kwargs = _get_flags(make, rule, build_inputs, buildfile)
+
+    output_params = []
+    if len(rule.output) == 1:
+        output_vars = make.qvar('@')
+    else:
+        output_vars = []
+        for i in range(compiler.num_outputs):
+            v = make.var(str(i + 1))
+            output_vars.append(v)
+            output_params.append(rule.output[i])
 
     recipename = make.var('RULE_{}'.format(compiler.rule_name.upper()))
     if not buildfile.has_variable(recipename):
@@ -123,23 +206,43 @@ def make_object_file(rule, build_inputs, buildfile, env):
 
         buildfile.define(recipename, [compiler(
             cmd=make.cmd_var(compiler, buildfile), input=make.qvar('<'),
-            output=make.qvar('@'), **cmd_kwargs
+            output=output_vars, **cmd_kwargs
         )] + recipe_extra)
 
-    out_dir = rule.output[0].path.parent()
-    buildfile.rule(
-        target=rule.output,
-        deps=[rule.file] + rule.extra_deps,
-        order_only=[out_dir.append(make.dir_sentinel)] if out_dir else None,
-        recipe=recipename,
+    deps = []
+    if hasattr(rule, 'pch_source'):
+        deps.append(rule.pch_source)
+    deps.append(rule.file)
+    if rule.pch:
+        deps.append(rule.pch)
+
+    dirs = uniques(i.path.parent() for i in rule.output)
+    make.multitarget_rule(
+        buildfile,
+        targets=rule.output,
+        deps=deps + rule.extra_deps,
+        order_only=[i.append(make.dir_sentinel) for i in dirs if i],
+        recipe=make.Call(recipename, *output_params),
         variables=variables
     )
 
 
-@ninja.rule_handler(Compile)
-def ninja_object_file(rule, build_inputs, buildfile, env):
+@ninja.rule_handler(CompileSource, CompileHeader)
+def ninja_compile(rule, build_inputs, buildfile, env):
     compiler = rule.builder
     variables, cmd_kwargs = _get_flags(ninja, rule, build_inputs, buildfile)
+
+    if len(rule.output) == 1:
+        output_vars = ninja.var('out')
+    elif compiler.num_outputs == 1:
+        output_vars = ninja.var('output')
+        variables[output_vars] = rule.output[0]
+    else:
+        output_vars = []
+        for i in range(compiler.num_outputs):
+            v = ninja.var('output{}'.format(i + 1))
+            output_vars.append(v)
+            variables[v] = rule.output[i]
 
     if not buildfile.has_rule(compiler.rule_name):
         depfile = None
@@ -154,23 +257,50 @@ def ninja_object_file(rule, build_inputs, buildfile, env):
 
         buildfile.rule(name=compiler.rule_name, command=compiler(
             cmd=ninja.cmd_var(compiler, buildfile), input=ninja.var('in'),
-            output=ninja.var('out'), **cmd_kwargs
+            output=output_vars, **cmd_kwargs
         ), depfile=depfile, deps=deps)
 
+    inputs = [rule.file]
+    pch_deps = []
+    if rule.pch:
+        pch_deps.append(rule.pch)
+    if hasattr(rule, 'pch_source'):
+        inputs = [rule.pch_source]
+        pch_deps.append(rule.file)
+
+    # XXX: Ninja doesn't support multiple outputs and deps-parsing at the same
+    # time, so just use the first output and set up an alias if necessary.
+    # Aliases aren't perfect, since the build can get out of sync if you delete
+    # the "alias" file, but it's close enough.
+    if compiler.deps_flavor in ('gcc', 'msvc') and len(rule.output) > 1:
+        output = rule.output[0]
+        buildfile.build(
+            output=rule.output[1:],
+            rule='phony',
+            inputs=rule.output[0]
+        )
+    else:
+        output = rule.output
+
     buildfile.build(
-        output=rule.output,
+        output=output,
         rule=compiler.rule_name,
-        inputs=[rule.file],
-        implicit=rule.extra_deps,
+        inputs=inputs,
+        implicit=pch_deps + rule.extra_deps,
         variables=variables
     )
 
 try:
     from ..backends.msbuild import writer as msbuild
 
-    @msbuild.rule_handler(Compile)
-    def msbuild_object_file(rule, build_inputs, solution, env):
+    @msbuild.rule_handler(CompileSource)
+    def msbuild_compile_source(rule, build_inputs, solution, env):
         # MSBuild does compilation and linking in one unit; see link.py.
         pass
+
+    @msbuild.rule_handler(CompileHeader)
+    def msbuild_compile_header(rule, build_inputs, solution, env):
+        warnings.warn('precompiled header rules not currently supported ' +
+                      'with msbuild')
 except:
     pass

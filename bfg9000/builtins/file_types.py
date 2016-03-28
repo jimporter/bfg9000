@@ -10,13 +10,13 @@ def source_file(name, lang=None):
 
 
 @builtin
-def directory(name):
-    return Directory(Path(name, Root.srcdir))
+def header(name, lang=None):
+    return HeaderFile(Path(name, Root.srcdir), lang)
 
 
 @builtin
-def header(name):
-    return HeaderFile(Path(name, Root.srcdir))
+def directory(name):
+    return Directory(Path(name, Root.srcdir))
 
 
 @builtin

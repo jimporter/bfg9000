@@ -37,5 +37,5 @@ def ninja_symlink(rule, build_inputs, buildfile, env):
         output=rule.output,
         rule='symlink',
         inputs=rule.real,
-        variables={ninja.var('input'): rule.link}
+        variables={'input': rule.link}
     )

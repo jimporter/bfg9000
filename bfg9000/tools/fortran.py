@@ -4,8 +4,8 @@ from .hooks import builder
 from .utils import check_which
 from ..languages import language
 
-language('f77', exts=['.f', '.for', '.ftn'])
-language('f95', exts=['.f90', '.f95', '.f03', '.f08'])
+language('f77', src_exts=['.f', '.for', '.ftn'])
+language('f95', src_exts=['.f90', '.f95', '.f03', '.f08'])
 
 _default_cmds = ['gfortran']
 

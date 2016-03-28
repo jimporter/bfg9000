@@ -28,6 +28,8 @@ class CcBuilder(object):
             pass
 
         self.compiler = CcCompiler(env, lang, name, command, cflags)
+        self.pch_compiler = CcPchCompiler(env, lang, self.brand, name, command,
+                                          cflags)
         self._linkers = {
             'executable': CcExecutableLinker(
                 env, lang, name, command, ldflags, ldlibs
@@ -51,21 +53,13 @@ class CcBuilder(object):
         return self._linkers[mode]
 
 
-class CcCompiler(object):
-    __langs = {
-        'c'     : 'c',
-        'c++'   : 'c++',
-        'objc'  : 'objective-c',
-        'objc++': 'objective-c++',
-        'f77'   : 'f77',
-        'f95'   : 'f95',
-    }
-
-    def __init__(self, env, lang, name, command, cflags):
+class CcBaseCompiler(object):
+    def __init__(self, env, lang, rule_name, command_var, command, cflags):
         self.platform = env.platform
         self.lang = lang
 
-        self.rule_name = self.command_var = name
+        self.rule_name = rule_name
+        self.command_var = command_var
         self.command = command
 
         self.global_args = cflags
@@ -80,8 +74,12 @@ class CcCompiler(object):
     def deps_flavor(self):
         return None if self.lang in ('f77', 'f95') else 'gcc'
 
+    @property
+    def num_outputs(self):
+        return 1
+
     def __call__(self, cmd, input, output, deps=None, args=None):
-        result = [cmd, '-x', self.__langs[self.lang]]
+        result = [cmd, '-x', self._langs[self.lang]]
         result.extend(iterate(args))
         result.extend(['-c', input])
         if deps:
@@ -89,19 +87,18 @@ class CcCompiler(object):
         result.extend(['-o', output])
         return result
 
-    def output_file(self, name):
-        # XXX: MinGW's object format doesn't appear to be COFF...
-        return ObjectFile(Path(name + '.o', Root.builddir),
-                          self.platform.object_format, self.lang)
-
     def _include_dir(self, directory):
         if directory.system:
-            return ['-isystem' + directory.path]
+            return ['-isystem', directory.path]
         else:
             return ['-I' + directory.path]
 
-    def args(self, includes):
-        return sum((self._include_dir(i) for i in includes), [])
+    def _include_pch(self, pch):
+        return ['-include', pch.path.stripext()]
+
+    def args(self, includes, pch=None):
+        return sum((self._include_dir(i) for i in includes),
+                   self._include_pch(pch) if pch else [])
 
     def link_args(self, name, mode, static_libs):
         args = []
@@ -117,6 +114,47 @@ class CcCompiler(object):
             args.extend('-D' + library_macro(i, 'static_library')
                         for i in static_libs)
         return args
+
+
+class CcCompiler(CcBaseCompiler):
+    _langs = {
+        'c'     : 'c',
+        'c++'   : 'c++',
+        'objc'  : 'objective-c',
+        'objc++': 'objective-c++',
+        'f77'   : 'f77',
+        'f95'   : 'f95',
+    }
+
+    def __init__(self, env, lang, name, command, cflags):
+        CcBaseCompiler.__init__(self, env, lang, name, name, command, cflags)
+
+    def output_file(self, name):
+        # XXX: MinGW's object format doesn't appear to be COFF...
+        return ObjectFile(Path(name + '.o', Root.builddir),
+                          self.platform.object_format, self.lang)
+
+
+class CcPchCompiler(CcCompiler):
+    _langs = {
+        'c'     : 'c-header',
+        'c++'   : 'c++-header',
+        'objc'  : 'objective-c-header',
+        'objc++': 'objective-c++-header',
+    }
+
+    def __init__(self, env, lang, brand, name, command, cflags):
+        CcBaseCompiler.__init__(self, env, lang, name + '_pch', name, command,
+                                cflags)
+        self._brand = brand
+
+    @property
+    def needs_source(self):
+        return False
+
+    def output_file(self, name):
+        ext = '.gch' if self._brand == 'gcc' else '.pch'
+        return PrecompiledHeader(Path(name + ext, Root.builddir), self.lang)
 
 
 class CcLinker(object):

@@ -8,7 +8,7 @@ class safe_string(object):
 
 
 def safe_str(s):
-    if isinstance(s, string_types) or isinstance(s, safe_string):
+    if isinstance(s, (string_types, safe_string)):
         return s
     elif hasattr(s, '_safe_str'):
         return s._safe_str()
@@ -50,7 +50,7 @@ class jbos(safe_string):  # Just a Bunch of Strings
             if isinstance(i, jbos):
                 for j in i.bits:
                     yield j
-            elif isinstance(i, string_types) or isinstance(i, safe_string):
+            elif isinstance(i, (string_types, safe_string)):
                 yield i
             else:
                 raise TypeError(type(i))
@@ -66,10 +66,14 @@ class jbos(safe_string):  # Just a Bunch of Strings
         return 'jbos({})'.format(', '.join(repr(i) for i in self.bits))
 
     def __add__(self, rhs):
-        return jbos(self, rhs)
+        if isinstance(rhs, (jbos, string_types, safe_string)):
+            return jbos(self, rhs)
+        return NotImplemented
 
     def __radd__(self, lhs):
-        return jbos(lhs, self)
+        if isinstance(lhs, (jbos, string_types, safe_string)):
+            return jbos(lhs, self)
+        return NotImplemented
 
 
 def join(iterable, delim):

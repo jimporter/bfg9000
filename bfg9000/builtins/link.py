@@ -17,18 +17,22 @@ build_input('link_options')(list)
 
 
 class Link(Edge):
-    def __init__(self, build, env, name, files=None, include=None, libs=None,
-                 packages=None, compile_options=None, link_options=None,
-                 lang=None, extra_deps=None):
+    def __init__(self, build, env, name, files=None, include=None, pch=None,
+                 libs=None, packages=None, compile_options=None,
+                 link_options=None, lang=None, extra_deps=None):
         self.name = self.__name(name)
 
         if isinstance(files, ObjectFiles):
             self.files = files
         else:
             self.files = ObjectFiles(
-                build, env, files, include=include, packages=packages,
+                build, env, files, include=include, pch=pch, packages=packages,
                 options=compile_options, lang=lang
             )
+
+        self.files.extend(chain.from_iterable(
+            getattr(i, 'extra_objects', []) for i in self.files
+        ))
 
         # XXX: Try to detect if a string refers to a shared lib?
         self.libs = [sourcify(i, Library, StaticLibrary)
@@ -51,9 +55,8 @@ class Link(Edge):
             # options that are specified like define('FOO') instead of
             # '-DFOO'). Then the linkers could generate those options in a
             # generic way.
-            c.link_options.extend(c.builder.link_args(
-                self.name, self.mode, (f['name'] for f in fwd if 'name' in f)
-            ))
+            c.add_link_options(self.name, self.mode,
+                               (f['name'] for f in fwd if 'name' in f))
 
         formats = uniques(chain( (i.format for i in self.files),
                                  (i.format for i in self.all_libs) ))

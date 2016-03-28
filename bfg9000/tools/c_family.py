@@ -7,10 +7,11 @@ from .hooks import builder
 from .utils import check_which
 from ..languages import language
 
-language('c', exts=['.c'])
-language('c++', exts=['.cpp', '.cc', '.cp', '.cxx', '.CPP', '.c++', '.C'])
-language('objc', exts=['.m'])
-language('objc++', exts=['.mm', '.M'])
+language('c', src_exts=['.c'], hdr_exts=['.h'])
+language('c++', src_exts=['.cpp', '.cc', '.cp', '.cxx', '.CPP', '.c++', '.C'],
+         hdr_exts=['.hpp'])
+language('objc', src_exts=['.m'])
+language('objc++', src_exts=['.mm', '.M'])
 
 _vars = {
     'c'     : ('CC'    , 'CFLAGS'     ),
