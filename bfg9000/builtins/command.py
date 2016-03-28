@@ -3,7 +3,6 @@ from six.moves import cStringIO as StringIO
 
 from .hooks import builtin
 from .. import safe_str
-from .. import shell
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..build_inputs import Edge
@@ -36,7 +35,7 @@ def make_command(rule, build_inputs, buildfile, env):
     out = make.Writer(StringIO())
     env_vars = pshell.global_env(rule.env)
 
-    for line in shell.join_commands(chain(env_vars, rule.cmds)):
+    for line in pshell.join_commands(chain(env_vars, rule.cmds)):
         out.write_shell(line)
 
     buildfile.rule(

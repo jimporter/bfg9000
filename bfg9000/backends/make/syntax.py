@@ -8,6 +8,8 @@ from ... import path
 from ... import safe_str
 from ... import iterutils
 from ...platforms import platform_name
+
+# XXX: Make currently only supports sh-style shells.
 from ...shell import posix as pshell
 
 __all__ = ['Call', 'Entity', 'Function', 'Makefile', 'Pattern', 'Section',

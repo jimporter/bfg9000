@@ -72,7 +72,7 @@ def test_deps(build, *args):
     build['tests'].extra_deps.extend(args)
 
 
-def _build_commands(tests, writer, local_env, collapse=False):
+def _build_commands(tests, writer, shell, local_env, collapse=False):
     def command(test, args=None):
         env_vars = local_env(test.env)
         subcmd = env_vars + [test.output] + test.options + (args or [])
@@ -89,10 +89,12 @@ def _build_commands(tests, writer, local_env, collapse=False):
     cmd, deps = [], []
     for i in tests:
         if type(i) == TestDriver:
-            args, moredeps = _build_commands(i.tests, writer, local_env, True)
+            args, more_deps = _build_commands(
+                i.tests, writer, shell, local_env, True
+            )
             if i.output.creator:
                 deps.append(i.output)
-            deps.extend(moredeps)
+            deps.extend(more_deps)
             cmd.append(command(i, args))
         else:
             cmd.append(command(i))
@@ -115,16 +117,12 @@ def make_test_rule(build_inputs, buildfile, env):
         deps.append('tests')
     deps.extend(tests.extra_deps)
 
-    try:
-        local_env = shell.local_env
-    except AttributeError:
-        setenv = env.tool('setenv')
-        local_env = partial(setenv, make.cmd_var(setenv, buildfile))
-
-    recipe, moredeps = _build_commands(tests.tests, make.Writer, local_env)
+    recipe, more_deps = _build_commands(
+        tests.tests, make.Writer, pshell, pshell.local_env
+    )
     buildfile.rule(
         target='test',
-        deps=deps + moredeps,
+        deps=deps + more_deps,
         recipe=recipe,
         phony=True
     )
@@ -152,10 +150,12 @@ def ninja_test_rule(build_inputs, buildfile, env):
         setenv = env.tool('setenv')
         local_env = partial(setenv, ninja.cmd_var(setenv, buildfile))
 
-    commands, moredeps = _build_commands(tests.tests, ninja.Writer, local_env)
+    commands, more_deps = _build_commands(
+        tests.tests, ninja.Writer, shell, local_env
+    )
     ninja.command_build(
         buildfile, env,
         output='test',
-        inputs=deps + moredeps,
+        inputs=deps + more_deps,
         commands=commands,
     )
