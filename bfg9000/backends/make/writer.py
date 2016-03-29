@@ -5,6 +5,7 @@ from packaging.version import Version
 
 from ... import path
 from .syntax import *
+from ...iterutils import listify
 from ...platforms import which
 
 
@@ -76,6 +77,19 @@ def flags_vars(name, value, buildfile):
     gflags = buildfile.variable('GLOBAL_' + name, value, Section.flags, True)
     flags = buildfile.target_variable(name, gflags, True)
     return gflags, flags
+
+
+def multitarget_rule(buildfile, targets, deps=None, order_only=None,
+                     recipe=None, variables=None, phony=None):
+    targets = listify(targets)
+    if len(targets) > 1:
+        primary = targets[0].path.addext('.stamp')
+        buildfile.rule(target=targets, deps=[primary])
+        recipe = listify(recipe) + [silent([ 'touch', var('@') ])]
+    else:
+        primary = targets[0]
+
+    buildfile.rule(primary, deps, order_only, recipe, variables, phony)
 
 
 @post_rule

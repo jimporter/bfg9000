@@ -257,21 +257,13 @@ def make_link(rule, build_inputs, buildfile, env):
                    output=make.var('2'), **cmd_kwargs)
         ])
 
-    all_outputs = listify(rule.output)
-    recipe = make.Call(recipename, rule.files, all_outputs[0].path)
-    if len(all_outputs) > 1:
-        output = all_outputs[0].path.addext('.stamp')
-        buildfile.rule(target=all_outputs, deps=[output])
-        recipe = [recipe, make.silent([ 'touch', make.var('@') ])]
-    else:
-        output = rule.output
-
-    dirs = uniques(i.path.parent() for i in all_outputs)
-    buildfile.rule(
-        target=output,
+    dirs = uniques(i.path.parent() for i in iterate(rule.output))
+    make.multitarget_rule(
+        buildfile,
+        targets=rule.output,
         deps=rule.files + rule.libs + rule.extra_deps,
         order_only=[i.append(make.dir_sentinel) for i in dirs if i],
-        recipe=recipe,
+        recipe=make.Call(recipename, rule.files, first(rule.output).path),
         variables=variables
     )
 
