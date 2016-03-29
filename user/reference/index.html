@@ -491,18 +491,23 @@ encounter some unavoidable issue with multiplatform compatibility.</p>
 since many are only useful to internal code. However, the most relevant ones
 for <code>build.bfg</code> files are shown below.</p>
 </div>
-<h3 id="envcompilerlang">env.compiler(<em>lang</em>)<a class="headerlink" href="#envcompilerlang" title="Permanent link">§</a></h3>
-<p>Return the compiler used by bfg9000 for a particular language <em>lang</em>. While
-compiler objects are primarily suited to bfg's internals, there are still a few
+<h3 id="envbuilderlang">env.builder(<em>lang</em>)<a class="headerlink" href="#envbuilderlang" title="Permanent link">§</a></h3>
+<p>Return the builder used by bfg9000 for a particular language <em>lang</em>. While
+builder objects are primarily suited to bfg's internals, there are still a few
 useful properties for <code>build.bfg</code> files:</p>
-<h4 id="compilercommand">compiler.command<a class="headerlink" href="#compilercommand" title="Permanent link">§</a></h4>
-<p>The command to run when invoking this compiler, e.g. <code>g++-4.9</code>.</p>
-<h4 id="compilerflavor">compiler.flavor<a class="headerlink" href="#compilerflavor" title="Permanent link">§</a></h4>
-<p>The "flavor" of the compiler, i.e. the kind of command-line interface it has.
+<h4 id="builderflavor">builder.flavor<a class="headerlink" href="#builderflavor" title="Permanent link">§</a></h4>
+<p>The "flavor" of the builder, i.e. the kind of command-line interface it has.
 Possible values are <code>'cc'</code> and <code>'msvc'</code>.</p>
-<h3 id="envlinkerlangs">env.linker(<em>langs</em>)<a class="headerlink" href="#envlinkerlangs" title="Permanent link">§</a></h3>
-<p>Return the compiler used by bfg9000 for a particular language (or list of
-languages) <em>lang</em>. Its public properties are the same as
+<h4 id="builderflavor_1">builder.flavor<a class="headerlink" href="#builderflavor_1" title="Permanent link">§</a></h4>
+<p>The brand of the builder, i.e. the commonad name people use for it. Possible
+values are <code>'gcc'</code>, <code>'clang'</code>, <code>'msvc'</code>, and <code>'unknown'</code>.</p>
+<h4 id="buildercompiler">builder.compiler<a class="headerlink" href="#buildercompiler" title="Permanent link">§</a></h4>
+<p>The compiler used with this builder.</p>
+<h5 id="compilercommand">compiler.command<a class="headerlink" href="#compilercommand" title="Permanent link">§</a></h5>
+<p>The command to run when invoking this compiler, e.g. <code>g++-4.9</code>.</p>
+<h3 id="builderlinkermode">builder.linker(<em>mode</em>)<a class="headerlink" href="#builderlinkermode" title="Permanent link">§</a></h3>
+<p>The linker used with this builder. <em>mode</em> is one of <code>'executable'</code>,
+<code>'shared_library'</code>, or <code>'static_library'</code>. Its public properties are the same as
 <a href="#compilercommand"><em>compiler</em></a> above.</p>
 <h3 id="envplatform">env.platform<a class="headerlink" href="#envplatform" title="Permanent link">§</a></h3>
 <p>Return the target platform used for the build (currently the same as the host

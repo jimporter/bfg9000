@@ -209,6 +209,12 @@
 <li>Use <em>doppel</em> for installing files instead of <em>install(1)</em></li>
 <li>Support <em>command</em> and <em>alias</em> rules under MSBuild</li>
 </ul>
+<h3 id="breaking-changes">Breaking changes<a class="headerlink" href="#breaking-changes" title="Permanent link">§</a></h3>
+<ul>
+<li><code>env.compiler(lang)</code> replaced by <code>env.builder(lang).compiler</code></li>
+<li><code>env.linker(lang, mode)</code> replaced by <code>env.builder(lang).linker(mode)</code></li>
+<li><code>env.compiler(lang).flavor</code> replaced by <code>env.builder(lang).flavor</code></li>
+</ul>
 <h3 id="bug-fixes">Bug fixes<a class="headerlink" href="#bug-fixes" title="Permanent link">§</a></h3>
 <ul>
 <li>Fix fetching <code>CFLAGS</code> from the environment (it used to try <code>CCFLAGS</code>)</li>
