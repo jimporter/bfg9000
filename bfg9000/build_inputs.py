@@ -1,8 +1,7 @@
 from six import iteritems
 
 from .file_types import File, Node, sourcify
-from .iterutils import iterate, unlistify
-
+from .iterutils import iterate, listify, unlistify
 
 _build_inputs = {}
 
@@ -18,11 +17,11 @@ def build_input(name):
 
 class Edge(object):
     def __init__(self, build, output, extra_deps=None):
-        for i in iterate(output):
+        self.output = listify(output)
+        for i in self.output:
             i.creator = self
-        self.output = output
         self.public_output = unlistify([
-            i for i in iterate(output) if not getattr(i, 'private', False)
+            i for i in self.output if not getattr(i, 'private', False)
         ])
 
         self.extra_deps = [sourcify(i, Node, File)

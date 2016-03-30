@@ -257,13 +257,13 @@ def make_link(rule, build_inputs, buildfile, env):
                    output=make.var('2'), **cmd_kwargs)
         ])
 
-    dirs = uniques(i.path.parent() for i in iterate(rule.output))
+    dirs = uniques(i.path.parent() for i in rule.output)
     make.multitarget_rule(
         buildfile,
         targets=rule.output,
         deps=rule.files + rule.libs + rule.extra_deps,
         order_only=[i.append(make.dir_sentinel) for i in dirs if i],
-        recipe=make.Call(recipename, rule.files, first(rule.output).path),
+        recipe=make.Call(recipename, rule.files, rule.output[0].path),
         variables=variables
     )
 
@@ -272,7 +272,7 @@ def make_link(rule, build_inputs, buildfile, env):
 def ninja_link(rule, build_inputs, buildfile, env):
     linker = rule.builder
     variables, cmd_kwargs = _get_flags(ninja, rule, build_inputs, buildfile)
-    variables[ninja.var('output')] = first(rule.output).path
+    variables[ninja.var('output')] = rule.output[0].path
 
     if not buildfile.has_rule(linker.rule_name):
         buildfile.rule(name=linker.rule_name, command=linker(
@@ -306,7 +306,7 @@ try:
 
     @msbuild.rule_handler(StaticLink, DynamicLink, SharedLink)
     def msbuild_link(rule, build_inputs, solution, env):
-        output = first(rule.output)
+        output = rule.output[0]
         import_lib = getattr(output, 'import_lib', None)
         cflags = _reduce_compile_options(
             rule.files, build_inputs['compile_options']

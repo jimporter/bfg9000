@@ -11,7 +11,7 @@ from six import iteritems, string_types
 from ... import path
 from ... import safe_str
 from ... import shell
-from ...iterutils import first, isiterable
+from ...iterutils import isiterable
 
 __all__ = ['ExecProject', 'NoopProject', 'Solution', 'UuidMap', 'VcxProject',
            'textify', 'textify_each']
@@ -104,7 +104,7 @@ class Solution(object):
         # created.
         dependencies = []
         for dep in deps:
-            dep_output = first(dep.creator.output)
+            dep_output = dep.creator.output[0]
             if dep_output not in self:
                 raise ValueError('unknown dependency for {!r}'.format(dep))
             dependencies.append(self[dep_output])

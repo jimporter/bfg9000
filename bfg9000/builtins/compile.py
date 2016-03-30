@@ -119,13 +119,14 @@ def make_object_file(rule, build_inputs, buildfile, env):
             df_cmd = make.cmd_var(depfixer, buildfile)
             recipe_extra = [make.silent(depfixer(df_cmd, deps))]
 
+            buildfile.include(rule.output[0].path.addext('.d'), optional=True)
+
         buildfile.define(recipename, [compiler(
             cmd=make.cmd_var(compiler, buildfile), input=make.qvar('<'),
             output=make.qvar('@'), **cmd_kwargs
         )] + recipe_extra)
 
-    path = rule.output.path
-    out_dir = path.parent()
+    out_dir = rule.output[0].path.parent()
     buildfile.rule(
         target=rule.output,
         deps=[rule.file] + rule.extra_deps,
@@ -133,7 +134,6 @@ def make_object_file(rule, build_inputs, buildfile, env):
         recipe=recipename,
         variables=variables
     )
-    buildfile.include(path.addext('.d'), optional=True)
 
 
 @ninja.rule_handler(Compile)

@@ -37,13 +37,14 @@ try:
 
     @msbuild.rule_handler(Alias)
     def msbuild_alias(rule, build_inputs, solution, env):
+        output = rule.output[0]
         project = msbuild.NoopProject(
-            name=rule.output.path,
+            name=output.path,
             version=env.getvar('VISUALSTUDIOVERSION'),
             platform=env.getvar('PLATFORM'),
             srcdir=env.srcdir.string(),
             dependencies=solution.dependencies(rule.extra_deps),
         )
-        solution[rule.output] = project
+        solution[output] = project
 except:
     pass
