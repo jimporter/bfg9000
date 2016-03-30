@@ -10,18 +10,18 @@ from ..path import Path, Root
 
 
 class MsvcBuilder(object):
-    def __init__(self, env, lang, name, cmd, link_cmd, lib_cmd, cflags,
-                 ldflags, ldlibs):
-        self.compiler = MsvcCompiler(env, lang, name, cmd, cflags)
+    def __init__(self, env, lang, name, command, link_command, lib_command,
+                 cflags, ldflags, ldlibs):
+        self.compiler = MsvcCompiler(env, lang, name, command, cflags)
         self._linkers = {
             'executable': MsvcExecutableLinker(
-                env, lang, name, link_cmd, ldflags, ldlibs
+                env, lang, name, link_command, ldflags, ldlibs
             ),
             'shared_library': MsvcSharedLibraryLinker(
-                env, lang, name, link_cmd, ldflags, ldlibs
+                env, lang, name, link_command, ldflags, ldlibs
             ),
             'static_library': MsvcStaticLinker(
-                env, lang, name, lib_cmd
+                env, lang, name, lib_command
             ),
         }
         self.packages = MsvcPackageResolver(env, lang)
@@ -44,12 +44,12 @@ class MsvcBuilder(object):
 
 
 class MsvcCompiler(object):
-    def __init__(self, env, lang, name, cmd, cflags):
+    def __init__(self, env, lang, name, command, cflags):
         self.platform = env.platform
         self.lang = lang
 
         self.rule_name = self.command_var = name
-        self.command = cmd
+        self.command = command
 
         self.global_args = ['/nologo'] + cflags
 
@@ -121,12 +121,14 @@ class MsvcLinker(object):
         'c++'   : {'c', 'c++'},
     }
 
-    def __init__(self, env, lang, name, cmd, ldflags, ldlibs):
+    def __init__(self, env, lang, rule_name, command_var, command, ldflags,
+                 ldlibs):
         self.platform = env.platform
         self.lang = lang
 
-        self.rule_name = self.command_var = 'link_' + name
-        self.command = cmd
+        self.rule_name = rule_name
+        self.command_var = command_var
+        self.command = command
         self.link_var = 'ld'
 
         self.global_args = ['/nologo'] + ldflags
@@ -143,7 +145,7 @@ class MsvcLinker(object):
                 self.__allowed_langs[self.lang].issuperset(langs))
 
     def __call__(self, cmd, input, output, libs=None, args=None):
-        result = [cmd]
+        result = [cmd] + self._always_args
         result.extend(iterate(args))
         result.extend(iterate(input))
         result.extend(iterate(libs))
@@ -165,7 +167,7 @@ class MsvcLinker(object):
         return self._lib_dirs(libraries, extra_dirs)
 
     def args(self, libraries, output):
-        return self._always_args + self.pkg_args(libraries, output)
+        return self.pkg_args(libraries, output)
 
     def parse_args(self, args):
         parser = ArgumentParser()
@@ -190,12 +192,20 @@ class MsvcLinker(object):
 
 
 class MsvcExecutableLinker(MsvcLinker):
+    def __init__(self, env, lang, name, command, ldflags, ldlibs):
+        MsvcLinker.__init__(self, env, lang, name + '_link', name + '_link',
+                            command, ldflags, ldlibs)
+
     def output_file(self, name):
         path = Path(name + self.platform.executable_ext, Root.builddir)
         return Executable(path, self.platform.object_format)
 
 
 class MsvcSharedLibraryLinker(MsvcLinker):
+    def __init__(self, env, lang, name, command, ldflags, ldlibs):
+        MsvcLinker.__init__(self, env, lang, name + '_linklib', name + '_link',
+                            command, ldflags, ldlibs)
+
     def output_file(self, name, version=None, soversion=None):
         dllname = Path(name + self.platform.shared_library_ext, Root.builddir)
         impname = Path(name + '.lib', Root.builddir)
@@ -219,12 +229,12 @@ class MsvcSharedLibraryLinker(MsvcLinker):
 class MsvcStaticLinker(object):
     link_var = 'lib'
 
-    def __init__(self, env, lang, name, cmd):
+    def __init__(self, env, lang, name, command):
         self.platform = env.platform
         self.lang = lang
 
-        self.rule_name = self.command_var = 'lib_' + name
-        self.command = cmd
+        self.rule_name = self.command_var = name + '_lib'
+        self.command = command
 
         self.global_args = shell.split(env.getvar('LIBFLAGS', ''))
 

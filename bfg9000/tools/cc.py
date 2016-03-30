@@ -13,11 +13,11 @@ from ..path import Path, Root
 
 
 class CcBuilder(object):
-    def __init__(self, env, lang, name, cmd, cflags, ldflags, ldlibs):
+    def __init__(self, env, lang, name, command, cflags, ldflags, ldlibs):
         self.brand = 'unknown'
         try:
             output = subprocess.check_output(
-                '{} --version'.format(cmd),
+                '{} --version'.format(command),
                 shell=True, universal_newlines=True
             )
             if 'Free Software Foundation' in output:
@@ -27,17 +27,17 @@ class CcBuilder(object):
         except:
             pass
 
-        self.compiler = CcCompiler(env, lang, name, cmd, cflags)
+        self.compiler = CcCompiler(env, lang, name, command, cflags)
         self._linkers = {
             'executable': CcExecutableLinker(
-                env, lang, name, cmd, ldflags, ldlibs
+                env, lang, name, command, ldflags, ldlibs
             ),
             'shared_library': CcSharedLibraryLinker(
-                env, lang, name, cmd, ldflags, ldlibs
+                env, lang, name, command, ldflags, ldlibs
             ),
             'static_library': ArLinker(env, lang),
         }
-        self.packages = CcPackageResolver(env, lang, cmd)
+        self.packages = CcPackageResolver(env, lang, command)
 
     @property
     def flavor(self):
@@ -61,12 +61,12 @@ class CcCompiler(object):
         'f95'   : 'f95',
     }
 
-    def __init__(self, env, lang, name, cmd, cflags):
+    def __init__(self, env, lang, name, command, cflags):
         self.platform = env.platform
         self.lang = lang
 
         self.rule_name = self.command_var = name
-        self.command = cmd
+        self.command = command
 
         self.global_args = cflags
 
@@ -129,13 +129,14 @@ class CcLinker(object):
         'f95'   : {'c', 'f77', 'f95'},
     }
 
-    def __init__(self, env, lang, name, cmd, ldflags, ldlibs):
+    def __init__(self, env, lang, rule_name, command_var, command, ldflags,
+                 ldlibs):
         self.env = env
         self.lang = lang
 
-        self.rule_name = 'link_' + name
-        self.command_var = name
-        self.command = cmd
+        self.rule_name = rule_name
+        self.command_var = command_var
+        self.command = command
         self.link_var = 'ld'
 
         self.global_args = ldflags
@@ -177,7 +178,7 @@ class CcLinker(object):
                 self.__allowed_langs[self.lang].issuperset(langs))
 
     def __call__(self, cmd, input, output, libs=None, args=None):
-        result = [cmd]
+        result = [cmd] + self._always_args
         result.extend(iterate(args))
         result.extend(iterate(input))
         result.extend(iterate(libs))
@@ -225,7 +226,7 @@ class CcLinker(object):
                  self._rpath(libraries, first(output)) )
 
     def args(self, libraries, output):
-        return self._always_args + self.pkg_args(libraries, output)
+        return self.pkg_args(libraries, output)
 
     def _link_lib(self, library):
         if isinstance(library, WholeArchive):
@@ -270,12 +271,20 @@ class CcLinker(object):
 
 
 class CcExecutableLinker(CcLinker):
+    def __init__(self, env, lang, name, command, ldflags, ldlibs):
+        CcLinker.__init__(self, env, lang, name + '_link', name, command,
+                          ldflags, ldlibs)
+
     def output_file(self, name):
         path = Path(name + self.platform.executable_ext, Root.builddir)
         return Executable(path, self.platform.object_format)
 
 
 class CcSharedLibraryLinker(CcLinker):
+    def __init__(self, env, lang, name, command, ldflags, ldlibs):
+        CcLinker.__init__(self, env, lang, name + '_linklib', name, command,
+                          ldflags, ldlibs)
+
     def output_file(self, name, version=None, soversion=None):
         head, tail = os.path.split(name)
         fmt = self.platform.object_format
@@ -330,7 +339,7 @@ class CcSharedLibraryLinker(CcLinker):
 
 
 class CcPackageResolver(object):
-    def __init__(self, env, lang, cmd):
+    def __init__(self, env, lang, command):
         value = env.getvar('CPATH')
         include_dirs = value.split(os.pathsep) if value else []
 
@@ -341,7 +350,7 @@ class CcPackageResolver(object):
         try:
             # XXX: Will this work for cross-compilation?
             output = subprocess.check_output(
-                '{} -print-search-dirs'.format(cmd),
+                '{} -print-search-dirs'.format(command),
                 shell=True, universal_newlines=True
             )
             m = re.search(r'^libraries: (.*)', output, re.MULTILINE)
