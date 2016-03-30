@@ -177,6 +177,10 @@ class CcLinker(object):
         return (format == self.platform.object_format and
                 self.__allowed_langs[self.lang].issuperset(langs))
 
+    @property
+    def num_outputs(self):
+        return 1
+
     def __call__(self, cmd, input, output, libs=None, args=None):
         result = [cmd] + self._always_args
         result.extend(iterate(args))
@@ -285,6 +289,16 @@ class CcSharedLibraryLinker(CcLinker):
         CcLinker.__init__(self, env, lang, name + '_linklib', name, command,
                           ldflags, ldlibs)
 
+    @property
+    def num_outputs(self):
+        return 2 if self.platform.has_import_library else 1
+
+    def __call__(self, cmd, input, output, libs=None, args=None):
+        result = CcLinker.__call__(self, cmd, input, first(output), libs, args)
+        if self.platform.has_import_library:
+            result.append('-Wl,--out-implib=' + output[1])
+        return result
+
     def output_file(self, name, version=None, soversion=None):
         head, tail = os.path.split(name)
         fmt = self.platform.object_format
@@ -317,11 +331,6 @@ class CcSharedLibraryLinker(CcLinker):
         shared = '-dynamiclib' if self.platform.name == 'darwin' else '-shared'
         return CcLinker._always_args.fget(self) + [shared, '-fPIC']
 
-    def _import_lib(self, output):
-        if self.platform.has_import_library:
-            return ['-Wl,--out-implib=' + output[1].path]
-        return []
-
     def _soname(self, library):
         if isinstance(library, VersionedSharedLibrary):
             soname = library.soname
@@ -335,7 +344,7 @@ class CcSharedLibraryLinker(CcLinker):
 
     def args(self, libraries, output):
         return (CcLinker.args(self, libraries, output) +
-                self._import_lib(output) + self._soname(first(output)))
+                self._soname(first(output)))
 
 
 class CcPackageResolver(object):

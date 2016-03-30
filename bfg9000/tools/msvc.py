@@ -144,6 +144,10 @@ class MsvcLinker(object):
         return (format == self.platform.object_format and
                 self.__allowed_langs[self.lang].issuperset(langs))
 
+    @property
+    def num_outputs(self):
+        return 1
+
     def __call__(self, cmd, input, output, libs=None, args=None):
         result = [cmd] + self._always_args
         result.extend(iterate(args))
@@ -171,8 +175,6 @@ class MsvcLinker(object):
 
     def parse_args(self, args):
         parser = ArgumentParser()
-        parser.add('/DLL')
-        parser.add('/IMPLIB', type=str, dest='implib')
         parser.add('/nologo')
 
         result, other = parser.parse_known(args)
@@ -206,6 +208,15 @@ class MsvcSharedLibraryLinker(MsvcLinker):
         MsvcLinker.__init__(self, env, lang, name + '_linklib', name + '_link',
                             command, ldflags, ldlibs)
 
+    @property
+    def num_outputs(self):
+        return 2
+
+    def __call__(self, cmd, input, output, libs=None, args=None):
+        result = MsvcLinker.__call__(self, cmd, input, output[0], libs, args)
+        result.append('/IMPLIB:' + output[1])
+        return result
+
     def output_file(self, name, version=None, soversion=None):
         dllname = Path(name + self.platform.shared_library_ext, Root.builddir)
         impname = Path(name + '.lib', Root.builddir)
@@ -217,13 +228,6 @@ class MsvcSharedLibraryLinker(MsvcLinker):
     @property
     def _always_args(self):
         return ['/DLL']
-
-    def _import_lib(self, library):
-        return ['/IMPLIB:' + library[1].path]
-
-    def args(self, libraries, output):
-        return (MsvcLinker.args(self, libraries, output) +
-                self._import_lib(output))
 
 
 class MsvcStaticLinker(object):

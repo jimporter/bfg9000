@@ -250,11 +250,21 @@ def make_link(rule, build_inputs, buildfile, env):
     linker = rule.builder
     variables, cmd_kwargs = _get_flags(make, rule, build_inputs, buildfile)
 
+    output_params = []
+    if len(rule.output) == 1:
+        output_vars = make.qvar('@')
+    else:
+        output_vars = []
+        for i in range(linker.num_outputs):
+            v = make.var(str(i + 2))
+            output_vars.append(v)
+            output_params.append(rule.output[i])
+
     recipename = make.var('RULE_{}'.format(linker.rule_name.upper()))
     if not buildfile.has_variable(recipename):
         buildfile.define(recipename, [
             linker(cmd=make.cmd_var(linker, buildfile), input=make.var('1'),
-                   output=make.var('2'), **cmd_kwargs)
+                   output=output_vars, **cmd_kwargs)
         ])
 
     dirs = uniques(i.path.parent() for i in rule.output)
@@ -263,7 +273,7 @@ def make_link(rule, build_inputs, buildfile, env):
         targets=rule.output,
         deps=rule.files + rule.libs + rule.extra_deps,
         order_only=[i.append(make.dir_sentinel) for i in dirs if i],
-        recipe=make.Call(recipename, rule.files, rule.output[0].path),
+        recipe=make.Call(recipename, rule.files, *output_params),
         variables=variables
     )
 
@@ -272,12 +282,23 @@ def make_link(rule, build_inputs, buildfile, env):
 def ninja_link(rule, build_inputs, buildfile, env):
     linker = rule.builder
     variables, cmd_kwargs = _get_flags(ninja, rule, build_inputs, buildfile)
-    variables[ninja.var('output')] = rule.output[0].path
+
+    if len(rule.output) == 1:
+        output_vars = ninja.var('out')
+    elif linker.num_outputs == 1:
+        output_vars = ninja.var('output')
+        variables[output_vars] = rule.output[0]
+    else:
+        output_vars = []
+        for i in range(linker.num_outputs):
+            v = ninja.var('output{}'.format(i + 1))
+            output_vars.append(v)
+            variables[v] = rule.output[i]
 
     if not buildfile.has_rule(linker.rule_name):
         buildfile.rule(name=linker.rule_name, command=linker(
             cmd=ninja.cmd_var(linker, buildfile), input=ninja.var('in'),
-            output=ninja.var('output'), **cmd_kwargs
+            output=output_vars, **cmd_kwargs
         ))
 
     buildfile.build(
