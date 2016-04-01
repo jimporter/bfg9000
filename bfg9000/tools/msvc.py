@@ -5,7 +5,7 @@ from .winargparse import ArgumentParser
 from .utils import library_macro
 from .. import shell
 from ..file_types import *
-from ..iterutils import intersect, iterate, uniques
+from ..iterutils import iterate, uniques
 from ..path import Path, Root
 
 
@@ -95,22 +95,16 @@ class MsvcCompiler(object):
 
     def parse_args(self, args):
         parser = ArgumentParser()
+        parser.add('/nologo')
         parser.add('/D', '-D', type=list, dest='defines')
         parser.add('/I', '-I', type=list, dest='includes')
-        parser.add('/W', type=list, dest='warnings')
-        parser.add('/nologo')
+
+        warn = parser.add('/W', type=dict, dest='warnings')
+        warn.add('0', '1', '2', '3', '4', 'all', dest='level')
+        warn.add('X', type=bool, dest='as_error')
+        warn.add('X-', type=bool, dest='as_error', value=False)
 
         result, other = parser.parse_known(args)
-
-        # Determine the active warning state.
-        warnings = result.pop('warnings')
-        levels = ['0', '1', '2', '3', '4', 'all']
-        level = next(intersect(reversed(warnings), levels), None)
-        as_error = next(intersect(reversed(warnings), ['X', 'X-']), None)
-        if as_error:
-            as_error = (as_error == 'X')
-
-        result['warnings'] = {'level': level, 'as_error': as_error}
         result['other'] = other
         return result
 

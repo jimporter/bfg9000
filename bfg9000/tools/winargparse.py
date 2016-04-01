@@ -34,6 +34,7 @@ class ArgumentParser(object):
                 self._long_names[i] = info
 
         self._options.append(info)
+        return info
 
     def parse_known(self, args):
         result = {i.name: i.default() for i in self._options}
@@ -45,37 +46,34 @@ class ArgumentParser(object):
             if i is None:
                 break
 
+            info = None
             if i[0] in self.prefix_chars:
-                short_name, value = i[:2], i[2:]
-                if short_name in self._short_names:
-                    info = self._short_names[short_name]
+                key, value = i[:2], i[2:]
+                if key in self._short_names:
+                    info = self._short_names[key]
                     if info.takes_value:
                         if not value:
                             value = next(args)
                     elif value:
                         raise ValueError('no value expected for option')
+                else:
+                    key, colon, value = i.partition(self.value_delim)
+                    if key in self._long_names:
+                        info = self._long_names[key]
+                        if not info.takes_value and colon:
+                            raise ValueError('no value expected for option')
 
-                    info.fill_value(result, value)
-                    continue
-
-                long_name, colon, value = i.partition(self.value_delim)
-                if long_name in self._long_names:
-                    info = self._long_names[long_name]
-                    if not info.takes_value and colon:
-                        raise ValueError('no value expected for option')
-
-                    info.fill_value(result, value)
-                    continue
-
+            if info:
+                info.fill_value(result, key, value)
+                continue
             extra.append(i)
 
         return result, extra
 
 
 class ArgumentInfo(object):
-    def __init__(self, name, type):
+    def __init__(self, name):
         self.name = name
-        self.type = type
 
     def default(self):
         return None
@@ -85,13 +83,19 @@ class ArgumentInfo(object):
         return True
 
 
+@ArgumentParser.handler('key')
+class KeyArgumentInfo(ArgumentInfo):
+    def fill_value(self, results, key, value):
+        results[self.name] = key
+
+
 @ArgumentParser.handler(bool)
 class BoolArgumentInfo(ArgumentInfo):
     def __init__(self, name, value=True):
-        ArgumentInfo.__init__(self, name, bool)
+        ArgumentInfo.__init__(self, name)
         self.value = value
 
-    def fill_value(self, results, value=None):
+    def fill_value(self, results, key, value):
         results[self.name] = self.value
 
     @property
@@ -102,9 +106,9 @@ class BoolArgumentInfo(ArgumentInfo):
 @ArgumentParser.handler(str)
 class StrArgumentInfo(ArgumentInfo):
     def __init__(self, name):
-        ArgumentInfo.__init__(self, name, str)
+        ArgumentInfo.__init__(self, name)
 
-    def fill_value(self, results, value):
+    def fill_value(self, results, key, value):
         if not value:
             raise ValueError('expected value for option')
         results[self.name] = value
@@ -113,12 +117,53 @@ class StrArgumentInfo(ArgumentInfo):
 @ArgumentParser.handler(list)
 class ListArgumentInfo(ArgumentInfo):
     def __init__(self, name):
-        ArgumentInfo.__init__(self, name, list)
+        ArgumentInfo.__init__(self, name)
 
     def default(self):
         return []
 
-    def fill_value(self, results, value):
+    def fill_value(self, results, key, value):
         if not value:
             raise ValueError('expected value for option')
         results[self.name].append(value)
+
+
+@ArgumentParser.handler(dict)
+class DictArgumentInfo(ArgumentInfo):
+    def __init__(self, name):
+        ArgumentInfo.__init__(self, name)
+        self._short_names = {}
+        self._long_names = {}
+        self._options = []
+
+    def add(self, *args, **kwargs):
+        dest = kwargs.pop('dest', args[0])
+        type = kwargs.pop('type', 'key')
+        info = ArgumentParser._argument_info[type](dest, **kwargs)
+
+        if type in (bool, 'key'):
+            for i in args:
+                self._long_names[i] = info
+        else:
+            for i in args:
+                if len(i) != 1:
+                    raise ValueError('short names should be one character')
+                self._short_names[i] = info
+
+        self._options.append(info)
+        return info
+
+    def default(self):
+        return {i.name: i.default() for i in self._options}
+
+    def fill_value(self, results, key, value):
+        if not value:
+            raise ValueError('expected value for option')
+
+        subkey, subvalue = value[:1], value[1:]
+        if subkey in self._short_names:
+            info = self._short_names[subkey]
+            info.fill_value(results[self.name], subkey, subvalue)
+        elif value in self._long_names:
+            info = self._long_names[value]
+            info.fill_value(results[self.name], value, None)

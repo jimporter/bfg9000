@@ -115,3 +115,48 @@ class TestWinArgParse(unittest.TestCase):
                          ({'foo': ['bar']}, []))
         self.assertEqual(parser.parse_known(['/foo:bar', '-foo:baz']),
                          ({'foo': ['bar', 'baz']}, []))
+
+    def test_short_dict(self):
+        parser = ArgumentParser()
+        warn = parser.add('/W', type=dict, dest='warn')
+        warn.add('1', '2', '3', '4', 'all', dest='level')
+        warn.add('X', type=bool, dest='error')
+        warn.add('X-', type=bool, dest='error', value=False)
+
+        self.assertEqual(parser.parse_known([]),
+                         ({'warn': {'level': None, 'error': None}}, []))
+        self.assertEqual(parser.parse_known(['/W2']),
+                         ({'warn': {'level': '2', 'error': None}}, []))
+        self.assertEqual(parser.parse_known(['/W2', '/W4']),
+                         ({'warn': {'level': '4', 'error': None}}, []))
+        self.assertEqual(parser.parse_known(['/W2', '/WX']),
+                         ({'warn': {'level': '2', 'error': True}}, []))
+        self.assertEqual(parser.parse_known(['/WX', '/W2', '/WX-', '/Wall']),
+                         ({'warn': {'level': 'all', 'error': False}}, []))
+
+    def test_long_dict(self):
+        parser = ArgumentParser()
+        warn = parser.add('/Warn', type=dict, dest='warn')
+        warn.add('1', '2', '3', '4', 'all', dest='level')
+        warn.add('X', type=bool, dest='error')
+        warn.add('X-', type=bool, dest='error', value=False)
+
+        self.assertEqual(parser.parse_known(
+            []
+        ), ({'warn': {'level': None, 'error': None}}, []))
+
+        self.assertEqual(parser.parse_known(
+            ['/Warn:2']
+        ), ({'warn': {'level': '2', 'error': None}}, []))
+
+        self.assertEqual(parser.parse_known(
+            ['/Warn:2', '/Warn:4']
+        ), ({'warn': {'level': '4', 'error': None}}, []))
+
+        self.assertEqual(parser.parse_known(
+            ['/Warn:2', '/Warn:X']
+        ), ({'warn': {'level': '2', 'error': True}}, []))
+
+        self.assertEqual(parser.parse_known(
+            ['/Warn:X', '/Warn:2', '/Warn:X-', '/Warn:all']
+        ), ({'warn': {'level': 'all', 'error': False}}, []))
