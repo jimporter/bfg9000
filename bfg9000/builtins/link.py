@@ -374,6 +374,9 @@ try:
         if hasattr(output, 'import_lib'):
             ldflags['import_lib'] = output.import_lib
 
+        pch_deps = filter(None, (getattr(i.creator, 'pch_source', None)
+                                 for i in rule.files))
+
         # Create the project file.
         project = msbuild.VcxProject(
             name=rule.name,
@@ -383,7 +386,7 @@ try:
             mode=rule.msbuild_mode,
             output_file=output,
             files=[{
-                'name': i.creator.file,
+                'name': getattr(i.creator, 'pch_source', i.creator.file),
                 'options': _parse_file_cflags(
                     i, build_inputs['compile_options'], common_cflags is None
                 ),
@@ -391,7 +394,7 @@ try:
             compile_options=common_cflags,
             link_options=ldflags,
             dependencies=solution.dependencies(chain(
-                rule.libs, rule.extra_deps,
+                rule.libs, rule.extra_deps, pch_deps,
                 chain.from_iterable(i.creator.extra_deps for i in rule.files)
             )),
         )

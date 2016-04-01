@@ -104,6 +104,9 @@ class Solution(object):
         # created.
         dependencies = []
         for dep in deps:
+            if not dep.creator:
+                continue
+
             dep_output = dep.creator.output[0]
             if dep_output not in self:
                 raise ValueError('unknown dependency for {!r}'.format(dep))
@@ -344,16 +347,27 @@ class VcxProject(Project):
             element.append(E.TreatWarningAsError(
                 'true' if warnings['as_error'] else 'false'
             ))
+
         if options.get('includes'):
             element.append(E.AdditionalIncludeDirectories( ';'.join(chain(
                 textify_each(options['includes']),
                 ['%(AdditionalIncludeDirectories)']
             )) ))
+
         if options.get('defines'):
             element.append(E.PreprocessorDefinitions( ';'.join(chain(
                 textify_each(options['defines']),
                 ['%(PreprocessorDefinitions)']
             )) ))
+
+        pch = options.get('pch', {})
+        if pch.get('create') is not None:
+            element.append(E.PrecompiledHeader('Create'))
+            element.append(E.PrecompiledHeaderFile(pch['create']))
+        elif pch.get('use') is not None:
+            element.append(E.PrecompiledHeader('Use'))
+            element.append(E.PrecompiledHeaderFile(pch['use']))
+
         if options.get('extra'):
             element.append(E.AdditionalOptions( ' '.join(chain(
                 textify_each(options['extra'], quoted=True),
@@ -362,15 +376,18 @@ class VcxProject(Project):
 
     def _write_link_options(self, element, options):
         element.append(E.OutputFile('$(TargetPath)'))
+
         if options.get('import_lib'):
             element.append(E.ImportLibrary(
                 textify(options['import_lib'])
             ))
+
         if options.get('extra'):
             element.append(E.AdditionalOptions( ' '.join(chain(
                 textify_each(options['extra'], quoted=True),
                 ['%(AdditionalOptions)']
             )) ))
+
         if options.get('libs'):
             element.append(E.AdditionalDependencies( ';'.join(chain(
                 textify_each(options['libs']),

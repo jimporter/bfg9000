@@ -1,5 +1,3 @@
-import warnings
-
 from .. import shell
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
@@ -49,6 +47,15 @@ try:
 
     @msbuild.rule_handler(EchoFile)
     def msbuild_echo_file(rule, build_inputs, solution, env):
-        warnings.warn('echo file rules not currently supported with msbuild')
+        output = rule.output[0]
+        project = msbuild.ExecProject(
+            name=output.path.suffix,
+            version=env.getvar('VISUALSTUDIOVERSION'),
+            platform=env.getvar('PLATFORM'),
+            srcdir=env.srcdir.string(),
+            commands=['echo ' + rule.text + ' > ' + output.path],
+            dependencies=solution.dependencies(rule.extra_deps),
+        )
+        solution[output] = project
 except:
     pass

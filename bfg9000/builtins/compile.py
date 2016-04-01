@@ -1,4 +1,3 @@
-import warnings
 from collections import defaultdict
 from six import string_types
 
@@ -293,14 +292,9 @@ def ninja_compile(rule, build_inputs, buildfile, env):
 try:
     from ..backends.msbuild import writer as msbuild
 
-    @msbuild.rule_handler(CompileSource)
-    def msbuild_compile_source(rule, build_inputs, solution, env):
+    @msbuild.rule_handler(CompileSource, CompileHeader)
+    def msbuild_compile(rule, build_inputs, solution, env):
         # MSBuild does compilation and linking in one unit; see link.py.
         pass
-
-    @msbuild.rule_handler(CompileHeader)
-    def msbuild_compile_header(rule, build_inputs, solution, env):
-        warnings.warn('precompiled header rules not currently supported ' +
-                      'with msbuild')
 except:
     pass

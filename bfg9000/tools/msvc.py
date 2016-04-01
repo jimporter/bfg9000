@@ -110,6 +110,10 @@ class MsvcBaseCompiler(object):
         warn.add('X', type=bool, dest='as_error')
         warn.add('X-', type=bool, dest='as_error', value=False)
 
+        pch = parser.add('/Y', type=dict, dest='pch')
+        pch.add('u', type=str, dest='use')
+        pch.add('c', type=str, dest='create')
+
         result, extra = parser.parse_known(args)
         result['extra'] = extra
         return result
