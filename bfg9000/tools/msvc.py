@@ -104,8 +104,8 @@ class MsvcCompiler(object):
         warn.add('X', type=bool, dest='as_error')
         warn.add('X-', type=bool, dest='as_error', value=False)
 
-        result, other = parser.parse_known(args)
-        result['other'] = other
+        result, extra = parser.parse_known(args)
+        result['extra'] = extra
         return result
 
 
@@ -171,8 +171,8 @@ class MsvcLinker(object):
         parser = ArgumentParser()
         parser.add('/nologo')
 
-        result, other = parser.parse_known(args)
-        result['other'] = other
+        result, extra = parser.parse_known(args)
+        result['extra'] = extra
         return result
 
     def _link_lib(self, library):

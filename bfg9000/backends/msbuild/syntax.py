@@ -264,16 +264,15 @@ class VcxProject(Project):
 
     def __init__(self, name, uuid=None, version=None, configuration=None,
                  platform=None, srcdir=None, mode='Application',
-                 output_file=None, import_lib=None, files=None, libs=None,
-                 options=None, dependencies=None):
+                 output_file=None, files=None, compile_options=None,
+                 link_options=None, dependencies=None):
         Project.__init__(self, name, uuid, version, configuration, platform,
                          srcdir, dependencies)
         self.mode = mode
         self.output_file = output_file
-        self.import_lib = import_lib
         self.files = files or []
-        self.libs = libs or []
-        self.options = options or {}
+        self.compile_options = compile_options or {}
+        self.link_options = link_options or {}
 
     @property
     def toolset(self):
@@ -287,61 +286,26 @@ class VcxProject(Project):
         )
 
         compile_opts = E.ClCompile()
-        warnings = self.options.get('warnings', {})
-        if warnings.get('level') is not None:
-            compile_opts.append(E.WarningLevel(
-                self._warning_levels[warnings['level']]
-            ))
-        if warnings.get('as_error') is not None:
-            compile_opts.append(E.TreatWarningAsError(
-                'true' if warnings['as_error'] else 'false'
-            ))
-        if self.options.get('includes'):
-            compile_opts.append(E.AdditionalIncludeDirectories( ';'.join(chain(
-                textify_each(self.options['includes']),
-                ['%(AdditionalIncludeDirectories)']
-            )) ))
-        if self.options.get('defines'):
-            compile_opts.append(E.PreprocessorDefinitions(
-                ';'.join(textify_each(self.options['defines']))
-            ))
-        if self.options.get('compile'):
-            compile_opts.append(E.AdditionalOptions( ' '.join(chain(
-                textify_each(self.options['compile'], quoted=True),
-                ['%(AdditionalOptions)']
-            )) ))
-
+        self._write_compile_options(compile_opts, self.compile_options)
         link_opts = E.Lib() if self.mode == 'StaticLibrary' else E.Link()
-        link_opts.append(E.OutputFile('$(TargetPath)'))
-        if self.import_lib:
-            link_opts.append(E.ImportLibrary(
-                textify(self.import_lib, out=True)
-            ))
-        if self.options.get('link'):
-            link_opts.append(E.AdditionalOptions( ' '.join(chain(
-                textify_each(self.options['link'], quoted=True, out=True),
-                ['%(AdditionalOptions)']
-            )) ))
-        if self.libs:
-            link_opts.append(E.AdditionalDependencies( ';'.join(chain(
-                textify_each(self.libs, out=True),
-                ['%(AdditionalDependencies)']
-            )) ))
+        self._write_link_options(link_opts, self.link_options)
 
         names = defaultdict(lambda: [])
         for i in self.files:
-            basename = ntpath.splitext(i.path.basename())[0]
-            names[basename].append(i.path.parent())
+            basename = ntpath.splitext(i['name'].path.basename())[0]
+            names[basename].append(i['name'].path.parent())
 
         compiles = E.ItemGroup()
         for i in self.files:
-            c = E.ClCompile(Include=textify(i))
-            dupes = names[ ntpath.splitext(i.path.basename())[0] ]
+            name = i['name']
+            c = E.ClCompile(Include=textify(name))
+            self._write_compile_options(c, i['options'])
+            dupes = names[ ntpath.splitext(name.path.basename())[0] ]
             if len(dupes) > 1:
                 # XXX: This can still fail rarely if the paths' bases are
                 # different.
                 prefix = ntpath.commonprefix([j.suffix for j in dupes])
-                suffix = path.Path(i.path.parent().suffix[len(prefix):])
+                suffix = path.Path(name.path.parent().suffix[len(prefix):])
                 c.append(E.ObjectFileName(textify(suffix) + '\\'))
             compiles.append(c)
 
@@ -359,6 +323,49 @@ class VcxProject(Project):
             compiles,
             E.Import(Project='$(VCTargetsPath)\Microsoft.Cpp.Targets')
         ])
+
+    def _write_compile_options(self, element, options):
+        warnings = options.get('warnings', {})
+        if warnings.get('level') is not None:
+            element.append(E.WarningLevel(
+                self._warning_levels[warnings['level']]
+            ))
+        if warnings.get('as_error') is not None:
+            element.append(E.TreatWarningAsError(
+                'true' if warnings['as_error'] else 'false'
+            ))
+        if options.get('includes'):
+            element.append(E.AdditionalIncludeDirectories( ';'.join(chain(
+                textify_each(options['includes']),
+                ['%(AdditionalIncludeDirectories)']
+            )) ))
+        if options.get('defines'):
+            element.append(E.PreprocessorDefinitions( ';'.join(chain(
+                textify_each(options['defines']),
+                ['%(PreprocessorDefinitions)']
+            )) ))
+        if options.get('extra'):
+            element.append(E.AdditionalOptions( ' '.join(chain(
+                textify_each(options['extra'], quoted=True),
+                ['%(AdditionalOptions)']
+            )) ))
+
+    def _write_link_options(self, element, options):
+        element.append(E.OutputFile('$(TargetPath)'))
+        if options.get('import_lib'):
+            element.append(E.ImportLibrary(
+                textify(options['import_lib'], out=True)
+            ))
+        if options.get('extra'):
+            element.append(E.AdditionalOptions( ' '.join(chain(
+                textify_each(options['extra'], quoted=True, out=True),
+                ['%(AdditionalOptions)']
+            )) ))
+        if options.get('libs'):
+            element.append(E.AdditionalDependencies( ';'.join(chain(
+                textify_each(options['libs'], out=True),
+                ['%(AdditionalDependencies)']
+            )) ))
 
 
 class NoopProject(Project):

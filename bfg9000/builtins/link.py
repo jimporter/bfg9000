@@ -325,18 +325,53 @@ try:
             )) for i in creators)
         ))
 
+    def _parse_common_cflags(compiler, global_cflags):
+        return compiler.parse_args(msbuild.textify_each(
+            compiler.global_args + global_cflags[compiler.lang]
+        ))
+
+    def _parse_file_cflags(file, global_cflags, add_common_cflags):
+        cflags = file.creator.builder.parse_args(
+            msbuild.textify_each(file.creator.options)
+        )
+        if not add_common_cflags:
+            return cflags
+        # XXX: We could cache these flags, but merge_dicts updates this dict
+        # in-place, so we'd need to rewrite that too.
+        common_cflags = _parse_common_cflags(file.creator.builder,
+                                             global_cflags)
+        return merge_dicts(common_cflags, cflags)
+
     @msbuild.rule_handler(StaticLink, DynamicLink, SharedLink)
     def msbuild_link(rule, build_inputs, solution, env):
         output = rule.output[0]
-        import_lib = getattr(output, 'import_lib', None)
-        cflags = _reduce_compile_options(
-            rule.files, build_inputs['compile_options']
-        )
+
+        # Parse compilation flags; if there's only one set of them (i.e. the
+        # command_var is the same for every compiler), we can apply these to
+        # all the files at once. Otherwise, we need to apply them to each file
+        # individually so they all get the correct options.
+        obj_creators = [i.creator for i in rule.files]
+        compilers = uniques(i.builder for i in obj_creators)
+        if len(uniques(i.command_var for i in compilers)) == 1:
+            common_cflags = _parse_common_cflags(
+                compilers[0], build_inputs['compile_options']
+            )
+        else:
+            common_cflags = None
+
+        # Parse linking flags.
         ldflags = rule.builder.parse_args(msbuild.textify_each(
             (rule.builder.global_args + build_inputs['link_options'] +
              rule.options), out=True
         ))
+        ldflags['libs'] = (
+            getattr(rule.builder, 'global_libs', []) +
+            getattr(rule, 'lib_options', [])
+        )
+        if hasattr(output, 'import_lib'):
+            ldflags['import_lib'] = output.import_lib
 
+        # Create the project file.
         project = msbuild.VcxProject(
             name=rule.name,
             version=env.getvar('VISUALSTUDIOVERSION'),
@@ -344,19 +379,14 @@ try:
             srcdir=env.srcdir.string(),
             mode=rule.msbuild_mode,
             output_file=output,
-            import_lib=import_lib,
-            files=[i.creator.file for i in rule.files],
-            libs=(
-                getattr(rule.builder, 'global_libs', []) +
-                getattr(rule, 'lib_options', [])
-            ),
-            options={
-                'defines' : cflags['defines'],
-                'includes': cflags['includes'],
-                'warnings': cflags['warnings'],
-                'compile' : cflags['other'],
-                'link'    : ldflags['other'],
-            },
+            files=[{
+                'name': i.creator.file,
+                'options': _parse_file_cflags(
+                    i, build_inputs['compile_options'], common_cflags is None
+                ),
+            } for i in rule.files],
+            compile_options=common_cflags,
+            link_options=ldflags,
             dependencies=solution.dependencies(chain(
                 rule.libs, rule.extra_deps,
                 chain.from_iterable(i.creator.extra_deps for i in rule.files)
