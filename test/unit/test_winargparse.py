@@ -13,34 +13,34 @@ class TestWinArgParse(unittest.TestCase):
     def test_short_bool(self):
         parser = ArgumentParser()
         parser.add('/a')
-        self.assertEqual(parser.parse_known([]), ({'a': False}, []))
+        self.assertEqual(parser.parse_known([]), ({'a': None}, []))
         self.assertEqual(parser.parse_known(['/a']), ({'a': True}, []))
         self.assertEqual(parser.parse_known(['/a', '/a']), ({'a': True}, []))
 
         parser = ArgumentParser()
         parser.add('/a', '-a')
-        self.assertEqual(parser.parse_known([]), ({'a': False}, []))
+        self.assertEqual(parser.parse_known([]), ({'a': None}, []))
         self.assertEqual(parser.parse_known(['/a']), ({'a': True}, []))
         self.assertEqual(parser.parse_known(['-a']), ({'a': True}, []))
 
     def test_long_bool(self):
         parser = ArgumentParser()
         parser.add('/foo')
-        self.assertEqual(parser.parse_known([]), ({'foo': False}, []))
+        self.assertEqual(parser.parse_known([]), ({'foo': None}, []))
         self.assertEqual(parser.parse_known(['/foo']), ({'foo': True}, []))
         self.assertEqual(parser.parse_known(['/foo', '/foo']),
                          ({'foo': True}, []))
 
         parser = ArgumentParser()
         parser.add('/foo', '-foo')
-        self.assertEqual(parser.parse_known([]), ({'foo': False}, []))
+        self.assertEqual(parser.parse_known([]), ({'foo': None}, []))
         self.assertEqual(parser.parse_known(['/foo']), ({'foo': True}, []))
         self.assertEqual(parser.parse_known(['-foo']), ({'foo': True}, []))
 
     def test_short_str(self):
         parser = ArgumentParser()
         parser.add('/a', type=str)
-        self.assertEqual(parser.parse_known([]), ({'a': ''}, []))
+        self.assertEqual(parser.parse_known([]), ({'a': None}, []))
         self.assertEqual(parser.parse_known(['/afoo']), ({'a': 'foo'}, []))
         self.assertEqual(parser.parse_known(['/a', 'foo']), ({'a': 'foo'}, []))
         self.assertEqual(parser.parse_known(['/afoo', '/a', 'bar']),
@@ -48,7 +48,7 @@ class TestWinArgParse(unittest.TestCase):
 
         parser = ArgumentParser()
         parser.add('/a', '-a', type=str)
-        self.assertEqual(parser.parse_known([]), ({'a': ''}, []))
+        self.assertEqual(parser.parse_known([]), ({'a': None}, []))
         self.assertEqual(parser.parse_known(['/afoo']), ({'a': 'foo'}, []))
         self.assertEqual(parser.parse_known(['-afoo']), ({'a': 'foo'}, []))
         self.assertEqual(parser.parse_known(['/a', 'foo']), ({'a': 'foo'}, []))
@@ -59,7 +59,7 @@ class TestWinArgParse(unittest.TestCase):
     def test_long_str(self):
         parser = ArgumentParser()
         parser.add('/foo', type=str)
-        self.assertEqual(parser.parse_known([]), ({'foo': ''}, []))
+        self.assertEqual(parser.parse_known([]), ({'foo': None}, []))
         self.assertEqual(parser.parse_known(['/foo:bar']),
                          ({'foo': 'bar'}, []))
         self.assertEqual(parser.parse_known(['/foo:bar', '/foo:baz']),
@@ -67,7 +67,7 @@ class TestWinArgParse(unittest.TestCase):
 
         parser = ArgumentParser()
         parser.add('/foo', '-foo', type=str)
-        self.assertEqual(parser.parse_known([]), ({'foo': ''}, []))
+        self.assertEqual(parser.parse_known([]), ({'foo': None}, []))
         self.assertEqual(parser.parse_known(['/foo:bar']),
                          ({'foo': 'bar'}, []))
         self.assertEqual(parser.parse_known(['-foo:bar']),
