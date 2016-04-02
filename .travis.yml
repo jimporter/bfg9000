@@ -8,15 +8,25 @@ python:
 os:
   - linux
 env:
-  - CC=gcc CXX=g++ CPPFLAGS="-Wall -Werror"
-  - CC=clang CXX=clang++ CPPFLAGS="-Wall -Werror"
+  global:
+    - PYTHON=python
+    - PIP=pip
+    - TEST_COMMAND="test -q"
+    - CPPFLAGS="-Wall -Werror"
+  matrix:
+    - CC=gcc CXX=g++
+    - CC=clang CXX=clang++
 
 matrix:
   include:
     - language: generic
       python: 2.7
       os: osx
-      env: CC=clang CXX=clang++ CPPFLAGS="-Wall -Werror"
+      env: CC=clang CXX=clang++
+    - language: generic
+      python: 3.5
+      os: osx
+      env: CC=clang CXX=clang++ PYTHON=python3 PIP=pip3
     - python: 2.7
       os: linux
       env: TEST_COMMAND=lint
@@ -41,10 +51,13 @@ before_install:
       brew install coreutils
       brew install libogg
       brew install ninja
-      brew install python
+      brew install ${PYTHON}
     fi
 install:
-  - pip install flake8
-  - pip install .
+  - |
+    if [ "${TEST_COMMAND}" = "lint" ]; then
+      ${PIP} install flake8
+    fi
+  - ${PIP} install .
 script:
-  - python setup.py ${TEST_COMMAND-test -q}
+  - ${PYTHON} setup.py ${TEST_COMMAND}
