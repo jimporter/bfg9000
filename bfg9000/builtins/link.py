@@ -362,7 +362,7 @@ try:
         # Parse linking flags.
         ldflags = rule.builder.parse_args(msbuild.textify_each(
             (rule.builder.global_args + build_inputs['link_options'] +
-             rule.options), out=True
+             rule.options)
         ))
         ldflags['libs'] = (
             getattr(rule.builder, 'global_libs', []) +

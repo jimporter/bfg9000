@@ -174,7 +174,7 @@ _path_vars = {
 }
 
 
-def textify(thing, quoted=False, out=False):
+def textify(thing, quoted=False, out=True):
     thing = safe_str.safe_str(thing)
 
     if isinstance(thing, safe_str.escaped_str):
@@ -189,7 +189,7 @@ def textify(thing, quoted=False, out=False):
         raise TypeError(type(thing))
 
 
-def textify_each(thing, quoted=False, out=False):
+def textify_each(thing, quoted=False, out=True):
     return (textify(i, quoted, out) for i in thing)
 
 
@@ -282,7 +282,7 @@ class VcxProject(Project):
         target_name = safe_str.safe_str(self.output_file).basename()
         override_props = E.PropertyGroup(
             E.TargetName(os.path.splitext(target_name)[0]),
-            E.TargetPath(textify(self.output_file, out=True))
+            E.TargetPath(textify(self.output_file))
         )
 
         compile_opts = E.ClCompile()
@@ -306,7 +306,7 @@ class VcxProject(Project):
                 # different.
                 prefix = ntpath.commonprefix([j.suffix for j in dupes])
                 suffix = path.Path(name.path.parent().suffix[len(prefix):])
-                c.append(E.ObjectFileName(textify(suffix) + '\\'))
+                c.append(E.ObjectFileName(textify(suffix, out=False) + '\\'))
             compiles.append(c)
 
         self._write(out, [
@@ -354,16 +354,16 @@ class VcxProject(Project):
         element.append(E.OutputFile('$(TargetPath)'))
         if options.get('import_lib'):
             element.append(E.ImportLibrary(
-                textify(options['import_lib'], out=True)
+                textify(options['import_lib'])
             ))
         if options.get('extra'):
             element.append(E.AdditionalOptions( ' '.join(chain(
-                textify_each(options['extra'], quoted=True, out=True),
+                textify_each(options['extra'], quoted=True),
                 ['%(AdditionalOptions)']
             )) ))
         if options.get('libs'):
             element.append(E.AdditionalDependencies( ';'.join(chain(
-                textify_each(options['libs'], out=True),
+                textify_each(options['libs']),
                 ['%(AdditionalDependencies)']
             )) ))
 
@@ -394,11 +394,12 @@ class ExecProject(Project):
             # value it should have; do users want to mess with an intermediate
             # file or an output file?
             if isiterable(i):
-                cmd = ' '.join(textify_each(i, quoted=True, out=True))
+                cmd = ' '.join(textify_each(i, quoted=True))
             else:
-                cmd = textify(i, out=True)
-            target.append(E.Exec({'Command': cmd,
-                                  'WorkingDirectory': '$(OutDir)'}))
+                cmd = textify(i)
+            target.append(E.Exec({
+                'Command': cmd, 'WorkingDirectory': '$(OutDir)'
+            }))
 
         self._write(out, [
             # Import the C++ properties to get $(OutDir). There might be a
