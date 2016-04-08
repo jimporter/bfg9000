@@ -129,4 +129,4 @@ def commonprefix(paths):
     for i, bit in enumerate(lo):
         if bit != hi[i]:
             return os.path.sep.join(lo[:i])
-    return lo
+    return os.path.sep.join(lo)

@@ -92,3 +92,31 @@ class TestPath(unittest.TestCase):
         p = Path('foo/bar', Root.builddir)
         self.assertEqual(install_path(p, InstallRoot.bindir),
                          Path('foo/bar', InstallRoot.bindir))
+
+
+class TestCommonPrefix(unittest.TestCase):
+    def test_empty(self):
+        self.assertEqual(commonprefix([]), '')
+
+    def test_single(self):
+        p = Path('foo/bar')
+        self.assertEqual(commonprefix([p]), 'foo/bar')
+
+    def test_multi_same(self):
+        p = Path('foo/bar')
+        self.assertEqual(commonprefix([p, p]), 'foo/bar')
+
+    def test_multi_partial_match(self):
+        p = Path('foo/bar')
+        q = Path('foo/baz')
+        self.assertEqual(commonprefix([p, q]), 'foo')
+
+    def test_multi_subset(self):
+        p = Path('foo/bar')
+        q = Path('foo/bar/baz')
+        self.assertEqual(commonprefix([p, q]), 'foo/bar')
+
+    def test_multi_no_match(self):
+        p = Path('foo/bar')
+        q = Path('baz/quux')
+        self.assertEqual(commonprefix([p, q]), '')
