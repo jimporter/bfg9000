@@ -230,12 +230,16 @@ by any of the source files, but does <em>not</em> include files external to the 
 <p>In addition, all build steps have the ability to define extra dependencies via
 the <em>extra_deps</em> argument. These can be files or other build steps, and changes
 to them will trigger a rebuild as with the build's inputs.</p>
+<p>Finally, build steps which produce a file can also be used like the
+<a href="#file-types">file types</a> described above to refer to prebuilt files already in
+the source tree (e.g. static libraries provided in binary form by a
+vendor). This is described in more detail for each step below.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>For build steps which produce an actual file, the exact name of the output
-file is determined by the platform you're running on. For instance, when
-building an executable file named "foo" on Windows, the resulting file will
-be <code>foo.exe</code>.</p>
+<p>For build steps which produce a file, the exact name of the output file is
+determined by the platform you're running on. For instance, when building an
+executable file named "foo" on Windows, the resulting file will be
+<code>foo.exe</code>.</p>
 </div>
 <h3 id="commandname-cmdcmds-environment-extra_deps">command(<em>name</em>, <em>cmd</em>|<em>cmds</em>, [<em>environment</em>], [<em>extra_deps</em>])<a class="headerlink" href="#commandname-cmdcmds-environment-extra_deps" title="Permanent link">§</a></h3>
 <p>Create a build step that runs a list of arbitrary commands, specified in either
@@ -252,6 +256,7 @@ file (or a plain string), this function will implicitly call
 <p>The following arguments may also be specified:</p>
 <ul>
 <li><em>include</em>: Forwarded on to <a href="#object_filename-file-extra_deps"><em>object_file</em></a></li>
+<li><em>pch</em>: Forwarded on to <a href="#object_filename-file-extra_deps"><em>object_file</em></a></li>
 <li><em>libs</em>: A list of library files (see <em>shared_library</em> and <em>static_library</em>)</li>
 <li><em>packages</em>: A list of external <a href="#package-finders">packages</a>; also forwarded on
   to <em>object_file</em></li>
@@ -260,11 +265,11 @@ file (or a plain string), this function will implicitly call
 <li><em>link_options</em>: Command-line options to pass to the linker</li>
 <li><em>lang</em>: Forwarded on to <a href="#object_filename-file-extra_deps"><em>object_file</em></a></li>
 </ul>
-<p>If <em>files</em> isn't specified, this function merely references an <em>existing</em>
-executable file (a precompiled binary, a shell script, etc) somewhere on the
-filesystem. In this case, <em>name</em> is the exact name of the file, relative to the
-source directory. This allows you to refer to existing executables for other
-functions. In addition, the following arguments may be specified:</p>
+<p>If neither <em>files</em> nor <em>libs</em> is specified, this function merely references an
+<em>existing</em> executable file (a precompiled binary, a shell script, etc) somewhere
+on the filesystem. In this case, <em>name</em> is the exact name of the file, relative
+to the source directory. This allows you to refer to existing executables for
+other functions. In addition, the following arguments may be specified:</p>
 <ul>
 <li><em>format</em>: The object format of the exectuable; by default, this is the
   platform's native object format (e.g. <code>'elf'</code> on Linux)</li>
@@ -281,6 +286,8 @@ without the extension.</p>
 <ul>
 <li><em>include</em>: A list of <a href="#header_directorydirectory">directories</a> to search for
   header files</li>
+<li><em>pch</em>: A <a href="#precompiled_headername-file-extra_deps">precompiled header</a> to use
+  during compilation</li>
 <li><em>packages</em>: A list of external <a href="#package-finders">packages</a></li>
 <li><em>options</em>: Command-line options to pass to the compiler</li>
 <li><em>lang</em>: The language of the source file; useful if the source file's extension
@@ -313,10 +320,43 @@ foo_obj = objs['foo.cpp']
 test_exe = executable('test', ['test.cpp', foo_obj])
 </code></pre>
 
+<h3 id="precompiled_headername-file-extra_deps">precompiled_header([<em>name</em>], [<em>file</em>, ..., [<em>extra_deps</em>]])<a class="headerlink" href="#precompiled_headername-file-extra_deps" title="Permanent link">§</a></h3>
+<p>Create a build step that generates a precompiled header, which can be used to
+speed up the compilation of <a href="#object_filename-file-extra_deps">object files</a>.
+If <em>name</em> is not specified, it is inferred from the value of <em>file</em>; the exact
+name varies based on the compiler being used, but typically looks like
+<code>header.hpp.pch</code> for cc-like compilers and <code>header.pch</code> for MSVC-like compilers.</p>
+<p>The arguments for <em>precompiled_header</em> are the same as for
+<a href="#object_filename-file-extra_deps"><em>object_file</em></a>, with the following additional
+argument:</p>
+<ul>
+<li><em>pch_source</em>: The source file to be used when building the precompiled
+  header. If this is not specified, a source file will automatically be created,
+  containing nothing but <code>#include "header"</code>, where <em>header</em> is the name of the
+  header specified in <em>file</em>. This option only applies to MSVC-like compilers;
+  for all others, it is ignored.</li>
+</ul>
+<p>If <em>file</em> isn't specified, this function merely references an <em>existing</em>
+precompiled header somewhere on the filesystem. In this case, <em>name</em> must be
+specified and is the exact name of the file, relative to the source directory.
+In addition, the following argument may be specified:</p>
+<ul>
+<li><em>lang</em>: The source language of the file; if none is specified, defaults to
+  <code>'c'</code></li>
+</ul>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The exact behavior of precompiled headers varies according to the compiler
+you're using. In <a href="https://gcc.gnu.org/onlinedocs/gcc/Precompiled-Headers.html">GCC</a> and <a href="http://clang.llvm.org/docs/UsersManual.html#usersmanual-precompiled-headers">Clang</a>, the header to be
+precompiled must be the <em>first</em> file <code>#include</code>d in each source file. In
+<a href="https://msdn.microsoft.com/en-us/library/szfdksca.aspx">MSVC</a>, the resulting precompiled header is actually compiled
+within the context of a particular source file and will contain all the
+code <em>up to and including</em> the header in question.</p>
+</div>
 <h3 id="shared_libraryname-files-extra_deps">shared_library(<em>name</em>, [<em>files</em>, ..., [<em>extra_deps</em>]])<a class="headerlink" href="#shared_libraryname-files-extra_deps" title="Permanent link">§</a></h3>
 <p>Create a build step that builds a shared library named <em>name</em>. Its arguments are
 the same as <a href="#executablename-files-extra_deps"><em>executable</em></a>, with the following
-additional options:</p>
+additional argument:</p>
 <ul>
 <li><em>version</em>: The version number of the library, e.g. <code>1.2.3</code>.</li>
 <li><em>soversion</em>: The API version of the library (used in its soname), e.g. <code>1</code>.</li>
