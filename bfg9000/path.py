@@ -35,6 +35,10 @@ class Path(safe_str.safe_string):
     def addext(self, ext):
         return Path(self.suffix + ext, self.root)
 
+    def split(self):
+        # This is guaranteed to work since `suffix` is normalized
+        return self.suffix.split(os.path.sep)
+
     def basename(self):
         return os.path.basename(self.suffix)
 
@@ -108,3 +112,15 @@ def install_path(path, install_root):
     else:
         suffix = path.suffix
     return Path(suffix, install_root)
+
+
+def commonprefix(paths):
+    if not paths:
+        return ''
+    split = [i.split() for i in paths]
+    lo, hi = min(split), max(split)
+
+    for i, bit in enumerate(lo):
+        if bit != hi[i]:
+            return os.path.sep.join(lo[:i])
+    return lo

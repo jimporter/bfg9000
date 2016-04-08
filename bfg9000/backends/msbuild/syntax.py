@@ -290,25 +290,6 @@ class VcxProject(Project):
         link_opts = E.Lib() if self.mode == 'StaticLibrary' else E.Link()
         self._write_link_options(link_opts, self.link_options)
 
-        names = defaultdict(lambda: [])
-        for i in self.files:
-            basename = ntpath.splitext(i['name'].path.basename())[0]
-            names[basename].append(i['name'].path.parent())
-
-        compiles = E.ItemGroup()
-        for i in self.files:
-            name = i['name']
-            c = E.ClCompile(Include=textify(name))
-            self._write_compile_options(c, i['options'])
-            dupes = names[ ntpath.splitext(name.path.basename())[0] ]
-            if len(dupes) > 1:
-                # XXX: This can still fail rarely if the paths' bases are
-                # different.
-                prefix = ntpath.commonprefix([j.suffix for j in dupes])
-                suffix = path.Path(name.path.parent().suffix[len(prefix):])
-                c.append(E.ObjectFileName(textify(suffix, out=False) + '\\'))
-            compiles.append(c)
-
         self._write(out, [
             E.Import(Project='$(VCTargetsPath)\Microsoft.Cpp.default.props'),
             E.PropertyGroup({'Label': 'Configuration'},
@@ -320,9 +301,38 @@ class VcxProject(Project):
             E.Import(Project='$(VCTargetsPath)\Microsoft.Cpp.props'),
             override_props,
             E.ItemDefinitionGroup(compile_opts, link_opts),
-            compiles,
+            self._compiles(self.files),
             E.Import(Project='$(VCTargetsPath)\Microsoft.Cpp.Targets')
         ])
+
+    def _compiles(self, files):
+        def basename(path):
+            return path.stripext().basename()
+
+        # First, figure out all the common prefixes of files with the same
+        # basename so we can use this to give them unique object names.
+        names = defaultdict(lambda: [])
+        for i in self.files:
+            p = i['name'].path
+            names[basename(p)].append(p.parent())
+        prefixes = {k: path.commonprefix(v) if len(v) > 1 else None
+                    for k, v in iteritems(names)}
+
+        compiles = E.ItemGroup()
+        for i in self.files:
+            name = i['name']
+            c = E.ClCompile(Include=textify(name))
+            self._write_compile_options(c, i['options'])
+
+            prefix = prefixes[basename(name.path)]
+            if prefix:
+                # If this prefix is shared with another file, strip it out (and
+                # the slash after it) to create a unique directory to store
+                # this object file.
+                suffix = path.Path(name.path.parent().suffix[len(prefix) + 1:])
+                c.append(E.ObjectFileName(textify(suffix, out=False) + '\\'))
+            compiles.append(c)
+        return compiles
 
     def _write_compile_options(self, element, options):
         warnings = options.get('warnings', {})
