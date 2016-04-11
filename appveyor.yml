@@ -8,7 +8,7 @@ environment:
   LIBOGG_CONFIG: Release
   LIBOGG_PLAT: Win32
   LIBRARY_PATH: C:\projects\bfg9000\lib
-  PYTHON: C:\Python27
+  PYTHON_PATH: C:\Python27
 
   matrix:
     - VS: C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall.bat
@@ -40,7 +40,7 @@ install:
     robocopy %LIBOGG%\include include *.h /E & exit 0
   - cinst ninja gnuwin32-coreutils.portable %CHOCO_EXTRAS%
   - if defined VS call "%VS%" x86
-  - set PATH=%PYTHON%;%PYTHON%\Scripts;%MINGW_PATH%;%PATH%
+  - set PATH=%PYTHON_PATH%;%PYTHON_PATH%\Scripts;%MINGW_PATH%;%PATH%
   - pip install lxml==3.5.0 .
 test_script:
   - python setup.py test -q

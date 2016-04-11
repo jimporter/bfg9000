@@ -212,10 +212,10 @@ setup(
     install_requires=['colorama', 'doppel==0.1.0.dev0', 'enum-compat',
                       'packaging', 'six'],
     extras_require={
-        'msbuild': ['lxml'],
-        'lint': ['flake8'],
-        'doc': ['mkdocs', 'mkdocs-bootswatch'],
         'deploy': ['pypandoc'],
+        'doc': ['mkdocs', 'mkdocs-bootswatch'],
+        'lint': ['flake8'],
+        'msbuild': ['lxml'],
     },
 
     entry_points={
