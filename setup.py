@@ -209,8 +209,7 @@ setup(
 
     packages=find_packages(exclude=['test', 'test.*']),
 
-    install_requires=['colorama', 'doppel==0.1.0.dev0', 'enum-compat',
-                      'packaging', 'six'],
+    install_requires=['colorama', 'doppel', 'enum-compat', 'packaging', 'six'],
     extras_require={
         'deploy': ['pypandoc'],
         'doc': ['mkdocs', 'mkdocs-bootswatch'],
