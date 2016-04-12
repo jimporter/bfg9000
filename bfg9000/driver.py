@@ -8,8 +8,7 @@ from . import log
 from .backends import get_backends
 from .build_inputs import BuildInputs
 from .environment import Environment, EnvVersionError
-from .path import Path, InstallRoot
-from .pathutils import samefile
+from .path import Path, InstallRoot, samefile
 from .platforms import platform_info
 from .version import version
 

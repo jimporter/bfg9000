@@ -1,4 +1,5 @@
-import os.path
+import errno
+import os
 from enum import Enum
 from itertools import chain
 
@@ -130,3 +131,20 @@ def commonprefix(paths):
         if bit != hi[i]:
             return os.path.sep.join(lo[:i])
     return os.path.sep.join(lo)
+
+
+def makedirs(path, mode=0o777, exist_ok=False):
+    try:
+        os.makedirs(path, mode)
+    except OSError as e:
+        if not exist_ok or e.errno != errno.EEXIST or not os.path.isdir(path):
+            raise
+
+
+def samefile(path1, path2):
+    if hasattr(os.path, 'samefile'):
+        return os.path.samefile(path1, path2)
+    else:
+        # This isn't entirely accurate, but it's close enough, and should only
+        # be necessary for Windows with Python 2.x.
+        return os.path.realpath(path1) == os.path.realpath(path2)

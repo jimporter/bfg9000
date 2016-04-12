@@ -9,8 +9,7 @@ from six import iteritems
 
 from bfg9000.backends import get_backends
 from bfg9000.environment import Environment
-from bfg9000.path import InstallRoot
-from bfg9000.pathutils import makedirs
+from bfg9000.path import InstallRoot, makedirs
 from bfg9000.platforms import platform_info, platform_name
 
 this_dir = os.path.abspath(os.path.dirname(__file__))

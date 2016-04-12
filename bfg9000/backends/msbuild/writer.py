@@ -4,7 +4,7 @@ import subprocess
 from packaging.version import Version
 
 from .syntax import *
-from ...pathutils import makedirs
+from ...path import makedirs
 from ...platforms import which
 
 
