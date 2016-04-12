@@ -198,20 +198,16 @@ using bfg to build your software!</p>
 <h2 id="installing-patchelf">Installing patchelf<a class="headerlink" href="#installing-patchelf" title="Permanent link">§</a></h2>
 <p>On Linux, bfg9000 requires <a href="https://nixos.org/patchelf.html">patchelf</a> in order
 to modify <a href="https://en.wikipedia.org/wiki/Rpath">rpath</a>s of executables and
-shared libraries when installing. The setup script will automatically download
-and install patchelf when installing the rest of bfg9000. If you're installing
-bfg into a <a href="https://virtualenv.readthedocs.org/en/latest/">virtualenv</a>, patchelf
-will go into <code>$VIRTUAL_ENV/bin</code>. You can also manually install patchelf from the
-setup script with the following command (assuming you've downloaded bfg's
-source):</p>
-<pre><code class="sh">$ python setup.py install_patchelf
+shared libraries when installing. The best way to install this is to use your
+distro's package manager, but if patchelf isn't listed, you can install patchelf
+via pip:</p>
+<pre><code class="sh">$ pip install 'bfg9000[patchelf]'
 </code></pre>
 
-<p>If you'd prefer not to install patchelf at all, simply set the environment
-variable <code>NO_PATCHELF</code> to <code>1</code> before installing bfg9000:</p>
-<pre><code class="sh">$ NO_PATCHELF=1 pip install bfg9000
-</code></pre>
-
+<p>This will automatically download and install patchelf when installing the rest
+of bfg9000. If you're installing into a
+<a href="https://virtualenv.readthedocs.org/en/latest/">virtualenv</a>, patchelf
+will go into <code>$VIRTUAL_ENV/bin</code>.</p>
 <h2 id="installing-msbuild-support">Installing MSBuild support<a class="headerlink" href="#installing-msbuild-support" title="Permanent link">§</a></h2>
 <p>Since many users don't need it, MSBuild support is an optional feature. To
 install all the dependencies required for MSBuild, you can run the following:</p>
