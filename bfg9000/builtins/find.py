@@ -1,6 +1,5 @@
 import fnmatch
 import os
-import posixpath
 import re
 
 from .hooks import builtin
@@ -53,7 +52,7 @@ def _walk_recursive(top):
     dirs, nondirs = _listdir(top)
     yield top, dirs, nondirs
     for name in dirs:
-        path = posixpath.join(top, name)
+        path = os.path.join(top, name)
         if not os.path.islink(path):
             for i in _walk_recursive(path):
                 yield i
@@ -72,7 +71,7 @@ def _find_files(paths, name, type, flat, filter):
                 files.pop(i)
 
     def _filter_join(base, files, name):
-        return (posixpath.join(base, i) for i in fnmatch.filter(files, name))
+        return (os.path.join(base, i) for i in fnmatch.filter(files, name))
 
     for p in iterate(paths):
         if type != 'f' and fnmatch.fnmatch(p, name):
