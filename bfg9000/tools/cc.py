@@ -427,7 +427,7 @@ class CcPackageResolver(object):
                 return HeaderDirectory(Path(base, Root.absolute), system=True,
                                        external=True)
 
-        raise ValueError("unable to find header '{}'".format(name))
+        raise IOError("unable to find header '{}'".format(name))
 
     def library(self, name, kind='any', search_dirs=None):
         if search_dirs is None:
@@ -459,4 +459,4 @@ class CcPackageResolver(object):
                                    format=self.platform.object_format,
                                    external=True, **extra_kwargs)
 
-        raise ValueError("unable to find library '{}'".format(name))
+        raise IOError("unable to find library '{}'".format(name))

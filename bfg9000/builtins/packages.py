@@ -103,11 +103,11 @@ def boost_package(env, name=None, version=None):
             dirs = find(r'C:\Boost\include', 'boost-*', type='d', flat=True)
             if dirs:
                 try:
-                    header = pkg.header(version_hpp, max(dirs))
+                    header = pkg.header(version_hpp, [max(dirs)])
                     boost_version = _boost_version(header, version)
                     return SystemPackage(
                         includes=[header],
-                        lib_dirs=r'C:\Boost\lib',
+                        lib_dirs=[r'C:\Boost\lib'],
                         version=boost_version
                     )
                 except IOError:
