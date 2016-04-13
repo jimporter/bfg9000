@@ -333,17 +333,14 @@ try:
             compiler.global_args + global_cflags[compiler.lang]
         ))
 
-    def _parse_file_cflags(file, global_cflags, add_common_cflags):
+    def _parse_file_cflags(file, per_compiler_cflags):
         cflags = file.creator.builder.parse_args(
             msbuild.textify_each(file.creator.options)
         )
-        if not add_common_cflags:
+        if not per_compiler_cflags:
             return cflags
-        # XXX: We could cache these flags, but merge_dicts updates this dict
-        # in-place, so we'd need to rewrite that too.
-        common_cflags = _parse_common_cflags(file.creator.builder,
-                                             global_cflags)
-        return merge_dicts(common_cflags, cflags)
+        key = file.creator.builder.command_var
+        return merge_dicts(per_compiler_cflags[key], cflags)
 
     @msbuild.rule_handler(StaticLink, DynamicLink, SharedLink)
     def msbuild_link(rule, build_inputs, solution, env):
@@ -355,10 +352,17 @@ try:
         # individually so they all get the correct options.
         obj_creators = [i.creator for i in rule.files]
         compilers = uniques(i.builder for i in obj_creators)
-        if len(uniques(i.command_var for i in compilers)) == 1:
-            common_cflags = _parse_common_cflags(
-                compilers[0], build_inputs['compile_options']
-            )
+
+        per_compiler_cflags = {}
+        for c in compilers:
+            key = c.command_var
+            if key not in per_compiler_cflags:
+                per_compiler_cflags[key] = c.parse_args(msbuild.textify_each(
+                    c.global_args + build_inputs['compile_options'][c.lang]
+                ))
+
+        if len(per_compiler_cflags) == 1:
+            common_cflags = per_compiler_cflags.popitem()[1]
         else:
             common_cflags = None
 
@@ -387,9 +391,7 @@ try:
             output_file=output,
             files=[{
                 'name': getattr(i.creator, 'pch_source', i.creator.file),
-                'options': _parse_file_cflags(
-                    i, build_inputs['compile_options'], common_cflags is None
-                ),
+                'options': _parse_file_cflags(i, per_compiler_cflags),
             } for i in rule.files],
             compile_options=common_cflags,
             link_options=ldflags,

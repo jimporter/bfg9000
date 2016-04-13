@@ -65,25 +65,27 @@ def uniques(iterable):
     return list(generate_uniques(iterable))
 
 
-def intersect(a, b):
-    return (i for i in a if i in b)
+def merge_into_dict(dst, *args):
+    for d in args:
+        for k, v in iteritems(d):
+            curr = dst.get(k)
+            if curr is None:
+                dst[k] = v
+            elif v is None:
+                continue
+            elif isinstance(curr, dict):
+                merge_into_dict(curr, v)
+            elif isiterable(curr):
+                if not isiterable(v):
+                    raise TypeError('type mismatch for {}'.format(k))
+                curr.extend(v)
+            else:
+                if isiterable(v):
+                    raise TypeError('type mismatch for {}'.format(k))
+                dst[k] = v
 
 
-def merge_dicts(a, b):
-    for k, v in iteritems(b):
-        curr = a.get(k)
-        if curr is None:
-            a[k] = listify(v) if isiterable(v) else v
-        elif v is None:
-            continue
-        elif isinstance(curr, dict):
-            merge_dicts(curr, v)
-        elif isiterable(curr):
-            if not isiterable(v):
-                raise TypeError('type mismatch for {}'.format(k))
-            curr.extend(v)
-        else:
-            if isiterable(v):
-                raise TypeError('type mismatch for {}'.format(k))
-            a[k] = v
-    return a
+def merge_dicts(*args):
+    dst = {}
+    merge_into_dict(dst, *args)
+    return dst
