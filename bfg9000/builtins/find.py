@@ -1,5 +1,6 @@
 import fnmatch
 import os
+import posixpath
 import re
 
 from .hooks import builtin
@@ -9,7 +10,6 @@ from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..backends.make.syntax import Writer, Syntax
 from ..build_inputs import build_input
-
 
 build_input('find_dirs')(set)
 depfile_name = '.bfg_find_deps'
@@ -52,7 +52,8 @@ def _walk_recursive(top):
     dirs, nondirs = _listdir(top)
     yield top, dirs, nondirs
     for name in dirs:
-        path = os.path.join(top, name)
+        # Use POSIX paths so that the result is platform-agnostic.
+        path = posixpath.join(top, name)
         if not os.path.islink(path):
             for i in _walk_recursive(path):
                 yield i
@@ -71,7 +72,8 @@ def _find_files(paths, name, type, flat, filter):
                 files.pop(i)
 
     def _filter_join(base, files, name):
-        return (os.path.join(base, i) for i in fnmatch.filter(files, name))
+        # Use POSIX paths so that the result is platform-agnostic.
+        return (posixpath.join(base, i) for i in fnmatch.filter(files, name))
 
     for p in iterate(paths):
         if type != 'f' and fnmatch.fnmatch(p, name):
