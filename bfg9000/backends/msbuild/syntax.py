@@ -201,15 +201,15 @@ class Project(object):
     _DOCTYPE = '<?xml version="1.0" encoding="utf-8"?>'
     _extension = '.proj'
 
-    def __init__(self, name, uuid=None, version=None, configuration=None,
-                 platform=None, srcdir=None, dependencies=None):
+    def __init__(self, env, name, configuration=None, dependencies=None):
         self.name = name
-        self.uuid = uuid
-        self.version = version or '14.0'
+        self.uuid = None
         self.configuration = configuration or 'Debug'
-        self.platform = platform or 'Win32'
-        self.srcdir = srcdir
         self.dependencies = dependencies or []
+
+        self.version = env.getvar('VISUALSTUDIOVERSION', '14.0')
+        self.platform = env.getvar('PLATFORM', 'Win32')
+        self.srcdir = env.srcdir
 
     @property
     def path(self):
@@ -245,7 +245,7 @@ class Project(object):
             E.PropertyGroup({'Label': 'Globals'},
                 E.ProjectGuid(self.uuid_str),
                 E.RootNamespace(self.name),
-                E.SourceDir(ntpath.normpath(self.srcdir))
+                E.SourceDir(textify(self.srcdir))
             ),
             *children
         )
@@ -265,12 +265,10 @@ class VcxProject(Project):
         'all': 'EnableAllWarnings',
     }
 
-    def __init__(self, name, uuid=None, version=None, configuration=None,
-                 platform=None, srcdir=None, mode='Application',
+    def __init__(self, env, name, mode='Application', configuration=None,
                  output_file=None, files=None, compile_options=None,
                  link_options=None, dependencies=None):
-        Project.__init__(self, name, uuid, version, configuration, platform,
-                         srcdir, dependencies)
+        Project.__init__(self, env, name, configuration, dependencies)
         self.mode = mode
         self.output_file = output_file
         self.files = files or []
@@ -396,20 +394,14 @@ class VcxProject(Project):
 
 
 class NoopProject(Project):
-    def __init__(self, name, uuid=None, version=None, configuration=None,
-                 platform=None, srcdir=None, dependencies=None):
-        Project.__init__(self, name, uuid, version, configuration, platform,
-                         srcdir, dependencies)
-
     def write(self, out):
         self._write(out, [E.Target({'Name': 'Build'})])
 
 
 class ExecProject(Project):
-    def __init__(self, name, uuid=None, version=None, configuration=None,
-                 platform=None, srcdir=None, commands=None, dependencies=None):
-        Project.__init__(self, name, uuid, version, configuration, platform,
-                         srcdir, dependencies)
+    def __init__(self, env, name, configuration=None, commands=None,
+                 dependencies=None):
+        Project.__init__(self, env, name, configuration, dependencies)
         self.commands = commands or []
 
     def write(self, out):

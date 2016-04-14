@@ -49,10 +49,7 @@ try:
     def msbuild_echo_file(rule, build_inputs, solution, env):
         output = rule.output[0]
         project = msbuild.ExecProject(
-            name=output.path.suffix,
-            version=env.getvar('VISUALSTUDIOVERSION'),
-            platform=env.getvar('PLATFORM'),
-            srcdir=env.srcdir.string(),
+            env, name=output.path.suffix,
             commands=['echo ' + rule.text + ' > ' + output.path],
             dependencies=solution.dependencies(rule.extra_deps),
         )

@@ -39,10 +39,7 @@ try:
     def msbuild_alias(rule, build_inputs, solution, env):
         output = rule.output[0]
         project = msbuild.NoopProject(
-            name=output.path,
-            version=env.getvar('VISUALSTUDIOVERSION'),
-            platform=env.getvar('PLATFORM'),
-            srcdir=env.srcdir.string(),
+            env, name=output.path,
             dependencies=solution.dependencies(rule.extra_deps),
         )
         solution[output] = project

@@ -64,10 +64,7 @@ try:
         # XXX: Support environment variables
         output = rule.output[0]
         project = msbuild.ExecProject(
-            name=output.path,
-            version=env.getvar('VISUALSTUDIOVERSION'),
-            platform=env.getvar('PLATFORM'),
-            srcdir=env.srcdir.string(),
+            env, name=output.path,
             commands=rule.cmds,
             dependencies=solution.dependencies(rule.extra_deps),
         )

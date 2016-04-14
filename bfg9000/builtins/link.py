@@ -383,10 +383,7 @@ try:
 
         # Create the project file.
         project = msbuild.VcxProject(
-            name=rule.name,
-            version=env.getvar('VISUALSTUDIOVERSION'),
-            platform=env.getvar('PLATFORM'),
-            srcdir=env.srcdir.string(),
+            env, name=rule.name,
             mode=rule.msbuild_mode,
             output_file=output,
             files=[{
