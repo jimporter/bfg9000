@@ -267,10 +267,10 @@ def ninja_compile(rule, build_inputs, buildfile, env):
         inputs = [rule.pch_source]
         pch_deps.append(rule.file)
 
-    # XXX: Ninja doesn't support multiple outputs and deps-parsing at the same
-    # time, so just use the first output and set up an alias if necessary.
-    # Aliases aren't perfect, since the build can get out of sync if you delete
-    # the "alias" file, but it's close enough.
+    # Ninja doesn't support multiple outputs and deps-parsing at the same time,
+    # so just use the first output and set up an alias if necessary. Aliases
+    # aren't perfect, since the build can get out of sync if you delete the
+    # "alias" file, but it's close enough.
     if compiler.deps_flavor in ('gcc', 'msvc') and len(rule.output) > 1:
         output = rule.output[0]
         buildfile.build(
