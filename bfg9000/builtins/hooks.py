@@ -1,4 +1,6 @@
 import functools
+import inspect
+import sys
 from six import iteritems
 
 _all_builtins = {}
@@ -12,8 +14,17 @@ class _Binder(object):
 
 class _FunctionBinder(_Binder):
     def bind(self, **kwargs):
-        # XXX: partial doesn't forward the docstring of the function.
-        return functools.partial(self._fn, *[kwargs[i] for i in self._args])
+        pre_args = tuple(kwargs[i] for i in self._args)
+
+        @functools.wraps(self._fn)
+        def wrapped(*args, **kwargs):
+            return self._fn(*(pre_args + args), **kwargs)
+
+        if sys.version_info >= (3, 3):
+            sig = inspect.signature(wrapped)
+            params = list(sig.parameters.values())[len(kwargs):]
+            wrapped.__signature__ = inspect.Signature(params)
+        return wrapped
 
 
 class _VariableBinder(_Binder):
