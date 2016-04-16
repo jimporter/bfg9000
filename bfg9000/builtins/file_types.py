@@ -3,22 +3,22 @@ from ..file_types import *
 from ..path import Path, Root
 
 
-@builtin
-def source_file(name, lang=None):
+@builtin.globals('build_inputs')
+def source_file(build, name, lang=None):
     # XXX: Add a way to make a generic File object instead of a SourceFile?
-    return SourceFile(Path(name, Root.srcdir), lang)
+    return build.add_source(SourceFile(Path(name, Root.srcdir), lang))
 
 
-@builtin
-def header(name, lang=None):
-    return HeaderFile(Path(name, Root.srcdir), lang)
+@builtin.globals('build_inputs')
+def header(build, name, lang=None):
+    return build.add_source(HeaderFile(Path(name, Root.srcdir), lang))
 
 
-@builtin
-def directory(name):
-    return Directory(Path(name, Root.srcdir))
+@builtin.globals('build_inputs')
+def directory(build, name):
+    return build.add_source(Directory(Path(name, Root.srcdir)))
 
 
-@builtin
-def header_directory(name, system=False):
-    return HeaderDirectory(Path(name, Root.srcdir), system)
+@builtin.globals('build_inputs')
+def header_directory(build, name, system=False):
+    return build.add_source(HeaderDirectory(Path(name, Root.srcdir), system))

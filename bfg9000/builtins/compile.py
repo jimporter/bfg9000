@@ -1,3 +1,4 @@
+import functools
 from collections import defaultdict
 from six import string_types
 
@@ -16,11 +17,9 @@ build_input('compile_options')(lambda build_inputs: defaultdict(list))
 
 
 class ObjectFiles(list):
-    def __init__(self, build, env, files, **kwargs):
-        def _compile(file, **kwargs):
-            return CompileSource(build, env, None, file,
-                                 **kwargs).public_output
-        list.__init__(self, (objectify(i, ObjectFile, _compile, **kwargs)
+    def __init__(self, builtins, build, env, files, **kwargs):
+        bound = functools.partial(builtins['object_file'], None)
+        list.__init__(self, (objectify(i, ObjectFile, bound, **kwargs)
                              for i in iterate(files)))
 
     def __getitem__(self, key):
@@ -39,15 +38,15 @@ class ObjectFiles(list):
 
 
 class Compile(Edge):
-    def __init__(self, build, env, output, include, pch, packages,
+    def __init__(self, builtins, build, env, output, include, pch, packages,
                  options, lang, extra_deps, extra_args=[]):
         self.includes = [sourcify(i, HeaderDirectory, system=False)
                          for i in iterate(include)]
 
         self.pch = objectify(
-            pch, PrecompiledHeader, CompileHeader, build=build, env=env,
-            file=pch, include=include, packages=packages, options=options,
-            lang=lang
+            pch, PrecompiledHeader, builtins['precompiled_header'],
+            build=build, env=env, file=pch, include=include, packages=packages,
+            options=options, lang=lang
         ) if pch else None
         if self.pch and isinstance(self.pch, MsvcPrecompiledHeader):
             output.extra_objects = [self.pch.object_file]
@@ -74,23 +73,26 @@ class Compile(Edge):
 
 
 class CompileSource(Compile):
-    def __init__(self, build, env, name, file, include=None, pch=None,
-                 packages=None, options=None, lang=None, extra_deps=None):
-        self.file = sourcify(file, SourceFile, lang=lang)
+    def __init__(self, builtins, build, env, name, file, include=None,
+                 pch=None, packages=None, options=None, lang=None,
+                 extra_deps=None):
+        self.file = objectify(file, SourceFile, builtins['source_file'],
+                              lang=lang)
         if name is None:
             name = self.file.path.stripext().suffix
 
         self.builder = env.builder(self.file.lang).compiler
         output = self.builder.output_file(name)
-        Compile.__init__(self, build, env, output, include, pch, packages,
-                         options, lang, extra_deps)
+        Compile.__init__(self, builtins, build, env, output, include, pch,
+                         packages, options, lang, extra_deps)
 
 
 class CompileHeader(Compile):
-    def __init__(self, build, env, name, file, source=None, include=None,
-                 pch=None, packages=None, options=None, lang=None,
-                 extra_deps=None):
-        self.file = sourcify(file, HeaderFile, lang=lang)
+    def __init__(self, builtins, build, env, name, file, source=None,
+                 include=None, pch=None, packages=None, options=None,
+                 lang=None, extra_deps=None):
+        self.file = objectify(file, HeaderFile, builtins['header'],
+                              lang=lang)
         if name is None:
             name = self.file.path.suffix
 
@@ -111,7 +113,8 @@ class CompileHeader(Compile):
                     Directory(self.file.path.parent())
                 ])
             else:
-                source = sourcify(source, SourceFile, lang=self.file.lang)
+                source = objectify(source, SourceFile, builtins['source_file'],
+                                   lang=self.file.lang)
 
             extra_args.append(self.file)
             self.pch_source = source
@@ -120,37 +123,43 @@ class CompileHeader(Compile):
         else:
             output = self.builder.output_file(name)
 
-        Compile.__init__(self, build, env, output, include, None, packages,
-                         options, lang, extra_deps, extra_args)
+        Compile.__init__(self, builtins, build, env, output, include, None,
+                         packages, options, lang, extra_deps, extra_args)
         self._internal_options.extend(extra_options)
 
 
-@builtin.globals('build_inputs', 'env')
-def object_file(build, env, name=None, file=None, **kwargs):
+@builtin.globals('builtins', 'build_inputs', 'env')
+def object_file(builtins, build, env, name=None, file=None, **kwargs):
     if file is None:
         if name is None:
             raise TypeError('expected name')
         object_format = kwargs.get('format', env.platform.object_format)
         lang = kwargs.get('lang', 'c')
-        return ObjectFile(Path(name, Root.srcdir), object_format, lang)
+        return build.add_source(ObjectFile(
+            Path(name, Root.srcdir), object_format, lang
+        ))
     else:
-        return CompileSource(build, env, name, file, **kwargs).public_output
+        return CompileSource(builtins, build, env, name, file,
+                             **kwargs).public_output
 
 
-@builtin.globals('build_inputs', 'env')
-def object_files(build, env, files, **kwargs):
-    return ObjectFiles(build, env, files, **kwargs)
+@builtin.globals('builtins', 'build_inputs', 'env')
+def object_files(builtins, build, env, files, **kwargs):
+    return ObjectFiles(builtins, build, env, files, **kwargs)
 
 
-@builtin.globals('build_inputs', 'env')
-def precompiled_header(build, env, name=None, file=None, **kwargs):
+@builtin.globals('builtins', 'build_inputs', 'env')
+def precompiled_header(builtins, build, env, name=None, file=None, **kwargs):
     if file is None:
         if name is None:
             raise TypeError('expected name')
         lang = kwargs.get('lang', 'c')
-        return PrecompiledHeader(Path(name, Root.srcdir), lang)
+        return build.add_source(PrecompiledHeader(
+            Path(name, Root.srcdir), lang
+        ))
     else:
-        return CompileHeader(build, env, name, file, **kwargs).public_output
+        return CompileHeader(builtins, build, env, name, file,
+                             **kwargs).public_output
 
 
 @builtin.globals('build_inputs')
