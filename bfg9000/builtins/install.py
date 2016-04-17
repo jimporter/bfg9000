@@ -12,13 +12,11 @@ from ..file_types import Directory, File
 @build_input('install')
 class InstallOutputs(object):
     def __init__(self):
-        self.files = []
-        self.dirs = []
+        self._outputs = []
 
     def add(self, item, explicit=True):
-        group = self.dirs if isinstance(item, Directory) else self.files
-        if item not in group:
-            group.append(item)
+        if item not in self._outputs:
+            self._outputs.append(item)
 
         for i in item.runtime_deps:
             self.add(i, explicit=False)
@@ -27,7 +25,10 @@ class InstallOutputs(object):
                 self.add(i, explicit=False)
 
     def __nonzero__(self):
-        return bool(self.files or self.dirs)
+        return bool(self._outputs)
+
+    def __iter__(self):
+        return iter(self._outputs)
 
 
 @builtin.globals('builtins', 'build_inputs')
@@ -62,26 +63,21 @@ def _install_commands(backend, build_inputs, buildfile, env):
         cmdname = '{name}_{kind}'.format(name=name, kind=kind)
         return buildfile.variable(cmdname, cmd, backend.Section.command, True)
 
-    def install_line(file):
-        src = file.path
-        dst = path.install_path(file.path, file.install_root)
-        return doppel(doppel_cmd(file.install_kind), src, dst)
+    def install_line(output):
+        src = output.path
+        dstbase = src.parent() if isinstance(output, Directory) else src
+        dst = path.install_path(dstbase, output.install_root)
+        return doppel(doppel_cmd(output.install_kind), src, dst)
 
-    def mkdir_line(dir):
-        src = dir.path
-        dst = path.install_path(dir.path.parent(), dir.install_root)
-        return doppel(doppel_cmd(dir.install_kind), src, dst)
-
-    def post_install(file):
-        if file.post_install:
-            line = file.post_install
+    def post_install(output):
+        if output.post_install:
+            line = output.post_install
             line[0] = backend.cmd_var(line[0], buildfile)
             return line
 
     return list(chain(
-        (install_line(i) for i in install_outputs.files),
-        (mkdir_line(i) for i in install_outputs.dirs),
-        ifilter(None, (post_install(i) for i in install_outputs.files))
+        (install_line(i) for i in install_outputs),
+        ifilter(None, (post_install(i) for i in install_outputs))
     ))
 
 
