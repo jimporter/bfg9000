@@ -4,8 +4,12 @@ from ..path import Path, Root
 
 
 @builtin.globals('build_inputs')
+def generic_file(build, name):
+    return build.add_source(File(Path(name, Root.srcdir)))
+
+
+@builtin.globals('build_inputs')
 def source_file(build, name, lang=None):
-    # XXX: Add a way to make a generic File object instead of a SourceFile?
     return build.add_source(SourceFile(Path(name, Root.srcdir), lang))
 
 

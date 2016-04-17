@@ -2,10 +2,32 @@
 
 ## File types
 
+Files used in a `build.bfg` script are divided by their types (e.g. source
+code, header files, etc).
+
+In most cases, you can simply pass a string to functions expecting a file type;
+the string will automatically be converted to a file object of the appropriate
+type. However, in some cases, you may wish to explicitly create a file object.
+This can be useful, for instance, when running commands that take a source file
+as an argument, e.g. in the following snippet:
+
+```python
+command('script', cmd=['python', source_file('script.py')])
+```
+
+Using [*source_file*](#source_filename-lang) here allows you to specify that the
+file is found in the *source directory*, rather than the build directory.
+
 ### directory(*name*)
 
 Create a reference to an existing directory named *name*. This allows you to
 refer to an arbitrary subfolder of your source directory.
+
+### generic_file(*name*)
+
+Create a reference to an existing file named *name*. This let you reference
+files that are part of the source distribution but which have no impact on the
+build proper (e.g. READMEs).
 
 ### header(*name*)
 
@@ -24,11 +46,7 @@ compilers that support this.
 ### source_file(*name*, [*lang*])
 
 Create a reference to an existing source file named *name*. If *lang* is not
-specified, the language of the file is inferred from its extension. Generally,
-this function is only necessary when running commands that take a source file
-as an argument, e.g. running a Python script; this allows you to specify that
-the file is found in the *source directory*. In other cases, a plain string will
-automatically get converted to a *source_file*.
+specified, the language of the file is inferred from its extension.
 
 ## Build steps
 
