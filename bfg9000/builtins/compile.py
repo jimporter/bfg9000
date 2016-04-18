@@ -40,8 +40,9 @@ class ObjectFiles(list):
 class Compile(Edge):
     def __init__(self, builtins, build, env, output, include, pch, packages,
                  options, lang, extra_deps, extra_args=[]):
-        self.includes = [sourcify(i, HeaderDirectory, system=False)
-                         for i in iterate(include)]
+        self.includes = [objectify(
+            i, HeaderDirectory, builtins['header_directory'], system=False
+        ) for i in iterate(include)]
 
         self.pch = objectify(
             pch, PrecompiledHeader, builtins['precompiled_header'],

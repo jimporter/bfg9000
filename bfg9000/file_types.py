@@ -2,7 +2,7 @@ from six import string_types
 
 from .iterutils import listify
 from .languages import src2lang, hdr2lang
-from .path import InstallRoot, Path, Root
+from .path import InstallRoot
 from .safe_str import safe_str
 
 
@@ -39,12 +39,6 @@ def objectify(thing, valid_type, creator, in_type=string_types, *args,
             creator = valid_type
         # XXX: Come up with a way to provide args to prepend?
         return creator(thing, *args, **kwargs)
-
-
-def sourcify(thing, valid_type, make_type=None, root=Root.srcdir, **kwargs):
-    if isinstance(thing, string_types):
-        thing = Path(thing, root)
-    return objectify(thing, valid_type, make_type, Path, **kwargs)
 
 
 class File(Node):

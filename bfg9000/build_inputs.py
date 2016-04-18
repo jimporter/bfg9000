@@ -1,6 +1,7 @@
 from six import iteritems
 
-from .file_types import File, Node, sourcify
+from .path import Path, Root
+from .file_types import File, Node, objectify
 from .iterutils import iterate, listify, unlistify
 
 _build_inputs = {}
@@ -24,7 +25,9 @@ class Edge(object):
             i for i in self.output if not i.private
         ])
 
-        self.extra_deps = [sourcify(i, Node, File)
+        def make(name):
+            return build.add_source(File(Path(name, Root.srcdir)))
+        self.extra_deps = [objectify(i, Node, make)
                            for i in iterate(extra_deps)]
         build.add_edge(self)
 

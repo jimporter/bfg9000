@@ -7,7 +7,7 @@ from .. import shell
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..build_inputs import build_input
-from ..file_types import Executable, File, objectify, sourcify
+from ..file_types import Executable, File, objectify
 from ..shell import posix as pshell
 
 
@@ -37,13 +37,13 @@ class TestDriver(object):
         self.tests = []
 
 
-@builtin.globals('build_inputs')
-def test(build, test, options=None, environment=None, driver=None):
+@builtin.globals('builtins', 'build_inputs')
+def test(builtins, build, test, options=None, environment=None, driver=None):
     if driver and environment:
         raise TypeError('only one of "driver" and "environment" may be ' +
                         'specified')
 
-    test = sourcify(test, File)
+    test = objectify(test, File, builtins['generic_file'])
     build['tests'].inputs.append(test)
     build['defaults'].remove(test)
 

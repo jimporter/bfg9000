@@ -32,8 +32,9 @@ class Link(Edge):
         ))
 
         # XXX: Try to detect if a string refers to a shared lib?
-        self.libs = [sourcify(i, Library, StaticLibrary)
-                     for i in iterate(libs)]
+        self.libs = [objectify(
+            i, Library, builtins['static_library'], lang=lang
+        ) for i in iterate(libs)]
         fwd = [i.forward_args for i in self.libs if hasattr(i, 'forward_args')]
         self.all_libs = sum((i.get('libs', []) for i in fwd), self.libs)
 
