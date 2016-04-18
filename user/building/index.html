@@ -187,6 +187,8 @@
         
             <li><a href="#installing-your-software">Installing your software</a></li>
         
+            <li><a href="#distributing-your-source">Distributing your source</a></li>
+        
     
     </ul>
 </div></div>
@@ -241,7 +243,7 @@ system. In descending order, bfg prefers <a href="https://ninja-build.org/"><cod
 If one of these isn't installed, it will try the next best option. However, you
 can explicitly select a backend with the <code>--backend</code> option. For instance, to
 build a Makefile even if Ninja is installed:</p>
-<pre><code class="sh">$ bfg9000 --backend make srcdir builddir
+<pre><code class="sh">$ bfg9000 --backend=make srcdir builddir
 </code></pre>
 
 <h2 id="setting-options">Setting options<a class="headerlink" href="#setting-options" title="Permanent link">§</a></h2>
@@ -252,13 +254,35 @@ For a full listing of the recognized environment variables, see the <a href="../
 Variables</a> chapter.</p>
 <h2 id="installing-your-software">Installing your software<a class="headerlink" href="#installing-your-software" title="Permanent link">§</a></h2>
 <p>After building your software, you may wish to install it to another directory on
-your system. By default, bfg9000 will install them into the appropriate place
-for your platform (e.g. <code>/usr/local/bin</code> for exectuables on POSIX systems).
-However, you can specify where you'd like to install your project when invoking
-bfg9000. To change the installation prefix (<code>/usr/local</code> on POSIX), just specify
-<code>--prefix /path/to/prefix</code> when running bfg9000. You can also specify the
-binary, library, and include directories individually, using <code>--bindir</code>,
-<code>--libdir</code>, and <code>--includedir</code>, respectively.</p></div>
+your system. You can do this by running:</p>
+<pre><code class="sh">$ ninja install
+</code></pre>
+
+<p>Of course, if you're using the Make backend, you'd run <code>make install</code> instead.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The MSBuild backend doesn't currently support this command.</p>
+</div>
+<h3 id="install-locations">Install locations<a class="headerlink" href="#install-locations" title="Permanent link">§</a></h3>
+<p>By default, bfg9000 will install them into the appropriate place for your
+platform (e.g. <code>/usr/local/bin</code> for exectuables on POSIX systems).  However, you
+can specify where you'd like to install your project when invoking bfg9000. To
+change the installation prefix (<code>/usr/local</code> on POSIX), just specify <code>--prefix
+/path/to/prefix</code> when running bfg9000. You can also specify the binary, library,
+and include directories individually, using <code>--bindir</code>, <code>--libdir</code>, and
+<code>--includedir</code>, respectively.</p>
+<h2 id="distributing-your-source">Distributing your source<a class="headerlink" href="#distributing-your-source" title="Permanent link">§</a></h2>
+<p>Once you're ready to release your software, you'll want to provide a source
+distribution. You can't just archive the entire source directory, since it'll
+include things that don't belong like <code>.gitignore</code>. Instead, you should run:</p>
+<pre><code class="sh">$ ninja dist
+</code></pre>
+
+<p>Equivalently, you can run <code>make dist</code> for the Make backend.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The MSBuild backend doesn't currently support this command.</p>
+</div></div>
         </div>
 
         <footer class="col-md-12">
