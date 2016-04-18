@@ -30,15 +30,19 @@ class Edge(object):
 
 
 class BuildInputs(object):
-    def __init__(self):
+    def __init__(self, bfgpath):
+        self.bfgpath = bfgpath
         self.edges = []
         self.extra_inputs = {}
 
         for name, fn in iteritems(_build_inputs):
-            self.extra_inputs[name] = fn()
+            self.extra_inputs[name] = fn(self)
 
     def add_edge(self, edge):
         self.edges.append(edge)
 
     def __getitem__(self, key):
         return self.extra_inputs[key]
+
+    def __setitem__(self, key, value):
+        self.extra_inputs[key] = value

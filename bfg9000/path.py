@@ -2,6 +2,7 @@ import errno
 import os
 from enum import Enum
 from itertools import chain
+from six import iteritems
 
 from . import safe_str
 
@@ -83,8 +84,9 @@ class Path(safe_str.safe_string):
         # anything; it just looks weird.)
         return root + (os.path.sep + self.suffix)
 
-    def string(self):
-        return self.realize(None)
+    def string(self, variables=None):
+        return self.realize({k: v.string() if isinstance(v, Path) else v
+                             for k, v in iteritems(variables or {})})
 
     def __str__(self):
         raise NotImplementedError()

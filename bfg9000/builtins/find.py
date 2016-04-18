@@ -11,7 +11,7 @@ from ..backends.ninja import writer as ninja
 from ..backends.make.syntax import Writer, Syntax
 from ..build_inputs import build_input
 
-build_input('find_dirs')(set)
+build_input('find_dirs')(lambda build_inputs: set())
 depfile_name = '.bfg_find_deps'
 
 
@@ -123,16 +123,15 @@ def find_files(builtins, build_inputs, env, path='.', name='*', type=None,
 def make_regenerate_rule(build_inputs, buildfile, env):
     bfg9000 = env.tool('bfg9000')
     bfgcmd = make.cmd_var(bfg9000, buildfile)
-    bfgpath = path.Path('build.bfg', path.Root.srcdir)
 
     if build_inputs['find_dirs']:
-        write_depfile(env.builddir.append(depfile_name).string(),
+        write_depfile(path.Path(depfile_name).string(env.path_roots),
                       'Makefile', build_inputs['find_dirs'], makeify=True)
         buildfile.include(depfile_name)
 
     buildfile.rule(
         target=path.Path('Makefile'),
-        deps=[bfgpath],
+        deps=[build_inputs.bfgpath],
         recipe=[bfg9000.regenerate(bfgcmd, path.Path('.'))]
     )
 
@@ -141,11 +140,10 @@ def make_regenerate_rule(build_inputs, buildfile, env):
 def ninja_regenerate_rule(build_inputs, buildfile, env):
     bfg9000 = env.tool('bfg9000')
     bfgcmd = ninja.cmd_var(bfg9000, buildfile)
-    bfgpath = path.Path('build.bfg', path.Root.srcdir)
     depfile = None
 
     if build_inputs['find_dirs']:
-        write_depfile(env.builddir.append(depfile_name).string(),
+        write_depfile(path.Path(depfile_name).string(env.path_roots),
                       'build.ninja', build_inputs['find_dirs'])
         depfile = depfile_name
 
@@ -158,5 +156,5 @@ def ninja_regenerate_rule(build_inputs, buildfile, env):
     buildfile.build(
         output=path.Path('build.ninja'),
         rule='regenerate',
-        implicit=[bfgpath]
+        implicit=[build_inputs.bfgpath]
     )

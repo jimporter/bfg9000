@@ -63,7 +63,7 @@ def write(env, build_inputs):
     for i in _post_rules:
         i(build_inputs, buildfile, env)
 
-    with open(env.builddir.append('Makefile').string(), 'w') as out:
+    with open(path.Path('Makefile').string(env.path_roots), 'w') as out:
         buildfile.write(out)
 
 

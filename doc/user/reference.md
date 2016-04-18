@@ -484,3 +484,13 @@ Finally, if *cache* is *True* (the default), this lookup will be cached so that
 any changes to the result of this function will regenerate the build scripts
 for the project. This allows you do add or remove source files and not have to
 worry about manually rerunning bfg9000.
+
+### project(*name*, [*version*])
+
+Set the name (and optionally the version) of the project. If you don't call
+this function to specify a project name, it defaults to the name of the
+project's source directory.
+
+!!! note
+    Currently, this is only useful to the MSBuild backend, which names the
+    `.sln` file according to the project name.

@@ -5,7 +5,7 @@ from packaging.version import Version
 from six import iteritems
 
 from .backends import get_backends
-from .path import Path, InstallRoot
+from .path import InstallRoot, Path, Root
 from . import platforms
 from . import tools
 
@@ -36,6 +36,13 @@ class Environment(object):
 
         self.variables = dict(os.environ)
         self.platform = platforms.platform_info()
+
+    @property
+    def path_roots(self):
+        return {
+            Root.srcdir: self.srcdir,
+            Root.builddir: self.builddir
+        }
 
     def getvar(self, key, default=None):
         return self.variables.get(key, default)

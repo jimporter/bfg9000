@@ -12,7 +12,7 @@ from ..languages import lang2src
 from ..path import Path, Root
 from ..shell import posix as pshell
 
-build_input('compile_options')(lambda: defaultdict(list))
+build_input('compile_options')(lambda build_inputs: defaultdict(list))
 
 
 class ObjectFiles(list):

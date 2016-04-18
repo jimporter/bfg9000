@@ -18,3 +18,8 @@
 # at ./simple.
 
 executable('simple', files=['simple.cpp'])
+
+# Optionally, you can also specify a project name and version. If you don't
+# specify a name, it defaults to the name of the source diretory.
+
+project('simple', version='1.0')

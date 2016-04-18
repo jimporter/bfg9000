@@ -3,8 +3,8 @@ import re
 import subprocess
 from packaging.version import Version
 
+from ... import path
 from .syntax import *
-from ...path import makedirs
 from ...platforms import which
 
 
@@ -44,11 +44,11 @@ def write(env, build_inputs):
     # XXX: Handle default builds. Default builds go first in the solution. This
     # also means we'd need to support aliases so that we can have multiple
     # builds be the default.
-    with open(env.builddir.append('project.sln').string(), 'w') as out:
+    sln_file = path.Path(build_inputs['project'].name + '.sln')
+    with open(sln_file.string(env.path_roots), 'w') as out:
         solution.write(out)
     for p in solution:
-        projfile = env.builddir.append(p.path).string()
-        makedirs(os.path.dirname(projfile), exist_ok=True)
-        with open(projfile, 'w') as out:
+        path.makedirs(p.path.parent().string(env.path_roots), exist_ok=True)
+        with open(p.path.string(env.path_roots), 'w') as out:
             p.write(out)
     uuids.save()

@@ -8,7 +8,7 @@ from . import log
 from .backends import get_backends
 from .build_inputs import BuildInputs
 from .environment import Environment, EnvVersionError
-from .path import Path, InstallRoot, samefile
+from .path import InstallRoot, Path, Root, samefile
 from .platforms import platform_info
 from .version import version
 
@@ -68,11 +68,11 @@ def parse_args(parser, args=None, namespace=None):
 
 
 def execute_script(env, filename=bfgfile):
-    build = BuildInputs()
+    bfgpath = Path(filename, Root.srcdir)
+    build = BuildInputs(bfgpath)
     builtin_dict = builtins.bind(build_inputs=build, env=env)
 
-    bfgpath = env.srcdir.append(filename).string()
-    with open(bfgpath, 'r') as f:
+    with open(bfgpath.string(env.path_roots), 'r') as f:
         os.chdir(env.srcdir.string())
         code = compile(f.read(), filename, 'exec')
         try:

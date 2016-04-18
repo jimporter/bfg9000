@@ -62,7 +62,7 @@ def write(env, build_inputs):
     for i in _post_rules:
         i(build_inputs, buildfile, env)
 
-    with open(env.builddir.append('build.ninja').string(), 'w') as out:
+    with open(path.Path('build.ninja').string(env.path_roots), 'w') as out:
         buildfile.write(out)
 
 

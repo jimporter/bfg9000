@@ -132,10 +132,11 @@ class Solution(object):
         project_info = []
 
         for p in self._projects:
+            path_vars = {path.Root.builddir: None}
             proj = S.Project(
                 '"{}"'.format(self.uuid_str),
                 '"{name}", "{path}", "{uuid}"'.format(
-                    name=p.name, path=p.path, uuid=p.uuid_str
+                    name=p.name, path=p.path.string(path_vars), uuid=p.uuid_str
                 )
             )
             if p.dependencies:
@@ -213,7 +214,7 @@ class Project(object):
 
     @property
     def path(self):
-        return os.path.join(self.name, '{name}{ext}'.format(
+        return path.Path(self.name).append('{name}{ext}'.format(
             name=os.path.basename(self.name), ext=self._extension
         ))
 
