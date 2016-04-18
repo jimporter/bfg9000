@@ -328,11 +328,10 @@ class VcxProject(Project):
 
             prefix = prefixes[basename(name.path)]
             if prefix:
-                # If this prefix is shared with another file, strip it out (and
-                # the slash after it) to create a unique directory to store
-                # this object file.
-                suffix = path.Path(name.path.parent().suffix[len(prefix) + 1:])
-                c.append(E.ObjectFileName(textify(suffix, out=False) + '\\'))
+                # If this prefix is shared with another file, strip it out to
+                # create a unique directory to store this object file.
+                suffix = path.Path(name.path.relpath(prefix))
+                c.append(E.ObjectFileName(textify(suffix, out=False)))
             compiles.append(c)
         return compiles
 

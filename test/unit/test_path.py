@@ -96,27 +96,27 @@ class TestPath(unittest.TestCase):
 
 class TestCommonPrefix(unittest.TestCase):
     def test_empty(self):
-        self.assertEqual(commonprefix([]), '')
+        self.assertEqual(commonprefix([]), None)
 
     def test_single(self):
         p = Path('foo/bar')
-        self.assertEqual(commonprefix([p]), os.path.join('foo', 'bar'))
+        self.assertEqual(commonprefix([p]), p)
 
     def test_multi_same(self):
         p = Path('foo/bar')
-        self.assertEqual(commonprefix([p, p]), os.path.join('foo', 'bar'))
+        self.assertEqual(commonprefix([p, p]), p)
 
     def test_multi_partial_match(self):
         p = Path('foo/bar')
         q = Path('foo/baz')
-        self.assertEqual(commonprefix([p, q]), 'foo')
+        self.assertEqual(commonprefix([p, q]), p.parent())
 
     def test_multi_subset(self):
         p = Path('foo/bar')
         q = Path('foo/bar/baz')
-        self.assertEqual(commonprefix([p, q]), os.path.join('foo', 'bar'))
+        self.assertEqual(commonprefix([p, q]), p)
 
     def test_multi_no_match(self):
         p = Path('foo/bar')
         q = Path('baz/quux')
-        self.assertEqual(commonprefix([p, q]), '')
+        self.assertEqual(commonprefix([p, q]), Path(''))

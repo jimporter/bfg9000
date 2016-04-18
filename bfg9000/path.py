@@ -124,15 +124,16 @@ def install_path(path, install_root):
 
 
 def commonprefix(paths):
-    if not paths:
-        return ''
+    if not paths or any(i.root != paths[0].root for i in paths):
+        return None
+
     split = [i.split() for i in paths]
     lo, hi = min(split), max(split)
 
     for i, bit in enumerate(lo):
         if bit != hi[i]:
-            return os.path.sep.join(lo[:i])
-    return os.path.sep.join(lo)
+            return Path(os.path.sep.join(lo[:i]), paths[0].root)
+    return Path(os.path.sep.join(lo), paths[0].root)
 
 
 def makedirs(path, mode=0o777, exist_ok=False):
