@@ -25,11 +25,15 @@ file is found in the *source directory*, rather than the build directory.
 Create a reference to an existing directory named *name*. This allows you to
 refer to an arbitrary subfolder of your source directory.
 
+### extra_dist([*files*], [*dirs*])
+
+Add extra *files* and *dirs* to the list of recognized source files. This lets
+you reference files that are part of the source distribution but which have no
+impact on the build proper (e.g. READMEs).
+
 ### generic_file(*name*)
 
-Create a reference to an existing file named *name*. This let you reference
-files that are part of the source distribution but which have no impact on the
-build proper (e.g. READMEs).
+Create a reference to an existing file named *name*.
 
 ### header(*name*)
 

@@ -1,6 +1,16 @@
+from .hooks import builtin
+from ..iterutils import iterate
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..path import Path, Root
+
+
+@builtin.globals('builtins')
+def extra_dist(builtins, files=None, dirs=None):
+    for i in iterate(files):
+        builtins['generic_file'](i)
+    for i in iterate(dirs):
+        builtins['directory'](i)
 
 
 def _dist_command(backend, build_inputs, buildfile, env):
