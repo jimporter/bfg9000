@@ -127,7 +127,7 @@ class IntegrationTest(unittest.TestCase):
     def shortDescription(self):
         return self.backend
 
-    def _target_name(self, target):
+    def target_name(self, target):
         if self.backend == 'msbuild':
             if isinstance(target, Target):
                 target = target.name
@@ -137,7 +137,7 @@ class IntegrationTest(unittest.TestCase):
                 target = target.path
             return target
 
-    def _target_path(self, target):
+    def target_path(self, target):
         if isinstance(target, Target):
             prefix = '.'
             if self.backend == 'msbuild':
@@ -165,14 +165,14 @@ class IntegrationTest(unittest.TestCase):
     def build(self, target=None):
         args = [os.getenv(self.backend.upper(), self.backend)]
         if target:
-            args.append(self._target_name(target))
+            args.append(self.target_name(target))
         return self.assertPopen(args, True)
 
     def wait(self, t=1):
         time.sleep(t)
 
     def assertPopen(self, args, bad=False):
-        args = [self._target_path(i) for i in args]
+        args = [self.target_path(i) for i in args]
         proc = subprocess.Popen(
             args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
             universal_newlines=True
@@ -183,20 +183,20 @@ class IntegrationTest(unittest.TestCase):
         return output
 
     def assertOutput(self, args, output):
-        args = [self._target_path(i) for i in args]
+        args = [self.target_path(i) for i in args]
         self.assertEqual(subprocess.check_output(
             args, stderr=subprocess.STDOUT, universal_newlines=True
         ), output)
 
     def assertExists(self, path):
-        realpath = self._target_path(path)
+        realpath = self.target_path(path)
         if not os.path.exists(realpath):
             raise unittest.TestCase.failureException(
                 "'{}' does not exist".format(realpath)
             )
 
     def assertNotExists(self, path):
-        realpath = self._target_path(path)
+        realpath = self.target_path(path)
         if os.path.exists(realpath):
             raise unittest.TestCase.failureException(
                 "'{}' exists".format(os.path.normpath(realpath))

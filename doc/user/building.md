@@ -57,7 +57,7 @@ can explicitly select a backend with the `--backend` option. For instance, to
 build a Makefile even if Ninja is installed:
 
 ```sh
-$ bfg9000 --backend make srcdir builddir
+$ bfg9000 --backend=make srcdir builddir
 ```
 
 ## Setting options
@@ -71,10 +71,38 @@ Variables](environment-vars.md) chapter.
 ## Installing your software
 
 After building your software, you may wish to install it to another directory on
-your system. By default, bfg9000 will install them into the appropriate place
-for your platform (e.g. `/usr/local/bin` for exectuables on POSIX systems).
-However, you can specify where you'd like to install your project when invoking
-bfg9000. To change the installation prefix (`/usr/local` on POSIX), just specify
-`--prefix /path/to/prefix` when running bfg9000. You can also specify the
-binary, library, and include directories individually, using `--bindir`,
-`--libdir`, and `--includedir`, respectively.
+your system. You can do this by running:
+
+```sh
+$ ninja install
+```
+
+Of course, if you're using the Make backend, you'd run `make install` instead.
+
+!!! warning
+    The MSBuild backend doesn't currently support this command.
+
+### Install locations
+
+By default, bfg9000 will install them into the appropriate place for your
+platform (e.g. `/usr/local/bin` for exectuables on POSIX systems).  However, you
+can specify where you'd like to install your project when invoking bfg9000. To
+change the installation prefix (`/usr/local` on POSIX), just specify `--prefix
+/path/to/prefix` when running bfg9000. You can also specify the binary, library,
+and include directories individually, using `--bindir`, `--libdir`, and
+`--includedir`, respectively.
+
+## Distributing your source
+
+Once you're ready to release your software, you'll want to provide a source
+distribution. You can't just archive the entire source directory, since it'll
+include things that don't belong like `.gitignore`. Instead, you should run:
+
+```sh
+$ ninja dist
+```
+
+Equivalently, you can run `make dist` for the Make backend.
+
+!!! warning
+    The MSBuild backend doesn't currently support this command.

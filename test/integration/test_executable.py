@@ -1,4 +1,5 @@
 import os.path
+import tarfile
 
 from .integration import *
 
@@ -21,3 +22,11 @@ class TestExecutable(IntegrationTest):
     def test_default(self):
         self.build()
         self.assertOutput([executable('simple')], 'hello, world!\n')
+
+    @skip_if_backend('msbuild')
+    def test_dist(self):
+        dist = output_file('simple-1.0.tar.gz')
+        self.build('dist')
+        self.assertExists(dist)
+        with tarfile.open(self.target_path(dist)) as t:
+            self.assertEqual(t.getnames(), ['build.bfg', 'simple.cpp'])

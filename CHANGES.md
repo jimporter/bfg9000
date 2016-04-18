@@ -18,6 +18,7 @@
 - *whole_archive* now forwards its arguments on to *static_library*
 - Use *doppel* for installing files instead of *install(1)*
 - Support *command* and *alias* rules under MSBuild
+- Add support for building a distribution of the sources (`make dist`)
 
 ### Breaking changes
 - `env.compiler(lang)` replaced by `env.builder(lang).compiler`

@@ -3,7 +3,9 @@
 ## File types
 
 Files used in a `build.bfg` script are divided by their types (e.g. source
-code, header files, etc).
+code, header files, etc). All files from the source directory which are
+referenced in the `build.bfg` script will automatically be added to the source
+distribution when it's built.
 
 In most cases, you can simply pass a string to functions expecting a file type;
 the string will automatically be converted to a file object of the appropriate
