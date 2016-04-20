@@ -1,10 +1,10 @@
+import os
 import platform
 import re
 import subprocess
 from setuptools import setup, find_packages, Command
-from bfg9000.version import version
 
-platform_name = platform.system()
+from bfg9000.version import version
 
 
 class DocServe(Command):
@@ -53,9 +53,15 @@ try:
 except:
     pass
 
-extra_scripts = []
+more_scripts = []
+more_requires = []
+
+platform_name = platform.system()
 if platform_name == 'Windows':
-    extra_scripts.append('bfg9000-setenv=bfg9000.setenv:main')
+    more_scripts.append('bfg9000-setenv=bfg9000.setenv:main')
+elif platform_name == 'Linux':
+    if os.getenv('NO_PATCHELF') not in ['1', 'true']:
+        more_requires.append('patchelf-wrapper')
 
 with open('README.md', 'r') as f:
     # Read from the file and strip out the badges.
@@ -97,20 +103,22 @@ setup(
 
     packages=find_packages(exclude=['test', 'test.*']),
 
-    install_requires=['colorama', 'doppel', 'enum-compat', 'packaging', 'six'],
+    install_requires=(
+        ['colorama', 'doppel', 'enum-compat', 'packaging', 'six'] +
+        more_requires
+    ),
     extras_require={
         'deploy': ['pypandoc'],
         'doc': ['mkdocs', 'mkdocs-bootswatch'],
         'lint': ['flake8'],
         'msbuild': ['lxml'],
-        'patchelf': ['patchelf-wrapper'],
     },
 
     entry_points={
         'console_scripts': [
             'bfg9000=bfg9000.driver:main',
             'bfg9000-depfixer=bfg9000.depfixer:main',
-        ] + extra_scripts,
+        ] + more_scripts,
         'bfg9000.backends': [
             'make=bfg9000.backends.make.writer',
             'ninja=bfg9000.backends.ninja.writer',

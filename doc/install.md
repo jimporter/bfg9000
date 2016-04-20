@@ -15,12 +15,16 @@ using bfg to build your software!
 
 On Linux, bfg9000 requires [patchelf](https://nixos.org/patchelf.html) in order
 to modify [rpath](https://en.wikipedia.org/wiki/Rpath)s of executables and
-shared libraries when installing. The best way to install this is to use your
-distro's package manager, but if patchelf isn't listed, you can install patchelf
-via pip:
+shared libraries when installing. If you don't already have patchelf installed
+(e.g. via your distro's package manager) and in your `PATH`, bfg9000 will
+automatically install it via the
+[patchelf-wrapper](https://pypi.python.org/pypi/patchelf-wrapper) package. If
+you'd prefer not to install patchelf at all, you can set the `NO_PATCHELF`
+environment variable to 1 before installing bfg9000:
+
 
 ```sh
-$ pip install 'bfg9000[patchelf]'
+$ NO_PATCHELF=1 pip install bfg9000
 ```
 
 This will automatically download and install patchelf when installing the rest

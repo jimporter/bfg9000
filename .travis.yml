@@ -55,10 +55,6 @@ before_install:
     fi
 install:
   - |
-    if [ "${TRAVIS_OS_NAME}" = "linux" ]; then
-      ${PIP} install patchelf-wrapper
-    fi
-  - |
     if [ "${TEST_COMMAND}" = "lint" ]; then
       ${PIP} install flake8
     fi
