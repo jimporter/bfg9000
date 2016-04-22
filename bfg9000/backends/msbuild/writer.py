@@ -38,7 +38,7 @@ def write(env, build_inputs):
     uuids = UuidMap(env.builddir.append('.bfg_uuid').string())
     solution = Solution(uuids)
 
-    for e in build_inputs.edges:
+    for e in build_inputs.edges():
         _rule_handlers[type(e)](e, build_inputs, solution, env)
 
     # XXX: Handle default builds. Default builds go first in the solution. This

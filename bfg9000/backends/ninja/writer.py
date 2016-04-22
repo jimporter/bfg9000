@@ -56,7 +56,7 @@ def write(env, build_inputs):
 
     for i in _pre_rules:
         i(build_inputs, buildfile, env)
-    for e in build_inputs.edges:
+    for e in build_inputs.edges():
         _rule_handlers[type(e)](e, build_inputs, buildfile, env)
     for i in _post_rules:
         i(build_inputs, buildfile, env)

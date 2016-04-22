@@ -35,23 +35,29 @@ class Edge(object):
 class BuildInputs(object):
     def __init__(self, bfgpath):
         self.bfgpath = bfgpath
-        self.sources = [File(bfgpath)]
-        self.edges = []
-        self.extra_inputs = {}
+        self._sources = [File(bfgpath)]
+        self._edges = []
+        self._extra_inputs = {}
 
         for name, fn in iteritems(_build_inputs):
-            self.extra_inputs[name] = fn(self)
+            self._extra_inputs[name] = fn(self)
 
     def add_source(self, source):
-        self.sources.append(source)
+        self._sources.append(source)
         return source
 
     def add_edge(self, edge):
-        self.edges.append(edge)
+        self._edges.append(edge)
         return edge
 
+    def sources(self):
+        return iter(self._sources)
+
+    def edges(self):
+        return iter(self._edges)
+
     def __getitem__(self, key):
-        return self.extra_inputs[key]
+        return self._extra_inputs[key]
 
     def __setitem__(self, key, value):
-        self.extra_inputs[key] = value
+        self._extra_inputs[key] = value

@@ -23,7 +23,7 @@ def _dist_command(backend, build_inputs, buildfile, env):
         dstname = '{}-{}.tar.gz'.format(project.name, project.version)
     else:
         dstname = '{}.tar.gz'.format(project.name)
-    return [tar(cmd, [i.path.relpath(srcdir) for i in build_inputs.sources],
+    return [tar(cmd, [i.path.relpath(srcdir) for i in build_inputs.sources()],
                 Path(dstname), srcdir)]
 
 
