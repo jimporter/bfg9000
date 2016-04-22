@@ -1,4 +1,5 @@
-from six import iteritems
+from collections import OrderedDict
+from six import iteritems, itervalues
 
 from .path import Path, Root
 from .file_types import File, Node, objectify
@@ -35,7 +36,7 @@ class Edge(object):
 class BuildInputs(object):
     def __init__(self, bfgpath):
         self.bfgpath = bfgpath
-        self._sources = [File(bfgpath)]
+        self._sources = OrderedDict([ (bfgpath, File(bfgpath)) ])
         self._edges = []
         self._extra_inputs = {}
 
@@ -43,7 +44,7 @@ class BuildInputs(object):
             self._extra_inputs[name] = fn(self)
 
     def add_source(self, source):
-        self._sources.append(source)
+        self._sources[source.path] = source
         return source
 
     def add_edge(self, edge):
@@ -51,7 +52,7 @@ class BuildInputs(object):
         return edge
 
     def sources(self):
-        return iter(self._sources)
+        return itervalues(self._sources)
 
     def edges(self):
         return iter(self._edges)
