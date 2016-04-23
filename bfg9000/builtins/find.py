@@ -4,12 +4,12 @@ import posixpath
 import re
 
 from .hooks import builtin
-from .. import path
-from ..iterutils import iterate
+from ..iterutils import listify
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..backends.make.syntax import Writer, Syntax
 from ..build_inputs import build_input
+from ..path import Path
 from ..platforms import known_platforms
 
 build_input('find_dirs')(lambda build_inputs: set())
@@ -36,10 +36,12 @@ def _listdir(path):
     try:
         names = os.listdir(path)
         for name in names:
-            if os.path.isdir(os.path.join(path, name)):
-                dirs.append(name)
+            # Use POSIX paths so that the result is platform-agnostic.
+            curpath = posixpath.join(path, name)
+            if os.path.isdir(curpath):
+                dirs.append((name, curpath))
             else:
-                nondirs.append(name)
+                nondirs.append((name, curpath))
     except:
         pass
     return dirs, nondirs
@@ -52,67 +54,69 @@ def _walk_flat(top):
 def _walk_recursive(top):
     dirs, nondirs = _listdir(top)
     yield top, dirs, nondirs
-    for name in dirs:
-        # Use POSIX paths so that the result is platform-agnostic.
-        path = posixpath.join(top, name)
+    for name, path in dirs:
         if not os.path.islink(path):
             for i in _walk_recursive(path):
                 yield i
 
 
-def _find_files(paths, name, type, flat, filter):
-    results = []
-    seen_dirs = []
+def _filter_from_glob(match_name, match_type):
+    regex = re.compile(fnmatch.translate(match_name))
+
+    def f(name, path, type):
+        return match_type in [type, '*'] and regex.match(name)
+    return f
+
+
+def _find_files(paths, filter, flat):
+    def do_filter(files, type, filter):
+        for name, path in files:
+            if filter(name, path, type):
+                yield path
 
     # "Does the walker choose the path, or the path the walker?" - Garth Nix
     walker = _walk_flat if flat else _walk_recursive
 
-    def _filter_in_place(files, type, func):
-        for i in reversed(range( len(files) )):
-            if not func(files[i], type):
-                files.pop(i)
+    results, seen_dirs = [], []
 
-    def _filter_join(base, files, name):
-        # Use POSIX paths so that the result is platform-agnostic.
-        return (posixpath.join(base, i) for i in fnmatch.filter(files, name))
-
-    for p in iterate(paths):
-        if type != 'f' and fnmatch.fnmatch(p, name):
-            results.append(p)
-
-        generator = walker(p)
-        for base, dirs, files in generator:
-            if filter:
-                _filter_in_place(dirs, 'd', filter)
-                _filter_in_place(files, 'f', filter)
-
+    paths = listify(paths)
+    results.extend(do_filter( ((p, p) for p in paths), 'd', filter ))
+    for p in paths:
+        for base, dirs, files in walker(p):
             seen_dirs.append(base)
-            if type != 'f':
-                results.extend(_filter_join(base, dirs, name))
-            if type != 'd':
-                results.extend(_filter_join(base, files, name))
+
+            results.extend(do_filter(dirs, 'd', filter))
+            results.extend(do_filter(files, 'f', filter))
 
     return results, seen_dirs
 
 
-def find(path='.', name='*', type=None, flat=False):
-    return _find_files(path, name, type, flat, None)[0]
+def find(path='.', name='*', type='*', flat=False):
+    return _find_files(path, _filter_from_glob(name, type), flat)[0]
 
 
 @builtin.globals('env')
-def filter_by_platform(env, name, type):
+def filter_by_platform(env, name, path, type):
     my_plat = set([env.platform.name, env.platform.flavor])
-    ex = '|'.join(re.escape(i) for i in known_platforms if i not in my_plat)
-    return re.search(r'(^|_)(' + ex + r')(\.[^\.])?$', name) is None
+    sub = '|'.join(re.escape(i) for i in known_platforms if i not in my_plat)
+    ex = r'(^|/|_)(' + sub + r')(\.[^\.]$|$|/)'
+    return re.search(ex, path) is None
 
 
 @builtin.globals('builtins', 'build_inputs', 'env')
-def find_files(builtins, build_inputs, env, path='.', name='*', type=None,
-               flat=False, filter=filter_by_platform, cache=True):
-    if filter == filter_by_platform:
-        filter = builtins['filter_by_platform']
+def find_files(builtins, build_inputs, env, path='.', name='*', type='*',
+               filter=filter_by_platform, flat=False, cache=True):
+    glob_filter = _filter_from_glob(name, type)
+    if filter:
+        if filter == filter_by_platform:
+            filter = builtins['filter_by_platform']
 
-    results, seen_dirs = _find_files(path, name, type, flat, filter)
+        def final_filter(name, path, type):
+            return filter(name, path, type) and glob_filter(name, path, type)
+    else:
+        final_filter = glob_filter
+
+    results, seen_dirs = _find_files(path, final_filter, flat)
     if cache:
         build_inputs['find_dirs'].update(seen_dirs)
     return results
@@ -124,14 +128,14 @@ def make_regenerate_rule(build_inputs, buildfile, env):
     bfgcmd = make.cmd_var(bfg9000, buildfile)
 
     if build_inputs['find_dirs']:
-        write_depfile(path.Path(depfile_name).string(env.path_roots),
+        write_depfile(Path(depfile_name).string(env.path_roots),
                       'Makefile', build_inputs['find_dirs'], makeify=True)
         buildfile.include(depfile_name)
 
     buildfile.rule(
-        target=path.Path('Makefile'),
+        target=Path('Makefile'),
         deps=[build_inputs.bfgpath],
-        recipe=[bfg9000.regenerate(bfgcmd, path.Path('.'))]
+        recipe=[bfg9000.regenerate(bfgcmd, Path('.'))]
     )
 
 
@@ -142,18 +146,18 @@ def ninja_regenerate_rule(build_inputs, buildfile, env):
     depfile = None
 
     if build_inputs['find_dirs']:
-        write_depfile(path.Path(depfile_name).string(env.path_roots),
+        write_depfile(Path(depfile_name).string(env.path_roots),
                       'build.ninja', build_inputs['find_dirs'])
         depfile = depfile_name
 
     buildfile.rule(
         name='regenerate',
-        command=bfg9000.regenerate(bfgcmd, path.Path('.')),
+        command=bfg9000.regenerate(bfgcmd, Path('.')),
         generator=True,
         depfile=depfile,
     )
     buildfile.build(
-        output=path.Path('build.ninja'),
+        output=Path('build.ninja'),
         rule='regenerate',
         implicit=[build_inputs.bfgpath]
     )
