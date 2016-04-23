@@ -5,6 +5,8 @@ import subprocess
 from .iterutils import iterate
 from .path import Path, Root, InstallRoot
 
+known_platforms = ['posix', 'linux', 'darwin', 'cygwin', 'windows']
+
 
 def platform_name():
     name = platform.system().lower()

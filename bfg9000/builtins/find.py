@@ -10,6 +10,7 @@ from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..backends.make.syntax import Writer, Syntax
 from ..build_inputs import build_input
+from ..platforms import known_platforms
 
 build_input('find_dirs')(lambda build_inputs: set())
 depfile_name = '.bfg_find_deps'
@@ -96,8 +97,6 @@ def _find_files(paths, name, type, flat, filter):
 
 def find(path='.', name='*', type=None, flat=False):
     return _find_files(path, name, type, flat, None)[0]
-
-known_platforms = ['posix', 'linux', 'darwin', 'cygwin', 'windows']
 
 
 @builtin.globals('env')
