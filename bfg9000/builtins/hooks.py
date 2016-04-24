@@ -7,12 +7,18 @@ _all_builtins = {}
 
 
 class _Binder(object):
-    def __init__(self, args, fn):
-        self._args = args
+    def __init__(self, fn):
         self._fn = fn
 
+    def bind(self, **kwargs):
+        return self._fn
 
-class _FunctionBinder(_Binder):
+
+class _PartialFunctionBinder(_Binder):
+    def __init__(self, fn, *args):
+        _Binder.__init__(self, fn)
+        self._args = args
+
     def bind(self, **kwargs):
         pre_args = tuple(kwargs[i] for i in self._args)
 
@@ -27,7 +33,11 @@ class _FunctionBinder(_Binder):
         return wrapped
 
 
-class _VariableBinder(_Binder):
+class _GetterBinder(_Binder):
+    def __init__(self, fn, *args):
+        _Binder.__init__(self, fn)
+        self._args = args
+
     def bind(self, **kwargs):
         return self._fn(*[kwargs[i] for i in self._args])
 
@@ -38,15 +48,14 @@ class _BuiltinDecorator(object):
 
     def __call__(self, *args):
         def wrapper(fn):
-            bound = self.__binder(args, fn)
-            _all_builtins[fn.__name__] = bound
-            return bound
+            _all_builtins[fn.__name__] = self.__binder(fn, *args)
+            return fn
         return wrapper
 
 
-builtin = _BuiltinDecorator(_FunctionBinder)()
-builtin.globals = _BuiltinDecorator(_FunctionBinder)
-builtin.variable = _BuiltinDecorator(_VariableBinder)
+builtin = _BuiltinDecorator(_Binder)()
+builtin.globals = _BuiltinDecorator(_PartialFunctionBinder)
+builtin.getter = _BuiltinDecorator(_GetterBinder)
 
 
 def bind(**kwargs):
@@ -57,6 +66,6 @@ def bind(**kwargs):
     return builtins
 
 
-@builtin.variable('env')
+@builtin.getter('env')
 def env(this_env):
     return this_env
