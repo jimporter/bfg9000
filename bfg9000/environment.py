@@ -1,7 +1,7 @@
 import json
 import os
 import warnings
-from packaging.version import Version
+from packaging.version import LegacyVersion
 from six import iteritems
 
 from .backends import get_backends
@@ -103,7 +103,7 @@ class Environment(object):
         if version <= 5:
             backend_version = get_backends()[data['backend']].version()
         else:
-            backend_version = Version(data['backend_version'])
+            backend_version = LegacyVersion(data['backend_version'])
         setattr(env, 'backend_version', backend_version)
 
         for i in ['bfgpath', 'srcdir', 'builddir']:

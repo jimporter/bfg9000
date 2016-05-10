@@ -49,6 +49,8 @@ class PkgConfigPackage(Package):
 
     @property
     def version(self):
+        # XXX: This should probably be a LegacyVersion, but that would make it
+        # a lot harder to work with SpecifierSets.
         return Version(self._call('version'))
 
     def cflags(self, builder, output):

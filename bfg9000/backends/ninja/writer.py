@@ -1,8 +1,7 @@
 import os
 import subprocess
 from itertools import chain
-from packaging.specifiers import SpecifierSet
-from packaging.version import Version
+from packaging.version import LegacyVersion
 from six.moves import cStringIO as StringIO
 
 from ... import iterutils
@@ -20,7 +19,7 @@ def version(env=os.environ):
             [ninja, '--version'],
             universal_newlines=True
         )
-        return Version(output.strip())
+        return LegacyVersion(output.strip())
     except IOError:
         return None
 
@@ -106,7 +105,9 @@ class Commands(object):
 def command_build(buildfile, env, output, inputs=None, implicit=None,
                   order_only=None, commands=None, environ=None):
     extra_kwargs = {}
-    if env.backend_version and env.backend_version in SpecifierSet('>=1.5'):
+    # XXX: Can't use SpecifierSet here yet, since those don't work well with
+    # LegacyVersions.
+    if env.backend_version and env.backend_version >= LegacyVersion('1.5'):
         extra_kwargs['pool'] = 'console'
 
     if not buildfile.has_rule('command'):

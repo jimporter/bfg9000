@@ -1,7 +1,7 @@
 import os
 import re
 import subprocess
-from packaging.version import Version
+from packaging.version import LegacyVersion
 
 from ... import path
 from .syntax import *
@@ -17,7 +17,7 @@ def version(env=os.environ):
         )
         m = re.search(r'([\d\.]+)$', output)
         if m:
-            return Version(m.group(1))
+            return LegacyVersion(m.group(1))
     except IOError:
         return None
 
