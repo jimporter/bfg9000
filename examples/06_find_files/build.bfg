@@ -3,9 +3,12 @@
 # For projects with many files (or lazy developers!), it can be bothersome to
 # have to list every source file explicitly. In cases like this, the
 # find_files() function comes in handy. It starts at a base directory and
-# searches recursively for files matching a glob:
+# searches recursively for files matching a glob; you can also pass an "extra"
+# glob to find files that should be distributed in a source package, but *not*
+# returned from find_files():
 
-hello = executable('hello', files=find_files('src/hello', '*.cpp'))
+hello = executable('hello', files=find_files('src/hello', '*.cpp',
+                                             extra='*.hpp'))
 
 # It's also possible to search specifically for files ('f') or directories
 # ('d'):
@@ -15,7 +18,8 @@ bye_dirs = find_files('src/goodbye', '*', type='d')
 # Finally, the search can be performed in multiple base directories, as well as
 # *not* recursing into subdirectories:
 
-goodbye = executable('goodbye', files=find_files(bye_dirs, '*.cpp', flat=True))
+goodbye = executable('goodbye', files=find_files(bye_dirs, '*.cpp',
+                                                 extra='*.hpp', flat=True))
 
 # When using find_files(), bfg9000 records the result of the search and, before
 # each build, will check to ensure that the result hasn't changed. If it has,

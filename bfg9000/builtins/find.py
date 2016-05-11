@@ -1,5 +1,4 @@
 import fnmatch
-import itertools
 import os
 import posixpath
 import re
@@ -87,25 +86,30 @@ def _find_files(paths, filter, flat):
     # "Does the walker choose the path, or the path the walker?" - Garth Nix
     walker = _walk_flat if flat else _walk_recursive
 
-    results, extra_results, seen_dirs = [], [], []
+    results, dist_results, seen_dirs = [], [], []
 
-    def do_filter(files, type):
+    def do_filter(files, type, always_dist=False):
         for name, path in files:
             matched = filter(name, path, type)
             if matched == FindResult.include:
+                if always_dist:
+                    dist_results.append(path)
                 results.append(path)
             elif matched == FindResult.not_now:
-                extra_results.append(path)
+                dist_results.append(path)
 
+    # XXX: We don't automatically add directories to dist; if we did, we
+    # wouldn't be able to include a subset of their contents (--no-recursion
+    # exists, but doesn't play nice with header_directory).
     paths = listify(paths)
     do_filter(( (p, p) for p in paths ), 'd')
     for p in paths:
         for base, dirs, files in walker(p):
             seen_dirs.append(base)
             do_filter(dirs, 'd')
-            do_filter(files, 'f')
+            do_filter(files, 'f', always_dist=True)
 
-    return results, extra_results, seen_dirs
+    return results, dist_results, seen_dirs
 
 
 def find(path='.', name='*', type='*', flat=False):
@@ -133,9 +137,9 @@ def find_files(builtins, build_inputs, env, path='.', name='*', type='*',
     else:
         final_filter = glob_filter
 
-    results, extra_results, seen_dirs = _find_files(path, final_filter, flat)
+    results, dist_results, seen_dirs = _find_files(path, final_filter, flat)
 
-    for i in itertools.chain(results, extra_results):
+    for i in dist_results:
         builtins['generic_file'](i)
     if cache:
         build_inputs['find_dirs'].update(seen_dirs)
