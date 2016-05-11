@@ -6,7 +6,7 @@ import re
 from enum import IntEnum
 
 from .hooks import builtin
-from ..iterutils import listify
+from ..iterutils import iterate, listify
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..backends.make.syntax import Writer, Syntax
@@ -69,14 +69,17 @@ def _walk_recursive(top):
                 yield i
 
 
-def _filter_from_glob(match_name, match_type):
-    regex = re.compile(fnmatch.translate(match_name))
+def _filter_from_glob(match_type, match_names, match_extra):
+    matches = [re.compile(fnmatch.translate(i)) for i in iterate(match_names)]
+    extra = [re.compile(fnmatch.translate(i)) for i in iterate(match_extra)]
 
     def f(name, path, type):
-        if match_type in [type, '*'] and regex.match(name):
-            return FindResult.include
-        else:
-            return FindResult.exclude
+        if match_type in [type, '*']:
+            if any(ex.match(name) for ex in matches):
+                return FindResult.include
+            elif any(ex.match(name) for ex in extra):
+                return FindResult.not_now
+        return FindResult.exclude
     return f
 
 
@@ -119,8 +122,8 @@ def filter_by_platform(env, name, path, type):
 
 @builtin.globals('builtins', 'build_inputs', 'env')
 def find_files(builtins, build_inputs, env, path='.', name='*', type='*',
-               filter=filter_by_platform, flat=False, cache=True):
-    glob_filter = _filter_from_glob(name, type)
+               extra=None, filter=filter_by_platform, flat=False, cache=True):
+    glob_filter = _filter_from_glob(type, name, extra)
     if filter:
         if filter == filter_by_platform:
             filter = builtins['filter_by_platform']
