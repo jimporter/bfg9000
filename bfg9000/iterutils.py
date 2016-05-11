@@ -29,7 +29,10 @@ def listify(thing, always_copy=False):
 
 
 def first(thing):
-    return next(iterate(thing))
+    try:
+        return next(iterate(thing))
+    except StopIteration:
+        raise LookupError()
 
 
 def unlistify(thing):

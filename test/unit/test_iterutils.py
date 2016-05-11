@@ -3,6 +3,106 @@ import unittest
 from bfg9000.iterutils import *
 
 
+class TestIsIterable(unittest.TestCase):
+    def test_list(self):
+        self.assertTrue(isiterable([]))
+
+    def test_dict(self):
+        self.assertTrue(isiterable([]))
+
+    def test_generator(self):
+        gen = (i for i in range(10))
+        self.assertTrue(isiterable(gen))
+
+    def test_string(self):
+        self.assertFalse(isiterable('foo'))
+
+    def test_none(self):
+        self.assertFalse(isiterable(None))
+
+
+class TestIterate(unittest.TestCase):
+    def test_none(self):
+        self.assertEquals(list(iterate(None)), [])
+
+    def test_one(self):
+        self.assertEquals(list(iterate('foo')), ['foo'])
+
+    def test_many(self):
+        self.assertEquals(list(iterate(['foo', 'bar'])), ['foo', 'bar'])
+
+
+class TestListify(unittest.TestCase):
+    def test_none(self):
+        self.assertEquals(listify(None), [])
+
+    def test_one(self):
+        self.assertEquals(listify('foo'), ['foo'])
+
+    def test_many(self):
+        x = ['foo', 'bar']
+        res = listify(x)
+        self.assertEquals(res, x)
+        self.assertTrue(x is res)
+
+    def test_always_copy(self):
+        x = ['foo', 'bar']
+        res = listify(x, always_copy=True)
+        self.assertEquals(res, x)
+        self.assertTrue(x is not res)
+
+
+class TestFirst(unittest.TestCase):
+    def test_none(self):
+        self.assertRaises(LookupError, first, None)
+
+    def test_one(self):
+        self.assertEqual(first('foo'), 'foo')
+
+    def test_many(self):
+        self.assertEqual(first(['foo', 'bar']), 'foo')
+
+
+class TestUnlistify(unittest.TestCase):
+    def test_none(self):
+        self.assertEquals(unlistify([]), None)
+
+    def test_one(self):
+        self.assertEquals(unlistify(['foo']), 'foo')
+
+    def test_many(self):
+        x = ['foo', 'bar']
+        res = unlistify(x)
+        self.assertEquals(res, x)
+        self.assertTrue(x is res)
+
+
+class TestTween(unittest.TestCase):
+    def test_none(self):
+        self.assertEquals(list(tween([], ',')), [])
+        self.assertEquals(list(tween([], ',', '[', ']')), [])
+
+    def test_one(self):
+        self.assertEquals(list(tween([1], ',')), [1])
+        self.assertEquals(list(tween([1], ',', '[', ']')), ['[', 1, ']'])
+
+    def test_many(self):
+        self.assertEquals(list(tween([1, 2], ',')), [1, ',', 2])
+        self.assertEquals(list(tween([1, 2], ',', '[', ']')),
+                          ['[', 1, ',', 2, ']'])
+
+
+class TestUniques(unittest.TestCase):
+    def test_none(self):
+        self.assertEquals(uniques([]), [])
+
+    def test_one(self):
+        self.assertEquals(uniques([1]), [1])
+
+    def test_many(self):
+        self.assertEquals(uniques([1, 2, 1, 3]), [1, 2, 3])
+
+
 class TestMergeIntoDict(unittest.TestCase):
     def test_merge_empty(self):
         d = {}
