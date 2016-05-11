@@ -28,8 +28,7 @@ class Node(object):
         return type(self) == type(rhs) and self.path == rhs.path
 
 
-def objectify(thing, valid_type, creator, in_type=string_types, *args,
-              **kwargs):
+def objectify(thing, valid_type, creator, in_type=string_types, **kwargs):
     if isinstance(thing, valid_type):
         return thing
     elif not isinstance(thing, in_type):
@@ -38,7 +37,7 @@ def objectify(thing, valid_type, creator, in_type=string_types, *args,
         if creator is None:
             creator = valid_type
         # XXX: Come up with a way to provide args to prepend?
-        return creator(thing, *args, **kwargs)
+        return creator(thing, **kwargs)
 
 
 class File(Node):
