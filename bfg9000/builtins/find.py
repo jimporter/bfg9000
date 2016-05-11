@@ -14,7 +14,7 @@ from ..build_inputs import build_input
 from ..path import Path
 from ..platforms import known_platforms
 
-build_input('find_dirs')(lambda build_inputs: set())
+build_input('find_dirs')(lambda build_inputs, env: set())
 depfile_name = '.bfg_find_deps'
 
 

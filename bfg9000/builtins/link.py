@@ -13,7 +13,7 @@ from ..iterutils import first, iterate, listify, merge_dicts, uniques
 from ..path import Root
 from ..shell import posix as pshell
 
-build_input('link_options')(lambda build_inputs: list())
+build_input('link_options')(lambda build_inputs, env: list())
 
 
 class Link(Edge):

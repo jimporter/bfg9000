@@ -5,8 +5,8 @@ from ..build_inputs import build_input
 
 ProjectInfo = namedtuple('ProjectInfo', ['name', 'version'])
 
-build_input('project')(lambda build_inputs: ProjectInfo(
-    build_inputs.bfgpath.parent().basename(), None
+build_input('project')(lambda build_inputs, env: ProjectInfo(
+    env.srcdir.basename(), None
 ))
 
 

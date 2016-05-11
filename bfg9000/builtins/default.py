@@ -6,7 +6,7 @@ from ..build_inputs import build_input
 
 @build_input('defaults')
 class DefaultOutputs(object):
-    def __init__(self, build_inputs):
+    def __init__(self, build_inputs, env):
         self.default_outputs = []
         self.fallback_defaults = []
 

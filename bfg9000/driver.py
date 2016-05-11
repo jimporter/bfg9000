@@ -69,7 +69,7 @@ def parse_args(parser, args=None, namespace=None):
 
 def execute_script(env, filename=bfgfile):
     bfgpath = Path(filename, Root.srcdir)
-    build = BuildInputs(bfgpath)
+    build = BuildInputs(env, bfgpath)
     builtin_dict = builtins.bind(build_inputs=build, env=env)
 
     with open(bfgpath.string(env.path_roots), 'r') as f:

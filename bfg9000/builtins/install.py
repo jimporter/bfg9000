@@ -11,7 +11,7 @@ from ..file_types import Directory, File
 
 @build_input('install')
 class InstallOutputs(object):
-    def __init__(self, build_inputs):
+    def __init__(self, build_inputs, env):
         self._outputs = []
 
     def add(self, item, explicit=True):
