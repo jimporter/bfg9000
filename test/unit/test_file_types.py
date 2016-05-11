@@ -5,7 +5,7 @@ from bfg9000.file_types import objectify
 
 class TestObjectify(unittest.TestCase):
     def test_create(self):
-        self.assertEqual(objectify('foo', list, None), ['f', 'o' ,'o'])
+        self.assertEqual(objectify('foo', list, None), ['f', 'o', 'o'])
 
     def test_already_created(self):
         self.assertEqual(objectify(['foo'], list, None), ['foo'])
@@ -22,4 +22,3 @@ class TestObjectify(unittest.TestCase):
     def test_extra_args(self):
         self.assertEqual(objectify('foo', list, lambda x, y: [x, y], y='bar'),
                          ['foo', 'bar'])
-
