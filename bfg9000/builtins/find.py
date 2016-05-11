@@ -1,7 +1,9 @@
 import fnmatch
+import itertools
 import os
 import posixpath
 import re
+from enum import IntEnum
 
 from .hooks import builtin
 from ..iterutils import listify
@@ -14,6 +16,13 @@ from ..platforms import known_platforms
 
 build_input('find_dirs')(lambda build_inputs: set())
 depfile_name = '.bfg_find_deps'
+
+
+@builtin
+class FindResult(IntEnum):
+    include = 0
+    not_now = 1
+    exclude = 2
 
 
 def write_depfile(path, output, seen_dirs, makeify=False):
@@ -64,31 +73,36 @@ def _filter_from_glob(match_name, match_type):
     regex = re.compile(fnmatch.translate(match_name))
 
     def f(name, path, type):
-        return match_type in [type, '*'] and regex.match(name)
+        if match_type in [type, '*'] and regex.match(name):
+            return FindResult.include
+        else:
+            return FindResult.exclude
     return f
 
 
 def _find_files(paths, filter, flat):
-    def do_filter(files, type, filter):
-        for name, path in files:
-            if filter(name, path, type):
-                yield path
-
     # "Does the walker choose the path, or the path the walker?" - Garth Nix
     walker = _walk_flat if flat else _walk_recursive
 
-    results, seen_dirs = [], []
+    results, extra_results, seen_dirs = [], [], []
+
+    def do_filter(files, type):
+        for name, path in files:
+            matched = filter(name, path, type)
+            if matched == FindResult.include:
+                results.append(path)
+            elif matched == FindResult.not_now:
+                extra_results.append(path)
 
     paths = listify(paths)
-    results.extend(do_filter( ((p, p) for p in paths), 'd', filter ))
+    do_filter(( (p, p) for p in paths ), 'd')
     for p in paths:
         for base, dirs, files in walker(p):
             seen_dirs.append(base)
+            do_filter(dirs, 'd')
+            do_filter(files, 'f')
 
-            results.extend(do_filter(dirs, 'd', filter))
-            results.extend(do_filter(files, 'f', filter))
-
-    return results, seen_dirs
+    return results, extra_results, seen_dirs
 
 
 def find(path='.', name='*', type='*', flat=False):
@@ -100,7 +114,7 @@ def filter_by_platform(env, name, path, type):
     my_plat = set([env.platform.name, env.platform.flavor])
     sub = '|'.join(re.escape(i) for i in known_platforms if i not in my_plat)
     ex = r'(^|/|_)(' + sub + r')(\.[^\.]$|$|/)'
-    return re.search(ex, path) is None
+    return FindResult.not_now if re.search(ex, path) else FindResult.include
 
 
 @builtin.globals('builtins', 'build_inputs', 'env')
@@ -112,11 +126,14 @@ def find_files(builtins, build_inputs, env, path='.', name='*', type='*',
             filter = builtins['filter_by_platform']
 
         def final_filter(name, path, type):
-            return filter(name, path, type) and glob_filter(name, path, type)
+            return max(filter(name, path, type), glob_filter(name, path, type))
     else:
         final_filter = glob_filter
 
-    results, seen_dirs = _find_files(path, final_filter, flat)
+    results, extra_results, seen_dirs = _find_files(path, final_filter, flat)
+
+    for i in itertools.chain(results, extra_results):
+        builtins['generic_file'](i)
     if cache:
         build_inputs['find_dirs'].update(seen_dirs)
     return results
