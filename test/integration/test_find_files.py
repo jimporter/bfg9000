@@ -27,12 +27,12 @@ class TestFindFiles(IntegrationTest):
         with tarfile.open(self.target_path(dist)) as t:
             self.assertEqual(set(t.getnames()), {
                 'build.bfg',
-                'src/hello/hello.cpp',
-                'src/hello/hello.hpp',
-                'src/hello/main.cpp',
-                'src/goodbye/main.cpp',
-                'src/goodbye/english/goodbye.cpp',
-                'src/goodbye/english/goodbye.hpp',
-                'src/goodbye/german/goodbye.cpp',
-                'src/goodbye/german/goodbye.hpp',
+                os.path.join('src', 'hello', 'hello.cpp'),
+                os.path.join('src', 'hello', 'hello.hpp'),
+                os.path.join('src', 'hello', 'main.cpp'),
+                os.path.join('src', 'goodbye', 'main.cpp'),
+                os.path.join('src', 'goodbye', 'english', 'goodbye.cpp'),
+                os.path.join('src', 'goodbye', 'english', 'goodbye.hpp'),
+                os.path.join('src', 'goodbye', 'german', 'goodbye.cpp'),
+                os.path.join('src', 'goodbye', 'german', 'goodbye.hpp'),
             })
