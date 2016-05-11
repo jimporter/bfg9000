@@ -580,34 +580,52 @@ specifier</a>.</p>
 <h3 id="bfg9000_version">bfg9000_version<a class="headerlink" href="#bfg9000_version" title="Permanent link">§</a></h3>
 <p>Return the current version of bfg9000. This can be useful if you want to
 optionally support a feature only available in certain versions of bfg.</p>
-<h3 id="filter_by_platformname-type">filter_by_platform(<em>name</em>, <em>type</em>)<a class="headerlink" href="#filter_by_platformname-type" title="Permanent link">§</a></h3>
-<p>Return <em>True</em> if <em>name</em> is a filename that should be included for the target
-platform, and <em>False</em> otherwise. File (or directory) names like <code>PLATFORM</code> or
-<code>foo_PLATFORM.cpp</code> are excluded if <code>PLATFORM</code> is a known platform name that
-<em>doesn't</em> match the target platform. Known platform names are: <code>'posix'</code>,
-<code>'linux'</code>, <code>'darwin'</code>, <code>'cygwin'</code>, <code>'windows'</code>.</p>
+<h3 id="filter_by_platformname-path-type">filter_by_platform(<em>name</em>, <em>path</em>, <em>type</em>)<a class="headerlink" href="#filter_by_platformname-path-type" title="Permanent link">§</a></h3>
+<p>Return <em>FindResult.include</em> if <em>path</em> is a filename that should be included for
+the target platform, and <em>FindResult.not_now</em> otherwise. File (or directory)
+names like <code>PLATFORM</code> or <code>foo_PLATFORM.cpp</code> are excluded if <code>PLATFORM</code> is a
+known platform name that <em>doesn't</em> match the target platform. Known platform
+names are: <code>'posix'</code>,<code>'linux'</code>, <code>'darwin'</code>, <code>'cygwin'</code>, <code>'windows'</code>.</p>
 <p>This is the default <em>filter</em> for
-<a href="../find_filespath-name-type-flat-filter-cache"><em>find_files</em></a>.</p>
-<h3 id="find_filespath-name-type-flat-filter-cache">find_files([<em>path</em>], [<em>name</em>], [<em>type</em>], [<em>flat</em>], [<em>filter</em>], [<em>cache</em>])<a class="headerlink" href="#find_filespath-name-type-flat-filter-cache" title="Permanent link">§</a></h3>
-<p>Find files in <em>path</em> whose name matches the glob <em>name</em>. If <em>path</em> is omitted,
-search in the root of the source directory; if <em>name</em> is omitted, all files will
-match. <em>type</em> may be either <code>'f'</code> to find only files or <code>'d'</code> to find only
-directories. If <em>flat</em> is true, <em>find_files</em> will not recurse into
-subdirectories. You can also specify a custom <em>filter</em> function to filter the
-list of files; this function takes two arguments: the file's name and its type.</p>
-<p>Finally, if <em>cache</em> is <em>True</em> (the default), this lookup will be cached so that
-any changes to the result of this function will regenerate the build scripts
-for the project. This allows you do add or remove source files and not have to
-worry about manually rerunning bfg9000.</p>
+<a href="#find_filespath-name-type-extra-flat-filter-cache"><em>find_files</em></a>.</p>
+<h3 id="findresult">FindResult<a class="headerlink" href="#findresult" title="Permanent link">§</a></h3>
+<p>An enum to be used as the result of a filter function for
+<a href="#find_filespath-name-type-extra-flat-filter-cache"><em>find_files</em></a>. The possible
+enum values are:</p>
+<ul>
+<li><em>include</em>: Include this file in the results</li>
+<li><em>exclude</em>: Don't include this file in the results</li>
+<li><em>not_now</em>: Don't include this file in the results, but do include is in the
+  <a href="../writing/#distributing-your-source">distribution</a></li>
+</ul>
+<h3 id="find_filespath-name-type-extra-flat-filter-cache">find_files([<em>path</em>], [<em>name</em>], [<em>type</em>], [<em>extra</em>], [<em>flat</em>], [<em>filter</em>], [<em>cache</em>])<a class="headerlink" href="#find_filespath-name-type-extra-flat-filter-cache" title="Permanent link">§</a></h3>
+<p>Find files in <em>path</em> whose name matches the glob (or list of globs) <em>name</em>. The
+following arguments may be specified:</p>
+<ul>
+<li><em>path</em>: A path (or list of paths) to start the search in; if omitted, search
+  in the root of the source directory (<code>'.'</code>)</li>
+<li><em>name</em>: A glob (or list of globs) to match files; if omitted, all files match
+  (equivalent to <code>'*'</code>)</li>
+<li><em>type</em>: A filter for the type of file: <code>'f'</code> to find only files,<code>'d'</code> to find
+  only directories, or <code>'*'</code> to find either</li>
+<li><em>extra</em>: A glob (or list of globs) to match extra files (which will not be
+  returned from <em>find_files</em> but will be added to the
+  <a href="../writing/#distributing-your-source">distribution</a>)</li>
+<li><em>flat</em>: If true, <em>find_files</em> will not recurse into subdirectories; otherwise,
+  (the default) it will</li>
+<li><em>filter</em>: A predicate taking a filename, relative path, and file type, and
+  returning a <a href="#FindResult"><em>FindResult</em></a> which will filter the results; by
+  default, this is <a href="#filter_by_platformname-path-type"><em>filter_by_platform</em></a></li>
+<li><em>cache</em>: If true (the default), cache the results so that any changes to will
+  regenerate the build scripts for the project</li>
+</ul>
+<p>The <em>cache</em> argument is particularly important. It allows you to add or remove
+source files and not have to worry about manually rerunning bfg9000.</p>
 <h3 id="projectname-version">project(<em>name</em>, [<em>version</em>])<a class="headerlink" href="#projectname-version" title="Permanent link">§</a></h3>
 <p>Set the name (and optionally the version) of the project. If you don't call
 this function to specify a project name, it defaults to the name of the
-project's source directory.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Currently, this is only useful to the MSBuild backend, which names the
-<code>.sln</code> file according to the project name.</p>
-</div></div>
+project's source directory. This is primarily useful for creating
+<a href="../writing/#distributing-your-source">distributions</a>.</p></div>
         </div>
 
         <footer class="col-md-12">
