@@ -484,37 +484,56 @@ specifier](https://www.python.org/dev/peps/pep-0440/#version-specifiers).
 Return the current version of bfg9000. This can be useful if you want to
 optionally support a feature only available in certain versions of bfg.
 
-### filter_by_platform(*name*, *type*)
+### filter_by_platform(*name*, *path*, *type*)
 
-Return *True* if *name* is a filename that should be included for the target
-platform, and *False* otherwise. File (or directory) names like `PLATFORM` or
-`foo_PLATFORM.cpp` are excluded if `PLATFORM` is a known platform name that
-*doesn't* match the target platform. Known platform names are: `'posix'`,
-`'linux'`, `'darwin'`, `'cygwin'`, `'windows'`.
+Return *FindResult.include* if *path* is a filename that should be included for
+the target platform, and *FindResult.not_now* otherwise. File (or directory)
+names like `PLATFORM` or `foo_PLATFORM.cpp` are excluded if `PLATFORM` is a
+known platform name that *doesn't* match the target platform. Known platform
+names are: `'posix'`,`'linux'`, `'darwin'`, `'cygwin'`, `'windows'`.
 
 This is the default *filter* for
-[*find_files*](find_filespath-name-type-flat-filter-cache).
+[*find_files*](#find_filespath-name-type-extra-flat-filter-cache).
 
-### find_files([*path*], [*name*], [*type*], [*flat*], [*filter*], [*cache*])
+### FindResult
 
-Find files in *path* whose name matches the glob *name*. If *path* is omitted,
-search in the root of the source directory; if *name* is omitted, all files will
-match. *type* may be either `'f'` to find only files or `'d'` to find only
-directories. If *flat* is true, *find_files* will not recurse into
-subdirectories. You can also specify a custom *filter* function to filter the
-list of files; this function takes two arguments: the file's name and its type.
+An enum to be used as the result of a filter function for
+[*find_files*](#find_filespath-name-type-extra-flat-filter-cache). The possible
+enum values are:
 
-Finally, if *cache* is *True* (the default), this lookup will be cached so that
-any changes to the result of this function will regenerate the build scripts
-for the project. This allows you do add or remove source files and not have to
-worry about manually rerunning bfg9000.
+* *include*: Include this file in the results
+* *exclude*: Don't include this file in the results
+* *not_now*: Don't include this file in the results, but do include is in the
+  [distribution](writing.md#distributing-your-source)
+
+### find_files([*path*], [*name*], [*type*], [*extra*], [*flat*], [*filter*], [*cache*])
+
+Find files in *path* whose name matches the glob (or list of globs) *name*. The
+following arguments may be specified:
+
+* *path*: A path (or list of paths) to start the search in; if omitted, search
+  in the root of the source directory (`'.'`)
+* *name*: A glob (or list of globs) to match files; if omitted, all files match
+  (equivalent to `'*'`)
+* *type*: A filter for the type of file: `'f'` to find only files,`'d'` to find
+  only directories, or `'*'` to find either
+* *extra*: A glob (or list of globs) to match extra files (which will not be
+  returned from *find_files* but will be added to the
+  [distribution](writing.md#distributing-your-source))
+* *flat*: If true, *find_files* will not recurse into subdirectories; otherwise,
+  (the default) it will
+* *filter*: A predicate taking a filename, relative path, and file type, and
+  returning a [*FindResult*](#FindResult) which will filter the results; by
+  default, this is [*filter_by_platform*](#filter_by_platformname-path-type)
+* *cache*: If true (the default), cache the results so that any changes to will
+  regenerate the build scripts for the project
+
+The *cache* argument is particularly important. It allows you to add or remove
+source files and not have to worry about manually rerunning bfg9000.
 
 ### project(*name*, [*version*])
 
 Set the name (and optionally the version) of the project. If you don't call
 this function to specify a project name, it defaults to the name of the
-project's source directory.
-
-!!! note
-    Currently, this is only useful to the MSBuild backend, which names the
-    `.sln` file according to the project name.
+project's source directory. This is primarily useful for creating
+[distributions](writing.md#distributing-your-source).
