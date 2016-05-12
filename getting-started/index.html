@@ -9,7 +9,7 @@
         
         <link rel="shortcut icon" href="../img/favicon.ico">
 
-	<title>Installation - bfg9000</title>
+	<title>Getting Started - bfg9000</title>
 
         <link href="../css/bootstrap-custom.min.css" rel="stylesheet">
         <link href="../css/font-awesome-4.0.3.css" rel="stylesheet">
@@ -58,7 +58,7 @@
             
             
                 <li class="active">
-                    <a href="./">Installation</a>
+                    <a href="./">Getting Started</a>
                 </li>
             
             
@@ -175,27 +175,39 @@
             <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
     
-        <li class="main active"><a href="#installation">Installation</a></li>
+        <li class="main active"><a href="#getting-started">Getting Started</a></li>
         
-            <li><a href="#installing-patchelf">Installing patchelf</a></li>
+            <li><a href="#supported-platformslanguages">Supported platforms/languages</a></li>
         
-            <li><a href="#installing-msbuild-support">Installing MSBuild support</a></li>
+            <li><a href="#installation">Installation</a></li>
         
     
     </ul>
 </div></div>
             <div class="col-md-9" role="main">
 
-<h1 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">§</a></h1>
+<h1 id="getting-started">Getting Started<a class="headerlink" href="#getting-started" title="Permanent link">§</a></h1>
+<h2 id="supported-platformslanguages">Supported platforms/languages<a class="headerlink" href="#supported-platformslanguages" title="Permanent link">§</a></h2>
+<p>bfg9000 is designed to work on Linux, OS X, and Windows; other POSIX systems
+should work as well, but they aren't explicitly supported (if you'd like to help
+add support for your favorite platform, just file a pull request!). In addition,
+bfg9000 supports building code written in the following languages:</p>
+<ul>
+<li>C</li>
+<li>C++</li>
+<li>Fortran (partial)</li>
+<li>Objective C/C++</li>
+</ul>
+<h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">§</a></h2>
 <p>bfg9000 uses <a href="https://pythonhosted.org/setuptools/">setuptools</a>, so installation
 is much the same as any other Python package:</p>
 <pre><code class="sh">$ pip install bfg9000
 </code></pre>
 
-<p>If you've downloaded bfg, just run <code>pip install .</code> from the source directory.
-(Equivalently, you can run <code>python setup.py install</code>.) From there, you can start
-using bfg to build your software!</p>
-<h2 id="installing-patchelf">Installing patchelf<a class="headerlink" href="#installing-patchelf" title="Permanent link">§</a></h2>
+<p>If you've downloaded bfg already, just run <code>pip install .</code> from the source
+directory. (Equivalently, you can run <code>python setup.py install</code>.) From there, you
+can start using bfg to build your software!</p>
+<h3 id="installing-patchelf">Installing patchelf<a class="headerlink" href="#installing-patchelf" title="Permanent link">§</a></h3>
 <p>On Linux, bfg9000 requires <a href="https://nixos.org/patchelf.html">patchelf</a> in order
 to modify <a href="https://en.wikipedia.org/wiki/Rpath">rpath</a>s of executables and
 shared libraries when installing. If you don't already have patchelf installed
@@ -211,7 +223,7 @@ environment variable to 1 before installing bfg9000:</p>
 of bfg9000. If you're installing into a
 <a href="https://virtualenv.readthedocs.org/en/latest/">virtualenv</a>, patchelf
 will go into <code>$VIRTUAL_ENV/bin</code>.</p>
-<h2 id="installing-msbuild-support">Installing MSBuild support<a class="headerlink" href="#installing-msbuild-support" title="Permanent link">§</a></h2>
+<h3 id="installing-msbuild-support">Installing MSBuild support<a class="headerlink" href="#installing-msbuild-support" title="Permanent link">§</a></h3>
 <p>Since many users don't need it, MSBuild support is an optional feature. To
 install all the dependencies required for MSBuild, you can run the following:</p>
 <pre><code class="sh">$ pip install bfg9000[msbuild]

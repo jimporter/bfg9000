@@ -36,22 +36,32 @@
             "title": "A brief example"
         }, 
         {
-            "location": "/install/", 
-            "text": "Installation\n\u00a7\n\n\nbfg9000 uses \nsetuptools\n, so installation\nis much the same as any other Python package:\n\n\n$ pip install bfg9000\n\n\n\n\nIf you've downloaded bfg, just run \npip install .\n from the source directory.\n(Equivalently, you can run \npython setup.py install\n.) From there, you can start\nusing bfg to build your software!\n\n\nInstalling patchelf\n\u00a7\n\n\nOn Linux, bfg9000 requires \npatchelf\n in order\nto modify \nrpath\ns of executables and\nshared libraries when installing. If you don't already have patchelf installed\n(e.g. via your distro's package manager) and in your \nPATH\n, bfg9000 will\nautomatically install it via the\n\npatchelf-wrapper\n package. If\nyou'd prefer not to install patchelf at all, you can set the \nNO_PATCHELF\n\nenvironment variable to 1 before installing bfg9000:\n\n\n$ NO_PATCHELF=1 pip install bfg9000\n\n\n\n\nThis will automatically download and install patchelf when installing the rest\nof bfg9000. If you're installing into a\n\nvirtualenv\n, patchelf\nwill go into \n$VIRTUAL_ENV/bin\n.\n\n\nInstalling MSBuild support\n\u00a7\n\n\nSince many users don't need it, MSBuild support is an optional feature. To\ninstall all the dependencies required for MSBuild, you can run the following:\n\n\n$ pip install bfg9000[msbuild]", 
+            "location": "/getting-started/", 
+            "text": "Getting Started\n\u00a7\n\n\nSupported platforms/languages\n\u00a7\n\n\nbfg9000 is designed to work on Linux, OS X, and Windows; other POSIX systems\nshould work as well, but they aren't explicitly supported (if you'd like to help\nadd support for your favorite platform, just file a pull request!). In addition,\nbfg9000 supports building code written in the following languages:\n\n\n\n\nC\n\n\nC++\n\n\nFortran (partial)\n\n\nObjective C/C++\n\n\n\n\nInstallation\n\u00a7\n\n\nbfg9000 uses \nsetuptools\n, so installation\nis much the same as any other Python package:\n\n\n$ pip install bfg9000\n\n\n\n\nIf you've downloaded bfg already, just run \npip install .\n from the source\ndirectory. (Equivalently, you can run \npython setup.py install\n.) From there, you\ncan start using bfg to build your software!\n\n\nInstalling patchelf\n\u00a7\n\n\nOn Linux, bfg9000 requires \npatchelf\n in order\nto modify \nrpath\ns of executables and\nshared libraries when installing. If you don't already have patchelf installed\n(e.g. via your distro's package manager) and in your \nPATH\n, bfg9000 will\nautomatically install it via the\n\npatchelf-wrapper\n package. If\nyou'd prefer not to install patchelf at all, you can set the \nNO_PATCHELF\n\nenvironment variable to 1 before installing bfg9000:\n\n\n$ NO_PATCHELF=1 pip install bfg9000\n\n\n\n\nThis will automatically download and install patchelf when installing the rest\nof bfg9000. If you're installing into a\n\nvirtualenv\n, patchelf\nwill go into \n$VIRTUAL_ENV/bin\n.\n\n\nInstalling MSBuild support\n\u00a7\n\n\nSince many users don't need it, MSBuild support is an optional feature. To\ninstall all the dependencies required for MSBuild, you can run the following:\n\n\n$ pip install bfg9000[msbuild]", 
+            "title": "Getting Started"
+        }, 
+        {
+            "location": "/getting-started/#getting-started", 
+            "text": "", 
+            "title": "Getting Started"
+        }, 
+        {
+            "location": "/getting-started/#supported-platformslanguages", 
+            "text": "bfg9000 is designed to work on Linux, OS X, and Windows; other POSIX systems\nshould work as well, but they aren't explicitly supported (if you'd like to help\nadd support for your favorite platform, just file a pull request!). In addition,\nbfg9000 supports building code written in the following languages:   C  C++  Fortran (partial)  Objective C/C++", 
+            "title": "Supported platforms/languages"
+        }, 
+        {
+            "location": "/getting-started/#installation", 
+            "text": "bfg9000 uses  setuptools , so installation\nis much the same as any other Python package:  $ pip install bfg9000  If you've downloaded bfg already, just run  pip install .  from the source\ndirectory. (Equivalently, you can run  python setup.py install .) From there, you\ncan start using bfg to build your software!", 
             "title": "Installation"
         }, 
         {
-            "location": "/install/#installation", 
-            "text": "bfg9000 uses  setuptools , so installation\nis much the same as any other Python package:  $ pip install bfg9000  If you've downloaded bfg, just run  pip install .  from the source directory.\n(Equivalently, you can run  python setup.py install .) From there, you can start\nusing bfg to build your software!", 
-            "title": "Installation"
-        }, 
-        {
-            "location": "/install/#installing-patchelf", 
+            "location": "/getting-started/#installing-patchelf", 
             "text": "On Linux, bfg9000 requires  patchelf  in order\nto modify  rpath s of executables and\nshared libraries when installing. If you don't already have patchelf installed\n(e.g. via your distro's package manager) and in your  PATH , bfg9000 will\nautomatically install it via the patchelf-wrapper  package. If\nyou'd prefer not to install patchelf at all, you can set the  NO_PATCHELF \nenvironment variable to 1 before installing bfg9000:  $ NO_PATCHELF=1 pip install bfg9000  This will automatically download and install patchelf when installing the rest\nof bfg9000. If you're installing into a virtualenv , patchelf\nwill go into  $VIRTUAL_ENV/bin .", 
             "title": "Installing patchelf"
         }, 
         {
-            "location": "/install/#installing-msbuild-support", 
+            "location": "/getting-started/#installing-msbuild-support", 
             "text": "Since many users don't need it, MSBuild support is an optional feature. To\ninstall all the dependencies required for MSBuild, you can run the following:  $ pip install bfg9000[msbuild]", 
             "title": "Installing MSBuild support"
         }, 
