@@ -15,7 +15,7 @@ markdown_extensions:
 
 pages:
   - Home: index.md
-  - Installation: install.md
+  - Getting Started: getting-started.md
   - User Guide:
       - Building with bfg9000: user/building.md
       - Writing a Build File: user/writing.md
