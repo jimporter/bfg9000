@@ -15,6 +15,13 @@ from .version import version
 bfgfile = 'build.bfg'
 logger = log.getLogger(__name__)
 
+description = """
+bfg9000 ("build file generator") is a cross-platform build configuration system
+with an emphasis on making it easy to define how to build your software. It
+converts a Python-based build script into the appropriate files for your
+underlying build system of choice.
+"""
+
 
 def is_srcdir(path):
     return os.path.exists(os.path.join(path, bfgfile))
@@ -94,7 +101,7 @@ def main():
     def path_arg(value):
         return Path(os.path.abspath(value))
 
-    parser = argparse.ArgumentParser(prog='bfg9000')
+    parser = argparse.ArgumentParser(prog='bfg9000', description=description)
     parser.add_argument('srcdir', nargs='?', help='source directory')
     parser.add_argument('builddir', nargs='?', help='build directory')
     parser.add_argument('--version', action='version',
