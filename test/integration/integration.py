@@ -157,8 +157,8 @@ class IntegrationTest(unittest.TestCase):
             cleandir(self.distdir)
 
         self.assertPopen(
-            ['bfg9000', self.srcdir, self.builddir, '--backend',
-             self.backend, '--debug'] + self.extra_args
+            ['bfg9000', '--debug', 'build', self.srcdir, self.builddir,
+             '--backend', self.backend] + self.extra_args
         )
         os.chdir(self.builddir)
 
