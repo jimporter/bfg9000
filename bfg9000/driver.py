@@ -37,30 +37,30 @@ def parse_args(parser, args=None, namespace=None):
     args = parser.parse_args(args, namespace)
 
     if args.subcommand == 'build':
-        if not args.srcdir:
-            parser.error('at least one of srcdir or builddir must be defined')
+        cwd = '.'
 
-        if args.builddir:
-            check_dir(args.srcdir)
-        else:
-            args.builddir = '.'
-            if not is_srcdir(args.srcdir):
-                args.srcdir, args.builddir = args.builddir, args.srcdir
-
-        if os.path.exists(args.builddir):
-            check_dir(args.builddir)
-            if samefile(args.srcdir, args.builddir):
+        if os.path.exists(args.directory):
+            check_dir(args.directory)
+            if samefile(args.directory, cwd):
                 parser.error('source and build directories must be different')
 
-        if not is_srcdir(args.srcdir):
-            parser.error('source directory must contain a build.bfg file')
-        if is_srcdir(args.builddir):
-            parser.error('build directory must not contain a build.bfg file')
+        if is_srcdir(args.directory):
+            if is_srcdir(cwd):
+                parser.error('build directory must not contain a {} file'
+                             .format(bfgfile))
+            srcdir, builddir = args.directory, cwd
+        else:
+            if not is_srcdir(cwd):
+                parser.error('source directory must contain a {} file'
+                             .format(bfgfile))
+            srcdir, builddir = cwd, args.directory
 
-        if not os.path.exists(args.builddir):
-            os.mkdir(args.builddir)
-        args.srcdir = Path(os.path.abspath(args.srcdir))
-        args.builddir = Path(os.path.abspath(args.builddir))
+        if not os.path.exists(builddir):
+            os.mkdir(builddir)
+
+        del args.directory
+        args.srcdir = Path(os.path.abspath(srcdir))
+        args.builddir = Path(os.path.abspath(builddir))
     else:
         check_dir(args.builddir)
         args.builddir = Path(os.path.abspath(args.builddir))
@@ -108,8 +108,7 @@ def main():
     subparsers = parser.add_subparsers(dest='subcommand')
 
     buildp = subparsers.add_parser('build')
-    buildp.add_argument('srcdir', nargs='?', help='source directory')
-    buildp.add_argument('builddir', nargs='?', help='build directory')
+    buildp.add_argument('directory', help='source or build directory')
     buildp.add_argument('--backend', metavar='BACKEND',
                         choices=list(backends.keys()),
                         default=list(backends.keys())[0],
