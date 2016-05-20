@@ -8,11 +8,12 @@ from . import log
 from .backends import get_backends
 from .build_inputs import BuildInputs
 from .environment import Environment, EnvVersionError
-from .path import InstallRoot, Path, Root, samefile
+from .path import abspath, InstallRoot, Path, Root, samefile
 from .platforms import platform_info
 from .version import version
 
 bfgfile = 'build.bfg'
+backends = get_backends()
 logger = log.getLogger(__name__)
 
 description = """
@@ -27,45 +28,11 @@ def is_srcdir(path):
     return os.path.exists(os.path.join(path, bfgfile))
 
 
-def parse_args(parser, args=None, namespace=None):
-    def check_dir(path):
-        if not os.path.exists(path):
-            parser.error("'{}' does not exist".format(path))
-        if not os.path.isdir(path):
-            parser.error("'{}' is not a directory".format(path))
-
-    args = parser.parse_args(args, namespace)
-
-    if args.subcommand == 'build':
-        cwd = '.'
-
-        if os.path.exists(args.directory):
-            check_dir(args.directory)
-            if samefile(args.directory, cwd):
-                parser.error('source and build directories must be different')
-
-        if is_srcdir(args.directory):
-            if is_srcdir(cwd):
-                parser.error('build directory must not contain a {} file'
-                             .format(bfgfile))
-            srcdir, builddir = args.directory, cwd
-        else:
-            if not is_srcdir(cwd):
-                parser.error('source directory must contain a {} file'
-                             .format(bfgfile))
-            srcdir, builddir = cwd, args.directory
-
-        if not os.path.exists(builddir):
-            os.mkdir(builddir)
-
-        del args.directory
-        args.srcdir = Path(os.path.abspath(srcdir))
-        args.builddir = Path(os.path.abspath(builddir))
-    else:
-        check_dir(args.builddir)
-        args.builddir = Path(os.path.abspath(args.builddir))
-
-    return args
+def check_dir(parser, path):
+    if not os.path.exists(path):
+        parser.error("'{}' does not exist".format(path))
+    if not os.path.isdir(path):
+        parser.error("'{}' is not a directory".format(path))
 
 
 def execute_script(env, filename=bfgfile):
@@ -87,13 +54,81 @@ def execute_script(env, filename=bfgfile):
     return build
 
 
+def build(args):
+    # De-munge the entry point if we're on Windows.
+    bfgpath = Path(os.path.realpath(
+        re.sub('-script.py$', '.exe', sys.argv[0])
+    ))
+    env = Environment(
+        bfgpath=bfgpath,
+        backend=args.backend,
+        backend_version=backends[args.backend].version(),
+        srcdir=args.srcdir,
+        builddir=args.builddir,
+        install_dirs={
+            InstallRoot.prefix: args.prefix,
+            InstallRoot.bindir: args.bindir,
+            InstallRoot.libdir: args.libdir,
+            InstallRoot.includedir: args.includedir,
+        }
+    )
+    env.save(args.builddir.string())
+
+    build = execute_script(env)
+    backends[env.backend].write(env, build)
+
+
+class SrcBuildDirs(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        cwd = '.'
+
+        if os.path.exists(values):
+            check_dir(parser, values)
+            if samefile(values, cwd):
+                parser.error('source and build directories must be different')
+
+        if is_srcdir(values):
+            if is_srcdir(cwd):
+                parser.error('build directory must not contain a {} file'
+                             .format(bfgfile))
+            srcdir, builddir = values, cwd
+        else:
+            if not is_srcdir(cwd):
+                parser.error('source directory must contain a {} file'
+                             .format(bfgfile))
+            if not os.path.exists(values):
+                os.mkdir(values)
+            srcdir, builddir = cwd, values
+
+        namespace.srcdir = abspath(srcdir)
+        namespace.builddir = abspath(builddir)
+
+
+class BuildDir(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        check_dir(parser, values)
+        setattr(namespace, self.dest, abspath(values))
+
+
+def regenerate(args):
+    try:
+        env = Environment.load(args.builddir.string())
+    except Exception as e:
+        msg = 'Unable to reload environment'
+        if str(e):
+            msg += ': {}'.format(str(e))
+        if isinstance(e, EnvVersionError):
+            msg += '\n  Please re-run bfg9000 manually'
+        logger.error(msg)
+        return 1
+
+    build = execute_script(env)
+    backends[env.backend].write(env, build)
+
+
 def main():
-    backends = get_backends()
     install_dirs = platform_info().install_dirs
     path_help = 'installation path for {} (default: %(default)r)'
-
-    def path_arg(value):
-        return Path(os.path.abspath(value))
 
     parser = argparse.ArgumentParser(prog='bfg9000', description=description)
     parser.add_argument('--version', action='version',
@@ -105,65 +140,36 @@ def main():
                         help=('show colored output (one of: %(choices)s; ' +
                               'default: %(default)s)'))
 
-    subparsers = parser.add_subparsers(dest='subcommand')
+    subparsers = parser.add_subparsers()
 
     buildp = subparsers.add_parser('build')
-    buildp.add_argument('directory', help='source or build directory')
+    buildp.set_defaults(func=build)
+    buildp.add_argument('directory', metavar='DIRECTORY', action=SrcBuildDirs,
+                        help='source or build directory')
     buildp.add_argument('--backend', metavar='BACKEND',
                         choices=list(backends.keys()),
                         default=list(backends.keys())[0],
                         help=('build backend (one of %(choices)s; default: ' +
                               '%(default)s)'))
-    buildp.add_argument('--prefix', type=path_arg, metavar='PATH',
+    buildp.add_argument('--prefix', type=abspath, metavar='PATH',
                         default=install_dirs[InstallRoot.prefix],
                         help='installation prefix (default: %(default)r)')
-    buildp.add_argument('--bindir', type=path_arg, metavar='PATH',
+    buildp.add_argument('--bindir', type=abspath, metavar='PATH',
                         default=install_dirs[InstallRoot.bindir],
                         help=path_help.format('executables'))
-    buildp.add_argument('--libdir', type=path_arg, metavar='PATH',
+    buildp.add_argument('--libdir', type=abspath, metavar='PATH',
                         default=install_dirs[InstallRoot.libdir],
                         help=path_help.format('libraries'))
-    buildp.add_argument('--includedir', type=path_arg, metavar='PATH',
+    buildp.add_argument('--includedir', type=abspath, metavar='PATH',
                         default=install_dirs[InstallRoot.includedir],
                         help=path_help.format('headers'))
 
     regenp = subparsers.add_parser('regenerate')
-    regenp.add_argument('builddir', nargs='?', default='.',
-                        help='build directory')
+    regenp.set_defaults(func=regenerate)
+    regenp.add_argument('builddir', metavar='BUILDDIR', nargs='?', default='.',
+                        action=BuildDir, help='build directory')
 
-    args = parse_args(parser)
+    args = parser.parse_args()
     log.init(args.color, debug=args.debug)
 
-    if args.subcommand == 'regenerate':
-        try:
-            env = Environment.load(args.builddir.string())
-        except Exception as e:
-            msg = 'Unable to reload environment'
-            if str(e):
-                msg += ': {}'.format(str(e))
-            if isinstance(e, EnvVersionError):
-                msg += '\n  Please re-run bfg9000 manually'
-            logger.error(msg)
-            return 1
-    else:
-        # De-munge the entry point if we're on Windows.
-        bfgpath = Path(os.path.realpath(
-            re.sub('-script.py$', '.exe', sys.argv[0])
-        ))
-        env = Environment(
-            bfgpath=bfgpath,
-            backend=args.backend,
-            backend_version=backends[args.backend].version(),
-            srcdir=args.srcdir,
-            builddir=args.builddir,
-            install_dirs={
-                InstallRoot.prefix: args.prefix,
-                InstallRoot.bindir: args.bindir,
-                InstallRoot.libdir: args.libdir,
-                InstallRoot.includedir: args.includedir,
-            }
-        )
-        env.save(args.builddir.string())
-
-    build = execute_script(env)
-    backends[env.backend].write(env, build)
+    return args.func(args)

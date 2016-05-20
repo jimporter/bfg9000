@@ -115,6 +115,10 @@ class Path(safe_str.safe_string):
         return safe_str.jbos(lhs, self)
 
 
+def abspath(path):
+    return Path(os.path.abspath(path), Root.absolute)
+
+
 def install_path(path, install_root):
     if path.root == Root.srcdir:
         suffix = os.path.basename(path.suffix)
