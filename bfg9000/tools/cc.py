@@ -88,7 +88,13 @@ class CcBaseCompiler(object):
         return result
 
     def _include_dir(self, directory):
-        if directory.system:
+        # Don't explicitly include default directories (e.g. /usr/include).
+        # Doing so would break GCC 6 when #including stdlib.h:
+        # <https://gcc.gnu.org/bugzilla/show_bug.cgi?id=70129>.
+        if ( directory.path.root == Root.absolute and
+             directory.path.string() in self.platform.include_dirs):
+            return []
+        elif directory.system:
             return ['-isystem', directory.path]
         else:
             return ['-I' + directory.path]
