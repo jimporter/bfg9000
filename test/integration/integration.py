@@ -7,7 +7,7 @@ from collections import namedtuple
 
 from six import iteritems
 
-from bfg9000.backends import get_backends
+from bfg9000.backends import list_backends
 from bfg9000.environment import Environment
 from bfg9000.path import InstallRoot, makedirs
 from bfg9000.platforms import platform_info, platform_name
@@ -24,7 +24,7 @@ Target = namedtuple('Target', ['name', 'path'])
 if os.getenv('BACKENDS', '').strip():
     backends = os.getenv('BACKENDS').split(' ')
 else:
-    backends = [k for k, v in iteritems(get_backends()) if v.priority > 0]
+    backends = [k for k, v in iteritems(list_backends()) if v.priority > 0]
 
 
 def cleandir(path, recreate=True):

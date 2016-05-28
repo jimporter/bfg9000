@@ -4,7 +4,7 @@ import warnings
 from packaging.version import LegacyVersion
 from six import iteritems
 
-from .backends import get_backends
+from .backends import list_backends
 from .path import InstallRoot, Path, Root
 from . import platforms
 from . import tools
@@ -101,7 +101,7 @@ class Environment(object):
             setattr(env, i, data[i])
 
         if version <= 5:
-            backend_version = get_backends()[data['backend']].version()
+            backend_version = list_backends()[data['backend']].version()
         else:
             backend_version = LegacyVersion(data['backend_version'])
         setattr(env, 'backend_version', backend_version)

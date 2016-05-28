@@ -5,7 +5,7 @@ import sys
 
 from . import builtins
 from . import log
-from .backends import get_backends
+from .backends import list_backends
 from .build_inputs import BuildInputs
 from .environment import Environment, EnvVersionError
 from .path import abspath, InstallRoot, Path, Root, samefile
@@ -13,7 +13,6 @@ from .platforms import platform_info
 from .version import version
 
 bfgfile = 'build.bfg'
-backends = get_backends()
 logger = log.getLogger(__name__)
 
 description = """
@@ -54,30 +53,6 @@ def execute_script(env, filename=bfgfile):
     return build
 
 
-def build(args):
-    # De-munge the entry point if we're on Windows.
-    bfgpath = Path(os.path.realpath(
-        re.sub('-script.py$', '.exe', sys.argv[0])
-    ))
-    env = Environment(
-        bfgpath=bfgpath,
-        backend=args.backend,
-        backend_version=backends[args.backend].version(),
-        srcdir=args.srcdir,
-        builddir=args.builddir,
-        install_dirs={
-            InstallRoot.prefix: args.prefix,
-            InstallRoot.bindir: args.bindir,
-            InstallRoot.libdir: args.libdir,
-            InstallRoot.includedir: args.includedir,
-        }
-    )
-    env.save(args.builddir.string())
-
-    build = execute_script(env)
-    backends[env.backend].write(env, build)
-
-
 class SrcBuildDirs(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         cwd = '.'
@@ -110,9 +85,40 @@ class BuildDir(argparse.Action):
         setattr(namespace, self.dest, abspath(values))
 
 
+def build(args):
+    backend = list_backends()[args.backend]
+
+    # De-munge the entry point if we're on Windows.
+    bfgpath = Path(os.path.realpath(
+        re.sub('-script.py$', '.exe', sys.argv[0])
+    ))
+
+    env = Environment(
+        bfgpath=bfgpath,
+        backend=args.backend,
+        backend_version=backend.version(),
+        srcdir=args.srcdir,
+        builddir=args.builddir,
+        install_dirs={
+            InstallRoot.prefix: args.prefix,
+            InstallRoot.bindir: args.bindir,
+            InstallRoot.libdir: args.libdir,
+            InstallRoot.includedir: args.includedir,
+        }
+    )
+    env.save(args.builddir.string())
+
+    build = execute_script(env)
+    backend.write(env, build)
+
+
 def regenerate(args):
     try:
         env = Environment.load(args.builddir.string())
+
+        backend = list_backends()[env.backend]
+        build = execute_script(env)
+        backend.write(env, build)
     except Exception as e:
         msg = 'Unable to reload environment'
         if str(e):
@@ -122,11 +128,9 @@ def regenerate(args):
         logger.error(msg)
         return 1
 
-    build = execute_script(env)
-    backends[env.backend].write(env, build)
-
 
 def main():
+    backends = list_backends()
     install_dirs = platform_info().install_dirs
     path_help = 'installation path for {} (default: %(default)r)'
 
