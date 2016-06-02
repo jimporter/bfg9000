@@ -117,6 +117,7 @@ setup(
     entry_points={
         'console_scripts': [
             'bfg9000=bfg9000.driver:main',
+            '9k=bfg9000.driver:simple_main',
             'bfg9000-depfixer=bfg9000.depfixer:main',
         ] + more_scripts,
         'bfg9000.backends': [

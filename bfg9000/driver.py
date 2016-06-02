@@ -35,6 +35,7 @@ is typically run automatically if bfg9000 determines that the build files are
 out of date.
 """
 
+
 def is_srcdir(path):
     return os.path.exists(os.path.join(path, bfgfile))
 
@@ -97,6 +98,43 @@ class BuildDir(argparse.Action):
         setattr(namespace, self.dest, abspath(values))
 
 
+def add_generic_args(parser):
+    parser.add_argument('--version', action='version',
+                        version='%(prog)s ' + version)
+    parser.add_argument('--debug', action='store_true', help=argparse.SUPPRESS)
+    parser.add_argument('-c', '--color', nargs='?', metavar='WHEN',
+                        choices=['always', 'never', 'auto'],
+                        default='auto', const='always',
+                        help=('show colored output (one of: %(choices)s; ' +
+                              'default: %(default)s)'))
+
+
+def add_build_args(parser):
+    backends = list_backends()
+    install_dirs = platform_info().install_dirs
+    path_help = 'installation path for {} (default: %(default)r)'
+
+    parser.add_argument('directory', metavar='DIRECTORY', action=SrcBuildDirs,
+                        help='source or build directory')
+    parser.add_argument('--backend', metavar='BACKEND',
+                        choices=list(backends.keys()),
+                        default=list(backends.keys())[0],
+                        help=('build backend (one of %(choices)s; default: ' +
+                              '%(default)s)'))
+    parser.add_argument('--prefix', type=abspath, metavar='PATH',
+                        default=install_dirs[InstallRoot.prefix],
+                        help='installation prefix (default: %(default)r)')
+    parser.add_argument('--bindir', type=abspath, metavar='PATH',
+                        default=install_dirs[InstallRoot.bindir],
+                        help=path_help.format('executables'))
+    parser.add_argument('--libdir', type=abspath, metavar='PATH',
+                        default=install_dirs[InstallRoot.libdir],
+                        help=path_help.format('libraries'))
+    parser.add_argument('--includedir', type=abspath, metavar='PATH',
+                        default=install_dirs[InstallRoot.includedir],
+                        help=path_help.format('headers'))
+
+
 def build(args):
     backend = list_backends()[args.backend]
 
@@ -142,44 +180,14 @@ def regenerate(args):
 
 
 def main():
-    backends = list_backends()
-    install_dirs = platform_info().install_dirs
-    path_help = 'installation path for {} (default: %(default)r)'
-
     parser = argparse.ArgumentParser(prog='bfg9000', description=description)
-    parser.add_argument('--version', action='version',
-                        version='%(prog)s ' + version)
-    parser.add_argument('--debug', action='store_true', help=argparse.SUPPRESS)
-    parser.add_argument('-c', '--color', nargs='?', metavar='WHEN',
-                        choices=['always', 'never', 'auto'],
-                        default='auto', const='always',
-                        help=('show colored output (one of: %(choices)s; ' +
-                              'default: %(default)s)'))
+    add_generic_args(parser)
 
     subparsers = parser.add_subparsers()
-
     buildp = subparsers.add_parser('build', description=build_desc,
                                    help='create build files')
     buildp.set_defaults(func=build)
-    buildp.add_argument('directory', metavar='DIRECTORY', action=SrcBuildDirs,
-                        help='source or build directory')
-    buildp.add_argument('--backend', metavar='BACKEND',
-                        choices=list(backends.keys()),
-                        default=list(backends.keys())[0],
-                        help=('build backend (one of %(choices)s; default: ' +
-                              '%(default)s)'))
-    buildp.add_argument('--prefix', type=abspath, metavar='PATH',
-                        default=install_dirs[InstallRoot.prefix],
-                        help='installation prefix (default: %(default)r)')
-    buildp.add_argument('--bindir', type=abspath, metavar='PATH',
-                        default=install_dirs[InstallRoot.bindir],
-                        help=path_help.format('executables'))
-    buildp.add_argument('--libdir', type=abspath, metavar='PATH',
-                        default=install_dirs[InstallRoot.libdir],
-                        help=path_help.format('libraries'))
-    buildp.add_argument('--includedir', type=abspath, metavar='PATH',
-                        default=install_dirs[InstallRoot.includedir],
-                        help=path_help.format('headers'))
+    add_build_args(buildp)
 
     regenp = subparsers.add_parser('regenerate', description=regenerate_desc,
                                    help='regenerate build files')
@@ -191,3 +199,14 @@ def main():
     log.init(args.color, debug=args.debug)
 
     return args.func(args)
+
+
+def simple_main():
+    parser = argparse.ArgumentParser(prog='9k', description=build_desc)
+    add_generic_args(parser)
+    add_build_args(parser)
+
+    args = parser.parse_args()
+    log.init(args.color, debug=args.debug)
+
+    return build(args)
