@@ -22,6 +22,18 @@ converts a Python-based build script into the appropriate files for your
 underlying build system of choice.
 """
 
+build_desc = """
+Generate the necessary build files to perform actual builds. If DIRECTORY is a
+source directory (i.e. it contains a build.bfg file), the build files will be
+created in the current directory. Otherwise, DIRECTORY is treated as the build
+directory, and bfg9000 will look for a build.bfg file in the current directory.
+"""
+
+regenerate_desc = """
+Regenerate an existing set of build files needed to perform actual builds. This
+is typically run automatically if bfg9000 determines that the build files are
+out of date.
+"""
 
 def is_srcdir(path):
     return os.path.exists(os.path.join(path, bfgfile))
@@ -146,7 +158,8 @@ def main():
 
     subparsers = parser.add_subparsers()
 
-    buildp = subparsers.add_parser('build')
+    buildp = subparsers.add_parser('build', description=build_desc,
+                                   help='create build files')
     buildp.set_defaults(func=build)
     buildp.add_argument('directory', metavar='DIRECTORY', action=SrcBuildDirs,
                         help='source or build directory')
@@ -168,7 +181,8 @@ def main():
                         default=install_dirs[InstallRoot.includedir],
                         help=path_help.format('headers'))
 
-    regenp = subparsers.add_parser('regenerate')
+    regenp = subparsers.add_parser('regenerate', description=regenerate_desc,
+                                   help='regenerate build files')
     regenp.set_defaults(func=regenerate)
     regenp.add_argument('builddir', metavar='BUILDDIR', nargs='?', default='.',
                         action=BuildDir, help='build directory')
