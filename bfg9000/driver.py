@@ -29,6 +29,11 @@ created in the current directory. Otherwise, DIRECTORY is treated as the build
 directory, and bfg9000 will look for a build.bfg file in the current directory.
 """
 
+buildex_desc = """
+Generate the necessary build files to perform actual builds from a build.bfg
+file in SRCDIR, and place them in BUILDDIR.
+"""
+
 regenerate_desc = """
 Regenerate an existing set of build files needed to perform actual builds. This
 is typically run automatically if bfg9000 determines that the build files are
@@ -40,11 +45,12 @@ def is_srcdir(path):
     return os.path.exists(os.path.join(path, bfgfile))
 
 
-def check_dir(parser, path):
-    if not os.path.exists(path):
-        parser.error("'{}' does not exist".format(path))
-    if not os.path.isdir(path):
-        parser.error("'{}' is not a directory".format(path))
+def check_dir(parser, pathstr, must_exist=True):
+    if os.path.exists(pathstr):
+        if not os.path.isdir(pathstr):
+            parser.error("'{}' is not a directory".format(pathstr))
+    elif must_exist:
+        parser.error("'{}' does not exist".format(pathstr))
 
 
 def execute_script(env, filename=bfgfile):
@@ -66,36 +72,31 @@ def execute_script(env, filename=bfgfile):
     return build
 
 
-class SrcBuildDirs(argparse.Action):
+class Directory(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        check_dir(parser, values, must_exist=False)
+        setattr(namespace, self.dest, abspath(values))
+
+
+class ExistingDirectory(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        check_dir(parser, values)
+        setattr(namespace, self.dest, abspath(values))
+
+
+class DirectoryPair(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         cwd = '.'
 
-        if os.path.exists(values):
-            check_dir(parser, values)
-            if samefile(values, cwd):
-                parser.error('source and build directories must be different')
+        check_dir(parser, values)
 
         if is_srcdir(values):
-            if is_srcdir(cwd):
-                parser.error('build directory must not contain a {} file'
-                             .format(bfgfile))
             srcdir, builddir = values, cwd
         else:
-            if not is_srcdir(cwd):
-                parser.error('source directory must contain a {} file'
-                             .format(bfgfile))
-            if not os.path.exists(values):
-                os.mkdir(values)
             srcdir, builddir = cwd, values
 
         namespace.srcdir = abspath(srcdir)
         namespace.builddir = abspath(builddir)
-
-
-class BuildDir(argparse.Action):
-    def __call__(self, parser, namespace, values, option_string=None):
-        check_dir(parser, values)
-        setattr(namespace, self.dest, abspath(values))
 
 
 def add_generic_args(parser):
@@ -114,8 +115,6 @@ def add_build_args(parser):
     install_dirs = platform_info().install_dirs
     path_help = 'installation path for {} (default: %(default)r)'
 
-    parser.add_argument('directory', metavar='DIRECTORY', action=SrcBuildDirs,
-                        help='source or build directory')
     parser.add_argument('--backend', metavar='BACKEND',
                         choices=list(backends.keys()),
                         default=list(backends.keys())[0],
@@ -135,7 +134,22 @@ def add_build_args(parser):
                         help=path_help.format('headers'))
 
 
-def build(args):
+def build(parser, args):
+    srcstr = args.srcdir.string()
+    buildstr = args.builddir.string()
+
+    if samefile(srcstr, buildstr):
+        parser.error('source and build directories must be different')
+    if not is_srcdir(srcstr):
+        parser.error('source directory must contain a {} file'
+                     .format(bfgfile))
+    if is_srcdir(buildstr):
+        parser.error('build directory must not contain a {} file'
+                     .format(bfgfile))
+
+    if not os.path.exists(buildstr):
+        os.mkdir(buildstr)
+
     backend = list_backends()[args.backend]
 
     # De-munge the entry point if we're on Windows.
@@ -162,7 +176,11 @@ def build(args):
     backend.write(env, build)
 
 
-def regenerate(args):
+def regenerate(parser, args):
+    if is_srcdir(args.builddir.string()):
+        parser.error('build directory must not contain a {} file'
+                     .format(bfgfile))
+
     try:
         env = Environment.load(args.builddir.string())
 
@@ -184,29 +202,43 @@ def main():
     add_generic_args(parser)
 
     subparsers = parser.add_subparsers()
+
     buildp = subparsers.add_parser('build', description=build_desc,
                                    help='create build files')
     buildp.set_defaults(func=build)
+    buildp.add_argument('directory', metavar='DIRECTORY', action=DirectoryPair,
+                        help='source or build directory')
     add_build_args(buildp)
+
+    buildexp = subparsers.add_parser('buildex', description=buildex_desc,
+                                     help='create build files')
+    buildexp.add_argument('srcdir', metavar='SRCDIR', action=ExistingDirectory,
+                          help='source directory')
+    buildexp.add_argument('builddir', metavar='BUILDDIR', action=Directory,
+                          help='build directory')
+    buildexp.set_defaults(func=build)
+    add_build_args(buildexp)
 
     regenp = subparsers.add_parser('regenerate', description=regenerate_desc,
                                    help='regenerate build files')
     regenp.set_defaults(func=regenerate)
     regenp.add_argument('builddir', metavar='BUILDDIR', nargs='?', default='.',
-                        action=BuildDir, help='build directory')
+                        action=ExistingDirectory, help='build directory')
 
     args = parser.parse_args()
     log.init(args.color, debug=args.debug)
 
-    return args.func(args)
+    return args.func(parser, args)
 
 
 def simple_main():
     parser = argparse.ArgumentParser(prog='9k', description=build_desc)
+    parser.add_argument('directory', metavar='DIRECTORY', action=DirectoryPair,
+                        help='source or build directory')
     add_generic_args(parser)
     add_build_args(parser)
 
     args = parser.parse_args()
     log.init(args.color, debug=args.debug)
 
-    return build(args)
+    return build(parser, args)
