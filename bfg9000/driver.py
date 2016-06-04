@@ -22,19 +22,19 @@ converts a Python-based build script into the appropriate files for your
 underlying build system of choice.
 """
 
-build_desc = """
+configure_desc = """
 Generate the necessary build files to perform actual builds. If DIRECTORY is a
 source directory (i.e. it contains a build.bfg file), the build files will be
 created in the current directory. Otherwise, DIRECTORY is treated as the build
 directory, and bfg9000 will look for a build.bfg file in the current directory.
 """
 
-buildex_desc = """
+configureinto_desc = """
 Generate the necessary build files to perform actual builds from a build.bfg
 file in SRCDIR, and place them in BUILDDIR.
 """
 
-regenerate_desc = """
+refresh_desc = """
 Regenerate an existing set of build files needed to perform actual builds. This
 is typically run automatically if bfg9000 determines that the build files are
 out of date.
@@ -110,7 +110,7 @@ def add_generic_args(parser):
                               'default: %(default)s)'))
 
 
-def add_build_args(parser):
+def add_configure_args(parser):
     backends = list_backends()
     install_dirs = platform_info().install_dirs
     path_help = 'installation path for {} (default: %(default)r)'
@@ -134,7 +134,7 @@ def add_build_args(parser):
                         help=path_help.format('headers'))
 
 
-def build(parser, args):
+def configure(parser, args):
     srcstr = args.srcdir.string()
     buildstr = args.builddir.string()
 
@@ -176,7 +176,7 @@ def build(parser, args):
     backend.write(env, build)
 
 
-def regenerate(parser, args):
+def refresh(parser, args):
     if is_srcdir(args.builddir.string()):
         parser.error('build directory must not contain a {} file'
                      .format(bfgfile))
@@ -203,27 +203,32 @@ def main():
 
     subparsers = parser.add_subparsers()
 
-    buildp = subparsers.add_parser('build', description=build_desc,
-                                   help='create build files')
-    buildp.set_defaults(func=build)
-    buildp.add_argument('directory', metavar='DIRECTORY', action=DirectoryPair,
+    conf_p = subparsers.add_parser(
+        'configure', description=configure_desc, help='create build files'
+    )
+    conf_p.set_defaults(func=configure)
+    conf_p.add_argument('directory', metavar='DIRECTORY', action=DirectoryPair,
                         help='source or build directory')
-    add_build_args(buildp)
+    add_configure_args(conf_p)
 
-    buildexp = subparsers.add_parser('buildex', description=buildex_desc,
-                                     help='create build files')
-    buildexp.add_argument('srcdir', metavar='SRCDIR', action=ExistingDirectory,
-                          help='source directory')
-    buildexp.add_argument('builddir', metavar='BUILDDIR', action=Directory,
-                          help='build directory')
-    buildexp.set_defaults(func=build)
-    add_build_args(buildexp)
+    confinto_p = subparsers.add_parser(
+        'configure-into', description=configureinto_desc,
+        help='create build files in a chosen directory'
+    )
+    confinto_p.add_argument('srcdir', metavar='SRCDIR',
+                            action=ExistingDirectory, help='source directory')
+    confinto_p.add_argument('builddir', metavar='BUILDDIR',
+                            action=Directory, help='build directory')
+    confinto_p.set_defaults(func=configure)
+    add_configure_args(confinto_p)
 
-    regenp = subparsers.add_parser('regenerate', description=regenerate_desc,
-                                   help='regenerate build files')
-    regenp.set_defaults(func=regenerate)
-    regenp.add_argument('builddir', metavar='BUILDDIR', nargs='?', default='.',
-                        action=ExistingDirectory, help='build directory')
+    refresh_p = subparsers.add_parser(
+        'refresh', description=refresh_desc, help='regenerate build files'
+    )
+    refresh_p.set_defaults(func=refresh)
+    refresh_p.add_argument('builddir', metavar='BUILDDIR', nargs='?',
+                           default='.', action=ExistingDirectory,
+                           help='build directory')
 
     args = parser.parse_args()
     log.init(args.color, debug=args.debug)
@@ -232,13 +237,13 @@ def main():
 
 
 def simple_main():
-    parser = argparse.ArgumentParser(prog='9k', description=build_desc)
+    parser = argparse.ArgumentParser(prog='9k', description=configure_desc)
     parser.add_argument('directory', metavar='DIRECTORY', action=DirectoryPair,
                         help='source or build directory')
     add_generic_args(parser)
-    add_build_args(parser)
+    add_configure_args(parser)
 
     args = parser.parse_args()
     log.init(args.color, debug=args.debug)
 
-    return build(parser, args)
+    return configure(parser, args)

@@ -11,7 +11,7 @@ class Bfg9000(object):
         self.command = env.getvar('BFG9000', env.bfgpath)
 
     def regenerate(self, cmd, builddir):
-        return [cmd, 'regenerate', builddir]
+        return [cmd, 'refresh', builddir]
 
 
 @tool('depfixer')
