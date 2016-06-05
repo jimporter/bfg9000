@@ -9,14 +9,22 @@ run your actual builds.
 ## Your first build
 
 Invoking bfg9000 is simple. Assuming you have an existing project that uses
-bfg9000, just call `bfg9000 srcdir builddir` and it will generate the final
+bfg9000, just call `bfg9000 configure builddir` and it will generate the final
 build script (`build.ninja` in this case) in `builddir` to use for
 building your project:
 
 ```sh
-$ bfg9000 path/to/src/ build/
-$ cd build
+$ cd /path/to/src/
+$ bfg9000 configure build/
+$ cd build/
 $ ninja
+```
+
+Since the configure command is easily the most common thing to run when using
+bfg9000, you can use the following shorthand instead of `bfg9000 configure`:
+
+```sh
+$ 9k build/
 ```
 
 !!! note
@@ -39,12 +47,15 @@ Second, simplifies building in multiple configurations, a very useful feature
 for development; you can easily have debug and optimized builds sitting
 side-by-side.
 
-In our example above, we explicitly specified both the source and build
-directories. However, for convenience, only one of them is required. If you're
-already in a source directory (i.e. a directory which contains a `build.bfg`
-file), then you can simply say `bfg9000 builddir`. If you're in a build
-directory (i.e. a directory which does *not* contain a `build.bfg` file), then
-you can instead say `bfg9000 srcdir`.
+In our example above, we specified the build directory to place the final build
+files. However, you can also run bfg9000 *from* the build directory, in which
+case you'd run `bfg9000 configure srcdir/` (or, equivalently, `9k srcdir/`). If
+neither the source nor build directories are your current working directory, you
+can run:
+
+```sh
+bfg9000 configure-into srcdir/ builddir/
+```
 
 ## Selecting a backend
 
@@ -57,7 +68,7 @@ can explicitly select a backend with the `--backend` option. For instance, to
 build a Makefile even if Ninja is installed:
 
 ```sh
-$ bfg9000 --backend=make srcdir builddir
+$ bfg9000 configure builddir/ --backend=make
 ```
 
 ## Setting options

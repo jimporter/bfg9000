@@ -23,6 +23,7 @@ in progress
 - Add support for building a distribution of the sources (`make dist`)
 
 ### Breaking changes
+- Configuring a build is now performed by `bfg9000 configure DIRECTORY`
 - `env.compiler(lang)` replaced by `env.builder(lang).compiler`
 - `env.linker(lang, mode)` replaced by `env.builder(lang).linker(mode)`
 - `env.compiler(lang).flavor` replaced by `env.builder(lang).flavor`

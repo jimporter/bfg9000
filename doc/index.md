@@ -40,8 +40,9 @@ To build this executable, we need to create the actual build files and then
 run them:
 
 ```sh
-$ bfg9000 path/to/src/ build/
-$ cd build
+$ cd /path/to/src/
+$ bfg9000 configure build/
+$ cd build/
 $ ninja
 ```
 
