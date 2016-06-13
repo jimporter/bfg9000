@@ -26,8 +26,8 @@ Create a reference to an existing directory named *name*. This allows you to
 refer to an arbitrary subfolder of your source directory. The arguments
 *include*, *exclude*, and *filter* are as per
 [*find_files*](#find_filespath-name-type-extra-exclude-flat-filter-cache). Any
-matching files will be added to the project's
-[distribution](writing.md#distributing-your-source).
+matching files will be added to the project's [source
+distribution](writing.md#distributing-your-source).
 
 ### extra_dist([*files*], [*dirs*])
 
@@ -51,8 +51,8 @@ project. This can then be used in the *include* argument when
 [compiling](#object_filename-file-extra_deps) a source file. The arguments
 *include*, *exclude*, and *filter* are as per
 [*find_files*](#find_filespath-name-type-extra-exclude-flat-filter-cache). Any
-matching files will be added to the project's
-[distribution](writing.md#distributing-your-source).
+matching files will be added to the project's [source
+distribution](writing.md#distributing-your-source).
 
 If *system* is *True*, this directory will be treated as a
 [system directory](https://gcc.gnu.org/onlinedocs/cpp/System-Headers.html) for
@@ -513,7 +513,7 @@ possible enum values are:
 * *include*: Include this file in the results
 * *exclude*: Don't include this file in the results
 * *not_now*: Don't include this file in the results, but do include is in the
-  [distribution](writing.md#distributing-your-source)
+  [source distribution](writing.md#distributing-your-source)
 
 ### find_files([*path*], [*name*], [*type*], [*extra*], [*exclude*], [*flat*], [*filter*], [*cache*])
 
@@ -528,7 +528,7 @@ following arguments may be specified:
   only directories, or `'*'` to find either
 * *extra*: A glob (or list of globs) to match extra files (which will not be
   returned from *find_files* but will be added to the
-  [distribution](writing.md#distributing-your-source))
+  [source distribution](writing.md#distributing-your-source))
 * *exclude*: A glob (or list of globs) of files to exclude from results; by
   default, `.#*`, `*~`, and `#*#` are exluded
 * *flat*: If true, *find_files* will not recurse into subdirectories; otherwise,
@@ -538,6 +538,8 @@ following arguments may be specified:
   default, this is [*filter_by_platform*](#filter_by_platformname-path-type)
 * *cache*: If true (the default), cache the results so that any changes to will
   regenerate the build scripts for the project
+* *dist*: If true (the default), all files found by this function will
+  automatically be added to the source distribution
 
 The *cache* argument is particularly important. It allows you to add or remove
 source files and not have to worry about manually rerunning bfg9000.
@@ -546,5 +548,5 @@ source files and not have to worry about manually rerunning bfg9000.
 
 Set the name (and optionally the version) of the project. If you don't call
 this function to specify a project name, it defaults to the name of the
-project's source directory. This is primarily useful for creating
-[distributions](writing.md#distributing-your-source).
+project's source directory. This is primarily useful for creating [source
+distributions](writing.md#distributing-your-source).

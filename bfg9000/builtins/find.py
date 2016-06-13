@@ -131,7 +131,7 @@ def filter_by_platform(env, name, path, type):
 @builtin.globals('builtins', 'build_inputs', 'env')
 def find_files(builtins, build_inputs, env, path='.', name='*', type='*',
                extra=None, exclude=exclude_globs, filter=filter_by_platform,
-               flat=False, cache=True):
+               flat=False, cache=True, dist=True):
     glob_filter = _filter_from_glob(type, name, extra, exclude)
     if filter:
         if filter == filter_by_platform:
@@ -144,10 +144,11 @@ def find_files(builtins, build_inputs, env, path='.', name='*', type='*',
 
     results, dist_results, seen_dirs = _find_files(path, final_filter, flat)
 
-    for i in dist_results:
-        builtins['generic_file'](i)
     if cache:
         build_inputs['find_dirs'].update(seen_dirs)
+    if dist:
+        for i in dist_results:
+            builtins['generic_file'](i)
     return results
 
 
