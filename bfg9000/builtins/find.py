@@ -68,18 +68,21 @@ def _walk_recursive(top):
                 yield i
 
 
-def _filter_from_glob(match_type, match_names, match_extra):
-    matches = [re.compile(fnmatch.translate(i)) for i in iterate(match_names)]
-    extra = [re.compile(fnmatch.translate(i)) for i in iterate(match_extra)]
+def _filter_from_glob(match_type, matches, extra, exclude):
+    matches = [re.compile(fnmatch.translate(i)) for i in iterate(matches)]
+    extra = [re.compile(fnmatch.translate(i)) for i in iterate(extra)]
+    exclude = [re.compile(fnmatch.translate(i)) for i in iterate(exclude)]
 
-    def f(name, path, type):
+    def fn(name, path, type):
         if match_type in [type, '*']:
+            if any(ex.match(name) for ex in exclude):
+                return FindResult.exclude
             if any(ex.match(name) for ex in matches):
                 return FindResult.include
             elif any(ex.match(name) for ex in extra):
                 return FindResult.not_now
         return FindResult.exclude
-    return f
+    return fn
 
 
 def _find_files(paths, filter, flat):
@@ -126,8 +129,9 @@ def filter_by_platform(env, name, path, type):
 
 @builtin.globals('builtins', 'build_inputs', 'env')
 def find_files(builtins, build_inputs, env, path='.', name='*', type='*',
-               extra=None, filter=filter_by_platform, flat=False, cache=True):
-    glob_filter = _filter_from_glob(type, name, extra)
+               extra=None, exclude=['.*#', '*~', '#*#'],
+               filter=filter_by_platform, flat=False, cache=True):
+    glob_filter = _filter_from_glob(type, name, extra, exclude)
     if filter:
         if filter == filter_by_platform:
             filter = builtins['filter_by_platform']

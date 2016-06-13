@@ -493,20 +493,20 @@ known platform name that *doesn't* match the target platform. Known platform
 names are: `'posix'`,`'linux'`, `'darwin'`, `'cygwin'`, `'windows'`.
 
 This is the default *filter* for
-[*find_files*](#find_filespath-name-type-extra-flat-filter-cache).
+[*find_files*](#find_filespath-name-type-extra-exclude-flat-filter-cache).
 
 ### FindResult
 
 An enum to be used as the result of a filter function for
-[*find_files*](#find_filespath-name-type-extra-flat-filter-cache). The possible
-enum values are:
+[*find_files*](#find_filespath-name-type-extra-exclude-flat-filter-cache). The
+possible enum values are:
 
 * *include*: Include this file in the results
 * *exclude*: Don't include this file in the results
 * *not_now*: Don't include this file in the results, but do include is in the
   [distribution](writing.md#distributing-your-source)
 
-### find_files([*path*], [*name*], [*type*], [*extra*], [*flat*], [*filter*], [*cache*])
+### find_files([*path*], [*name*], [*type*], [*extra*], [*exclude*], [*flat*], [*filter*], [*cache*])
 
 Find files in *path* whose name matches the glob (or list of globs) *name*. The
 following arguments may be specified:
@@ -520,6 +520,8 @@ following arguments may be specified:
 * *extra*: A glob (or list of globs) to match extra files (which will not be
   returned from *find_files* but will be added to the
   [distribution](writing.md#distributing-your-source))
+* *exclude*: A glob (or list of globs) of files to exclude from results; by
+  default, `.#*`, `*~`, and `#*#` are exluded
 * *flat*: If true, *find_files* will not recurse into subdirectories; otherwise,
   (the default) it will
 * *filter*: A predicate taking a filename, relative path, and file type, and
