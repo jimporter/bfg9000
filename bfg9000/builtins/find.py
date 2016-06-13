@@ -15,6 +15,7 @@ from ..platforms import known_platforms
 
 build_input('find_dirs')(lambda build_inputs, env: set())
 depfile_name = '.bfg_find_deps'
+exclude_globs = ['.*#', '*~', '#*#']
 
 
 @builtin
@@ -129,8 +130,8 @@ def filter_by_platform(env, name, path, type):
 
 @builtin.globals('builtins', 'build_inputs', 'env')
 def find_files(builtins, build_inputs, env, path='.', name='*', type='*',
-               extra=None, exclude=['.*#', '*~', '#*#'],
-               filter=filter_by_platform, flat=False, cache=True):
+               extra=None, exclude=exclude_globs, filter=filter_by_platform,
+               flat=False, cache=True):
     glob_filter = _filter_from_glob(type, name, extra, exclude)
     if filter:
         if filter == filter_by_platform:

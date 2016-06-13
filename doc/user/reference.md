@@ -20,10 +20,14 @@ command('script', cmd=['python', source_file('script.py')])
 Using [*source_file*](#source_filename-lang) here allows you to specify that the
 file is found in the *source directory*, rather than the build directory.
 
-### directory(*name*)
+### directory(*name*, [*include*], [*exclude*], [*filter*])
 
 Create a reference to an existing directory named *name*. This allows you to
-refer to an arbitrary subfolder of your source directory.
+refer to an arbitrary subfolder of your source directory. The arguments
+*include*, *exclude*, and *filter* are as per
+[*find_files*](#find_filespath-name-type-extra-exclude-flat-filter-cache). Any
+matching files will be added to the project's
+[distribution](writing.md#distributing-your-source).
 
 ### extra_dist([*files*], [*dirs*])
 
@@ -40,12 +44,17 @@ Create a reference to an existing file named *name*.
 Create a reference to an existing header named *name*. This is useful if you'd
 like to [install](#install) a single header file for your project.
 
-### header_directory(*name*, [*system*])
+### header_directory(*name*, [*include*], [*exclude*], [*filter*], [*system*])
 
 Create a reference to a directory named *name* containing header files for the
 project. This can then be used in the *include* argument when
-[compiling](#object_filename-file-extra_deps) a source file. If *system* is
-*True*, this directory will be treated as a
+[compiling](#object_filename-file-extra_deps) a source file. The arguments
+*include*, *exclude*, and *filter* are as per
+[*find_files*](#find_filespath-name-type-extra-exclude-flat-filter-cache). Any
+matching files will be added to the project's
+[distribution](writing.md#distributing-your-source).
+
+If *system* is *True*, this directory will be treated as a
 [system directory](https://gcc.gnu.org/onlinedocs/cpp/System-Headers.html) for
 compilers that support this.
 
