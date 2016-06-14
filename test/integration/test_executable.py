@@ -29,4 +29,4 @@ class TestExecutable(IntegrationTest):
         self.build('dist')
         self.assertExists(dist)
         with tarfile.open(self.target_path(dist)) as t:
-            self.assertEqual(t.getnames(), ['build.bfg', 'simple.cpp'])
+            self.assertEqual(set(t.getnames()), {'build.bfg', 'simple.cpp'})

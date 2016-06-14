@@ -75,7 +75,7 @@ def _filter_from_glob(match_type, matches, extra, exclude):
     exclude = [re.compile(fnmatch.translate(i)) for i in iterate(exclude)]
 
     def fn(name, path, type):
-        if match_type in [type, '*']:
+        if match_type in {type, '*'}:
             if any(ex.match(name) for ex in exclude):
                 return FindResult.exclude
             if any(ex.match(name) for ex in matches):

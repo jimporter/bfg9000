@@ -1,4 +1,5 @@
 import os
+import tarfile
 
 from .integration import *
 pjoin = os.path.join
@@ -17,6 +18,19 @@ class TestSubdirs(IntegrationTest):
     def test_build(self):
         self.build()
         self.assertOutput([executable('sub/program')], 'hello, library!\n')
+
+    @skip_if_backend('msbuild')
+    def test_dist(self):
+        dist = output_file('05_subdirs.tar.gz')
+        self.build('dist')
+        self.assertExists(dist)
+        with tarfile.open(self.target_path(dist)) as t:
+            self.assertEqual(set(t.getnames()), {
+                'build.bfg',
+                os.path.join('include', 'library.hpp'),
+                os.path.join('src', 'library.cpp'),
+                os.path.join('src', 'program.cpp'),
+            })
 
     @only_if_backend('make')
     def test_dir_sentinels(self):
