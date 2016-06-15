@@ -1,6 +1,7 @@
 *.pyc
 /bfg9000.egg-info/
 /build/
+/deb_dist/
 /dist/
 /site/
 /test/stage/

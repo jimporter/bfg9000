@@ -1,0 +1,7 @@
+diff --git a/debian/pydist-overrides b/debian/pydist-overrides
+new file mode 100644
+index 0000000..b9c3876
+--- /dev/null
++++ b/debian/pydist-overrides
+@@ -0,0 +1 @@
++doppel doppel
