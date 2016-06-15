@@ -106,7 +106,7 @@ def _find_files(paths, filter, flat):
     # wouldn't be able to include a subset of their contents (--no-recursion
     # exists, but doesn't play nice with header_directory).
     paths = listify(paths)
-    do_filter(( (p, p) for p in paths ), 'd')
+    do_filter(( (os.path.basename(p), p) for p in paths ), 'd')
     for p in paths:
         for base, dirs, files in walker(p):
             seen_dirs.append(base)
