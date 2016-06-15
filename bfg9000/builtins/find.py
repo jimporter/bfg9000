@@ -92,26 +92,22 @@ def _find_files(paths, filter, flat):
 
     results, dist_results, seen_dirs = [], [], []
 
-    def do_filter(files, type, always_dist=False):
+    def do_filter(files, type):
         for name, path in files:
             matched = filter(name, path, type)
             if matched == FindResult.include:
-                if always_dist:
-                    dist_results.append(path)
+                dist_results.append(path)
                 results.append(path)
             elif matched == FindResult.not_now:
                 dist_results.append(path)
 
-    # XXX: We don't automatically add directories to dist; if we did, we
-    # wouldn't be able to include a subset of their contents (--no-recursion
-    # exists, but doesn't play nice with header_directory).
     paths = listify(paths)
     do_filter(( (os.path.basename(p), p) for p in paths ), 'd')
     for p in paths:
         for base, dirs, files in walker(p):
             seen_dirs.append(base)
             do_filter(dirs, 'd')
-            do_filter(files, 'f', always_dist=True)
+            do_filter(files, 'f')
 
     return results, dist_results, seen_dirs
 

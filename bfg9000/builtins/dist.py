@@ -24,7 +24,7 @@ def _dist_command(backend, build_inputs, buildfile, env):
     else:
         dstname = '{}.tar.gz'.format(project.name)
     return [tar(cmd, [i.path.relpath(srcdir) for i in build_inputs.sources()],
-                Path(dstname), srcdir)]
+                Path(dstname), base=srcdir, recurse=False)]
 
 
 @make.post_rule

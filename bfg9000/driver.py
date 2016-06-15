@@ -138,8 +138,6 @@ def configure(parser, args):
     srcstr = args.srcdir.string()
     buildstr = args.builddir.string()
 
-    if samefile(srcstr, buildstr):
-        parser.error('source and build directories must be different')
     if not is_srcdir(srcstr):
         parser.error('source directory must contain a {} file'
                      .format(bfgfile))
@@ -147,7 +145,10 @@ def configure(parser, args):
         parser.error('build directory must not contain a {} file'
                      .format(bfgfile))
 
-    if not os.path.exists(buildstr):
+    if os.path.exists(buildstr):
+        if samefile(srcstr, buildstr):
+            parser.error('source and build directories must be different')
+    else:
         os.mkdir(buildstr)
 
     backend = list_backends()[args.backend]

@@ -12,8 +12,10 @@ class Tar(object):
         self.command = env.getvar('TAR', 'tar')
         check_which(self.command)
 
-    def __call__(self, cmd, src, dst, base=None):
+    def __call__(self, cmd, src, dst, base=None, recurse=True):
         result = [cmd, '-czf', dst]
+        if not recurse:
+            result.append('--no-recursion')
         if base:
             result.extend(['-C', base])
         result.extend(iterate(src))

@@ -30,9 +30,12 @@ class TestFindFiles(IntegrationTest):
                 os.path.join('src', 'hello', 'hello.cpp'),
                 os.path.join('src', 'hello', 'hello.hpp'),
                 os.path.join('src', 'hello', 'main.cpp'),
+                os.path.join('src', 'goodbye'),
                 os.path.join('src', 'goodbye', 'main.cpp'),
+                os.path.join('src', 'goodbye', 'english'),
                 os.path.join('src', 'goodbye', 'english', 'goodbye.cpp'),
                 os.path.join('src', 'goodbye', 'english', 'goodbye.hpp'),
+                os.path.join('src', 'goodbye', 'german'),
                 os.path.join('src', 'goodbye', 'german', 'goodbye.cpp'),
                 os.path.join('src', 'goodbye', 'german', 'goodbye.hpp'),
             })
