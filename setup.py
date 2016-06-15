@@ -2,6 +2,7 @@ import os
 import platform
 import re
 import subprocess
+import sys
 from setuptools import setup, find_packages, Command
 
 from bfg9000.version import version
@@ -56,6 +57,9 @@ except:
 more_scripts = []
 more_requires = []
 
+if sys.version_info < (3, 4):
+    more_requires.append('enum34')
+
 platform_name = platform.system()
 if platform_name == 'Windows':
     more_scripts.append('bfg9000-setenv=bfg9000.setenv:main')
@@ -104,8 +108,7 @@ setup(
     packages=find_packages(exclude=['test', 'test.*']),
 
     install_requires=(
-        ['colorama', 'doppel', 'enum-compat', 'packaging', 'six'] +
-        more_requires
+        ['colorama', 'doppel', 'packaging', 'six'] + more_requires
     ),
     extras_require={
         'deploy': ['pypandoc'],
