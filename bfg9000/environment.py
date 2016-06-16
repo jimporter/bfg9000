@@ -15,7 +15,7 @@ class EnvVersionError(RuntimeError):
 
 
 class Environment(object):
-    version = 6
+    version = 7
     envfile = '.bfg_environ'
 
     def __new__(cls, *args, **kwargs):
@@ -24,9 +24,9 @@ class Environment(object):
         env.__tools = {}
         return env
 
-    def __init__(self, bfgpath, backend, backend_version, srcdir, builddir,
+    def __init__(self, bfgdir, backend, backend_version, srcdir, builddir,
                  install_dirs):
-        self.bfgpath = bfgpath
+        self.bfgdir = bfgdir
         self.backend = backend
         self.backend_version = backend_version
 
@@ -73,7 +73,7 @@ class Environment(object):
             json.dump({
                 'version': self.version,
                 'data': {
-                    'bfgpath': self.bfgpath.to_json(),
+                    'bfgdir': self.bfgdir.to_json(),
                     'platform': self.platform.name,
                     'backend': self.backend,
                     'backend_version': str(self.backend_version),
@@ -95,22 +95,36 @@ class Environment(object):
         if version > cls.version:
             raise EnvVersionError('saved version exceeds expected version')
 
+        # Upgrade from older versions of the Environment if necessary.
+
+        # v5 converts srcdir and builddir to Path objects internally.
+        if version < 5:
+            for i in ('srcdir', 'builddir'):
+                data[i] = Path(data[i]).to_json()
+
+        # v6 adds persistence for the backend's version and converts bfgpath to
+        # a Path object internally.
+        if version < 6:
+            backend = list_backends()[data['backend']]
+            data['backend_version'] = str(backend.version())
+            data['bfgpath'] = Path(data['bfgpath']).to_json()
+
+        # v7 replaces bfgpath with bfgdir.
+        if version < 7:
+            bfgdir = Path.from_json(data['bfgpath']).parent()
+            data['bfgdir'] = bfgdir.to_json()
+            del data['bfgpath']
+
+        # Now that we've upgraded, initialize the Environment object.
         env = Environment.__new__(Environment)
 
         for i in ['backend', 'variables']:
             setattr(env, i, data[i])
 
-        if version <= 5:
-            backend_version = list_backends()[data['backend']].version()
-        else:
-            backend_version = LegacyVersion(data['backend_version'])
-        setattr(env, 'backend_version', backend_version)
+        setattr(env, 'backend_version', LegacyVersion(data['backend_version']))
 
-        for i in ['bfgpath', 'srcdir', 'builddir']:
-            if version <= 4 or (version <= 5 and i == 'bfgpath'):
-                setattr(env, i, Path(data[i]))
-            else:
-                setattr(env, i, Path.from_json(data[i]))
+        for i in ('bfgdir', 'srcdir', 'builddir'):
+            setattr(env, i, Path.from_json(data[i]))
 
         env.platform = platforms.platform_info(data['platform'])
         env.install_dirs = {

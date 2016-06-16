@@ -1,6 +1,5 @@
 import argparse
 import os
-import re
 import sys
 
 from . import builtins
@@ -152,14 +151,11 @@ def configure(parser, args):
         os.mkdir(buildstr)
 
     backend = list_backends()[args.backend]
-
-    # De-munge the entry point if we're on Windows.
-    bfgpath = Path(os.path.realpath(
-        re.sub('-script.py$', '.exe', sys.argv[0])
-    ))
+    # Get the bin directory holding bfg's executables.
+    bfgdir = Path(os.path.dirname(sys.argv[0]))
 
     env = Environment(
-        bfgpath=bfgpath,
+        bfgdir=bfgdir,
         backend=args.backend,
         backend_version=backend.version(),
         srcdir=args.srcdir,
