@@ -23,32 +23,32 @@ class TestIsIterable(unittest.TestCase):
 
 class TestIterate(unittest.TestCase):
     def test_none(self):
-        self.assertEquals(list(iterate(None)), [])
+        self.assertEqual(list(iterate(None)), [])
 
     def test_one(self):
-        self.assertEquals(list(iterate('foo')), ['foo'])
+        self.assertEqual(list(iterate('foo')), ['foo'])
 
     def test_many(self):
-        self.assertEquals(list(iterate(['foo', 'bar'])), ['foo', 'bar'])
+        self.assertEqual(list(iterate(['foo', 'bar'])), ['foo', 'bar'])
 
 
 class TestListify(unittest.TestCase):
     def test_none(self):
-        self.assertEquals(listify(None), [])
+        self.assertEqual(listify(None), [])
 
     def test_one(self):
-        self.assertEquals(listify('foo'), ['foo'])
+        self.assertEqual(listify('foo'), ['foo'])
 
     def test_many(self):
         x = ['foo', 'bar']
         res = listify(x)
-        self.assertEquals(res, x)
+        self.assertEqual(res, x)
         self.assertTrue(x is res)
 
     def test_always_copy(self):
         x = ['foo', 'bar']
         res = listify(x, always_copy=True)
-        self.assertEquals(res, x)
+        self.assertEqual(res, x)
         self.assertTrue(x is not res)
 
 
@@ -65,42 +65,42 @@ class TestFirst(unittest.TestCase):
 
 class TestUnlistify(unittest.TestCase):
     def test_none(self):
-        self.assertEquals(unlistify([]), None)
+        self.assertEqual(unlistify([]), None)
 
     def test_one(self):
-        self.assertEquals(unlistify(['foo']), 'foo')
+        self.assertEqual(unlistify(['foo']), 'foo')
 
     def test_many(self):
         x = ['foo', 'bar']
         res = unlistify(x)
-        self.assertEquals(res, x)
+        self.assertEqual(res, x)
         self.assertTrue(x is res)
 
 
 class TestTween(unittest.TestCase):
     def test_none(self):
-        self.assertEquals(list(tween([], ',')), [])
-        self.assertEquals(list(tween([], ',', '[', ']')), [])
+        self.assertEqual(list(tween([], ',')), [])
+        self.assertEqual(list(tween([], ',', '[', ']')), [])
 
     def test_one(self):
-        self.assertEquals(list(tween([1], ',')), [1])
-        self.assertEquals(list(tween([1], ',', '[', ']')), ['[', 1, ']'])
+        self.assertEqual(list(tween([1], ',')), [1])
+        self.assertEqual(list(tween([1], ',', '[', ']')), ['[', 1, ']'])
 
     def test_many(self):
-        self.assertEquals(list(tween([1, 2], ',')), [1, ',', 2])
-        self.assertEquals(list(tween([1, 2], ',', '[', ']')),
-                          ['[', 1, ',', 2, ']'])
+        self.assertEqual(list(tween([1, 2], ',')), [1, ',', 2])
+        self.assertEqual(list(tween([1, 2], ',', '[', ']')),
+                         ['[', 1, ',', 2, ']'])
 
 
 class TestUniques(unittest.TestCase):
     def test_none(self):
-        self.assertEquals(uniques([]), [])
+        self.assertEqual(uniques([]), [])
 
     def test_one(self):
-        self.assertEquals(uniques([1]), [1])
+        self.assertEqual(uniques([1]), [1])
 
     def test_many(self):
-        self.assertEquals(uniques([1, 2, 1, 3]), [1, 2, 3])
+        self.assertEqual(uniques([1, 2, 1, 3]), [1, 2, 3])
 
 
 class TestMergeIntoDict(unittest.TestCase):
