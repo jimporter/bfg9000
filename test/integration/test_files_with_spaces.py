@@ -24,7 +24,5 @@ class TestFilesWithSpaces(IntegrationTest):
 
     @skip_if_backend('msbuild')
     def test_script(self):
-        assertRegex(self,
-            self.build('script'),
-            re.compile('^hello, world!$', re.MULTILINE)
-        )
+        assertRegex(self, self.build('script'),
+                    re.compile('^hello, world!$', re.MULTILINE))

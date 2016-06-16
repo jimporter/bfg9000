@@ -12,22 +12,16 @@ class TestCommand(IntegrationTest):
         )
 
     def test_hello(self):
-        assertRegex(self,
-            self.build('hello'),
-            re.compile(r'^\s*hello$', re.MULTILINE)
-        )
+        assertRegex(self, self.build('hello'),
+                    re.compile(r'^\s*hello$', re.MULTILINE))
 
     def test_world(self):
-        assertRegex(self,
-            self.build('world'),
-            re.compile(r'^\s*world$', re.MULTILINE)
-        )
+        assertRegex(self, self.build('world'),
+                    re.compile(r'^\s*world$', re.MULTILINE))
 
     def test_script(self):
-        assertRegex(self,
-            self.build('script'),
-            re.compile(r'^\s*hello, world!$', re.MULTILINE)
-        )
+        assertRegex(self, self.build('script'),
+                    re.compile(r'^\s*hello, world!$', re.MULTILINE))
         self.assertExists(output_file('file'))
 
     def test_alias(self):

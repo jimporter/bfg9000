@@ -15,8 +15,6 @@ class TestEnvVars(IntegrationTest):
 
     @skip_if_backend('msbuild')
     def test_command(self):
-        assertRegex(self,
-            self.build('script'),
-            re.compile('^hello script$', re.MULTILINE)
-        )
+        assertRegex(self, self.build('script'),
+                    re.compile('^hello script$', re.MULTILINE))
         self.assertExists(os.path.join(self.builddir, 'file'))
