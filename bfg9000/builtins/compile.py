@@ -111,7 +111,7 @@ class CompileHeader(Compile):
                 text = '#include "{}"'.format(self.file.path.basename())
                 EchoFile(build, source, text)
                 extra_options = self.builder.args([
-                    Directory(self.file.path.parent())
+                    Directory(self.file.path.parent(), None)
                 ])
             else:
                 source = objectify(source, SourceFile, builtins['source_file'],

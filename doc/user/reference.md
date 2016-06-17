@@ -25,8 +25,8 @@ file is found in the *source directory*, rather than the build directory.
 Create a reference to an existing directory named *name*. This allows you to
 refer to an arbitrary subfolder of your source directory. The arguments
 *include*, *exclude*, and *filter* are as per
-[*find_files*](#find_filespath-name-type-extra-exclude-flat-filter-cache). Any
-matching files will be added to the project's [source
+[*find_files*](#find_filespath-name-type-extra-exclude-flat-filter-cache-dist-as_object).
+Any matching files will be added to the project's [source
 distribution](writing.md#distributing-your-source).
 
 ### extra_dist([*files*], [*dirs*])
@@ -50,8 +50,8 @@ Create a reference to a directory named *name* containing header files for the
 project. This can then be used in the *include* argument when
 [compiling](#object_filename-file-extra_deps) a source file. The arguments
 *include*, *exclude*, and *filter* are as per
-[*find_files*](#find_filespath-name-type-extra-exclude-flat-filter-cache). Any
-matching files will be added to the project's [source
+[*find_files*](#find_filespath-name-type-extra-exclude-flat-filter-cache-dist-as_object).
+Any matching files will be added to the project's [source
 distribution](writing.md#distributing-your-source).
 
 If *system* is *True*, this directory will be treated as a
@@ -502,20 +502,20 @@ known platform name that *doesn't* match the target platform. Known platform
 names are: `'posix'`,`'linux'`, `'darwin'`, `'cygwin'`, `'windows'`.
 
 This is the default *filter* for
-[*find_files*](#find_filespath-name-type-extra-exclude-flat-filter-cache).
+[*find_files*](#find_filespath-name-type-extra-exclude-flat-filter-cache-dist-as_object).
 
 ### FindResult
 
 An enum to be used as the result of a filter function for
-[*find_files*](#find_filespath-name-type-extra-exclude-flat-filter-cache). The
-possible enum values are:
+[*find_files*](#find_filespath-name-type-extra-exclude-flat-filter-cache-dist-as_object).
+The possible enum values are:
 
 * *include*: Include this file in the results
 * *exclude*: Don't include this file in the results
 * *not_now*: Don't include this file in the results, but do include is in the
   [source distribution](writing.md#distributing-your-source)
 
-### find_files([*path*], [*name*], [*type*], [*extra*], [*exclude*], [*flat*], [*filter*], [*cache*])
+### find_files([*path*], [*name*], [*type*], [*extra*], [*exclude*], [*flat*], [*filter*], [*cache*], [*dist*], [*as_object*])
 
 Find files in *path* whose name matches the glob (or list of globs) *name*. The
 following arguments may be specified:
@@ -540,6 +540,8 @@ following arguments may be specified:
   regenerate the build scripts for the project
 * *dist*: If true (the default), all files found by this function will
   automatically be added to the source distribution
+* *as_object*: If true, results will be returned as file or directory objects;
+  otherwise (the default), return path strings
 
 The *cache* argument is particularly important. It allows you to add or remove
 source files and not have to worry about manually rerunning bfg9000.

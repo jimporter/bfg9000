@@ -5,12 +5,13 @@ import re
 from enum import IntEnum
 
 from .hooks import builtin
+from ..file_types import File, Directory
 from ..iterutils import iterate, listify
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..backends.make.syntax import Writer, Syntax
 from ..build_inputs import build_input
-from ..path import Path
+from ..path import Path, Root
 from ..platforms import known_platforms
 
 build_input('find_dirs')(lambda build_inputs, env: set())
@@ -86,26 +87,29 @@ def _filter_from_glob(match_type, matches, extra, exclude):
     return fn
 
 
-def _find_files(paths, filter, flat):
+def _find_files(paths, filter, flat, as_object):
     # "Does the walker choose the path, or the path the walker?" - Garth Nix
     walker = _walk_flat if flat else _walk_recursive
 
     results, dist_results, seen_dirs = [], [], []
 
     def do_filter(files, type):
+        cls = File if type == 'f' else lambda p: Directory(p, None)
         for name, path in files:
+            fileobj = cls(Path(path, Root.srcdir))
             matched = filter(name, path, type)
             if matched == FindResult.include:
-                dist_results.append(path)
-                results.append(path)
+                dist_results.append(fileobj)
+                results.append(fileobj if as_object else path)
             elif matched == FindResult.not_now:
-                dist_results.append(path)
+                dist_results.append(fileobj)
 
     paths = listify(paths)
     do_filter(( (os.path.basename(p), p) for p in paths ), 'd')
     for p in paths:
         for base, dirs, files in walker(p):
             seen_dirs.append(base)
+
             do_filter(dirs, 'd')
             do_filter(files, 'f')
 
@@ -127,7 +131,7 @@ def filter_by_platform(env, name, path, type):
 @builtin.globals('builtins', 'build_inputs', 'env')
 def find_files(builtins, build_inputs, env, path='.', name='*', type='*',
                extra=None, exclude=exclude_globs, filter=filter_by_platform,
-               flat=False, cache=True, dist=True):
+               flat=False, cache=True, dist=True, as_object=False):
     glob_filter = _filter_from_glob(type, name, extra, exclude)
     if filter:
         if filter == filter_by_platform:
@@ -138,13 +142,13 @@ def find_files(builtins, build_inputs, env, path='.', name='*', type='*',
     else:
         final_filter = glob_filter
 
-    results, dist_results, seen_dirs = _find_files(path, final_filter, flat)
+    results, dist, seen_dirs = _find_files(path, final_filter, flat, as_object)
 
     if cache:
         build_inputs['find_dirs'].update(seen_dirs)
     if dist:
-        for i in dist_results:
-            builtins['generic_file'](i)
+        for i in dist:
+            build_inputs.add_source(i)
     return results
 
 

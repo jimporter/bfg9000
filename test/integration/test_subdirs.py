@@ -27,9 +27,10 @@ class TestSubdirs(IntegrationTest):
         with tarfile.open(self.target_path(dist)) as t:
             self.assertEqual(set(t.getnames()), {
                 'build.bfg',
-                os.path.join('include', 'library.hpp'),
-                os.path.join('src', 'library.cpp'),
-                os.path.join('src', 'program.cpp'),
+                pjoin('include', 'library.hpp'),
+                pjoin('include', 'detail', 'export.hpp'),
+                pjoin('src', 'library.cpp'),
+                pjoin('src', 'program.cpp'),
             })
 
     @only_if_backend('make')
@@ -47,6 +48,7 @@ class TestSubdirs(IntegrationTest):
 
         self.assertDirectory(self.distdir, [
             pjoin(self.includedir, 'library.hpp'),
+            pjoin(self.includedir, 'detail', 'export.hpp'),
             pjoin(self.bindir, executable('sub/program').path),
             pjoin(self.libdir, shared_library('sub/library').path),
         ] + extra)
@@ -69,6 +71,7 @@ class TestSubdirs(IntegrationTest):
 
         self.assertDirectory(self.distdir, [
             pjoin(self.includedir, 'library.hpp'),
+            pjoin(self.includedir, 'detail', 'export.hpp'),
             pjoin(self.bindir, executable('sub/program').path),
             pjoin(self.libdir, shared_library('sub/library').path),
         ] + extra)

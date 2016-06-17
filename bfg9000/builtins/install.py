@@ -64,10 +64,15 @@ def _install_commands(backend, build_inputs, buildfile, env):
         return buildfile.variable(cmdname, cmd, backend.Section.command, True)
 
     def install_line(output):
-        src = output.path
-        dstbase = src.parent() if isinstance(output, Directory) else src
-        dst = path.install_path(dstbase, output.install_root)
-        return doppel(doppel_cmd(output.install_kind), src, dst)
+        cmd = doppel_cmd(output.install_kind)
+        if isinstance(output, Directory):
+            src = [i.path.relpath(output.path) for i in output.files]
+            dst = path.install_path(output.path.parent(), output.install_root)
+            return doppel.copy_into(cmd, src, dst, output.path)
+        else:
+            src = output.path
+            dst = path.install_path(src, output.install_root)
+            return doppel.copy_onto(cmd, src, dst)
 
     def post_install(output):
         if output.post_install:

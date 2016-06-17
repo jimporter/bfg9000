@@ -1,6 +1,8 @@
 from .hooks import tool
 from .utils import check_which
 
+from ..iterutils import iterate
+
 
 @tool('doppel')
 class Doppel(object):
@@ -14,5 +16,13 @@ class Doppel(object):
     def data_args(self):
         return ['-m', '644']
 
-    def __call__(self, cmd, src, dst):
+    def copy_onto(self, cmd, src, dst):
         return [cmd, '-p', src, dst]
+
+    def copy_into(self, cmd, src, dst, base=None):
+        result = [cmd, '-ipN']
+        if base:
+            result.extend(['-C', base])
+        result.extend(iterate(src))
+        result.append(dst)
+        return result

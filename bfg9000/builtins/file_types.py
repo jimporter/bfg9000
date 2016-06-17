@@ -27,12 +27,14 @@ def header(build, name, lang=None):
 @builtin.globals('builtins', 'build_inputs')
 def directory(builtins, build, name, include='*', exclude=exclude_globs,
               filter=filter_by_platform):
-    builtins['find_files'](name, include, '*', None, exclude, filter)
-    return Directory(Path(name, Root.srcdir))
+    files = builtins['find_files'](name, include, '*', None, exclude, filter,
+                                   as_object=True)
+    return Directory(Path(name, Root.srcdir), files)
 
 
 @builtin.globals('builtins', 'build_inputs')
 def header_directory(builtins, build, name, include='*', exclude=exclude_globs,
                      filter=filter_by_platform, system=False):
-    builtins['find_files'](name, include, 'f', None, exclude, filter)
-    return HeaderDirectory(Path(name, Root.srcdir), system)
+    files = builtins['find_files'](name, include, 'f', None, exclude, filter,
+                                   as_object=True)
+    return HeaderDirectory(Path(name, Root.srcdir), files, system)

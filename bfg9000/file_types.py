@@ -6,6 +6,18 @@ from .path import InstallRoot
 from .safe_str import safe_str
 
 
+def objectify(thing, valid_type, creator, in_type=string_types, **kwargs):
+    if isinstance(thing, valid_type):
+        return thing
+    elif not isinstance(thing, in_type):
+        raise TypeError('expected a {} or a {}'.format(valid_type, in_type))
+    else:
+        if creator is None:
+            creator = valid_type
+        # XXX: Come up with a way to provide args to prepend?
+        return creator(thing, **kwargs)
+
+
 class Node(object):
     private = False
 
@@ -28,16 +40,8 @@ class Node(object):
         return type(self) == type(rhs) and self.path == rhs.path
 
 
-def objectify(thing, valid_type, creator, in_type=string_types, **kwargs):
-    if isinstance(thing, valid_type):
-        return thing
-    elif not isinstance(thing, in_type):
-        raise TypeError('expected a {} or a {}'.format(valid_type, in_type))
-    else:
-        if creator is None:
-            creator = valid_type
-        # XXX: Come up with a way to provide args to prepend?
-        return creator(thing, **kwargs)
+class Phony(Node):
+    pass
 
 
 class File(Node):
@@ -53,11 +57,9 @@ class File(Node):
 
 
 class Directory(File):
-    pass
-
-
-class Phony(Node):
-    pass
+    def __init__(self, path, files, external=False):
+        File.__init__(self, path, external)
+        self.files = files
 
 
 class SourceFile(File):
@@ -92,8 +94,8 @@ class HeaderDirectory(Directory):
     install_kind = 'data'
     install_root = InstallRoot.includedir
 
-    def __init__(self, path, system, external=False):
-        Directory.__init__(self, path, external)
+    def __init__(self, path, files, system, external=False):
+        Directory.__init__(self, path, files, external)
         self.system = system
 
 

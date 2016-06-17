@@ -346,8 +346,8 @@ class MsvcPackageResolver(object):
 
         for base in search_dirs:
             if os.path.exists(os.path.join(base, name)):
-                return HeaderDirectory(Path(base, Root.absolute), system=True,
-                                       external=True)
+                return HeaderDirectory(Path(base, Root.absolute), None,
+                                       system=True, external=True)
 
         raise IOError("unable to find header '{}'".format(name))
 
