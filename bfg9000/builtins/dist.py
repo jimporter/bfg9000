@@ -15,16 +15,19 @@ def extra_dist(builtins, files=None, dirs=None):
 
 def _dist_command(backend, build_inputs, buildfile, env):
     srcdir = Path('.', Root.srcdir)
-    tar = env.tool('tar')
-    cmd = backend.cmd_var(tar, buildfile)
+    doppel = env.tool('doppel')
+    cmd = backend.cmd_var(doppel, buildfile)
+    ext = '.tar.gz'
 
     project = build_inputs['project']
+    dstname = project.name
     if project.version:
-        dstname = '{}-{}.tar.gz'.format(project.name, project.version)
-    else:
-        dstname = '{}.tar.gz'.format(project.name)
-    return [tar(cmd, [i.path.relpath(srcdir) for i in build_inputs.sources()],
-                Path(dstname), base=srcdir, recurse=False)]
+        dstname += '-' + str(project.version)
+
+    return [doppel.archive(
+        cmd, 'tgz', [i.path.relpath(srcdir) for i in build_inputs.sources()],
+        Path(dstname + ext), directory=srcdir, dest_prefix=dstname
+    )]
 
 
 @make.post_rule

@@ -1,4 +1,4 @@
-import os.path
+import posixpath
 import tarfile
 
 from .integration import *
@@ -29,4 +29,7 @@ class TestExecutable(IntegrationTest):
         self.build('dist')
         self.assertExists(dist)
         with tarfile.open(self.target_path(dist)) as t:
-            self.assertEqual(set(t.getnames()), {'build.bfg', 'simple.cpp'})
+            self.assertEqual(set(t.getnames()), {
+                posixpath.join('simple-1.0', 'build.bfg'),
+                posixpath.join('simple-1.0', 'simple.cpp'),
+            })

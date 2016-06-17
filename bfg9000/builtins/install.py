@@ -68,7 +68,7 @@ def _install_commands(backend, build_inputs, buildfile, env):
         if isinstance(output, Directory):
             src = [i.path.relpath(output.path) for i in output.files]
             dst = path.install_path(output.path.parent(), output.install_root)
-            return doppel.copy_into(cmd, src, dst, output.path)
+            return doppel.copy_into(cmd, src, dst, directory=output.path)
         else:
             src = output.path
             dst = path.install_path(src, output.install_root)

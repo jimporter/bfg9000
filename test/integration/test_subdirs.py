@@ -1,4 +1,5 @@
 import os
+import posixpath
 import tarfile
 
 from .integration import *
@@ -26,11 +27,12 @@ class TestSubdirs(IntegrationTest):
         self.assertExists(dist)
         with tarfile.open(self.target_path(dist)) as t:
             self.assertEqual(set(t.getnames()), {
-                'build.bfg',
-                pjoin('include', 'library.hpp'),
-                pjoin('include', 'detail', 'export.hpp'),
-                pjoin('src', 'library.cpp'),
-                pjoin('src', 'program.cpp'),
+                posixpath.join('05_subdirs', 'build.bfg'),
+                posixpath.join('05_subdirs', 'include', 'library.hpp'),
+                posixpath.join('05_subdirs', 'include', 'detail',
+                               'export.hpp'),
+                posixpath.join('05_subdirs', 'src', 'library.cpp'),
+                posixpath.join('05_subdirs', 'src', 'program.cpp'),
             })
 
     @only_if_backend('make')

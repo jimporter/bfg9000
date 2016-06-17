@@ -19,10 +19,20 @@ class Doppel(object):
     def copy_onto(self, cmd, src, dst):
         return [cmd, '-p', src, dst]
 
-    def copy_into(self, cmd, src, dst, base=None):
+    def copy_into(self, cmd, src, dst, directory=None):
         result = [cmd, '-ipN']
-        if base:
-            result.extend(['-C', base])
+        if directory:
+            result.extend(['-C', directory])
+        result.extend(iterate(src))
+        result.append(dst)
+        return result
+
+    def archive(self, cmd, format, src, dst, directory=None, dest_prefix=None):
+        result = [cmd, '-ipN', '-f', format]
+        if directory:
+            result.extend(['-C', directory])
+        if dest_prefix:
+            result.extend(['--dest-prefix', dest_prefix])
         result.extend(iterate(src))
         result.append(dst)
         return result

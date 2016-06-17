@@ -1,4 +1,4 @@
-import os.path
+import posixpath
 import tarfile
 
 from .integration import *
@@ -25,17 +25,18 @@ class TestFindFiles(IntegrationTest):
         self.build('dist')
         self.assertExists(dist)
         with tarfile.open(self.target_path(dist)) as t:
+            src = posixpath.join('06_find_files', 'src')
             self.assertEqual(set(t.getnames()), {
-                'build.bfg',
-                os.path.join('src', 'hello', 'hello.cpp'),
-                os.path.join('src', 'hello', 'hello.hpp'),
-                os.path.join('src', 'hello', 'main.cpp'),
-                os.path.join('src', 'goodbye'),
-                os.path.join('src', 'goodbye', 'main.cpp'),
-                os.path.join('src', 'goodbye', 'english'),
-                os.path.join('src', 'goodbye', 'english', 'goodbye.cpp'),
-                os.path.join('src', 'goodbye', 'english', 'goodbye.hpp'),
-                os.path.join('src', 'goodbye', 'german'),
-                os.path.join('src', 'goodbye', 'german', 'goodbye.cpp'),
-                os.path.join('src', 'goodbye', 'german', 'goodbye.hpp'),
+                posixpath.join('06_find_files', 'build.bfg'),
+                posixpath.join(src, 'hello', 'hello.cpp'),
+                posixpath.join(src, 'hello', 'hello.hpp'),
+                posixpath.join(src, 'hello', 'main.cpp'),
+                posixpath.join(src, 'goodbye'),
+                posixpath.join(src, 'goodbye', 'main.cpp'),
+                posixpath.join(src, 'goodbye', 'english'),
+                posixpath.join(src, 'goodbye', 'english', 'goodbye.cpp'),
+                posixpath.join(src, 'goodbye', 'english', 'goodbye.hpp'),
+                posixpath.join(src, 'goodbye', 'german'),
+                posixpath.join(src, 'goodbye', 'german', 'goodbye.cpp'),
+                posixpath.join(src, 'goodbye', 'german', 'goodbye.hpp'),
             })
