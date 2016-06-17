@@ -113,7 +113,10 @@ include things that don't belong like `.gitignore`. Instead, you should run:
 $ ninja dist
 ```
 
-Equivalently, you can run `make dist` for the Make backend.
+(Of course, you should run `make dist` for the Make backend.) This will produce
+a `tar.gz` file containing all the source files necessary for building your
+project. If you'd like to specify another file format, you can use one of the
+following targets: `dist-gzip`, `dist-bzip2`, or `dist-zip`.
 
 !!! warning
     The MSBuild backend doesn't currently support this command.
