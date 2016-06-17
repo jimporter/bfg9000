@@ -214,9 +214,13 @@ as an argument, e.g. in the following snippet:</p>
 
 <p>Using <a href="#source_filename-lang"><em>source_file</em></a> here allows you to specify that the
 file is found in the <em>source directory</em>, rather than the build directory.</p>
-<h3 id="directoryname">directory(<em>name</em>)<a class="headerlink" href="#directoryname" title="Permanent link">§</a></h3>
+<h3 id="directoryname-include-exclude-filter">directory(<em>name</em>, [<em>include</em>], [<em>exclude</em>], [<em>filter</em>])<a class="headerlink" href="#directoryname-include-exclude-filter" title="Permanent link">§</a></h3>
 <p>Create a reference to an existing directory named <em>name</em>. This allows you to
-refer to an arbitrary subfolder of your source directory.</p>
+refer to an arbitrary subfolder of your source directory. The arguments
+<em>include</em>, <em>exclude</em>, and <em>filter</em> are as per
+<a href="#find_filespath-name-type-extra-exclude-flat-filter-cache-dist-as_object"><em>find_files</em></a>.
+Any matching files will be added to the project's <a href="../writing/#distributing-your-source">source
+distribution</a>.</p>
 <h3 id="extra_distfiles-dirs">extra_dist([<em>files</em>], [<em>dirs</em>])<a class="headerlink" href="#extra_distfiles-dirs" title="Permanent link">§</a></h3>
 <p>Add extra <em>files</em> and <em>dirs</em> to the list of recognized source files. This lets
 you reference files that are part of the source distribution but which have no
@@ -226,11 +230,15 @@ impact on the build proper (e.g. READMEs).</p>
 <h3 id="headername">header(<em>name</em>)<a class="headerlink" href="#headername" title="Permanent link">§</a></h3>
 <p>Create a reference to an existing header named <em>name</em>. This is useful if you'd
 like to <a href="#install">install</a> a single header file for your project.</p>
-<h3 id="header_directoryname-system">header_directory(<em>name</em>, [<em>system</em>])<a class="headerlink" href="#header_directoryname-system" title="Permanent link">§</a></h3>
+<h3 id="header_directoryname-include-exclude-filter-system">header_directory(<em>name</em>, [<em>include</em>], [<em>exclude</em>], [<em>filter</em>], [<em>system</em>])<a class="headerlink" href="#header_directoryname-include-exclude-filter-system" title="Permanent link">§</a></h3>
 <p>Create a reference to a directory named <em>name</em> containing header files for the
 project. This can then be used in the <em>include</em> argument when
-<a href="#object_filename-file-extra_deps">compiling</a> a source file. If <em>system</em> is
-<em>True</em>, this directory will be treated as a
+<a href="#object_filename-file-extra_deps">compiling</a> a source file. The arguments
+<em>include</em>, <em>exclude</em>, and <em>filter</em> are as per
+<a href="#find_filespath-name-type-extra-exclude-flat-filter-cache-dist-as_object"><em>find_files</em></a>.
+Any matching files will be added to the project's <a href="../writing/#distributing-your-source">source
+distribution</a>.</p>
+<p>If <em>system</em> is <em>True</em>, this directory will be treated as a
 <a href="https://gcc.gnu.org/onlinedocs/cpp/System-Headers.html">system directory</a> for
 compilers that support this.</p>
 <h3 id="source_filename-lang">source_file(<em>name</em>, [<em>lang</em>])<a class="headerlink" href="#source_filename-lang" title="Permanent link">§</a></h3>
@@ -587,18 +595,18 @@ names like <code>PLATFORM</code> or <code>foo_PLATFORM.cpp</code> are excluded i
 known platform name that <em>doesn't</em> match the target platform. Known platform
 names are: <code>'posix'</code>,<code>'linux'</code>, <code>'darwin'</code>, <code>'cygwin'</code>, <code>'windows'</code>.</p>
 <p>This is the default <em>filter</em> for
-<a href="#find_filespath-name-type-extra-flat-filter-cache"><em>find_files</em></a>.</p>
+<a href="#find_filespath-name-type-extra-exclude-flat-filter-cache-dist-as_object"><em>find_files</em></a>.</p>
 <h3 id="findresult">FindResult<a class="headerlink" href="#findresult" title="Permanent link">§</a></h3>
 <p>An enum to be used as the result of a filter function for
-<a href="#find_filespath-name-type-extra-flat-filter-cache"><em>find_files</em></a>. The possible
-enum values are:</p>
+<a href="#find_filespath-name-type-extra-exclude-flat-filter-cache-dist-as_object"><em>find_files</em></a>.
+The possible enum values are:</p>
 <ul>
 <li><em>include</em>: Include this file in the results</li>
 <li><em>exclude</em>: Don't include this file in the results</li>
 <li><em>not_now</em>: Don't include this file in the results, but do include is in the
-  <a href="../writing/#distributing-your-source">distribution</a></li>
+  <a href="../writing/#distributing-your-source">source distribution</a></li>
 </ul>
-<h3 id="find_filespath-name-type-extra-flat-filter-cache">find_files([<em>path</em>], [<em>name</em>], [<em>type</em>], [<em>extra</em>], [<em>flat</em>], [<em>filter</em>], [<em>cache</em>])<a class="headerlink" href="#find_filespath-name-type-extra-flat-filter-cache" title="Permanent link">§</a></h3>
+<h3 id="find_filespath-name-type-extra-exclude-flat-filter-cache-dist-as_object">find_files([<em>path</em>], [<em>name</em>], [<em>type</em>], [<em>extra</em>], [<em>exclude</em>], [<em>flat</em>], [<em>filter</em>], [<em>cache</em>], [<em>dist</em>], [<em>as_object</em>])<a class="headerlink" href="#find_filespath-name-type-extra-exclude-flat-filter-cache-dist-as_object" title="Permanent link">§</a></h3>
 <p>Find files in <em>path</em> whose name matches the glob (or list of globs) <em>name</em>. The
 following arguments may be specified:</p>
 <ul>
@@ -610,7 +618,9 @@ following arguments may be specified:</p>
   only directories, or <code>'*'</code> to find either</li>
 <li><em>extra</em>: A glob (or list of globs) to match extra files (which will not be
   returned from <em>find_files</em> but will be added to the
-  <a href="../writing/#distributing-your-source">distribution</a>)</li>
+  <a href="../writing/#distributing-your-source">source distribution</a>)</li>
+<li><em>exclude</em>: A glob (or list of globs) of files to exclude from results; by
+  default, <code>.#*</code>, <code>*~</code>, and <code>#*#</code> are exluded</li>
 <li><em>flat</em>: If true, <em>find_files</em> will not recurse into subdirectories; otherwise,
   (the default) it will</li>
 <li><em>filter</em>: A predicate taking a filename, relative path, and file type, and
@@ -618,14 +628,18 @@ following arguments may be specified:</p>
   default, this is <a href="#filter_by_platformname-path-type"><em>filter_by_platform</em></a></li>
 <li><em>cache</em>: If true (the default), cache the results so that any changes to will
   regenerate the build scripts for the project</li>
+<li><em>dist</em>: If true (the default), all files found by this function will
+  automatically be added to the source distribution</li>
+<li><em>as_object</em>: If true, results will be returned as file or directory objects;
+  otherwise (the default), return path strings</li>
 </ul>
 <p>The <em>cache</em> argument is particularly important. It allows you to add or remove
 source files and not have to worry about manually rerunning bfg9000.</p>
 <h3 id="projectname-version">project(<em>name</em>, [<em>version</em>])<a class="headerlink" href="#projectname-version" title="Permanent link">§</a></h3>
 <p>Set the name (and optionally the version) of the project. If you don't call
 this function to specify a project name, it defaults to the name of the
-project's source directory. This is primarily useful for creating
-<a href="../writing/#distributing-your-source">distributions</a>.</p></div>
+project's source directory. This is primarily useful for creating <a href="../writing/#distributing-your-source">source
+distributions</a>.</p></div>
         </div>
 
         <footer class="col-md-12">

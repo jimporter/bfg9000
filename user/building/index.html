@@ -286,7 +286,10 @@ include things that don't belong like <code>.gitignore</code>. Instead, you shou
 <pre><code class="sh">$ ninja dist
 </code></pre>
 
-<p>Equivalently, you can run <code>make dist</code> for the Make backend.</p>
+<p>(Of course, you should run <code>make dist</code> for the Make backend.) This will produce
+a <code>tar.gz</code> file containing all the source files necessary for building your
+project. If you'd like to specify another file format, you can use one of the
+following targets: <code>dist-gzip</code>, <code>dist-bzip2</code>, or <code>dist-zip</code>.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>The MSBuild backend doesn't currently support this command.</p>
