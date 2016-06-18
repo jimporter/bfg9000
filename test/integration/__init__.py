@@ -205,7 +205,8 @@ class IntegrationTest(unittest.TestCase):
     def assertDirectory(self, path, contents):
         actual = set(os.path.normpath(os.path.join(path, base, f))
                      for base, dirs, files in os.walk(path) for f in files)
-        expected = set(os.path.normpath(i) for i in contents)
+        expected = set(os.path.normpath(os.path.join(path, i))
+                       for i in contents)
         if actual != expected:
             missing = [os.path.relpath(i, path) for i in (expected - actual)]
             extra = [os.path.relpath(i, path) for i in (actual - expected)]
