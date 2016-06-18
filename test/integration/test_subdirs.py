@@ -1,7 +1,7 @@
 import os
 import tarfile
 
-from .integration import *
+from . import *
 pjoin = os.path.join
 
 

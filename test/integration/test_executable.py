@@ -1,6 +1,6 @@
 import tarfile
 
-from .integration import *
+from . import *
 
 
 class TestExecutable(IntegrationTest):

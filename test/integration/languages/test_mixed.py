@@ -1,6 +1,6 @@
 import os.path
 
-from ..integration import *
+from .. import *
 
 
 class TestMixed(IntegrationTest):

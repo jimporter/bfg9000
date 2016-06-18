@@ -1,6 +1,6 @@
 import os.path
 
-from .integration import *
+from . import *
 
 is_mingw = platform_name() == 'windows' and env.builder('c++').flavor == 'cc'
 

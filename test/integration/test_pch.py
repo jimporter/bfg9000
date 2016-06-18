@@ -1,4 +1,4 @@
-from .integration import *
+from . import *
 
 
 class TestPch(IntegrationTest):

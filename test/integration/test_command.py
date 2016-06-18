@@ -2,7 +2,7 @@ import os.path
 import re
 from six import assertRegex
 
-from .integration import *
+from . import *
 
 
 class TestCommand(IntegrationTest):

@@ -1,7 +1,7 @@
 import os.path
 import shutil
 
-from .integration import *
+from . import *
 pjoin = os.path.join
 
 

@@ -1,6 +1,6 @@
 import os.path
 
-from ..integration import *
+from .. import *
 
 
 @unittest.skipIf(env.platform.name == 'windows', 'no fortran on windows')
