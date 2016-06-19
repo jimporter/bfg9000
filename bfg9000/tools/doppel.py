@@ -32,7 +32,7 @@ class Doppel(object):
         if directory:
             result.extend(['-C', directory])
         if dest_prefix:
-            result.extend(['--dest-prefix', dest_prefix])
+            result.extend(['-P', dest_prefix])
         result.extend(iterate(src))
         result.append(dst)
         return result
