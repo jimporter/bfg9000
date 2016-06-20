@@ -87,7 +87,7 @@ class DirectoryPair(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         cwd = '.'
 
-        check_dir(parser, values)
+        check_dir(parser, values, must_exist=False)
 
         if is_srcdir(values):
             srcdir, builddir = values, cwd
