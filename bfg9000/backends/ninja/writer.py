@@ -103,23 +103,35 @@ class Commands(object):
 
 
 def command_build(buildfile, env, output, inputs=None, implicit=None,
-                  order_only=None, commands=None, environ=None):
-    extra_kwargs = {}
-    # XXX: Can't use SpecifierSet here yet, since those don't work well with
-    # LegacyVersions.
-    if env.backend_version and env.backend_version >= LegacyVersion('1.5'):
-        extra_kwargs['pool'] = 'console'
+                  order_only=None, commands=None, environ=None, console=True):
+    if console:
+        rule_name = 'console_command'
+        extra_implicit = ['PHONY']
 
-    if not buildfile.has_rule('command'):
-        buildfile.rule(name='command', command=var('cmd'), **extra_kwargs)
-    if not buildfile.has_build('PHONY'):
-        buildfile.build(output='PHONY', rule='phony')
+        if not buildfile.has_rule('console_command'):
+            # XXX: Can't use SpecifierSet here yet, since those don't work well
+            # with LegacyVersions.
+            extra_kwargs = {}
+            if ( env.backend_version and
+                 env.backend_version >= LegacyVersion('1.5') ):
+                extra_kwargs['pool'] = 'console'
+            buildfile.rule(name='console_command', command=var('cmd'),
+                           **extra_kwargs)
+
+        if not buildfile.has_build('PHONY'):
+            buildfile.build(output='PHONY', rule='phony')
+    else:
+        rule_name = 'command'
+        extra_implicit = []
+
+        if not buildfile.has_rule('command'):
+            buildfile.rule(name='command', command=var('cmd'))
 
     buildfile.build(
         output=output,
-        rule='command',
+        rule=rule_name,
         inputs=inputs,
-        implicit=iterutils.listify(implicit) + ['PHONY'],
+        implicit=iterutils.listify(implicit) + extra_implicit,
         order_only=order_only,
         variables={'cmd': Commands(commands, environ)}
     )

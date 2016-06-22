@@ -53,9 +53,17 @@ class _BuiltinDecorator(object):
         return wrapper
 
 
+def _decorate_type(type):
+    def wrapper(fn):
+        fn.type = type
+        return fn
+    return wrapper
+
+
 builtin = _BuiltinDecorator(_Binder)()
 builtin.globals = _BuiltinDecorator(_PartialFunctionBinder)
 builtin.getter = _BuiltinDecorator(_GetterBinder)
+builtin.type = _decorate_type
 
 
 def bind(**kwargs):

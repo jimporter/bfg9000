@@ -21,6 +21,7 @@ in progress
 - Use *doppel* for installing files instead of *install(1)*
 - Support *command* and *alias* rules under MSBuild
 - Add support for building a distribution of the sources (`make dist`)
+- Allow running custom build steps via `build_step()`
 
 ### Breaking changes
 - Configuring a build is now performed by `bfg9000 configure DIRECTORY`

@@ -172,6 +172,7 @@ class SharedLink(DynamicLink):
 
 
 @builtin.globals('builtins', 'build_inputs', 'env')
+@builtin.type(Executable)
 def executable(builtins, build, env, name, files=None, **kwargs):
     if files is None and kwargs.get('libs') is None:
         object_format = kwargs.get('format', env.platform.object_format)
@@ -184,6 +185,7 @@ def executable(builtins, build, env, name, files=None, **kwargs):
 
 
 @builtin.globals('builtins', 'build_inputs', 'env')
+@builtin.type(StaticLibrary)
 def static_library(builtins, build, env, name, files=None, **kwargs):
     if files is None and kwargs.get('libs') is None:
         object_format = kwargs.get('format', env.platform.object_format)
@@ -197,6 +199,7 @@ def static_library(builtins, build, env, name, files=None, **kwargs):
 
 
 @builtin.globals('builtins', 'build_inputs', 'env')
+@builtin.type(SharedLibrary)
 def shared_library(builtins, build, env, name, files=None, **kwargs):
     if files is None and kwargs.get('libs') is None:
         # XXX: What to do here for Windows, which has a separate DLL file?
@@ -217,6 +220,7 @@ def shared_library(builtins, build, env, name, files=None, **kwargs):
 
 
 @builtin.globals('builtins')
+@builtin.type(WholeArchive)
 def whole_archive(builtins, name, *args, **kwargs):
     if isinstance(name, StaticLibrary):
         if len(args) or len(kwargs):
@@ -385,8 +389,14 @@ try:
         if hasattr(output, 'import_lib'):
             ldflags['import_lib'] = output.import_lib
 
-        pch_deps = filter(None, (getattr(i.creator, 'pch_source', None)
-                                 for i in rule.files))
+        deps = chain(
+            (i.creator.file for i in rule.files),
+            chain.from_iterable(i.creator.header_files for i in rule.files),
+            chain.from_iterable(i.creator.extra_deps for i in rule.files),
+            filter(None, (getattr(i.creator, 'pch_source', None)
+                          for i in rule.files)),
+            rule.libs, rule.extra_deps
+        )
 
         # Create the project file.
         project = msbuild.VcxProject(
@@ -399,10 +409,7 @@ try:
             } for i in rule.files],
             compile_options=common_cflags,
             link_options=ldflags,
-            dependencies=solution.dependencies(chain(
-                rule.libs, rule.extra_deps, pch_deps,
-                chain.from_iterable(i.creator.extra_deps for i in rule.files)
-            )),
+            dependencies=solution.dependencies(deps),
         )
         solution[output] = project
 except:

@@ -19,8 +19,9 @@ build_input('compile_options')(lambda build_inputs, env: defaultdict(list))
 class ObjectFiles(list):
     def __init__(self, builtins, build, env, files, **kwargs):
         bound = functools.partial(builtins['object_file'], None)
-        list.__init__(self, (objectify(i, ObjectFile, bound, **kwargs)
-                             for i in iterate(files)))
+        list.__init__(self, (objectify(
+            i, ObjectFile, bound, in_type=(string_types, SourceFile), **kwargs
+        ) for i in iterate(files)))
 
     def __getitem__(self, key):
         if isinstance(key, string_types):
@@ -40,20 +41,27 @@ class ObjectFiles(list):
 class Compile(Edge):
     def __init__(self, builtins, build, env, output, include, pch, packages,
                  options, lang, extra_deps, extra_args=[]):
-        self.includes = [objectify(
-            i, HeaderDirectory, builtins['header_directory'], system=False
-        ) for i in iterate(include)]
+        self.header_files = []
+        self.includes = []
+        for i in iterate(include):
+            if isinstance(i, HeaderFile):
+                self.header_files.append(i)
 
-        self.pch = objectify(
-            pch, PrecompiledHeader, builtins['precompiled_header'],
-            build=build, env=env, file=pch, include=include, packages=packages,
-            options=options, lang=lang
-        ) if pch else None
-        if self.pch and isinstance(self.pch, MsvcPrecompiledHeader):
-            output.extra_objects = [self.pch.object_file]
+            self.includes.append(objectify(
+                i, HeaderDirectory, builtins['header_directory'],
+                in_type=(string_types, HeaderFile), system=False
+            ))
 
         self.packages = listify(packages)
         self.user_options = pshell.listify(options)
+
+        self.pch = objectify(
+            pch, PrecompiledHeader, builtins['precompiled_header'],
+            build=build, env=env, file=pch, include=include,
+            packages=self.packages, options=self.user_options, lang=lang
+        ) if pch else None
+        if self.pch and isinstance(self.pch, MsvcPrecompiledHeader):
+            output.extra_objects = [self.pch.object_file]
 
         self._internal_options = (
             self.builder.args(self.includes, self.pch, *extra_args) +
@@ -130,6 +138,7 @@ class CompileHeader(Compile):
 
 
 @builtin.globals('builtins', 'build_inputs', 'env')
+@builtin.type(ObjectFile)
 def object_file(builtins, build, env, name=None, file=None, **kwargs):
     if file is None:
         if name is None:
@@ -150,6 +159,7 @@ def object_files(builtins, build, env, files, **kwargs):
 
 
 @builtin.globals('builtins', 'build_inputs', 'env')
+@builtin.type(PrecompiledHeader)
 def precompiled_header(builtins, build, env, name=None, file=None, **kwargs):
     if file is None:
         if name is None:
@@ -224,6 +234,7 @@ def make_compile(rule, build_inputs, buildfile, env):
     deps.append(rule.file)
     if rule.pch:
         deps.append(rule.pch)
+    deps.extend(rule.header_files)
 
     dirs = uniques(i.path.parent() for i in rule.output)
     make.multitarget_rule(
@@ -270,12 +281,13 @@ def ninja_compile(rule, build_inputs, buildfile, env):
         ), depfile=depfile, deps=deps)
 
     inputs = [rule.file]
-    pch_deps = []
+    implicit_deps = []
     if rule.pch:
-        pch_deps.append(rule.pch)
+        implicit_deps.append(rule.pch)
     if hasattr(rule, 'pch_source'):
         inputs = [rule.pch_source]
-        pch_deps.append(rule.file)
+        implicit_deps.append(rule.file)
+    implicit_deps.extend(rule.header_files)
 
     # Ninja doesn't support multiple outputs and deps-parsing at the same time,
     # so just use the first output and set up an alias if necessary. Aliases
@@ -295,7 +307,7 @@ def ninja_compile(rule, build_inputs, buildfile, env):
         output=output,
         rule=compiler.rule_name,
         inputs=inputs,
-        implicit=pch_deps + rule.extra_deps,
+        implicit=implicit_deps + rule.extra_deps,
         variables=variables
     )
 

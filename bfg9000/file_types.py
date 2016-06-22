@@ -1,12 +1,12 @@
-from six import string_types
+from six import string_types as _string_types
 
-from .iterutils import listify
-from .languages import src2lang, hdr2lang
-from .path import InstallRoot
-from .safe_str import safe_str
+from .iterutils import listify as _listify
+from .languages import src2lang as _src2lang, hdr2lang as _hdr2lang
+from .path import InstallRoot as _InstallRoot
+from .safe_str import safe_str as _safe_str
 
 
-def objectify(thing, valid_type, creator, in_type=string_types, **kwargs):
+def objectify(thing, valid_type, creator, in_type=_string_types, **kwargs):
     if isinstance(thing, valid_type):
         return thing
     elif not isinstance(thing, in_type):
@@ -26,7 +26,7 @@ class Node(object):
         self.path = path
 
     def _safe_str(self):
-        return safe_str(self.path)
+        return _safe_str(self.path)
 
     def __repr__(self):
         return '<{type} {name}>'.format(
@@ -57,24 +57,24 @@ class File(Node):
 
 
 class Directory(File):
-    def __init__(self, path, files, external=False):
+    def __init__(self, path, files=None, external=False):
         File.__init__(self, path, external)
         self.files = files
 
 
 class SourceFile(File):
-    def __init__(self, path, lang, external=False):
+    def __init__(self, path, lang=None, external=False):
         File.__init__(self, path, external)
-        self.lang = lang or src2lang.get(path.ext())
+        self.lang = lang or _src2lang.get(path.ext())
 
 
 class HeaderFile(File):
     install_kind = 'data'
-    install_root = InstallRoot.includedir
+    install_root = _InstallRoot.includedir
 
-    def __init__(self, path, lang, external=False):
+    def __init__(self, path, lang=None, external=False):
         File.__init__(self, path, external)
-        self.lang = lang or hdr2lang.get(path.ext())
+        self.lang = lang or _hdr2lang.get(path.ext())
 
 
 class PrecompiledHeader(HeaderFile):
@@ -92,9 +92,9 @@ class MsvcPrecompiledHeader(PrecompiledHeader):
 
 class HeaderDirectory(Directory):
     install_kind = 'data'
-    install_root = InstallRoot.includedir
+    install_root = _InstallRoot.includedir
 
-    def __init__(self, path, files, system, external=False):
+    def __init__(self, path, files=None, system=False, external=False):
         Directory.__init__(self, path, files, external)
         self.system = system
 
@@ -114,17 +114,17 @@ class ObjectFile(Binary):
 
 
 class Executable(Binary):
-    install_root = InstallRoot.bindir
+    install_root = _InstallRoot.bindir
 
 
 class Library(Binary):
-    install_root = InstallRoot.libdir
+    install_root = _InstallRoot.libdir
 
 
 class StaticLibrary(Library):
     def __init__(self, path, format, lang, external=False):
         Library.__init__(self, path, format, external)
-        self.lang = listify(lang)
+        self.lang = _listify(lang)
 
 
 class WholeArchive(StaticLibrary):
@@ -156,7 +156,7 @@ class ExportFile(File):
 
 
 class DllLibrary(SharedLibrary):
-    install_root = InstallRoot.bindir
+    install_root = _InstallRoot.bindir
     # XXX: When adding support for .NET, this might need to become an instance
     # variable, since .NET DLLs aren't "private".
     private = True

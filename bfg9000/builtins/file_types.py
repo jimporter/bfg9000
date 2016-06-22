@@ -5,16 +5,19 @@ from ..path import Path, Root
 
 
 @builtin.globals('build_inputs')
+@builtin.type(File)
 def generic_file(build, name):
     return build.add_source(File(Path(name, Root.srcdir)))
 
 
 @builtin.globals('build_inputs')
+@builtin.type(SourceFile)
 def source_file(build, name, lang=None):
     return build.add_source(SourceFile(Path(name, Root.srcdir), lang))
 
 
 @builtin.globals('build_inputs')
+@builtin.type(HeaderFile)
 def header(build, name, lang=None):
     return build.add_source(HeaderFile(Path(name, Root.srcdir), lang))
 
@@ -25,6 +28,7 @@ def header(build, name, lang=None):
 # files.
 
 @builtin.globals('builtins', 'build_inputs')
+@builtin.type(Directory)
 def directory(builtins, build, name, include='*', exclude=exclude_globs,
               filter=filter_by_platform):
     files = builtins['find_files'](name, include, '*', None, exclude, filter,
@@ -33,8 +37,12 @@ def directory(builtins, build, name, include='*', exclude=exclude_globs,
 
 
 @builtin.globals('builtins', 'build_inputs')
+@builtin.type(HeaderDirectory)
 def header_directory(builtins, build, name, include='*', exclude=exclude_globs,
                      filter=filter_by_platform, system=False):
+    if isinstance(name, HeaderFile):
+        return HeaderDirectory(name.path.parent(), None, system)
+
     files = builtins['find_files'](name, include, 'f', None, exclude, filter,
                                    as_object=True)
     return HeaderDirectory(Path(name, Root.srcdir), files, system)

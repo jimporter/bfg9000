@@ -87,12 +87,27 @@ vendor). This is described in more detail for each step below.
     executable file named "foo" on Windows, the resulting file will be
     `foo.exe`.
 
+### build_step(*name*, *cmd*|*cmds*, [*environment*], [*type*], [*args*], [*kwargs*], [*extra_deps*])
+
+Create a custom build step that produces a file named *name* by running an
+arbitrary command (*cmd* or *cmds*). *name* may either be a single file name or
+a list of file names. For a description of the arguments *cmd*, *cmds*, and
+*environment*, see [*command*](#commandname-cmdcmds-environment-extra_deps)
+below.
+
+By default, this function return a [*source_file*](#source_filename_lang); you
+can adjust this with the *type* argument. This should be either 1) a function
+returning a file object, or 2) an object with a `.type` attribute that meets the
+criteria of (1). You can also pass *args* and *kwargs* to forward arguments
+along to this function.
+
 ### command(*name*, *cmd*|*cmds*, [*environment*], [*extra_deps*])
 
-Create a build step that runs a list of arbitrary commands, specified in either
-*cmd* or *cmds*; *cmd* takes a single command, whereas *cmds* takes a list of
-commands. Each command may either be a string to be parsed according to shell
-rules or a list of arguments to be passed directly to the process.
+Create a build step named *name* that runs a list of arbitrary commands,
+specified in either *cmd* or *cmds*; *cmd* takes a single command, whereas
+*cmds* takes a list of commands. Each command may either be a string to be
+parsed according to shell rules or a list of arguments to be passed directly to
+the process.
 
 You may also pass a dict to *environment* to set environment variables for the
 commands. These override any environment variables set on the command line.
