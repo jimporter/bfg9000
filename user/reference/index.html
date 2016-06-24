@@ -265,11 +265,23 @@ determined by the platform you're running on. For instance, when building an
 executable file named "foo" on Windows, the resulting file will be
 <code>foo.exe</code>.</p>
 </div>
+<h3 id="build_stepname-cmdcmds-environment-type-args-kwargs-extra_deps">build_step(<em>name</em>, <em>cmd</em>|<em>cmds</em>, [<em>environment</em>], [<em>type</em>], [<em>args</em>], [<em>kwargs</em>], [<em>extra_deps</em>])<a class="headerlink" href="#build_stepname-cmdcmds-environment-type-args-kwargs-extra_deps" title="Permanent link">§</a></h3>
+<p>Create a custom build step that produces a file named <em>name</em> by running an
+arbitrary command (<em>cmd</em> or <em>cmds</em>). <em>name</em> may either be a single file name or
+a list of file names. For a description of the arguments <em>cmd</em>, <em>cmds</em>, and
+<em>environment</em>, see <a href="#commandname-cmdcmds-environment-extra_deps"><em>command</em></a>
+below.</p>
+<p>By default, this function return a <a href="#source_filename_lang"><em>source_file</em></a>; you
+can adjust this with the <em>type</em> argument. This should be either 1) a function
+returning a file object, or 2) an object with a <code>.type</code> attribute that meets the
+criteria of (1). You can also pass <em>args</em> and <em>kwargs</em> to forward arguments
+along to this function.</p>
 <h3 id="commandname-cmdcmds-environment-extra_deps">command(<em>name</em>, <em>cmd</em>|<em>cmds</em>, [<em>environment</em>], [<em>extra_deps</em>])<a class="headerlink" href="#commandname-cmdcmds-environment-extra_deps" title="Permanent link">§</a></h3>
-<p>Create a build step that runs a list of arbitrary commands, specified in either
-<em>cmd</em> or <em>cmds</em>; <em>cmd</em> takes a single command, whereas <em>cmds</em> takes a list of
-commands. Each command may either be a string to be parsed according to shell
-rules or a list of arguments to be passed directly to the process.</p>
+<p>Create a build step named <em>name</em> that runs a list of arbitrary commands,
+specified in either <em>cmd</em> or <em>cmds</em>; <em>cmd</em> takes a single command, whereas
+<em>cmds</em> takes a list of commands. Each command may either be a string to be
+parsed according to shell rules or a list of arguments to be passed directly to
+the process.</p>
 <p>You may also pass a dict to <em>environment</em> to set environment variables for the
 commands. These override any environment variables set on the command line.</p>
 <h3 id="executablename-files-extra_deps">executable(<em>name</em>, [<em>files</em>, ..., [<em>extra_deps</em>]])<a class="headerlink" href="#executablename-files-extra_deps" title="Permanent link">§</a></h3>
