@@ -279,5 +279,5 @@ to forward arguments along to *type*:
 ```python
 hdr, src = build_step(['hello.tab.h', 'hello.tab.c'], cmd=[
     'bison', 'hello.y'
-], type=[header, source_file])
+], type=[header_file, source_file])
 ```

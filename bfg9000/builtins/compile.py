@@ -100,7 +100,7 @@ class CompileHeader(Compile):
     def __init__(self, builtins, build, env, name, file, source=None,
                  include=None, pch=None, packages=None, options=None,
                  lang=None, extra_deps=None):
-        self.file = objectify(file, HeaderFile, builtins['header'],
+        self.file = objectify(file, HeaderFile, builtins['header_file'],
                               lang=lang)
         if name is None:
             name = self.file.path.suffix

@@ -25,6 +25,7 @@ in progress
 
 ### Breaking changes
 - Configuring a build is now performed by `bfg9000 configure DIRECTORY`
+- `header()` renamed to `header_file()`
 - `env.compiler(lang)` replaced by `env.builder(lang).compiler`
 - `env.linker(lang, mode)` replaced by `env.builder(lang).linker(mode)`
 - `env.compiler(lang).flavor` replaced by `env.builder(lang).flavor`

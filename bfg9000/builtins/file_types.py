@@ -18,7 +18,7 @@ def source_file(build, name, lang=None):
 
 @builtin.globals('build_inputs')
 @builtin.type(HeaderFile)
-def header(build, name, lang=None):
+def header_file(build, name, lang=None):
     return build.add_source(HeaderFile(Path(name, Root.srcdir), lang))
 
 

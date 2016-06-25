@@ -12,7 +12,7 @@ prog = executable(
 )
 install(prog, shared_a, static_a)
 
-shared_a_hdr = header('shared_a.hpp')
-static_a_hdr = header('static_a.hpp')
+shared_a_hdr = header_file('shared_a.hpp')
+static_a_hdr = header_file('static_a.hpp')
 
 install(shared_a_hdr, static_a_hdr)

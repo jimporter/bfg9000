@@ -38,11 +38,6 @@ impact on the build proper (e.g. READMEs).
 
 Create a reference to an existing file named *name*.
 
-### header(*name*) { #header }
-
-Create a reference to an existing header named *name*. This is useful if you'd
-like to [install](#install) a single header file for your project.
-
 ### header_directory(*name*, [*include*], [*exclude*], [*filter*], [*system*]) { #header_directory }
 
 Create a reference to a directory named *name* containing header files for the
@@ -55,6 +50,11 @@ distribution](writing.md#distributing-your-source).
 If *system* is *True*, this directory will be treated as a
 [system directory](https://gcc.gnu.org/onlinedocs/cpp/System-Headers.html) for
 compilers that support this.
+
+### header_file(*name*) { #header_file }
+
+Create a reference to an existing header named *name*. This is useful if you'd
+like to [install](#install) a single header file for your project.
 
 ### source_file(*name*, [*lang*]) { #source_file }
 
