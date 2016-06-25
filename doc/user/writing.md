@@ -259,3 +259,25 @@ mettle = test_driver('mettle')
 test( executable('test_foo', files=['test_foo.cpp']), driver=mettle )
 test( executable('test_bar', files=['test_bar.cpp']), driver=mettle )
 ```
+
+## Custom build steps
+
+Sometimes, the built-in build steps don't support the things you want to do
+(e.g. if you're generating source files via Flex/Bison). In these cases, you
+can use [*build_step()*](reference.md#build_step) to define a step that produces
+a file by running an arbitrary command:
+
+```python
+lex = build_step('lex.yy.c', cmd=[ 'flex', source_file('hello.lex') ])
+```
+
+You can also define steps that produce *multiple* files. When doing this, you'll
+generally want to specify the *type* argument as well, which lets you indicate
+the type of file object to return. In addition, you can pass *args* and *kwargs*
+to forward arguments along to *type*:
+
+```python
+hdr, src = build_step(['hello.tab.h', 'hello.tab.c'], cmd=[
+    'bison', 'hello.y'
+], type=[header, source_file])
+```
