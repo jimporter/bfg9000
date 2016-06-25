@@ -197,6 +197,8 @@
         
             <li><a href="#tests">Tests</a></li>
         
+            <li><a href="#custom-build-steps">Custom build steps</a></li>
+        
     
     </ul>
 </div></div>
@@ -405,6 +407,23 @@ test files into a single run, which is very useful for reporting:</p>
 <pre><code class="python">mettle = test_driver('mettle')
 test( executable('test_foo', files=['test_foo.cpp']), driver=mettle )
 test( executable('test_bar', files=['test_bar.cpp']), driver=mettle )
+</code></pre>
+
+<h2 id="custom-build-steps">Custom build steps<a class="headerlink" href="#custom-build-steps" title="Permanent link">§</a></h2>
+<p>Sometimes, the built-in build steps don't support the things you want to do
+(e.g. if you're generating source files via Flex/Bison). In these cases, you
+can use <a href="../reference/#build_step"><em>build_step()</em></a> to define a step that produces
+a file by running an arbitrary command:</p>
+<pre><code class="python">lex = build_step('lex.yy.c', cmd=[ 'flex', source_file('hello.lex') ])
+</code></pre>
+
+<p>You can also define steps that produce <em>multiple</em> files. When doing this, you'll
+generally want to specify the <em>type</em> argument as well, which lets you indicate
+the type of file object to return. In addition, you can pass <em>args</em> and <em>kwargs</em>
+to forward arguments along to <em>type</em>:</p>
+<pre><code class="python">hdr, src = build_step(['hello.tab.h', 'hello.tab.c'], cmd=[
+    'bison', 'hello.y'
+], type=[header, source_file])
 </code></pre></div>
         </div>
 
