@@ -21,7 +21,8 @@ $ ninja
 ```
 
 Since the configure command is easily the most common thing to run when using
-bfg9000, you can use the following shorthand instead of `bfg9000 configure`:
+bfg9000, you can use the following shorthand instead of
+`bfg9000 configure build/`:
 
 ```sh
 $ 9k build/

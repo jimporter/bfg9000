@@ -10,8 +10,7 @@ is unavoidable. By using a general-purpose language, this complexity can
 ## Your first build script
 
 The simplest build script, compiling a single source file into an
-[executable](reference.md#executablename-files-extra_deps), is indeed very
-simple:
+[executable](reference.md#executable), is indeed very simple:
 
 ```python
 executable('simple', files=['simple.cpp'])
@@ -37,7 +36,7 @@ verbosity. First, arguments that normally take a list can take a single item
 instead, e.g. `executable('simple', files='simple.cpp')`. In addition, bfg9000
 will automatically convert a string argument to an object of the appropriate
 type. In the previous example, `'simple.cpp'` is automatically converted to a
-[*source_file*](reference.md#source_filename-lang).
+[*source_file*](reference.md#source_file).
 
 ### Sudirectories
 
@@ -45,7 +44,7 @@ Many projects organize their headers and source files into different
 directories. For source files, this is easy to handle: just write out the
 relative path to the file. For header files, you need to let your compiler know
 where they're located. The
-[*header_directory*](reference.md#header_directoryname-system) function creates
+[*header_directory*](reference.md#header_directory) function creates
 a reference to the directory, which can then be passed to your build function
 via the *include* argument:
 
@@ -77,9 +76,9 @@ executable('simple', files=['simple.cpp'], compile_options=['-Wall', '-Werror'],
            link_options=['-static-libstdc++'])
 ```
 
-You can also specify [global compiler
-options](reference.md#global_optionsoptions-lang) (on a per-language basis) as
-well as [global linker options](reference.md#global_link_optionsoptions):
+You can also specify [global compiler options](reference.md#global_options) (on
+a per-language basis) as well as [global linker
+options](reference.md#global_link_options):
 
 ```python
 global_options(['-Wall', '-Werror'], lang='c++')
@@ -90,15 +89,14 @@ Naturally, the interpretations of these arguments depend on the compiler being
 used, so it's important to be sure the compiler understands the arguments. You
 can determine the kind of compiler being used by consulting the build's
 [Environment](reference.md#environment) and checking the compiler's
-[*flavor*](reference.md#compilerflavor).
+[*flavor*](reference.md#compiler-flavor).
 
 ## Building libraries
 
 Similar to building executables, you can also build
-[shared](reference.md#shared_libraryname-files-extra_deps) and
-[static](reference.md#static_libraryname-files-extra_deps) libraries. These take
-the same arguments as above, although static libraries have no use for the
-*link_options* argument.
+[shared](reference.md#shared_library) and [static](reference.md#static_library)
+libraries. These take the same arguments as above, although static libraries
+have no use for the *link_options* argument.
 
 Once you've defined rules to build a library, you can pass it along to an
 executable or other shared library via the *libs* argument:
@@ -136,9 +134,9 @@ For projects with many source files, it can be inconvenient to manually list all
 of them. Since `build.bfg` files are just Python scripts, you *could* use
 Python's standard library to examine the file system and build the list.
 However, there's a better way: bfg9000 provides a
-[*find_files()*](reference.md#find_filespath-name-type-flat-filter-cache)
-function to fetch the list; if the list ever changes, the build files will be
-regenerated *automatically* the next time they're run.
+[*find_files()*](reference.md#find_files) function to fetch the list; if the
+list ever changes, the build files will be regenerated *automatically* the next
+time they're run.
 
 *find_files()* starts at a base directory and searches recursively for any files
 matching a particular glob:
@@ -157,20 +155,20 @@ For instance, you can search only for files or only for directories by passing
 When you're building multiple binaries, you might want to be able to specify
 what gets built by default, i.e. when calling `make` (or `ninja`) with no
 arguments. Normally, every executable and library (except those passed to
-[*test()*](reference.md#testtest-options-environmentdriver)) will get built.
-However, you can pass any build rule(s) to [*default()*](reference.md#default),
-and they'll be set as the default, overriding the normal behavior. This makes it
-easy to provide your users with a standard build that gets them all the bits
-they need, and none they don't.
+[*test()*](reference.md#test)) will get built. However, you can pass any build
+rule(s) to [*default()*](reference.md#default), and they'll be set as the
+default, overriding the normal behavior. This makes it easy to provide your
+users with a standard build that gets them all the bits they need, and none they
+don't.
 
 ## External packages
 
 Most projects have external packages that they depend on. There are lots of
 different ways these packages are organized, and bfg9000 currently supports
-three of them: ["system" packages](reference.md#system_packagename-lang-kind)
-(libraries installed into the default location for your system), [pkg-config
-packages](reference.md#pkgconfig_packagename-version-lang), and [Boost
-packages](reference.md#boost_packagename-version):
+three of them: ["system" packages](reference.md#system_package) (libraries
+installed into the default location for your system), [pkg-config
+packages](reference.md#pkgconfig_package), and [Boost
+packages](reference.md#boost_package):
 
 ```python
 ogg = system_package('ogg', kind='static')
@@ -242,19 +240,17 @@ All good projects should have tests. Since your project is good (isn't it?),
 yours has tests too, and you should have a good way to execute those tests from
 your build system. bfg9000 provides a [set of
 functions](reference.md#test-rules) for running tests. The most important of
-these is aptly named
-[*test()*](reference.md#testtest-options-environmentdriver). Any executable can
-be passed to this function, and it will be executed as a test; an exit status of
-0 marks success, and non-zero marks failure:
+these is aptly named [*test()*](reference.md#test). Any executable can be passed
+to this function, and it will be executed as a test; an exit status of 0 marks
+success, and non-zero marks failure:
 
 ```python
 test( executable('test_foo', files=['test_foo.cpp']) )
 ```
 
-In addition, you can provide a [test
-driver](reference.md#test_driverdriver-options-environmentparent) that collects
-all of your tests together and runs them as one. *test_driver()* takes an
-executable (a [*system_executable*](reference.md#system_executablename) by
+In addition, you can provide a [test driver](reference.md#test_driver) that
+collects all of your tests together and runs them as one. *test_driver()* takes
+an executable (a [*system_executable*](reference.md#system_executable) by
 default) that runs all the test files. This allows you to aggregate multiple
 test files into a single run, which is very useful for reporting:
 

@@ -42,7 +42,7 @@ run them:
 
 ```sh
 $ cd /path/to/src/
-$ bfg9000 configure build/
+$ 9k build/
 $ cd build/
 $ ninja
 ```

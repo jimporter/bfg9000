@@ -20,45 +20,43 @@ command('script', cmd=['python', source_file('script.py')])
 Using [*source_file*](#source_filename-lang) here allows you to specify that the
 file is found in the *source directory*, rather than the build directory.
 
-### directory(*name*, [*include*], [*exclude*], [*filter*])
+### directory(*name*, [*include*], [*exclude*], [*filter*]) { #directory }
 
 Create a reference to an existing directory named *name*. This allows you to
 refer to an arbitrary subfolder of your source directory. The arguments
-*include*, *exclude*, and *filter* are as per
-[*find_files*](#find_filespath-name-type-extra-exclude-flat-filter-cache-dist-as_object).
-Any matching files will be added to the project's [source
+*include*, *exclude*, and *filter* are as per [*find_files*](#find_files). Any
+matching files will be added to the project's [source
 distribution](writing.md#distributing-your-source).
 
-### extra_dist([*files*], [*dirs*])
+### extra_dist([*files*], [*dirs*]) { #extra_dist }
 
 Add extra *files* and *dirs* to the list of recognized source files. This lets
 you reference files that are part of the source distribution but which have no
 impact on the build proper (e.g. READMEs).
 
-### generic_file(*name*)
+### generic_file(*name*) { #generic_file }
 
 Create a reference to an existing file named *name*.
 
-### header(*name*)
+### header(*name*) { #header }
 
 Create a reference to an existing header named *name*. This is useful if you'd
 like to [install](#install) a single header file for your project.
 
-### header_directory(*name*, [*include*], [*exclude*], [*filter*], [*system*])
+### header_directory(*name*, [*include*], [*exclude*], [*filter*], [*system*]) { #header_directory }
 
 Create a reference to a directory named *name* containing header files for the
 project. This can then be used in the *include* argument when
-[compiling](#object_filename-file-extra_deps) a source file. The arguments
-*include*, *exclude*, and *filter* are as per
-[*find_files*](#find_filespath-name-type-extra-exclude-flat-filter-cache-dist-as_object).
-Any matching files will be added to the project's [source
+[compiling](#object_file) a source file. The arguments *include*, *exclude*, and
+*filter* are as per [*find_files*](#find_files). Any matching files will be
+added to the project's [source
 distribution](writing.md#distributing-your-source).
 
 If *system* is *True*, this directory will be treated as a
 [system directory](https://gcc.gnu.org/onlinedocs/cpp/System-Headers.html) for
 compilers that support this.
 
-### source_file(*name*, [*lang*])
+### source_file(*name*, [*lang*]) { #source_file }
 
 Create a reference to an existing source file named *name*. If *lang* is not
 specified, the language of the file is inferred from its extension.
@@ -87,21 +85,20 @@ vendor). This is described in more detail for each step below.
     executable file named "foo" on Windows, the resulting file will be
     `foo.exe`.
 
-### build_step(*name*, *cmd*|*cmds*, [*environment*], [*type*], [*args*], [*kwargs*], [*extra_deps*])
+### build_step(*name*, *cmd*|*cmds*, [*environment*], [*type*], [*args*], [*kwargs*], [*extra_deps*]) { #build_step }
 
 Create a custom build step that produces a file named *name* by running an
 arbitrary command (*cmd* or *cmds*). *name* may either be a single file name or
 a list of file names. For a description of the arguments *cmd*, *cmds*, and
-*environment*, see [*command*](#commandname-cmdcmds-environment-extra_deps)
-below.
+*environment*, see [*command*](#command) below.
 
-By default, this function return a [*source_file*](#source_filename_lang); you
-can adjust this with the *type* argument. This should be either 1) a function
-returning a file object, or 2) an object with a `.type` attribute that meets the
-criteria of (1). You can also pass *args* and *kwargs* to forward arguments
-along to this function.
+By default, this function return a [*source_file*](#source_file); you can adjust
+this with the *type* argument. This should be either 1) a function returning a
+file object, or 2) an object with a `.type` attribute that meets the criteria of
+(1). You can also pass *args* and *kwargs* to forward arguments along to this
+function.
 
-### command(*name*, *cmd*|*cmds*, [*environment*], [*extra_deps*])
+### command(*name*, *cmd*|*cmds*, [*environment*], [*extra_deps*]) { #command }
 
 Create a build step named *name* that runs a list of arbitrary commands,
 specified in either *cmd* or *cmds*; *cmd* takes a single command, whereas
@@ -112,24 +109,24 @@ the process.
 You may also pass a dict to *environment* to set environment variables for the
 commands. These override any environment variables set on the command line.
 
-### executable(*name*, [*files*, ..., [*extra_deps*]])
+### executable(*name*, [*files*, ..., [*extra_deps*]]) { #executable }
 
 Create a build step that builds an executable file named *name*. *files* is the
 list of source (or object) files to link. If an element of *files* is a source
 file (or a plain string), this function will implicitly call
-[*object_file*](#object_filename-file-extra_deps) on it.
+[*object_file*](#object_file) on it.
 
 The following arguments may also be specified:
 
-* *include*: Forwarded on to [*object_file*](#object_filename-file-extra_deps)
-* *pch*: Forwarded on to [*object_file*](#object_filename-file-extra_deps)
+* *include*: Forwarded on to [*object_file*](#object_file)
+* *pch*: Forwarded on to [*object_file*](#object_file)
 * *libs*: A list of library files (see *shared_library* and *static_library*)
 * *packages*: A list of external [packages](#package-finders); also forwarded on
   to *object_file*
 * *compile_options*: Forwarded on to
-  [*object_file*](#object_filename-file-extra_deps) as *options*
+  [*object_file*](#object_filen) as *options*
 * *link_options*: Command-line options to pass to the linker
-* *lang*: Forwarded on to [*object_file*](#object_filename-file-extra_deps)
+* *lang*: Forwarded on to [*object_file*](#object_file)
 
 If neither *files* nor *libs* is specified, this function merely references an
 *existing* executable file (a precompiled binary, a shell script, etc) somewhere
@@ -145,7 +142,7 @@ variables](environment-vars.md#dynamic-linking) and the [compiler environment
 variable](environment-vars.md#compilation-variables) (e.g. `CC`) for the
 relevant language.
 
-### object_file([*name*], [*file*, ..., [*extra_deps*]])
+### object_file([*name*], [*file*, ..., [*extra_deps*]]) { #object_file }
 
 Create a build step that compiles a source file named *file* to an object file
 named *name*; if *name* is not specified, it takes the file name in *file*
@@ -153,10 +150,10 @@ without the extension.
 
 The following arguments may also be specified:
 
-* *include*: A list of [directories](#header_directorydirectory) to search for
-  header files
-* *pch*: A [precompiled header](#precompiled_headername-file-extra_deps) to use
-  during compilation
+* *include*: A list of [directories](#header_directory) to search for header
+  files; you may also pass [header files](#header), and their directories will
+  be added to the search list
+* *pch*: A [precompiled header](#precompiled_header) to use during compilation
 * *packages*: A list of external [packages](#package-finders)
 * *options*: Command-line options to pass to the compiler
 * *lang*: The language of the source file; useful if the source file's extension
@@ -175,11 +172,10 @@ addition, the following arguments may be specified:
 This build step recognizes the [compilation environment
 variables](environment-vars.md#compilation-variables) for the relevant language.
 
-### object_files(*files*, ..., [*extra_deps*])
+### object_files(*files*, ..., [*extra_deps*]) { #object_files }
 
 Create a compilation build step for each of the files in *files*; this is
-equivalent to calling [*object_file*](#object_filename-file-extra_deps) for each
-element in *files*.
+equivalent to calling [*object_file*](#object_file) for each element in *files*.
 
 In addition, *object_files* returns a special list that allows you to index into
 it using the filename of one of the source files listed in *files*. This makes
@@ -194,17 +190,16 @@ foo_obj = objs['foo.cpp']
 test_exe = executable('test', ['test.cpp', foo_obj])
 ```
 
-### precompiled_header([*name*], [*file*, ..., [*extra_deps*]])
+### precompiled_header([*name*], [*file*, ..., [*extra_deps*]]) { #precompiled_header }
 
 Create a build step that generates a precompiled header, which can be used to
-speed up the compilation of [object files](#object_filename-file-extra_deps).
-If *name* is not specified, it is inferred from the value of *file*; the exact
-name varies based on the compiler being used, but typically looks like
-`header.hpp.pch` for cc-like compilers and `header.pch` for MSVC-like compilers.
+speed up the compilation of [object files](#object_file). If *name* is not
+specified, it is inferred from the value of *file*; the exact name varies based
+on the compiler being used, but typically looks like `header.hpp.pch` for
+cc-like compilers and `header.pch` for MSVC-like compilers.
 
 The arguments for *precompiled_header* are the same as for
-[*object_file*](#object_filename-file-extra_deps), with the following additional
-argument:
+[*object_file*](#object_file), with the following additional argument:
 
 * *pch_source*: The source file to be used when building the precompiled
   header. If this is not specified, a source file will automatically be created,
@@ -232,11 +227,10 @@ In addition, the following argument may be specified:
 [clang-pch]: http://clang.llvm.org/docs/UsersManual.html#usersmanual-precompiled-headers
 [msvc-pch]: https://msdn.microsoft.com/en-us/library/szfdksca.aspx
 
-### shared_library(*name*, [*files*, ..., [*extra_deps*]])
+### shared_library(*name*, [*files*, ..., [*extra_deps*]]) { #shared_library }
 
 Create a build step that builds a shared library named *name*. Its arguments are
-the same as [*executable*](#executablename-files-extra_deps), with the following
-additional argument:
+the same as [*executable*](#executable), with the following additional argument:
 
 * *version*: The version number of the library, e.g. `1.2.3`.
 * *soversion*: The API version of the library (used in its soname), e.g. `1`.
@@ -264,13 +258,13 @@ relevant language.
     Windows](writing.md#building-libraries-on-windows) for an example of how to
     use this macro in your code.
 
-### static_library(*name*, [*files*, ..., [*extra_deps*]])
+### static_library(*name*, [*files*, ..., [*extra_deps*]]) { #static_library }
 
 Create a build step that builds a static library named *name*. Its arguments are
-the same as [*executable*](#executablename-files-extra_deps). Link-related
-arguments (*link_options*, *libs*, and libraries from *packages*) have no direct
-effect on this build step. Instead, they're cached and forwarded on to any
-dynamic linking step that uses this static library.
+the same as [*executable*](#executable). Link-related arguments (*link_options*,
+*libs*, and libraries from *packages*) have no direct effect on this build
+step. Instead, they're cached and forwarded on to any dynamic linking step that
+uses this static library.
 
 Like with *executable*, if *files* isn't specified, this function merely
 references an *existing* shared library somewhere on the filesystem. In this
@@ -291,7 +285,7 @@ variables](environment-vars.md#static-linking).
     [Building libraries on Windows](writing.md#building-libraries-on-windows)
     for an example of how to use this macro in your code.
 
-### whole_archive(*name*, [*files*, ..., [*extra_deps*]])
+### whole_archive(*name*, [*files*, ..., [*extra_deps*]]) { #whole_archive }
 
 Create a build step that builds a [whole-archive](http://linux.die.net/man/1/ld)
 named *name*. Whole archives ensures that *every* object file in the library is
@@ -299,9 +293,8 @@ included, rather than just the ones whose symbols are referenced. This is
 typically used to turn a static library into a shared library.
 
 *whole_archive*'s arguments are the same as for
-[*static_library*](#static_libraryname-files-extra_deps). In addition, you can
-pass an existing static library to *whole_archive* to convert it into a whole
-archive.
+[*static_library*](#static_library). In addition, you can pass an existing
+static library to *whole_archive* to convert it into a whole archive.
 
 !!! warning
     The MSVC linker doesn't have a way of expressing the required directives, so
@@ -309,20 +302,20 @@ archive.
 
 ## Grouping rules
 
-### alias(*name*, [*deps*])
+### alias(*name*, [*deps*]) { #alias }
 
 Create a build step named *name* that performs no actions on its own. Instead,
 it just runs its dependencies listed in *deps* as necessary. This build step is
 useful for grouping common steps together.
 
-### default(*...*)
+### default(*...*) { #default }
 
 Specify a list of build steps that should be run by default when building. These
 are all accumulated into the `all` target. If *default* is never called, all
-executables and libraries *not* passed to
-[*test*](#testtest-options-environmentdriver) will be built by default.
+executables and libraries *not* passed to [*test*](#test) will be built by
+default.
 
-### install(*...*)
+### install(*...*) { #install }
 
 Specify a list of files that need to be installed for the project to work. Each
 will be installed to the appropriate location based on its type, e.g. header
@@ -344,50 +337,48 @@ This rule recognizes the following environment variables:
 
 ## Global options
 
-### global_options(*options*, *lang*)
+### global_options(*options*, *lang*) { #global_options }
 
 Specify some *options* (either as a string or list) to use for all compilation
 steps for the language *lang*.
 
-### global_link_options(*options*)
+### global_link_options(*options*) { #global_link_options }
 
 Specify some *options* (either as a string or list) to use for all link steps
-(i.e. for [executables](#executablename-files-extra_deps) and
-[shared libraries](#shared_libraryname-files-extra_deps)).
+(i.e. for [executables](#executable) and [shared libraries](#shared_library)).
 
 ## Test rules
 
 These rules help you define automated tests that can all be run via the `test`
-target. For simple cases, you should only need the
-[*test*](#testtest-options-environmentdriver) rule, but you can also wrap your
-tests with a separate driver using
-[*test_driver*](#test_driverdriver-options-environmentparent).
+target. For simple cases, you should only need the [*test*](#test) rule, but you
+can also wrap your tests with a separate driver using
+[*test_driver*](#test_driver).
 
 For cases where you only want to *build* the tests, not run them, you can use
 the `tests` target.
 
-### test(*test*, [*options*], [*environment*|*driver*])
+### test(*test*, [*options*], [*environment*|*driver*]) { #test }
 
 Create a test for a single test file named *test*. You may specify additional
 command-line arguments to the test in *options*. You can also pass temporary
 environment variables as a dict via *environment*, or specify a test driver to
 add this test file to via *driver*.
 
-### test_driver(*driver*, [*options*], [*environment*|*parent*])
+### test_driver(*driver*, [*options*], [*environment*|*parent*]) { #test_driver }
 
 Create a test driver which can run a series of tests, specified as command-line
 arguments to the driver. You may specify driver-wide command-line arguments via
 *options*. You can also pass temporary environment variables as a dict with
 *environment*, or specify a parent test driver to wrap this driver via *driver*.
 
-### test_deps(*...*)
+### test_deps(*...*) { #test_deps }
 
 Specify a list of dependencies which must be satisfied before the tests can be
 run.
 
 ## Package resolvers
 
-### boost_package([*name*], [*version*])
+### boost_package([*name*], [*version*]) { #boost_package }
 
 Search for a [Boost](https://www.boost.org/) library. You can specify *name* (as
 a string or a list) to specify a specific Boost library (or libraries); for
@@ -399,7 +390,7 @@ specifier](https://www.python.org/dev/peps/pep-0440/#version-specifiers).
 This rule recognizes the [packaging environment
 variables](environment-vars.md#packaging-variables).
 
-### pkgconfig_package(*name*, [*version*], [*lang*])
+### pkgconfig_package(*name*, [*version*], [*lang*]) { #pkgconfig_package }
 
 Search for a package named *name* via
 [pkg-config](https://www.freedesktop.org/wiki/Software/pkg-config/). If
@@ -412,14 +403,14 @@ need to link a static library written in C++ with a program written in C.
 This rule recognizes the following environment variable:
 [`PKG_CONFIG`](environment-vars.md#pkg_config),
 
-### system_executable(*name*)
+### system_executable(*name*) { #system_executable }
 
 Search for an executable named *name* somewhere in the system's PATH.
 
 This rule recognizes the following environment variables:
 [`PATH`](environment-vars.md#path), [`PATHEXT`](environment-vars.md#pathext).
 
-### system_package(*name*, [*lang*], [*kind*])
+### system_package(*name*, [*lang*], [*kind*]) { #system_package }
 
 Search for a library named *name* somewhere in the system's default library
 location. *lang* is the source language of the library (`'c'` by default); this
@@ -452,52 +443,52 @@ encounter some unavoidable issue with multiplatform compatibility.
     since many are only useful to internal code. However, the most relevant ones
     for `build.bfg` files are shown below.
 
-### env.builder(*lang*)
+### env.builder(*lang*) { #env-builder }
 
 Return the builder used by bfg9000 for a particular language *lang*. While
 builder objects are primarily suited to bfg's internals, there are still a few
 useful properties for `build.bfg` files:
 
-#### builder.flavor
+#### builder.flavor { #builder-flavor }
 
 The "flavor" of the builder, i.e. the kind of command-line interface it has.
 Possible values are `'cc'` and `'msvc'`.
 
-#### builder.flavor
+#### builder.brand { #builder-brand }
 
 The brand of the builder, i.e. the commonad name people use for it. Possible
 values are `'gcc'`, `'clang'`, `'msvc'`, and `'unknown'`.
 
-#### builder.compiler
+#### builder.compiler { #builder-compiler }
 
 The compiler used with this builder.
 
-##### compiler.command
+##### compiler.command { #compiler-command }
 
 The command to run when invoking this compiler, e.g. `g++-4.9`.
 
-### builder.linker(*mode*)
+### builder.linker(*mode*) { #builder-linker }
 
 The linker used with this builder. *mode* is one of `'executable'`,
 `'shared_library'`, or `'static_library'`. Its public properties are the same as
-[*compiler*](#compilercommand) above.
+[*compiler*](#compiler-command) above.
 
-### env.platform
+### env.platform { #env-platform }
 
 Return the target platform used for the build (currently the same as the host
 platform).
 
-#### platform.flavor
+#### platform.flavor { #platform-flavor }
 
 The "flavor" of the platform. Either `'posix'` or `'windows'`.
 
-#### platform.name
+#### platform.name { #platform-name }
 
 The name of the platform, e.g. `'linux'`, `'darwin'` (OS X), or `'windows'`.
 
 ## Miscellaneous
 
-### bfg9000_required_version([*version*], [*python_version*])
+### bfg9000_required_version([*version*], [*python_version*]) { #bfg9000_required_version }
 
 Set the required *version* for bfg9000 and/or the required *python_version*.
 Each of these is a standard Python [version
@@ -508,7 +499,7 @@ specifier](https://www.python.org/dev/peps/pep-0440/#version-specifiers).
 Return the current version of bfg9000. This can be useful if you want to
 optionally support a feature only available in certain versions of bfg.
 
-### filter_by_platform(*name*, *path*, *type*)
+### filter_by_platform(*name*, *path*, *type*) { #filter_by_platform {
 
 Return *FindResult.include* if *path* is a filename that should be included for
 the target platform, and *FindResult.not_now* otherwise. File (or directory)
@@ -516,21 +507,19 @@ names like `PLATFORM` or `foo_PLATFORM.cpp` are excluded if `PLATFORM` is a
 known platform name that *doesn't* match the target platform. Known platform
 names are: `'posix'`,`'linux'`, `'darwin'`, `'cygwin'`, `'windows'`.
 
-This is the default *filter* for
-[*find_files*](#find_filespath-name-type-extra-exclude-flat-filter-cache-dist-as_object).
+This is the default *filter* for [*find_files*](#find_files).
 
 ### FindResult
 
 An enum to be used as the result of a filter function for
-[*find_files*](#find_filespath-name-type-extra-exclude-flat-filter-cache-dist-as_object).
-The possible enum values are:
+[*find_files*](#find_files). The possible enum values are:
 
 * *include*: Include this file in the results
 * *exclude*: Don't include this file in the results
 * *not_now*: Don't include this file in the results, but do include is in the
   [source distribution](writing.md#distributing-your-source)
 
-### find_files([*path*], [*name*], [*type*], [*extra*], [*exclude*], [*flat*], [*filter*], [*cache*], [*dist*], [*as_object*])
+### find_files([*path*], [*name*], [*type*], [*extra*], [*exclude*], [*flat*], [*filter*], [*cache*], [*dist*], [*as_object*]) { #find_files }
 
 Find files in *path* whose name matches the glob (or list of globs) *name*. The
 following arguments may be specified:
@@ -550,7 +539,7 @@ following arguments may be specified:
   (the default) it will
 * *filter*: A predicate taking a filename, relative path, and file type, and
   returning a [*FindResult*](#FindResult) which will filter the results; by
-  default, this is [*filter_by_platform*](#filter_by_platformname-path-type)
+  default, this is [*filter_by_platform*](#filter_by_platform)
 * *cache*: If true (the default), cache the results so that any changes to will
   regenerate the build scripts for the project
 * *dist*: If true (the default), all files found by this function will
@@ -561,7 +550,7 @@ following arguments may be specified:
 The *cache* argument is particularly important. It allows you to add or remove
 source files and not have to worry about manually rerunning bfg9000.
 
-### project(*name*, [*version*])
+### project(*name*, [*version*]) { #project }
 
 Set the name (and optionally the version) of the project. If you don't call
 this function to specify a project name, it defaults to the name of the
