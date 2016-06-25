@@ -226,9 +226,6 @@ you reference files that are part of the source distribution but which have no
 impact on the build proper (e.g. READMEs).</p>
 <h3 id="generic_file">generic_file(<em>name</em>)<a class="headerlink" href="#generic_file" title="Permanent link">§</a></h3>
 <p>Create a reference to an existing file named <em>name</em>.</p>
-<h3 id="header">header(<em>name</em>)<a class="headerlink" href="#header" title="Permanent link">§</a></h3>
-<p>Create a reference to an existing header named <em>name</em>. This is useful if you'd
-like to <a href="#install">install</a> a single header file for your project.</p>
 <h3 id="header_directory">header_directory(<em>name</em>, [<em>include</em>], [<em>exclude</em>], [<em>filter</em>], [<em>system</em>])<a class="headerlink" href="#header_directory" title="Permanent link">§</a></h3>
 <p>Create a reference to a directory named <em>name</em> containing header files for the
 project. This can then be used in the <em>include</em> argument when
@@ -239,6 +236,9 @@ distribution</a>.</p>
 <p>If <em>system</em> is <em>True</em>, this directory will be treated as a
 <a href="https://gcc.gnu.org/onlinedocs/cpp/System-Headers.html">system directory</a> for
 compilers that support this.</p>
+<h3 id="header_file">header_file(<em>name</em>)<a class="headerlink" href="#header_file" title="Permanent link">§</a></h3>
+<p>Create a reference to an existing header named <em>name</em>. This is useful if you'd
+like to <a href="#install">install</a> a single header file for your project.</p>
 <h3 id="source_file">source_file(<em>name</em>, [<em>lang</em>])<a class="headerlink" href="#source_file" title="Permanent link">§</a></h3>
 <p>Create a reference to an existing source file named <em>name</em>. If <em>lang</em> is not
 specified, the language of the file is inferred from its extension.</p>
