@@ -1,7 +1,7 @@
 # Changes
 
 ## v0.2.0
-in progress
+2016-06-26
 {: .subtitle}
 
 ### New features
