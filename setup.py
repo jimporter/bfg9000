@@ -57,6 +57,9 @@ except:
 more_scripts = []
 more_requires = []
 
+if os.getenv('NO_DOPPEL') not in ['1', 'true']:
+    more_requires.append('doppel')
+
 if sys.version_info < (3, 4):
     more_requires.append('enum34')
 
@@ -108,7 +111,7 @@ setup(
     packages=find_packages(exclude=['test', 'test.*']),
 
     install_requires=(
-        ['colorama', 'doppel', 'packaging', 'six'] + more_requires
+        ['colorama', 'packaging', 'six'] + more_requires
     ),
     extras_require={
         'deploy': ['pypandoc'],
