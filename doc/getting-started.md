@@ -22,8 +22,12 @@ $ pip install bfg9000
 ```
 
 If you've downloaded bfg already, just run `pip install .` from the source
-directory. (Equivalently, you can run `python setup.py install`.) From there, you
-can start using bfg to build your software!
+directory. (Equivalently, you can run `python setup.py install`.) From there,
+you can start using bfg to build your software!
+
+!!! note
+    If you're using Ubuntu, you can also install bfg9000 from the following PPA:
+    [ppa:jimporter/stable](https://launchpad.net/~jimporter/+archive/ubuntu/stable).
 
 ### Installing patchelf
 
