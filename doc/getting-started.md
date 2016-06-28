@@ -27,7 +27,9 @@ you can start using bfg to build your software!
 
 !!! note
     If you're using Ubuntu, you can also install bfg9000 from the following PPA:
-    [ppa:jimporter/stable](https://launchpad.net/~jimporter/+archive/ubuntu/stable).
+    [ppa:jimporter/stable][ppa].
+
+[ppa]: https://launchpad.net/~jimporter/+archive/ubuntu/stable
 
 ### Installing patchelf
 

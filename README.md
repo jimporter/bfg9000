@@ -62,9 +62,11 @@ is much the same as any other Python package:
 $ pip install bfg9000
 ```
 
-From there, you can start using bfg to build your software! For more information
-about how to install bfg9000, see the
-[documentation](https://jimporter.github.io/bfg9000/install).
+From there, you can start using bfg to build your software! (If you're using
+Ubuntu, you can also install bfg9000 from the following PPA:
+[ppa:jimporter/stable](https://launchpad.net/~jimporter/+archive/ubuntu/stable)).
+For more information about how to install bfg9000, see the
+[documentation](https://jimporter.github.io/bfg9000/getting-started).
 
 ## License
 
