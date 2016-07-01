@@ -1,6 +1,6 @@
 # Changes
 
-## v0.2.0 (in progress)
+## v0.2.0 (2016-06-26)
 
 ### New features
 - Support Objective C/C++
@@ -19,8 +19,11 @@
 - Use *doppel* for installing files instead of *install(1)*
 - Support *command* and *alias* rules under MSBuild
 - Add support for building a distribution of the sources (`make dist`)
+- Allow running custom build steps via `build_step()`
 
 ### Breaking changes
+- Configuring a build is now performed by `bfg9000 configure DIRECTORY`
+- `header()` renamed to `header_file()`
 - `env.compiler(lang)` replaced by `env.builder(lang).compiler`
 - `env.linker(lang, mode)` replaced by `env.builder(lang).linker(mode)`
 - `env.compiler(lang).flavor` replaced by `env.builder(lang).flavor`
