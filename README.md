@@ -70,7 +70,7 @@ For more information about how to install bfg9000, see the
 
 ## License
 
-This project is licensed under the BSD 3-clause license.
+This project is licensed under the BSD 3-clause [license](LICENSE).
 
 [pypi-image]: https://img.shields.io/pypi/v/bfg9000.svg
 [pypi-link]: https://pypi.python.org/pypi/bfg9000
