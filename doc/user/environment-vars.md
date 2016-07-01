@@ -210,13 +210,13 @@ is delimited by `:`; on Windows, by `;`.
 Default: *none*
 {: .subtitle}
 
-*MSVC-only* A list of directories to search for headers, delimited by `;`.
+*MSVC-only*. A list of directories to search for headers, delimited by `;`.
 
 #### *LIB*
 Default: *none*
 {: .subtitle}
 
-*MSVC-only* A list of directories to search for [system
+*MSVC-only*. A list of directories to search for [system
 libraries](reference.md#system_package), delimited by `;`.
 
 #### *LIBRARY_PATH*
