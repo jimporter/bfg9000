@@ -45,6 +45,7 @@ cache:
   - apt
 
 before_install:
+  - set -e
   - |
     if [ "${TRAVIS_OS_NAME}" = "osx" ]; then
       brew update
