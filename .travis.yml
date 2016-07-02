@@ -59,7 +59,6 @@ install:
     if [ "${TEST_COMMAND}" = "lint" ]; then
       ${PIP} install flake8
     fi
-  - git clone https://github.com/jimporter/doppel.git
-  - ${PIP} install ./doppel .
+  - ${PIP} install .
 script:
   - ${PYTHON} setup.py ${TEST_COMMAND}

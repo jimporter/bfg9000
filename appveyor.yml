@@ -41,7 +41,6 @@ install:
   - cinst ninja gnuwin32-coreutils.portable %CHOCO_EXTRAS%
   - if defined VS call "%VS%" x86
   - set PATH=%PYTHON_PATH%;%PYTHON_PATH%\Scripts;%MINGW_PATH%;%PATH%
-  - git clone https://github.com/jimporter/doppel.git
-  - pip install ./doppel lxml==3.5.0 .
+  - pip install .
 test_script:
   - python setup.py test -q
