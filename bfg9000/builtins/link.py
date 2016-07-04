@@ -65,7 +65,7 @@ class Link(Edge):
             (i.lang for i in self.files),
             chain.from_iterable(getattr(i, 'lang', []) for i in self.all_libs)
         ))
-        self.builder = self.__find_linker(env, formats[0], self.langs)
+        self.linker = self.__find_linker(env, formats[0], self.langs)
 
         self.user_options = pshell.listify(link_options)
         self._extra_options = sum((i.get('link_options', []) for i in fwd), [])
@@ -77,8 +77,8 @@ class Link(Edge):
         self._fill_options(env)
 
         primary = first(output)
-        if hasattr(self.builder, 'post_install'):
-            primary.post_install = self.builder.post_install(output)
+        if hasattr(self.linker, 'post_install'):
+            primary.post_install = self.linker.post_install(output)
         build['defaults'].add(primary)
 
     @property
@@ -86,7 +86,7 @@ class Link(Edge):
         return self._internal_options + self._extra_options + self.user_options
 
     def _output_file(self, name):
-        return self.builder.output_file(name)
+        return self.linker.output_file(name)
 
     @classmethod
     def __name(cls, name):
@@ -117,7 +117,7 @@ class StaticLink(Link):
 
     def _output_file(self, name):
         langs = uniques(i.lang for i in self.files)
-        return self.builder.output_file(name, langs)
+        return self.linker.output_file(name, langs)
 
 
 class DynamicLink(Link):
@@ -128,17 +128,17 @@ class DynamicLink(Link):
     def _fill_options(self, env):
         # XXX: Create a LinkOptions namedtuple for managing these args?
         self._internal_options = (
-            sum((i.ldflags(self.builder, self.output)
+            sum((i.ldflags(self.linker, self.output)
                  for i in self.all_packages), []) +
-            self.builder.args(self.all_libs, self.output)
+            self.linker.args(self.all_libs, self.output)
         )
 
         linkers = (env.builder(i).linker(self.mode) for i in self.langs)
         self.lib_options = (
-            sum((i.always_libs(i is self.builder) for i in linkers), []) +
-            sum((i.ldlibs(self.builder, self.output)
+            sum((i.always_libs(i is self.linker) for i in linkers), []) +
+            sum((i.ldlibs(self.linker, self.output)
                  for i in self.all_packages), []) +
-            self.builder.libs(self.all_libs)
+            self.linker.libs(self.all_libs)
         )
 
         first(self.output).runtime_deps = sum(
@@ -168,7 +168,7 @@ class SharedLink(DynamicLink):
         DynamicLink.__init__(self, *args, **kwargs)
 
     def _output_file(self, name):
-        return self.builder.output_file(name, self.version, self.soversion)
+        return self.linker.output_file(name, self.version, self.soversion)
 
 
 @builtin.globals('builtins', 'build_inputs', 'env')
@@ -237,8 +237,8 @@ def global_link_options(build, options):
 
 def _get_flags(backend, rule, build_inputs, buildfile):
     global_ldflags, ldflags = backend.flags_vars(
-        rule.builder.link_var + 'flags',
-        rule.builder.global_args + build_inputs['link_options'],
+        rule.linker.link_var + 'flags',
+        rule.linker.global_args + build_inputs['link_options'],
         buildfile
     )
 
@@ -250,7 +250,7 @@ def _get_flags(backend, rule, build_inputs, buildfile):
 
     if hasattr(rule, 'lib_options'):
         global_ldlibs, ldlibs = backend.flags_vars(
-            rule.builder.link_var + 'libs', rule.builder.global_libs, buildfile
+            rule.linker.link_var + 'libs', rule.linker.global_libs, buildfile
         )
         cmd_kwargs['libs'] = ldlibs
         if rule.lib_options:
@@ -261,7 +261,7 @@ def _get_flags(backend, rule, build_inputs, buildfile):
 
 @make.rule_handler(StaticLink, DynamicLink, SharedLink)
 def make_link(rule, build_inputs, buildfile, env):
-    linker = rule.builder
+    linker = rule.linker
     variables, cmd_kwargs = _get_flags(make, rule, build_inputs, buildfile)
 
     output_params = []
@@ -294,7 +294,7 @@ def make_link(rule, build_inputs, buildfile, env):
 
 @ninja.rule_handler(StaticLink, DynamicLink, SharedLink)
 def ninja_link(rule, build_inputs, buildfile, env):
-    linker = rule.builder
+    linker = rule.linker
     variables, cmd_kwargs = _get_flags(ninja, rule, build_inputs, buildfile)
 
     if len(rule.output) == 1:
@@ -328,13 +328,13 @@ try:
 
     def _reduce_compile_options(files, global_cflags):
         creators = [i.creator for i in files if i.creator]
-        compilers = uniques(i.builder for i in creators)
+        compilers = uniques(i.linker for i in creators)
 
         return reduce(merge_dicts, chain(
             (i.parse_args(msbuild.textify_each(
                 i.global_args + global_cflags[i.lang]
             )) for i in compilers),
-            (i.builder.parse_args(msbuild.textify_each(
+            (i.linker.parse_args(msbuild.textify_each(
                 i.options
             )) for i in creators)
         ))
@@ -345,12 +345,12 @@ try:
         ))
 
     def _parse_file_cflags(file, per_compiler_cflags):
-        cflags = file.creator.builder.parse_args(
+        cflags = file.creator.linker.parse_args(
             msbuild.textify_each(file.creator.options)
         )
         if not per_compiler_cflags:
             return cflags
-        key = file.creator.builder.command_var
+        key = file.creator.linker.command_var
         return merge_dicts(per_compiler_cflags[key], cflags)
 
     @msbuild.rule_handler(StaticLink, DynamicLink, SharedLink)
@@ -362,7 +362,7 @@ try:
         # all the files at once. Otherwise, we need to apply them to each file
         # individually so they all get the correct options.
         obj_creators = [i.creator for i in rule.files]
-        compilers = uniques(i.builder for i in obj_creators)
+        compilers = uniques(i.linker for i in obj_creators)
 
         per_compiler_cflags = {}
         for c in compilers:
@@ -378,12 +378,12 @@ try:
             common_cflags = None
 
         # Parse linking flags.
-        ldflags = rule.builder.parse_args(msbuild.textify_each(
-            (rule.builder.global_args + build_inputs['link_options'] +
+        ldflags = rule.linker.parse_args(msbuild.textify_each(
+            (rule.linker.global_args + build_inputs['link_options'] +
              rule.options)
         ))
         ldflags['libs'] = (
-            getattr(rule.builder, 'global_libs', []) +
+            getattr(rule.linker, 'global_libs', []) +
             getattr(rule, 'lib_options', [])
         )
         if hasattr(output, 'import_lib'):

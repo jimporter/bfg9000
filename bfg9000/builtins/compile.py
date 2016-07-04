@@ -64,14 +64,14 @@ class Compile(Edge):
             output.extra_objects = [self.pch.object_file]
 
         self._internal_options = (
-            self.builder.args(self.includes, self.pch, *extra_args) +
-            sum((i.cflags(self.builder, output) for i in self.packages), [])
+            self.compiler.args(self.includes, self.pch, *extra_args) +
+            sum((i.cflags(self.compiler, output) for i in self.packages), [])
         )
 
         Edge.__init__(self, build, output, extra_deps)
 
     def add_link_options(self, *args, **kwargs):
-        opts = self.builder.link_args(*args, **kwargs)
+        opts = self.compiler.link_args(*args, **kwargs)
         self._internal_options.extend(opts)
         if self.pch and self.pch.creator:
             self.pch.creator.add_link_options(*args, **kwargs)
@@ -90,8 +90,8 @@ class CompileSource(Compile):
         if name is None:
             name = self.file.path.stripext().suffix
 
-        self.builder = env.builder(self.file.lang).compiler
-        output = self.builder.output_file(name)
+        self.compiler = env.builder(self.file.lang).compiler
+        output = self.compiler.output_file(name)
         Compile.__init__(self, builtins, build, env, output, include, pch,
                          packages, options, lang, extra_deps)
 
@@ -105,11 +105,11 @@ class CompileHeader(Compile):
         if name is None:
             name = self.file.path.suffix
 
-        self.builder = env.builder(self.file.lang).pch_compiler
+        self.compiler = env.builder(self.file.lang).pch_compiler
 
         extra_options = []
         extra_args = []
-        if self.builder.needs_source:
+        if self.compiler.needs_source:
             if source is None:
                 ext = lang2src[self.file.lang][0]
                 source = SourceFile(self.file.path.stripext(ext),
@@ -118,7 +118,7 @@ class CompileHeader(Compile):
 
                 text = '#include "{}"'.format(self.file.path.basename())
                 EchoFile(build, source, text)
-                extra_options = self.builder.args([
+                extra_options = self.compiler.args([
                     Directory(self.file.path.parent(), None)
                 ])
             else:
@@ -128,9 +128,9 @@ class CompileHeader(Compile):
             extra_args.append(self.file)
             self.pch_source = source
             source_name = self.pch_source.path.stripext().suffix
-            output = self.builder.output_file(name, source_name)
+            output = self.compiler.output_file(name, source_name)
         else:
-            output = self.builder.output_file(name)
+            output = self.compiler.output_file(name)
 
         Compile.__init__(self, builtins, build, env, output, include, None,
                          packages, options, lang, extra_deps, extra_args)
@@ -180,8 +180,8 @@ def global_options(build, options, lang):
 
 def _get_flags(backend, rule, build_inputs, buildfile):
     global_cflags, cflags = backend.flags_vars(
-        rule.builder.command_var + 'flags',
-        ( rule.builder.global_args +
+        rule.compiler.command_var + 'flags',
+        ( rule.compiler.global_args +
           build_inputs['compile_options'][rule.file.lang] ),
         buildfile
     )
@@ -197,7 +197,7 @@ def _get_flags(backend, rule, build_inputs, buildfile):
 
 @make.rule_handler(CompileSource, CompileHeader)
 def make_compile(rule, build_inputs, buildfile, env):
-    compiler = rule.builder
+    compiler = rule.compiler
     variables, cmd_kwargs = _get_flags(make, rule, build_inputs, buildfile)
 
     output_params = []
@@ -249,7 +249,7 @@ def make_compile(rule, build_inputs, buildfile, env):
 
 @ninja.rule_handler(CompileSource, CompileHeader)
 def ninja_compile(rule, build_inputs, buildfile, env):
-    compiler = rule.builder
+    compiler = rule.compiler
     variables, cmd_kwargs = _get_flags(ninja, rule, build_inputs, buildfile)
 
     if len(rule.output) == 1:

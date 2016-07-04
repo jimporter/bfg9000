@@ -25,14 +25,14 @@ class SystemPackage(Package):
         self._libraries = libraries or []
         self.version = version
 
-    def cflags(self, builder, output):
-        return builder.args(self._includes)
+    def cflags(self, compiler, output):
+        return compiler.args(self._includes)
 
-    def ldflags(self, builder, output):
-        return builder.pkg_args(self._libraries, output, self._lib_dirs)
+    def ldflags(self, linker, output):
+        return linker.pkg_args(self._libraries, output, self._lib_dirs)
 
-    def ldlibs(self, builder, output):
-        return builder.libs(self._libraries)
+    def ldlibs(self, linker, output):
+        return linker.libs(self._libraries)
 
 
 class PkgConfigPackage(Package):
@@ -53,14 +53,14 @@ class PkgConfigPackage(Package):
         # a lot harder to work with SpecifierSets.
         return Version(self._call('version'))
 
-    def cflags(self, builder, output):
-        return shell.split(self._call('cflags', builder.flavor == 'msvc'))
+    def cflags(self, compiler, output):
+        return shell.split(self._call('cflags', compiler.flavor == 'msvc'))
 
-    def ldflags(self, builder, output):
-        return shell.split(self._call('ldflags', builder.flavor == 'msvc'))
+    def ldflags(self, linker, output):
+        return shell.split(self._call('ldflags', linker.flavor == 'msvc'))
 
-    def ldlibs(self, builder, output):
-        return shell.split(self._call('ldlibs', builder.flavor == 'msvc'))
+    def ldlibs(self, linker, output):
+        return shell.split(self._call('ldlibs', linker.flavor == 'msvc'))
 
 
 def _boost_version(header, required_version=None):

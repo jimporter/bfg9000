@@ -1,5 +1,4 @@
 import os.path
-import warnings
 from itertools import chain
 
 from .winargparse import ArgumentParser
@@ -58,8 +57,6 @@ class MsvcBaseCompiler(object):
 
     @property
     def flavor(self):
-        warnings.warn('compiler.flavor is deprecated; please use ' +
-                      'builder.flavor instead', DeprecationWarning)
         return 'msvc'
 
     @property
@@ -185,8 +182,6 @@ class MsvcLinker(object):
 
     @property
     def flavor(self):
-        warnings.warn('compiler.flavor is deprecated; please use ' +
-                      'builder.flavor instead', DeprecationWarning)
         return 'msvc'
 
     def can_link(self, format, langs):

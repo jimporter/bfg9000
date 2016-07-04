@@ -1,7 +1,6 @@
 import os.path
 import re
 import subprocess
-import warnings
 from itertools import chain
 from six.moves import filter as ifilter
 
@@ -66,8 +65,6 @@ class CcBaseCompiler(object):
 
     @property
     def flavor(self):
-        warnings.warn('compiler.flavor is deprecated; please use ' +
-                      'builder.flavor instead', DeprecationWarning)
         return 'cc'
 
     @property
@@ -213,8 +210,6 @@ class CcLinker(object):
 
     @property
     def flavor(self):
-        warnings.warn('compiler.flavor is deprecated; please use ' +
-                      'builder.flavor instead', DeprecationWarning)
         return 'cc'
 
     def can_link(self, format, langs):
