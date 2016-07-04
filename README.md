@@ -53,7 +53,7 @@ For further examples, please see the
 [`examples/`](https://github.com/jimporter/bfg9000/tree/master/examples)
 subdirectory.
 
-# Installation
+## Installation
 
 bfg9000 uses [setuptools](https://pythonhosted.org/setuptools/), so installation
 is much the same as any other Python package:
