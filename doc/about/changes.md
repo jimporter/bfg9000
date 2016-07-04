@@ -1,5 +1,15 @@
 # Changes
 
+## v0.3.0
+in progress
+{: .subtitle}
+
+### New features
+
+- Add `header` argument to `system_package()` to find header files
+
+---
+
 ## v0.2.0
 2016-06-26
 {: .subtitle}

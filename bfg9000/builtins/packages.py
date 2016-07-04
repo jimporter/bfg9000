@@ -76,18 +76,21 @@ def _boost_version(header, required_version=None):
 
 
 @builtin.globals('env')
-def system_package(env, name, lang='c', kind='any'):
+def system_package(env, name, lang='c', kind='any', header=None):
     if kind not in ('any', 'shared', 'static'):
         raise ValueError("kind must be one of 'any', 'shared', or 'static'")
-    lib = env.builder(lang).packages.library(name, kind)
-    return SystemPackage(libraries=[lib])
+
+    pkg = env.builder(lang).packages
+    includes = [pkg.header(i) for i in iterate(header)]
+    lib = pkg.library(name, kind)
+    return SystemPackage(includes=includes, libraries=[lib])
 
 
 @builtin.globals('env')
 def boost_package(env, name=None, version=None):
     version = make_specifier(version)
     pkg = env.builder('c++').packages
-    version_hpp = os.path.join('boost', 'version.hpp')
+    version_hpp = 'boost/version.hpp'
 
     root = env.getvar('BOOST_ROOT')
     incdir = env.getvar('BOOST_INCLUDEDIR', os.path.join(root, 'include')

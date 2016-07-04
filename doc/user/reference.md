@@ -387,8 +387,14 @@ If *version* is specified, it will ensure that the installed version of Boost
 meets the version requirement; it must be formatted as a Python [version
 specifier](https://www.python.org/dev/peps/pep-0440/#version-specifiers).
 
-This rule recognizes the [packaging environment
-variables](environment-vars.md#packaging-variables).
+This rule recognizes the following environment variables:
+[`BOOST_ROOT`](environment-vars.md#boost_root),
+[`BOOST_INCLUDEDIR`](environment-vars.md#boost_includedir),
+[`BOOST_LIBRARYDIR`](environment-vars.md#boost_librarydir),
+[`CPATH`](environment-vars.md#cpath),
+[`INCLUDE`](environment-vars.md#include),
+[`LIB`](environment-vars.md#lib),
+[`LIBRARY_PATH`](environment-vars.md#library_path).
 
 ### pkgconfig_package(*name*, [*version*], [*lang*]) { #pkgconfig_package }
 
@@ -410,26 +416,25 @@ Search for an executable named *name* somewhere in the system's PATH.
 This rule recognizes the following environment variables:
 [`PATH`](environment-vars.md#path), [`PATHEXT`](environment-vars.md#pathext).
 
-### system_package(*name*, [*lang*], [*kind*]) { #system_package }
+### system_package(*name*, [*lang*], [*kind*], [*header*]) { #system_package }
 
 Search for a library named *name* somewhere in the system's default library
 location. *lang* is the source language of the library (`'c'` by default); this
 is useful if you need to link a static library written in C++ with a program
-written in C.
+written in C. You can also specify *kind* to one of `'any'` (the default),
+`'shared'`, or `'static'`. This allows you to restrict the search to find only
+static versions of a library, for example.
 
-You can also specify *kind* to one of `'any'` (the default), `'shared'`, or
-`'static'`. This allows you to restrict the search to find only static versions
-of a library, for example.
+Finally, the *header* argument allows you to specify a header file (or list
+thereof) that you need to use in your source files. This will search for the
+header file and add the appropriate include directory to your build
+configuration.
 
 This rule recognizes the following environment variables:
+[`CPATH`](environment-vars.md#cpath),
+[`INCLUDE`](environment-vars.md#include),
 [`LIB`](environment-vars.md#lib),
 [`LIBRARY_PATH`](environment-vars.md#library_path).
-
-!!! note
-    This only finds the library itself, not any required headers. Those are
-    assumed to be somewhere where your compiler can find them automatically; if
-    not, you can set [`CPPFLAGS`](environment-vars.md#cppflags) to add the
-    appropriate header search path.
 
 ## Environment
 
