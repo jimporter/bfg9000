@@ -504,7 +504,7 @@ specifier](https://www.python.org/dev/peps/pep-0440/#version-specifiers).
 Return the current version of bfg9000. This can be useful if you want to
 optionally support a feature only available in certain versions of bfg.
 
-### filter_by_platform(*name*, *path*, *type*) { #filter_by_platform {
+### filter_by_platform(*name*, *path*, *type*) { #filter_by_platform }
 
 Return *FindResult.include* if *path* is a filename that should be included for
 the target platform, and *FindResult.not_now* otherwise. File (or directory)
