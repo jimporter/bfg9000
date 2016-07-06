@@ -521,7 +521,7 @@ An enum to be used as the result of a filter function for
 
 * *include*: Include this file in the results
 * *exclude*: Don't include this file in the results
-* *not_now*: Don't include this file in the results, but do include is in the
+* *not_now*: Don't include this file in the results, but do include it in the
   [source distribution](writing.md#distributing-your-source)
 
 ### find_files([*path*], [*name*], [*type*], [*extra*], [*exclude*], [*flat*], [*filter*], [*cache*], [*dist*], [*as_object*]) { #find_files }
