@@ -58,10 +58,13 @@ def _listdir(path):
 
 
 def _walk_flat(top):
-    yield (top,) + _listdir(top)
+    if os.path.exists(top):
+        yield (top,) + _listdir(top)
 
 
 def _walk_recursive(top):
+    if not os.path.exists(top):
+        return
     dirs, nondirs = _listdir(top)
     yield top, dirs, nondirs
     for name, path in dirs:
