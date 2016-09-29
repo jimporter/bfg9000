@@ -8,7 +8,7 @@ from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..build_inputs import build_input, Edge
 from ..file_types import *
-from ..iterutils import iterate, listify, uniques
+from ..iterutils import first, iterate, listify, uniques
 from ..languages import lang2src
 from ..path import Path, Root
 from ..shell import posix as pshell
@@ -217,7 +217,7 @@ def make_compile(rule, build_inputs, buildfile, env):
         # Only GCC-style depfiles are supported by Make.
         if compiler.deps_flavor == 'gcc':
             depfixer = env.tool('depfixer')
-            cmd_kwargs['deps'] = deps = make.qvar('@') + '.d'
+            cmd_kwargs['deps'] = deps = first(output_vars) + '.d'
             df_cmd = make.cmd_var(depfixer, buildfile)
             recipe_extra = [make.silent(depfixer(df_cmd, deps))]
 
