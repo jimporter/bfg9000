@@ -22,10 +22,12 @@ matrix:
     - language: generic
       python: 2.7
       os: osx
+      osx_image: xcode7.3
       env: CC=clang CXX=clang++
     - language: generic
       python: 3.5
       os: osx
+      osx_image: xcode7.3
       env: CC=clang CXX=clang++ PYTHON=python3 PIP=pip3
     - python: 2.7
       os: linux
@@ -48,11 +50,12 @@ before_install:
   - set -e
   - |
     if [ "${TRAVIS_OS_NAME}" = "osx" ]; then
+      shell_session_update() { :; }
       brew update
-      brew install coreutils
-      brew install libogg
-      brew install ninja
-      brew install ${PYTHON}
+      brew install coreutils gcc libogg ninja
+      if [ "${PYTHON}" = "python3" ]; then
+        brew install ${PYTHON}
+      fi
     fi
 install:
   - |
