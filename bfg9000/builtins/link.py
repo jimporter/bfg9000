@@ -1,4 +1,5 @@
 import os.path
+import re
 from itertools import chain
 from six.moves import reduce
 
@@ -14,6 +15,23 @@ from ..path import Root
 from ..shell import posix as pshell
 
 build_input('link_options')(lambda build_inputs, env: list())
+
+
+_modes = {
+    'shared_library': 'EXPORTS',
+    'static_library': 'STATIC',
+}
+
+
+def library_macro(name, mode):
+    if mode not in _modes:
+        return []
+
+    # Since the name always begins with "lib", this always produces a valid
+    # macro name.
+    return ['{name}_{suffix}'.format(
+        name=re.sub(r'\W', '_', name.upper()), suffix=_modes[mode]
+    )]
 
 
 class Link(Edge):
@@ -47,14 +65,17 @@ class Link(Edge):
                                 self.packages)
 
         for c in (i.creator for i in self.files if i.creator):
-            # XXX: Passing all the static libs' names to the compiler to add
-            # the appropriate macros is a bit convoluted. Perhaps this could be
-            # simplified when we add support for "semantic options" (i.e.
+            # To handle the different import/export rules for libraries, we
+            # need to provide some LIBFOO_EXPORTS/LIBFOO_STATIC macros so the
+            # build knows how to annotate public API functions in the headers.
+            # XXX: One day, we could pass these as "semantic options" (i.e.
             # options that are specified like define('FOO') instead of
-            # '-DFOO'). Then the linkers could generate those options in a
+            # '-DFOO'). Then the linkers could generate those options in a more
             # generic way.
-            c.add_link_options(self.name, self.mode,
-                               (f['name'] for f in fwd if 'name' in f))
+            macro = library_macro(self.name, self.mode)
+            c.add_link_options(
+                self.mode, sum((f.get('defines', []) for f in fwd), macro)
+            )
 
         formats = uniques(chain( (i.format for i in self.files),
                                  (i.format for i in self.all_libs) ))
@@ -109,7 +130,7 @@ class StaticLink(Link):
     def _fill_options(self, env):
         primary = first(self.output)
         primary.forward_args = {
-            'name': self.name,
+            'defines': library_macro(self.name, self.mode),
             'options': self.options,
             'libs': self.libs,
             'packages': self.packages,

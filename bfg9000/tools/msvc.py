@@ -2,7 +2,6 @@ import os.path
 from itertools import chain
 
 from .winargparse import ArgumentParser
-from .utils import library_macro
 from .. import shell
 from ..file_types import *
 from ..iterutils import iterate, uniques
@@ -86,16 +85,8 @@ class MsvcBaseCompiler(object):
         return sum((self._include_dir(i) for i in includes),
                    self._include_pch(pch) if pch else [])
 
-    def link_args(self, name, mode, static_libs):
-        args = []
-        if mode in ['shared_library', 'static_library']:
-            args.append('/D' + library_macro(name, mode))
-        elif mode != 'executable':
-            raise ValueError("unknown mode '{}'".format(mode))
-
-        args.extend('/D' + library_macro(i, 'static_library')
-                    for i in static_libs)
-        return args
+    def link_args(self, mode, defines):
+        return ['/D' + i for i in defines]
 
     def parse_args(self, args):
         parser = ArgumentParser()

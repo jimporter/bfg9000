@@ -5,7 +5,7 @@ from itertools import chain
 from six.moves import filter as ifilter
 
 from .ar import ArLinker
-from .utils import darwin_install_name, library_macro
+from .utils import darwin_install_name
 from ..file_types import *
 from ..iterutils import first, iterate, uniques
 from ..path import Path, Root
@@ -103,19 +103,18 @@ class CcBaseCompiler(object):
         return sum((self._include_dir(i) for i in includes),
                    self._include_pch(pch) if pch else [])
 
-    def link_args(self, name, mode, static_libs):
+    def link_args(self, mode, defines):
         args = []
-        if mode in ['shared_library', 'static_library']:
-            if self.platform.flavor != 'windows':
-                args.append('-fPIC')
-            if self.platform.has_import_library:
-                args.append('-D' + library_macro(name, mode))
-        elif mode != 'executable':
-            raise ValueError("unknown mode '{}'".format(mode))
+        if ( mode in ['shared_library', 'static_library'] and
+             self.platform.flavor != 'windows'):
+            args.append('-fPIC')
 
+        # We only need to define LIBFOO_EXPORTS/LIBFOO_STATIC macros on
+        # platforms that have different import/export rules for libraries. We
+        # approximate this by checking if the platform uses import libraries,
+        # and only define the macros if it does.
         if self.platform.has_import_library:
-            args.extend('-D' + library_macro(i, 'static_library')
-                        for i in static_libs)
+            args.extend('-D' + i for i in defines)
         return args
 
 
