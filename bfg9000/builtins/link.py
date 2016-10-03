@@ -82,17 +82,18 @@ class Link(Edge):
         if len(formats) > 1:
             raise ValueError('cannot link multiple object formats')
 
-        self.langs = uniques(chain(
-            (i.lang for i in self.files),
+        self.langs = uniques(i.lang for i in self.files)
+        self.all_langs = uniques(chain(
+            self.langs,
             chain.from_iterable(getattr(i, 'lang', []) for i in self.all_libs)
         ))
-        self.linker = self.__find_linker(env, formats[0], self.langs)
+        self.linker = self.__find_linker(env, formats[0], self.all_langs)
 
         self.user_options = pshell.listify(link_options)
         self._extra_options = sum((i.get('link_options', []) for i in fwd), [])
         self._internal_options = []
 
-        output = self._output_file(name)
+        output = self.linker.output_file(name, self)
         Edge.__init__(self, build, output, extra_deps)
 
         self._fill_options(env)
@@ -105,9 +106,6 @@ class Link(Edge):
     @property
     def options(self):
         return self._internal_options + self._extra_options + self.user_options
-
-    def _output_file(self, name):
-        return self.linker.output_file(name)
 
     @classmethod
     def __name(cls, name):
@@ -136,10 +134,6 @@ class StaticLink(Link):
             'packages': self.packages,
         }
 
-    def _output_file(self, name):
-        langs = uniques(i.lang for i in self.files)
-        return self.linker.output_file(name, langs)
-
 
 class DynamicLink(Link):
     mode = 'executable'
@@ -151,15 +145,15 @@ class DynamicLink(Link):
         self._internal_options = (
             sum((i.ldflags(self.linker, self.output)
                  for i in self.all_packages), []) +
-            self.linker.args(self.all_libs, self.output)
+            self.linker.args(self, self.output)
         )
 
-        linkers = (env.builder(i).linker(self.mode) for i in self.langs)
+        linkers = (env.builder(i).linker(self.mode) for i in self.all_langs)
         self.lib_options = (
             sum((i.always_libs(i is self.linker) for i in linkers), []) +
             sum((i.ldlibs(self.linker, self.output)
                  for i in self.all_packages), []) +
-            self.linker.libs(self.all_libs)
+            self.linker.libs(self, self.output)
         )
 
         first(self.output).runtime_deps = sum(
@@ -187,9 +181,6 @@ class SharedLink(DynamicLink):
         if (self.version is None) != (self.soversion is None):
             raise ValueError('specify both version and soversion or neither')
         DynamicLink.__init__(self, *args, **kwargs)
-
-    def _output_file(self, name):
-        return self.linker.output_file(name, self.version, self.soversion)
 
 
 @builtin.globals('builtins', 'build_inputs', 'env')

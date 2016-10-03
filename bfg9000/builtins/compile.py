@@ -39,8 +39,8 @@ class ObjectFiles(list):
 
 
 class Compile(Edge):
-    def __init__(self, builtins, build, env, output, include, pch, packages,
-                 options, lang, extra_deps, extra_args=[]):
+    def __init__(self, builtins, build, env, name, include, pch, packages,
+                 options, lang, extra_deps):
         self.header_files = []
         self.includes = []
         for i in iterate(include):
@@ -60,11 +60,11 @@ class Compile(Edge):
             build=build, env=env, file=pch, include=include,
             packages=self.packages, options=self.user_options, lang=lang
         ) if pch else None
-        if self.pch and isinstance(self.pch, MsvcPrecompiledHeader):
-            output.extra_objects = [self.pch.object_file]
+
+        output = self.compiler.output_file(name, self)
 
         self._internal_options = (
-            self.compiler.args(self.includes, self.pch, *extra_args) +
+            self.compiler.args(self, output) +
             sum((i.cflags(self.compiler, output) for i in self.packages), [])
         )
 
@@ -91,8 +91,7 @@ class CompileSource(Compile):
             name = self.file.path.stripext().suffix
 
         self.compiler = env.builder(self.file.lang).compiler
-        output = self.compiler.output_file(name)
-        Compile.__init__(self, builtins, build, env, output, include, pch,
+        Compile.__init__(self, builtins, build, env, name, include, pch,
                          packages, options, lang, extra_deps)
 
 
@@ -120,13 +119,12 @@ class CompileHeader(Compile):
 
             text = '#include "{}"'.format(self.file.path.basename())
             EchoFile(build, self.pch_source, text)
-            extra_options = self.compiler.args([
+            extra_options = self.compiler._include_dir(  # FIXME
                 Directory(self.file.path.parent(), None)
-            ])
+            )
 
-        output = self.compiler.output_file(name, self.pch_source)
-        Compile.__init__(self, builtins, build, env, output, include, None,
-                         packages, options, lang, extra_deps, extra_args)
+        Compile.__init__(self, builtins, build, env, name, include, None,
+                         packages, options, lang, extra_deps)
         self._internal_options.extend(extra_options)
 
 

@@ -99,7 +99,9 @@ class CcBaseCompiler(object):
     def _include_pch(self, pch):
         return ['-include', pch.path.stripext()]
 
-    def args(self, includes, pch=None):
+    def args(self, options, output):
+        includes = getattr(options, 'includes', [])
+        pch = getattr(options, 'pch', None)
         return sum((self._include_dir(i) for i in includes),
                    self._include_pch(pch) if pch else [])
 
@@ -131,7 +133,7 @@ class CcCompiler(CcBaseCompiler):
     def __init__(self, env, lang, name, command, cflags):
         CcBaseCompiler.__init__(self, env, lang, name, name, command, cflags)
 
-    def output_file(self, name):
+    def output_file(self, name, options):
         # XXX: MinGW's object format doesn't appear to be COFF...
         return ObjectFile(Path(name + '.o', Root.builddir),
                           self.platform.object_format, self.lang)
@@ -154,7 +156,7 @@ class CcPchCompiler(CcCompiler):
     def needs_source(self):
         return False
 
-    def output_file(self, name, source):
+    def output_file(self, name, options):
         ext = '.gch' if self._brand == 'gcc' else '.pch'
         return PrecompiledHeader(Path(name + ext, Root.builddir), self.lang)
 
@@ -263,12 +265,14 @@ class CcLinker(object):
             raise ValueError('unrecognized object format "{}"'
                              .format(output.format))
 
-    def pkg_args(self, libraries, output, extra_dirs=[]):
-        return ( self._lib_dirs(libraries, extra_dirs) +
+    def pkg_args(self, options, output):
+        libraries = getattr(options, 'all_libs', [])
+        lib_dirs = getattr(options, 'lib_dirs', [])
+        return ( self._lib_dirs(libraries, lib_dirs) +
                  self._rpath(libraries, first(output)) )
 
-    def args(self, libraries, output):
-        return self.pkg_args(libraries, output)
+    def args(self, options, output):
+        return self.pkg_args(options, output)
 
     def _link_lib(self, library):
         if isinstance(library, WholeArchive):
@@ -295,7 +299,8 @@ class CcLinker(object):
             libs.append('-lgfortran')
         return libs
 
-    def libs(self, libraries):
+    def libs(self, options, output):
+        libraries = getattr(options, 'all_libs', [])
         return sum((self._link_lib(i) for i in libraries), [])
 
     def post_install(self, output):
@@ -317,7 +322,7 @@ class CcExecutableLinker(CcLinker):
         CcLinker.__init__(self, env, lang, name + '_link', name, command,
                           ldflags, ldlibs)
 
-    def output_file(self, name):
+    def output_file(self, name, options):
         path = Path(name + self.platform.executable_ext, Root.builddir)
         return Executable(path, self.platform.object_format)
 
@@ -337,7 +342,10 @@ class CcSharedLibraryLinker(CcLinker):
             result.append('-Wl,--out-implib=' + output[1])
         return result
 
-    def output_file(self, name, version=None, soversion=None):
+    def output_file(self, name, options):
+        version = getattr(options, 'version', None)
+        soversion = getattr(options, 'soversion', None)
+
         head, tail = os.path.split(name)
         fmt = self.platform.object_format
 
@@ -380,8 +388,8 @@ class CcSharedLibraryLinker(CcLinker):
         else:
             return ['-Wl,-soname,' + soname.path.basename()]
 
-    def args(self, libraries, output):
-        return (CcLinker.args(self, libraries, output) +
+    def args(self, options, output):
+        return (CcLinker.args(self, options, output) +
                 self._soname(first(output)))
 
 

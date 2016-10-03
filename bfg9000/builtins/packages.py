@@ -20,19 +20,19 @@ class Package(object):
 class SystemPackage(Package):
     def __init__(self, includes=None, lib_dirs=None, libraries=None,
                  version=None):
-        self._includes = includes or []
-        self._lib_dirs = lib_dirs or []
-        self._libraries = libraries or []
+        self.includes = includes or []
+        self.lib_dirs = lib_dirs or []
+        self.all_libs = libraries or []
         self.version = version
 
     def cflags(self, compiler, output):
-        return compiler.args(self._includes)
+        return compiler.args(self, output)
 
     def ldflags(self, linker, output):
-        return linker.pkg_args(self._libraries, output, self._lib_dirs)
+        return linker.pkg_args(self, output)
 
     def ldlibs(self, linker, output):
-        return linker.libs(self._libraries)
+        return linker.libs(self, output)
 
 
 class PkgConfigPackage(Package):

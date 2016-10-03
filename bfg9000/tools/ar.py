@@ -33,8 +33,8 @@ class ArLinker(object):
         result.extend(iterutils.iterate(input))
         return result
 
-    def output_file(self, name, langs):
+    def output_file(self, name, options):
         head, tail = os.path.split(name)
         path = os.path.join(head, 'lib' + tail + '.a')
         return StaticLibrary(Path(path, Root.builddir),
-                             self.platform.object_format, langs)
+                             self.platform.object_format, options.langs)

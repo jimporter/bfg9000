@@ -81,7 +81,9 @@ class MsvcBaseCompiler(object):
     def _include_pch(self, pch):
         return ['/Yu' + pch.header_name]
 
-    def args(self, includes, pch=None):
+    def args(self, options, output):
+        includes = getattr(options, 'includes', [])
+        pch = getattr(options, 'pch', None)
         return sum((self._include_dir(i) for i in includes),
                    self._include_pch(pch) if pch else [])
 
@@ -112,9 +114,12 @@ class MsvcCompiler(MsvcBaseCompiler):
     def __init__(self, env, lang, name, command, cflags):
         MsvcBaseCompiler.__init__(self, env, lang, name, name, command, cflags)
 
-    def output_file(self, name):
-        return ObjectFile(Path(name + '.obj', Root.builddir),
-                          self.platform.object_format, self.lang)
+    def output_file(self, name, options):
+        output = ObjectFile(Path(name + '.obj', Root.builddir),
+                         self.platform.object_format, self.lang)
+        if options.pch:
+            output.extra_objects = [options.pch.object_file]
+        return output
 
 
 class MsvcPchCompiler(MsvcBaseCompiler):
@@ -139,17 +144,20 @@ class MsvcPchCompiler(MsvcBaseCompiler):
     def _create_pch(self, header):
         return ['/Yc' + header.path.suffix]
 
-    def args(self, includes, pch=None, header=None):
-        return ( MsvcBaseCompiler.args(self, includes, pch) +
+    def args(self, options, output):
+        header = getattr(options, 'file', None)
+        return ( MsvcBaseCompiler.args(self, options, output) +
                  (self._create_pch(header) if header else []) )
 
-    def output_file(self, name, source):
+    def output_file(self, name, options):
         pchpath = Path(name, Root.builddir).stripext('.pch')
-        objpath = source.path.stripext('.obj').reroot()
-        pch = MsvcPrecompiledHeader(
+        objpath = options.pch_source.path.stripext('.obj').reroot()
+        output = MsvcPrecompiledHeader(
             pchpath, objpath, name, self.platform.object_format, self.lang
         )
-        return [pch, pch.object_file]
+        if options.pch:
+            output.extra_objects = [options.pch.object_file]
+        return [output, output.object_file]
 
 
 class MsvcLinker(object):
@@ -202,11 +210,13 @@ class MsvcLinker(object):
         ))
         return ['/LIBPATH:' + i for i in dirs]
 
-    def pkg_args(self, libraries, output, extra_dirs=[]):
-        return self._lib_dirs(libraries, extra_dirs)
+    def pkg_args(self, options, output):
+        libraries = getattr(options, 'all_libs', [])
+        lib_dirs = getattr(options, 'lib_dirs', [])
+        return self._lib_dirs(libraries, lib_dirs)
 
-    def args(self, libraries, output):
-        return self.pkg_args(libraries, output)
+    def args(self, options, output):
+        return self.pkg_args(options, output)
 
     def parse_args(self, args):
         parser = ArgumentParser()
@@ -224,7 +234,8 @@ class MsvcLinker(object):
     def always_libs(self, primary):
         return []
 
-    def libs(self, libraries):
+    def libs(self, options, output):
+        libraries = getattr(options, 'all_libs', [])
         return sum((self._link_lib(i) for i in libraries), [])
 
 
@@ -233,7 +244,7 @@ class MsvcExecutableLinker(MsvcLinker):
         MsvcLinker.__init__(self, env, lang, name + '_link', name + '_link',
                             command, ldflags, ldlibs)
 
-    def output_file(self, name):
+    def output_file(self, name, options):
         path = Path(name + self.platform.executable_ext, Root.builddir)
         return Executable(path, self.platform.object_format)
 
@@ -252,7 +263,7 @@ class MsvcSharedLibraryLinker(MsvcLinker):
         result.append('/IMPLIB:' + output[1])
         return result
 
-    def output_file(self, name, version=None, soversion=None):
+    def output_file(self, name, options):
         dllname = Path(name + self.platform.shared_library_ext, Root.builddir)
         impname = Path(name + '.lib', Root.builddir)
         expname = Path(name + '.exp', Root.builddir)
@@ -291,9 +302,9 @@ class MsvcStaticLinker(object):
         result.append('/OUT:' + output)
         return result
 
-    def output_file(self, name, langs):
+    def output_file(self, name, options):
         return StaticLibrary(Path(name + '.lib', Root.builddir),
-                             self.platform.object_format, langs)
+                             self.platform.object_format, options.langs)
 
     def parse_args(self, args):
         return {'other': args}
