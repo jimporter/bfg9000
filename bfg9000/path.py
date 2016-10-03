@@ -58,6 +58,9 @@ class Path(safe_str.safe_string):
                 raise ValueError('source mismatch')
             return os.path.relpath(self.suffix or '.', start.suffix or '.')
 
+    def reroot(self, root=Root.builddir):
+        return Path(self.suffix, root)
+
     def to_json(self):
         return (self.suffix, self.root.name)
 

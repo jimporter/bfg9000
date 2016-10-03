@@ -105,33 +105,26 @@ class CompileHeader(Compile):
         if name is None:
             name = self.file.path.suffix
 
+        self.pch_source = objectify(
+            source, (SourceFile, type(None)), builtins['source_file'],
+            lang=self.file.lang
+        )
+
         self.compiler = env.builder(self.file.lang).pch_compiler
 
         extra_options = []
-        extra_args = []
-        if self.compiler.needs_source:
-            if source is None:
-                ext = lang2src[self.file.lang][0]
-                source = SourceFile(self.file.path.stripext(ext),
-                                    self.file.lang)
-                source.path.root = Root.builddir
+        if self.compiler.needs_source and self.pch_source is None:
+            ext = lang2src[self.file.lang][0]
+            self.pch_source = SourceFile(self.file.path.stripext(ext).reroot(),
+                                         self.file.lang)
 
-                text = '#include "{}"'.format(self.file.path.basename())
-                EchoFile(build, source, text)
-                extra_options = self.compiler.args([
-                    Directory(self.file.path.parent(), None)
-                ])
-            else:
-                source = objectify(source, SourceFile, builtins['source_file'],
-                                   lang=self.file.lang)
+            text = '#include "{}"'.format(self.file.path.basename())
+            EchoFile(build, self.pch_source, text)
+            extra_options = self.compiler.args([
+                Directory(self.file.path.parent(), None)
+            ])
 
-            extra_args.append(self.file)
-            self.pch_source = source
-            source_name = self.pch_source.path.stripext().suffix
-            output = self.compiler.output_file(name, source_name)
-        else:
-            output = self.compiler.output_file(name)
-
+        output = self.compiler.output_file(name, self.pch_source)
         Compile.__init__(self, builtins, build, env, output, include, None,
                          packages, options, lang, extra_deps, extra_args)
         self._internal_options.extend(extra_options)
@@ -229,7 +222,7 @@ def make_compile(rule, build_inputs, buildfile, env):
         )] + recipe_extra)
 
     deps = []
-    if hasattr(rule, 'pch_source'):
+    if isinstance(rule, CompileHeader) and rule.pch_source:
         deps.append(rule.pch_source)
     deps.append(rule.file)
     if rule.pch:
@@ -284,7 +277,7 @@ def ninja_compile(rule, build_inputs, buildfile, env):
     implicit_deps = []
     if rule.pch:
         implicit_deps.append(rule.pch)
-    if hasattr(rule, 'pch_source'):
+    if isinstance(rule, CompileHeader) and rule.pch_source:
         inputs = [rule.pch_source]
         implicit_deps.append(rule.file)
     implicit_deps.extend(rule.header_files)

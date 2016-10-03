@@ -155,7 +155,7 @@ class CcPchCompiler(CcCompiler):
     def needs_source(self):
         return False
 
-    def output_file(self, name):
+    def output_file(self, name, source):
         ext = '.gch' if self._brand == 'gcc' else '.pch'
         return PrecompiledHeader(Path(name + ext, Root.builddir), self.lang)
 

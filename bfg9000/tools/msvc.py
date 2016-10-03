@@ -152,9 +152,9 @@ class MsvcPchCompiler(MsvcBaseCompiler):
         return ( MsvcBaseCompiler.args(self, includes, pch) +
                  (self._create_pch(header) if header else []) )
 
-    def output_file(self, name, source_name):
+    def output_file(self, name, source):
         pchpath = Path(name, Root.builddir).stripext('.pch')
-        objpath = Path(source_name + '.obj', Root.builddir)
+        objpath = source.path.stripext('.obj').reroot()
         pch = MsvcPrecompiledHeader(
             pchpath, objpath, name, self.platform.object_format, self.lang
         )
