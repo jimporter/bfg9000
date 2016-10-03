@@ -26,13 +26,13 @@ class SystemPackage(Package):
         self.version = version
 
     def cflags(self, compiler, output):
-        return compiler.args(self, output)
+        return compiler.args(self, output, pkg=True)
 
     def ldflags(self, linker, output):
-        return linker.pkg_args(self, output)
+        return linker.args(self, output, pkg=True)
 
     def ldlibs(self, linker, output):
-        return linker.libs(self, output)
+        return linker.libs(self, output, pkg=True)
 
 
 class PkgConfigPackage(Package):

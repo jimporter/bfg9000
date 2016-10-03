@@ -99,7 +99,7 @@ class CcBaseCompiler(object):
     def _include_pch(self, pch):
         return ['-include', pch.path.stripext()]
 
-    def args(self, options, output):
+    def args(self, options, output, pkg=False):
         includes = getattr(options, 'includes', [])
         pch = getattr(options, 'pch', None)
         return sum((self._include_dir(i) for i in includes),
@@ -265,14 +265,11 @@ class CcLinker(object):
             raise ValueError('unrecognized object format "{}"'
                              .format(output.format))
 
-    def pkg_args(self, options, output):
+    def args(self, options, output, pkg=False):
         libraries = getattr(options, 'all_libs', [])
         lib_dirs = getattr(options, 'lib_dirs', [])
         return ( self._lib_dirs(libraries, lib_dirs) +
                  self._rpath(libraries, first(output)) )
-
-    def args(self, options, output):
-        return self.pkg_args(options, output)
 
     def _link_lib(self, library):
         if isinstance(library, WholeArchive):
@@ -299,7 +296,7 @@ class CcLinker(object):
             libs.append('-lgfortran')
         return libs
 
-    def libs(self, options, output):
+    def libs(self, options, output, pkg=False):
         libraries = getattr(options, 'all_libs', [])
         return sum((self._link_lib(i) for i in libraries), [])
 
@@ -388,9 +385,11 @@ class CcSharedLibraryLinker(CcLinker):
         else:
             return ['-Wl,-soname,' + soname.path.basename()]
 
-    def args(self, options, output):
-        return (CcLinker.args(self, options, output) +
-                self._soname(first(output)))
+    def args(self, options, output, pkg=False):
+        args = CcLinker.args(self, options, output)
+        if not pkg:
+            args.extend(self._soname(first(output)))
+        return args
 
 
 class CcPackageResolver(object):

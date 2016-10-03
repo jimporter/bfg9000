@@ -81,7 +81,7 @@ class MsvcBaseCompiler(object):
     def _include_pch(self, pch):
         return ['/Yu' + pch.header_name]
 
-    def args(self, options, output):
+    def args(self, options, output, pkg=False):
         includes = getattr(options, 'includes', [])
         pch = getattr(options, 'pch', None)
         return sum((self._include_dir(i) for i in includes),
@@ -210,13 +210,10 @@ class MsvcLinker(object):
         ))
         return ['/LIBPATH:' + i for i in dirs]
 
-    def pkg_args(self, options, output):
+    def args(self, options, output, pkg=False):
         libraries = getattr(options, 'all_libs', [])
         lib_dirs = getattr(options, 'lib_dirs', [])
         return self._lib_dirs(libraries, lib_dirs)
-
-    def args(self, options, output):
-        return self.pkg_args(options, output)
 
     def parse_args(self, args):
         parser = ArgumentParser()
@@ -234,7 +231,7 @@ class MsvcLinker(object):
     def always_libs(self, primary):
         return []
 
-    def libs(self, options, output):
+    def libs(self, options, output, pkg=False):
         libraries = getattr(options, 'all_libs', [])
         return sum((self._link_lib(i) for i in libraries), [])
 
