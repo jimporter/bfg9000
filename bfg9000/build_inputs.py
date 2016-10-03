@@ -18,12 +18,13 @@ def build_input(name):
 
 
 class Edge(object):
-    def __init__(self, build, output, extra_deps=None):
+    def __init__(self, build, output, final_output=None, extra_deps=None):
         self.output = listify(output)
         for i in self.output:
             i.creator = self
+
         self.public_output = unlistify([
-            i for i in self.output if not i.private
+            i for i in listify(final_output) or self.output if not i.private
         ])
 
         def make(name):

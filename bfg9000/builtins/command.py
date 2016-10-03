@@ -25,7 +25,7 @@ class BaseCommand(Edge):
         self.name = name
         self.cmds = cmds
         self.env = environment or {}
-        Edge.__init__(self, build, outputs, extra_deps)
+        Edge.__init__(self, build, outputs, extra_deps=extra_deps)
 
 
 class Command(BaseCommand):

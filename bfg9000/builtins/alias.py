@@ -7,7 +7,7 @@ from ..file_types import Phony
 
 class Alias(Edge):
     def __init__(self, build, name, deps=None):
-        Edge.__init__(self, build, Phony(name), deps)
+        Edge.__init__(self, build, Phony(name), extra_deps=deps)
 
 
 @builtin.globals('build_inputs')

@@ -9,7 +9,6 @@ from ..backends.ninja import writer as ninja
 from ..build_inputs import build_input, Edge
 from ..file_types import *
 from ..iterutils import first, iterate, listify, uniques
-from ..languages import lang2src
 from ..path import Path, Root
 from ..shell import posix as pshell
 
@@ -61,14 +60,21 @@ class Compile(Edge):
             packages=self.packages, options=self.user_options, lang=lang
         ) if pch else None
 
+        if hasattr(self.compiler, 'pre_build'):
+            self.compiler.pre_build(build, self)
+
         output = self.compiler.output_file(name, self)
+        public_output = None
+
+        if hasattr(self.compiler, 'post_build'):
+            public_output = self.compiler.post_build(build, self, output)
 
         self._internal_options = (
             self.compiler.args(self, output) +
             sum((i.cflags(self.compiler, output) for i in self.packages), [])
         )
 
-        Edge.__init__(self, build, output, extra_deps)
+        Edge.__init__(self, build, output, public_output, extra_deps)
 
     def add_link_options(self, *args, **kwargs):
         opts = self.compiler.link_args(*args, **kwargs)
@@ -110,22 +116,8 @@ class CompileHeader(Compile):
         )
 
         self.compiler = env.builder(self.file.lang).pch_compiler
-
-        extra_options = []
-        if self.compiler.needs_source and self.pch_source is None:
-            ext = lang2src[self.file.lang][0]
-            self.pch_source = SourceFile(self.file.path.stripext(ext).reroot(),
-                                         self.file.lang)
-
-            text = '#include "{}"'.format(self.file.path.basename())
-            EchoFile(build, self.pch_source, text)
-            extra_options = self.compiler._include_dir(  # FIXME
-                Directory(self.file.path.parent(), None)
-            )
-
         Compile.__init__(self, builtins, build, env, name, include, None,
                          packages, options, lang, extra_deps)
-        self._internal_options.extend(extra_options)
 
 
 @builtin.globals('builtins', 'build_inputs', 'env')

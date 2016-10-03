@@ -3,8 +3,10 @@ from itertools import chain
 
 from .winargparse import ArgumentParser
 from .. import shell
+from ..builtins.echo_file import EchoFile
 from ..file_types import *
 from ..iterutils import iterate, uniques
+from ..languages import lang2src
 from ..path import Path, Root
 
 
@@ -128,10 +130,6 @@ class MsvcPchCompiler(MsvcBaseCompiler):
                                   command, cflags)
 
     @property
-    def needs_source(self):
-        return True
-
-    @property
     def num_outputs(self):
         return 2
 
@@ -141,13 +139,32 @@ class MsvcPchCompiler(MsvcBaseCompiler):
         result.append('/Fp' + output[0])
         return result
 
+    def pre_build(self, build, options):
+        if options.pch_source is None:
+            header = getattr(options, 'file', None)
+            ext = lang2src[header.lang][0]
+            options.pch_source = SourceFile(header.path.stripext(ext).reroot(),
+                                            header.lang)
+            options.inject_include_dir = True
+
+            text = '#include "{}"'.format(header.path.basename())
+            EchoFile(build, options.pch_source, text)
+
     def _create_pch(self, header):
         return ['/Yc' + header.path.suffix]
 
     def args(self, options, output):
         header = getattr(options, 'file', None)
-        return ( MsvcBaseCompiler.args(self, options, output) +
-                 (self._create_pch(header) if header else []) )
+        args = []
+        if getattr(options, 'inject_include_dir', False):
+            # Add the include path for the generated header; see pre_build()
+            # above for more details.
+            d = Directory(header.path.parent(), None)
+            args.extend(self._include_dir(d))
+
+        args.extend(MsvcBaseCompiler.args(self, options, output) +
+                    (self._create_pch(header) if header else []))
+        return args
 
     def output_file(self, name, options):
         pchpath = Path(name, Root.builddir).stripext('.pch')

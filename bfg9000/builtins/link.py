@@ -5,7 +5,6 @@ from six.moves import reduce
 
 from .compile import ObjectFiles
 from .hooks import builtin
-from .symlink import Symlink
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..build_inputs import build_input, Edge
@@ -93,10 +92,18 @@ class Link(Edge):
         self._extra_options = sum((i.get('link_options', []) for i in fwd), [])
         self._internal_options = []
 
-        output = self.linker.output_file(name, self)
-        Edge.__init__(self, build, output, extra_deps)
+        if hasattr(self.linker, 'pre_build'):
+            self.linker.pre_build(build, self)
 
-        self._fill_options(env)
+        output = self.linker.output_file(name, self)
+        public_output = None
+
+        if hasattr(self.linker, 'post_build'):
+            public_output = self.linker.post_build(build, self, output)
+
+        self._fill_options(env, output)
+
+        Edge.__init__(self, build, output, public_output, extra_deps)
 
         primary = first(output)
         if hasattr(self.linker, 'post_install'):
@@ -125,8 +132,8 @@ class StaticLink(Link):
     msbuild_mode = 'StaticLibrary'
     _prefix = 'lib'
 
-    def _fill_options(self, env):
-        primary = first(self.output)
+    def _fill_options(self, env, output):
+        primary = first(output)
         primary.forward_args = {
             'defines': library_macro(self.name, self.mode),
             'options': self.options,
@@ -140,23 +147,23 @@ class DynamicLink(Link):
     msbuild_mode = 'Application'
     _prefix = ''
 
-    def _fill_options(self, env):
+    def _fill_options(self, env, output):
         # XXX: Create a LinkOptions namedtuple for managing these args?
         self._internal_options = (
-            sum((i.ldflags(self.linker, self.output)
+            sum((i.ldflags(self.linker, output)
                  for i in self.all_packages), []) +
-            self.linker.args(self, self.output)
+            self.linker.args(self, output)
         )
 
         linkers = (env.builder(i).linker(self.mode) for i in self.all_langs)
         self.lib_options = (
             sum((i.always_libs(i is self.linker) for i in linkers), []) +
-            sum((i.ldlibs(self.linker, self.output)
+            sum((i.ldlibs(self.linker, output)
                  for i in self.all_packages), []) +
-            self.linker.libs(self, self.output)
+            self.linker.libs(self, output)
         )
 
-        first(self.output).runtime_deps = sum(
+        first(output).runtime_deps = sum(
             (self.__get_runtime_deps(i) for i in self.libs), []
         )
 
@@ -220,8 +227,8 @@ def shared_library(builtins, build, env, name, files=None, **kwargs):
             Path(name, Root.srcdir), object_format
         ))
     else:
-        output = SharedLink(builtins, build, env, name, files,
-                            **kwargs).public_output
+        return SharedLink(builtins, build, env, name, files,
+                          **kwargs).public_output
         if not isinstance(output, VersionedSharedLibrary):
             return output
 

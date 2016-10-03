@@ -6,6 +6,7 @@ from six.moves import filter as ifilter
 
 from .ar import ArLinker
 from .utils import darwin_install_name
+from ..builtins.symlink import Symlink
 from ..file_types import *
 from ..iterutils import first, iterate, uniques
 from ..path import Path, Root
@@ -151,10 +152,6 @@ class CcPchCompiler(CcCompiler):
         CcBaseCompiler.__init__(self, env, lang, name + '_pch', name, command,
                                 cflags)
         self._brand = brand
-
-    @property
-    def needs_source(self):
-        return False
 
     def output_file(self, name, options):
         ext = '.gch' if self._brand == 'gcc' else '.pch'
@@ -338,6 +335,13 @@ class CcSharedLibraryLinker(CcLinker):
         if self.platform.has_import_library:
             result.append('-Wl,--out-implib=' + output[1])
         return result
+
+    def post_build(self, build, options, output):
+        if isinstance(output, VersionedSharedLibrary):
+            # Make symlinks for the various versions of the shared lib.
+            Symlink(build, output.soname, output)
+            Symlink(build, output.link, output.soname)
+            return output.link
 
     def output_file(self, name, options):
         version = getattr(options, 'version', None)
