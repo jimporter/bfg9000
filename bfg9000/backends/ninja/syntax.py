@@ -1,6 +1,7 @@
 import re
 from collections import namedtuple, OrderedDict
 from enum import Enum
+from itertools import chain
 from packaging.version import LegacyVersion
 from six import iteritems, string_types
 from six.moves import cStringIO as StringIO
@@ -9,9 +10,10 @@ from ... import path
 from ... import safe_str
 from ... import shell
 from ... import iterutils
+from ...platforms import platform_name
 
 __all__ = ['NinjaFile', 'Section', 'Syntax', 'Writer', 'Variable', 'var',
-           'path_vars']
+           'Commands', 'path_vars']
 
 Rule = namedtuple('Rule', ['command', 'depfile', 'deps', 'generator', 'pool',
                            'restat'])
@@ -123,6 +125,39 @@ def var(v):
     return v if isinstance(v, Variable) else Variable(v)
 
 
+class Commands(object):
+    def __init__(self, commands, environ=None):
+        if not commands:
+            raise ValueError('expected at least one command')
+        self.commands = iterutils.listify(commands)
+        self.environ = environ or {}
+
+    def use(self):
+        out = Writer(StringIO())
+        if ( self.needs_shell(self.commands, self.environ) and
+             platform_name() == 'windows'):
+            out.write_literal('cmd /c ')
+
+        env_vars = shell.global_env(self.environ)
+        for line in shell.join_commands(chain(env_vars, self.commands)):
+            out.write_shell(line)
+        return safe_str.escaped_str(out.stream.getvalue())
+
+    def _safe_str(self):
+        return self.use()
+
+    @staticmethod
+    def needs_shell(commands, environ=[]):
+        if not commands:
+            raise ValueError('expected at least one command')
+        return (
+            len(environ) > 0 or
+            len(commands) > 1 or
+            isinstance(commands[0], shell.shell_list) or
+            not iterutils.isiterable(commands[0])
+        )
+
+
 path_vars = {
     path.Root.srcdir:   Variable('srcdir'),
     path.Root.builddir: None,
@@ -164,15 +199,25 @@ class NinjaFile(object):
 
     def rule(self, name, command, depfile=None, deps=None, generator=False,
              pool=None, restat=False):
+        if not isinstance(command, Commands):
+            command = iterutils.listify(command)
+            if Commands.needs_shell(command):
+                command = Commands(command)
+            else:
+                command = iterutils.first(command)
+
         if pool is not None:
             if pool == 'console':
                 self.min_version('1.5')
             else:
                 raise ValueError("unknown pool '{}'".format(pool))
+
         if re.search('\W', name):
             raise ValueError('rule name contains invalid characters')
+
         if self.has_rule(name):
             raise ValueError("rule '{}' already exists".format(name))
+
         self._rules[name] = Rule(command, depfile, deps, generator, pool,
                                  restat)
 

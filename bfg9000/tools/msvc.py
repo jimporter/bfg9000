@@ -3,7 +3,7 @@ from itertools import chain
 
 from .winargparse import ArgumentParser
 from .. import shell
-from ..builtins.echo_file import EchoFile
+from ..builtins.write_file import WriteFile
 from ..file_types import *
 from ..iterutils import iterate, uniques
 from ..languages import lang2src
@@ -148,7 +148,7 @@ class MsvcPchCompiler(MsvcBaseCompiler):
             options.inject_include_dir = True
 
             text = '#include "{}"'.format(header.path.basename())
-            EchoFile(build, options.pch_source, text)
+            WriteFile(build, options.pch_source, text)
 
     def _create_pch(self, header):
         return ['/Yc' + header.path.suffix]

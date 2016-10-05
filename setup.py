@@ -65,7 +65,10 @@ if sys.version_info < (3, 4):
 
 platform_name = platform.system()
 if platform_name == 'Windows':
-    more_scripts.append('bfg9000-setenv=bfg9000.setenv:main')
+    more_scripts.extend([
+        'bfg9000-setenv=bfg9000.setenv:main',
+        'bfg9000-printf=bfg9000.printf:main',
+    ])
 elif platform_name == 'Linux':
     if os.getenv('NO_PATCHELF') not in ['1', 'true']:
         more_requires.append('patchelf-wrapper')

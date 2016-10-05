@@ -12,11 +12,13 @@ class Symlink(Edge):
 
 @make.rule_handler(Symlink)
 def make_symlink(rule, build_inputs, buildfile, env):
-    recipename = make.var('SYMLINK')
+    symlink = env.tool('symlink')
+    recipename = make.var('RULE_{}'.format(symlink.rule_name.upper()))
     if not buildfile.has_variable(recipename):
-        buildfile.define(recipename, [
-            ['ln', '-sf', make.var('1'), make.qvar('@')],
-        ])
+        buildfile.define(recipename, [symlink(
+            cmd=make.cmd_var(symlink, buildfile), input=make.var('1'),
+            output=make.qvar('@')
+        )])
 
     buildfile.rule(
         target=rule.output,
@@ -27,15 +29,16 @@ def make_symlink(rule, build_inputs, buildfile, env):
 
 @ninja.rule_handler(Symlink)
 def ninja_symlink(rule, build_inputs, buildfile, env):
-    if not buildfile.has_rule('symlink'):
-        buildfile.rule(
-            name='symlink',
-            command=['ln', '-sf', ninja.var('input'), ninja.var('out')]
-        )
+    symlink = env.tool('symlink')
+    if not buildfile.has_rule(symlink.rule_name):
+        buildfile.rule(name=symlink.rule_name, command=[symlink(
+            cmd=ninja.cmd_var(symlink, buildfile), input=ninja.var('input'),
+            output=ninja.var('out')
+        )])
 
     buildfile.build(
         output=rule.output,
-        rule='symlink',
+        rule=symlink.rule_name,
         inputs=rule.real,
         variables={'input': rule.link}
     )

@@ -329,10 +329,10 @@ def ninja_link(rule, build_inputs, buildfile, env):
             variables[v] = rule.output[i]
 
     if not buildfile.has_rule(linker.rule_name):
-        buildfile.rule(name=linker.rule_name, command=linker(
+        buildfile.rule(name=linker.rule_name, command=[linker(
             cmd=ninja.cmd_var(linker, buildfile), input=ninja.var('in'),
             output=output_vars, **cmd_kwargs
-        ))
+        )])
 
     buildfile.build(
         output=rule.output,

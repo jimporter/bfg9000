@@ -2,7 +2,6 @@ import functools
 from collections import defaultdict
 from six import string_types
 
-from .echo_file import EchoFile
 from .hooks import builtin
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
@@ -258,10 +257,10 @@ def ninja_compile(rule, build_inputs, buildfile, env):
             deps = 'msvc'
             cmd_kwargs['deps'] = True
 
-        buildfile.rule(name=compiler.rule_name, command=compiler(
+        buildfile.rule(name=compiler.rule_name, command=[compiler(
             cmd=ninja.cmd_var(compiler, buildfile), input=ninja.var('in'),
             output=output_vars, **cmd_kwargs
-        ), depfile=depfile, deps=deps)
+        )], depfile=depfile, deps=deps)
 
     inputs = [rule.file]
     implicit_deps = []

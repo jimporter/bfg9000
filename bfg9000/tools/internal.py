@@ -1,6 +1,7 @@
 from .hooks import tool
 from ..platforms import platform_name
 from ..safe_str import escaped_str, jbos, safe_str
+from ..shell import shell_list
 
 
 @tool('bfg9000')
@@ -23,7 +24,8 @@ class Depfixer(object):
         self.command = env.getvar('DEPFIXER', default)
 
     def __call__(self, cmd, depfile):
-        return cmd + ' < ' + depfile + ' >> ' + depfile
+        return shell_list([cmd, escaped_str('<'), depfile, escaped_str('>>'),
+                           depfile])
 
 
 if platform_name() == 'windows':

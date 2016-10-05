@@ -296,6 +296,13 @@ Default: `patchelf`
 *Linux-only*. The command to use when patching an ELF file's rpath for
 installation.
 
+#### *PRINTF*
+Default: `printf` or `/path/to/bfg9000-printf`
+{: .subtitle}
+
+The command to use when printing formatted strings during the build process
+(used when writing generated files).
+
 #### *SETENV*
 Default: `/path/to/bfg9000-setenv`
 {: .subtitle}
