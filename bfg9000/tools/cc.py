@@ -390,7 +390,7 @@ class CcSharedLibraryLinker(CcLinker):
             return ['-Wl,-soname,' + soname.path.basename()]
 
     def args(self, options, output, pkg=False):
-        args = CcLinker.args(self, options, output)
+        args = CcLinker.args(self, options, output, pkg)
         if not pkg:
             args.extend(self._soname(first(output)))
         return args
