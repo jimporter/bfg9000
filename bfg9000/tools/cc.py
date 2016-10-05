@@ -76,6 +76,10 @@ class CcBaseCompiler(object):
     def num_outputs(self):
         return 1
 
+    @property
+    def depends_on_libs(self):
+        return False
+
     def __call__(self, cmd, input, output, deps=None, args=None):
         result = [cmd, '-x', self._langs[self.lang]]
         result.extend(iterate(args))

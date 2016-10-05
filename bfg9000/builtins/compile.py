@@ -37,8 +37,8 @@ class ObjectFiles(list):
 
 
 class Compile(Edge):
-    def __init__(self, builtins, build, env, name, include, pch, packages,
-                 options, lang, extra_deps):
+    def __init__(self, builtins, build, env, name, include, pch, libs,
+                 packages, options, lang, extra_deps):
         self.header_files = []
         self.includes = []
         for i in iterate(include):
@@ -50,6 +50,11 @@ class Compile(Edge):
                 in_type=(string_types, HeaderFile), system=False
             ))
 
+        self.libs = [objectify(
+            i, Library, builtins['static_library'], lang=lang
+        ) for i in iterate(libs)]
+        # XXX: Handle forward_args from libs?
+
         self.packages = listify(packages)
         self.user_options = pshell.listify(options)
 
@@ -60,7 +65,7 @@ class Compile(Edge):
         ) if pch else None
 
         if hasattr(self.compiler, 'pre_build'):
-            self.compiler.pre_build(build, self)
+            self.compiler.pre_build(build, self, name)
 
         output = self.compiler.output_file(name, self)
         public_output = None
@@ -88,7 +93,7 @@ class Compile(Edge):
 
 class CompileSource(Compile):
     def __init__(self, builtins, build, env, name, file, include=None,
-                 pch=None, packages=None, options=None, lang=None,
+                 pch=None, libs=None, packages=None, options=None, lang=None,
                  extra_deps=None):
         self.file = objectify(file, SourceFile, builtins['source_file'],
                               lang=lang)
@@ -96,14 +101,14 @@ class CompileSource(Compile):
             name = self.file.path.stripext().suffix
 
         self.compiler = env.builder(self.file.lang).compiler
-        Compile.__init__(self, builtins, build, env, name, include, pch,
+        Compile.__init__(self, builtins, build, env, name, include, pch, libs,
                          packages, options, lang, extra_deps)
 
 
 class CompileHeader(Compile):
     def __init__(self, builtins, build, env, name, file, source=None,
-                 include=None, pch=None, packages=None, options=None,
-                 lang=None, extra_deps=None):
+                 include=None, pch=None, libs=None, packages=None,
+                 options=None, lang=None, extra_deps=None):
         self.file = objectify(file, HeaderFile, builtins['header_file'],
                               lang=lang)
         if name is None:
@@ -115,7 +120,7 @@ class CompileHeader(Compile):
         )
 
         self.compiler = env.builder(self.file.lang).pch_compiler
-        Compile.__init__(self, builtins, build, env, name, include, None,
+        Compile.__init__(self, builtins, build, env, name, include, None, libs,
                          packages, options, lang, extra_deps)
 
 
@@ -217,6 +222,8 @@ def make_compile(rule, build_inputs, buildfile, env):
     if rule.pch:
         deps.append(rule.pch)
     deps.extend(rule.header_files)
+    if compiler.depends_on_libs:
+        deps.extend(rule.libs)
 
     dirs = uniques(i.path.parent() for i in rule.output)
     make.multitarget_rule(
@@ -270,6 +277,8 @@ def ninja_compile(rule, build_inputs, buildfile, env):
         inputs = [rule.pch_source]
         implicit_deps.append(rule.file)
     implicit_deps.extend(rule.header_files)
+    if compiler.depends_on_libs:
+        implicit_deps.extend(rule.libs)
 
     # Ninja doesn't support multiple outputs and deps-parsing at the same time,
     # so just use the first output and set up an alias if necessary. Aliases

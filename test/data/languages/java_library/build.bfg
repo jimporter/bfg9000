@@ -1,0 +1,4 @@
+# -*- python -*-
+
+lib = shared_library('lib', 'lib/library.java')
+executable('program', 'program.java', entry_point='program', libs=lib)

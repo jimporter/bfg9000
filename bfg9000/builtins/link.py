@@ -36,12 +36,13 @@ def library_macro(name, mode):
 class Link(Edge):
     def __init__(self, builtins, build, env, name, files=None, include=None,
                  pch=None, libs=None, packages=None, compile_options=None,
-                 link_options=None, lang=None, extra_deps=None):
+                 link_options=None, entry_point=None, lang=None,
+                 extra_deps=None):
         self.name = self.__name(name)
 
         self.files = objectify(
             files, ObjectFiles, builtins['object_files'], object,
-            include=include, pch=pch, packages=packages,
+            include=include, pch=pch, libs=libs, packages=packages,
             options=compile_options, lang=lang
         )
         self.files.extend(chain.from_iterable(
@@ -62,6 +63,9 @@ class Link(Edge):
         self.packages = listify(packages)
         self.all_packages = sum((i.get('packages', []) for i in fwd),
                                 self.packages)
+
+        if entry_point:
+            self.entry_point = entry_point
 
         for c in (i.creator for i in self.files if i.creator):
             # To handle the different import/export rules for libraries, we
@@ -93,7 +97,7 @@ class Link(Edge):
         self._internal_options = []
 
         if hasattr(self.linker, 'pre_build'):
-            self.linker.pre_build(build, self)
+            self.linker.pre_build(build, self, name)
 
         output = self.linker.output_file(name, self)
         public_output = None
@@ -275,6 +279,11 @@ def _get_flags(backend, rule, build_inputs, buildfile):
         if rule.lib_options:
             variables[ldlibs] = [global_ldlibs] + rule.lib_options
 
+    if hasattr(rule, 'manifest'):
+        var = backend.var('manifest')
+        cmd_kwargs['manifest'] = var
+        variables[var] = rule.manifest
+
     return variables, cmd_kwargs
 
 
@@ -300,11 +309,12 @@ def make_link(rule, build_inputs, buildfile, env):
                    output=output_vars, **cmd_kwargs)
         ])
 
+    manifest = listify(getattr(rule, 'manifest', None))
     dirs = uniques(i.path.parent() for i in rule.output)
     make.multitarget_rule(
         buildfile,
         targets=rule.output,
-        deps=rule.files + rule.libs + rule.extra_deps,
+        deps=rule.files + rule.libs + manifest + rule.extra_deps,
         order_only=[i.append(make.dir_sentinel) for i in dirs if i],
         recipe=make.Call(recipename, rule.files, *output_params),
         variables=variables
@@ -334,11 +344,12 @@ def ninja_link(rule, build_inputs, buildfile, env):
             output=output_vars, **cmd_kwargs
         )])
 
+    manifest = listify(getattr(rule, 'manifest', None))
     buildfile.build(
         output=rule.output,
         rule=linker.rule_name,
         inputs=rule.files,
-        implicit=rule.libs + rule.extra_deps,
+        implicit=rule.libs + manifest + rule.extra_deps,
         variables=variables
     )
 

@@ -36,6 +36,7 @@ matrix:
 addons:
   apt:
     packages:
+      - default-jdk
       - gfortran
       - gobjc
       - gobjc++

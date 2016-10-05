@@ -68,6 +68,10 @@ class MsvcBaseCompiler(object):
     def num_outputs(self):
         return 1
 
+    @property
+    def depends_on_libs(self):
+        return False
+
     def __call__(self, cmd, input, output, deps=None, args=None):
         result = [cmd]
         result.extend(iterate(args))
@@ -139,7 +143,7 @@ class MsvcPchCompiler(MsvcBaseCompiler):
         result.append('/Fp' + output[0])
         return result
 
-    def pre_build(self, build, options):
+    def pre_build(self, build, options, name):
         if options.pch_source is None:
             header = getattr(options, 'file', None)
             ext = lang2src[header.lang][0]
