@@ -152,7 +152,6 @@ class DynamicLink(Link):
     _prefix = ''
 
     def _fill_options(self, env, output):
-        # XXX: Create a LinkOptions namedtuple for managing these args?
         self._internal_options = (
             sum((i.ldflags(self.linker, output)
                  for i in self.all_packages), []) +

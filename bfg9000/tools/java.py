@@ -117,7 +117,7 @@ class JarMaker(object):
 @builder('java')
 def java_builder(env):
     cmd = env.getvar('JAVAC', 'javac')
-    cmd = check_which(cmd, kind='{} compiler'.format('java'))
+    cmd = check_which(cmd, kind='java compiler')
 
     jar_cmd = env.getvar('JAR', 'jar')
     jar_cmd = check_which(jar_cmd, kind='jar builder')
