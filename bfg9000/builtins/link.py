@@ -10,7 +10,7 @@ from ..backends.ninja import writer as ninja
 from ..build_inputs import build_input, Edge
 from ..file_types import *
 from ..iterutils import first, iterate, listify, merge_dicts, uniques
-from ..path import Root
+from ..path import Path, Root
 from ..shell import posix as pshell
 
 build_input('link_options')(lambda build_inputs, env: list())
