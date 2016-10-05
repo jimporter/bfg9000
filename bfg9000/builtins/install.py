@@ -25,6 +25,9 @@ class InstallOutputs(object):
                 self.add(i, explicit=False)
 
     def __nonzero__(self):
+        return self.__bool__()
+
+    def __bool__(self):
         return bool(self._outputs)
 
     def __iter__(self):
