@@ -30,7 +30,7 @@ class JavaCompiler(object):
     def __init__(self, env, command):
         self.rule_name = self.command_var = 'javac'
         self.command = command
-        self.global_args = shell.split(env.getvar('JAVACFLAGS', ''))
+        self.global_args = shell.split(env.getvar('JAVAFLAGS', ''))
 
     @property
     def deps_flavor(self):

@@ -67,6 +67,22 @@ Default: *none*
 Command line arguments to pass to the compiler when compiling any Fortran source
 file.
 
+### Java
+---
+
+#### *JAVAC*
+Default: `javac`
+{: .subtitle}
+
+The command to use when compiling Java source files.
+
+#### *JAVAFLAGS*
+Default: *none*
+{: .subtitle}
+
+Command line arguments to pass to the compiler when compiling any Java source
+file.
+
 ### Objective C
 ---
 
@@ -135,6 +151,12 @@ Default: `lib`
 
 *MSVC-only*. The command to use when creating static libraries whose source
 is in C++.
+
+#### *JAR*
+Default: `jar`
+{: .subtitle}
+
+The command to use when creating `.jar` files for JVM-based binaries.
 
 #### *LIBFLAGS*
 Default: *none*

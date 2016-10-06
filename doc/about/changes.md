@@ -7,6 +7,7 @@ in progress
 ### New features
 
 - Add `header` argument to `system_package()` to find header files
+- Support Java
 
 ---
 

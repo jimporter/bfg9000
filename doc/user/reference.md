@@ -154,6 +154,9 @@ The following arguments may also be specified:
   files; you may also pass [header files](#header), and their directories will
   be added to the search list
 * *pch*: A [precompiled header](#precompiled_header) to use during compilation
+* *libs*: A list of library files (see *shared_library* and *static_library*);
+  this is only used by languages that need libraries defined at compile-time,
+  such as Java
 * *packages*: A list of external [packages](#package-finders)
 * *options*: Command-line options to pass to the compiler
 * *lang*: The language of the source file; useful if the source file's extension
