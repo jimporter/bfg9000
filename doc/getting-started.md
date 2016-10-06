@@ -10,6 +10,7 @@ bfg9000 supports building code written in the following languages:
 * C
 * C++
 * Fortran (partial)
+* Java
 * Objective C/C++
 
 ## Installation
