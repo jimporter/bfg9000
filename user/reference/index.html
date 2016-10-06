@@ -263,6 +263,9 @@ without the extension.</p>
   files; you may also pass <a href="#header">header files</a>, and their directories will
   be added to the search list</li>
 <li><em>pch</em>: A <a href="#precompiled_header">precompiled header</a> to use during compilation</li>
+<li><em>libs</em>: A list of library files (see <em>shared_library</em> and <em>static_library</em>);
+  this is only used by languages that need libraries defined at compile-time,
+  such as Java</li>
 <li><em>packages</em>: A list of external <a href="#package-finders">packages</a></li>
 <li><em>options</em>: Command-line options to pass to the compiler</li>
 <li><em>lang</em>: The language of the source file; useful if the source file's extension
