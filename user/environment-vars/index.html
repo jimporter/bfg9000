@@ -209,6 +209,15 @@ Objective C++.</p>
 <p class="subtitle">Default: <em>none</em></p>
 <p>Command line arguments to pass to the compiler when compiling any Objective C++
 source file.</p>
+<h3 id="scala">Scala<a class="headerlink" href="#scala" title="Permanent link">§</a></h3>
+<hr />
+<h4 id="scalac"><em>SCALAC</em><a class="headerlink" href="#scalac" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <code>scalac</code></p>
+<p>The command to use when compiling Scala source files.</p>
+<h4 id="scalaflags"><em>SCALAFLAGS</em><a class="headerlink" href="#scalaflags" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <em>none</em></p>
+<p>Command line arguments to pass to the compiler when compiling any Scala source
+file.</p>
 <h2 id="linking-variables">Linking variables<a class="headerlink" href="#linking-variables" title="Permanent link">§</a></h2>
 <h3 id="static-linking">Static linking<a class="headerlink" href="#static-linking" title="Permanent link">§</a></h3>
 <hr />
@@ -220,14 +229,6 @@ files.</p>
 <p class="subtitle">Default: <code>cru</code></p>
 <p><em>POSIX-only</em>. The arguments to pass to the static library builder (typically
 <code>ar</code>).</p>
-<h4 id="cc_lib"><em>CC_LIB</em><a class="headerlink" href="#cc_lib" title="Permanent link">§</a></h4>
-<p class="subtitle">Default: <code>lib</code></p>
-<p><em>MSVC-only</em>. The command to use when creating static libraries whose source
-is in C.</p>
-<h4 id="cxx_lib"><em>CXX_LIB</em><a class="headerlink" href="#cxx_lib" title="Permanent link">§</a></h4>
-<p class="subtitle">Default: <code>lib</code></p>
-<p><em>MSVC-only</em>. The command to use when creating static libraries whose source
-is in C++.</p>
 <h4 id="jar"><em>JAR</em><a class="headerlink" href="#jar" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <code>jar</code></p>
 <p>The command to use when creating <code>.jar</code> files for JVM-based binaries.</p>
@@ -235,16 +236,11 @@ is in C++.</p>
 <p class="subtitle">Default: <em>none</em></p>
 <p><em>Windows-only</em>. Command line arguments to pass to the static library builder
 (typically <code>lib</code>).</p>
+<h4 id="vclib"><em>VCLIB</em><a class="headerlink" href="#vclib" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <code>lib</code></p>
+<p><em>MSVC-only</em>. The command to use when creating static libraries.</p>
 <h3 id="dynamic-linking">Dynamic linking<a class="headerlink" href="#dynamic-linking" title="Permanent link">§</a></h3>
 <hr />
-<h4 id="cc_link"><em>CC_LINK</em><a class="headerlink" href="#cc_link" title="Permanent link">§</a></h4>
-<p class="subtitle">Default: <code>link</code></p>
-<p><em>MSVC-only</em>. The command to use when linking shared libraries whose source
-is in C.</p>
-<h4 id="cxx_link"><em>CXX_LINK</em><a class="headerlink" href="#cxx_link" title="Permanent link">§</a></h4>
-<p class="subtitle">Default: <code>link</code></p>
-<p><em>MSVC-only</em>. The command to use when linking shared libraries whose source
-is in C++.</p>
 <h4 id="ldflags"><em>LDFLAGS</em><a class="headerlink" href="#ldflags" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <em>none</em></p>
 <p>Command line arguments to pass to the linker when linking an executable or
@@ -254,6 +250,9 @@ shared library.</p>
 <p>Additional libraries to link into an executable or shared library. This is
 mainly useful for cases where a system library (e.g. the C++ Standard Library
 implementation) requires another library to be explicitly linked with it.</p>
+<h4 id="vclink"><em>VCLINK</em><a class="headerlink" href="#vclink" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <code>link</code></p>
+<p><em>MSVC-only</em>. The command to use when linking shared libraries.</p>
 <h2 id="packaging-variables">Packaging variables<a class="headerlink" href="#packaging-variables" title="Permanent link">§</a></h2>
 <hr />
 <h4 id="boost_root"><em>BOOST_ROOT</em><a class="headerlink" href="#boost_root" title="Permanent link">§</a></h4>
