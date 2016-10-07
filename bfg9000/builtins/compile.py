@@ -167,7 +167,7 @@ def global_options(build, options, lang):
 
 def _get_flags(backend, rule, build_inputs, buildfile):
     global_cflags, cflags = backend.flags_vars(
-        rule.compiler.command_var + 'flags',
+        rule.compiler.flags_var,
         ( rule.compiler.global_args +
           build_inputs['compile_options'][rule.file.lang] ),
         buildfile

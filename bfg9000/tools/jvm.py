@@ -9,9 +9,11 @@ from ..shell import shell_list
 
 
 class JvmBuilder(object):
-    def __init__(self, env, lang, name, command, jar_command, flags):
+    def __init__(self, env, lang, name, command, jar_command, flags_name,
+                 flags):
         self.brand = 'jvm'  # XXX: Be more specific?
-        self.compiler = JvmCompiler(env, lang, name, command, flags)
+        self.compiler = JvmCompiler(env, lang, name, command, flags_name,
+                                    flags)
         self._linkers = {
             'executable': JarMaker(env, jar_command, Executable),
             'shared_library': JarMaker(env, jar_command, SharedLibrary),
@@ -26,12 +28,14 @@ class JvmBuilder(object):
 
 
 class JvmCompiler(object):
-    def __init__(self, env, lang, name, command, flags):
+    def __init__(self, env, lang, name, command, flags_name, flags):
         self.env = env
         self.lang = lang
 
         self.rule_name = self.command_var = name
         self.command = command
+
+        self.flags_var = flags_name
         self.global_args = flags
 
     @property
@@ -74,13 +78,20 @@ class JvmCompiler(object):
 
 
 class JarMaker(object):
+    rule_name = command_var = 'jar'
+    flags_var = 'jarflags'
+    libs_var = 'jarlibs'
+
     def __init__(self, env, command, output_type):
-        self.rule_name = self.command_var = self.link_var = 'jar'
         self.command = command
         self.output_type = output_type
 
         self.global_args = []
         self.global_libs = []
+
+    @property
+    def flavor(self):
+        return 'jar'
 
     def can_link(self, format, langs):
         return format == 'jvm'

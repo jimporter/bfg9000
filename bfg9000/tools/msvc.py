@@ -12,18 +12,20 @@ from ..path import Path, Root
 
 class MsvcBuilder(object):
     def __init__(self, env, lang, name, command, link_command, lib_command,
-                 cflags, ldflags, ldlibs):
-        self.compiler = MsvcCompiler(env, lang, name, command, cflags)
-        self.pch_compiler = MsvcPchCompiler(env, lang, name, command, cflags)
+                 cflags_name, cflags, ldflags, ldlibs):
+        self.compiler = MsvcCompiler(env, lang, name, command, cflags_name,
+                                     cflags)
+        self.pch_compiler = MsvcPchCompiler(env, lang, name, command,
+                                            cflags_name, cflags)
         self._linkers = {
             'executable': MsvcExecutableLinker(
-                env, lang, name, link_command, ldflags, ldlibs
+                env, lang, link_command, ldflags, ldlibs
             ),
             'shared_library': MsvcSharedLibraryLinker(
-                env, lang, name, link_command, ldflags, ldlibs
+                env, lang, link_command, ldflags, ldlibs
             ),
             'static_library': MsvcStaticLinker(
-                env, lang, name, lib_command
+                env, lang, lib_command
             ),
         }
         self.packages = MsvcPackageResolver(env, lang)
@@ -46,7 +48,8 @@ class MsvcBuilder(object):
 
 
 class MsvcBaseCompiler(object):
-    def __init__(self, env, lang, rule_name, command_var, command, cflags):
+    def __init__(self, env, lang, rule_name, command_var, command, cflags_name,
+                 cflags):
         self.platform = env.platform
         self.lang = lang
 
@@ -54,6 +57,7 @@ class MsvcBaseCompiler(object):
         self.command_var = command_var
         self.command = command
 
+        self.flags_var = cflags_name
         self.global_args = ['/nologo'] + cflags
 
     @property
@@ -117,8 +121,9 @@ class MsvcBaseCompiler(object):
 
 
 class MsvcCompiler(MsvcBaseCompiler):
-    def __init__(self, env, lang, name, command, cflags):
-        MsvcBaseCompiler.__init__(self, env, lang, name, name, command, cflags)
+    def __init__(self, env, lang, name, command, cflags_name, cflags):
+        MsvcBaseCompiler.__init__(self, env, lang, name, name, command,
+                                  cflags_name, cflags)
 
     def output_file(self, name, options):
         output = ObjectFile(Path(name + '.obj'), self.platform.object_format,
@@ -129,9 +134,9 @@ class MsvcCompiler(MsvcBaseCompiler):
 
 
 class MsvcPchCompiler(MsvcBaseCompiler):
-    def __init__(self, env, lang, name, command, cflags):
+    def __init__(self, env, lang, name, command, cflags_name, cflags):
         MsvcBaseCompiler.__init__(self, env, lang, name + '_pch', name,
-                                  command, cflags)
+                                  command, cflags_name, cflags)
 
     @property
     def num_outputs(self):
@@ -182,20 +187,21 @@ class MsvcPchCompiler(MsvcBaseCompiler):
 
 
 class MsvcLinker(object):
+    flags_var = 'ldflags'
+    libs_var = 'ldlibs'
+
     __allowed_langs = {
         'c'     : {'c'},
         'c++'   : {'c', 'c++'},
     }
 
-    def __init__(self, env, lang, rule_name, command_var, command, ldflags,
-                 ldlibs):
+    def __init__(self, env, lang, rule_name, command, ldflags, ldlibs):
         self.platform = env.platform
         self.lang = lang
 
         self.rule_name = rule_name
-        self.command_var = command_var
+        self.command_var = 'vclink'
         self.command = command
-        self.link_var = 'ld'
 
         self.global_args = ['/nologo'] + ldflags
         self.global_libs = ldlibs
@@ -258,9 +264,9 @@ class MsvcLinker(object):
 
 
 class MsvcExecutableLinker(MsvcLinker):
-    def __init__(self, env, lang, name, command, ldflags, ldlibs):
-        MsvcLinker.__init__(self, env, lang, name + '_link', name + '_link',
-                            command, ldflags, ldlibs)
+    def __init__(self, env, lang, command, ldflags, ldlibs):
+        MsvcLinker.__init__(self, env, lang, 'vclink', command, ldflags,
+                            ldlibs)
 
     def output_file(self, name, options):
         path = Path(name + self.platform.executable_ext)
@@ -268,9 +274,9 @@ class MsvcExecutableLinker(MsvcLinker):
 
 
 class MsvcSharedLibraryLinker(MsvcLinker):
-    def __init__(self, env, lang, name, command, ldflags, ldlibs):
-        MsvcLinker.__init__(self, env, lang, name + '_linklib', name + '_link',
-                            command, ldflags, ldlibs)
+    def __init__(self, env, lang, command, ldflags, ldlibs):
+        MsvcLinker.__init__(self, env, lang, 'vclinklib', command, ldflags,
+                            ldlibs)
 
     @property
     def num_outputs(self):
@@ -295,13 +301,13 @@ class MsvcSharedLibraryLinker(MsvcLinker):
 
 
 class MsvcStaticLinker(object):
-    link_var = 'lib'
+    flags_var = 'libflags'
 
-    def __init__(self, env, lang, name, command):
+    def __init__(self, env, lang, command):
         self.platform = env.platform
         self.lang = lang
 
-        self.rule_name = self.command_var = name + '_lib'
+        self.rule_name = self.command_var = 'vclib'
         self.command = command
 
         self.global_args = shell.split(env.getvar('LIBFLAGS', ''))

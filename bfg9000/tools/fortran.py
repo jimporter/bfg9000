@@ -19,4 +19,5 @@ def fortran_builder(env, lang):
     ldflags = shell.split(env.getvar('LDFLAGS', ''))
     ldlibs = shell.split(env.getvar('LDLIBS', ''))
 
-    return cc.CcBuilder(env, lang, 'fc', cmd, cflags, ldflags, ldlibs)
+    return cc.CcBuilder(env, lang, 'fc', cmd, 'fflags', cflags, ldflags,
+                        ldlibs)

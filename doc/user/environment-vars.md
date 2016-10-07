@@ -154,20 +154,6 @@ Default: `cru`
 *POSIX-only*. The arguments to pass to the static library builder (typically
 `ar`).
 
-#### *CC_LIB*
-Default: `lib`
-{: .subtitle}
-
-*MSVC-only*. The command to use when creating static libraries whose source
-is in C.
-
-#### *CXX_LIB*
-Default: `lib`
-{: .subtitle}
-
-*MSVC-only*. The command to use when creating static libraries whose source
-is in C++.
-
 #### *JAR*
 Default: `jar`
 {: .subtitle}
@@ -181,22 +167,14 @@ Default: *none*
 *Windows-only*. Command line arguments to pass to the static library builder
 (typically `lib`).
 
+#### *VCLIB*
+Default: `lib`
+{: .subtitle}
+
+*MSVC-only*. The command to use when creating static libraries.
+
 ### Dynamic linking
 ---
-
-#### *CC_LINK*
-Default: `link`
-{: .subtitle}
-
-*MSVC-only*. The command to use when linking shared libraries whose source
-is in C.
-
-#### *CXX_LINK*
-Default: `link`
-{: .subtitle}
-
-*MSVC-only*. The command to use when linking shared libraries whose source
-is in C++.
 
 #### *LDFLAGS*
 Default: *none*
@@ -212,6 +190,12 @@ Default: *none*
 Additional libraries to link into an executable or shared library. This is
 mainly useful for cases where a system library (e.g. the C++ Standard Library
 implementation) requires another library to be explicitly linked with it.
+
+#### *VCLINK*
+Default: `link`
+{: .subtitle}
+
+*MSVC-only*. The command to use when linking shared libraries.
 
 ## Packaging variables
 ---

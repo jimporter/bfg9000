@@ -8,7 +8,8 @@ from ..path import Path
 
 
 class ArLinker(object):
-    rule_name = command_var = link_var = 'ar'
+    rule_name = command_var = 'ar'
+    flags_var = 'arflags'
 
     def __init__(self, env, lang):
         self.platform = env.platform

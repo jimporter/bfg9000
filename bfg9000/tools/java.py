@@ -22,7 +22,7 @@ _cmds = {
 @builder('java', 'scala')
 def java_builder(env, lang):
     var, flags_var = _vars[lang]
-    low_var = var.lower()
+    low_var, low_flags_var = var.lower(), flags_var.lower()
 
     cmd = env.getvar(var, _cmds[lang])
     cmd = check_which(cmd, kind='{} compiler'.format(lang))
@@ -31,4 +31,5 @@ def java_builder(env, lang):
     jar_cmd = env.getvar('JAR', 'jar')
     jar_cmd = check_which(jar_cmd, kind='jar builder')
 
-    return jvm.JvmBuilder(env, lang, low_var, cmd, jar_cmd, flags)
+    return jvm.JvmBuilder(env, lang, low_var, cmd, jar_cmd, low_flags_var,
+                          flags)

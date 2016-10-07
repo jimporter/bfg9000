@@ -259,7 +259,7 @@ def global_link_options(build, options):
 
 def _get_flags(backend, rule, build_inputs, buildfile):
     global_ldflags, ldflags = backend.flags_vars(
-        rule.linker.link_var + 'flags',
+        rule.linker.flags_var,
         rule.linker.global_args + build_inputs['link_options'],
         buildfile
     )
@@ -272,7 +272,7 @@ def _get_flags(backend, rule, build_inputs, buildfile):
 
     if hasattr(rule, 'lib_options'):
         global_ldlibs, ldlibs = backend.flags_vars(
-            rule.linker.link_var + 'libs', rule.linker.global_libs, buildfile
+            rule.linker.libs_var, rule.linker.global_libs, buildfile
         )
         cmd_kwargs['libs'] = ldlibs
         if rule.lib_options:

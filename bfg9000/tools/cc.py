@@ -13,7 +13,8 @@ from ..path import Path, Root
 
 
 class CcBuilder(object):
-    def __init__(self, env, lang, name, command, cflags, ldflags, ldlibs):
+    def __init__(self, env, lang, name, command, cflags_name, cflags, ldflags,
+                 ldlibs):
         self.brand = 'unknown'
         try:
             output = subprocess.check_output(
@@ -27,9 +28,10 @@ class CcBuilder(object):
         except:
             pass
 
-        self.compiler = CcCompiler(env, lang, name, command, cflags)
+        self.compiler = CcCompiler(env, lang, name, command, cflags_name,
+                                   cflags)
         self.pch_compiler = CcPchCompiler(env, lang, self.brand, name, command,
-                                          cflags)
+                                          cflags_name, cflags)
         self._linkers = {
             'executable': CcExecutableLinker(
                 env, lang, name, command, ldflags, ldlibs
@@ -54,7 +56,8 @@ class CcBuilder(object):
 
 
 class CcBaseCompiler(object):
-    def __init__(self, env, lang, rule_name, command_var, command, cflags):
+    def __init__(self, env, lang, rule_name, command_var, command, cflags_name,
+                 cflags):
         self.platform = env.platform
         self.lang = lang
 
@@ -62,6 +65,7 @@ class CcBaseCompiler(object):
         self.command_var = command_var
         self.command = command
 
+        self.flags_var = cflags_name
         self.global_args = cflags
 
     @property
@@ -135,8 +139,9 @@ class CcCompiler(CcBaseCompiler):
         'f95'   : 'f95',
     }
 
-    def __init__(self, env, lang, name, command, cflags):
-        CcBaseCompiler.__init__(self, env, lang, name, name, command, cflags)
+    def __init__(self, env, lang, name, command, cflags_name, cflags):
+        CcBaseCompiler.__init__(self, env, lang, name, name, command,
+                                cflags_name, cflags)
 
     def output_file(self, name, options):
         # XXX: MinGW's object format doesn't appear to be COFF...
@@ -152,9 +157,9 @@ class CcPchCompiler(CcCompiler):
         'objc++': 'objective-c++-header',
     }
 
-    def __init__(self, env, lang, brand, name, command, cflags):
+    def __init__(self, env, lang, brand, name, command, cflags_name, cflags):
         CcBaseCompiler.__init__(self, env, lang, name + '_pch', name, command,
-                                cflags)
+                                cflags_name, cflags)
         self._brand = brand
 
     def output_file(self, name, options):
@@ -163,6 +168,9 @@ class CcPchCompiler(CcCompiler):
 
 
 class CcLinker(object):
+    flags_var = 'ldflags'
+    libs_var = 'ldlibs'
+
     __allowed_langs = {
         'c'     : {'c'},
         'c++'   : {'c', 'c++', 'f77', 'f95'},
@@ -180,7 +188,6 @@ class CcLinker(object):
         self.rule_name = rule_name
         self.command_var = command_var
         self.command = command
-        self.link_var = 'ld'
 
         self.global_args = ldflags
         self.global_libs = ldlibs
