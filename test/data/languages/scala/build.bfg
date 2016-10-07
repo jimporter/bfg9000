@@ -1,0 +1,3 @@
+# -*- python -*-
+
+executable('program', 'program.scala', entry_point='program')

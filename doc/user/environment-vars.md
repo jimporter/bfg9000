@@ -119,6 +119,22 @@ Default: *none*
 Command line arguments to pass to the compiler when compiling any Objective C++
 source file.
 
+### Scala
+---
+
+#### *SCALAC*
+Default: `scalac`
+{: .subtitle}
+
+The command to use when compiling Scala source files.
+
+#### *SCALAFLAGS*
+Default: *none*
+{: .subtitle}
+
+Command line arguments to pass to the compiler when compiling any Scala source
+file.
+
 ## Linking variables
 
 ### Static linking

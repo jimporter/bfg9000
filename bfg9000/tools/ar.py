@@ -4,7 +4,7 @@ from .. import shell
 from .. import iterutils
 from .utils import check_which
 from ..file_types import StaticLibrary
-from ..path import Path, Root
+from ..path import Path
 
 
 class ArLinker(object):
@@ -36,5 +36,5 @@ class ArLinker(object):
     def output_file(self, name, options):
         head, tail = os.path.split(name)
         path = os.path.join(head, 'lib' + tail + '.a')
-        return StaticLibrary(Path(path, Root.builddir),
-                             self.platform.object_format, options.langs)
+        return StaticLibrary(Path(path), self.platform.object_format,
+                             options.langs)

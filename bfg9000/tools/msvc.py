@@ -121,8 +121,8 @@ class MsvcCompiler(MsvcBaseCompiler):
         MsvcBaseCompiler.__init__(self, env, lang, name, name, command, cflags)
 
     def output_file(self, name, options):
-        output = ObjectFile(Path(name + '.obj', Root.builddir),
-                         self.platform.object_format, self.lang)
+        output = ObjectFile(Path(name + '.obj'), self.platform.object_format,
+                            self.lang)
         if options.pch:
             output.extra_objects = [options.pch.object_file]
         return output
@@ -171,7 +171,7 @@ class MsvcPchCompiler(MsvcBaseCompiler):
         return args
 
     def output_file(self, name, options):
-        pchpath = Path(name, Root.builddir).stripext('.pch')
+        pchpath = Path(name).stripext('.pch')
         objpath = options.pch_source.path.stripext('.obj').reroot()
         output = MsvcPrecompiledHeader(
             pchpath, objpath, name, self.platform.object_format, self.lang
@@ -263,7 +263,7 @@ class MsvcExecutableLinker(MsvcLinker):
                             command, ldflags, ldlibs)
 
     def output_file(self, name, options):
-        path = Path(name + self.platform.executable_ext, Root.builddir)
+        path = Path(name + self.platform.executable_ext)
         return Executable(path, self.platform.object_format)
 
 
@@ -282,9 +282,9 @@ class MsvcSharedLibraryLinker(MsvcLinker):
         return result
 
     def output_file(self, name, options):
-        dllname = Path(name + self.platform.shared_library_ext, Root.builddir)
-        impname = Path(name + '.lib', Root.builddir)
-        expname = Path(name + '.exp', Root.builddir)
+        dllname = Path(name + self.platform.shared_library_ext)
+        impname = Path(name + '.lib')
+        expname = Path(name + '.exp')
         dll = DllLibrary(dllname, self.platform.object_format, impname,
                          expname)
         return [dll, dll.import_lib, dll.export_file]
@@ -321,8 +321,8 @@ class MsvcStaticLinker(object):
         return result
 
     def output_file(self, name, options):
-        return StaticLibrary(Path(name + '.lib', Root.builddir),
-                             self.platform.object_format, options.langs)
+        return StaticLibrary(Path(name + '.lib'), self.platform.object_format,
+                             options.langs)
 
     def parse_args(self, args):
         return {'other': args}

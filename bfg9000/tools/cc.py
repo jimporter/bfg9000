@@ -140,8 +140,8 @@ class CcCompiler(CcBaseCompiler):
 
     def output_file(self, name, options):
         # XXX: MinGW's object format doesn't appear to be COFF...
-        return ObjectFile(Path(name + '.o', Root.builddir),
-                          self.platform.object_format, self.lang)
+        return ObjectFile(Path(name + '.o'), self.platform.object_format,
+                          self.lang)
 
 
 class CcPchCompiler(CcCompiler):
@@ -159,7 +159,7 @@ class CcPchCompiler(CcCompiler):
 
     def output_file(self, name, options):
         ext = '.gch' if self._brand == 'gcc' else '.pch'
-        return PrecompiledHeader(Path(name + ext, Root.builddir), self.lang)
+        return PrecompiledHeader(Path(name + ext), self.lang)
 
 
 class CcLinker(object):
@@ -321,7 +321,7 @@ class CcExecutableLinker(CcLinker):
                           ldflags, ldlibs)
 
     def output_file(self, name, options):
-        path = Path(name + self.platform.executable_ext, Root.builddir)
+        path = Path(name + self.platform.executable_ext)
         return Executable(path, self.platform.object_format)
 
 
@@ -357,7 +357,7 @@ class CcSharedLibraryLinker(CcLinker):
         def lib(head, tail, prefix='lib', suffix=''):
             return Path(os.path.join(
                 head, prefix + tail + self.platform.shared_library_ext + suffix
-            ), Root.builddir)
+            ))
 
         if self.platform.has_import_library:
             dllprefix = 'cyg' if self.platform.name == 'cygwin' else 'lib'
