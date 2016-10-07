@@ -1,4 +1,5 @@
-import os.path
+import glob
+import os
 
 from .. import *
 
@@ -11,7 +12,6 @@ class TestScala(IntegrationTest):
 
     def test_build(self):
         self.build('program.jar')
-        # XXX: Test running the .jar; this breaks right now because it doesn't
-        # include all the necessary .class files.
-        self.assertOutput(['scala', 'program'],
-                          'hello from scala!\n')
+        for i in glob.glob("*.class*"):
+            os.remove(i)
+        self.assertOutput(['scala', 'program.jar'], 'hello from scala!\n')

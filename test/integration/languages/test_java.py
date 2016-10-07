@@ -1,4 +1,5 @@
-import os.path
+import glob
+import os
 
 from .. import *
 
@@ -11,6 +12,8 @@ class TestJava(IntegrationTest):
 
     def test_build(self):
         self.build('program.jar')
+        for i in glob.glob("*.class*"):
+            os.remove(i)
         self.assertOutput(['java', '-jar', 'program.jar'],
                           'hello from java!\n')
 
@@ -23,5 +26,7 @@ class TestJavaLibrary(IntegrationTest):
 
     def test_build(self):
         self.build('program.jar')
+        for i in glob.glob("*.class*"):
+            os.remove(i)
         self.assertOutput(['java', '-jar', 'program.jar'],
                           'hello from library!\n')

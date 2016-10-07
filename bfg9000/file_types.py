@@ -113,6 +113,12 @@ class ObjectFile(Binary):
         self.lang = lang
 
 
+# XXX: Perhaps this should be a generic file list that we can use for any kind
+# of file?
+class JvmClassList(ObjectFile):
+    pass
+
+
 class Executable(Binary):
     install_root = _InstallRoot.bindir
 

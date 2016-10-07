@@ -103,7 +103,11 @@ def emit_deps(instream, outstream):
 
 
 def main():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        prog='bfg9000-depfixer',
+        description='Read in a depfile (in Makefile syntax) on stdin and ' +
+                    'output all the dependencies as targets on stdout.'
+    )
     parser.add_argument('--version', action='version',
                         version='%(prog)s ' + version)
     parser.parse_args()

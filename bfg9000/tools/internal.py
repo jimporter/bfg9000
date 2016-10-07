@@ -28,6 +28,18 @@ class Depfixer(object):
                            depfile])
 
 
+@tool('jvmoutput')
+class JvmOutput(object):
+    rule_name = command_var = 'depfixer'
+
+    def __init__(self, env):
+        default = env.bfgdir.append('bfg9000-jvmoutput')
+        self.command = env.getvar('JVMOUTPUT', default)
+
+    def __call__(self, cmd, output):
+        return shell_list([cmd, escaped_str('>'), output])
+
+
 if platform_name() == 'windows':
     @tool('setenv')
     class SetEnv(object):

@@ -308,6 +308,10 @@ def make_link(rule, build_inputs, buildfile, env):
                    output=output_vars, **cmd_kwargs)
         ])
 
+    files = rule.files
+    if hasattr(rule.linker, 'transform_input'):
+        files = rule.linker.transform_input(files)
+
     manifest = listify(getattr(rule, 'manifest', None))
     dirs = uniques(i.path.parent() for i in rule.output)
     make.multitarget_rule(
@@ -315,7 +319,7 @@ def make_link(rule, build_inputs, buildfile, env):
         targets=rule.output,
         deps=rule.files + rule.libs + manifest + rule.extra_deps,
         order_only=[i.append(make.dir_sentinel) for i in dirs if i],
-        recipe=make.Call(recipename, rule.files, *output_params),
+        recipe=make.Call(recipename, files, *output_params),
         variables=variables
     )
 
@@ -337,9 +341,15 @@ def ninja_link(rule, build_inputs, buildfile, env):
             output_vars.append(v)
             variables[v] = rule.output[i]
 
+    if hasattr(rule.linker, 'transform_input'):
+        input_var = ninja.var('input')
+        variables[input_var] = rule.linker.transform_input(rule.files)
+    else:
+        input_var = ninja.var('in')
+
     if not buildfile.has_rule(linker.rule_name):
         buildfile.rule(name=linker.rule_name, command=[linker(
-            cmd=ninja.cmd_var(linker, buildfile), input=ninja.var('in'),
+            cmd=ninja.cmd_var(linker, buildfile), input=input_var,
             output=output_vars, **cmd_kwargs
         )])
 

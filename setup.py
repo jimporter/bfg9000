@@ -128,6 +128,7 @@ setup(
             'bfg9000=bfg9000.driver:main',
             '9k=bfg9000.driver:simple_main',
             'bfg9000-depfixer=bfg9000.depfixer:main',
+            'bfg9000-jvmoutput=bfg9000.jvmoutput:main',
         ] + more_scripts,
         'bfg9000.backends': [
             'make=bfg9000.backends.make.writer',
