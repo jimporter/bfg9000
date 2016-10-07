@@ -23,12 +23,12 @@ matrix:
       python: 2.7
       os: osx
       osx_image: xcode7.3
-      env: CC=clang CXX=clang++
+      env: CC=clang CXX=clang++ NO_SCALA_TEST=1
     - language: generic
       python: 3.5
       os: osx
       osx_image: xcode7.3
-      env: CC=clang CXX=clang++ PYTHON=python3 PIP=pip3
+      env: CC=clang CXX=clang++ PYTHON=python3 PIP=pip3 NO_SCALA_TEST=1
     - python: 2.7
       os: linux
       env: TEST_COMMAND=lint
