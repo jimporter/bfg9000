@@ -1,4 +1,5 @@
 # -*- python -*-
 
 lib = shared_library('lib', 'lib/library.java')
-executable('program', 'program.java', entry_point='program', libs=lib)
+prog = executable('program', 'program.java', entry_point='program', libs=lib)
+install(lib, prog)

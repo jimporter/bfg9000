@@ -14,9 +14,11 @@ class JvmBuilder(object):
         self.brand = 'jvm'  # XXX: Be more specific?
         self.compiler = JvmCompiler(env, lang, name, command, flags_name,
                                     flags)
+
+        linker = JarMaker(env, jar_command)
         self._linkers = {
-            'executable': JarMaker(env, jar_command, Executable),
-            'shared_library': JarMaker(env, jar_command, SharedLibrary),
+            'executable': linker,
+            'shared_library': linker,
         }
 
     @property
@@ -82,9 +84,8 @@ class JarMaker(object):
     flags_var = 'jarflags'
     libs_var = 'jarlibs'
 
-    def __init__(self, env, command, output_type):
+    def __init__(self, env, command):
         self.command = command
-        self.output_type = output_type
 
         self.global_args = []
         self.global_libs = []
@@ -131,4 +132,4 @@ class JarMaker(object):
         return []
 
     def output_file(self, name, options):
-        return self.output_type(Path(name + '.jar'), 'jvm')
+        return ExecutableLibrary(Path(name + '.jar'), 'jvm')

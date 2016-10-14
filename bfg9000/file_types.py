@@ -127,6 +127,13 @@ class Library(Binary):
     install_root = _InstallRoot.libdir
 
 
+# This is used for JVM binaries, which can be both executables and libraries.
+# Multiple inheritance is a sign that we should perhaps switch to a trait-based
+# system though...
+class ExecutableLibrary(Executable, Library):
+    install_root = _InstallRoot.bindir
+
+
 class StaticLibrary(Library):
     def __init__(self, path, format, lang, external=False):
         Library.__init__(self, path, format, external)

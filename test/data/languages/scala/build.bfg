@@ -1,3 +1,4 @@
 # -*- python -*-
 
-executable('program', 'program.scala', entry_point='program')
+prog = executable('program', 'program.scala', entry_point='program')
+install(prog)
