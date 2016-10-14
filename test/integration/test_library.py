@@ -31,7 +31,7 @@ class TestStaticLibrary(IntegrationTest):
 class TestVersionedLibrary(IntegrationTest):
     def __init__(self, *args, **kwargs):
         IntegrationTest.__init__(
-            self, 'versioned_library', dist=True, *args, **kwargs
+            self, 'versioned_library', install=True, *args, **kwargs
         )
 
     def test_build(self):
@@ -41,7 +41,7 @@ class TestVersionedLibrary(IntegrationTest):
     def test_install(self):
         self.build('install')
 
-        self.assertDirectory(self.distdir, [
+        self.assertDirectory(self.installdir, [
             pjoin(self.bindir, executable('program').path),
             pjoin(self.libdir, shared_library('library', '1.2.3').path),
             pjoin(self.libdir, shared_library('library', '1').path),

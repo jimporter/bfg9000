@@ -6,11 +6,12 @@ pjoin = os.path.join
 
 class TestInstall(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        IntegrationTest.__init__(self, 'install', dist=True, *args, **kwargs)
+        IntegrationTest.__init__(self, 'install', install=True, *args,
+                                 **kwargs)
 
     def setUp(self):
         IntegrationTest.setUp(self)
-        cleandir(self.distdir)
+        cleandir(self.installdir)
 
     def test_default(self):
         self.build()
@@ -28,7 +29,7 @@ class TestInstall(IntegrationTest):
         if platform_info().has_import_library:
             extra = [pjoin(self.libdir, import_library('shared_a').path)]
 
-        self.assertDirectory(self.distdir, [
+        self.assertDirectory(self.installdir, [
             pjoin(self.includedir, 'shared_a.hpp'),
             pjoin(self.includedir, 'static_a.hpp'),
             pjoin(self.bindir, executable('program').path),
@@ -40,7 +41,7 @@ class TestInstall(IntegrationTest):
         os.chdir(self.srcdir)
         cleandir(self.builddir)
         self.assertOutput(
-            [os.path.join(self.bindir, executable('program').path)],
+            [pjoin(self.bindir, executable('program').path)],
             'hello from shared a!\nhello from shared b!\n' +
             'hello from static a!\nhello from static b!\n'
         )
@@ -56,7 +57,7 @@ class TestInstall(IntegrationTest):
         if platform_info().has_import_library:
             extra = [pjoin(self.libdir, import_library('shared_a').path)]
 
-        self.assertDirectory(self.distdir, [
+        self.assertDirectory(self.installdir, [
             pjoin(self.includedir, 'shared_a.hpp'),
             pjoin(self.includedir, 'static_a.hpp'),
             pjoin(self.bindir, executable('program').path),
@@ -68,7 +69,7 @@ class TestInstall(IntegrationTest):
         os.chdir(self.srcdir)
         cleandir(self.builddir)
         self.assertOutput(
-            [os.path.join(self.bindir, executable('program').path)],
+            [pjoin(self.bindir, executable('program').path)],
             'hello from shared a!\nhello from shared b!\n' +
             'hello from static a!\nhello from static b!\n'
         )

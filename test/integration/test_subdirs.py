@@ -7,13 +7,12 @@ pjoin = os.path.join
 
 class TestSubdirs(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        IntegrationTest.__init__(
-            self, pjoin(examples_dir, '05_subdirs'), dist=True, *args, **kwargs
-        )
+        IntegrationTest.__init__(self, pjoin(examples_dir, '05_subdirs'),
+                                 install=True, *args, **kwargs)
 
     def setUp(self):
         IntegrationTest.setUp(self)
-        cleandir(self.distdir)
+        cleandir(self.installdir)
 
     def test_build(self):
         self.build()
@@ -46,7 +45,7 @@ class TestSubdirs(IntegrationTest):
         if platform_info().has_import_library:
             extra = [pjoin(self.libdir, import_library('sub/library').path)]
 
-        self.assertDirectory(self.distdir, [
+        self.assertDirectory(self.installdir, [
             pjoin(self.includedir, 'library.hpp'),
             pjoin(self.includedir, 'detail', 'export.hpp'),
             pjoin(self.bindir, executable('sub/program').path),
@@ -69,7 +68,7 @@ class TestSubdirs(IntegrationTest):
         if platform_info().has_import_library:
             extra = [pjoin(self.libdir, import_library('sub/library').path)]
 
-        self.assertDirectory(self.distdir, [
+        self.assertDirectory(self.installdir, [
             pjoin(self.includedir, 'library.hpp'),
             pjoin(self.includedir, 'detail', 'export.hpp'),
             pjoin(self.bindir, executable('sub/program').path),

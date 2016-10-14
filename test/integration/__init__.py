@@ -89,7 +89,7 @@ class SubprocessError(unittest.TestCase.failureException):
 
 class IntegrationTest(unittest.TestCase):
     def __init__(self, srcdir, *args, **kwargs):
-        dist = kwargs.pop('dist', False)
+        install = kwargs.pop('install', False)
         self._args = args
         self._kwargs = kwargs
 
@@ -109,16 +109,17 @@ class IntegrationTest(unittest.TestCase):
 
         self.builddir = os.path.join(test_stage_dir, srcname + '-build')
 
-        if dist:
-            self.distdir = os.path.join(test_stage_dir, srcname + '-dist')
-            self.extra_args = ['--prefix', self.distdir]
+        if install:
+            self.installdir = os.path.join(test_stage_dir,
+                                           srcname + '-install')
+            self.extra_args = ['--prefix', self.installdir]
 
             install_dirs = platform_info().install_dirs
-            path_vars = {InstallRoot.prefix: self.distdir}
+            path_vars = {InstallRoot.prefix: self.installdir}
             for i in InstallRoot:
                 setattr(self, i.name, install_dirs[i].realize(path_vars))
         else:
-            self.distdir = None
+            self.installdir = None
 
     def parameterize(self):
         return [ self.__class__(backend=i, *self._args, **self._kwargs)
@@ -153,8 +154,8 @@ class IntegrationTest(unittest.TestCase):
             shutil.copytree(self.orig_srcdir, self.srcdir)
         os.chdir(self.srcdir)
         cleandir(self.builddir)
-        if self.distdir:
-            cleandir(self.distdir)
+        if self.installdir:
+            cleandir(self.installdir)
 
         self.assertPopen(
             ['bfg9000', '--debug', 'configure', self.builddir,
