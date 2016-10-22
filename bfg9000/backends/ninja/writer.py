@@ -23,6 +23,7 @@ def version(env=os.environ):
 
 
 priority = 3
+filepath = path.Path('build.ninja')
 
 _rule_handlers = {}
 _pre_rules = []
@@ -60,7 +61,7 @@ def write(env, build_inputs):
     for i in _post_rules:
         i(build_inputs, buildfile, env)
 
-    with open(path.Path('build.ninja').string(env.path_roots), 'w') as out:
+    with open(filepath.string(env.path_roots), 'w') as out:
         buildfile.write(out)
 
 

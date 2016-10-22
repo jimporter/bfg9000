@@ -26,18 +26,23 @@ class FindResult(IntEnum):
     exclude = 2
 
 
-def write_depfile(path, output, seen_dirs, makeify=False):
-    with open(path, 'w') as f:
+def write_depfile(env, path, output, seen_dirs, makeify=False):
+    with open(path.string(env.path_roots), 'w') as f:
+        # Since this file is in the build dir, we can use relative dirs for
+        # deps also in the build dir.
+        roots = env.path_roots.copy()
+        roots[Root.builddir] = None
+
         out = Writer(f)
-        out.write(output, Syntax.target)
+        out.write(output.string(roots), Syntax.target)
         out.write_literal(':')
         for i in seen_dirs:
             out.write_literal(' ')
-            out.write(os.path.abspath(i), Syntax.dependency)
+            out.write(i.string(roots), Syntax.dependency)
         out.write_literal('\n')
         if makeify:
             for i in seen_dirs:
-                out.write(os.path.abspath(i), Syntax.target)
+                out.write(i.string(roots), Syntax.target)
                 out.write_literal(':\n')
 
 
@@ -111,7 +116,7 @@ def _find_files(paths, filter, flat, as_object):
     do_filter(( (os.path.basename(p), p) for p in paths ), 'd')
     for p in paths:
         for base, dirs, files in walker(p):
-            seen_dirs.append(base)
+            seen_dirs.append(Path(base, Root.srcdir))
 
             do_filter(dirs, 'd')
             do_filter(files, 'f')
@@ -161,8 +166,8 @@ def make_regenerate_rule(build_inputs, buildfile, env):
     bfgcmd = make.cmd_var(bfg9000, buildfile)
 
     if build_inputs['find_dirs']:
-        write_depfile(Path(depfile_name).string(env.path_roots),
-                      'Makefile', build_inputs['find_dirs'], makeify=True)
+        write_depfile(env, Path(depfile_name), make.filepath,
+                      build_inputs['find_dirs'], makeify=True)
         buildfile.include(depfile_name)
 
     buildfile.rule(
@@ -179,8 +184,8 @@ def ninja_regenerate_rule(build_inputs, buildfile, env):
     depfile = None
 
     if build_inputs['find_dirs']:
-        write_depfile(Path(depfile_name).string(env.path_roots),
-                      'build.ninja', build_inputs['find_dirs'])
+        write_depfile(env, Path(depfile_name), ninja.filepath,
+                      build_inputs['find_dirs'])
         depfile = depfile_name
 
     buildfile.rule(

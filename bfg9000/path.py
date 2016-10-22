@@ -3,6 +3,7 @@ import os
 from enum import Enum
 from itertools import chain
 from six import iteritems
+from contextlib import contextmanager
 
 from . import safe_str
 
@@ -158,3 +159,19 @@ def samefile(path1, path2):
         # This isn't entirely accurate, but it's close enough, and should only
         # be necessary for Windows with Python 2.x.
         return os.path.realpath(path1) == os.path.realpath(path2)
+
+
+# Make an alias since the function below masks the module-level function with
+# one of its parameters.
+_makedirs = makedirs
+
+
+@contextmanager
+def pushd(dirname, makedirs=False, mode=0o777, exist_ok=False):
+    old = os.getcwd()
+    if makedirs:
+        _makedirs(dirname, mode, exist_ok)
+
+    os.chdir(dirname)
+    yield
+    os.chdir(old)

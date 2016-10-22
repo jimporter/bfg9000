@@ -2,16 +2,14 @@ import argparse
 import os
 import sys
 
-from . import builtins
 from . import log
 from .backends import list_backends
-from .build_inputs import BuildInputs
+from .build import bfgfile, execute_script, is_srcdir
 from .environment import Environment, EnvVersionError
-from .path import abspath, InstallRoot, Path, Root, samefile
+from .path import abspath, InstallRoot, Path, samefile
 from .platforms import platform_info
 from .version import version
 
-bfgfile = 'build.bfg'
 logger = log.getLogger(__name__)
 
 description = """
@@ -40,35 +38,12 @@ out of date.
 """
 
 
-def is_srcdir(path):
-    return os.path.exists(os.path.join(path, bfgfile))
-
-
 def check_dir(parser, pathstr, must_exist=True):
     if os.path.exists(pathstr):
         if not os.path.isdir(pathstr):
             parser.error("'{}' is not a directory".format(pathstr))
     elif must_exist:
         parser.error("'{}' does not exist".format(pathstr))
-
-
-def execute_script(env, filename=bfgfile):
-    bfgpath = Path(filename, Root.srcdir)
-    build = BuildInputs(env, bfgpath)
-    builtin_dict = builtins.bind(build_inputs=build, env=env)
-
-    with open(bfgpath.string(env.path_roots), 'r') as f:
-        os.chdir(env.srcdir.string())
-        code = compile(f.read(), filename, 'exec')
-        try:
-            exec(code, builtin_dict)
-        except SystemExit:
-            pass
-        except Exception as e:
-            logger.exception(e)
-            raise SystemExit(1)
-
-    return build
 
 
 class Directory(argparse.Action):
@@ -172,7 +147,12 @@ def configure(parser, args):
     )
     env.save(args.builddir.string())
 
-    build = execute_script(env)
+    try:
+        build = execute_script(env)
+    except Exception as e:
+        logger.exception(e)
+        return 1
+
     backend.write(env, build)
 
 
