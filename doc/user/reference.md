@@ -496,6 +496,12 @@ The name of the platform, e.g. `'linux'`, `'darwin'` (OS X), or `'windows'`.
 
 ## Miscellaneous
 
+### \__bfg9000__
+
+A dictionary containing all the builtin functions and global variables defined
+by bfg9000. This can be useful for feature detection or accessing builtins
+shadowed by a local variable.
+
 ### bfg9000_required_version([*version*], [*python_version*]) { #bfg9000_required_version }
 
 Set the required *version* for bfg9000 and/or the required *python_version*.

@@ -71,6 +71,7 @@ def bind(**kwargs):
     for k, v in iteritems(_all_builtins):
         builtins[k] = v.bind(builtins=builtins, **kwargs)
 
+    builtins['__bfg9000__'] = builtins
     return builtins
 
 
