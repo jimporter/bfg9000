@@ -42,13 +42,14 @@ class _GetterBinder(_Binder):
         return self._fn(*[kwargs[i] for i in self._args])
 
 
-class _BuiltinDecorator(object):
-    def __init__(self, binder):
+class _Decorator(object):
+    def __init__(self, builtins, binder):
+        self.__builtins = builtins
         self.__binder = binder
 
     def __call__(self, *args):
         def wrapper(fn):
-            _all_builtins[fn.__name__] = self.__binder(fn, *args)
+            self.__builtins[fn.__name__] = self.__binder(fn, *args)
             return fn
         return wrapper
 
@@ -60,21 +61,37 @@ def _decorate_type(type):
     return wrapper
 
 
-builtin = _BuiltinDecorator(_Binder)()
-builtin.globals = _BuiltinDecorator(_PartialFunctionBinder)
-builtin.getter = _BuiltinDecorator(_GetterBinder)
-builtin.type = _decorate_type
+class Builtin(object):
+    def __init__(self):
+        self._builtins = {}
+        self._decorator = _Decorator(self._builtins, _Binder)()
+        self.globals = _Decorator(self._builtins, _PartialFunctionBinder)
+        self.getter = _Decorator(self._builtins, _GetterBinder)
+
+    def __call__(self, *args, **kwargs):
+        return self._decorator(*args, **kwargs)
+
+    @staticmethod
+    def type(type):
+        def wrapper(fn):
+            fn.type = type
+            return fn
+        return wrapper
+
+    def bind(self, **kwargs):
+        builtins = {}
+        for k, v in iteritems(self._builtins):
+            builtins[k] = v.bind(builtins=builtins, **kwargs)
+
+        builtins['__bfg9000__'] = builtins
+        return builtins
 
 
-def bind(**kwargs):
-    builtins = {}
-    for k, v in iteritems(_all_builtins):
-        builtins[k] = v.bind(builtins=builtins, **kwargs)
-
-    builtins['__bfg9000__'] = builtins
-    return builtins
+builtin = Builtin()
+optbuiltin = Builtin()
 
 
 @builtin.getter('env')
-def env(this_env):
-    return this_env
+@optbuiltin.getter('env')
+def env(_env):
+    return _env

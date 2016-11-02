@@ -15,7 +15,7 @@ class EnvVersionError(RuntimeError):
 
 
 class Environment(object):
-    version = 7
+    version = 8
     envfile = '.bfg_environ'
 
     def __new__(cls, *args, **kwargs):
@@ -25,7 +25,7 @@ class Environment(object):
         return env
 
     def __init__(self, bfgdir, backend, backend_version, srcdir, builddir,
-                 install_dirs):
+                 install_dirs, extra_args):
         self.bfgdir = bfgdir
         self.backend = backend
         self.backend_version = backend_version
@@ -33,6 +33,8 @@ class Environment(object):
         self.srcdir = srcdir
         self.builddir = builddir
         self.install_dirs = install_dirs
+
+        self.extra_args = extra_args
 
         self.variables = dict(os.environ)
         self.platform = platforms.platform_info()
@@ -63,16 +65,17 @@ class Environment(object):
                 'version': self.version,
                 'data': {
                     'bfgdir': self.bfgdir.to_json(),
-                    'platform': self.platform.name,
                     'backend': self.backend,
                     'backend_version': str(self.backend_version),
-                    'variables': self.variables,
                     'srcdir': self.srcdir.to_json(),
                     'builddir': self.builddir.to_json(),
                     'install_dirs': {
                         k.name: v.to_json() for k, v in
                         iteritems(self.install_dirs)
                     },
+                    'extra_args': self.extra_args,
+                    'variables': self.variables,
+                    'platform': self.platform.name,
                 }
             }, out)
 
@@ -104,10 +107,14 @@ class Environment(object):
             data['bfgdir'] = bfgdir.to_json()
             del data['bfgpath']
 
+        # v8 adds suppot for user-defined command-line arguments.
+        if version < 8:
+            data['extra_args'] = []
+
         # Now that we've upgraded, initialize the Environment object.
         env = Environment.__new__(Environment)
 
-        for i in ['backend', 'variables']:
+        for i in ['backend', 'extra_args', 'variables']:
             setattr(env, i, data[i])
 
         setattr(env, 'backend_version', LegacyVersion(data['backend_version']))

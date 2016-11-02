@@ -2,7 +2,7 @@ import platform
 from packaging.specifiers import SpecifierSet
 from packaging.version import Version
 
-from .hooks import builtin
+from .hooks import builtin, optbuiltin
 from ..version import version as _bfg_version
 from ..file_types import objectify
 
@@ -23,6 +23,7 @@ def check_version(version, specifier, kind):
 
 
 @builtin
+@optbuiltin
 def bfg9000_required_version(version=None, python_version=None):
     version = make_specifier(version, prereleases=True)
     python_version = make_specifier(python_version, prereleases=True)
@@ -32,5 +33,6 @@ def bfg9000_required_version(version=None, python_version=None):
 
 
 @builtin.getter()
+@optbuiltin.getter()
 def bfg9000_version():
     return _bfg_version

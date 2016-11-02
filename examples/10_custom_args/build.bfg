@@ -1,0 +1,5 @@
+# -*- python -*-
+
+global_options(['-DNAME="{}"'.format(argv.name)], lang='c++')
+
+executable('simple', files=['simple.cpp'])

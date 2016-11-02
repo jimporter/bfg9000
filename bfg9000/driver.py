@@ -4,7 +4,7 @@ import sys
 
 from . import log
 from .backends import list_backends
-from .build import bfgfile, execute_script, is_srcdir
+from .build import bfgfile, execute_script, is_srcdir, parse_extra_args
 from .environment import Environment, EnvVersionError
 from .path import abspath, InstallRoot, Path, samefile
 from .platforms import platform_info
@@ -111,7 +111,7 @@ def add_configure_args(parser):
                         help=path_help.format('headers'))
 
 
-def configure(parser, args):
+def configure(parser, args, extra):
     srcstr = args.srcdir.string()
     buildstr = args.builddir.string()
 
@@ -143,12 +143,14 @@ def configure(parser, args):
             InstallRoot.bindir: args.bindir,
             InstallRoot.libdir: args.libdir,
             InstallRoot.includedir: args.includedir,
-        }
+        },
+        extra_args=extra,
     )
     env.save(args.builddir.string())
 
     try:
-        build = execute_script(env)
+        argv = parse_extra_args(env)
+        build = execute_script(env, argv)
     except Exception as e:
         logger.exception(e)
         return 1
@@ -156,7 +158,10 @@ def configure(parser, args):
     backend.write(env, build)
 
 
-def refresh(parser, args):
+def refresh(parser, args, extra):
+    if extra:
+        parser.error('unrecongized arguments: {}'.format(extra))
+
     if is_srcdir(args.builddir.string()):
         parser.error('build directory must not contain a {} file'
                      .format(bfgfile))
@@ -165,7 +170,8 @@ def refresh(parser, args):
         env = Environment.load(args.builddir.string())
 
         backend = list_backends()[env.backend]
-        build = execute_script(env)
+        argv = parse_extra_args(env)
+        build = execute_script(env, argv)
         backend.write(env, build)
     except Exception as e:
         msg = 'Unable to reload environment'
@@ -210,10 +216,10 @@ def main():
                            default='.', action=ExistingDirectory,
                            help='build directory')
 
-    args = parser.parse_args()
+    args, extra = parser.parse_known_args()
     log.init(args.color, debug=args.debug)
 
-    return args.func(parser, args)
+    return args.func(parser, args, extra)
 
 
 def simple_main():
@@ -223,7 +229,7 @@ def simple_main():
     add_generic_args(parser)
     add_configure_args(parser)
 
-    args = parser.parse_args()
+    args, extra = parser.parse_known_args()
     log.init(args.color, debug=args.debug)
 
-    return configure(parser, args)
+    return configure(parser, args, extra)

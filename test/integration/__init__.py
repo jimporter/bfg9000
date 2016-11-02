@@ -17,7 +17,7 @@ examples_dir = os.path.join(this_dir, '..', '..', 'examples')
 test_data_dir = os.path.join(this_dir, '..', 'data')
 test_stage_dir = os.path.join(this_dir, '..', 'stage')
 
-env = Environment(None, None, None, None, None, None)
+env = Environment(None, None, None, None, None, None, None)
 
 Target = namedtuple('Target', ['name', 'path'])
 
@@ -90,6 +90,8 @@ class SubprocessError(unittest.TestCase.failureException):
 class IntegrationTest(unittest.TestCase):
     def __init__(self, srcdir, *args, **kwargs):
         install = kwargs.pop('install', False)
+
+        self._configure = kwargs.pop('configure', True)
         self._args = args
         self._kwargs = kwargs
 
@@ -149,6 +151,10 @@ class IntegrationTest(unittest.TestCase):
         return target
 
     def setUp(self):
+        if self._configure:
+            self.configure(self.extra_args)
+
+    def configure(self, extra_args=[]):
         if self.stage_src:
             cleandir(self.srcdir, recreate=False)
             shutil.copytree(self.orig_srcdir, self.srcdir)
@@ -159,7 +165,7 @@ class IntegrationTest(unittest.TestCase):
 
         self.assertPopen(
             ['bfg9000', '--debug', 'configure', self.builddir,
-             '--backend', self.backend] + self.extra_args
+             '--backend', self.backend] + extra_args
         )
         os.chdir(self.builddir)
 
