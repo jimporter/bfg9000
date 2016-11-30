@@ -2,9 +2,9 @@ import argparse
 import os
 import sys
 
+from . import build
 from . import log
 from .backends import list_backends
-from .build import bfgfile, execute_script, is_srcdir, parse_extra_args
 from .environment import Environment, EnvVersionError
 from .path import abspath, InstallRoot, Path, samefile
 from .platforms import platform_info
@@ -46,6 +46,29 @@ def check_dir(parser, pathstr, must_exist=True):
         parser.error("'{}' does not exist".format(pathstr))
 
 
+def environment_from_args(args, extra_args=None):
+    # Get the bin directory holding bfg's executables.
+    bfgdir = Path(os.path.dirname(sys.argv[0]))
+
+    backend = list_backends()[args.backend]
+    env = Environment(
+        bfgdir=bfgdir,
+        backend=args.backend,
+        backend_version=backend.version(),
+        srcdir=args.srcdir,
+        builddir=args.builddir,
+        install_dirs={
+            InstallRoot.prefix: args.prefix,
+            InstallRoot.bindir: args.bindir,
+            InstallRoot.libdir: args.libdir,
+            InstallRoot.includedir: args.includedir,
+        },
+        extra_args=extra_args,
+    )
+
+    return env, backend
+
+
 class Directory(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         check_dir(parser, values, must_exist=False)
@@ -64,13 +87,30 @@ class DirectoryPair(argparse.Action):
 
         check_dir(parser, values, must_exist=False)
 
-        if is_srcdir(values):
+        if build.is_srcdir(values):
             srcdir, builddir = values, cwd
         else:
             srcdir, builddir = cwd, values
 
         namespace.srcdir = abspath(srcdir)
         namespace.builddir = abspath(builddir)
+
+
+class ConfigureHelp(argparse.Action):
+    def __init__(self, option_strings, dest=argparse.SUPPRESS,
+                 default=argparse.SUPPRESS, help=None):
+        argparse.Action.__init__(
+            self, option_strings=option_strings, dest=dest, default=default,
+            nargs=0, help=help
+        )
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        if getattr(namespace, 'srcdir', None):
+            env, backend = environment_from_args(namespace)
+            build.print_help(env, parser)
+        else:
+            parser.print_help()
+        parser.exit()
 
 
 def add_generic_args(parser):
@@ -92,6 +132,8 @@ def add_configure_args(parser):
     install_dirs = platform_info().install_dirs
     path_help = 'installation path for {} (default: %(default)r)'
 
+    parser.add_argument('-h', '--help', action=ConfigureHelp,
+                        help='show this help message and exit')
     parser.add_argument('--backend', metavar='BACKEND',
                         choices=list(backends.keys()),
                         default=list(backends.keys())[0],
@@ -115,12 +157,12 @@ def configure(parser, args, extra):
     srcstr = args.srcdir.string()
     buildstr = args.builddir.string()
 
-    if not is_srcdir(srcstr):
+    if not build.is_srcdir(srcstr):
         parser.error('source directory must contain a {} file'
-                     .format(bfgfile))
-    if is_srcdir(buildstr):
+                     .format(build.bfgfile))
+    if build.is_srcdir(buildstr):
         parser.error('build directory must not contain a {} file'
-                     .format(bfgfile))
+                     .format(build.bfgfile))
 
     if os.path.exists(buildstr):
         if samefile(srcstr, buildstr):
@@ -128,51 +170,33 @@ def configure(parser, args, extra):
     else:
         os.mkdir(buildstr)
 
-    backend = list_backends()[args.backend]
-    # Get the bin directory holding bfg's executables.
-    bfgdir = Path(os.path.dirname(sys.argv[0]))
-
-    env = Environment(
-        bfgdir=bfgdir,
-        backend=args.backend,
-        backend_version=backend.version(),
-        srcdir=args.srcdir,
-        builddir=args.builddir,
-        install_dirs={
-            InstallRoot.prefix: args.prefix,
-            InstallRoot.bindir: args.bindir,
-            InstallRoot.libdir: args.libdir,
-            InstallRoot.includedir: args.includedir,
-        },
-        extra_args=extra,
-    )
+    env, backend = environment_from_args(args, extra)
     env.save(args.builddir.string())
-
     try:
-        argv = parse_extra_args(env)
-        build = execute_script(env, argv)
+        argv = build.parse_extra_args(env)
+        build_inputs = build.execute_script(env, argv)
     except Exception as e:
         logger.exception(e)
         return 1
 
-    backend.write(env, build)
+    backend.write(env, build_inputs)
 
 
 def refresh(parser, args, extra):
     if extra:
-        parser.error('unrecongized arguments: {}'.format(extra))
+        parser.error('unrecongized arguments: {}'.format(' '.join(extra)))
 
-    if is_srcdir(args.builddir.string()):
+    if build.is_srcdir(args.builddir.string()):
         parser.error('build directory must not contain a {} file'
-                     .format(bfgfile))
+                     .format(build.bfgfile))
 
     try:
         env = Environment.load(args.builddir.string())
 
         backend = list_backends()[env.backend]
-        argv = parse_extra_args(env)
-        build = execute_script(env, argv)
-        backend.write(env, build)
+        argv = build.parse_extra_args(env)
+        build_inputs = build.execute_script(env, argv)
+        backend.write(env, build_inputs)
     except Exception as e:
         msg = 'Unable to reload environment'
         if str(e):
@@ -183,22 +207,28 @@ def refresh(parser, args, extra):
         return 1
 
 
+def help(parser, args, extra):
+    parser.parse_args(extra + ['--help'])
+
+
 def main():
     parser = argparse.ArgumentParser(prog='bfg9000', description=description)
-    add_generic_args(parser)
-
     subparsers = parser.add_subparsers()
 
+    add_generic_args(parser)
+
     conf_p = subparsers.add_parser(
-        'configure', description=configure_desc, help='create build files'
+        'configure', description=configure_desc, add_help=False,
+        help='create build files'
     )
     conf_p.set_defaults(func=configure)
-    conf_p.add_argument('directory', metavar='DIRECTORY', action=DirectoryPair,
+    conf_p.add_argument(argparse.SUPPRESS, metavar='DIRECTORY',
+                        action=DirectoryPair,
                         help='source or build directory')
     add_configure_args(conf_p)
 
     confinto_p = subparsers.add_parser(
-        'configure-into', description=configureinto_desc,
+        'configure-into', description=configureinto_desc, add_help=False,
         help='create build files in a chosen directory'
     )
     confinto_p.add_argument('srcdir', metavar='SRCDIR',
@@ -216,6 +246,11 @@ def main():
                            default='.', action=ExistingDirectory,
                            help='build directory')
 
+    help_p = subparsers.add_parser(
+        'help', help='show this help message and exit', add_help=False
+    )
+    help_p.set_defaults(func=help)
+
     args, extra = parser.parse_known_args()
     log.init(args.color, debug=args.debug)
 
@@ -223,7 +258,8 @@ def main():
 
 
 def simple_main():
-    parser = argparse.ArgumentParser(prog='9k', description=configure_desc)
+    parser = argparse.ArgumentParser(prog='9k', description=configure_desc,
+                                     add_help=False)
     parser.add_argument('directory', metavar='DIRECTORY', action=DirectoryPair,
                         help='source or build directory')
     add_generic_args(parser)

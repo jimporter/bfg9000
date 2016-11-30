@@ -1,4 +1,4 @@
 # -*- python -*-
 
-argument('name', default='unnamed')
+argument('name', default='unnamed', help='set the name to greet')
 

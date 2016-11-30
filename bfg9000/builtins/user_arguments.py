@@ -3,6 +3,12 @@ import re
 
 from .hooks import builtin, optbuiltin
 
+help_description = """
+These arguments are defined by the build.opts file in the project's source
+directory. To disambiguate them from built-in arguments, you may prefix the
+argument name with `-x`. For example, `--foo` may also be written as `--x-foo`.
+"""
+
 
 class ToggleAction(argparse.Action):
     def __init__(self, option_strings, dest, default=False, required=False,
@@ -41,11 +47,16 @@ class WithAction(ToggleAction):
     _false_prefix = 'without-'
 
 
-def make_parser(filename):
-    parser = argparse.ArgumentParser(prog=filename, add_help=False)
+def make_parser(prog, parents=None, usage='parse'):
+    parser = argparse.ArgumentParser(prog=prog, parents=parents,
+                                     add_help=False)
     parser.register('action', 'enable', EnableAction)
     parser.register('action', 'with', WithAction)
-    return parser
+
+    group = parser.add_argument_group('user arguments',
+                                      description=help_description)
+    group.usage = usage
+    return parser, group
 
 
 @builtin.getter('argv')
@@ -57,5 +68,8 @@ def argv(_argv):
 def argument(parser, *args, **kwargs):
     if any(i.startswith('x-') for i in args):
         raise ValueError('"x-" prefix is reserved')
-    names = ['--' + i for i in args] + ['--x-' + i for i in args]
+
+    names = ['--' + i for i in args]
+    if parser.usage == 'parse':
+        names += ['--x-' + i for i in args]
     parser.add_argument(*names, **kwargs)
