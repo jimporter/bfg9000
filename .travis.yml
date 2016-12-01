@@ -54,7 +54,7 @@ before_install:
     if [ "${TRAVIS_OS_NAME}" = "osx" ]; then
       shell_session_update() { :; }
       brew update
-      brew install coreutils gcc libogg ninja
+      brew install gcc libogg ninja
       if [ "${PYTHON}" = "python3" ]; then
         brew install ${PYTHON}
       fi
