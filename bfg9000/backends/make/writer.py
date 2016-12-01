@@ -23,6 +23,7 @@ def version(env=os.environ):
         pass
     return None
 
+
 priority = 2
 
 _rule_handlers = {}

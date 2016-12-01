@@ -302,6 +302,7 @@ def ninja_compile(rule, build_inputs, buildfile, env):
         variables=variables
     )
 
+
 try:
     from ..backends.msbuild import writer as msbuild
 

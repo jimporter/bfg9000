@@ -98,6 +98,7 @@ def ninja_command(rule, build_inputs, buildfile, env):
         console=isinstance(rule, Command)
     )
 
+
 try:
     from ..backends.msbuild import writer as msbuild
 

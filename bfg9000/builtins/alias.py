@@ -32,6 +32,7 @@ def ninja_alias(rule, build_inputs, buildfile, env):
         inputs=rule.extra_deps
     )
 
+
 try:
     from ..backends.msbuild import writer as msbuild
 

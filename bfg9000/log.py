@@ -41,6 +41,7 @@ def _showwarning(message, category, filename, lineno, file=None, line=None):
     stack = traceback.extract_stack()[1:]
     _log_trace(logging.WARN, message, stack)
 
+
 warnings.showwarning = _showwarning
 warnings.filterwarnings('once')
 

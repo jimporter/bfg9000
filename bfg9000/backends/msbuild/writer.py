@@ -21,6 +21,7 @@ def version(env=os.environ):
     except IOError:
         return None
 
+
 priority = 1
 
 _rule_handlers = {}

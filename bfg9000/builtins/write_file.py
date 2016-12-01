@@ -44,6 +44,7 @@ def ninja_write_file(rule, build_inputs, buildfile, env):
         variables={'text': rule.text}
     )
 
+
 try:
     from ..backends.msbuild import writer as msbuild
 
