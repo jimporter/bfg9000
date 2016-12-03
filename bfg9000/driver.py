@@ -102,11 +102,14 @@ def add_generic_args(parser):
     parser.add_argument('--version', action='version',
                         version='%(prog)s ' + version)
     parser.add_argument('--debug', action='store_true', help=argparse.SUPPRESS)
-    parser.add_argument('-c', '--color', nargs='?', metavar='WHEN',
-                        choices=['always', 'never', 'auto'],
-                        default='auto', const='always',
+    parser.add_argument('--color', metavar='WHEN',
+                        choices=['always', 'never', 'auto'], default='auto',
                         help=('show colored output (one of: %(choices)s; ' +
                               'default: %(default)s)'))
+    parser.add_argument('-c', action='store_const', const='always',
+                        dest='color',
+                        help=('show colored output (equivalent to ' +
+                              '`--color=always`)'))
 
 
 def add_configure_args(parser):
