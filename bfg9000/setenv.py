@@ -1,8 +1,8 @@
-import argparse
 import os
 import subprocess
 import sys
 
+from .arguments import parser as argparse
 from .version import version
 
 

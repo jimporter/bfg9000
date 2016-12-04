@@ -1,8 +1,8 @@
 import os.path
 from itertools import chain
 
-from .winargparse import ArgumentParser
 from .. import shell
+from ..arguments.windows import ArgumentParser
 from ..builtins.write_file import WriteFile
 from ..file_types import *
 from ..iterutils import iterate, uniques

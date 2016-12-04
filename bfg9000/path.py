@@ -131,6 +131,20 @@ def install_path(path, install_root):
     return Path(suffix, install_root)
 
 
+def exists(path):
+    return os.path.exists(path.string())
+
+
+def samefile(path1, path2):
+    if hasattr(os.path, 'samefile'):
+        return os.path.samefile(path1.string(), path2.string())
+    else:
+        # This isn't entirely accurate, but it's close enough, and should only
+        # be necessary for Windows with Python 2.x.
+        return (os.path.realpath(path1.string()) ==
+                os.path.realpath(path2.string()))
+
+
 def commonprefix(paths):
     if not paths or any(i.root != paths[0].root for i in paths):
         return None
@@ -150,15 +164,6 @@ def makedirs(path, mode=0o777, exist_ok=False):
     except OSError as e:
         if not exist_ok or e.errno != errno.EEXIST or not os.path.isdir(path):
             raise
-
-
-def samefile(path1, path2):
-    if hasattr(os.path, 'samefile'):
-        return os.path.samefile(path1, path2)
-    else:
-        # This isn't entirely accurate, but it's close enough, and should only
-        # be necessary for Windows with Python 2.x.
-        return os.path.realpath(path1) == os.path.realpath(path2)
 
 
 # Make an alias since the function below masks the module-level function with

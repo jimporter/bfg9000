@@ -1,7 +1,7 @@
-import argparse
 import re
 import sys
 
+from .arguments import parser as argparse
 from .version import version
 
 
