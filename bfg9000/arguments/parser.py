@@ -47,6 +47,15 @@ class ArgumentParser(argparse.ArgumentParser):
         self.register('action', 'enable', EnableAction)
         self.register('action', 'with', WithAction)
 
+    def _get_option_tuples(self, option_string):
+        # Don't try to check prefixes for long options; this is similar to
+        # Python 3.5's `allow_abbrev=False`, except this doesn't break combined
+        # short options. See <https://bugs.python.org/issue26967>.
+        if option_string[:2] == self.prefix_chars * 2:
+            return []
+
+        return argparse.ArgumentParser._get_option_tuples(self, option_string)
+
 
 # It'd be nice to just have a UserArgumentParser class with this method but it
 # wouldn't propagate to argument groups, so it's easier to just do it this way.
