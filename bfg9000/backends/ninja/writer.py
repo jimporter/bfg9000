@@ -9,15 +9,17 @@ from ...platforms import which
 
 
 def version(env=os.environ):
-    try:
-        ninja = which(env.get('NINJA', ['ninja', 'ninja-build']), env)
-        output = subprocess.check_output(
-            [ninja, '--version'],
-            universal_newlines=True
-        )
-        return LegacyVersion(output.strip())
-    except IOError:
-        return None
+    ninja = which(env.get('NINJA', ['ninja', 'ninja-build']), env)
+    with open(os.devnull, 'wb') as devnull:
+        try:
+            output = subprocess.check_output(
+                '{} --version'.format(ninja),
+                shell=True, universal_newlines=True, stderr=devnull
+            )
+            return LegacyVersion(output.strip())
+        except IOError:
+            pass
+    return None
 
 
 priority = 3

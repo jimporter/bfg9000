@@ -10,17 +10,18 @@ from ...platforms import which
 
 
 def version(env=os.environ):
-    try:
-        make = which(env.get('MAKE', ['make', 'gmake']), env)
-        output = subprocess.check_output(
-            [make, '--version'],
-            universal_newlines=True
-        )
-        m = re.match(r'GNU Make ([\d\.]+)', output)
-        if m:
-            return LegacyVersion(m.group(1))
-    except IOError:
-        pass
+    make = which(env.get('MAKE', ['make', 'gmake']), env)
+    with open(os.devnull, 'wb') as devnull:
+        try:
+            output = subprocess.check_output(
+                '{} --version'.format(make),
+                shell=True, universal_newlines=True, stderr=devnull
+            )
+            m = re.match(r'GNU Make ([\d\.]+)', output)
+            if m:
+                return LegacyVersion(m.group(1))
+        except IOError:
+            pass
     return None
 
 

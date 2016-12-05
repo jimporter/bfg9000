@@ -9,17 +9,19 @@ from ...platforms import which
 
 
 def version(env=os.environ):
-    try:
-        msbuild = which(env.get('MSBUILD', ['msbuild', 'xbuild']), env)
-        output = subprocess.check_output(
-            [msbuild, '/version'],
-            universal_newlines=True
-        )
-        m = re.search(r'([\d\.]+)$', output)
-        if m:
-            return LegacyVersion(m.group(1))
-    except IOError:
-        return None
+    msbuild = which(env.get('MSBUILD', ['msbuild', 'xbuild']), env)
+    with open(os.devnull, 'wb') as devnull:
+        try:
+            output = subprocess.check_output(
+                '{} /version'.format(msbuild),
+                shell=True, universal_newlines=True, stderr=devnull
+            )
+            m = re.search(r'([\d\.]+)$', output)
+            if m:
+                return LegacyVersion(m.group(1))
+        except IOError:
+            pass
+    return None
 
 
 priority = 1

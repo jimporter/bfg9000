@@ -41,6 +41,8 @@ class PkgConfigPackage(Package):
         self._pkg_config = pkg_config
 
     def _call(self, command, *args):
+        # XXX: Use shell mode so that the (user-defined) pkg-config command can
+        # have multiple arguments defined in it?
         return subprocess.check_output(
             getattr(self._pkg_config, command)(
                 self._pkg_config.command, self.name, *args
