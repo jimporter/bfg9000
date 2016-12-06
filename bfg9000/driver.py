@@ -65,7 +65,7 @@ def execute_script(env, filename=bfgfile):
         except SystemExit:
             pass
         except Exception as e:
-            log.exception(e)
+            logger.exception(e)
             raise SystemExit(1)
 
     return build
