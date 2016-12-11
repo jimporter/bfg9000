@@ -10,6 +10,7 @@ environment:
   LIBRARY_PATH: C:\projects\bfg9000\lib
   PYTHON_PATH: C:\Python27
   NO_SCALA_TEST: 1
+  NO_GCJ_TEST: 1
 
   matrix:
     - VS: C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall.bat

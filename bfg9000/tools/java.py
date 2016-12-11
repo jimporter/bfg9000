@@ -1,4 +1,6 @@
-from . import jvm
+import re
+
+from . import cc, jvm
 from .. import shell
 from .hooks import builder
 from ..builtins.write_file import WriteFile
@@ -14,7 +16,7 @@ _vars = {
     'scala': ('SCALAC', 'SCALAFLAGS'),
 }
 _cmds = {
-    'java' : 'javac',
+    'java' : ['javac', 'gcj'],
     'scala': 'scalac',
 }
 
@@ -28,8 +30,16 @@ def java_builder(env, lang):
     cmd = check_which(cmd, kind='{} compiler'.format(lang))
     flags = shell.split(env.getvar(flags_var, ''))
 
-    jar_cmd = env.getvar('JAR', 'jar')
-    jar_cmd = check_which(jar_cmd, kind='jar builder')
-
-    return jvm.JvmBuilder(env, lang, low_var, cmd, jar_cmd, low_flags_var,
-                          flags)
+    # XXX: It might make more sense to try to check version strings instead of
+    # filenames, but the command-line arg for version info can't be determined
+    # ahead of time.
+    if re.search(r'gcj(-\d+\.\d+)?(\.exe)?($|\s)', cmd):
+        ldflags = shell.split(env.getvar('LDFLAGS', ''))
+        ldlibs = shell.split(env.getvar('LDLIBS', ''))
+        return cc.CcBuilder(env, lang, low_var, cmd, low_flags_var, flags,
+                            ldflags, ldlibs)
+    else:
+        jar_cmd = env.getvar('JAR', 'jar')
+        jar_cmd = check_which(jar_cmd, kind='jar builder')
+        return jvm.JvmBuilder(env, lang, low_var, cmd, jar_cmd, low_flags_var,
+                              flags)

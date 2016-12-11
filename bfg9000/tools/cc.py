@@ -31,8 +31,12 @@ class CcBuilder(object):
 
         self.compiler = CcCompiler(env, lang, name, command, cflags_name,
                                    cflags)
-        self.pch_compiler = CcPchCompiler(env, lang, self.brand, name, command,
-                                          cflags_name, cflags)
+        try:
+            self.pch_compiler = CcPchCompiler(env, lang, self.brand, name,
+                                              command, cflags_name, cflags)
+        except ValueError:
+            self.pch_compiler = None
+
         self._linkers = {
             'executable': CcExecutableLinker(
                 env, lang, name, command, ldflags, ldlibs
@@ -138,6 +142,7 @@ class CcCompiler(CcBaseCompiler):
         'objc++': 'objective-c++',
         'f77'   : 'f77',
         'f95'   : 'f95',
+        'java'  : 'java',
     }
 
     def __init__(self, env, lang, name, command, cflags_name, cflags):
@@ -159,6 +164,8 @@ class CcPchCompiler(CcCompiler):
     }
 
     def __init__(self, env, lang, brand, name, command, cflags_name, cflags):
+        if lang == 'java':
+            raise ValueError('Java has no precompiled headers')
         CcBaseCompiler.__init__(self, env, lang, name + '_pch', name, command,
                                 cflags_name, cflags)
         self._brand = brand
@@ -179,6 +186,8 @@ class CcLinker(object):
         'objc++': {'c', 'c++', 'objc', 'objc++', 'f77', 'f95'},
         'f77'   : {'c', 'f77', 'f95'},
         'f95'   : {'c', 'f77', 'f95'},
+        # XXX: Include other languages that should work here?
+        'java'  : {'java'},
     }
 
     def __init__(self, env, lang, rule_name, command_var, command, ldflags,
@@ -274,11 +283,19 @@ class CcLinker(object):
             raise ValueError('unrecognized object format "{}"'
                              .format(output.format))
 
+    def _entry_point(self, entry_point):
+        # This only applies to GCJ. XXX: Move GCJ-stuff to a separate class?
+        if self.lang == 'java' and entry_point:
+            return ['--main={}'.format(entry_point)]
+        return []
+
     def args(self, options, output, pkg=False):
         libraries = getattr(options, 'all_libs', [])
         lib_dirs = getattr(options, 'lib_dirs', [])
+        entry_point = getattr(options, 'entry_point', None)
         return ( self._lib_dirs(libraries, lib_dirs) +
-                 self._rpath(libraries, first(output)) )
+                 self._rpath(libraries, first(output)) +
+                 self._entry_point(entry_point))
 
     def _link_lib(self, library):
         if isinstance(library, WholeArchive):

@@ -31,6 +31,17 @@ class TestJava(IntegrationTest):
         )
 
 
+if os.getenv('NO_GCJ_TEST') not in ['1', 'true']:
+    class TestGcj(IntegrationTest):
+        def __init__(self, *args, **kwargs):
+            IntegrationTest.__init__(self, os.path.join('languages', 'java'),
+                                     env={'JAVAC': 'gcj'}, *args, **kwargs)
+
+        def test_build(self):
+            self.build('program')
+            self.assertOutput([executable('program')], 'hello from java!\n')
+
+
 class TestJavaLibrary(IntegrationTest):
     def __init__(self, *args, **kwargs):
         IntegrationTest.__init__(

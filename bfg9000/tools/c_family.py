@@ -52,7 +52,10 @@ def c_family_builder(env, lang):
     ldflags = shell.split(env.getvar('LDFLAGS', ''))
     ldlibs = shell.split(env.getvar('LDLIBS', ''))
 
-    if re.match(r'\S*cl(\.exe)?($|\s)', cmd):
+    # XXX: It might make more sense to try to check version strings instead of
+    # filenames, but the command-line arg for version info can't be determined
+    # ahead of time.
+    if re.search(r'cl(-\d+\.\d+)?(\.exe)?($|\s)', cmd):
         origin = os.path.dirname(cmd)
         link_cmd = env.getvar('VCLINK', os.path.join(origin, 'link'))
         lib_cmd = env.getvar('VCLIB', os.path.join(origin, 'lib'))
