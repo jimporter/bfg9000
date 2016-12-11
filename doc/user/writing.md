@@ -281,3 +281,50 @@ hdr, src = build_step(['hello.tab.h', 'hello.tab.c'], cmd=[
     'bison', 'hello.y'
 ], type=[header_file, source_file])
 ```
+
+## User-defined arguments
+
+Many projects benefit from letting the user configure project-specific elements
+of their builds, e.g. by enabling certain optional features or by using
+different branding for testing and release builds. You can add support for
+options to configure your build by creating a `build.opts` file alongside your
+`build.bfg`.
+
+Inside `build.opts`, you can define arguments with the
+[*argument()*](reference.md#argument) function:
+
+```python
+# Adds --name/--x-name to the list of available command-line options, e.g.:
+#   9k build/ --name=foobar
+argument('name', default='unnamed', help='set the program's name')
+```
+
+It works much like [argparse][argparse]'s [*add_argument()*][add_argument]
+method, except that a) argument names are automatically prefixed with `--` (and
+`--x-` for forwards compatibility) and b) there are two extra actions available:
+`enable'` and `'with'`:
+
+```python
+# Adds --enable-foo/--disable-foo (and --x- variants)
+argument('foo', action='enable', help='enable the foo feature')
+
+# Adds --with-bar/--without-bar (and --x- variants)
+argument('bar', action='with', help='build the bar module')
+```
+
+Once these options are defined, you can fetch their results from the built-in
+[*argv*](reference.md#argv) global in your `build.bfg` file. This object is
+simply an [*argparse.Namespace*][namespace] object:
+
+```python
+print('This program's name is {}'.format(argv.name))
+
+if argv.foo:
+    pass  # Enable the foo feature
+if argv.bar:
+    pass  # Build the bar module
+```
+
+[argparse]: https://docs.python.org/library/argparse.html
+[add_argument]: https://docs.python.org/library/argparse.html#the-add-argument-method
+[namespace]: https://docs.python.org/library/argparse.html#argparse.Namespace

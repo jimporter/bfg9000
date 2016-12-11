@@ -1,5 +1,10 @@
 # Reference
 
+Below are listed all the builtin functions and properties available to bfg9000
+scripts (`build.bfg` and `build.opts`). Most are only available to `build.bfg`
+files, since that's where most of the build configuration logic belongs, but
+some may be used in `build.opts`. Consult each function to see its availability.
+
 ## File types
 
 Files used in a `build.bfg` script are divided by their types (e.g. source
@@ -21,6 +26,8 @@ Using [*source_file*](#source_filename-lang) here allows you to specify that the
 file is found in the *source directory*, rather than the build directory.
 
 ### directory(*name*, [*include*], [*exclude*], [*filter*]) { #directory }
+Availability: `build.bfg`
+{: .subtitle}
 
 Create a reference to an existing directory named *name*. This allows you to
 refer to an arbitrary subfolder of your source directory. The arguments
@@ -29,16 +36,22 @@ matching files will be added to the project's [source
 distribution](writing.md#distributing-your-source).
 
 ### extra_dist([*files*], [*dirs*]) { #extra_dist }
+Availability: `build.bfg`
+{: .subtitle}
 
 Add extra *files* and *dirs* to the list of recognized source files. This lets
 you reference files that are part of the source distribution but which have no
 impact on the build proper (e.g. READMEs).
 
 ### generic_file(*name*) { #generic_file }
+Availability: `build.bfg`
+{: .subtitle}
 
 Create a reference to an existing file named *name*.
 
 ### header_directory(*name*, [*include*], [*exclude*], [*filter*], [*system*]) { #header_directory }
+Availability: `build.bfg`
+{: .subtitle}
 
 Create a reference to a directory named *name* containing header files for the
 project. This can then be used in the *include* argument when
@@ -52,16 +65,22 @@ If *system* is *True*, this directory will be treated as a
 compilers that support this.
 
 ### header_file(*name*) { #header_file }
+Availability: `build.bfg`
+{: .subtitle}
 
 Create a reference to an existing header named *name*. This is useful if you'd
 like to [install](#install) a single header file for your project.
 
 ### source_file(*name*, [*lang*]) { #source_file }
+Availability: `build.bfg`
+{: .subtitle}
 
 Create a reference to an existing source file named *name*. If *lang* is not
 specified, the language of the file is inferred from its extension.
 
 ## Build steps
+Availability: `build.bfg`
+{: .subtitle}
 
 Build steps define rules to create an output (usually a file) from zero or more
 inputs (also usually files). As you may expect, if the output doesn't exist, the
@@ -86,6 +105,8 @@ vendor). This is described in more detail for each step below.
     `foo.exe`.
 
 ### build_step(*name*, *cmd*|*cmds*, [*environment*], [*type*], [*args*], [*kwargs*], [*extra_deps*]) { #build_step }
+Availability: `build.bfg`
+{: .subtitle}
 
 Create a custom build step that produces a file named *name* by running an
 arbitrary command (*cmd* or *cmds*). *name* may either be a single file name or
@@ -99,6 +120,8 @@ file object, or 2) an object with a `.type` attribute that meets the criteria of
 function.
 
 ### command(*name*, *cmd*|*cmds*, [*environment*], [*extra_deps*]) { #command }
+Availability: `build.bfg`
+{: .subtitle}
 
 Create a build step named *name* that runs a list of arbitrary commands,
 specified in either *cmd* or *cmds*; *cmd* takes a single command, whereas
@@ -110,6 +133,8 @@ You may also pass a dict to *environment* to set environment variables for the
 commands. These override any environment variables set on the command line.
 
 ### executable(*name*, [*files*, ..., [*extra_deps*]]) { #executable }
+Availability: `build.bfg`
+{: .subtitle}
 
 Create a build step that builds an executable file named *name*. *files* is the
 list of source (or object) files to link. If an element of *files* is a source
@@ -123,8 +148,7 @@ The following arguments may also be specified:
 * *libs*: A list of library files (see *shared_library* and *static_library*)
 * *packages*: A list of external [packages](#package-finders); also forwarded on
   to *object_file*
-* *compile_options*: Forwarded on to
-  [*object_file*](#object_filen) as *options*
+* *compile_options*: Forwarded on to [*object_file*](#object_file) as *options*
 * *link_options*: Command-line options to pass to the linker
 * *lang*: Forwarded on to [*object_file*](#object_file)
 
@@ -143,6 +167,8 @@ variable](environment-vars.md#compilation-variables) (e.g. `CC`) for the
 relevant language.
 
 ### object_file([*name*], [*file*, ..., [*extra_deps*]]) { #object_file }
+Availability: `build.bfg`
+{: .subtitle}
 
 Create a build step that compiles a source file named *file* to an object file
 named *name*; if *name* is not specified, it takes the file name in *file*
@@ -176,6 +202,8 @@ This build step recognizes the [compilation environment
 variables](environment-vars.md#compilation-variables) for the relevant language.
 
 ### object_files(*files*, ..., [*extra_deps*]) { #object_files }
+Availability: `build.bfg`
+{: .subtitle}
 
 Create a compilation build step for each of the files in *files*; this is
 equivalent to calling [*object_file*](#object_file) for each element in *files*.
@@ -194,6 +222,8 @@ test_exe = executable('test', ['test.cpp', foo_obj])
 ```
 
 ### precompiled_header([*name*], [*file*, ..., [*extra_deps*]]) { #precompiled_header }
+Availability: `build.bfg`
+{: .subtitle}
 
 Create a build step that generates a precompiled header, which can be used to
 speed up the compilation of [object files](#object_file). If *name* is not
@@ -231,6 +261,8 @@ In addition, the following argument may be specified:
 [msvc-pch]: https://msdn.microsoft.com/en-us/library/szfdksca.aspx
 
 ### shared_library(*name*, [*files*, ..., [*extra_deps*]]) { #shared_library }
+Availability: `build.bfg`
+{: .subtitle}
 
 Create a build step that builds a shared library named *name*. Its arguments are
 the same as [*executable*](#executable), with the following additional argument:
@@ -262,6 +294,8 @@ relevant language.
     use this macro in your code.
 
 ### static_library(*name*, [*files*, ..., [*extra_deps*]]) { #static_library }
+Availability: `build.bfg`
+{: .subtitle}
 
 Create a build step that builds a static library named *name*. Its arguments are
 the same as [*executable*](#executable). Link-related arguments (*link_options*,
@@ -289,6 +323,8 @@ variables](environment-vars.md#static-linking).
     for an example of how to use this macro in your code.
 
 ### whole_archive(*name*, [*files*, ..., [*extra_deps*]]) { #whole_archive }
+Availability: `build.bfg`
+{: .subtitle}
 
 Create a build step that builds a [whole-archive](http://linux.die.net/man/1/ld)
 named *name*. Whole archives ensures that *every* object file in the library is
@@ -306,12 +342,16 @@ static library to *whole_archive* to convert it into a whole archive.
 ## Grouping rules
 
 ### alias(*name*, [*deps*]) { #alias }
+Availability: `build.bfg`
+{: .subtitle}
 
 Create a build step named *name* that performs no actions on its own. Instead,
 it just runs its dependencies listed in *deps* as necessary. This build step is
 useful for grouping common steps together.
 
 ### default(*...*) { #default }
+Availability: `build.bfg`
+{: .subtitle}
 
 Specify a list of build steps that should be run by default when building. These
 are all accumulated into the `all` target. If *default* is never called, all
@@ -319,6 +359,8 @@ executables and libraries *not* passed to [*test*](#test) will be built by
 default.
 
 ### install(*...*) { #install }
+Availability: `build.bfg`
+{: .subtitle}
 
 Specify a list of files that need to be installed for the project to work. Each
 will be installed to the appropriate location based on its type, e.g. header
@@ -341,11 +383,15 @@ This rule recognizes the following environment variables:
 ## Global options
 
 ### global_options(*options*, *lang*) { #global_options }
+Availability: `build.bfg`
+{: .subtitle}
 
 Specify some *options* (either as a string or list) to use for all compilation
 steps for the language *lang*.
 
 ### global_link_options(*options*) { #global_link_options }
+Availability: `build.bfg`
+{: .subtitle}
 
 Specify some *options* (either as a string or list) to use for all link steps
 (i.e. for [executables](#executable) and [shared libraries](#shared_library)).
@@ -361,6 +407,8 @@ For cases where you only want to *build* the tests, not run them, you can use
 the `tests` target.
 
 ### test(*test*, [*options*], [*environment*|*driver*]) { #test }
+Availability: `build.bfg`
+{: .subtitle}
 
 Create a test for a single test file named *test*. You may specify additional
 command-line arguments to the test in *options*. You can also pass temporary
@@ -368,6 +416,8 @@ environment variables as a dict via *environment*, or specify a test driver to
 add this test file to via *driver*.
 
 ### test_driver(*driver*, [*options*], [*environment*|*parent*]) { #test_driver }
+Availability: `build.bfg`
+{: .subtitle}
 
 Create a test driver which can run a series of tests, specified as command-line
 arguments to the driver. You may specify driver-wide command-line arguments via
@@ -375,6 +425,8 @@ arguments to the driver. You may specify driver-wide command-line arguments via
 *environment*, or specify a parent test driver to wrap this driver via *driver*.
 
 ### test_deps(*...*) { #test_deps }
+Availability: `build.bfg`
+{: .subtitle}
 
 Specify a list of dependencies which must be satisfied before the tests can be
 run.
@@ -382,6 +434,8 @@ run.
 ## Package resolvers
 
 ### boost_package([*name*], [*version*]) { #boost_package }
+Availability: `build.bfg`
+{: .subtitle}
 
 Search for a [Boost](https://www.boost.org/) library. You can specify *name* (as
 a string or a list) to specify a specific Boost library (or libraries); for
@@ -400,6 +454,8 @@ This rule recognizes the following environment variables:
 [`LIBRARY_PATH`](environment-vars.md#library_path).
 
 ### pkgconfig_package(*name*, [*version*], [*lang*]) { #pkgconfig_package }
+Availability: `build.bfg`
+{: .subtitle}
 
 Search for a package named *name* via
 [pkg-config](https://www.freedesktop.org/wiki/Software/pkg-config/). If
@@ -413,6 +469,8 @@ This rule recognizes the following environment variable:
 [`PKG_CONFIG`](environment-vars.md#pkg_config),
 
 ### system_executable(*name*) { #system_executable }
+Availability: `build.bfg`
+{: .subtitle}
 
 Search for an executable named *name* somewhere in the system's PATH.
 
@@ -420,6 +478,8 @@ This rule recognizes the following environment variables:
 [`PATH`](environment-vars.md#path), [`PATHEXT`](environment-vars.md#pathext).
 
 ### system_package(*name*, [*lang*], [*kind*], [*header*]) { #system_package }
+Availability: `build.bfg`
+{: .subtitle}
 
 Search for a library named *name* somewhere in the system's default library
 location. *lang* is the source language of the library (`'c'` by default); this
@@ -452,6 +512,8 @@ encounter some unavoidable issue with multiplatform compatibility.
     for `build.bfg` files are shown below.
 
 ### env.builder(*lang*) { #env-builder }
+Availability: `build.bfg` and `build.opts`
+{: .subtitle}
 
 Return the builder used by bfg9000 for a particular language *lang*. While
 builder objects are primarily suited to bfg's internals, there are still a few
@@ -475,13 +537,15 @@ The compiler used with this builder.
 
 The command to run when invoking this compiler, e.g. `g++-4.9`.
 
-### builder.linker(*mode*) { #builder-linker }
+#### builder.linker(*mode*) { #builder-linker }
 
 The linker used with this builder. *mode* is one of `'executable'`,
 `'shared_library'`, or `'static_library'`. Its public properties are the same as
 [*compiler*](#compiler-command) above.
 
 ### env.platform { #env-platform }
+Availability: `build.bfg` and `build.opts`
+{: .subtitle}
 
 Return the target platform used for the build (currently the same as the host
 platform).
@@ -494,26 +558,64 @@ The "flavor" of the platform. Either `'posix'` or `'windows'`.
 
 The name of the platform, e.g. `'linux'`, `'darwin'` (OS X), or `'windows'`.
 
-## Miscellaneous
+## Utilities
+
+### argument(*names*..., [*action*], [*nargs*], [*const*], [*default*], [*type*], [*choices*], [*required*], [*help*], [*metavar*], [*dest*]) { #argument }
+Availability: `build.opts`
+{: .subtitle}
+
+Define how a particular command-line argument will be parsed. *names* is a
+sequence of argument names; these will be prefixed with `--` and `--x-` for
+parsing. For example, passing `'foo'` will add `--foo` and `--x-foo` as possible
+command-line arguments.
+
+All other arguments to this function have the same behavior as in
+[*argparse.ArgumentParser.add_argument()*][add_argument], with the exception of
+*action*, which accepts two extra values:
+
+* `'enable'`: Add a pair of arguments of the form `--enable-<name>` and
+  `--disable-<name>` (with `--x-`-prefixed versions as well), storing *True* if
+  `--enable-<name>` is specified and *False* if `--disable-<name>` is.
+* `'with'`: As `'enable'`, except the arguments are of the form `--with-<name>`
+  and `--without-name`.
+
+[add_argument]: https://docs.python.org/library/argparse.html#the-add-argument-method
+
+### argv
+Availability: `build.bfg`
+{: .subtitle}
+
+Retrieve the set of [user-defined arguments](writing.md#user-defined-arguments)
+passed to bfg9000; this is an [*argparse.Namespace*][namespace] object.
+
+[namespace]: https://docs.python.org/library/argparse.html#argparse.Namespace
 
 ### \__bfg9000__
+Availability: `build.bfg` and `build.opts`
+{: .subtitle}
 
 A dictionary containing all the builtin functions and global variables defined
 by bfg9000. This can be useful for feature detection or accessing builtins
 shadowed by a local variable.
 
 ### bfg9000_required_version([*version*], [*python_version*]) { #bfg9000_required_version }
+Availability: `build.bfg` and `build.opts`
+{: .subtitle}
 
 Set the required *version* for bfg9000 and/or the required *python_version*.
 Each of these is a standard Python [version
 specifier](https://www.python.org/dev/peps/pep-0440/#version-specifiers).
 
 ### bfg9000_version
+Availability: `build.bfg` and `build.opts`
+{: .subtitle}
 
 Return the current version of bfg9000. This can be useful if you want to
 optionally support a feature only available in certain versions of bfg.
 
 ### filter_by_platform(*name*, *path*, *type*) { #filter_by_platform }
+Availability: `build.bfg`
+{: .subtitle}
 
 Return *FindResult.include* if *path* is a filename that should be included for
 the target platform, and *FindResult.not_now* otherwise. File (or directory)
@@ -524,6 +626,8 @@ names are: `'posix'`,`'linux'`, `'darwin'`, `'cygwin'`, `'windows'`.
 This is the default *filter* for [*find_files*](#find_files).
 
 ### FindResult
+Availability: `build.bfg`
+{: .subtitle}
 
 An enum to be used as the result of a filter function for
 [*find_files*](#find_files). The possible enum values are:
@@ -534,6 +638,8 @@ An enum to be used as the result of a filter function for
   [source distribution](writing.md#distributing-your-source)
 
 ### find_files([*path*], [*name*], [*type*], [*extra*], [*exclude*], [*flat*], [*filter*], [*cache*], [*dist*], [*as_object*]) { #find_files }
+Availability: `build.bfg`
+{: .subtitle}
 
 Find files in *path* whose name matches the glob (or list of globs) *name*. The
 following arguments may be specified:
@@ -542,7 +648,7 @@ following arguments may be specified:
   in the root of the source directory (`'.'`)
 * *name*: A glob (or list of globs) to match files; if omitted, all files match
   (equivalent to `'*'`)
-* *type*: A filter for the type of file: `'f'` to find only files,`'d'` to find
+* *type*: A filter for the type of file: `'f'` to find only files, `'d'` to find
   only directories, or `'*'` to find either
 * *extra*: A glob (or list of globs) to match extra files (which will not be
   returned from *find_files* but will be added to the
@@ -565,6 +671,8 @@ The *cache* argument is particularly important. It allows you to add or remove
 source files and not have to worry about manually rerunning bfg9000.
 
 ### project(*name*, [*version*]) { #project }
+Availability: `build.bfg`
+{: .subtitle}
 
 Set the name (and optionally the version) of the project. If you don't call
 this function to specify a project name, it defaults to the name of the

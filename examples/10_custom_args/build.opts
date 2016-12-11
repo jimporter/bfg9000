@@ -1,4 +1,10 @@
 # -*- python -*-
 
+# Inside `build.opts`, you can define arguments with the argument() function. It
+# works much like argparse's add_argument() method, except that argument names
+# are automatically prefixed with `--` (and `--x-` for forwards compatibility):
+
 argument('name', default='unnamed', help='set the name to greet')
 
+# The above can then be defined at the command line like so:
+#   9k build/ --name=foobar
