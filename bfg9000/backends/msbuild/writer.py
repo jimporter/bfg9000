@@ -9,9 +9,9 @@ from ...platforms import which
 
 
 def version(env=os.environ):
-    msbuild = which(env.get('MSBUILD', ['msbuild', 'xbuild']), env)
     with open(os.devnull, 'wb') as devnull:
         try:
+            msbuild = which(env.get('MSBUILD', ['msbuild', 'xbuild']), env)
             output = subprocess.check_output(
                 '{} /version'.format(msbuild),
                 shell=True, universal_newlines=True, stderr=devnull

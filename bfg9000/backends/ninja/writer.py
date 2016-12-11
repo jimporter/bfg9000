@@ -9,9 +9,9 @@ from ...platforms import which
 
 
 def version(env=os.environ):
-    ninja = which(env.get('NINJA', ['ninja', 'ninja-build']), env)
     with open(os.devnull, 'wb') as devnull:
         try:
+            ninja = which(env.get('NINJA', ['ninja', 'ninja-build']), env)
             output = subprocess.check_output(
                 '{} --version'.format(ninja),
                 shell=True, universal_newlines=True, stderr=devnull

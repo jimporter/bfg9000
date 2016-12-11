@@ -10,9 +10,9 @@ from ...platforms import which
 
 
 def version(env=os.environ):
-    make = which(env.get('MAKE', ['make', 'gmake']), env)
     with open(os.devnull, 'wb') as devnull:
         try:
+            make = which(env.get('MAKE', ['make', 'gmake']), env)
             output = subprocess.check_output(
                 '{} --version'.format(make),
                 shell=True, universal_newlines=True, stderr=devnull
