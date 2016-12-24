@@ -145,6 +145,11 @@
 <li>Support Java/Scala</li>
 <li>Add support for user-defined arguments</li>
 </ul>
+<h3 id="breaking-changes">Breaking changes<a class="headerlink" href="#breaking-changes" title="Permanent link">§</a></h3>
+<ul>
+<li><code>directory()</code> and <code>header_directory()</code> no longer automatically include all
+  files within them (pass <code>include='*'</code> for the old behavior)</li>
+</ul>
 <hr />
 <h2 id="v020">v0.2.0<a class="headerlink" href="#v020" title="Permanent link">§</a></h2>
 <p class="subtitle">2016-06-26</p>
@@ -168,7 +173,7 @@
 <li>Add support for building a distribution of the sources (<code>make dist</code>)</li>
 <li>Allow running custom build steps via <code>build_step()</code></li>
 </ul>
-<h3 id="breaking-changes">Breaking changes<a class="headerlink" href="#breaking-changes" title="Permanent link">§</a></h3>
+<h3 id="breaking-changes_1">Breaking changes<a class="headerlink" href="#breaking-changes_1" title="Permanent link">§</a></h3>
 <ul>
 <li>Configuring a build is now performed by <code>bfg9000 configure DIRECTORY</code></li>
 <li><code>header()</code> renamed to <code>header_file()</code></li>
