@@ -47,7 +47,7 @@ class Compile(Edge):
 
             self.includes.append(objectify(
                 i, HeaderDirectory, builtins['header_directory'],
-                in_type=(string_types, HeaderFile), system=False
+                in_type=(string_types, HeaderFile)
             ))
 
         self.libs = [objectify(

@@ -8,6 +8,11 @@
 - Support Java/Scala
 - Add support for user-defined arguments
 
+### Breaking changes
+
+- `directory()` and `header_directory()` no longer automatically include all
+  files within them (pass `include='*'` for the old behavior)
+
 ---
 
 ## v0.2.0 (2016-06-26)

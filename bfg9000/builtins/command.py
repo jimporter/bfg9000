@@ -29,32 +29,36 @@ class BaseCommand(Edge):
 
 
 class Command(BaseCommand):
-    def __init__(self, build, name, *args, **kwargs):
-        BaseCommand.__init__(self, build, name, Phony(name), *args, **kwargs)
+    def __init__(self, build, name, **kwargs):
+        BaseCommand.__init__(self, build, name, Phony(name), **kwargs)
 
 
 @builtin.globals('build_inputs')
-def command(build, *args, **kwargs):
-    return Command(build, *args, **kwargs).public_output
+def command(build, name, **kwargs):
+    return Command(build, name, **kwargs).public_output
 
 
 class BuildStep(BaseCommand):
-    def __init__(self, build, name, cmd=None, cmds=None, environment=None,
-                 type=source_file, args=None, kwargs=None, extra_deps=None):
+    def __init__(self, build, name, **kwargs):
         name = listify(name)
         project_name = name[0]
+
+        type = kwargs.pop('type', source_file)
         if not isiterable(type):
             type = repeat(type, len(name))
-        if args is None:
-            args = repeat([], len(name))
-        if kwargs is None:
-            kwargs = repeat({}, len(name))
+
+        type_args = kwargs.pop('args', None)
+        if type_args is None:
+            type_args = repeat([], len(name))
+
+        type_kwargs = kwargs.pop('kwargs', None)
+        if type_kwargs is None:
+            type_kwargs = repeat({}, len(name))
 
         outputs = [self._make_outputs(*i) for i in
-                   zip(name, type, args, kwargs)]
+                   zip(name, type, type_args, type_kwargs)]
 
-        BaseCommand.__init__(self, build, project_name, outputs, cmd, cmds,
-                             environment, extra_deps)
+        BaseCommand.__init__(self, build, project_name, outputs, **kwargs)
 
     @staticmethod
     def _make_outputs(name, type, args, kwargs):
@@ -66,8 +70,8 @@ class BuildStep(BaseCommand):
 
 
 @builtin.globals('build_inputs')
-def build_step(build, *args, **kwargs):
-    return BuildStep(build, *args, **kwargs).public_output
+def build_step(build, name, **kwargs):
+    return BuildStep(build, name, **kwargs).public_output
 
 
 @make.rule_handler(Command, BuildStep)

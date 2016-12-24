@@ -1,4 +1,4 @@
 # -*- python -*-
 
-directory = directory('nonexist')
+nonexist = directory('nonexist')
 executable('simple', files=['simple.cpp'])

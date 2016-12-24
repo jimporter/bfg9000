@@ -112,7 +112,6 @@ def _find_files(paths, filter, flat, as_object):
             elif matched == FindResult.not_now:
                 dist_results.append(fileobj)
 
-    paths = listify(paths)
     do_filter(( (os.path.basename(p), p) for p in paths ), 'd')
     for p in paths:
         for base, dirs, files in walker(p):
@@ -125,7 +124,7 @@ def _find_files(paths, filter, flat, as_object):
 
 
 def find(path='.', name='*', type='*', flat=False):
-    return _find_files(path, _filter_from_glob(name, type), flat)[0]
+    return _find_files(listify(path), _filter_from_glob(name, type), flat)[0]
 
 
 @builtin.globals('env')
@@ -150,14 +149,16 @@ def find_files(builtins, build_inputs, env, path='.', name='*', type='*',
     else:
         final_filter = glob_filter
 
-    results, dist, seen_dirs = _find_files(path, final_filter, flat, as_object)
+    paths = [i.path.string(env.path_roots) if isinstance(i, File) else i
+             for i in iterate(path)]
+    found, dist, seen_dirs = _find_files(paths, final_filter, flat, as_object)
 
     if cache:
         build_inputs['find_dirs'].update(seen_dirs)
     if dist:
         for i in dist:
             build_inputs.add_source(i)
-    return results
+    return found
 
 
 @make.post_rule

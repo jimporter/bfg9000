@@ -6,7 +6,7 @@
 # headers. The header_directory() function creates a reference to a directory
 # that can then be passed to the build functions:
 
-include = header_directory('include')
+include = header_directory('include', include='*.hpp')
 
 # Built files can also be added to subdirectories:
 

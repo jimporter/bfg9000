@@ -29,7 +29,7 @@ def header_file(build, name, lang=None):
 
 @builtin.globals('builtins', 'build_inputs')
 @builtin.type(Directory)
-def directory(builtins, build, name, include='*', exclude=exclude_globs,
+def directory(builtins, build, name, include=None, exclude=exclude_globs,
               filter=filter_by_platform):
     files = builtins['find_files'](name, include, '*', None, exclude, filter,
                                    as_object=True)
@@ -38,8 +38,9 @@ def directory(builtins, build, name, include='*', exclude=exclude_globs,
 
 @builtin.globals('builtins', 'build_inputs')
 @builtin.type(HeaderDirectory)
-def header_directory(builtins, build, name, include='*', exclude=exclude_globs,
-                     filter=filter_by_platform, system=False):
+def header_directory(builtins, build, name, include=None,
+                     exclude=exclude_globs, filter=filter_by_platform,
+                     system=False):
     if isinstance(name, HeaderFile):
         return HeaderDirectory(name.path.parent(), None, system)
 
