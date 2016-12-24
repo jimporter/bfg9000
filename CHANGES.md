@@ -6,6 +6,7 @@
 
 - Add `header` argument to `system_package()` to find header files
 - Support Java/Scala
+- Add support for user-defined arguments
 
 ---
 
