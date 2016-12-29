@@ -3,7 +3,7 @@ from .utils import check_which
 
 
 @tool('pkg_config')
-class Install(object):
+class PkgConfig(object):
     rule_name = command_var = 'pkg_config'
 
     def __init__(self, env):
