@@ -1,4 +1,5 @@
 import os
+import subprocess
 import warnings
 from six import string_types
 from six.moves import zip
@@ -7,6 +8,27 @@ from .. import shell
 from ..iterutils import listify
 from ..path import Path
 from ..platforms import which
+
+
+class Command(object):
+    def __init__(self, env, command):
+        self.env = env
+        self.command = command
+
+    def run(self, *args, **kwargs):
+        env = kwargs.pop('env', self.env.variables)
+        # XXX: Use shell mode so that the (user-defined) command can have
+        # multiple arguments defined in it?
+        return subprocess.check_output(
+            self(self.command, *args, **kwargs),
+            universal_newlines=True, env=env
+        )
+
+
+class SimpleCommand(Command):
+    def __init__(self, env, var, default, kind='executable'):
+        command = check_which(env.getvar(var, default), env.variables, kind)
+        Command.__init__(self, env, command)
 
 
 def check_which(names, env=os.environ, kind='executable'):

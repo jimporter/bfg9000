@@ -1,16 +1,15 @@
 from .hooks import tool
-from .utils import check_which
+from .utils import SimpleCommand
 
 from ..iterutils import iterate
 
 
 @tool('doppel')
-class Doppel(object):
+class Doppel(SimpleCommand):
     rule_name = command_var = 'doppel'
 
     def __init__(self, env):
-        self.command = env.getvar('DOPPEL', 'doppel')
-        check_which(self.command)
+        SimpleCommand.__init__(self, env, 'DOPPEL', 'doppel')
 
     @property
     def data_args(self):

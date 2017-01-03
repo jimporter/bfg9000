@@ -1,15 +1,15 @@
 from .hooks import tool
-from .utils import check_which, darwin_install_name
+from .utils import darwin_install_name, SimpleCommand
 from ..path import install_path
 
 
 @tool('install_name_tool')
-class InstallNameTool(object):
+class InstallNameTool(SimpleCommand):
     rule_name = command_var = 'install_name_tool'
 
     def __init__(self, env):
-        self.command = env.getvar('INSTALL_NAME_TOOL', 'install_name_tool')
-        check_which(self.command)
+        SimpleCommand.__init__(self, env, 'INSTALL_NAME_TOOL',
+                               'install_name_tool')
 
     def __call__(self, cmd, file, libraries):
         def change(lib):

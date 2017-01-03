@@ -1,17 +1,16 @@
 from .. import safe_str
 from .hooks import tool
-from .utils import check_which
+from .utils import SimpleCommand
 from ..iterutils import uniques
 from ..path import install_path
 
 
 @tool('patchelf')
-class PatchElf(object):
+class PatchElf(SimpleCommand):
     rule_name = command_var = 'patchelf'
 
     def __init__(self, env):
-        self.command = env.getvar('PATCHELF', 'patchelf')
-        check_which(self.command)
+        SimpleCommand.__init__(self, env, 'PATCHELF', 'patchelf')
 
     def __call__(self, cmd, file, libraries):
         paths = uniques(install_path(i.path, i.install_root).parent()

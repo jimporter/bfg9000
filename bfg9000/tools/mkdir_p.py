@@ -1,15 +1,14 @@
 from .hooks import tool
-from .utils import check_which
+from .utils import SimpleCommand
 
 
 @tool('mkdir_p')
-class MkdirP(object):
+class MkdirP(SimpleCommand):
     rule_name = command_var = 'mkdir_p'
 
     def __init__(self, env):
         default = 'doppel -p' if env.platform.name == 'windows' else 'mkdir -p'
-        self.command = env.getvar('MKDIR_P', default)
-        check_which(self.command)
+        SimpleCommand.__init__(self, env, 'MKDIR_P', default)
 
     def __call__(self, cmd, path):
         return [cmd, path]

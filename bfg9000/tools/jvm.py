@@ -1,5 +1,6 @@
 import os
 
+from .utils import Command
 from .. import safe_str
 from ..builtins.write_file import WriteFile
 from ..file_types import *
@@ -29,13 +30,12 @@ class JvmBuilder(object):
         return self._linkers[mode]
 
 
-class JvmCompiler(object):
+class JvmCompiler(Command):
     def __init__(self, env, lang, name, command, flags_name, flags):
-        self.env = env
+        Command.__init__(self, env, command)
         self.lang = lang
 
         self.rule_name = self.command_var = name
-        self.command = command
 
         self.flags_var = flags_name
         self.global_args = flags
@@ -79,13 +79,13 @@ class JvmCompiler(object):
         return JvmClassList(Path(name + '.classlist'), 'jvm', self.lang)
 
 
-class JarMaker(object):
+class JarMaker(Command):
     rule_name = command_var = 'jar'
     flags_var = 'jarflags'
     libs_var = 'jarlibs'
 
     def __init__(self, env, command):
-        self.command = command
+        Command.__init__(self, env, command)
 
         self.global_args = []
         self.global_libs = []

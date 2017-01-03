@@ -40,29 +40,51 @@ class PkgConfigPackage(Package):
         self.name = name
         self._pkg_config = pkg_config
 
-    def _call(self, command, *args):
-        # XXX: Use shell mode so that the (user-defined) pkg-config command can
-        # have multiple arguments defined in it?
-        return subprocess.check_output(
-            getattr(self._pkg_config, command)(
-                self._pkg_config.command, self.name, *args
-            ), universal_newlines=True
-        ).strip()
-
     @property
     def version(self):
         # XXX: This should probably be a LegacyVersion, but that would make it
         # a lot harder to work with SpecifierSets.
-        return Version(self._call('version'))
+        return Version(self._pkg_config.run(self.name, 'version').strip())
 
     def cflags(self, compiler, output):
-        return shell.split(self._call('cflags', compiler.flavor == 'msvc'))
+        return shell.split(self._pkg_config.run(
+            self.name, 'cflags', compiler.flavor == 'msvc'
+        ).strip())
 
     def ldflags(self, linker, output):
-        return shell.split(self._call('ldflags', linker.flavor == 'msvc'))
+        return shell.split(self._pkg_config.run(
+            self.name, 'ldflags', linker.flavor == 'msvc'
+        ).strip())
 
     def ldlibs(self, linker, output):
-        return shell.split(self._call('ldlibs', linker.flavor == 'msvc'))
+        return shell.split(self._pkg_config.run(
+            self.name, 'ldlibs', linker.flavor == 'msvc'
+        ).strip())
+
+
+@builtin.globals('env')
+def system_package(env, name, lang='c', kind='any', header=None):
+    if kind not in ('any', 'shared', 'static'):
+        raise ValueError("kind must be one of 'any', 'shared', or 'static'")
+
+    pkg = env.builder(lang).packages
+    includes = [pkg.header(i) for i in iterate(header)]
+    lib = pkg.library(name, kind)
+    return SystemPackage(includes=includes, libraries=[lib])
+
+
+@builtin.globals('env')
+def pkgconfig_package(env, name, version=None):
+    pkg = PkgConfigPackage(name, env.tool('pkg_config'))
+    version = make_specifier(version)
+    check_version(pkg.version, version, name)
+    return pkg
+
+
+@builtin.globals('env')
+def system_executable(env, name, format=None):
+    return Executable(Path(which(name, env.variables), Root.absolute),
+                      format or env.platform.object_format, external=True)
 
 
 def _boost_version(header, required_version=None):
@@ -75,17 +97,6 @@ def _boost_version(header, required_version=None):
                 check_version(version, required_version, 'Boost')
                 return version
     raise IOError('unable to parse "boost/version.hpp"')
-
-
-@builtin.globals('env')
-def system_package(env, name, lang='c', kind='any', header=None):
-    if kind not in ('any', 'shared', 'static'):
-        raise ValueError("kind must be one of 'any', 'shared', or 'static'")
-
-    pkg = env.builder(lang).packages
-    includes = [pkg.header(i) for i in iterate(header)]
-    lib = pkg.library(name, kind)
-    return SystemPackage(includes=includes, libraries=[lib])
 
 
 @builtin.globals('env')
@@ -140,17 +151,3 @@ def boost_package(env, name=None, version=None):
                        for i in iterate(name)],
             version=boost_version
         )
-
-
-@builtin.globals('env')
-def pkgconfig_package(env, name, version=None):
-    pkg = PkgConfigPackage(name, env.tool('pkg_config'))
-    version = make_specifier(version)
-    check_version(pkg.version, version, name)
-    return pkg
-
-
-@builtin.globals('env')
-def system_executable(env, name, format=None):
-    return Executable(Path(which(name, env.variables), Root.absolute),
-                      format or env.platform.object_format, external=True)

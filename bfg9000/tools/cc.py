@@ -5,7 +5,7 @@ from itertools import chain
 from six.moves import filter as ifilter
 
 from .ar import ArLinker
-from .utils import darwin_install_name
+from .utils import Command, darwin_install_name
 from ..builtins.symlink import Symlink
 from ..file_types import *
 from ..iterutils import first, iterate, uniques
@@ -60,15 +60,14 @@ class CcBuilder(object):
         return self._linkers[mode]
 
 
-class CcBaseCompiler(object):
+class CcBaseCompiler(Command):
     def __init__(self, env, lang, rule_name, command_var, command, cflags_name,
                  cflags):
-        self.platform = env.platform
+        Command.__init__(self, env, command)
         self.lang = lang
 
         self.rule_name = rule_name
         self.command_var = command_var
-        self.command = command
 
         self.flags_var = cflags_name
         self.global_args = cflags
@@ -103,7 +102,7 @@ class CcBaseCompiler(object):
         # Doing so would break GCC 6 when #including stdlib.h:
         # <https://gcc.gnu.org/bugzilla/show_bug.cgi?id=70129>.
         if ( directory.path.root == Root.absolute and
-             directory.path.string() in self.platform.include_dirs):
+             directory.path.string() in self.env.platform.include_dirs):
             return []
         elif directory.system:
             return ['-isystem', directory.path]
@@ -122,14 +121,14 @@ class CcBaseCompiler(object):
     def link_args(self, mode, defines):
         args = []
         if ( mode in ['shared_library', 'static_library'] and
-             self.platform.flavor != 'windows'):
+             self.env.platform.flavor != 'windows'):
             args.append('-fPIC')
 
         # We only need to define LIBFOO_EXPORTS/LIBFOO_STATIC macros on
         # platforms that have different import/export rules for libraries. We
         # approximate this by checking if the platform uses import libraries,
         # and only define the macros if it does.
-        if self.platform.has_import_library:
+        if self.env.platform.has_import_library:
             args.extend('-D' + i for i in defines)
         return args
 
@@ -151,7 +150,7 @@ class CcCompiler(CcBaseCompiler):
 
     def output_file(self, name, options):
         # XXX: MinGW's object format doesn't appear to be COFF...
-        return ObjectFile(Path(name + '.o'), self.platform.object_format,
+        return ObjectFile(Path(name + '.o'), self.env.platform.object_format,
                           self.lang)
 
 
@@ -175,7 +174,7 @@ class CcPchCompiler(CcCompiler):
         return PrecompiledHeader(Path(name + ext), self.lang)
 
 
-class CcLinker(object):
+class CcLinker(Command):
     flags_var = 'ldflags'
     libs_var = 'ldlibs'
 
@@ -192,12 +191,11 @@ class CcLinker(object):
 
     def __init__(self, env, lang, rule_name, command_var, command, ldflags,
                  ldlibs):
-        self.env = env
+        Command.__init__(self, env, command)
         self.lang = lang
 
         self.rule_name = rule_name
         self.command_var = command_var
-        self.command = command
 
         self.global_args = ldflags
         self.global_libs = ldlibs
@@ -205,11 +203,11 @@ class CcLinker(object):
         # Create a regular expression to extract the library name for linking
         # with -l.
         lib_formats = [r'lib(.*)\.a']
-        if not self.platform.has_import_library:
-            so_ext = re.escape(self.platform.shared_library_ext)
+        if not self.env.platform.has_import_library:
+            so_ext = re.escape(self.env.platform.shared_library_ext)
             lib_formats.append(r'lib(.*)' + so_ext)
         # XXX: Include Cygwin here too?
-        if self.platform.name == 'windows':
+        if self.env.platform.name == 'windows':
             lib_formats.append(r'(.*)\.lib')
         self._lib_re = re.compile('(?:' + '|'.join(lib_formats) + ')$')
 
@@ -224,15 +222,11 @@ class CcLinker(object):
         return next(ifilter( None, m.groups() ))
 
     @property
-    def platform(self):
-        return self.env.platform
-
-    @property
     def flavor(self):
         return 'cc'
 
     def can_link(self, format, langs):
-        return (format == self.platform.object_format and
+        return (format == self.env.platform.object_format and
                 self.__allowed_langs[self.lang].issuperset(langs))
 
     @property
@@ -260,7 +254,7 @@ class CcLinker(object):
         return ['-L' + i for i in dirs]
 
     def _rpath(self, libraries, output):
-        if not self.platform.has_rpath:
+        if not self.env.platform.has_rpath:
             return []
 
         start = output.path.parent()
@@ -299,7 +293,7 @@ class CcLinker(object):
 
     def _link_lib(self, library):
         if isinstance(library, WholeArchive):
-            if self.platform.name == 'darwin':
+            if self.env.platform.name == 'darwin':
                 return ['-Wl,-force_load', library.path]
             return ['-Wl,--whole-archive', library.path,
                     '-Wl,--no-whole-archive']
@@ -327,7 +321,7 @@ class CcLinker(object):
         return sum((self._link_lib(i) for i in libraries), [])
 
     def post_install(self, output):
-        if not self.platform.has_rpath:
+        if not self.env.platform.has_rpath:
             return None
 
         if output.format == 'elf':
@@ -346,8 +340,8 @@ class CcExecutableLinker(CcLinker):
                           ldflags, ldlibs)
 
     def output_file(self, name, options):
-        path = Path(name + self.platform.executable_ext)
-        return Executable(path, self.platform.object_format)
+        path = Path(name + self.env.platform.executable_ext)
+        return Executable(path, self.env.platform.object_format)
 
 
 class CcSharedLibraryLinker(CcLinker):
@@ -357,11 +351,11 @@ class CcSharedLibraryLinker(CcLinker):
 
     @property
     def num_outputs(self):
-        return 2 if self.platform.has_import_library else 1
+        return 2 if self.env.platform.has_import_library else 1
 
     def __call__(self, cmd, input, output, libs=None, args=None):
         result = CcLinker.__call__(self, cmd, input, first(output), libs, args)
-        if self.platform.has_import_library:
+        if self.env.platform.has_import_library:
             result.append('-Wl,--out-implib=' + output[1])
         return result
 
@@ -377,21 +371,22 @@ class CcSharedLibraryLinker(CcLinker):
         soversion = getattr(options, 'soversion', None)
 
         head, tail = os.path.split(name)
-        fmt = self.platform.object_format
+        fmt = self.env.platform.object_format
 
         def lib(head, tail, prefix='lib', suffix=''):
+            ext = self.env.platform.shared_library_ext
             return Path(os.path.join(
-                head, prefix + tail + self.platform.shared_library_ext + suffix
+                head, prefix + tail + ext + suffix
             ))
 
-        if self.platform.has_import_library:
-            dllprefix = 'cyg' if self.platform.name == 'cygwin' else 'lib'
+        if self.env.platform.has_import_library:
+            dllprefix = 'cyg' if self.env.platform.name == 'cygwin' else 'lib'
             dllname = lib(head, tail, dllprefix)
             impname = lib(head, tail, suffix='.a')
             dll = DllLibrary(dllname, fmt, impname)
             return [dll, dll.import_lib]
-        elif version and self.platform.has_versioned_library:
-            if self.platform.name == 'darwin':
+        elif version and self.env.platform.has_versioned_library:
+            if self.env.platform.name == 'darwin':
                 real = lib(head, '{}.{}'.format(tail, version))
                 soname = lib(head, '{}.{}'.format(tail, soversion))
             else:
@@ -404,7 +399,8 @@ class CcSharedLibraryLinker(CcLinker):
 
     @property
     def _always_args(self):
-        shared = '-dynamiclib' if self.platform.name == 'darwin' else '-shared'
+        shared = ('-dynamiclib' if self.env.platform.name == 'darwin'
+                  else '-shared')
         return CcLinker._always_args.fget(self) + [shared, '-fPIC']
 
     def _soname(self, library):
@@ -413,7 +409,7 @@ class CcSharedLibraryLinker(CcLinker):
         else:
             soname = library
 
-        if self.platform.name == 'darwin':
+        if self.env.platform.name == 'darwin':
             return ['-install_name', darwin_install_name(soname)]
         else:
             return ['-Wl,-soname,' + soname.path.basename()]
@@ -458,7 +454,7 @@ class CcPackageResolver(object):
         )) if os.path.exists(i)]
 
         self.lang = lang
-        self.platform = env.platform
+        self.env = env
 
     def header(self, name, search_dirs=None):
         if search_dirs is None:
@@ -477,8 +473,8 @@ class CcPackageResolver(object):
 
         libnames = []
         if kind in ('any', 'shared'):
-            libname = 'lib' + name + self.platform.shared_library_ext
-            if self.platform.has_import_library:
+            libname = 'lib' + name + self.env.platform.shared_library_ext
+            if self.env.platform.has_import_library:
                 libnames.append((libname + '.a', ImportLibrary, {}))
             else:
                 libnames.append((libname, SharedLibrary, {}))
@@ -487,7 +483,7 @@ class CcPackageResolver(object):
                              {'lang': self.lang}))
 
         # XXX: Include Cygwin here too?
-        if self.platform.name == 'windows':
+        if self.env.platform.name == 'windows':
             # We don't actually know what kind of library this is. It could be
             # a static library or an import library (which we classify as a
             # kind of shared lib).
@@ -498,7 +494,7 @@ class CcPackageResolver(object):
                 fullpath = os.path.join(base, libname)
                 if os.path.exists(fullpath):
                     return libkind(Path(fullpath, Root.absolute),
-                                   format=self.platform.object_format,
+                                   format=self.env.platform.object_format,
                                    external=True, **extra_kwargs)
 
         raise IOError("unable to find library '{}'".format(name))

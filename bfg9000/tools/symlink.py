@@ -1,15 +1,14 @@
 from .hooks import tool
-from .utils import check_which
+from .utils import SimpleCommand
 
 
 @tool('symlink')
-class Symlink(object):
+class Symlink(SimpleCommand):
     rule_name = command_var = 'symlink'
 
     def __init__(self, env):
         # XXX: Support mklink?
-        self.command = env.getvar('SYMLINK', 'ln -sf')
-        check_which(self.command)
+        SimpleCommand.__init__(self, env, 'SYMLINK', 'ln -sf')
 
     def __call__(self, cmd, input, output):
         return [cmd, input, output]

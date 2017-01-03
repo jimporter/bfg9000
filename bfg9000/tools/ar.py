@@ -2,22 +2,18 @@ import os
 
 from .. import shell
 from .. import iterutils
-from .utils import check_which
+from .utils import SimpleCommand
 from ..file_types import StaticLibrary
 from ..path import Path
 
 
-class ArLinker(object):
+class ArLinker(SimpleCommand):
     rule_name = command_var = 'ar'
     flags_var = 'arflags'
 
     def __init__(self, env, lang):
-        self.platform = env.platform
+        SimpleCommand.__init__(self, env, 'AR', 'ar', kind='static linker')
         self.lang = lang
-
-        self.command = env.getvar('AR', 'ar')
-        check_which(self.command, kind='static linker')
-
         self.global_args = shell.split(env.getvar('ARFLAGS', 'cru'))
 
     @property
@@ -25,7 +21,7 @@ class ArLinker(object):
         return 'ar'
 
     def can_link(self, format, langs):
-        return format == self.platform.object_format
+        return format == self.env.platform.object_format
 
     def __call__(self, cmd, input, output, args=None):
         result = [cmd]
@@ -37,5 +33,5 @@ class ArLinker(object):
     def output_file(self, name, options):
         head, tail = os.path.split(name)
         path = os.path.join(head, 'lib' + tail + '.a')
-        return StaticLibrary(Path(path), self.platform.object_format,
+        return StaticLibrary(Path(path), self.env.platform.object_format,
                              options.langs)

@@ -1,3 +1,5 @@
+import subprocess
+
 from .. import platforms
 
 if platforms.platform_name() == 'windows':
