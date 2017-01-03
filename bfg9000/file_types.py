@@ -179,3 +179,7 @@ class DllLibrary(SharedLibrary):
         SharedLibrary.__init__(self, path, format, external)
         self.import_lib = LinkLibrary(import_name, self, external)
         self.export_file = ExportFile(export_name, external)
+
+
+class Package(object):
+    pass

@@ -165,14 +165,13 @@ don't.
 
 Most projects have external packages that they depend on. There are lots of
 different ways these packages are organized, and bfg9000 currently supports
-three of them: ["system" packages](reference.md#system_package) (libraries
-installed into the default location for your system), [pkg-config
-packages](reference.md#pkgconfig_package), and [Boost
+two of them: ["ordinary" packages](reference.md#package) (resolved using either
+[`pkg-config`](https://www.freedesktop.org/wiki/Software/pkg-config/) or
+searched for in the default location for your system) and [Boost
 packages](reference.md#boost_package):
 
 ```python
-ogg = system_package('ogg', kind='static')
-zlib = pkgconfig_package('zlib', version='>=1.2.8')
+ogg = package('ogg', kind='static')
 prog_opts = boost_package('program_options', version='>=1.55')
 ```
 
@@ -180,7 +179,7 @@ Each of these returns an object representing the package that can be used when
 building binaries by passing them in the *packages* argument:
 
 ```python
-executable('program', files=['main.cpp'], packages=[ogg, zlib, prog_opts])
+executable('program', files=['main.cpp'], packages=[ogg, prog_opts])
 ```
 
 ## Installation

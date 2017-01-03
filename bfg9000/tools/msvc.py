@@ -1,7 +1,8 @@
 import os.path
 from itertools import chain
 
-from .utils import Command
+from . import pkg_config
+from .utils import Command, SystemPackage
 from .. import shell
 from ..arguments.windows import ArgumentParser
 from ..builtins.write_file import WriteFile
@@ -383,3 +384,11 @@ class MsvcPackageResolver(object):
                 return Library(Path(fullpath, Root.absolute),
                                self.env.platform.object_format, external=True)
         raise IOError("unable to find library '{}'".format(name))
+
+    def resolve(self, name, kind='any', header=None, version=None):
+        try:
+            return pkg_config.resolve(self.env, name, version)
+        except (OSError, ValueError):
+            includes = [self.header(i) for i in iterate(header)]
+            lib = self.library(name, kind)
+            return SystemPackage(includes=includes, libraries=[lib])

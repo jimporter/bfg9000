@@ -4,8 +4,9 @@ import subprocess
 from itertools import chain
 from six.moves import filter as ifilter
 
+from . import pkg_config
 from .ar import ArLinker
-from .utils import Command, darwin_install_name
+from .utils import Command, darwin_install_name, SystemPackage
 from ..builtins.symlink import Symlink
 from ..file_types import *
 from ..iterutils import first, iterate, uniques
@@ -498,3 +499,11 @@ class CcPackageResolver(object):
                                    external=True, **extra_kwargs)
 
         raise IOError("unable to find library '{}'".format(name))
+
+    def resolve(self, name, kind='any', header=None, version=None):
+        try:
+            return pkg_config.resolve(self.env, name, version)
+        except (OSError, ValueError):
+            includes = [self.header(i) for i in iterate(header)]
+            lib = self.library(name, kind)
+            return SystemPackage(includes=includes, libraries=[lib])

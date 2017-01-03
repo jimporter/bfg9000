@@ -1,84 +1,38 @@
 import os.path
 import re
-from packaging.version import Version
-import subprocess
+import warnings
 
 from .hooks import builtin
 from .find import find
-from .version import check_version, make_specifier
-from .. import shell
 from ..file_types import Executable
 from ..iterutils import iterate, listify
+from ..tools.utils import SystemPackage
 from ..path import Path, Root
 from ..platforms import which
-
-
-class Package(object):
-    pass
-
-
-class SystemPackage(Package):
-    def __init__(self, includes=None, lib_dirs=None, libraries=None,
-                 version=None):
-        self.includes = includes or []
-        self.lib_dirs = lib_dirs or []
-        self.all_libs = libraries or []
-        self.version = version
-
-    def cflags(self, compiler, output):
-        return compiler.args(self, output, pkg=True)
-
-    def ldflags(self, linker, output):
-        return linker.args(self, output, pkg=True)
-
-    def ldlibs(self, linker, output):
-        return linker.libs(self, output, pkg=True)
-
-
-class PkgConfigPackage(Package):
-    def __init__(self, name, pkg_config):
-        self.name = name
-        self._pkg_config = pkg_config
-
-    @property
-    def version(self):
-        # XXX: This should probably be a LegacyVersion, but that would make it
-        # a lot harder to work with SpecifierSets.
-        return Version(self._pkg_config.run(self.name, 'version').strip())
-
-    def cflags(self, compiler, output):
-        return shell.split(self._pkg_config.run(
-            self.name, 'cflags', compiler.flavor == 'msvc'
-        ).strip())
-
-    def ldflags(self, linker, output):
-        return shell.split(self._pkg_config.run(
-            self.name, 'ldflags', linker.flavor == 'msvc'
-        ).strip())
-
-    def ldlibs(self, linker, output):
-        return shell.split(self._pkg_config.run(
-            self.name, 'ldlibs', linker.flavor == 'msvc'
-        ).strip())
+from ..versionutils import check_version, make_specifier, Version
 
 
 @builtin.globals('env')
-def system_package(env, name, lang='c', kind='any', header=None):
+def package(env, name, lang='c', kind='any', header=None, version=None):
     if kind not in ('any', 'shared', 'static'):
         raise ValueError("kind must be one of 'any', 'shared', or 'static'")
-
-    pkg = env.builder(lang).packages
-    includes = [pkg.header(i) for i in iterate(header)]
-    lib = pkg.library(name, kind)
-    return SystemPackage(includes=includes, libraries=[lib])
-
-
-@builtin.globals('env')
-def pkgconfig_package(env, name, version=None):
-    pkg = PkgConfigPackage(name, env.tool('pkg_config'))
     version = make_specifier(version)
-    check_version(pkg.version, version, name)
-    return pkg
+
+    return env.builder(lang).packages.resolve(name, kind, header, version)
+
+
+@builtin.globals('builtins')
+def system_package(builtins, name, lang='c', kind='any', header=None):
+    warnings.warn('system_package is deprecated; please use package instead',
+                  DeprecationWarning)
+    return builtins['package'](name, lang=lang, kind=kind, header=header)
+
+
+@builtin.globals('builtins')
+def pkgconfig_package(builtins, name, lang='c', version=None):
+    warnings.warn('pkgconfig_package is deprecated; please use package ' +
+                  'instead', DeprecationWarning)
+    return builtins['package'](name, version=version)
 
 
 @builtin.globals('env')
@@ -99,6 +53,8 @@ def _boost_version(header, required_version=None):
     raise IOError('unable to parse "boost/version.hpp"')
 
 
+# XXX: This is a bit hacky, and we should try to make it work a little more
+# like the package() function above.
 @builtin.globals('env')
 def boost_package(env, name=None, version=None):
     version = make_specifier(version)

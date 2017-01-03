@@ -453,20 +453,38 @@ This rule recognizes the following environment variables:
 [`LIB`](environment-vars.md#lib),
 [`LIBRARY_PATH`](environment-vars.md#library_path).
 
-### pkgconfig_package(*name*, [*version*], [*lang*]) { #pkgconfig_package }
+### package(*name*, [*lang*], [*kind*], [*header*], [*version*]) { #package }
 Availability: `build.bfg`
 {: .subtitle}
 
-Search for a package named *name* via
-[pkg-config](https://www.freedesktop.org/wiki/Software/pkg-config/). If
-*version* is specified, it will ensure that the installed version of the package
-meets the version requirement; it must be formatted as a Python [version
-specifier](https://www.python.org/dev/peps/pep-0440/#version-specifiers). *lang*
-is the source language of the library (`'c'` by default); this is useful if you
-need to link a static library written in C++ with a program written in C.
+Search for a package named *name*. *lang* is the source language of the library
+(`'c'` by default); this will affect how the package is resolved. For native
+libraries (C, C++, Fortran, etc), this will use
+[`pkg-config`](https://www.freedesktop.org/wiki/Software/pkg-config/) to resolve
+the package if it's installed. Otherwise (or if `pkg-config` can't find the
+package), this will check the system's default library locations.
 
-This rule recognizes the following environment variable:
-[`PKG_CONFIG`](environment-vars.md#pkg_config),
+You can also specify *kind* to one of `'any'` (the default), `'shared'`, or
+`'static'`. This allows you to restrict the search to find only static versions
+of a library, for example.
+
+The *header* argument allows you to specify a header file (or list
+thereof) that you need to use in your source files. This will search for the
+header file and add the appropriate include directory to your build
+configuration. (Note: this doesn't apply when `pkg-config` resolves the package,
+since `pkg-config` should add the appropriate include directories on its own.)
+
+Finally, if *version* is specified, it will (if possible) ensure that the
+installed version of the package meets the version requirement; it must be
+formatted as a Python [version
+specifier](https://www.python.org/dev/peps/pep-0440/#version-specifiers).
+
+This rule recognizes the following environment variables:
+[`CPATH`](environment-vars.md#cpath),
+[`INCLUDE`](environment-vars.md#include),
+[`LIB`](environment-vars.md#lib),
+[`LIBRARY_PATH`](environment-vars.md#library_path),
+[`PKG_CONFIG`](environment-vars.md#pkg_config).
 
 ### system_executable(*name*) { #system_executable }
 Availability: `build.bfg`
@@ -476,28 +494,6 @@ Search for an executable named *name* somewhere in the system's PATH.
 
 This rule recognizes the following environment variables:
 [`PATH`](environment-vars.md#path), [`PATHEXT`](environment-vars.md#pathext).
-
-### system_package(*name*, [*lang*], [*kind*], [*header*]) { #system_package }
-Availability: `build.bfg`
-{: .subtitle}
-
-Search for a library named *name* somewhere in the system's default library
-location. *lang* is the source language of the library (`'c'` by default); this
-is useful if you need to link a static library written in C++ with a program
-written in C. You can also specify *kind* to one of `'any'` (the default),
-`'shared'`, or `'static'`. This allows you to restrict the search to find only
-static versions of a library, for example.
-
-Finally, the *header* argument allows you to specify a header file (or list
-thereof) that you need to use in your source files. This will search for the
-header file and add the appropriate include directory to your build
-configuration.
-
-This rule recognizes the following environment variables:
-[`CPATH`](environment-vars.md#cpath),
-[`INCLUDE`](environment-vars.md#include),
-[`LIB`](environment-vars.md#lib),
-[`LIBRARY_PATH`](environment-vars.md#library_path).
 
 ## Environment
 
