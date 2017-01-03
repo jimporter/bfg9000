@@ -73,7 +73,7 @@ elif platform_name == 'Linux':
     if os.getenv('NO_PATCHELF') not in ['1', 'true']:
         more_requires.append('patchelf-wrapper')
 
-with open('README.md', 'r') as f:
+with open(os.path.join(os.path.dirname(__file__), 'README.md'), 'r') as f:
     # Read from the file and strip out the badges.
     long_desc = re.sub(r'(^# bfg9000.*)\n\n(.+\n)*', r'\1', f.read())
 
