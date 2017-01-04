@@ -48,7 +48,19 @@ class StackFilter(object):
 class StackfulStreamHandler(logging.StreamHandler):
     def emit(self, record):
         if record.exc_info:
-            record.full_stack = traceback.extract_tb(record.exc_info[2])
+            if isinstance(record.exc_info[1], SyntaxError):
+                e = record.exc_info[1]
+                record.msg = e.msg
+
+                # Figure out where to put the carat.
+                text = e.text.expandtabs()
+                dedent = len(text) - len(text.lstrip())
+                offset = 4 - dedent - 1 + e.offset
+
+                record.full_stack = [(e.filename, e.lineno, '<module>',
+                                      e.text + ' ' * offset + '^')]
+            else:
+                record.full_stack = traceback.extract_tb(record.exc_info[2])
             record.exc_info = None
 
         pre, stack, post = _filter_stack(record.full_stack)
@@ -56,8 +68,12 @@ class StackfulStreamHandler(logging.StreamHandler):
         record.stack = _format_stack(stack).rstrip()
         record.stack_post = '\n' + _format_stack(post).rstrip()
 
-        record.user_pathname = stack[-1][0]
-        record.user_lineno = stack[-1][1]
+        if len(stack):
+            record.user_pathname = stack[-1][0]
+            record.user_lineno = stack[-1][1]
+        else:
+            record.user_pathname = '???'
+            record.user_lineno = 0
 
         return logging.StreamHandler.emit(self, record)
 
