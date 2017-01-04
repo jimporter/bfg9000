@@ -1,5 +1,7 @@
 # -*- python -*-
 
+import sys
+
 # Sometimes, you want to be able to perform a build step that bfg9000 doesn't
 # provide a built-in rule for. In this case, you can use the build_step()
 # function, which takes an arbitrary command and produces a file:
@@ -7,7 +9,7 @@
 generator = source_file('generator.py')
 
 hello = build_step('hello.cpp', cmd=[
-    'python', generator, 'hello', 'hello.cpp'
+    sys.executable, generator, 'hello', 'hello.cpp'
 ])
 
 executable('hello', files=[hello])
@@ -19,7 +21,7 @@ executable('hello', files=[hello])
 # forward arguments along to `type`:
 
 goodbye_hdr, goodbye_src = build_step(['goodbye.hpp', 'goodbye.cpp'], cmd=[
-    'python', generator, 'goodbye', 'goodbye.hpp', 'goodbye.cpp'
+    sys.executable, generator, 'goodbye', 'goodbye.hpp', 'goodbye.cpp'
 ], type=[header_file, source_file])
 
 executable('goodbye', files=['main.cpp', goodbye_src], include=[goodbye_hdr])

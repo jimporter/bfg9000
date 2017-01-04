@@ -1,7 +1,9 @@
 # -*- python -*-
 
+import sys
+
 executable('quad damage', files=['quad damage.cpp'])
 executable('another file', files=['sub dir/another file.cpp'])
 
 script = source_file('my script.py')
-command('script', cmd=['python', script])
+command('script', cmd=[sys.executable, script])

@@ -1,5 +1,7 @@
 # -*- python -*-
 
+import sys
+
 # It's important to have tests for your code! Any executable can be run as a
 # test by passing it to the test() function:
 
@@ -10,5 +12,5 @@ test( executable('prog', files=['prog.cpp']) )
 # using the `python` command, but you're free to use any test driver you like
 # (including ones built by the executable() function in bfg9000!).
 
-driver = test_driver('python')
+driver = test_driver(sys.executable)
 test('script.py', driver=driver)
