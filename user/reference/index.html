@@ -494,39 +494,37 @@ specifier</a>.</p>
 <a href="../environment-vars/#include"><code>INCLUDE</code></a>,
 <a href="../environment-vars/#lib"><code>LIB</code></a>,
 <a href="../environment-vars/#library_path"><code>LIBRARY_PATH</code></a>.</p>
-<h3 id="pkgconfig_package">pkgconfig_package(<em>name</em>, [<em>version</em>], [<em>lang</em>])<a class="headerlink" href="#pkgconfig_package" title="Permanent link">§</a></h3>
+<h3 id="package">package(<em>name</em>, [<em>lang</em>], [<em>kind</em>], [<em>header</em>], [<em>version</em>])<a class="headerlink" href="#package" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
-<p>Search for a package named <em>name</em> via
-<a href="https://www.freedesktop.org/wiki/Software/pkg-config/">pkg-config</a>. If
-<em>version</em> is specified, it will ensure that the installed version of the package
-meets the version requirement; it must be formatted as a Python <a href="https://www.python.org/dev/peps/pep-0440/#version-specifiers">version
-specifier</a>. <em>lang</em>
-is the source language of the library (<code>'c'</code> by default); this is useful if you
-need to link a static library written in C++ with a program written in C.</p>
-<p>This rule recognizes the following environment variable:
-<a href="../environment-vars/#pkg_config"><code>PKG_CONFIG</code></a>,</p>
+<p>Search for a package named <em>name</em>. <em>lang</em> is the source language of the library
+(<code>'c'</code> by default); this will affect how the package is resolved. For native
+libraries (C, C++, Fortran, etc), this will use
+<a href="https://www.freedesktop.org/wiki/Software/pkg-config/"><code>pkg-config</code></a> to resolve
+the package if it's installed. Otherwise (or if <code>pkg-config</code> can't find the
+package), this will check the system's default library locations.</p>
+<p>You can also specify <em>kind</em> to one of <code>'any'</code> (the default), <code>'shared'</code>, or
+<code>'static'</code>. This allows you to restrict the search to find only static versions
+of a library, for example.</p>
+<p>The <em>header</em> argument allows you to specify a header file (or list
+thereof) that you need to use in your source files. This will search for the
+header file and add the appropriate include directory to your build
+configuration. (Note: this doesn't apply when <code>pkg-config</code> resolves the package,
+since <code>pkg-config</code> should add the appropriate include directories on its own.)</p>
+<p>Finally, if <em>version</em> is specified, it will (if possible) ensure that the
+installed version of the package meets the version requirement; it must be
+formatted as a Python <a href="https://www.python.org/dev/peps/pep-0440/#version-specifiers">version
+specifier</a>.</p>
+<p>This rule recognizes the following environment variables:
+<a href="../environment-vars/#cpath"><code>CPATH</code></a>,
+<a href="../environment-vars/#include"><code>INCLUDE</code></a>,
+<a href="../environment-vars/#lib"><code>LIB</code></a>,
+<a href="../environment-vars/#library_path"><code>LIBRARY_PATH</code></a>,
+<a href="../environment-vars/#pkg_config"><code>PKG_CONFIG</code></a>.</p>
 <h3 id="system_executable">system_executable(<em>name</em>)<a class="headerlink" href="#system_executable" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Search for an executable named <em>name</em> somewhere in the system's PATH.</p>
 <p>This rule recognizes the following environment variables:
 <a href="../environment-vars/#path"><code>PATH</code></a>, <a href="../environment-vars/#pathext"><code>PATHEXT</code></a>.</p>
-<h3 id="system_package">system_package(<em>name</em>, [<em>lang</em>], [<em>kind</em>], [<em>header</em>])<a class="headerlink" href="#system_package" title="Permanent link">§</a></h3>
-<p class="subtitle">Availability: <code>build.bfg</code></p>
-<p>Search for a library named <em>name</em> somewhere in the system's default library
-location. <em>lang</em> is the source language of the library (<code>'c'</code> by default); this
-is useful if you need to link a static library written in C++ with a program
-written in C. You can also specify <em>kind</em> to one of <code>'any'</code> (the default),
-<code>'shared'</code>, or <code>'static'</code>. This allows you to restrict the search to find only
-static versions of a library, for example.</p>
-<p>Finally, the <em>header</em> argument allows you to specify a header file (or list
-thereof) that you need to use in your source files. This will search for the
-header file and add the appropriate include directory to your build
-configuration.</p>
-<p>This rule recognizes the following environment variables:
-<a href="../environment-vars/#cpath"><code>CPATH</code></a>,
-<a href="../environment-vars/#include"><code>INCLUDE</code></a>,
-<a href="../environment-vars/#lib"><code>LIB</code></a>,
-<a href="../environment-vars/#library_path"><code>LIBRARY_PATH</code></a>.</p>
 <h2 id="environment">Environment<a class="headerlink" href="#environment" title="Permanent link">§</a></h2>
 <p>The <em>environment</em>, <code>env</code>, is a special object that encapsulates information
 about the system outside of bfg9000. It's used internally for nearly all
