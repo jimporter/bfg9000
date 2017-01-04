@@ -389,6 +389,7 @@ class MsvcPackageResolver(object):
         try:
             return pkg_config.resolve(self.env, name, version)
         except (OSError, ValueError):
+            name = self.env.platform.transform_package(name)
             includes = [self.header(i) for i in iterate(header)]
             lib = self.library(name, kind)
             return SystemPackage(includes=includes, libraries=[lib])

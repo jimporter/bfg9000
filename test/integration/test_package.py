@@ -40,3 +40,25 @@ class TestBoostPackage(IntegrationTest):
         self.build()
         self.assertOutput([executable('program'), '--hello'],
                           'Hello, world!\n')
+
+
+@unittest.skipIf(is_mingw, 'xfail on mingw')
+class TestOpenGLPackage(IntegrationTest):
+    def __init__(self, *args, **kwargs):
+        IntegrationTest.__init__(self, 'opengl', *args, **kwargs)
+
+    def test_build(self):
+        self.build()
+        self.assertOutput([executable('program')], '')
+
+
+@unittest.skipIf(is_mingw, 'xfail on mingw')
+class TestOpenGLSystemPackage(IntegrationTest):
+    def __init__(self, *args, **kwargs):
+        IntegrationTest.__init__(
+            self, 'opengl', env={'PKG_CONFIG': 'nonexist'}, *args, **kwargs
+        )
+
+    def test_build(self):
+        self.build()
+        self.assertOutput([executable('program')], '')

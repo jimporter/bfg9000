@@ -249,7 +249,7 @@ class CcLinker(Command):
     def _lib_dirs(self, libraries, extra_dirs):
         dirs = uniques(chain(
             (i.path.parent() for i in iterate(libraries)
-             if not isinstance(i, StaticLibrary)),
+             if isinstance(i, Library) and not isinstance(i, StaticLibrary)),
             extra_dirs
         ))
         return ['-L' + i for i in dirs]
@@ -300,6 +300,8 @@ class CcLinker(Command):
                     '-Wl,--no-whole-archive']
         elif isinstance(library, StaticLibrary):
             return [library.path]
+        elif isinstance(library, Framework):
+            return ['-framework', library.name]
 
         # If we're here, we have a SharedLibrary (or possibly just a Library
         # in the case of MinGW).
@@ -469,6 +471,9 @@ class CcPackageResolver(object):
         raise IOError("unable to find header '{}'".format(name))
 
     def library(self, name, kind='any', search_dirs=None):
+        if isinstance(name, Framework):
+            return name
+
         if search_dirs is None:
             search_dirs = self.lib_dirs
 
@@ -504,6 +509,7 @@ class CcPackageResolver(object):
         try:
             return pkg_config.resolve(self.env, name, version)
         except (OSError, ValueError):
+            name = self.env.platform.transform_package(name)
             includes = [self.header(i) for i in iterate(header)]
             lib = self.library(name, kind)
             return SystemPackage(includes=includes, libraries=[lib])

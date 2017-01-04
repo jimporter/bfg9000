@@ -183,3 +183,9 @@ class DllLibrary(SharedLibrary):
 
 class Package(object):
     pass
+
+
+# A reference to a macOS framework. XXX: Maybe put this somewhere else?
+class Framework(object):
+    def __init__(self, name):
+        self.name = name

@@ -1,6 +1,7 @@
 import os
 import platform
 
+from .file_types import Framework
 from .path import Path, Root, InstallRoot
 from .platform_name import platform_name
 
@@ -12,11 +13,22 @@ known_platforms = ['posix', 'linux', 'darwin', 'cygwin', 'windows']
 # information here as well (e.g. include/library dirs). In the future, when we
 # support cross-compilation, stuff like that should be moved elsewhere.
 class Platform(object):
+    _package_map = {}
+
     def __init__(self, name):
         self.name = name
 
+    def transform_package(self, name):
+        return self._package_map.get(name, name)
+
 
 class PosixPlatform(Platform):
+    _package_map = {
+        'gl': 'GL',
+        'glu': 'GLU',
+        'zlib': 'z',
+    }
+
     @property
     def flavor(self):
         return 'posix'
@@ -70,6 +82,12 @@ class LinuxPlatform(PosixPlatform):
 
 
 class DarwinPlatform(PosixPlatform):
+    _package_map = {
+        'gl': Framework('OpenGL'),
+        'glu': Framework('OpenGL'),
+        'glut': Framework('GLUT'),
+    }
+
     @property
     def object_format(self):
         return 'mach-o'
@@ -84,6 +102,12 @@ class DarwinPlatform(PosixPlatform):
 
 
 class WindowsPlatform(Platform):
+    _package_map = {
+        'gl': 'opengl32',
+        'glu': 'glu32',
+        'glut': 'glut32',
+    }
+
     @property
     def flavor(self):
         return 'windows'

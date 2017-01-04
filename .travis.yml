@@ -37,12 +37,14 @@ addons:
   apt:
     packages:
       - default-jdk
+      - freeglut3-dev
       - gfortran
       - gobjc
       - gobjc++
       - gcj-jdk
       - libboost-dev
       - libboost-program-options-dev
+      - libgl1-mesa-dev
       - libogg-dev
       - ninja-build
       - scala

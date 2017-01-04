@@ -1,0 +1,5 @@
+# -*- python -*-
+
+gl = package('gl')
+
+executable('program', files=['program.cpp'], packages=[gl])
