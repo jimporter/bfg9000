@@ -167,11 +167,10 @@ def configure(parser, args, extra):
     try:
         argv = build.parse_user_args(env)
         build_inputs = build.execute_script(env, argv)
+        backend.write(env, build_inputs)
     except Exception as e:
         logger.exception(e)
         return 1
-
-    backend.write(env, build_inputs)
 
 
 def refresh(parser, args, extra):

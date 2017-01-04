@@ -41,7 +41,7 @@ class StackFilter(object):
 
     def filter(self, record):
         has_stack = bool((record.exc_info and record.exc_info[0]) or
-                         getattr(record, 'full_stack', None))
+                         getattr(record, 'show_stack', False))
         return has_stack == self.has_stack
 
 
@@ -64,16 +64,19 @@ class StackfulStreamHandler(logging.StreamHandler):
             record.exc_info = None
 
         pre, stack, post = _filter_stack(record.full_stack)
-        record.stack_pre = _format_stack(pre)
-        record.stack = _format_stack(stack).rstrip()
-        record.stack_post = '\n' + _format_stack(post).rstrip()
 
         if len(stack):
+            record.stack_pre = '\n' + _format_stack(pre).rstrip()
+            record.stack = '\n' + _format_stack(stack).rstrip()
+            record.stack_post = '\n' + _format_stack(post).rstrip()
+
             record.user_pathname = stack[-1][0]
             record.user_lineno = stack[-1][1]
         else:
-            record.user_pathname = '???'
-            record.user_lineno = 0
+            record.show_stack = False
+            record.stack = '\n' + _format_stack(pre).rstrip()
+            logging.root.handle(record)
+            return
 
         return logging.StreamHandler.emit(self, record)
 
@@ -97,13 +100,18 @@ def init(color='auto', debug=False):
 
     stackless = logging.StreamHandler()
     stackless.addFilter(StackFilter(has_stack=False))
-    stackless.setFormatter(logging.Formatter('%(levelname)s: %(message)s'))
+
+    fmt = '%(levelname)s: %(message)s'
+    if debug:
+        fmt += '\033[2m%(stack)s\033[0m'
+
+    stackless.setFormatter(logging.Formatter(fmt))
     logging.root.addHandler(stackless)
 
     stackful = StackfulStreamHandler()
     stackful.addFilter(StackFilter(has_stack=True))
 
-    fmt = '%(levelname)s: %(user_pathname)s:%(user_lineno)d: %(message)s\n'
+    fmt = '%(levelname)s: %(user_pathname)s:%(user_lineno)d: %(message)s'
     if debug:
         fmt += '\033[2m%(stack_pre)s\033[0m'
     fmt += '%(stack)s'
@@ -116,7 +124,7 @@ def init(color='auto', debug=False):
 
 def _showwarning(message, category, filename, lineno, file=None, line=None):
     stack = traceback.extract_stack()[1:]
-    logging.warning(message, extra={'full_stack': stack})
+    logging.warning(message, extra={'full_stack': stack, 'show_stack': True})
 
 
 warnings.showwarning = _showwarning
