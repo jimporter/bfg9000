@@ -184,7 +184,7 @@ def textify(thing, quoted=False, out=True):
     if isinstance(thing, safe_str.escaped_str):
         return thing.string
     elif isinstance(thing, string_types):
-        return shell.quote(thing) if quoted else thing
+        return shell.quote(thing, escape_percent=True) if quoted else thing
     elif isinstance(thing, safe_str.jbos):
         return ''.join(textify(i, quoted, out) for i in thing.bits)
     elif isinstance(thing, path.Path):

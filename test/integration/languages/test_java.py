@@ -4,6 +4,7 @@ import os
 from .. import *
 
 
+@skip_if_backend('msbuild')
 class TestJava(IntegrationTest):
     def __init__(self, *args, **kwargs):
         IntegrationTest.__init__(self, os.path.join('languages', 'java'),
@@ -31,17 +32,19 @@ class TestJava(IntegrationTest):
         )
 
 
-if os.getenv('NO_GCJ_TEST') not in ['1', 'true']:
-    class TestGcj(IntegrationTest):
-        def __init__(self, *args, **kwargs):
-            IntegrationTest.__init__(self, os.path.join('languages', 'java'),
-                                     env={'JAVAC': 'gcj'}, *args, **kwargs)
+@unittest.skipIf(os.getenv('NO_GCJ_TEST') in ['1', 'true'],
+                 'skipping gcj tests')
+class TestGcj(IntegrationTest):
+    def __init__(self, *args, **kwargs):
+        IntegrationTest.__init__(self, os.path.join('languages', 'java'),
+                                 env={'JAVAC': 'gcj'}, *args, **kwargs)
 
-        def test_build(self):
-            self.build('program')
-            self.assertOutput([executable('program')], 'hello from java!\n')
+    def test_build(self):
+        self.build('program')
+        self.assertOutput([executable('program')], 'hello from java!\n')
 
 
+@skip_if_backend('msbuild')
 class TestJavaLibrary(IntegrationTest):
     def __init__(self, *args, **kwargs):
         IntegrationTest.__init__(

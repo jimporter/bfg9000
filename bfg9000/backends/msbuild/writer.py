@@ -13,8 +13,8 @@ def version(env=os.environ):
         try:
             msbuild = which(env.get('MSBUILD', ['msbuild', 'xbuild']), env)
             output = subprocess.check_output(
-                '{} /version'.format(msbuild),
-                shell=True, universal_newlines=True, stderr=devnull
+                [msbuild, '/version'],
+                universal_newlines=True, stderr=devnull
             )
             m = re.search(r'([\d\.]+)$', output)
             if m:

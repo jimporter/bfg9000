@@ -72,9 +72,16 @@ def listify(thing):
         return split(thing)
 
 
-def escape(s):
+def escape(s, escape_percent=False):
     if not s:
         return '', False
+
+    # In some contexts (mainly certain uses of the Windows shell), we want to
+    # escape percent signs. This doesn't count as "escaping" for the purposes
+    # of quoting the result though.
+    if escape_percent:
+        s = s.replace('%', '%%')
+
     if not _bad_chars.search(s):
         return s, False
 
@@ -88,12 +95,12 @@ def quote_escaped(s, escaped=True):
     return '"' + s + '"' if escaped else s
 
 
-def quote(s):
-    return quote_escaped(*escape(s))
+def quote(s, escape_percent=False):
+    return quote_escaped(*escape(s, escape_percent))
 
 
-def quote_info(s):
-    s, esc = escape(s)
+def quote_info(s, escape_percent=False):
+    s, esc = escape(s, escape_percent)
     return quote_escaped(s, esc), esc
 
 

@@ -5,17 +5,16 @@ from . import *
 pjoin = os.path.join
 
 
+@skip_if_backend('msbuild')
 class TestRegenerate(IntegrationTest):
     def __init__(self, *args, **kwargs):
         IntegrationTest.__init__(self, 'regenerate', stage_src=True,
                                  *args, **kwargs)
 
-    @skip_if_backend('msbuild')
     def test_build(self):
         self.build('foo')
         self.assertExists(pjoin(self.builddir, 'foo'))
 
-    @skip_if_backend('msbuild')
     def test_regenerate(self):
         self.wait()
         with open(pjoin(self.srcdir, 'build.bfg'), 'a') as out:
@@ -25,6 +24,7 @@ class TestRegenerate(IntegrationTest):
         self.assertExists(pjoin(self.builddir, 'bar'))
 
 
+@skip_if_backend('msbuild')
 class TestRegenerateGlob(IntegrationTest):
     def __init__(self, *args, **kwargs):
         self.extradir = pjoin(test_data_dir, 'regenerate_glob')
@@ -37,7 +37,6 @@ class TestRegenerateGlob(IntegrationTest):
         shutil.copy(pjoin(self.extradir, src),
                     pjoin(self.srcdir, dest))
 
-    @skip_if_backend('msbuild')
     @skip_pred(lambda x: x.backend == 'make' and
                env.platform.name == 'windows', 'xfail on windows + make')
     def test_add_file(self):
@@ -51,7 +50,6 @@ class TestRegenerateGlob(IntegrationTest):
         self.assertOutput([executable('hello')],
                           'Hello, world!\nBonjour le monde!\n')
 
-    @skip_if_backend('msbuild')
     def test_add_dir(self):
         self.wait()
         shutil.copytree(pjoin(self.extradir, 'src', 'goodbye', 'french'),
@@ -63,7 +61,6 @@ class TestRegenerateGlob(IntegrationTest):
         self.assertOutput([executable('goodbye')],
                           'Goodbye!\nAuf Wiedersehen!\nAu revoir!\n')
 
-    @skip_if_backend('msbuild')
     @skip_pred(lambda x: x.backend == 'make' and
                env.platform.name == 'windows', 'xfail on windows + make')
     def test_remove_file(self):
@@ -74,7 +71,6 @@ class TestRegenerateGlob(IntegrationTest):
         self.build(executable('hello'))
         self.assertOutput([executable('hello')], '')
 
-    @skip_if_backend('msbuild')
     def test_remove_dir(self):
         self.wait()
         cleandir(pjoin(self.srcdir, 'src', 'goodbye', 'german'),

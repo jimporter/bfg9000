@@ -351,6 +351,7 @@ def ninja_link(rule, build_inputs, buildfile, env):
 
 
 try:
+    from .compile import CompileHeader
     from ..backends.msbuild import writer as msbuild
 
     def _reduce_compile_options(files, global_cflags):
@@ -372,12 +373,12 @@ try:
         ))
 
     def _parse_file_cflags(file, per_compiler_cflags):
-        cflags = file.creator.linker.parse_args(
+        cflags = file.creator.compiler.parse_args(
             msbuild.textify_each(file.creator.options)
         )
         if not per_compiler_cflags:
             return cflags
-        key = file.creator.linker.command_var
+        key = file.creator.compiler.command_var
         return merge_dicts(per_compiler_cflags[key], cflags)
 
     @msbuild.rule_handler(StaticLink, DynamicLink, SharedLink)
@@ -394,7 +395,7 @@ try:
         # all the files at once. Otherwise, we need to apply them to each file
         # individually so they all get the correct options.
         obj_creators = [i.creator for i in rule.files]
-        compilers = uniques(i.linker for i in obj_creators)
+        compilers = uniques(i.compiler for i in obj_creators)
 
         per_compiler_cflags = {}
         for c in compilers:
@@ -430,13 +431,20 @@ try:
             rule.libs, rule.extra_deps
         )
 
+        def get_source(file):
+            # Get the source file for this compilation rule; it's either a
+            # regular source file or a PCH source file.
+            if isinstance(file.creator, CompileHeader):
+                return file.creator.pch_source
+            return file.creator.file
+
         # Create the project file.
         project = msbuild.VcxProject(
             env, name=rule.name,
             mode=rule.msbuild_mode,
             output_file=output,
             files=[{
-                'name': getattr(i.creator, 'pch_source', i.creator.file),
+                'name': get_source(i),
                 'options': _parse_file_cflags(i, per_compiler_cflags),
             } for i in rule.files],
             compile_options=common_cflags,

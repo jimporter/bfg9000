@@ -1,3 +1,4 @@
+import functools
 import os
 import shutil
 import subprocess
@@ -47,13 +48,23 @@ def cleandir(path, recreate=True):
 def skip_pred(predicate, msg='skipped'):
     def wrap(fn):
         if isinstance(fn, type):
-            raise TypeError('skip_pred only works on functions')
+            # XXX: Actually show these tests as skipped; right now they're
+            # totally hidden.
+            @functools.wraps(fn, assigned=['__name__', '__module__'],
+                             updated=[])
+            class Wrap(fn):
+                def __init__(self, *args, **kwargs):
+                    fn.__init__(self, *args, **kwargs)
+                    if predicate(self):
+                        raise unittest.SkipTest(msg)
 
-        def inner(self, *args, **kwargs):
-            if predicate(self):
-                raise unittest.SkipTest(msg)
-            return fn(self, *args, **kwargs)
-        return inner
+            return Wrap
+        else:
+            def inner(self, *args, **kwargs):
+                if predicate(self):
+                    raise unittest.SkipTest(msg)
+                return fn(self, *args, **kwargs)
+            return inner
     return wrap
 
 
@@ -126,8 +137,15 @@ class IntegrationTest(unittest.TestCase):
             self.installdir = None
 
     def parameterize(self):
-        return [ self.__class__(backend=i, *self._args, **self._kwargs)
-                 for i in backends ]
+        result = []
+        for i in backends:
+            try:
+                result.append(self.__class__(
+                    backend=i, *self._args, **self._kwargs
+                ))
+            except unittest.SkipTest:
+                pass
+        return result
 
     def shortDescription(self):
         return self.backend

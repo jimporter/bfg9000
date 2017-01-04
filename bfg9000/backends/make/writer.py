@@ -14,8 +14,8 @@ def version(env=os.environ):
         try:
             make = which(env.get('MAKE', ['make', 'gmake']), env)
             output = subprocess.check_output(
-                '{} --version'.format(make),
-                shell=True, universal_newlines=True, stderr=devnull
+                [make, '--version'],
+                universal_newlines=True, stderr=devnull
             )
             m = re.match(r'GNU Make ([\d\.]+)', output)
             if m:
