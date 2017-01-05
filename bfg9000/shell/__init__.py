@@ -1,8 +1,8 @@
 import subprocess
 
-from .. import platforms
+from ..platform_name import platform_name
 
-if platforms.platform_name() == 'windows':
+if platform_name() == 'windows':
     from .windows import *
 else:
     from .posix import *

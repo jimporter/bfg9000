@@ -2,10 +2,14 @@ import errno
 import os
 from enum import Enum
 from itertools import chain
-from six import iteritems
+from six import iteritems, string_types
 from contextlib import contextmanager
 
 from . import safe_str
+from .iterutils import listify
+from .platform_name import platform_name
+from . import shell
+
 
 Root = Enum('Root', ['srcdir', 'builddir', 'absolute'])
 InstallRoot = Enum('InstallRoot', ['prefix', 'bindir', 'libdir', 'includedir'])
@@ -180,3 +184,42 @@ def pushd(dirname, makedirs=False, mode=0o777, exist_ok=False):
     os.chdir(dirname)
     yield
     os.chdir(old)
+
+
+def which(names, env=os.environ, first_word=False, resolve=False):
+    def transform(name):
+        # Only check the first word, since some commands have built-in
+        # arguments, like `mkdir -p`.
+        if isinstance(name, string_types):
+            return shell.split(name)[0] if first_word else name
+        elif isinstance(name, Path):
+            return name.string()
+        else:
+            return name
+
+    paths = env.get('PATH', os.defpath).split(os.pathsep)
+    if platform_name() in ['windows', 'cygwin']:
+        exts = [''] + env.get('PATHEXT', '').split(os.pathsep)
+    else:
+        exts = ['']
+
+    names = listify(names)
+    if len(names) == 0:
+        raise TypeError('must supply at least one name')
+
+    for name in names:
+        check = transform(name)
+        if os.path.isabs(check):
+            fullpaths = [check]
+        else:
+            search = ['.'] if os.path.dirname(check) else paths
+            fullpaths = [os.path.normpath(os.path.join(path, check))
+                         for path in search]
+
+        for fullpath in fullpaths:
+            for ext in exts:
+                withext = fullpath + ext
+                if os.path.exists(withext):
+                    return withext if resolve else name
+
+    raise IOError("unable to find executable '{}'".format(names[0]))

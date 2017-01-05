@@ -5,16 +5,16 @@ from packaging.version import LegacyVersion
 
 from ... import path
 from .syntax import *
-from ...platforms import which
 
 
 def version(env=os.environ):
     with open(os.devnull, 'wb') as devnull:
         try:
-            msbuild = which(env.get('MSBUILD', ['msbuild', 'xbuild']), env)
+            msbuild = path.which(env.get('MSBUILD', ['msbuild', 'xbuild']),
+                                 env, first_word=True)
             output = subprocess.check_output(
-                [msbuild, '/version'],
-                universal_newlines=True, stderr=devnull
+                '{} /version'.format(msbuild),
+                shell=True, universal_newlines=True, stderr=devnull
             )
             m = re.search(r'([\d\.]+)$', output)
             if m:

@@ -1,25 +1,10 @@
 import os
 import platform
-import subprocess
 
-from .iterutils import iterate
 from .path import Path, Root, InstallRoot
+from .platform_name import platform_name
 
 known_platforms = ['posix', 'linux', 'darwin', 'cygwin', 'windows']
-
-
-def platform_name():
-    name = platform.system().lower()
-    if name == 'windows':
-        try:
-            uname = subprocess.check_output(
-                'uname', universal_newlines=True
-            ).lower()
-            if uname.startswith('cygwin'):
-                name = 'cygwin'
-        except WindowsError:
-            pass
-    return name
 
 
 # Platform objects are primarily intended to represent information about the
@@ -170,24 +155,3 @@ def platform_info(name=None):
         return LinuxPlatform(name)
     else:  # Probably some POSIX system
         return PosixPlatform(name)
-
-
-def which(names, env=os.environ):
-    paths = env.get('PATH', os.defpath).split(os.pathsep)
-    if platform_name() in ['windows', 'cygwin']:
-        exts = env.get('PATHEXT', '').split(os.pathsep)
-    else:
-        exts = ['']
-
-    for name in iterate(names):
-        if os.path.isabs(name):
-            if os.path.exists(name):
-                return name
-        else:
-            for path in ['.'] if os.path.dirname(name) else paths:
-                for ext in exts:
-                    fullpath = os.path.normpath(os.path.join(path, name + ext))
-                    if os.path.exists(fullpath):
-                        return fullpath
-
-    raise IOError("unable to find executable '{}'".format(name))

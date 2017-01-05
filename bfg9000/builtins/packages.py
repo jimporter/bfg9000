@@ -7,8 +7,7 @@ from .find import find
 from ..file_types import Executable
 from ..iterutils import iterate, listify
 from ..tools.utils import SystemPackage
-from ..path import Path, Root
-from ..platforms import which
+from ..path import Path, Root, which
 from ..versionutils import check_version, make_specifier, Version
 
 
@@ -37,8 +36,10 @@ def pkgconfig_package(builtins, name, lang='c', version=None):
 
 @builtin.globals('env')
 def system_executable(env, name, format=None):
-    return Executable(Path(which(name, env.variables), Root.absolute),
-                      format or env.platform.object_format, external=True)
+    return Executable(
+        Path(which(name, env.variables, resolve=True), Root.absolute),
+        format or env.platform.object_format, external=True
+    )
 
 
 def _boost_version(header, required_version=None):

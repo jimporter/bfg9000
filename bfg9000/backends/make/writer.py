@@ -6,16 +6,16 @@ from packaging.version import LegacyVersion
 from ... import path
 from .syntax import *
 from ...iterutils import listify
-from ...platforms import which
 
 
 def version(env=os.environ):
     with open(os.devnull, 'wb') as devnull:
         try:
-            make = which(env.get('MAKE', ['make', 'gmake']), env)
+            make = path.which(env.get('MAKE', ['make', 'gmake']),
+                              env, first_word=True)
             output = subprocess.check_output(
-                [make, '--version'],
-                universal_newlines=True, stderr=devnull
+                '{} --version'.format(make),
+                shell=True, universal_newlines=True, stderr=devnull
             )
             m = re.match(r'GNU Make ([\d\.]+)', output)
             if m:
