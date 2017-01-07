@@ -5,6 +5,7 @@ from itertools import chain
 from six.moves import filter as ifilter
 
 from . import pkg_config
+from .. import shell
 from .ar import ArLinker
 from .utils import Command, darwin_install_name, SystemPackage
 from ..builtins.symlink import Symlink
@@ -17,18 +18,15 @@ class CcBuilder(object):
     def __init__(self, env, lang, name, command, cflags_name, cflags, ldflags,
                  ldlibs):
         self.brand = 'unknown'
-        with open(os.devnull, 'wb') as devnull:
-            try:
-                output = subprocess.check_output(
-                    '{} --version'.format(command),
-                    shell=True, universal_newlines=True, stderr=devnull
-                )
-                if 'Free Software Foundation' in output:
-                    self.brand = 'gcc'
-                elif 'clang' in output:
-                    self.brand = 'clang'
-            except:
-                pass
+        try:
+            output = shell.execute('{} --version'.format(command),
+                          shell=True, quiet=True)
+            if 'Free Software Foundation' in output:
+                self.brand = 'gcc'
+            elif 'clang' in output:
+                self.brand = 'clang'
+        except:
+            pass
 
         self.compiler = CcCompiler(env, lang, name, command, cflags_name,
                                    cflags)
@@ -434,17 +432,16 @@ class CcPackageResolver(object):
         )) if os.path.exists(i)]
 
         system_lib_dirs = []
-        with open(os.devnull, 'wb') as devnull:
-            try:
-                # XXX: Will this work for cross-compilation?
-                output = subprocess.check_output(
-                    '{} -print-search-dirs'.format(command),
-                    shell=True, universal_newlines=True, stderr=devnull
-                )
-                m = re.search(r'^libraries: (.*)', output, re.MULTILINE)
-                system_lib_dirs = re.split(os.pathsep, m.group(1))
-            except:
-                pass
+        try:
+            # XXX: Will this work for cross-compilation?
+            output = shell.execute(
+                '{} -print-search-dirs'.format(command),
+                shell=True, quiet=True
+            )
+            m = re.search(r'^libraries: (.*)', output, re.MULTILINE)
+            system_lib_dirs = re.split(os.pathsep, m.group(1))
+        except:
+            pass
 
         value = env.getvar('LIBRARY_PATH')
         user_lib_dirs = value.split(os.pathsep) if value else []

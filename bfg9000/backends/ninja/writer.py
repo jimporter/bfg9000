@@ -4,21 +4,19 @@ from packaging.version import LegacyVersion
 
 from ... import iterutils
 from ... import path
+from ... import shell
 from .syntax import *
 
 
 def version(env=os.environ):
-    with open(os.devnull, 'wb') as devnull:
-        try:
-            ninja = path.which(env.get('NINJA', ['ninja', 'ninja-build']),
-                               env, first_word=True)
-            output = subprocess.check_output(
-                '{} --version'.format(ninja),
-                shell=True, universal_newlines=True, stderr=devnull
-            )
-            return LegacyVersion(output.strip())
-        except IOError:
-            pass
+    try:
+        ninja = path.which(env.get('NINJA', ['ninja', 'ninja-build']),
+                           env, first_word=True)
+        output = shell.execute('{} --version'.format(ninja),
+                               shell=True, quiet=True)
+        return LegacyVersion(output.strip())
+    except IOError:
+        pass
     return None
 
 

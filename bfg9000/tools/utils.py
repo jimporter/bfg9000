@@ -18,9 +18,9 @@ class Command(object):
         env = kwargs.pop('env', self.env.variables)
         # XXX: Use shell mode so that the (user-defined) command can have
         # multiple arguments defined in it?
-        return subprocess.check_output(
+        return shell.execute(
             self(self.command, *args, **kwargs),
-            universal_newlines=True, env=env
+            env=env, quiet=True
         )
 
 

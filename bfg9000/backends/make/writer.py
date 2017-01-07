@@ -4,24 +4,22 @@ import subprocess
 from packaging.version import LegacyVersion
 
 from ... import path
+from ... import shell
 from .syntax import *
 from ...iterutils import listify
 
 
 def version(env=os.environ):
-    with open(os.devnull, 'wb') as devnull:
-        try:
-            make = path.which(env.get('MAKE', ['make', 'gmake']),
-                              env, first_word=True)
-            output = subprocess.check_output(
-                '{} --version'.format(make),
-                shell=True, universal_newlines=True, stderr=devnull
-            )
-            m = re.match(r'GNU Make ([\d\.]+)', output)
-            if m:
-                return LegacyVersion(m.group(1))
-        except IOError:
-            pass
+    try:
+        make = path.which(env.get('MAKE', ['make', 'gmake']),
+                          env, first_word=True)
+        output = shell.execute('{} --version'.format(make),
+                               shell=True, quiet=True)
+        m = re.match(r'GNU Make ([\d\.]+)', output)
+        if m:
+            return LegacyVersion(m.group(1))
+    except IOError:
+        pass
     return None
 
 

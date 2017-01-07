@@ -4,23 +4,21 @@ import subprocess
 from packaging.version import LegacyVersion
 
 from ... import path
+from ... import shell
 from .syntax import *
 
 
 def version(env=os.environ):
-    with open(os.devnull, 'wb') as devnull:
-        try:
-            msbuild = path.which(env.get('MSBUILD', ['msbuild', 'xbuild']),
-                                 env, first_word=True)
-            output = subprocess.check_output(
-                '{} /version'.format(msbuild),
-                shell=True, universal_newlines=True, stderr=devnull
-            )
-            m = re.search(r'([\d\.]+)$', output)
-            if m:
-                return LegacyVersion(m.group(1))
-        except IOError:
-            pass
+    try:
+        msbuild = path.which(env.get('MSBUILD', ['msbuild', 'xbuild']),
+                             env, first_word=True)
+        output = shell.execute('{} /version'.format(msbuild),
+                               shell=True, quiet=True)
+        m = re.search(r'([\d\.]+)$', output)
+        if m:
+            return LegacyVersion(m.group(1))
+    except IOError:
+        pass
     return None
 
 
