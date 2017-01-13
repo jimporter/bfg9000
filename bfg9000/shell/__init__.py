@@ -16,13 +16,14 @@ class shell_list(list):
 
 
 def execute(args, shell=False, env=None, quiet=False):
+    stderr = None
     if quiet:
-        devnull = open(os.devnull, 'wb')
+        stderr = open(os.devnull, 'wb')
     try:
         return subprocess.check_output(
-            args, universal_newlines=True, shell=shell, env=env
+            args, universal_newlines=True, shell=shell, env=env, stderr=stderr
         )
     except:
         if quiet:
-            devnull.close()
+            stderr.close()
         raise
