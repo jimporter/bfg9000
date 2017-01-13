@@ -155,6 +155,7 @@ def find_files(builtins, build_inputs, env, path='.', name='*', type='*',
 
     if cache:
         build_inputs['find_dirs'].update(seen_dirs)
+        build_inputs['regenerate'].depfile = depfile_name
     if dist:
         for i in dist:
             build_inputs.add_source(i)
@@ -162,41 +163,15 @@ def find_files(builtins, build_inputs, env, path='.', name='*', type='*',
 
 
 @make.post_rule
-def make_regenerate_rule(build_inputs, buildfile, env):
-    bfg9000 = env.tool('bfg9000')
-    bfgcmd = make.cmd_var(bfg9000, buildfile)
-
+def make_find_dirs(build_inputs, buildfile, env):
     if build_inputs['find_dirs']:
         write_depfile(env, Path(depfile_name), make.filepath,
                       build_inputs['find_dirs'], makeify=True)
         buildfile.include(depfile_name)
 
-    buildfile.rule(
-        target=Path('Makefile'),
-        deps=[build_inputs.bfgpath],
-        recipe=[bfg9000.regenerate(bfgcmd, Path('.'))]
-    )
-
 
 @ninja.post_rule
-def ninja_regenerate_rule(build_inputs, buildfile, env):
-    bfg9000 = env.tool('bfg9000')
-    bfgcmd = ninja.cmd_var(bfg9000, buildfile)
-    depfile = None
-
+def ninja_find_dirs(build_inputs, buildfile, env):
     if build_inputs['find_dirs']:
         write_depfile(env, Path(depfile_name), ninja.filepath,
                       build_inputs['find_dirs'])
-        depfile = depfile_name
-
-    buildfile.rule(
-        name='regenerate',
-        command=[bfg9000.regenerate(bfgcmd, Path('.'))],
-        generator=True,
-        depfile=depfile,
-    )
-    buildfile.build(
-        output=Path('build.ninja'),
-        rule='regenerate',
-        implicit=[build_inputs.bfgpath]
-    )
