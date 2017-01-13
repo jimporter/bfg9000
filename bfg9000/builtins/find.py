@@ -27,10 +27,10 @@ class FindResult(IntEnum):
 
 
 def write_depfile(env, path, output, seen_dirs, makeify=False):
-    with open(path.string(env.path_roots), 'w') as f:
+    with open(path.string(env.base_dirs), 'w') as f:
         # Since this file is in the build dir, we can use relative dirs for
         # deps also in the build dir.
-        roots = env.path_roots.copy()
+        roots = env.base_dirs.copy()
         roots[Root.builddir] = None
 
         out = Writer(f)
@@ -149,7 +149,7 @@ def find_files(builtins, build_inputs, env, path='.', name='*', type='*',
     else:
         final_filter = glob_filter
 
-    paths = [i.path.string(env.path_roots) if isinstance(i, File) else i
+    paths = [i.path.string(env.base_dirs) if isinstance(i, File) else i
              for i in iterate(path)]
     found, dist, seen_dirs = _find_files(paths, final_filter, flat, as_object)
 

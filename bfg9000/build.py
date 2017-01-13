@@ -33,7 +33,7 @@ def _fill_parser(env, parent=None, filename=optsfile, usage='parse'):
 
     builtin_dict = optbuiltin.bind(env=env, parser=group)
     try:
-        with open(optspath.string(env.path_roots), 'r') as f, \
+        with open(optspath.string(env.base_dirs), 'r') as f, \
              pushd(env.srcdir.string()):  # noqa
             code = compile(f.read(), filename, 'exec')
             exec(code, builtin_dict)
@@ -61,7 +61,7 @@ def execute_script(env, argv, filename=bfgfile):
     build = BuildInputs(env, bfgpath)
     builtin_dict = builtin.bind(build_inputs=build, argv=argv, env=env)
 
-    with open(bfgpath.string(env.path_roots), 'r') as f, \
+    with open(bfgpath.string(env.base_dirs), 'r') as f, \
          pushd(env.srcdir.string()):  # noqa
         code = compile(f.read(), filename, 'exec')
         try:

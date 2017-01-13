@@ -46,10 +46,10 @@ def write(env, build_inputs):
     # also means we'd need to support aliases so that we can have multiple
     # builds be the default.
     sln_file = path.Path(build_inputs['project'].name + '.sln')
-    with open(sln_file.string(env.path_roots), 'w') as out:
+    with open(sln_file.string(env.base_dirs), 'w') as out:
         solution.write(out)
     for p in solution:
-        path.makedirs(p.path.parent().string(env.path_roots), exist_ok=True)
-        with open(p.path.string(env.path_roots), 'w') as out:
+        path.makedirs(p.path.parent().string(env.base_dirs), exist_ok=True)
+        with open(p.path.string(env.base_dirs), 'w') as out:
             p.write(out)
     uuids.save()

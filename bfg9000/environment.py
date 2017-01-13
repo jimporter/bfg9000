@@ -40,11 +40,13 @@ class Environment(object):
         self.platform = platforms.platform_info()
 
     @property
-    def path_roots(self):
-        return {
+    def base_dirs(self):
+        dirs = {
             Root.srcdir: self.srcdir,
             Root.builddir: self.builddir
         }
+        dirs.update(self.install_dirs)
+        return dirs
 
     def getvar(self, key, default=None):
         return self.variables.get(key, default)
