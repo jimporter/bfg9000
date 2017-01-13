@@ -46,7 +46,7 @@ def test(builtins, build, test, options=None, environment=None, driver=None):
         raise TypeError('only one of "driver" and "environment" may be ' +
                         'specified')
 
-    test = objectify(test, File, builtins['generic_file'])
+    test = objectify(test, builtins['generic_file'])
     build['tests'].inputs.append(test)
     build['defaults'].remove(test)
 
@@ -62,7 +62,7 @@ def test_driver(builtins, build, env, driver, options=None, environment=None,
         raise TypeError('only one of "parent" and "environment" may be ' +
                         'specified')
 
-    driver = objectify(driver, Executable, builtins['system_executable'])
+    driver = objectify(driver, builtins['system_executable'])
     result = TestDriver(driver, pshell.listify(options), environment or {})
     (parent or build['tests']).tests.append(result)
     return result

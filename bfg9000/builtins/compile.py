@@ -44,24 +44,21 @@ class Compile(Edge):
         for i in iterate(include):
             if isinstance(i, HeaderFile):
                 self.header_files.append(i)
-
-            self.includes.append(objectify(
-                i, HeaderDirectory, builtins['header_directory'],
-                in_type=(string_types, HeaderFile)
-            ))
+            self.includes.append(objectify(i, builtins['header_directory']))
 
         self.libs = [objectify(
             i, Library, builtins['static_library'], lang=lang
         ) for i in iterate(libs)]
         # XXX: Handle forward_args from libs?
 
-        self.packages = listify(packages)
+        self.packages = [objectify(i, builtins['package'])
+                         for i in iterate(packages)]
         self.user_options = pshell.listify(options)
 
         self.pch = objectify(
-            pch, PrecompiledHeader, builtins['precompiled_header'],
-            build=build, env=env, file=pch, include=include,
-            packages=self.packages, options=self.user_options, lang=lang
+            pch, builtins['precompiled_header'],
+            file=pch, include=include, packages=self.packages,
+            options=self.user_options, lang=lang
         ) if pch else None
 
         if hasattr(self.compiler, 'pre_build'):
@@ -95,8 +92,7 @@ class CompileSource(Compile):
     def __init__(self, builtins, build, env, name, file, include=None,
                  pch=None, libs=None, packages=None, options=None, lang=None,
                  extra_deps=None):
-        self.file = objectify(file, SourceFile, builtins['source_file'],
-                              lang=lang)
+        self.file = objectify(file, builtins['source_file'], lang=lang)
         if name is None:
             name = self.file.path.stripext().suffix
 
@@ -109,13 +105,12 @@ class CompileHeader(Compile):
     def __init__(self, builtins, build, env, name, file, source=None,
                  include=None, pch=None, libs=None, packages=None,
                  options=None, lang=None, extra_deps=None):
-        self.file = objectify(file, HeaderFile, builtins['header_file'],
-                              lang=lang)
+        self.file = objectify(file, builtins['header_file'], lang=lang)
         if name is None:
             name = self.file.path.suffix
 
         self.pch_source = objectify(
-            source, (SourceFile, type(None)), builtins['source_file'],
+            source, builtins['source_file'], allow_none=True,
             lang=self.file.lang
         )
 
@@ -141,6 +136,7 @@ def object_file(builtins, build, env, name=None, file=None, **kwargs):
 
 
 @builtin.globals('builtins', 'build_inputs', 'env')
+@builtin.type(ObjectFiles, in_type=object)
 def object_files(builtins, build, env, files, **kwargs):
     return ObjectFiles(builtins, build, env, files, **kwargs)
 

@@ -1,3 +1,5 @@
+from six import string_types
+
 from .find import exclude_globs, filter_by_platform
 from .hooks import builtin
 from ..file_types import *
@@ -27,23 +29,36 @@ def header_file(build, name, lang=None):
 # adding/removing files in directories doesn't force bfg to regenerate build
 # files.
 
+
+def _find(builtins, name, include, type, exclude, filter):
+    if not include:
+        return None
+    return builtins['find_files'](name, include, type, None, exclude, filter,
+                                  as_object=True)
+
+
 @builtin.globals('builtins', 'build_inputs')
-@builtin.type(Directory)
+@builtin.type(Directory, in_type=(string_types, File))
 def directory(builtins, build, name, include=None, exclude=exclude_globs,
               filter=filter_by_platform):
-    files = builtins['find_files'](name, include, '*', None, exclude, filter,
-                                   as_object=True)
-    return Directory(Path(name, Root.srcdir), files)
+    if isinstance(name, File):
+        path = name.path.parent()
+    else:
+        path = Path(name, Root.srcdir)
+
+    files = _find(builtins, name, include, '*', exclude, filter)
+    return Directory(path, files)
 
 
 @builtin.globals('builtins', 'build_inputs')
-@builtin.type(HeaderDirectory)
+@builtin.type(HeaderDirectory, in_type=(string_types, HeaderFile))
 def header_directory(builtins, build, name, include=None,
                      exclude=exclude_globs, filter=filter_by_platform,
                      system=False):
     if isinstance(name, HeaderFile):
-        return HeaderDirectory(name.path.parent(), None, system)
+        path = name.path.parent()
+    else:
+        path = Path(name, Root.srcdir)
 
-    files = builtins['find_files'](name, include, 'f', None, exclude, filter,
-                                   as_object=True)
-    return HeaderDirectory(Path(name, Root.srcdir), files, system)
+    files = _find(builtins, name, include, 'f', exclude, filter)
+    return HeaderDirectory(path, files, system)

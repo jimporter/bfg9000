@@ -1,7 +1,7 @@
 import functools
 import inspect
 import sys
-from six import iteritems
+from six import iteritems, itervalues
 
 _all_builtins = {}
 
@@ -42,6 +42,16 @@ class _GetterBinder(_Binder):
         return self._fn(*[kwargs[i] for i in self._args])
 
 
+class _PostWrapper(object):
+    def __init__(self, fn, *args):
+        self._fn = fn
+        self._args = args
+
+    def __call__(self, **kwargs):
+        args = tuple(kwargs[i] for i in self._args)
+        return self._fn(*args)
+
+
 class _Decorator(object):
     def __init__(self, builtins, binder):
         self.__builtins = builtins
@@ -54,13 +64,6 @@ class _Decorator(object):
         return wrapper
 
 
-def _decorate_type(type):
-    def wrapper(fn):
-        fn.type = type
-        return fn
-    return wrapper
-
-
 class Builtin(object):
     def __init__(self):
         self._builtins = {}
@@ -68,13 +71,18 @@ class Builtin(object):
         self.globals = _Decorator(self._builtins, _PartialFunctionBinder)
         self.getter = _Decorator(self._builtins, _GetterBinder)
 
+        self._post = {}
+        self.post = _Decorator(self._post, _PostWrapper)
+
     def __call__(self, *args, **kwargs):
         return self._decorator(*args, **kwargs)
 
     @staticmethod
-    def type(type):
+    def type(type, in_type=None):
         def wrapper(fn):
             fn.type = type
+            if in_type:
+                fn.in_type = in_type
             return fn
         return wrapper
 
@@ -85,6 +93,10 @@ class Builtin(object):
 
         builtins['__bfg9000__'] = builtins
         return builtins
+
+    def run_post(self, builtins, **kwargs):
+        for v in itervalues(self._post):
+            v(builtins=builtins, **kwargs)
 
 
 builtin = Builtin()

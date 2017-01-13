@@ -41,7 +41,7 @@ class Link(Edge):
         self.name = self.__name(name)
 
         self.files = objectify(
-            files, ObjectFiles, builtins['object_files'], object,
+            files, builtins['object_files'],
             include=include, pch=pch, libs=libs, packages=packages,
             options=compile_options, lang=lang
         )
@@ -60,7 +60,8 @@ class Link(Edge):
              not any(isinstance(i, WholeArchive) for i in self.libs) ):
             raise ValueError('need at least one source file')
 
-        self.packages = listify(packages)
+        self.packages = [objectify(i, builtins['package'])
+                         for i in iterate(packages)]
         self.all_packages = sum((i.get('packages', []) for i in fwd),
                                 self.packages)
 

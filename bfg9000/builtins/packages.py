@@ -4,7 +4,7 @@ import warnings
 
 from .hooks import builtin
 from .find import find
-from ..file_types import Executable
+from ..file_types import Executable, Package
 from ..iterutils import iterate, listify
 from ..tools.utils import SystemPackage
 from ..path import Path, Root, which
@@ -12,6 +12,7 @@ from ..versionutils import check_version, make_specifier, Version
 
 
 @builtin.globals('env')
+@builtin.type(Package)
 def package(env, name, lang='c', kind='any', header=None, version=None):
     if kind not in ('any', 'shared', 'static'):
         raise ValueError("kind must be one of 'any', 'shared', or 'static'")
@@ -35,6 +36,7 @@ def pkgconfig_package(builtins, name, lang='c', version=None):
 
 
 @builtin.globals('env')
+@builtin.type(Executable)
 def system_executable(env, name, format=None):
     return Executable(
         Path(which(name, env.variables, resolve=True), Root.absolute),
