@@ -93,8 +93,21 @@ class Path(safe_str.safe_string):
         return root + (os.path.sep + self.suffix)
 
     def string(self, variables=None):
-        return self.realize({k: v.string() if isinstance(v, Path) else v
-                             for k, v in iteritems(variables or {})})
+        path = self
+        result = ''
+
+        while True:
+            real = path.realize(variables)
+            if isinstance(real, safe_str.jbos):
+                path, suffix = real.bits
+                result = suffix + result
+            elif isinstance(real, Path):
+                path = real
+            else:
+                result = real + result
+                break
+
+        return result
 
     def __str__(self):
         raise NotImplementedError()
