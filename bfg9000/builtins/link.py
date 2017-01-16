@@ -15,7 +15,6 @@ from ..shell import posix as pshell
 
 build_input('link_options')(lambda build_inputs, env: list())
 
-
 _modes = {
     'shared_library': 'EXPORTS',
     'static_library': 'STATIC',
@@ -94,7 +93,6 @@ class Link(Edge):
         self.linker = self.__find_linker(env, formats[0], self.all_langs)
 
         self.user_options = pshell.listify(link_options)
-        self._extra_options = sum((i.get('link_options', []) for i in fwd), [])
         self._internal_options = []
 
         if hasattr(self.linker, 'pre_build'):
@@ -117,7 +115,7 @@ class Link(Edge):
 
     @property
     def options(self):
-        return self._internal_options + self._extra_options + self.user_options
+        return self._internal_options + self.user_options
 
     @classmethod
     def __name(cls, name):
@@ -139,12 +137,16 @@ class StaticLink(Link):
 
     def _fill_options(self, env, output):
         primary = first(output)
+        # XXX: Forward (dynamic) linker options as well? Currently link_options
+        # for a static lib refers to options passed to the static linker rather
+        # than options that should be forwarded to the dynamic linker; we could
+        # change this though...
         primary.forward_args = {
             'defines': library_macro(self.name, self.mode),
-            'options': self.options,
-            'libs': self.libs,
+            'libs': self.all_libs,
             'packages': self.packages,
         }
+        primary.linktime_deps.extend(self.libs)
 
 
 class DynamicLink(Link):
@@ -167,18 +169,16 @@ class DynamicLink(Link):
             self.linker.libs(self, output)
         )
 
-        first(output).runtime_deps = sum(
-            (self.__get_runtime_deps(i) for i in self.libs), []
-        )
+        first(output).runtime_deps.extend(chain.from_iterable(
+            self.__get_runtime_deps(i) for i in self.libs
+        ))
 
     @staticmethod
-    def __get_runtime_deps(library):
-        if isinstance(library, LinkLibrary):
-            return library.runtime_deps
-        elif isinstance(library, SharedLibrary):
-            return [library]
-        else:
-            return []
+    def __get_runtime_deps(lib):
+        extra = []
+        if isinstance(lib, SharedLibrary) and not isinstance(lib, LinkLibrary):
+            extra = [lib]
+        return lib.runtime_deps + extra
 
 
 class SharedLink(DynamicLink):

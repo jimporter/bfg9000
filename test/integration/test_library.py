@@ -26,6 +26,30 @@ class TestStaticLibrary(IntegrationTest):
                           'hello, library!\n')
 
 
+class TestNestedStaticLibrary(IntegrationTest):
+    def __init__(self, *args, **kwargs):
+        IntegrationTest.__init__(
+            self, 'nested_static_library', install=True, *args, **kwargs
+        )
+
+    def test_build(self):
+        self.build()
+        self.assertOutput(
+            [executable('program')],
+            'hello from inner\nhello from middle\nhello from outer\n'
+        )
+
+    @skip_if_backend('msbuild')
+    def test_install(self):
+        self.build('install')
+
+        self.assertDirectory(self.installdir, [
+            pjoin(self.libdir, static_library('inner').path),
+            pjoin(self.libdir, static_library('middle').path),
+            pjoin(self.libdir, static_library('outer').path),
+        ])
+
+
 @unittest.skipIf(env.platform.name == 'windows',
                  'no versioned libraries on windows')
 class TestVersionedLibrary(IntegrationTest):

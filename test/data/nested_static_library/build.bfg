@@ -1,0 +1,10 @@
+# -*- python -*-
+
+inner = static_library('inner', files=['inner.cpp'])
+middle = static_library('middle', files=['middle.cpp'], libs=[inner])
+outer = static_library('outer', files=['outer.cpp'], libs=[middle])
+
+prog = executable('program', files=['program.cpp'], libs=[outer])
+
+default(prog)
+install(outer)

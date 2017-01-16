@@ -14,15 +14,12 @@ class InstallOutputs(object):
     def __init__(self, build_inputs, env):
         self._outputs = []
 
-    def add(self, item, explicit=True):
+    def add(self, item):
         if item not in self._outputs:
             self._outputs.append(item)
 
-        for i in item.runtime_deps:
-            self.add(i, explicit=False)
-        if explicit:
-            for i in item.install_deps:
-                self.add(i, explicit=False)
+        for i in chain(item.runtime_deps, item.linktime_deps):
+            self.add(i)
 
     def __nonzero__(self):
         return self.__bool__()

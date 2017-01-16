@@ -67,8 +67,8 @@ class File(Node):
         Node.__init__(self, path)
         self.external = external
         self.post_install = None
-        self.install_deps = []
         self.runtime_deps = []
+        self.linktime_deps = []
 
 
 class Directory(File):
