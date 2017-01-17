@@ -504,7 +504,7 @@ class CcPackageResolver(object):
 
     def resolve(self, name, kind='any', header=None, version=None):
         try:
-            return pkg_config.resolve(self.env, name, version)
+            return pkg_config.resolve(self.env, name, kind, version)
         except (OSError, ValueError):
             name = self.env.platform.transform_package(name)
             includes = [self.header(i) for i in iterate(header)]
