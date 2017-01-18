@@ -150,15 +150,15 @@ class ExecutableLibrary(Executable, Library):
 
 
 class StaticLibrary(Library):
-    def __init__(self, path, format, lang, external=False):
+    def __init__(self, path, format, langs, external=False):
         Library.__init__(self, path, format, external)
-        self.lang = _listify(lang)
+        self.langs = _listify(langs)
 
 
 class WholeArchive(StaticLibrary):
     def __init__(self, library, external=False):
         StaticLibrary.__init__(self, library.path, library.format,
-                               library.lang, external)
+                               library.langs, external)
         self.library = library
 
 

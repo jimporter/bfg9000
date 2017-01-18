@@ -35,7 +35,7 @@ class SystemPackage(Package):
                  version=None):
         self.includes = includes or []
         self.lib_dirs = lib_dirs or []
-        self.all_libs = libraries or []
+        self.libs = libraries or []
         self.version = version
 
     def cflags(self, compiler, output):

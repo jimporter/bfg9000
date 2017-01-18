@@ -238,7 +238,7 @@ class MsvcLinker(Command):
         return ['/LIBPATH:' + i for i in dirs]
 
     def args(self, options, output, pkg=False):
-        libraries = getattr(options, 'all_libs', [])
+        libraries = getattr(options, 'libs', [])
         lib_dirs = getattr(options, 'lib_dirs', [])
         return self._lib_dirs(libraries, lib_dirs)
 
@@ -259,7 +259,7 @@ class MsvcLinker(Command):
         return []
 
     def libs(self, options, output, pkg=False):
-        libraries = getattr(options, 'all_libs', [])
+        libraries = getattr(options, 'libs', [])
         return sum((self._link_lib(i) for i in libraries), [])
 
 

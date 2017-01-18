@@ -39,30 +39,32 @@ class Link(Edge):
                  extra_deps=None):
         self.name = self.__name(name)
 
-        self.files = objectify(
-            files, builtins['object_files'],
-            include=include, pch=pch, libs=libs, packages=packages,
-            options=compile_options, lang=lang
-        )
-        self.files.extend(chain.from_iterable(
-            getattr(i, 'extra_objects', []) for i in self.files
-        ))
-
         # XXX: Try to detect if a string refers to a shared lib?
-        self.libs = [objectify(
+        self.user_libs = [objectify(
             i, Library, builtins['static_library'], lang=lang
         ) for i in iterate(libs)]
-        fwd = [i.forward_args for i in self.libs if hasattr(i, 'forward_args')]
-        self.all_libs = sum((i.get('libs', []) for i in fwd), self.libs)
+        fwd = [i.forward_args for i in self.user_libs
+               if hasattr(i, 'forward_args')]
+        self.libs = sum((i.get('libs', []) for i in fwd), self.user_libs)
+
+        self.user_packages = [objectify(i, builtins['package'])
+                              for i in iterate(packages)]
+        self.packages = sum((i.get('packages', []) for i in fwd),
+                            self.user_packages)
+
+        self.user_files = objectify(
+            files, builtins['object_files'],
+            include=include, pch=pch, libs=self.user_libs,
+            packages=self.user_packages, options=compile_options, lang=lang
+        )
+        self.files = sum(
+            (getattr(i, 'extra_objects', []) for i in self.user_files),
+            self.user_files
+        )
 
         if ( len(self.files) == 0 and
-             not any(isinstance(i, WholeArchive) for i in self.libs) ):
+             not any(isinstance(i, WholeArchive) for i in self.user_libs) ):
             raise ValueError('need at least one source file')
-
-        self.packages = [objectify(i, builtins['package'])
-                         for i in iterate(packages)]
-        self.all_packages = sum((i.get('packages', []) for i in fwd),
-                                self.packages)
 
         if entry_point:
             self.entry_point = entry_point
@@ -80,17 +82,15 @@ class Link(Edge):
                 self.mode, sum((f.get('defines', []) for f in fwd), macro)
             )
 
-        formats = uniques(chain( (i.format for i in self.files),
-                                 (i.format for i in self.all_libs) ))
+        formats = uniques(i.format for i in chain(self.files, self.libs))
         if len(formats) > 1:
             raise ValueError('cannot link multiple object formats')
 
-        self.langs = uniques(i.lang for i in self.files)
-        self.all_langs = uniques(chain(
-            self.langs,
-            chain.from_iterable(getattr(i, 'lang', []) for i in self.all_libs)
+        self.langs = uniques(chain(
+            (i.lang for i in self.files),
+            chain.from_iterable(getattr(i, 'langs', []) for i in self.libs)
         ))
-        self.linker = self.__find_linker(env, formats[0], self.all_langs)
+        self.linker = self.__find_linker(env, formats[0], self.langs)
 
         self.user_options = pshell.listify(link_options)
         self._internal_options = []
@@ -143,10 +143,10 @@ class StaticLink(Link):
         # change this though...
         primary.forward_args = {
             'defines': library_macro(self.name, self.mode),
-            'libs': self.all_libs,
+            'libs': self.libs,
             'packages': self.packages,
         }
-        primary.linktime_deps.extend(self.libs)
+        primary.linktime_deps.extend(self.user_libs)
 
 
 class DynamicLink(Link):
@@ -157,15 +157,15 @@ class DynamicLink(Link):
     def _fill_options(self, env, output):
         self._internal_options = (
             sum((i.ldflags(self.linker, output)
-                 for i in self.all_packages), []) +
+                 for i in self.packages), []) +
             self.linker.args(self, output)
         )
 
-        linkers = (env.builder(i).linker(self.mode) for i in self.all_langs)
+        linkers = (env.builder(i).linker(self.mode) for i in self.langs)
         self.lib_options = (
             sum((i.always_libs(i is self.linker) for i in linkers), []) +
             sum((i.ldlibs(self.linker, output)
-                 for i in self.all_packages), []) +
+                 for i in self.packages), []) +
             self.linker.libs(self, output)
         )
 

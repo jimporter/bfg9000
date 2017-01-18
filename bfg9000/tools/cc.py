@@ -283,7 +283,7 @@ class CcLinker(Command):
         return []
 
     def args(self, options, output, pkg=False):
-        libraries = getattr(options, 'all_libs', [])
+        libraries = getattr(options, 'libs', [])
         lib_dirs = getattr(options, 'lib_dirs', [])
         entry_point = getattr(options, 'entry_point', None)
         return ( self._lib_dirs(libraries, lib_dirs) +
@@ -318,7 +318,7 @@ class CcLinker(Command):
         return libs
 
     def libs(self, options, output, pkg=False):
-        libraries = getattr(options, 'all_libs', [])
+        libraries = getattr(options, 'libs', [])
         return sum((self._link_lib(i) for i in libraries), [])
 
     def post_install(self, output):
