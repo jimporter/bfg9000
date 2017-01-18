@@ -26,7 +26,7 @@ class ToggleAction(argparse.Action):
 
     @staticmethod
     def _prefix(s, prefix):
-        if s.startswith('--'):
+        if not s.startswith('--'):
             raise ValueError('option string must begin with "--"')
         return re.sub('(^--(x-)?)', r'\1' + prefix, s)
 
