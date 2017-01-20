@@ -224,6 +224,10 @@ class CcLinker(Command):
     def flavor(self):
         return 'cc'
 
+    @property
+    def family(self):
+        return 'native'
+
     def can_link(self, format, langs):
         return (format == self.env.platform.object_format and
                 self.__allowed_langs[self.lang].issuperset(langs))

@@ -1,5 +1,6 @@
 import os.path
 import re
+from collections import defaultdict
 from itertools import chain
 from six.moves import reduce
 
@@ -13,7 +14,7 @@ from ..iterutils import first, iterate, listify, merge_dicts, uniques
 from ..path import Path, Root
 from ..shell import posix as pshell
 
-build_input('link_options')(lambda build_inputs, env: list())
+build_input('link_options')(lambda build_inputs, env: defaultdict(list))
 
 _modes = {
     'shared_library': 'EXPORTS',
@@ -247,14 +248,16 @@ def whole_archive(builtins, name, *args, **kwargs):
 
 
 @builtin.globals('build_inputs')
-def global_link_options(build, options):
-    build['link_options'].extend(pshell.listify(options))
+def global_link_options(build, options, family='native'):
+    for i in iterate(family):
+        build['link_options'][i].extend(pshell.listify(options))
 
 
 def _get_flags(backend, rule, build_inputs, buildfile):
     global_ldflags, ldflags = backend.flags_vars(
         rule.linker.flags_var,
-        rule.linker.global_args + build_inputs['link_options'],
+        ( rule.linker.global_args +
+          build_inputs['link_options'][rule.linker.family] ),
         buildfile
     )
 
@@ -419,8 +422,8 @@ try:
 
         # Parse linking flags.
         ldflags = rule.linker.parse_args(msbuild.textify_each(
-            (rule.linker.global_args + build_inputs['link_options'] +
-             rule.options)
+            (rule.linker.global_args +
+             build_inputs['link_options'][rule.linker.family] + rule.options)
         ))
         ldflags['libs'] = (
             getattr(rule.linker, 'global_libs', []) +

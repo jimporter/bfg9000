@@ -38,6 +38,9 @@ class TestNestedStaticLibrary(IntegrationTest):
             [executable('program')],
             'hello from inner\nhello from middle\nhello from outer\n'
         )
+        if env.platform.name == 'linux':
+            output = self.assertPopen(['readelf', '-s', executable('program')])
+            assertNotRegex(self, output, r"Symbol table '.symtab'")
 
     @skip_if_backend('msbuild')
     def test_install(self):

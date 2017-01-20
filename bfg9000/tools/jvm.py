@@ -94,6 +94,10 @@ class JarMaker(Command):
     def flavor(self):
         return 'jar'
 
+    @property
+    def family(self):
+        return 'jvm'
+
     def can_link(self, format, langs):
         return format == 'jvm'
 

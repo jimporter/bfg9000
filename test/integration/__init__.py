@@ -98,6 +98,14 @@ class SubprocessError(unittest.TestCase.failureException):
         )
 
 
+# For some reason, six doesn't have this wrapper...
+def assertNotRegex(self, *args, **kwargs):
+    if hasattr(self, 'assertNotRegex'):
+        return self.assertNotRegex(*args, **kwargs)
+    else:
+        return self.assertNotRegexpMatches(*args, **kwargs)
+
+
 class IntegrationTest(unittest.TestCase):
     def __init__(self, srcdir, *args, **kwargs):
         install = kwargs.pop('install', False)

@@ -158,14 +158,15 @@ def precompiled_header(builtins, build, env, name=None, file=None, **kwargs):
 
 @builtin.globals('build_inputs')
 def global_options(build, options, lang):
-    build['compile_options'][lang].extend(pshell.listify(options))
+    for i in iterate(lang):
+        build['compile_options'][i].extend(pshell.listify(options))
 
 
 def _get_flags(backend, rule, build_inputs, buildfile):
     global_cflags, cflags = backend.flags_vars(
         rule.compiler.flags_var,
         ( rule.compiler.global_args +
-          build_inputs['compile_options'][rule.file.lang] ),
+          build_inputs['compile_options'][rule.compiler.lang] ),
         buildfile
     )
 

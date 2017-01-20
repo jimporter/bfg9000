@@ -387,14 +387,19 @@ Availability: `build.bfg`
 {: .subtitle}
 
 Specify some *options* (either as a string or list) to use for all compilation
-steps for the language *lang*.
+steps for the language (or list of languages) *lang*.
 
-### global_link_options(*options*) { #global_link_options }
+### global_link_options(*options*, [*family*]) { #global_link_options }
 Availability: `build.bfg`
 {: .subtitle}
 
-Specify some *options* (either as a string or list) to use for all link steps
-(i.e. for [executables](#executable) and [shared libraries](#shared_library)).
+Specify some *options* (either as a string or list) to use for all dynamic link
+steps (i.e. [executables](#executable) and [shared libraries](#shared_library))
+for a given *family* of languages (or a list of families).
+
+By default *family* is `'native'`, used for C, C++, and other languages using
+the same linking process. You can also specify `'jvm'` for JVM-based languages
+(Java, Scala).
 
 ## Test rules
 
