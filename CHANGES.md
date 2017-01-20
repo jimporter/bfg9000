@@ -3,15 +3,21 @@
 ## v0.3.0 (in progress)
 
 ### New features
-
-- Add `header` argument to `system_package()` to find header files
+- Replace `system_package()` and `pkgconfig_package()` with a generic package
+  resolver: `package()`
+- Add `header` argument to `package()` to find header files
 - Support Java/Scala
 - Add support for user-defined arguments
 
 ### Breaking changes
-
 - `directory()` and `header_directory()` no longer automatically include all
   files within them (pass `include='*'` for the old behavior)
+- When creating a static library, `link_options` now specifies options that will
+  be forwarded along to the dynamic linker, rather than options for the static
+  linker itself
+
+### Bug fixes
+- Improved logging of syntax errors in `build.bfg` files
 
 ---
 
