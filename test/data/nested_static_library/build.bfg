@@ -1,6 +1,8 @@
 # -*- python -*-
 
-inner = static_library('inner', files=['inner.cpp'])
+opts = ['-s'] if env.builder('c++').flavor == 'cc' else []
+
+inner = static_library('inner', files=['inner.cpp'], link_options=opts)
 middle = static_library('middle', files=['middle.cpp'], libs=[inner])
 outer = static_library('outer', files=['outer.cpp'], libs=[middle])
 

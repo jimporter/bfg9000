@@ -93,7 +93,7 @@ class Link(Edge):
         self.linker = self.__find_linker(env, formats[0], self.langs)
 
         self.user_options = pshell.listify(link_options)
-        self._internal_options = []
+        self.forwarded_options = sum((i.get('options', []) for i in fwd), [])
 
         if hasattr(self.linker, 'pre_build'):
             self.linker.pre_build(build, self, name)
@@ -113,10 +113,6 @@ class Link(Edge):
             primary.post_install = self.linker.post_install(output)
         build['defaults'].add(primary)
 
-    @property
-    def options(self):
-        return self._internal_options + self.user_options
-
     @classmethod
     def __name(cls, name):
         head, tail = os.path.split(name)
@@ -135,14 +131,19 @@ class StaticLink(Link):
     msbuild_mode = 'StaticLibrary'
     _prefix = 'lib'
 
+    @property
+    def options(self):
+        # Don't pass any options to the static linker. XXX: We used to support
+        # this for users via `link_options`, but that's used for forwarding
+        # options to a dynamic linker now. Should we add support for static
+        # link options back in under a different name?
+        return []
+
     def _fill_options(self, env, output):
         primary = first(output)
-        # XXX: Forward (dynamic) linker options as well? Currently link_options
-        # for a static lib refers to options passed to the static linker rather
-        # than options that should be forwarded to the dynamic linker; we could
-        # change this though...
         primary.forward_args = {
             'defines': library_macro(self.name, self.mode),
+            'options': self.forwarded_options + self.user_options,
             'libs': self.libs,
             'packages': self.packages,
         }
@@ -153,6 +154,11 @@ class DynamicLink(Link):
     mode = 'executable'
     msbuild_mode = 'Application'
     _prefix = ''
+
+    @property
+    def options(self):
+        return (self._internal_options + self.forwarded_options +
+                self.user_options)
 
     def _fill_options(self, env, output):
         self._internal_options = (
