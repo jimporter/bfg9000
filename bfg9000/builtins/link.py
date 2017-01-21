@@ -5,6 +5,7 @@ from itertools import chain
 from six.moves import reduce
 
 from .compile import Compile, ObjectFiles
+from .file_types import local_file
 from .hooks import builtin
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
@@ -33,6 +34,14 @@ def library_macro(name, mode):
     )]
 
 
+def library_version(kwargs):
+    version = kwargs.pop('version', None)
+    soversion = kwargs.pop('soversion', None)
+    if (version is None) != (soversion is None):
+        raise ValueError('specify both version and soversion or neither')
+    return version, soversion
+
+
 class Link(Edge):
     def __init__(self, builtins, build, env, name, files=None, include=None,
                  pch=None, libs=None, packages=None, compile_options=None,
@@ -40,10 +49,8 @@ class Link(Edge):
                  extra_deps=None):
         self.name = self.__name(name)
 
-        # XXX: Try to detect if a string refers to a shared lib?
-        self.user_libs = [objectify(
-            i, Library, builtins['static_library'], lang=lang
-        ) for i in iterate(libs)]
+        self.user_libs = [objectify(i, builtins['library'], lang=lang)
+                          for i in iterate(libs)]
         fwd = [i.forward_args for i in self.user_libs
                if hasattr(i, 'forward_args')]
         self.libs = sum((i.get('libs', []) for i in fwd), self.user_libs)
@@ -129,34 +136,6 @@ class Link(Edge):
         raise ValueError('unable to find linker')
 
 
-class StaticLink(Link):
-    mode = 'static_library'
-    msbuild_mode = 'StaticLibrary'
-    _prefix = 'lib'
-
-    @property
-    def options(self):
-        # Don't pass any options to the static linker. XXX: We used to support
-        # this for users via `link_options`, but that's used for forwarding
-        # options to a dynamic linker now. Should we add support for static
-        # link options back in under a different name?
-        return []
-
-    def _fill_options(self, env, output):
-        primary = first(output)
-        primary.forward_args = {
-            'options': self.forwarded_options + self.user_options,
-            'libs': self.libs,
-            'packages': self.packages,
-        }
-        if self.linker.has_link_macros:
-            primary.forward_args['defines'] = library_macro(
-                self.name, self.mode
-            )
-
-        primary.linktime_deps.extend(self.user_libs)
-
-
 class DynamicLink(Link):
     mode = 'executable'
     msbuild_mode = 'Application'
@@ -200,46 +179,100 @@ class SharedLink(DynamicLink):
     _prefix = 'lib'
 
     def __init__(self, *args, **kwargs):
-        self.version = kwargs.pop('version', None)
-        self.soversion = kwargs.pop('soversion', None)
-        if (self.version is None) != (self.soversion is None):
-            raise ValueError('specify both version and soversion or neither')
+        self.version, self.soversion = library_version(kwargs)
         DynamicLink.__init__(self, *args, **kwargs)
 
 
-def generic_link(builtins, build, env, file_type, edge_type, name, files=None,
-                 **kwargs):
-    if files is None and kwargs.get('libs') is None:
-        object_format = kwargs.get('format', env.platform.object_format)
-        return build.add_source(file_type(
-            Path(name, Root.srcdir), object_format
-        ))
-    else:
-        return edge_type(builtins, build, env, name, files,
-                         **kwargs).public_output
+class StaticLink(Link):
+    mode = 'static_library'
+    msbuild_mode = 'StaticLibrary'
+    _prefix = 'lib'
+
+    @property
+    def options(self):
+        # Don't pass any options to the static linker. XXX: We used to support
+        # this for users via `link_options`, but that's used for forwarding
+        # options to a dynamic linker now. Should we add support for static
+        # link options back in under a different name?
+        return []
+
+    def _fill_options(self, env, output):
+        primary = first(output)
+        primary.forward_args = {
+            'options': self.forwarded_options + self.user_options,
+            'libs': self.libs,
+            'packages': self.packages,
+        }
+        if self.linker.has_link_macros:
+            macro = library_macro(self.name, self.mode)
+            primary.forward_args['defines'] = macro
+
+        primary.linktime_deps.extend(self.user_libs)
+
+
+class DualedStaticLink(StaticLink):
+    def __init__(self, *args, **kwargs):
+        library_version(kwargs)
+        StaticLink.__init__(self, *args, **kwargs)
 
 
 @builtin.globals('builtins', 'build_inputs', 'env')
 @builtin.type(Executable)
-def executable(builtins, build, env, *args, **kwargs):
-    return generic_link(builtins, build, env, Executable, DynamicLink,
-                        *args, **kwargs)
-
-
-@builtin.globals('builtins', 'build_inputs', 'env')
-@builtin.type(StaticLibrary)
-def static_library(builtins, build, env, *args, **kwargs):
-    return generic_link(builtins, build, env, StaticLibrary, StaticLink,
-                        *args, **kwargs)
+def executable(builtins, build, env, name, files=None, **kwargs):
+    if files is None and 'libs' not in kwargs:
+        params = [('format', env.platform.object_format)]
+        return local_file(build, Executable, name, params, **kwargs)
+    return DynamicLink(builtins, build, env, name, files,
+                       **kwargs).public_output
 
 
 @builtin.globals('builtins', 'build_inputs', 'env')
 @builtin.type(SharedLibrary)
-def shared_library(builtins, build, env, *args, **kwargs):
-    # XXX: What to do for pre-built shared libraries for Windows, which has a
-    # separate DLL file?
-    return generic_link(builtins, build, env, SharedLibrary, SharedLink,
-                        *args, **kwargs)
+def shared_library(builtins, build, env, name, files=None, **kwargs):
+    if files is None and 'libs' not in kwargs:
+        # XXX: What to do for pre-built shared libraries for Windows, which has
+        # a separate DLL file?
+        params = [('format', env.platform.object_format)]
+        return local_file(build, SharedLibrary, name, params, **kwargs)
+    return SharedLink(builtins, build, env, name, files,
+                      **kwargs).public_output
+
+
+@builtin.globals('builtins', 'build_inputs', 'env')
+@builtin.type(StaticLibrary)
+def static_library(builtins, build, env, name, files=None, **kwargs):
+    if files is None and 'libs' not in kwargs:
+        params = [('format', env.platform.object_format), ('lang', 'c')]
+        return local_file(build, StaticLibrary, name, params, **kwargs)
+    return StaticLink(builtins, build, env, name, files,
+                      **kwargs).public_output
+
+
+@builtin.globals('builtins', 'build_inputs', 'env')
+@builtin.type(Library)
+def library(builtins, build, env, name, files=None, **kwargs):
+    if files is None and 'libs' not in kwargs:
+        # XXX: Try to detect if a string refers to a shared lib?
+        params = [('format', env.platform.object_format), ('lang', 'c')]
+        return local_file(build, StaticLibrary, name, params, **kwargs)
+
+    if env.library_mode.shared and env.library_mode.static:
+        shared = SharedLink(builtins, build, env, name, files, **kwargs)
+        if not env.builder(shared.linker.lang).can_dual_link:
+            return shared.public_output
+
+        static = DualedStaticLink(builtins, build, env, name, shared.files,
+                                  **kwargs)
+        return DualUseLibrary(shared.public_output, static.public_output)
+    elif env.library_mode.shared:
+        return SharedLink(builtins, build, env, name, files,
+                          **kwargs).public_output
+    elif env.library_mode.static:
+        return DualedStaticLink(builtins, build, env, name, files,
+                                **kwargs).public_output
+    else:
+        raise ValueError('unable to create library: both shared and static ' +
+                         'modes disabled')
 
 
 @builtin.globals('builtins')
@@ -289,7 +322,7 @@ def _get_flags(backend, rule, build_inputs, buildfile):
     return variables, cmd_kwargs
 
 
-@make.rule_handler(StaticLink, DynamicLink, SharedLink)
+@make.rule_handler(StaticLink, DynamicLink, SharedLink, DualedStaticLink)
 def make_link(rule, build_inputs, buildfile, env):
     linker = rule.linker
     variables, cmd_kwargs = _get_flags(make, rule, build_inputs, buildfile)
@@ -327,7 +360,7 @@ def make_link(rule, build_inputs, buildfile, env):
     )
 
 
-@ninja.rule_handler(StaticLink, DynamicLink, SharedLink)
+@ninja.rule_handler(StaticLink, DynamicLink, SharedLink, DualedStaticLink)
 def ninja_link(rule, build_inputs, buildfile, env):
     linker = rule.linker
     variables, cmd_kwargs = _get_flags(ninja, rule, build_inputs, buildfile)
@@ -397,7 +430,8 @@ try:
         key = file.creator.compiler.command_var
         return merge_dicts(per_compiler_cflags[key], cflags)
 
-    @msbuild.rule_handler(StaticLink, DynamicLink, SharedLink)
+    @msbuild.rule_handler(DynamicLink, SharedLink, StaticLink,
+                          DualedStaticLink)
     def msbuild_link(rule, build_inputs, solution, env):
         if ( any(i not in ['c', 'c++'] for i in rule.langs) or
              rule.linker.flavor != 'msvc' ):

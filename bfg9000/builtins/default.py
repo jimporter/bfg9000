@@ -27,8 +27,9 @@ class DefaultOutputs(object):
 @builtin.globals('build_inputs')
 def default(build, *args):
     for i in args:
-        if i.creator:
-            build['defaults'].add(i, explicit=True)
+        for j in i.all:
+            if j.creator:
+                build['defaults'].add(j, explicit=True)
 
 
 @make.pre_rule

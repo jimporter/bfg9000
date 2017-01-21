@@ -12,11 +12,7 @@ class ToggleAction(argparse.Action):
         self.false_strings = [self._prefix(i, self._false_prefix)
                               for i in option_strings]
 
-        if default:
-            option_strings = self.false_strings + self.true_strings
-        else:
-            option_strings = self.true_strings + self.false_strings
-
+        option_strings = self.true_strings + self.false_strings
         argparse.Action.__init__(self, option_strings, dest=dest, nargs=0,
                                  default=default, required=required, help=help)
 

@@ -6,6 +6,17 @@ from ..file_types import *
 from ..path import Path, Root
 
 
+def local_file(build, file_type, name, params, kwargs):
+    extra_args = []
+    for name, default in params:
+        extra_args.append(kwargs.pop(name, default))
+    if kwargs:
+        raise TypeError("unexpected keyword argument '{}'".format(
+            next(iter(kwargs))
+        ))
+    return build.add_source(file_type(Path(name, Root.srcdir), *extra_args))
+
+
 @builtin.globals('build_inputs')
 @builtin.type(File)
 def generic_file(build, name):

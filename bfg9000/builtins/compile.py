@@ -3,6 +3,7 @@ from collections import defaultdict
 from six import string_types
 
 from .hooks import builtin
+from .file_types import local_file
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..build_inputs import build_input, Edge
@@ -46,10 +47,9 @@ class Compile(Edge):
                 self.header_files.append(i)
             self.includes.append(objectify(i, builtins['header_directory']))
 
-        self.libs = [objectify(
-            i, Library, builtins['static_library'], lang=lang
-        ) for i in iterate(libs)]
         # XXX: Handle forward_args from libs?
+        self.libs = [objectify(i, builtins['library'], lang=lang)
+                     for i in iterate(libs)]
 
         self.packages = [objectify(i, builtins['package'])
                          for i in iterate(packages)]
@@ -125,14 +125,10 @@ def object_file(builtins, build, env, name=None, file=None, **kwargs):
     if file is None:
         if name is None:
             raise TypeError('expected name')
-        object_format = kwargs.get('format', env.platform.object_format)
-        lang = kwargs.get('lang', 'c')
-        return build.add_source(ObjectFile(
-            Path(name, Root.srcdir), object_format, lang
-        ))
-    else:
-        return CompileSource(builtins, build, env, name, file,
-                             **kwargs).public_output
+        params = [('format', env.platform.object_format), ('lang', 'c')]
+        return local_file(build, ObjectFile, name, params, **kwargs)
+    return CompileSource(builtins, build, env, name, file,
+                         **kwargs).public_output
 
 
 @builtin.globals('builtins', 'build_inputs', 'env')
@@ -147,10 +143,8 @@ def precompiled_header(builtins, build, env, name=None, file=None, **kwargs):
     if file is None:
         if name is None:
             raise TypeError('expected name')
-        lang = kwargs.get('lang', 'c')
-        return build.add_source(PrecompiledHeader(
-            Path(name, Root.srcdir), lang
-        ))
+        params = [('lang', 'c')]
+        return local_file(build, PrecompiledHeader, name, params, **kwargs)
     else:
         return CompileHeader(builtins, build, env, name, file,
                              **kwargs).public_output

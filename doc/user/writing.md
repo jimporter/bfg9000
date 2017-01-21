@@ -93,18 +93,35 @@ can determine the kind of compiler being used by consulting the build's
 
 ## Building libraries
 
-Similar to building executables, you can also build
-[shared](reference.md#shared_library) and [static](reference.md#static_library)
-libraries. These take the same arguments as above, although static libraries
-have no use for the *link_options* argument.
+In addition to building executables, you can obviously also build
+[libraries](reference.md#library). This takes the same arguments as an
+executable as described above. Once you've defined how to build your library,
+you can pass it along to an executable or other shared library via the *libs*
+argument:
 
-Once you've defined rules to build a library, you can pass it along to an
-executable or other shared library via the *libs* argument:
+```python
+lib = library('library', files=['library.cpp'])
+executable('program', files=['program.cpp'], libs=[lib])
+```
+
+By default, this will create a shared library; however, when running bfg9000,
+users can specify what kind of library to build by passing
+`--enable-shared`/`--disable-shared` and `--enable-static`/`--disable-static` on
+the command line.
+
+When creating a static library, the `link_options` argument behaves specially:
+it represents arguments that will be *forwarded* to the dynamic linker when the
+static lib is used.
+
+### Shared and static libraries
+
+Sometimes, you may want to explicitly specify in the build file whether to
+create a [shared](reference.md#shared_library) or a
+[static](reference.md#static_library) library. This is easy to accomplish:
 
 ```python
 shared = shared_library('shared', files=['shared.cpp'])
-static = static_library('shared', files=['static.cpp'])
-executable('program', files=['program.cpp'], libs=[shared, static])
+static = static_library('static', files=['static.cpp'])
 ```
 
 ### Building libraries on Windows

@@ -43,6 +43,10 @@ class Node(object):
     def _safe_str(self):
         return _safe_str(self.path)
 
+    @property
+    def all(self):
+        return [self]
+
     def __repr__(self):
         return '<{type} {name}>'.format(
             type=type(self).__name__, name=repr(self.path)
@@ -161,6 +165,10 @@ class WholeArchive(StaticLibrary):
                                library.langs, external)
         self.library = library
 
+    @property
+    def all(self):
+        return [self.library]
+
 
 class SharedLibrary(Library):
     pass
@@ -177,6 +185,18 @@ class VersionedSharedLibrary(SharedLibrary):
         SharedLibrary.__init__(self, path, format, external)
         self.soname = LinkLibrary(soname, self, external)
         self.link = LinkLibrary(linkname, self.soname, external)
+
+
+class DualUseLibrary(SharedLibrary):
+    def __init__(self, shared, static):
+        SharedLibrary.__init__(self, shared.path, shared.format,
+                               shared.external)
+        self.shared = shared
+        self.static = static
+
+    @property
+    def all(self):
+        return [self.shared, self.static]
 
 
 class ExportFile(File):

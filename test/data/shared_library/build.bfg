@@ -1,0 +1,4 @@
+# -*- python -*-
+
+lib = shared_library('library', files=['library.cpp'])
+executable('program', files=['program.cpp'], libs=[lib])

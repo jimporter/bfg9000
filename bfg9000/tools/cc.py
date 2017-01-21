@@ -55,6 +55,10 @@ class CcBuilder(object):
     def auto_link(self):
         return False
 
+    @property
+    def can_dual_link(self):
+        return True
+
     def linker(self, mode):
         return self._linkers[mode]
 

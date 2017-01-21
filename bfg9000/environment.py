@@ -1,6 +1,7 @@
 import json
 import os
 import warnings
+from collections import namedtuple
 from packaging.version import LegacyVersion
 from six import iteritems
 
@@ -9,13 +10,15 @@ from .path import InstallRoot, Path, Root
 from . import platforms
 from . import tools
 
+LibraryMode = namedtuple('LibraryMode', ['shared', 'static'])
+
 
 class EnvVersionError(RuntimeError):
     pass
 
 
 class Environment(object):
-    version = 8
+    version = 9
     envfile = '.bfg_environ'
 
     def __new__(cls, *args, **kwargs):
@@ -25,7 +28,7 @@ class Environment(object):
         return env
 
     def __init__(self, bfgdir, backend, backend_version, srcdir, builddir,
-                 install_dirs, extra_args):
+                 install_dirs, library_mode, extra_args):
         self.bfgdir = bfgdir
         self.backend = backend
         self.backend_version = backend_version
@@ -33,6 +36,7 @@ class Environment(object):
         self.srcdir = srcdir
         self.builddir = builddir
         self.install_dirs = install_dirs
+        self.library_mode = LibraryMode(*library_mode)
 
         self.extra_args = extra_args
 
@@ -75,6 +79,7 @@ class Environment(object):
                         k.name: v.to_json() for k, v in
                         iteritems(self.install_dirs)
                     },
+                    'library_mode': self.library_mode,
                     'extra_args': self.extra_args,
                     'variables': self.variables,
                     'platform': self.platform.name,
@@ -109,9 +114,13 @@ class Environment(object):
             data['bfgdir'] = bfgdir.to_json()
             del data['bfgpath']
 
-        # v8 adds suppot for user-defined command-line arguments.
+        # v8 adds support for user-defined command-line arguments.
         if version < 8:
             data['extra_args'] = []
+
+        # v9 adds options for choosing the mode to build libraries in.
+        if version < 9:
+            data['library_mode'] = [True, False]
 
         # Now that we've upgraded, initialize the Environment object.
         env = Environment.__new__(Environment)
@@ -120,6 +129,7 @@ class Environment(object):
             setattr(env, i, data[i])
 
         setattr(env, 'backend_version', LegacyVersion(data['backend_version']))
+        setattr(env, 'library_mode', LibraryMode(*data['library_mode']))
 
         for i in ('bfgdir', 'srcdir', 'builddir'):
             setattr(env, i, Path.from_json(data[i]))

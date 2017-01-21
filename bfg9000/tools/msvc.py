@@ -45,6 +45,12 @@ class MsvcBuilder(object):
     def auto_link(self):
         return True
 
+    @property
+    def can_dual_link(self):
+        # XXX: Issue a warning that MSVC can't dual link because of name
+        # clashes? It's probably not obvious to users.
+        return False
+
     def linker(self, mode):
         return self._linkers[mode]
 

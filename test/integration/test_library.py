@@ -4,12 +4,36 @@ from . import *
 pjoin = os.path.join
 
 
-class TestSharedLibrary(IntegrationTest):
+class TestLibrary(IntegrationTest):
     def __init__(self, *args, **kwargs):
         IntegrationTest.__init__(
             self, pjoin(examples_dir, '02_library'),
-            *args, **kwargs
+            configure=False, *args, **kwargs
         )
+
+    def test_default(self):
+        self.configure()
+        self.build()
+        self.assertOutput([executable('program')], 'hello, library!\n')
+        self.assertExists(shared_library('library'))
+
+    def test_static(self):
+        self.configure(['--disable-shared', '--enable-static'])
+        self.build()
+        self.assertOutput([executable('program')], 'hello, library!\n')
+        self.assertExists(static_library('library'))
+
+    def test_dual(self):
+        self.configure(['--enable-shared', '--enable-static'])
+        self.build()
+        self.assertOutput([executable('program')], 'hello, library!\n')
+        self.assertExists(shared_library('library'))
+        self.assertExists(static_library('library'))
+
+
+class TestSharedLibrary(IntegrationTest):
+    def __init__(self, *args, **kwargs):
+        IntegrationTest.__init__(self, 'shared_library', *args, **kwargs)
 
     def test_build(self):
         self.build()
@@ -22,8 +46,7 @@ class TestStaticLibrary(IntegrationTest):
 
     def test_build(self):
         self.build()
-        self.assertOutput([executable('program')],
-                          'hello, library!\n')
+        self.assertOutput([executable('program')], 'hello, library!\n')
 
 
 class TestNestedStaticLibrary(IntegrationTest):

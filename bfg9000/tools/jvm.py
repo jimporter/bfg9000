@@ -16,7 +16,7 @@ class JvmBuilder(object):
         self.compiler = JvmCompiler(env, lang, name, command, flags_name,
                                     flags)
 
-        linker = JarMaker(env, jar_command)
+        linker = JarMaker(env, lang, jar_command)
         self._linkers = {
             'executable': linker,
             'shared_library': linker,
@@ -26,7 +26,15 @@ class JvmBuilder(object):
     def flavor(self):
         return 'jvm'
 
+    @property
+    def can_dual_link(self):
+        return False
+
     def linker(self, mode):
+        if mode == 'static_library':
+            raise ValueError('static linking not supported with {}'.format(
+                self.brand
+            ))
         return self._linkers[mode]
 
 
@@ -84,8 +92,9 @@ class JarMaker(Command):
     flags_var = 'jarflags'
     libs_var = 'jarlibs'
 
-    def __init__(self, env, command):
+    def __init__(self, env, lang, command):
         Command.__init__(self, env, command)
+        self.lang = lang
 
         self.global_args = []
         self.global_libs = []

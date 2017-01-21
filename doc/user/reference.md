@@ -166,6 +166,41 @@ variables](environment-vars.md#dynamic-linking) and the [compiler environment
 variable](environment-vars.md#compilation-variables) (e.g. `CC`) for the
 relevant language.
 
+### library(*name*, [*files*, ..., [*extra_deps*]]) { #library }
+Availability: `build.bfg`
+{: .subtitle}
+
+Create a build step that builds a shared library named *name*. Its arguments are
+the same as [*executable*](#executable), with the following additional
+arguments:
+
+* *version*: The version number of the library, e.g. `1.2.3`.
+* *soversion*: The API version of the library (used in its soname), e.g. `1`.
+
+Depending on the arguments the user passes to bfg9000, this will build either
+a [shared](#shared_library) or [static](#static_library) library, *or both*. To
+enable/disable shared libraries, pass `--enable-shared`/`--disable-shared`, and
+for static libraries, pass `--enable-static`/`--disable-static`.
+
+Like with *executable*, if *files* isn't specified, this function merely
+references an *existing* library somewhere on the filesystem. In this case,
+*name* must be specified and is the exact name of the file, relative to
+the source directory. You may also pass in the *format* argument as with
+*executable*.
+
+This build step recognizes the [dynamic linking environment
+variables](environment-vars.md#dynamic-linking) or the [static
+linking environment variables](environment-vars.md#static-linking), as well as
+the [compiler environment
+variable](environment-vars.md#compilation-variables) (e.g. `CC`) for the
+relevant language.
+
+!!! warning
+    By convention, MSVC uses the same filenames for static libraries as for
+    import libs for shared libraries. As a result, if both shared and static
+    library builds are enabled with MSVC, bfg9000 will fall back to building
+    only the shared library.
+
 ### object_file([*name*], [*file*, ..., [*extra_deps*]]) { #object_file }
 Availability: `build.bfg`
 {: .subtitle}
@@ -265,7 +300,8 @@ Availability: `build.bfg`
 {: .subtitle}
 
 Create a build step that builds a shared library named *name*. Its arguments are
-the same as [*executable*](#executable), with the following additional argument:
+the same as [*executable*](#executable), with the following additional
+arguments:
 
 * *version*: The version number of the library, e.g. `1.2.3`.
 * *soversion*: The API version of the library (used in its soname), e.g. `1`.

@@ -55,6 +55,7 @@ def environment_from_args(args, extra_args=None):
             path.InstallRoot.libdir: args.libdir,
             path.InstallRoot.includedir: args.includedir,
         },
+        library_mode=(args.shared, args.static),
         extra_args=extra_args,
     )
 
@@ -129,23 +130,31 @@ def add_configure_args(parser):
 
     parser.add_argument('-h', '--help', action=ConfigureHelp,
                         help='show this help message and exit')
-    parser.add_argument('--backend', metavar='BACKEND',
-                        choices=list(backends.keys()),
-                        default=list(backends.keys())[0],
-                        help=('build backend (one of %(choices)s; default: ' +
-                              '%(default)s)'))
-    parser.add_argument('--prefix', type=Directory(), metavar='PATH',
-                        default=install_dirs[path.InstallRoot.prefix],
-                        help='installation prefix (default: %(default)r)')
-    parser.add_argument('--bindir', type=Directory(), metavar='PATH',
-                        default=install_dirs[path.InstallRoot.bindir],
-                        help=path_help.format('executables'))
-    parser.add_argument('--libdir', type=Directory(), metavar='PATH',
-                        default=install_dirs[path.InstallRoot.libdir],
-                        help=path_help.format('libraries'))
-    parser.add_argument('--includedir', type=Directory(), metavar='PATH',
-                        default=install_dirs[path.InstallRoot.includedir],
-                        help=path_help.format('headers'))
+
+    build = parser.add_argument_group('build arguments')
+    build.add_argument('--backend', metavar='BACKEND',
+                       choices=list(backends.keys()),
+                       default=list(backends.keys())[0],
+                       help=('build backend (one of %(choices)s; default: ' +
+                             '%(default)s)'))
+    build.add_argument('--shared', action='enable', default=True,
+                       help='build shared libraries (default: enabled)')
+    build.add_argument('--static', action='enable', default=False,
+                       help='build static libraries (default: disabled)')
+
+    install = parser.add_argument_group('installation arguments')
+    install.add_argument('--prefix', type=Directory(), metavar='PATH',
+                         default=install_dirs[path.InstallRoot.prefix],
+                         help='installation prefix (default: %(default)r)')
+    install.add_argument('--bindir', type=Directory(), metavar='PATH',
+                         default=install_dirs[path.InstallRoot.bindir],
+                         help=path_help.format('executables'))
+    install.add_argument('--libdir', type=Directory(), metavar='PATH',
+                         default=install_dirs[path.InstallRoot.libdir],
+                         help=path_help.format('libraries'))
+    install.add_argument('--includedir', type=Directory(), metavar='PATH',
+                         default=install_dirs[path.InstallRoot.includedir],
+                         help=path_help.format('headers'))
 
 
 def configure(parser, args, extra):
