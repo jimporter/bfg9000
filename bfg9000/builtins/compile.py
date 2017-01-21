@@ -1,4 +1,5 @@
 import functools
+import warnings
 from collections import defaultdict
 from six import string_types
 
@@ -38,12 +39,18 @@ class ObjectFiles(list):
 
 
 class Compile(Edge):
-    def __init__(self, builtins, build, env, name, include=None, pch=None,
-                 libs=None, packages=None, options=None, lang=None,
+    def __init__(self, builtins, build, env, name, includes=None, include=None,
+                 pch=None, libs=None, packages=None, options=None, lang=None,
                  extra_deps=None):
+        # XXX: Remove this after 0.3 is released.
+        if include is not None:
+            warnings.warn("'include' keyword argument is deprecated; use " +
+                          "'includes' instead")
+            includes = include
+
         self.header_files = []
         self.includes = []
-        for i in iterate(include):
+        for i in iterate(includes):
             if isinstance(i, HeaderFile):
                 self.header_files.append(i)
             self.includes.append(objectify(i, builtins['header_directory']))
@@ -144,9 +151,8 @@ def precompiled_header(builtins, build, env, name=None, file=None, **kwargs):
             raise TypeError('expected name')
         params = [('lang', 'c')]
         return local_file(build, PrecompiledHeader, name, params, **kwargs)
-    else:
-        return CompileHeader(builtins, build, env, name, file,
-                             **kwargs).public_output
+    return CompileHeader(builtins, build, env, name, file,
+                         **kwargs).public_output
 
 
 @builtin.globals('build_inputs')

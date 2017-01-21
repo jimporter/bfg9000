@@ -21,6 +21,7 @@ def package(env, name, lang='c', kind='any', header=None, version=None):
     return env.builder(lang).packages.resolve(name, kind, header, version)
 
 
+# XXX: Remove this after 0.3 is released.
 @builtin.globals('builtins')
 def system_package(builtins, name, lang='c', kind='any', header=None):
     warnings.warn('system_package is deprecated; please use package instead',
@@ -28,6 +29,7 @@ def system_package(builtins, name, lang='c', kind='any', header=None):
     return builtins['package'](name, lang=lang, kind=kind, header=header)
 
 
+# XXX: Remove this after 0.3 is released.
 @builtin.globals('builtins')
 def pkgconfig_package(builtins, name, lang='c', version=None):
     warnings.warn('pkgconfig_package is deprecated; please use package ' +

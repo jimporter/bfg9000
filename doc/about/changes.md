@@ -16,6 +16,7 @@ in progress
 ### Breaking changes
 - `directory()` and `header_directory()` no longer automatically include all
   files within them (pass `include='*'` for the old behavior)
+- The `include` argument for object files has been replaced by `includes`
 - When creating a static library, `link_options` now specifies options that will
   be forwarded along to the dynamic linker, rather than options for the static
   linker itself

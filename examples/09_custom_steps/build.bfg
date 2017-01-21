@@ -24,4 +24,4 @@ goodbye_hdr, goodbye_src = build_step(['goodbye.hpp', 'goodbye.cpp'], cmd=[
     sys.executable, generator, 'goodbye', 'goodbye.hpp', 'goodbye.cpp'
 ], type=[header_file, source_file])
 
-executable('goodbye', files=['main.cpp', goodbye_src], include=[goodbye_hdr])
+executable('goodbye', files=['main.cpp', goodbye_src], includes=[goodbye_hdr])

@@ -143,7 +143,7 @@ file (or a plain string), this function will implicitly call
 
 The following arguments may also be specified:
 
-* *include*: Forwarded on to [*object_file*](#object_file)
+* *includes*: Forwarded on to [*object_file*](#object_file)
 * *pch*: Forwarded on to [*object_file*](#object_file)
 * *libs*: A list of library files (see *shared_library* and *static_library*)
 * *packages*: A list of external [packages](#package-finders); also forwarded on
@@ -211,7 +211,7 @@ without the extension.
 
 The following arguments may also be specified:
 
-* *include*: A list of [directories](#header_directory) to search for header
+* *includes*: A list of [directories](#header_directory) to search for header
   files; you may also pass [header files](#header), and their directories will
   be added to the search list
 * *pch*: A [precompiled header](#precompiled_header) to use during compilation

@@ -43,10 +43,10 @@ def library_version(kwargs):
 
 
 class Link(Edge):
-    def __init__(self, builtins, build, env, name, files=None, include=None,
-                 pch=None, libs=None, packages=None, compile_options=None,
-                 link_options=None, entry_point=None, lang=None,
-                 extra_deps=None):
+    def __init__(self, builtins, build, env, name, files=None, includes=None,
+                 include=None, pch=None, libs=None, packages=None,
+                 compile_options=None, link_options=None, entry_point=None,
+                 lang=None, extra_deps=None):
         self.name = self.__name(name)
 
         self.user_libs = [objectify(i, builtins['library'], lang=lang)
@@ -60,9 +60,10 @@ class Link(Edge):
         self.packages = sum((i.get('packages', []) for i in fwd),
                             self.user_packages)
 
+        # XXX: Remove `include` after 0.3 is released.
         self.user_files = objectify(
             files, builtins['object_files'],
-            include=include, pch=pch, libs=self.user_libs,
+            includes=includes, include=include, pch=pch, libs=self.user_libs,
             packages=self.user_packages, options=compile_options, lang=lang
         )
         self.files = sum(

@@ -12,7 +12,7 @@ include = header_directory('include', include='*.hpp')
 
 lib = shared_library('sub/library', files=['src/library.cpp'],
                      include=[include])
-prog = executable('sub/program', files=['src/program.cpp'], include=[include],
+prog = executable('sub/program', files=['src/program.cpp'], includes=[include],
                   libs=[lib])
 
 install(prog, lib, include)

@@ -50,13 +50,13 @@ via the *include* argument:
 
 ```python
 include_dir = header_directory('include')
-executable('program', files=['src/prog.cpp'], include=[include_dir])
+executable('program', files=['src/prog.cpp'], includes=[include_dir])
 ```
 
 As noted above, you can also simplify this to:
 
 ```python
-executable('program', files='src/prog.cpp', include='include')
+executable('program', files='src/prog.cpp', includes='include')
 ```
 
 Of course, bfg9000 also allows you to place built files in subdirectories as
@@ -209,7 +209,7 @@ directories of headers:
 
 ```python
 include_dir = header_directory('include')
-lib = static_library('program', files=['src/prog.cpp'], include=[include_dir])
+lib = static_library('program', files=['src/prog.cpp'], includes=[include_dir])
 install(lib, include_dir)
 ```
 
