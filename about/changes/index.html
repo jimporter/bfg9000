@@ -141,7 +141,9 @@
 <p class="subtitle">in progress</p>
 <h3 id="new-features">New features<a class="headerlink" href="#new-features" title="Permanent link">§</a></h3>
 <ul>
-<li>Add <code>header</code> argument to <code>system_package()</code> to find header files</li>
+<li>Replace <code>system_package()</code> and <code>pkgconfig_package()</code> with a generic package
+  resolver: <code>package()</code></li>
+<li>Add <code>header</code> argument to <code>package()</code> to find header files</li>
 <li>Support Java/Scala</li>
 <li>Add support for user-defined arguments</li>
 </ul>
@@ -149,6 +151,13 @@
 <ul>
 <li><code>directory()</code> and <code>header_directory()</code> no longer automatically include all
   files within them (pass <code>include='*'</code> for the old behavior)</li>
+<li>When creating a static library, <code>link_options</code> now specifies options that will
+  be forwarded along to the dynamic linker, rather than options for the static
+  linker itself</li>
+</ul>
+<h3 id="bug-fixes">Bug fixes<a class="headerlink" href="#bug-fixes" title="Permanent link">§</a></h3>
+<ul>
+<li>Improved logging of syntax errors in <code>build.bfg</code> files</li>
 </ul>
 <hr />
 <h2 id="v020">v0.2.0<a class="headerlink" href="#v020" title="Permanent link">§</a></h2>
@@ -181,7 +190,7 @@
 <li><code>env.linker(lang, mode)</code> replaced by <code>env.builder(lang).linker(mode)</code></li>
 <li><code>env.compiler(lang).flavor</code> replaced by <code>env.builder(lang).flavor</code></li>
 </ul>
-<h3 id="bug-fixes">Bug fixes<a class="headerlink" href="#bug-fixes" title="Permanent link">§</a></h3>
+<h3 id="bug-fixes_1">Bug fixes<a class="headerlink" href="#bug-fixes_1" title="Permanent link">§</a></h3>
 <ul>
 <li>Fix fetching <code>CFLAGS</code> from the environment (it used to try <code>CCFLAGS</code>)</li>
 <li>Fix execution context of <code>build.bfg</code> files; this caused strange issues with

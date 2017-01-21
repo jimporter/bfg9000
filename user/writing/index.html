@@ -216,15 +216,28 @@ can determine the kind of compiler being used by consulting the build's
 <a href="../reference/#environment">Environment</a> and checking the compiler's
 <a href="../reference/#compiler-flavor"><em>flavor</em></a>.</p>
 <h2 id="building-libraries">Building libraries<a class="headerlink" href="#building-libraries" title="Permanent link">§</a></h2>
-<p>Similar to building executables, you can also build
-<a href="../reference/#shared_library">shared</a> and <a href="../reference/#static_library">static</a>
-libraries. These take the same arguments as above, although static libraries
-have no use for the <em>link_options</em> argument.</p>
-<p>Once you've defined rules to build a library, you can pass it along to an
-executable or other shared library via the <em>libs</em> argument:</p>
+<p>In addition to building executables, you can obviously also build
+<a href="../reference/#library">libraries</a>. This takes the same arguments as an
+executable as described above. Once you've defined how to build your library,
+you can pass it along to an executable or other shared library via the <em>libs</em>
+argument:</p>
+<pre><code class="python">lib = library('library', files=['library.cpp'])
+executable('program', files=['program.cpp'], libs=[lib])
+</code></pre>
+
+<p>By default, this will create a shared library; however, when running bfg9000,
+users can specify what kind of library to build by passing
+<code>--enable-shared</code>/<code>--disable-shared</code> and <code>--enable-static</code>/<code>--disable-static</code> on
+the command line.</p>
+<p>When creating a static library, the <code>link_options</code> argument behaves specially:
+it represents arguments that will be <em>forwarded</em> to the dynamic linker when the
+static lib is used.</p>
+<h3 id="shared-and-static-libraries">Shared and static libraries<a class="headerlink" href="#shared-and-static-libraries" title="Permanent link">§</a></h3>
+<p>Sometimes, you may want to explicitly specify in the build file whether to
+create a <a href="../reference/#shared_library">shared</a> or a
+<a href="../reference/#static_library">static</a> library. This is easy to accomplish:</p>
 <pre><code class="python">shared = shared_library('shared', files=['shared.cpp'])
-static = static_library('shared', files=['static.cpp'])
-executable('program', files=['program.cpp'], libs=[shared, static])
+static = static_library('static', files=['static.cpp'])
 </code></pre>
 
 <h3 id="building-libraries-on-windows">Building libraries on Windows<a class="headerlink" href="#building-libraries-on-windows" title="Permanent link">§</a></h3>
@@ -392,7 +405,7 @@ argument('bar', action='with', help='build the bar module')
 <p>Once these options are defined, you can fetch their results from the built-in
 <a href="../reference/#argv"><em>argv</em></a> global in your <code>build.bfg</code> file. This object is
 simply an <a href="https://docs.python.org/library/argparse.html#argparse.Namespace"><em>argparse.Namespace</em></a> object:</p>
-<pre><code class="python">print('This program's name is {}'.format(argv.name))
+<pre><code class="python">print(&quot;This program's name is {}&quot;.format(argv.name))
 
 if argv.foo:
     pass  # Enable the foo feature
