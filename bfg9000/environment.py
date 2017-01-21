@@ -128,16 +128,15 @@ class Environment(object):
         for i in ['backend', 'extra_args', 'variables']:
             setattr(env, i, data[i])
 
-        setattr(env, 'backend_version', LegacyVersion(data['backend_version']))
-        setattr(env, 'library_mode', LibraryMode(*data['library_mode']))
-
         for i in ('bfgdir', 'srcdir', 'builddir'):
             setattr(env, i, Path.from_json(data[i]))
 
-        env.platform = platforms.platform_info(data['platform'])
+        env.backend_version = LegacyVersion(data['backend_version'])
         env.install_dirs = {
             InstallRoot[k]: Path.from_json(v) for k, v in
             iteritems(data['install_dirs'])
         }
+        env.library_mode = LibraryMode(*data['library_mode'])
+        env.platform = platforms.platform_info(data['platform'])
 
         return env
