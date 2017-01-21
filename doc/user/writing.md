@@ -316,7 +316,7 @@ Once these options are defined, you can fetch their results from the built-in
 simply an [*argparse.Namespace*][namespace] object:
 
 ```python
-print('This program's name is {}'.format(argv.name))
+print("This program's name is {}".format(argv.name))
 
 if argv.foo:
     pass  # Enable the foo feature
