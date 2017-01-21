@@ -4,7 +4,7 @@ from collections import defaultdict
 from itertools import chain
 from six.moves import reduce
 
-from .compile import ObjectFiles
+from .compile import Compile, ObjectFiles
 from .hooks import builtin
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
@@ -67,21 +67,11 @@ class Link(Edge):
              not any(isinstance(i, WholeArchive) for i in self.user_libs) ):
             raise ValueError('need at least one source file')
 
+        self.user_options = pshell.listify(link_options)
+        self.forwarded_options = sum((i.get('options', []) for i in fwd), [])
+
         if entry_point:
             self.entry_point = entry_point
-
-        for c in (i.creator for i in self.files if i.creator):
-            # To handle the different import/export rules for libraries, we
-            # need to provide some LIBFOO_EXPORTS/LIBFOO_STATIC macros so the
-            # build knows how to annotate public API functions in the headers.
-            # XXX: One day, we could pass these as "semantic options" (i.e.
-            # options that are specified like define('FOO') instead of
-            # '-DFOO'). Then the linkers could generate those options in a more
-            # generic way.
-            macro = library_macro(self.name, self.mode)
-            c.add_link_options(
-                self.mode, sum((f.get('defines', []) for f in fwd), macro)
-            )
 
         formats = uniques(i.format for i in chain(self.files, self.libs))
         if len(formats) > 1:
@@ -93,8 +83,20 @@ class Link(Edge):
         ))
         self.linker = self.__find_linker(env, formats[0], self.langs)
 
-        self.user_options = pshell.listify(link_options)
-        self.forwarded_options = sum((i.get('options', []) for i in fwd), [])
+        # To handle the different import/export rules for libraries, we need to
+        # provide some LIBFOO_EXPORTS/LIBFOO_STATIC macros so the build knows
+        # how to annotate public API functions in the headers. XXX: One day, we
+        # could pass these as "semantic options" (i.e. options that are
+        # specified like define('FOO') instead of '-DFOO'). Then the linkers
+        # could generate those options in a more generic way.
+        defines = []
+        if self.linker.has_link_macros:
+            defines = library_macro(self.name, self.mode)
+        defines = sum((f.get('defines', []) for f in fwd), defines)
+
+        for i in self.files:
+            if isinstance(i.creator, Compile):
+                i.creator.add_link_options(self.mode, defines)
 
         if hasattr(self.linker, 'pre_build'):
             self.linker.pre_build(build, self, name)
@@ -143,11 +145,15 @@ class StaticLink(Link):
     def _fill_options(self, env, output):
         primary = first(output)
         primary.forward_args = {
-            'defines': library_macro(self.name, self.mode),
             'options': self.forwarded_options + self.user_options,
             'libs': self.libs,
             'packages': self.packages,
         }
+        if self.linker.has_link_macros:
+            primary.forward_args['defines'] = library_macro(
+                self.name, self.mode
+            )
+
         primary.linktime_deps.extend(self.user_libs)
 
 

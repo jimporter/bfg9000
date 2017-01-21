@@ -102,8 +102,8 @@ class JarMaker(Command):
         return format == 'jvm'
 
     @property
-    def num_outputs(self):
-        return 1
+    def has_link_macros(self):
+        return False
 
     def pre_build(self, build, options, name):
         dirs = uniques(i.path for i in iterate(options.libs))

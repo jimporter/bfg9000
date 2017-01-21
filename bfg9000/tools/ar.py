@@ -29,6 +29,14 @@ class ArLinker(SimpleCommand):
     def can_link(self, format, langs):
         return format == self.env.platform.object_format
 
+    @property
+    def has_link_macros(self):
+        # We only need to define LIBFOO_EXPORTS/LIBFOO_STATIC macros on
+        # platforms that have different import/export rules for libraries. We
+        # approximate this by checking if the platform uses import libraries,
+        # and only define the macros if it does.
+        return self.env.platform.has_import_library
+
     def __call__(self, cmd, input, output, args=None):
         result = [cmd]
         result.extend(iterutils.iterate(args))

@@ -123,12 +123,7 @@ class CcBaseCompiler(Command):
              self.env.platform.flavor != 'windows'):
             args.append('-fPIC')
 
-        # We only need to define LIBFOO_EXPORTS/LIBFOO_STATIC macros on
-        # platforms that have different import/export rules for libraries. We
-        # approximate this by checking if the platform uses import libraries,
-        # and only define the macros if it does.
-        if self.env.platform.has_import_library:
-            args.extend('-D' + i for i in defines)
+        args.extend('-D' + i for i in defines)
         return args
 
 
@@ -231,6 +226,14 @@ class CcLinker(Command):
     def can_link(self, format, langs):
         return (format == self.env.platform.object_format and
                 self.__allowed_langs[self.lang].issuperset(langs))
+
+    @property
+    def has_link_macros(self):
+        # We only need to define LIBFOO_EXPORTS/LIBFOO_STATIC macros on
+        # platforms that have different import/export rules for libraries. We
+        # approximate this by checking if the platform uses import libraries,
+        # and only define the macros if it does.
+        return self.env.platform.has_import_library
 
     @property
     def num_outputs(self):

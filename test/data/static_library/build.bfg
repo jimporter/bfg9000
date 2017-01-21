@@ -1,6 +1,4 @@
 # -*- python -*-
 
-inner = static_library('inner_library', files=['inner_library.cpp'])
-lib = static_library('library', files=['library.cpp'], libs=[inner])
-prog = executable('program', files=['program.cpp'], libs=[lib])
-default(prog, lib)
+lib = static_library('library', files=['library.cpp'])
+executable('program', files=['program.cpp'], libs=[lib])

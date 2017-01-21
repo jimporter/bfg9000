@@ -219,6 +219,10 @@ class MsvcLinker(Command):
                 self.__allowed_langs[self.lang].issuperset(langs))
 
     @property
+    def has_link_macros(self):
+        return True
+
+    @property
     def num_outputs(self):
         return 1
 
@@ -326,6 +330,10 @@ class MsvcStaticLinker(Command):
 
     def can_link(self, format, langs):
         return format == self.env.platform.object_format
+
+    @property
+    def has_link_macros(self):
+        return True
 
     def __call__(self, cmd, input, output, args=None):
         result = [cmd]
