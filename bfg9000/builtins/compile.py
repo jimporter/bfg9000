@@ -38,8 +38,9 @@ class ObjectFiles(list):
 
 
 class Compile(Edge):
-    def __init__(self, builtins, build, env, name, include, pch, libs,
-                 packages, options, lang, extra_deps):
+    def __init__(self, builtins, build, env, name, include=None, pch=None,
+                 libs=None, packages=None, options=None, lang=None,
+                 extra_deps=None):
         self.header_files = []
         self.includes = []
         for i in iterate(include):
@@ -55,11 +56,13 @@ class Compile(Edge):
                          for i in iterate(packages)]
         self.user_options = pshell.listify(options)
 
+        if pch and not self.compiler.accepts_pch:
+            raise TypeError('pch not supported for this compiler')
         self.pch = objectify(
-            pch, builtins['precompiled_header'],
+            pch, builtins['precompiled_header'], allow_none=True,
             file=pch, include=include, packages=self.packages,
             options=self.user_options, lang=lang
-        ) if pch else None
+        )
 
         if hasattr(self.compiler, 'pre_build'):
             self.compiler.pre_build(build, self, name)
@@ -89,34 +92,30 @@ class Compile(Edge):
 
 
 class CompileSource(Compile):
-    def __init__(self, builtins, build, env, name, file, include=None,
-                 pch=None, libs=None, packages=None, options=None, lang=None,
-                 extra_deps=None):
-        self.file = objectify(file, builtins['source_file'], lang=lang)
+    def __init__(self, builtins, build, env, name, file, **kwargs):
+        self.file = objectify(file, builtins['source_file'],
+                              lang=kwargs.get('lang'))
         if name is None:
             name = self.file.path.stripext().suffix
 
         self.compiler = env.builder(self.file.lang).compiler
-        Compile.__init__(self, builtins, build, env, name, include, pch, libs,
-                         packages, options, lang, extra_deps)
+        Compile.__init__(self, builtins, build, env, name, **kwargs)
 
 
 class CompileHeader(Compile):
-    def __init__(self, builtins, build, env, name, file, source=None,
-                 include=None, pch=None, libs=None, packages=None,
-                 options=None, lang=None, extra_deps=None):
-        self.file = objectify(file, builtins['header_file'], lang=lang)
+    def __init__(self, builtins, build, env, name, file, **kwargs):
+        self.file = objectify(file, builtins['header_file'],
+                              lang=kwargs.get('lang'))
         if name is None:
             name = self.file.path.suffix
 
         self.pch_source = objectify(
-            source, builtins['source_file'], allow_none=True,
-            lang=self.file.lang
+            kwargs.pop('source', None), builtins['source_file'],
+            allow_none=True, lang=self.file.lang
         )
 
         self.compiler = env.builder(self.file.lang).pch_compiler
-        Compile.__init__(self, builtins, build, env, name, include, None, libs,
-                         packages, options, lang, extra_deps)
+        Compile.__init__(self, builtins, build, env, name, **kwargs)
 
 
 @builtin.globals('builtins', 'build_inputs', 'env')

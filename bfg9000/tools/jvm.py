@@ -53,12 +53,12 @@ class JvmCompiler(Command):
         return None
 
     @property
-    def num_outputs(self):
-        return 1
-
-    @property
     def depends_on_libs(self):
         return True
+
+    @property
+    def accepts_pch(self):
+        return False
 
     def __call__(self, cmd, input, output, args=None):
         jvmoutput = self.env.tool('jvmoutput')

@@ -132,6 +132,10 @@ class MsvcCompiler(MsvcBaseCompiler):
         MsvcBaseCompiler.__init__(self, env, lang, name, name, command,
                                   cflags_name, cflags)
 
+    @property
+    def accepts_pch(self):
+        return True
+
     def output_file(self, name, options):
         output = ObjectFile(Path(name + '.obj'),
                             self.env.platform.object_format, self.lang)
@@ -148,6 +152,11 @@ class MsvcPchCompiler(MsvcBaseCompiler):
     @property
     def num_outputs(self):
         return 2
+
+    @property
+    def accepts_pch(self):
+        # You can't to pass a PCH to a PCH compiler!
+        return False
 
     def __call__(self, cmd, input, output, deps=None, args=None):
         result = MsvcBaseCompiler.__call__(self, cmd, input, output[1], deps,

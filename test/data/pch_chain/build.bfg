@@ -1,4 +1,0 @@
-# -*- python -*-
-
-pch = precompiled_header(file='header.hpp', pch='private.hpp')
-executable('program', ['program.cpp'], pch=pch)
