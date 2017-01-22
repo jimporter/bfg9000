@@ -49,12 +49,7 @@ def environment_from_args(args, extra_args=None):
         backend_version=backend.version(),
         srcdir=args.srcdir,
         builddir=args.builddir,
-        install_dirs={
-            path.InstallRoot.prefix: args.prefix,
-            path.InstallRoot.bindir: args.bindir,
-            path.InstallRoot.libdir: args.libdir,
-            path.InstallRoot.includedir: args.includedir,
-        },
+        install_dirs={i: getattr(args, i.name) for i in path.InstallRoot},
         library_mode=(args.shared, args.static),
         extra_args=extra_args,
     )
@@ -125,8 +120,6 @@ def add_generic_args(parser):
 
 def add_configure_args(parser):
     backends = list_backends()
-    install_dirs = platform_info().install_dirs
-    path_help = 'installation path for {} (default: %(default)r)'
 
     parser.add_argument('-h', '--help', action=ConfigureHelp,
                         help='show this help message and exit')
@@ -142,19 +135,23 @@ def add_configure_args(parser):
     build.add_argument('--static', action='enable', default=False,
                        help='build static libraries (default: disabled)')
 
+    install_dirs = platform_info().install_dirs
+    common_path_help = 'installation path for {} (default: %(default)r)'
+    path_help = {
+        'prefix': 'installation prefix (default: %(default)r)',
+        'exec_prefix': ('installation prefix for architecture-dependent ' +
+                        'files (default: %(default)r)'),
+        'bindir': common_path_help.format('executables'),
+        'libdir': common_path_help.format('libraries'),
+        'includedir': common_path_help.format('headers'),
+    }
+
     install = parser.add_argument_group('installation arguments')
-    install.add_argument('--prefix', type=Directory(), metavar='PATH',
-                         default=install_dirs[path.InstallRoot.prefix],
-                         help='installation prefix (default: %(default)r)')
-    install.add_argument('--bindir', type=Directory(), metavar='PATH',
-                         default=install_dirs[path.InstallRoot.bindir],
-                         help=path_help.format('executables'))
-    install.add_argument('--libdir', type=Directory(), metavar='PATH',
-                         default=install_dirs[path.InstallRoot.libdir],
-                         help=path_help.format('libraries'))
-    install.add_argument('--includedir', type=Directory(), metavar='PATH',
-                         default=install_dirs[path.InstallRoot.includedir],
-                         help=path_help.format('headers'))
+    for root in path.InstallRoot:
+        name = '--' + root.name.replace('_', '-')
+        install.add_argument(name, type=Directory(), metavar='PATH',
+                             default=install_dirs[root],
+                             help=path_help[root.name])
 
 
 def configure(parser, args, extra):
@@ -203,7 +200,7 @@ def refresh(parser, args, extra):
             msg += ': {}'.format(str(e))
         if isinstance(e, EnvVersionError):
             msg += '\n  Please re-run bfg9000 manually'
-        logger.error(msg)
+        logger.error(msg, exc_info=True)
         return 1
 
 

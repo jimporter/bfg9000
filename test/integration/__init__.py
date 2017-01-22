@@ -10,7 +10,7 @@ from six import iteritems
 
 from bfg9000.backends import list_backends
 from bfg9000.environment import Environment
-from bfg9000.path import InstallRoot, makedirs
+from bfg9000.path import InstallRoot, makedirs, Path, Root
 from bfg9000.platforms import platform_info, platform_name
 
 this_dir = os.path.abspath(os.path.dirname(__file__))
@@ -137,10 +137,12 @@ class IntegrationTest(unittest.TestCase):
                                            srcname + '-install')
             self.extra_args = ['--prefix', self.installdir]
 
-            install_dirs = platform_info().install_dirs
-            path_vars = {InstallRoot.prefix: self.installdir}
+            install_dirs = platform_info().install_dirs.copy()
+            install_dirs[InstallRoot.prefix] = Path(
+                self.installdir, Root.absolute
+            )
             for i in InstallRoot:
-                setattr(self, i.name, install_dirs[i].realize(path_vars))
+                setattr(self, i.name, install_dirs[i].string(install_dirs))
         else:
             self.installdir = None
 

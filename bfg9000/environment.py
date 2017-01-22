@@ -18,7 +18,7 @@ class EnvVersionError(RuntimeError):
 
 
 class Environment(object):
-    version = 9
+    version = 10
     envfile = '.bfg_environ'
 
     def __new__(cls, *args, **kwargs):
@@ -87,7 +87,7 @@ class Environment(object):
             }, out)
 
     @classmethod
-    def load(cls, path):
+    def load(cls, path, save_on_upgrade=True):
         with open(os.path.join(path, cls.envfile)) as inp:
             state = json.load(inp)
             version, data = state['version'], state['data']
@@ -122,10 +122,17 @@ class Environment(object):
         if version < 9:
             data['library_mode'] = [True, False]
 
+        # v10 adds exec_prefix to install_dirs.
+        if version < 10:
+            data['install_dirs']['exec_prefix'] = ['', 'prefix']
+            for i in ('bindir', 'libdir'):
+                if data['install_dirs'][i][1] == 'prefix':
+                    data['install_dirs'][i][1] = 'exec_prefix'
+
         # Now that we've upgraded, initialize the Environment object.
         env = Environment.__new__(Environment)
 
-        for i in ['backend', 'extra_args', 'variables']:
+        for i in ('backend', 'extra_args', 'variables'):
             setattr(env, i, data[i])
 
         for i in ('bfgdir', 'srcdir', 'builddir'):
@@ -138,5 +145,8 @@ class Environment(object):
         }
         env.library_mode = LibraryMode(*data['library_mode'])
         env.platform = platforms.platform_info(data['platform'])
+
+        if save_on_upgrade and version < cls.version:
+            env.save(path)
 
         return env

@@ -64,10 +64,11 @@ class PosixPlatform(Platform):
     @property
     def install_dirs(self):
         return {
-            InstallRoot.prefix:     Path('/usr/local', Root.absolute),
-            InstallRoot.bindir:     Path('bin', InstallRoot.prefix),
-            InstallRoot.libdir:     Path('lib', InstallRoot.prefix),
-            InstallRoot.includedir: Path('include', InstallRoot.prefix),
+            InstallRoot.prefix:      Path('/usr/local', Root.absolute),
+            InstallRoot.exec_prefix: Path('', InstallRoot.prefix),
+            InstallRoot.bindir:      Path('bin', InstallRoot.exec_prefix),
+            InstallRoot.libdir:      Path('lib', InstallRoot.exec_prefix),
+            InstallRoot.includedir:  Path('include', InstallRoot.prefix),
         }
 
 
@@ -151,10 +152,11 @@ class WindowsPlatform(Platform):
     @property
     def install_dirs(self):
         return {
-            InstallRoot.prefix:     None,
-            InstallRoot.bindir:     Path('', InstallRoot.prefix),
-            InstallRoot.libdir:     Path('', InstallRoot.prefix),
-            InstallRoot.includedir: Path('', InstallRoot.prefix),
+            InstallRoot.prefix:      None,
+            InstallRoot.exec_prefix: Path('', InstallRoot.prefix),
+            InstallRoot.bindir:      Path('', InstallRoot.exec_prefix),
+            InstallRoot.libdir:      Path('', InstallRoot.exec_prefix),
+            InstallRoot.includedir:  Path('', InstallRoot.prefix),
         }
 
 

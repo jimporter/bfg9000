@@ -12,7 +12,8 @@ from . import shell
 
 
 Root = Enum('Root', ['srcdir', 'builddir', 'absolute'])
-InstallRoot = Enum('InstallRoot', ['prefix', 'bindir', 'libdir', 'includedir'])
+InstallRoot = Enum('InstallRoot', ['prefix', 'exec_prefix', 'bindir', 'libdir',
+                                   'includedir'])
 
 
 class Path(safe_str.safe_string):
