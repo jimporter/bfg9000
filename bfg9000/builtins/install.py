@@ -1,4 +1,6 @@
+import warnings
 from itertools import chain
+from six import itervalues
 from six.moves import filter as ifilter
 
 from .hooks import builtin
@@ -31,17 +33,28 @@ class InstallOutputs(object):
         return iter(self._outputs)
 
 
-@builtin.globals('builtins', 'build_inputs')
-def install(builtins, build, *args):
+def _can_install(env):
+    return all(i is not None for i in itervalues(env.install_dirs))
+
+
+@builtin.globals('builtins', 'build_inputs', 'env')
+def install(builtins, build, env, *args):
     if len(args) == 0:
         raise ValueError('expected at least one argument')
+
+    can_install = _can_install(env)
+    if not can_install:
+        warnings.warn('unset installation directories; installation of this ' +
+                      'build disabled')
+
     for i in args:
         if not isinstance(i, File):
             raise TypeError('expected a file or directory')
         if i.external:
             raise ValueError('external files are not installable')
 
-        build['install'].add(i)
+        if can_install:
+            build['install'].add(i)
         builtins['default'](i)
 
 

@@ -76,8 +76,8 @@ class Environment(object):
                     'srcdir': self.srcdir.to_json(),
                     'builddir': self.builddir.to_json(),
                     'install_dirs': {
-                        k.name: v.to_json() for k, v in
-                        iteritems(self.install_dirs)
+                        k.name: v.to_json() if v else None
+                        for k, v in iteritems(self.install_dirs)
                     },
                     'library_mode': self.library_mode,
                     'extra_args': self.extra_args,
@@ -133,8 +133,8 @@ class Environment(object):
 
         env.backend_version = LegacyVersion(data['backend_version'])
         env.install_dirs = {
-            InstallRoot[k]: Path.from_json(v) for k, v in
-            iteritems(data['install_dirs'])
+            InstallRoot[k]: Path.from_json(v) if v else None
+            for k, v in iteritems(data['install_dirs'])
         }
         env.library_mode = LibraryMode(*data['library_mode'])
         env.platform = platforms.platform_info(data['platform'])
