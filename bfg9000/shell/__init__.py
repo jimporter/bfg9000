@@ -20,10 +20,10 @@ def execute(args, shell=False, env=None, quiet=False):
     if quiet:
         stderr = open(os.devnull, 'wb')
     try:
-        return subprocess.check_output(
+        result = subprocess.check_output(
             args, universal_newlines=True, shell=shell, env=env, stderr=stderr
         )
-    except:
+    finally:
         if quiet:
             stderr.close()
-        raise
+    return result
