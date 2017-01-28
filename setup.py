@@ -114,7 +114,7 @@ setup(
     packages=find_packages(exclude=['test', 'test.*']),
 
     install_requires=(
-        ['colorama', 'packaging', 'setuptools >= 34.0.2', 'six'] +
+        ['colorama', 'packaging', 'setuptools', 'six'] +
         more_requires
     ),
     extras_require={
