@@ -1,11 +1,11 @@
 import os
 import subprocess
-from packaging.version import LegacyVersion
 
 from ... import iterutils
 from ... import path
 from ... import shell
 from .syntax import *
+from ...versioning import Version
 
 
 def version(env=os.environ):
@@ -14,7 +14,7 @@ def version(env=os.environ):
                            env, first_word=True)
         output = shell.execute('{} --version'.format(ninja),
                                shell=True, quiet=True)
-        return LegacyVersion(output.strip())
+        return Version(output.strip())
     except IOError:
         pass
     return None
@@ -85,8 +85,7 @@ def command_build(buildfile, env, output, inputs=None, implicit=None,
             # XXX: Can't use SpecifierSet here yet, since those don't work well
             # with LegacyVersions.
             extra_kwargs = {}
-            if ( env.backend_version and
-                 env.backend_version >= LegacyVersion('1.5') ):
+            if env.backend_version and env.backend_version >= Version('1.5'):
                 extra_kwargs['pool'] = 'console'
             buildfile.rule(name='console_command', command=[[var('cmd')]],
                            **extra_kwargs)

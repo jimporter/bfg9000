@@ -5,7 +5,7 @@ import sys
 from setuptools import setup, find_packages, Command
 
 from bfg9000.platform_name import platform_name
-from bfg9000.version import version
+from bfg9000.app_version import version
 
 
 class DocServe(Command):

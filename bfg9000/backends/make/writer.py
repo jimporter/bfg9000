@@ -1,12 +1,12 @@
 import os
 import re
 import subprocess
-from packaging.version import LegacyVersion
 
 from ... import path
 from ... import shell
 from .syntax import *
 from ...iterutils import listify
+from ...versioning import Version
 
 
 def version(env=os.environ):
@@ -17,7 +17,7 @@ def version(env=os.environ):
                                shell=True, quiet=True)
         m = re.match(r'GNU Make ([\d\.]+)', output)
         if m:
-            return LegacyVersion(m.group(1))
+            return Version(m.group(1))
     except IOError:
         pass
     return None

@@ -2,7 +2,6 @@ import re
 from collections import namedtuple, OrderedDict
 from enum import Enum
 from itertools import chain
-from packaging.version import LegacyVersion
 from six import iteritems, string_types
 from six.moves import cStringIO as StringIO
 
@@ -11,6 +10,7 @@ from ... import safe_str
 from ... import shell
 from ... import iterutils
 from ...platforms import platform_name
+from ...versioning import Version
 
 __all__ = ['NinjaFile', 'Section', 'Syntax', 'Writer', 'Variable', 'var',
            'Commands', 'path_vars']
@@ -180,8 +180,8 @@ class NinjaFile(object):
         self._defaults = []
 
     def min_version(self, version):
-        if ( self._min_version is None or
-             LegacyVersion(version) > LegacyVersion(self._min_version) ):
+        version = Version(version)
+        if self._min_version is None or version > self._min_version:
             self._min_version = version
 
     def variable(self, name, value, section=Section.other, exist_ok=True):
@@ -289,7 +289,7 @@ class NinjaFile(object):
 
         if self._min_version:
             self._write_variable(
-                out, var('ninja_required_version'), self._min_version
+                out, var('ninja_required_version'), str(self._min_version)
             )
             out.write_literal('\n')
 

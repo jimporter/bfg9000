@@ -4,11 +4,11 @@ import warnings
 
 from .hooks import builtin
 from .find import find
-from ..file_types import Executable, Package
+from ..file_types import Executable, objectify, Package
 from ..iterutils import iterate, listify
 from ..tools.utils import SystemPackage
 from ..path import Path, Root, which
-from ..versionutils import check_version, make_specifier, Version
+from ..versioning import check_version, SpecifierSet, Version
 
 
 @builtin.globals('env')
@@ -16,7 +16,7 @@ from ..versionutils import check_version, make_specifier, Version
 def package(env, name, lang='c', kind='any', header=None, version=None):
     if kind not in ('any', 'shared', 'static'):
         raise ValueError("kind must be one of 'any', 'shared', or 'static'")
-    version = make_specifier(version)
+    version = objectify(version, SpecifierSet, allow_none=True)
 
     return env.builder(lang).packages.resolve(name, kind, header, version)
 
@@ -62,7 +62,7 @@ def _boost_version(header, required_version=None):
 # like the package() function above.
 @builtin.globals('env')
 def boost_package(env, name=None, version=None):
-    version = make_specifier(version)
+    version = objectify(version, SpecifierSet, allow_none=True)
     pkg = env.builder('c++').packages
     version_hpp = 'boost/version.hpp'
 

@@ -4,7 +4,7 @@ from .hooks import tool
 from .utils import SimpleCommand
 from .. import shell
 from ..file_types import Package
-from ..versionutils import check_version, Version
+from ..versioning import check_version, Version
 
 
 @tool('pkg_config')

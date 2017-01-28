@@ -3,7 +3,7 @@ import subprocess
 import sys
 
 from .arguments import parser as argparse
-from .version import version
+from .app_version import version
 
 
 def main():

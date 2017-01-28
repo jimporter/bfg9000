@@ -2,13 +2,13 @@ import json
 import os
 import warnings
 from collections import namedtuple
-from packaging.version import LegacyVersion
 from six import iteritems
 
-from .backends import list_backends
-from .path import InstallRoot, Path, Root
 from . import platforms
 from . import tools
+from .backends import list_backends
+from .path import InstallRoot, Path, Root
+from .versioning import Version
 
 LibraryMode = namedtuple('LibraryMode', ['shared', 'static'])
 
@@ -138,7 +138,7 @@ class Environment(object):
         for i in ('bfgdir', 'srcdir', 'builddir'):
             setattr(env, i, Path.from_json(data[i]))
 
-        env.backend_version = LegacyVersion(data['backend_version'])
+        env.backend_version = Version(data['backend_version'])
         env.install_dirs = {
             InstallRoot[k]: Path.from_json(v) if v else None
             for k, v in iteritems(data['install_dirs'])
