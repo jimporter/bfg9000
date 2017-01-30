@@ -168,10 +168,7 @@ class DynamicLink(Link):
 
     @staticmethod
     def __get_runtime_deps(lib):
-        extra = []
-        if isinstance(lib, SharedLibrary) and not isinstance(lib, LinkLibrary):
-            extra = [lib]
-        return lib.runtime_deps + extra
+        return listify(lib.runtime_file) + lib.runtime_deps
 
 
 class SharedLink(DynamicLink):

@@ -71,12 +71,10 @@ class File(Node):
         Node.__init__(self, path)
         self.external = external
         self.post_install = None
-        self.runtime_deps = []
-        self.linktime_deps = []
 
     @property
     def install_deps(self):
-        return self.runtime_deps + self.linktime_deps
+        return []
 
 
 class Directory(File):
@@ -124,6 +122,7 @@ class HeaderDirectory(Directory):
 
 class Binary(File):
     install_kind = 'program'
+    install_root = _InstallRoot.libdir
 
     def __init__(self, path, format, external=False):
         File.__init__(self, path, external)
@@ -142,12 +141,27 @@ class JvmClassList(ObjectFile):
     pass
 
 
-class Executable(Binary):
+# This is sort of a misnomer. It's really just "a binary that is not an object
+# file", even though it's not necessarily been linked.
+class LinkedBinary(Binary):
+    def __init__(self, *args, **kwargs):
+        Binary.__init__(self, *args, **kwargs)
+        self.runtime_deps = []
+        self.linktime_deps = []
+
+    @property
+    def install_deps(self):
+        return self.runtime_deps + self.linktime_deps
+
+
+class Executable(LinkedBinary):
     install_root = _InstallRoot.bindir
 
 
-class Library(Binary):
-    install_root = _InstallRoot.libdir
+class Library(LinkedBinary):
+    @property
+    def runtime_file(self):
+        return None
 
 
 # This is used for JVM binaries, which can be both executables and libraries.
@@ -175,13 +189,20 @@ class WholeArchive(StaticLibrary):
 
 
 class SharedLibrary(Library):
-    pass
+    @property
+    def runtime_file(self):
+        return self
 
 
 class LinkLibrary(SharedLibrary):
     def __init__(self, path, library, external=False):
         SharedLibrary.__init__(self, path, library.format, external)
-        self.runtime_deps = [library]
+        self.library = library
+        self.linktime_deps = [library]
+
+    @property
+    def runtime_file(self):
+        return self.library
 
 
 class VersionedSharedLibrary(SharedLibrary):
