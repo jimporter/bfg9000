@@ -1,4 +1,8 @@
 # -*- python -*-
 
-lib = shared_library('library', files=['library.cpp'])
-executable('program', files=['program.cpp'], libs=[lib])
+inner = shared_library('inner/inner', files=['inner.cpp'])
+middle = shared_library('middle/middle', files=['middle.cpp'], libs=[inner])
+outer = shared_library('outer/outer', files=['outer.cpp'], libs=[middle])
+prog = executable('program', files=['program.cpp'], libs=[outer])
+
+install(prog)

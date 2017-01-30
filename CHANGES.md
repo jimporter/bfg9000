@@ -21,6 +21,7 @@
 
 ### Bug fixes
 - Improved logging of syntax errors in `build.bfg` files
+- Fixed usage of nested shared libraries on Linux (via `-rpath-link`)
 
 ---
 

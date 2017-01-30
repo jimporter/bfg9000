@@ -63,4 +63,4 @@ def check_which(names, env=os.environ, kind='executable'):
 
 
 def darwin_install_name(library):
-    return os.path.join('@rpath', library.path.basename())
+    return os.path.join('@rpath', library.path.suffix)

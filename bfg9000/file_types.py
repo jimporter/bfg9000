@@ -249,3 +249,7 @@ class Package(object):
 class Framework(object):
     def __init__(self, name):
         self.name = name
+
+    @property
+    def runtime_file(self):
+        None

@@ -162,13 +162,9 @@ class DynamicLink(Link):
             self.linker.libs(self, output)
         )
 
-        first(output).runtime_deps.extend(chain.from_iterable(
-            self.__get_runtime_deps(i) for i in self.libs
-        ))
-
-    @staticmethod
-    def __get_runtime_deps(lib):
-        return listify(lib.runtime_file) + lib.runtime_deps
+        first(output).runtime_deps.extend(
+            i.runtime_file for i in self.libs if i.runtime_file
+        )
 
 
 class SharedLink(DynamicLink):

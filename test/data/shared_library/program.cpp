@@ -1,6 +1,6 @@
-#include "library.hpp"
+#include "outer.hpp"
 
 int main() {
-  hello();
+  outer::hello();
   return 0;
 }

@@ -12,6 +12,7 @@ class InstallNameTool(SimpleCommand):
                                'install_name_tool')
 
     def __call__(self, cmd, file, libraries):
+        # XXX: Delete the rpath for `file` too?
         def change(lib):
             return ['-change', darwin_install_name(lib),
                     install_path(lib.path, lib.install_root)]

@@ -209,15 +209,15 @@ class IntegrationTest(unittest.TestCase):
     def wait(self, t=1):
         time.sleep(t)
 
-    def assertPopen(self, args, env=None, env_update=True):
+    def assertPopen(self, command, env=None, env_update=True):
         if env is not None and env_update:
             overrides = env
             env = dict(os.environ)
             env.update(overrides)
 
-        args = [self.target_path(i) for i in args]
+        command = [self.target_path(i) for i in command]
         proc = subprocess.Popen(
-            args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+            command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
             env=env, universal_newlines=True
         )
         output = proc.communicate()[0]
@@ -225,11 +225,8 @@ class IntegrationTest(unittest.TestCase):
             raise SubprocessError(output)
         return output
 
-    def assertOutput(self, args, output):
-        args = [self.target_path(i) for i in args]
-        self.assertEqual(subprocess.check_output(
-            args, stderr=subprocess.STDOUT, universal_newlines=True
-        ), output)
+    def assertOutput(self, command, output, *args, **kwargs):
+        self.assertEqual(self.assertPopen(command, *args, **kwargs), output)
 
     def assertExists(self, path):
         realpath = self.target_path(path)

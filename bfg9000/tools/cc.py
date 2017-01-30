@@ -5,6 +5,7 @@ from itertools import chain
 from six.moves import filter as ifilter
 
 from . import pkg_config
+from .. import safe_str
 from .. import shell
 from .ar import ArLinker
 from .utils import Command, darwin_install_name, SystemPackage
@@ -12,6 +13,14 @@ from ..builtins.symlink import Symlink
 from ..file_types import *
 from ..iterutils import first, iterate, uniques
 from ..path import Path, Root
+
+
+def recursive_deps(lib):
+    for i in lib.runtime_deps:
+        yield i
+        for i in lib.runtime_deps:
+            for j in recursive_deps(i):
+                yield j
 
 
 class CcBuilder(object):
@@ -276,22 +285,31 @@ class CcLinker(Command):
         if not self.env.platform.has_rpath:
             return []
 
-        start = output.path.parent()
-        paths = uniques(i.path.parent().relpath(start) for i in libraries
-                        if isinstance(i, SharedLibrary))
-        if not paths:
+        runtime_libs = [i.runtime_file for i in libraries if i.runtime_file]
+        if not runtime_libs:
             return []
 
         if output.format == 'elf':
+            start = output.path.parent()
+            paths = uniques(i.path.parent().relpath(start)
+                            for i in runtime_libs)
+            dep_paths = uniques(i.path.parent() for i in chain.from_iterable(
+                recursive_deps(i) for i in runtime_libs
+            ))
+
             base = '$ORIGIN'
-            return ['-Wl,-rpath,{}'.format(':'.join(
+            rpaths = ['-Wl,-rpath,{}'.format(':'.join(
                 base if i == '.' else os.path.join(base, i) for i in paths
             ))]
+            rpath_links = (['-Wl,-rpath-link,' + safe_str.join(dep_paths, ':')]
+                           if dep_paths else [])
+
+            return rpaths + rpath_links
         elif output.format == 'mach-o':
             base = '@executable_path'
-            return ( ['-Wl,-headerpad_max_install_names'] +
-                     ['-Wl,-rpath,{}'.format(os.path.join(base, i))
-                      for i in paths] )
+            path = Path('.').relpath(output.path.parent())
+            return ['-Wl,-headerpad_max_install_names', '-Wl,-rpath,' +
+                    (base if path == '.' else os.path.join(base, path))]
         else:
             raise ValueError('unrecognized object format "{}"'
                              .format(output.format))
