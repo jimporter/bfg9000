@@ -12,7 +12,9 @@ class DefaultOutputs(object):
 
     def add(self, output, explicit=False):
         outputs = self.default_outputs if explicit else self.fallback_defaults
-        outputs.append(output)
+        for i in output.all:
+            if i.creator:
+                outputs.append(i)
 
     def remove(self, output):
         for i, fallback in enumerate(self.fallback_defaults):
@@ -27,9 +29,7 @@ class DefaultOutputs(object):
 @builtin.globals('build_inputs')
 def default(build, *args):
     for i in args:
-        for j in i.all:
-            if j.creator:
-                build['defaults'].add(j, explicit=True)
+        build['defaults'].add(i, explicit=True)
 
 
 @make.pre_rule

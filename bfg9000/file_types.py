@@ -74,6 +74,10 @@ class File(Node):
         self.runtime_deps = []
         self.linktime_deps = []
 
+    @property
+    def install_deps(self):
+        return self.runtime_deps + self.linktime_deps
+
 
 class Directory(File):
     def __init__(self, path, files=None, external=False):

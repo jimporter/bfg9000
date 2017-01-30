@@ -17,11 +17,17 @@ class InstallOutputs(object):
         self._outputs = []
 
     def add(self, item):
-        if item not in self._outputs:
-            self._outputs.append(item)
+        for i in item.all:
+            if i not in self._outputs:
+                if not isinstance(i, File):
+                    raise TypeError('expected a file or directory')
+                if i.external:
+                    raise ValueError('external files are not installable')
 
-        for i in chain(item.runtime_deps, item.linktime_deps):
-            self.add(i)
+                self._outputs.append(i)
+
+            for j in i.install_deps:
+                self.add(j)
 
     def __nonzero__(self):
         return self.__bool__()
@@ -48,11 +54,6 @@ def install(builtins, build, env, *args):
                       'build disabled')
 
     for i in args:
-        if not isinstance(i, File):
-            raise TypeError('expected a file or directory')
-        if i.external:
-            raise ValueError('external files are not installable')
-
         if can_install:
             build['install'].add(i)
         builtins['default'](i)
