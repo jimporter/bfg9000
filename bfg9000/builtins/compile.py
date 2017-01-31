@@ -1,4 +1,3 @@
-import functools
 import warnings
 from collections import defaultdict
 from six import string_types
@@ -18,10 +17,8 @@ build_input('compile_options')(lambda build_inputs, env: defaultdict(list))
 
 class ObjectFiles(list):
     def __init__(self, builtins, build, env, files, **kwargs):
-        bound = functools.partial(builtins['object_file'], None)
-        list.__init__(self, (objectify(
-            i, ObjectFile, bound, in_type=(string_types, SourceFile), **kwargs
-        ) for i in iterate(files)))
+        list.__init__(self, (builtins['_make_object_file'](i, **kwargs)
+                             for i in iterate(files)))
 
     def __getitem__(self, key):
         if isinstance(key, string_types):
@@ -53,23 +50,20 @@ class Compile(Edge):
         for i in iterate(includes):
             if isinstance(i, HeaderFile):
                 self.header_files.append(i)
-            self.includes.append(objectify(i, builtins['header_directory']))
+            self.includes.append(builtins['header_directory'](i))
 
         # XXX: Handle forward_args from libs?
-        self.libs = [objectify(i, builtins['library'], lang=lang)
-                     for i in iterate(libs)]
+        self.libs = [builtins['library'](i, lang=lang) for i in iterate(libs)]
 
-        self.packages = [objectify(i, builtins['package'])
-                         for i in iterate(packages)]
+        self.packages = [builtins['package'](i) for i in iterate(packages)]
         self.user_options = pshell.listify(options)
 
         if pch and not self.compiler.accepts_pch:
             raise TypeError('pch not supported for this compiler')
-        self.pch = objectify(
-            pch, builtins['precompiled_header'], allow_none=True,
-            file=pch, include=include, packages=self.packages,
+        self.pch = builtins['precompiled_header'](
+            pch, file=pch, include=include, packages=self.packages,
             options=self.user_options, lang=lang
-        )
+        ) if pch else None
 
         if hasattr(self.compiler, 'pre_build'):
             self.compiler.pre_build(build, self, name)
@@ -100,8 +94,7 @@ class Compile(Edge):
 
 class CompileSource(Compile):
     def __init__(self, builtins, build, env, name, file, **kwargs):
-        self.file = objectify(file, builtins['source_file'],
-                              lang=kwargs.get('lang'))
+        self.file = builtins['source_file'](file, lang=kwargs.get('lang'))
         if name is None:
             name = self.file.path.stripext().suffix
 
@@ -111,22 +104,21 @@ class CompileSource(Compile):
 
 class CompileHeader(Compile):
     def __init__(self, builtins, build, env, name, file, **kwargs):
-        self.file = objectify(file, builtins['header_file'],
-                              lang=kwargs.get('lang'))
+        self.file = builtins['header_file'](file, lang=kwargs.get('lang'))
         if name is None:
             name = self.file.path.suffix
 
-        self.pch_source = objectify(
-            kwargs.pop('source', None), builtins['source_file'],
-            allow_none=True, lang=self.file.lang
-        )
+        source = kwargs.pop('source', None)
+        self.pch_source = builtins['source_file'](
+            source, lang=self.file.lang
+        ) if source else None
 
         self.compiler = env.builder(self.file.lang).pch_compiler
         Compile.__init__(self, builtins, build, env, name, **kwargs)
 
 
 @builtin.globals('builtins', 'build_inputs', 'env')
-@builtin.type(ObjectFile)
+@builtin.type(ObjectFile, in_type=(string_types, type(None)))
 def object_file(builtins, build, env, name=None, file=None, **kwargs):
     if file is None:
         if name is None:
@@ -138,13 +130,20 @@ def object_file(builtins, build, env, name=None, file=None, **kwargs):
 
 
 @builtin.globals('builtins', 'build_inputs', 'env')
+@builtin.type(ObjectFile, in_type=(string_types, SourceFile))
+def _make_object_file(builtins, build, env, file, **kwargs):
+    return CompileSource(builtins, build, env, None, file,
+                         **kwargs).public_output
+
+
+@builtin.globals('builtins', 'build_inputs', 'env')
 @builtin.type(ObjectFiles, in_type=object)
 def object_files(builtins, build, env, files, **kwargs):
     return ObjectFiles(builtins, build, env, files, **kwargs)
 
 
 @builtin.globals('builtins', 'build_inputs', 'env')
-@builtin.type(PrecompiledHeader)
+@builtin.type(PrecompiledHeader, in_type=(string_types, type(None)))
 def precompiled_header(builtins, build, env, name=None, file=None, **kwargs):
     if file is None:
         if name is None:

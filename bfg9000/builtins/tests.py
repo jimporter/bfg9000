@@ -7,7 +7,7 @@ from .. import shell
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..build_inputs import build_input
-from ..file_types import Executable, File, objectify
+from ..file_types import Executable, File
 from ..shell import posix as pshell
 
 
@@ -46,7 +46,7 @@ def test(builtins, build, test, options=None, environment=None, driver=None):
         raise TypeError('only one of "driver" and "environment" may be ' +
                         'specified')
 
-    test = objectify(test, builtins['generic_file'])
+    test = builtins['generic_file'](test)
     build['tests'].inputs.append(test)
     build['defaults'].remove(test)
 
@@ -62,7 +62,7 @@ def test_driver(builtins, build, env, driver, options=None, environment=None,
         raise TypeError('only one of "parent" and "environment" may be ' +
                         'specified')
 
-    driver = objectify(driver, builtins['system_executable'])
+    driver = builtins['system_executable'](driver)
     result = TestDriver(driver, pshell.listify(options), environment or {})
     (parent or build['tests']).tests.append(result)
     return result

@@ -1,6 +1,6 @@
 import unittest
 
-from bfg9000.file_types import objectify
+from bfg9000.build_inputs import objectify
 
 
 class TestObjectify(unittest.TestCase):

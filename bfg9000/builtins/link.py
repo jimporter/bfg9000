@@ -2,6 +2,7 @@ import os.path
 import re
 from collections import defaultdict
 from itertools import chain
+from six import string_types
 from six.moves import reduce
 
 from .compile import Compile, ObjectFiles
@@ -49,22 +50,22 @@ class Link(Edge):
                  lang=None, extra_deps=None):
         self.name = self.__name(name)
 
-        self.user_libs = [objectify(i, builtins['library'], lang=lang)
+        self.user_libs = [builtins['library'](i, lang=lang)
                           for i in iterate(libs)]
         fwd = [i.forward_args for i in self.user_libs
                if hasattr(i, 'forward_args')]
         self.libs = sum((i.get('libs', []) for i in fwd), self.user_libs)
 
-        self.user_packages = [objectify(i, builtins['package'])
+        self.user_packages = [builtins['package'](i)
                               for i in iterate(packages)]
         self.packages = sum((i.get('packages', []) for i in fwd),
                             self.user_packages)
 
         # XXX: Remove `include` after 0.3 is released.
-        self.user_files = objectify(
-            files, builtins['object_files'],
-            includes=includes, include=include, pch=pch, libs=self.user_libs,
-            packages=self.user_packages, options=compile_options, lang=lang
+        self.user_files = builtins['object_files'](
+            files, includes=includes, include=include, pch=pch,
+            libs=self.user_libs, packages=self.user_packages,
+            options=compile_options, lang=lang
         )
         self.files = sum(
             (getattr(i, 'extra_objects', []) for i in self.user_files),
@@ -221,8 +222,13 @@ def executable(builtins, build, env, name, files=None, **kwargs):
 
 
 @builtin.globals('builtins', 'build_inputs', 'env')
-@builtin.type(SharedLibrary)
+@builtin.type(SharedLibrary, in_type=(string_types, DualUseLibrary))
 def shared_library(builtins, build, env, name, files=None, **kwargs):
+    if isinstance(name, DualUseLibrary):
+        if files is not None or not set(kwargs.keys()) <= {'format'}:
+            raise TypeError('unexpected arguments')
+        return name.shared
+
     if files is None and 'libs' not in kwargs:
         # XXX: What to do for pre-built shared libraries for Windows, which has
         # a separate DLL file?
@@ -233,8 +239,13 @@ def shared_library(builtins, build, env, name, files=None, **kwargs):
 
 
 @builtin.globals('builtins', 'build_inputs', 'env')
-@builtin.type(StaticLibrary)
+@builtin.type(StaticLibrary, in_type=(string_types, DualUseLibrary))
 def static_library(builtins, build, env, name, files=None, **kwargs):
+    if isinstance(name, DualUseLibrary):
+        if files is not None or not set(kwargs.keys()) <= {'format', 'lang'}:
+            raise TypeError('unexpected arguments')
+        return name.static
+
     if files is None and 'libs' not in kwargs:
         params = [('format', env.platform.object_format), ('lang', 'c')]
         return local_file(build, StaticLibrary, name, params, **kwargs)
@@ -270,7 +281,7 @@ def library(builtins, build, env, name, files=None, **kwargs):
 
 
 @builtin.globals('builtins')
-@builtin.type(WholeArchive)
+@builtin.type(WholeArchive, in_type=(string_types, StaticLibrary))
 def whole_archive(builtins, name, *args, **kwargs):
     if isinstance(name, StaticLibrary):
         if len(args) or len(kwargs):

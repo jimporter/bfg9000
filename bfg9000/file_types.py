@@ -1,36 +1,7 @@
-from six import string_types as _string_types
-
 from .iterutils import listify as _listify
 from .languages import src2lang as _src2lang, hdr2lang as _hdr2lang
 from .path import InstallRoot as _InstallRoot
 from .safe_str import safe_str as _safe_str
-
-
-def objectify(thing, valid_type, creator=None, in_type=None, allow_none=False,
-              **kwargs):
-    if allow_none and thing is None:
-        return None
-
-    if creator is None:
-        if hasattr(valid_type, 'type'):
-            creator = valid_type
-            valid_type = valid_type.type
-        else:
-            creator = valid_type
-
-    if in_type is None:
-        if hasattr(creator, 'in_type'):
-            in_type = creator.in_type
-        else:
-            in_type = _string_types
-
-    if isinstance(thing, valid_type):
-        return thing
-    elif not isinstance(thing, in_type):
-        raise TypeError('expected a {} or a {}'.format(valid_type, in_type))
-    else:
-        # XXX: Come up with a way to provide args to prepend?
-        return creator(thing, **kwargs)
 
 
 class Node(object):

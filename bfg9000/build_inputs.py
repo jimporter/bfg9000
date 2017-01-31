@@ -2,8 +2,8 @@ from collections import OrderedDict
 from six import iteritems, itervalues
 
 from .path import Path, Root
-from .file_types import File, Node, objectify
-from .iterutils import iterate, listify, unlistify
+from .file_types import File, Node
+from .iterutils import iterate, listify, objectify, unlistify
 
 _build_inputs = {}
 
