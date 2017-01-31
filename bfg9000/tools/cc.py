@@ -306,7 +306,7 @@ class CcLinker(Command):
 
             return rpaths + rpath_links
         elif output.format == 'mach-o':
-            base = '@executable_path'
+            base = '@loader_path'
             path = Path('.').relpath(output.path.parent())
             return ['-Wl,-headerpad_max_install_names', '-Wl,-rpath,' +
                     (base if path == '.' else os.path.join(base, path))]
