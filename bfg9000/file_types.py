@@ -4,6 +4,19 @@ from .path import InstallRoot as _InstallRoot
 from .safe_str import safe_str as _safe_str
 
 
+class forward_property(object):
+    def __init__(self, fget=None):
+        self.fget = fget
+
+    def __get__(self, obj, objtype=None):
+        if obj is None:
+            return self
+        return self.fget(obj)
+
+    def __set__(self, obj, value):
+        pass
+
+
 class Node(object):
     private = False
 
@@ -142,23 +155,6 @@ class ExecutableLibrary(Executable, Library):
     install_root = _InstallRoot.bindir
 
 
-class StaticLibrary(Library):
-    def __init__(self, path, format, langs, external=False):
-        Library.__init__(self, path, format, external)
-        self.langs = _listify(langs)
-
-
-class WholeArchive(StaticLibrary):
-    def __init__(self, library, external=False):
-        StaticLibrary.__init__(self, library.path, library.format,
-                               library.langs, external)
-        self.library = library
-
-    @property
-    def all(self):
-        return [self.library]
-
-
 class SharedLibrary(Library):
     @property
     def runtime_file(self):
@@ -183,26 +179,15 @@ class VersionedSharedLibrary(SharedLibrary):
         self.link = LinkLibrary(linkname, self.soname, external)
 
 
-class DualUseLibrary(SharedLibrary):
-    def __init__(self, shared, static):
-        SharedLibrary.__init__(self, shared.path, shared.format,
-                               shared.external)
-        self.shared = shared
-        self.static = static
-
-    @property
-    def all(self):
-        return [self.shared, self.static]
-
-
 class ExportFile(File):
     private = True
 
 
+# This refers specifically to DLL files that have an import library, not just
+# anything with a .dll extension (for instance, .NET DLLs are just regular
+# shared libraries.
 class DllLibrary(SharedLibrary):
     install_root = _InstallRoot.bindir
-    # XXX: When adding support for .NET, this might need to become an instance
-    # variable, since .NET DLLs aren't "private".
     private = True
 
     def __init__(self, path, format, import_name, export_name=None,
@@ -210,6 +195,41 @@ class DllLibrary(SharedLibrary):
         SharedLibrary.__init__(self, path, format, external)
         self.import_lib = LinkLibrary(import_name, self, external)
         self.export_file = ExportFile(export_name, external)
+
+
+class StaticLibrary(Library):
+    def __init__(self, path, format, langs, external=False):
+        Library.__init__(self, path, format, external)
+        self.langs = _listify(langs)
+
+
+class WholeArchive(StaticLibrary):
+    def __init__(self, library, external=False):
+        StaticLibrary.__init__(self, library.path, library.format,
+                               library.langs, external)
+        self.library = library
+
+    @forward_property
+    def creator(self):
+        return self.library.runtime_deps
+
+    @forward_property
+    def runtime_deps(self):
+        return self.library.runtime_deps
+
+    @forward_property
+    def linktime_deps(self):
+        return self.library.linktime_deps
+
+
+class DualUseLibrary(object):
+    def __init__(self, shared, static):
+        self.shared = shared
+        self.static = static
+
+    @property
+    def all(self):
+        return [self.shared, self.static]
 
 
 class Package(object):

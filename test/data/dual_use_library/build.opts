@@ -1,0 +1,3 @@
+# -*- python -*-
+
+argument('install-libs', action='store_true', default=False)

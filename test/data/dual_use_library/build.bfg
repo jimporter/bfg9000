@@ -1,0 +1,11 @@
+# -*- python -*-
+
+inner = library('inner', files=['inner.cpp'])
+middle = library('middle', files=['middle.cpp'], libs=[inner])
+outer = library('outer', files=['outer.cpp'], libs=[middle])
+prog = executable('program', files=['program.cpp'], libs=[outer])
+
+if argv.install_libs:
+    install(outer)
+else:
+    install(prog)
