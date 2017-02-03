@@ -176,17 +176,22 @@ arguments:
 
 * *version*: The version number of the library, e.g. `1.2.3`.
 * *soversion*: The API version of the library (used in its soname), e.g. `1`.
-
-Depending on the arguments the user passes to bfg9000, this will build either
-a [shared](#shared_library) or [static](#static_library) library, *or both*. To
-enable/disable shared libraries, pass `--enable-shared`/`--disable-shared`, and
-for static libraries, pass `--enable-static`/`--disable-static`.
+* *kind*: The kind of library to be built; one of [`'shared'`](#shared_library),
+  [`'static'`](#static_library), or `'dual'` (to build both shared *and* static
+  versions). If not specified, the default behavior depends on the command-line
+  arguments passed to bfg9000. To enable/disable shared libraries, pass
+  `--enable-shared`/`--disable-shared`, and for static libraries, pass
+  `--enable-static`/`--disable-static`.
 
 Like with *executable*, if *files* isn't specified, this function merely
 references an *existing* library somewhere on the filesystem. In this case,
 *name* must be specified and is the exact name of the file, relative to
 the source directory. You may also pass in the *format* argument as with
 *executable*.
+
+If *name* refers to a dual-use library, this function will return the library
+subtype as specified in *kind* (e.g. passing `'shared'` will return the shared
+version of the library).
 
 This build step recognizes the [dynamic linking environment
 variables](environment-vars.md#dynamic-linking) or the [static
@@ -312,6 +317,9 @@ case, *name* must be specified and is the exact name of the file, relative to
 the source directory. You may also pass in the *format* argument as with
 *executable*.
 
+If *name* refers to a dual-use library, this function will return the shared
+version of the library.
+
 This build step recognizes the [dynamic linking environment
 variables](environment-vars.md#dynamic-linking) and the [compiler environment
 variable](environment-vars.md#compilation-variables) (e.g. `CC`) for the
@@ -320,8 +328,7 @@ relevant language.
 !!! note
     On Windows, this produces *two* files for native-runtime languages (e.g. C
     or C++): `name.dll` and `name.lib`. The latter is the *import library*, used
-    when linking to this library. As a result, `my_lib.all` returns a list
-    containing *two* files.
+    when linking to this library.
 
     Additionally for native languages on Windows, this step will add a
     preprocessor macro named `LIB<NAME>_EXPORTS` that can be used for declaring
@@ -348,6 +355,9 @@ the source directory. In addition, the following arguments may be specified:
   platform's native object format (e.g. `'elf'` on Linux)
 * *lang*: The source language(s) of the library; if none is specified, defaults
   to `['c']`
+
+If *name* refers to a dual-use library, this function will return the static
+version of the library.
 
 This build step recognizes the [static linking environment
 variables](environment-vars.md#static-linking).
