@@ -204,7 +204,7 @@ class NinjaFile(object):
             if Commands.needs_shell(command):
                 command = Commands(command)
             else:
-                command = iterutils.first(command)
+                command = command[0]
 
         if pool is not None:
             if pool == 'console':
