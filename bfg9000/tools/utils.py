@@ -31,8 +31,9 @@ class SimpleCommand(Command):
 
 
 class SystemPackage(Package):
-    def __init__(self, includes=None, lib_dirs=None, libraries=None,
+    def __init__(self, name, includes=None, lib_dirs=None, libraries=None,
                  version=None):
+        Package.__init__(self, name)
         self.includes = includes or []
         self.lib_dirs = lib_dirs or []
         self.libs = libraries or []

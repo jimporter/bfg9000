@@ -11,7 +11,7 @@ from .ar import ArLinker
 from .utils import Command, darwin_install_name, SystemPackage
 from ..builtins.symlink import Symlink
 from ..file_types import *
-from ..iterutils import first, iterate, uniques
+from ..iterutils import first, iterate, listify, uniques
 from ..path import Path, Root
 
 
@@ -393,7 +393,8 @@ class CcSharedLibraryLinker(CcLinker):
         return 2 if self.env.platform.has_import_library else 1
 
     def __call__(self, cmd, input, output, libs=None, args=None):
-        result = CcLinker.__call__(self, cmd, input, first(output), libs, args)
+        output = listify(output)
+        result = CcLinker.__call__(self, cmd, input, output[0], libs, args)
         if self.env.platform.has_import_library:
             result.append('-Wl,--out-implib=' + output[1])
         return result
@@ -544,7 +545,7 @@ class CcPackageResolver(object):
         try:
             return pkg_config.resolve(self.env, name, kind, version)
         except (OSError, ValueError):
-            name = self.env.platform.transform_package(name)
+            real_name = self.env.platform.transform_package(name)
             includes = [self.header(i) for i in iterate(header)]
-            lib = self.library(name, kind)
-            return SystemPackage(includes=includes, libraries=[lib])
+            lib = self.library(real_name, kind)
+            return SystemPackage(name, includes=includes, libraries=[lib])

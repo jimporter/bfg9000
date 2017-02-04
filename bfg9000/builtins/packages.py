@@ -62,6 +62,7 @@ def _boost_version(header, required_version=None):
 # like the package() function above.
 @builtin.globals('env')
 def boost_package(env, name=None, version=None):
+    final_name = 'boost({})'.format(','.join(iterate(name)))
     version = objectify(version or '', SpecifierSet)
     pkg = env.builder('c++').packages
     version_hpp = 'boost/version.hpp'
@@ -85,6 +86,7 @@ def boost_package(env, name=None, version=None):
                     header = pkg.header(version_hpp, [max(dirs)])
                     boost_version = _boost_version(header, version)
                     return SystemPackage(
+                        final_name,
                         includes=[header],
                         lib_dirs=[r'C:\Boost\lib'],
                         version=boost_version
@@ -100,6 +102,7 @@ def boost_package(env, name=None, version=None):
             # XXX: Don't require auto-link.
             raise ValueError('Boost on Windows requires auto-link')
         return SystemPackage(
+            final_name,
             includes=[header],
             lib_dirs=listify(libdir),
             version=boost_version
@@ -107,6 +110,7 @@ def boost_package(env, name=None, version=None):
     else:
         dirs = [libdir] if libdir else None
         return SystemPackage(
+            final_name,
             includes=[header],
             libraries=[pkg.library('boost_' + i, search_dirs=dirs)
                        for i in iterate(name)],

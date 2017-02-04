@@ -212,7 +212,14 @@ class DualUseLibrary(object):
 
 
 class Package(object):
-    pass
+    def __init__(self, name):
+        self.name = name
+
+    def __hash__(self):
+        return hash(self.name)
+
+    def __eq__(self, rhs):
+        return type(self) == type(rhs) and self.name == rhs.name
 
 
 # A reference to a macOS framework. XXX: Maybe put this somewhere else?
