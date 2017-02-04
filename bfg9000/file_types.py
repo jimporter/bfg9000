@@ -4,19 +4,6 @@ from .path import InstallRoot as _InstallRoot
 from .safe_str import safe_str as _safe_str
 
 
-class forward_property(object):
-    def __init__(self, fget=None):
-        self.fget = fget
-
-    def __get__(self, obj, objtype=None):
-        if obj is None:
-            return self
-        return self.fget(obj)
-
-    def __set__(self, obj, value):
-        pass
-
-
 class Node(object):
     private = False
 
@@ -205,22 +192,13 @@ class StaticLibrary(Library):
 
 
 class WholeArchive(StaticLibrary):
-    def __init__(self, library, external=False):
-        StaticLibrary.__init__(self, library.path, library.format,
-                               library.langs, external)
+    def __init__(self, library):
         self.library = library
 
-    @forward_property
-    def creator(self):
-        return self.library.runtime_deps
-
-    @forward_property
-    def runtime_deps(self):
-        return self.library.runtime_deps
-
-    @forward_property
-    def linktime_deps(self):
-        return self.library.linktime_deps
+    def __getattribute__(self, name):
+        if name in ['library', '_safe_str', '__repr__', '__hash__', '__eq__']:
+            return object.__getattribute__(self, name)
+        return getattr(object.__getattribute__(self, 'library'), name)
 
 
 class DualUseLibrary(object):
