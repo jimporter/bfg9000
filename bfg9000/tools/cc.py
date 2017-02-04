@@ -110,13 +110,13 @@ class CcBaseCompiler(Command):
         return result
 
     def _include_dir(self, directory):
-        # Don't explicitly include default directories (e.g. /usr/include).
+        is_default = ( directory.path.string(self.env.base_dirs) in
+                       self.env.platform.include_dirs )
+
+        # Don't include default directories as system dirs (e.g. /usr/include).
         # Doing so would break GCC 6 when #including stdlib.h:
         # <https://gcc.gnu.org/bugzilla/show_bug.cgi?id=70129>.
-        if ( directory.path.root == Root.absolute and
-             directory.path.string() in self.env.platform.include_dirs):
-            return []
-        elif directory.system:
+        if directory.system and not is_default:
             return ['-isystem', directory.path]
         else:
             return ['-I' + directory.path]
@@ -282,7 +282,7 @@ class CcLinker(Command):
         return ['-L' + i for i in dirs]
 
     def _rpath(self, libraries, output):
-        if not self.env.platform.has_rpath:
+        if not output or not self.env.platform.has_rpath:
             return []
 
         runtime_libs = [i.runtime_file for i in libraries if i.runtime_file]
@@ -325,7 +325,7 @@ class CcLinker(Command):
         lib_dirs = getattr(options, 'lib_dirs', [])
         entry_point = getattr(options, 'entry_point', None)
         return ( self._lib_dirs(libraries, lib_dirs) +
-                 self._rpath(libraries, first(output)) +
+                 self._rpath(libraries, first(output, default=None)) +
                  self._entry_point(entry_point))
 
     def _link_lib(self, library):

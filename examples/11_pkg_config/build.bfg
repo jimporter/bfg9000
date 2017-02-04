@@ -1,0 +1,40 @@
+# -*- python -*-
+
+# When creating libraries for other projects to use, it's common to generate
+# pkg-config info to make it easier for users of the library to, well, use it.
+# Of course, you first have to define your build and specify the appropriate
+# files to install:
+
+project('hello', '1.0')
+
+ogg = package('ogg')
+
+include = header_directory('include', include='*.hpp')
+inner = library('inner', files=['src/inner.cpp'], packages=[ogg])
+lib = library('hello', files=['src/hello.cpp'], includes=[include],
+              libs=[inner])
+
+install(lib, include)
+
+# From there, you can call the pkg_config() function to create a pkg-config .pc
+# file. There are numerous options available, but the ones below are the most
+# important:
+
+pkg_config(
+    # Every package needs a name, since that's how pkg-config looks them up!
+    'hello',
+    # Packages must also have versions so that users of the package can set
+    # the required version.
+    version='1.0',
+    # Most packages have include files; these can be header files or header
+    # directories.
+    includes=[include],
+    # Libraries are also a common part of packages; if a library listed here
+    # depends on another library or a package, it will automatically be
+    # included in the pkg-config info.
+    libs=[lib],
+    # By default, auto_fill is True and will automatically fill the above
+    # fields with sensible defaults. If False, only the values you explicitly
+    # specify will be used.
+    auto_fill=False
+)

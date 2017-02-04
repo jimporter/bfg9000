@@ -30,9 +30,10 @@ class PkgConfig(SimpleCommand):
 
 
 class PkgConfigPackage(Package):
-    def __init__(self, name, kind, pkg_config):
-        self.name = name
+    def __init__(self, name, kind, specifier, pkg_config):
+        Package.__init__(self, name)
         self.static = kind == 'static'
+        self.specifier = specifier
         self._pkg_config = pkg_config
         try:
             self.version = Version(self._pkg_config.run(
@@ -40,6 +41,7 @@ class PkgConfigPackage(Package):
             ).strip())
         except subprocess.CalledProcessError:
             raise ValueError("unable to find package '{}'".format(name))
+        check_version(self.version, self.specifier, self.name)
 
     def cflags(self, compiler, output):
         return shell.split(self._pkg_config.run(
@@ -65,6 +67,4 @@ class PkgConfigPackage(Package):
 
 
 def resolve(env, name, kind='any', version=None):
-    pkg = PkgConfigPackage(name, kind, env.tool('pkg_config'))
-    check_version(pkg.version, version, name)
-    return pkg
+    return PkgConfigPackage(name, kind, version, env.tool('pkg_config'))

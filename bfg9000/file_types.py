@@ -1,7 +1,16 @@
+import copy
+
 from .iterutils import listify as _listify
 from .languages import src2lang as _src2lang, hdr2lang as _hdr2lang
-from .path import InstallRoot as _InstallRoot
+from .path import InstallRoot as _InstallRoot, install_path as _install_path
 from .safe_str import safe_str as _safe_str
+
+
+def installify(file):
+    file = copy.copy(file)
+    file.path = _install_path(file.path, file.install_root,
+                              directory=isinstance(file, Directory))
+    return file
 
 
 class Node(object):
@@ -119,6 +128,7 @@ class LinkedBinary(Binary):
         Binary.__init__(self, *args, **kwargs)
         self.runtime_deps = []
         self.linktime_deps = []
+        self.package_deps = []
 
     @property
     def install_deps(self):
@@ -205,10 +215,35 @@ class DualUseLibrary(object):
     def __init__(self, shared, static):
         self.shared = shared
         self.static = static
+        self.shared.parent = self
+        self.static.parent = self
 
     @property
     def all(self):
         return [self.shared, self.static]
+
+    def __repr__(self):
+        return '<DualUseLibrary {!r}>'.format(self.shared.path)
+
+    def __hash__(self):
+        return hash(self.shared.path)
+
+    def __eq__(self, rhs):
+        return (type(self) == type(rhs) and
+                self.shared.path == rhs.shared.path and
+                self.static.path == rhs.static.path)
+
+    @property
+    def package_deps(self):
+        return self.shared.package_deps
+
+    @property
+    def forward_args(self):
+        return self.static.forward_args
+
+
+class PkgConfigPcFile(File):
+    install_root = _InstallRoot.libdir
 
 
 class Package(object):

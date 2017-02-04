@@ -27,6 +27,8 @@ if os.getenv('BACKENDS', '').strip():
 else:
     backends = [k for k, v in iteritems(list_backends()) if v.priority > 0]
 
+_unset = object()
+
 
 def cleandir(path, recreate=True):
     if os.path.exists(path):
@@ -114,7 +116,7 @@ class IntegrationTest(unittest.TestCase):
         self._args = args
         self._kwargs = kwargs
 
-        self.stage_src = kwargs.pop('stage_src', False)
+        stage_src = kwargs.pop('stage_src', False)
         self.backend = kwargs.pop('backend', None)
         self.env = kwargs.pop('env', None)
 
@@ -126,11 +128,12 @@ class IntegrationTest(unittest.TestCase):
 
         srcname = os.path.basename(srcdir)
         self.srcdir = os.path.join(test_data_dir, srcdir)
-        if self.stage_src:
+        if stage_src:
+            srcname = os.path.basename(srcdir)
             self.orig_srcdir = self.srcdir
             self.srcdir = os.path.join(test_stage_dir, srcname)
-
-        self.builddir = os.path.join(test_stage_dir, srcname + '-build')
+        else:
+            self.orig_srcdir = None
 
         if install:
             self.installdir = os.path.join(test_stage_dir,
@@ -145,6 +148,15 @@ class IntegrationTest(unittest.TestCase):
                 setattr(self, i.name, install_dirs[i].string(install_dirs))
         else:
             self.installdir = None
+
+    @staticmethod
+    def _make_builddir(srcdir):
+        srcname = os.path.basename(srcdir)
+        return os.path.join(test_stage_dir, srcname + '-build')
+
+    @property
+    def builddir(self):
+        return self._make_builddir(self.srcdir)
 
     def parameterize(self):
         result = []
@@ -182,23 +194,39 @@ class IntegrationTest(unittest.TestCase):
 
     def setUp(self):
         if self._configure:
-            self.configure(self.extra_args, self.env)
+            self.configure()
 
-    def configure(self, extra_args=[], env=None):
-        if self.stage_src:
-            cleandir(self.srcdir, recreate=False)
-            shutil.copytree(self.orig_srcdir, self.srcdir)
-        os.chdir(self.srcdir)
-        cleandir(self.builddir)
-        if self.installdir:
-            cleandir(self.installdir)
+    def configure(self, srcdir=None, builddir=None, installdir=_unset,
+                  orig_srcdir=_unset, extra_args=_unset, env=_unset):
+        if srcdir:
+            srcdir = os.path.join(test_data_dir, srcdir)
+        else:
+            srcdir = self.srcdir
+        builddir = builddir or self._make_builddir(srcdir)
+
+        if installdir is _unset:
+            installdir = self.installdir
+        if orig_srcdir is _unset:
+            orig_srcdir = self.orig_srcdir
+        if extra_args is _unset:
+            extra_args = self.extra_args
+        if env is _unset:
+            env = self.env
+
+        if orig_srcdir:
+            cleandir(srcdir, recreate=False)
+            shutil.copytree(orig_srcdir, srcdir)
+        os.chdir(srcdir)
+        cleandir(builddir)
+        if installdir:
+            cleandir(installdir)
 
         self.assertPopen(
-            ['bfg9000', '--debug', 'configure', self.builddir,
+            ['bfg9000', '--debug', 'configure', builddir,
              '--backend', self.backend] + extra_args,
             env=env, env_update=True
         )
-        os.chdir(self.builddir)
+        os.chdir(builddir)
 
     def build(self, target=None):
         args = [os.getenv(self.backend.upper(), self.backend)]

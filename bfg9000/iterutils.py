@@ -50,10 +50,15 @@ def listify(thing, always_copy=False):
     return list(iterate(thing))
 
 
-def first(thing):
+_first_required = object()
+
+
+def first(thing, default=_first_required):
     try:
         return next(iterate(thing))
     except StopIteration:
+        if default is not _first_required:
+            return default
         raise LookupError()
 
 

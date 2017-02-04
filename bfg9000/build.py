@@ -69,4 +69,5 @@ def execute_script(env, argv, filename=bfgfile):
         except SystemExit:
             pass
 
+    builtin.run_post(builtin_dict, build_inputs=build, argv=argv, env=env)
     return build

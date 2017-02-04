@@ -134,11 +134,13 @@ class Link(Edge):
     @staticmethod
     def __get_forward_args(libs):
         result = {}
+
         def accumulate(libs):
             for i in libs:
                 if hasattr(i, 'forward_args'):
                     merge_into_dict(result, i.forward_args)
                     accumulate(i.forward_args.get('libs', []))
+
         accumulate(libs)
         return result
 

@@ -217,8 +217,8 @@ without the extension.
 The following arguments may also be specified:
 
 * *includes*: A list of [directories](#header_directory) to search for header
-  files; you may also pass [header files](#header), and their directories will
-  be added to the search list
+  files; you may also pass [header files](#header_file), and their directories
+  will be added to the search list
 * *pch*: A [precompiled header](#precompiled_header) to use during compilation
 * *libs*: A list of library files (see *shared_library* and *static_library*);
   this is only used by languages that need libraries defined at compile-time,
@@ -536,6 +536,56 @@ This rule recognizes the following environment variables:
 [`LIB`](environment-vars.md#lib),
 [`LIBRARY_PATH`](environment-vars.md#library_path),
 [`PKG_CONFIG`](environment-vars.md#pkg_config).
+
+### pkg_config([*name*], [*desc_name*], [*desc*], [*url*], [*version*], [*requires*], [*requires_private*], [*conflicts*], [*includes*], [*libs*], [*libs_private*], [*options*], [*link_options*], [*link_options_private*], [*auto_fill*]) { #pkg_config }
+Availability: `build.bfg`
+{: .subtitle}
+
+Create pkg-config information for this project and install it along with the
+rest of the installed files. All of these arguments are optional and will be
+automatically inferred from the rest of the build where possible. Unless
+otherwise noted, these arguments correspond directly to the fields in the
+pkg-config `.pc` file.
+
+* *name*: The name of the package (to be used at the name of the `.pc` file)
+* *desc_name*: A human-readable name for the package (stored as the `Name`
+  field in pkg-config); defaults to *name*
+* *desc*: A brief description of the package; defaults to `<name> library`
+* *url*: A URL where users can learn more about the package
+* *version*: The package's version
+* *requires*: A list of packages required by this package; these can be strings,
+  a string and version specifier, or the results from [*package*](#package). In
+  the last case, packages resolved by pkg-config are added directly as
+  requirements; those resolved by other means are added to the `Libs` field in
+  pkg-config
+* *requires_private*: A list of packages required by this package but not
+  exposed to users; these can be specified as with *requires*
+* *conflicts*: A list of packages that conflict with this package; these can be
+  specified as with *requires*
+* *includes*: A list of [directories](#header_directory) (or [header
+  files](#header_file)) to add to the search path for users of this package
+* *libs*: A list of [libraries](#library) for users of this package to link to;
+  any dependent libraries, packages, or link options (in the case of static
+  libs) will automatically be added to *libs_private*, *requires_private*, and
+  *link_options_private*, respectively
+* *libs_private*: A list of [libraries](#library) required by this package but
+  not exposed to users (this is used primarily for static linking); dependent
+  libraries, packages, and link options are added as with *libs*
+* *options*: A list of compile options for this package
+* *link_options*: A list of link options for this package
+* *link_options_private*: A list of link options for this package but not
+  exposed to users (this is used primarily for static linking)
+* *lang*: The language of the builder to use when generating option strings;
+  by default, `'c'`
+
+If *auto_fill* is true (the default), this function will automatically fill in
+default values for the following fields:
+
+* *name*: The [project's name](#project) (this also fills in *desc_name* and
+  *desc* with default values)
+* *version*: The [project's version](#project), or `0.0` if none is specified
+* *includes*: The list of [installed](#install) header files/directories
+* *libs*: The list of [installed](#install) library files
 
 ### system_executable(*name*) { #system_executable }
 Availability: `build.bfg`

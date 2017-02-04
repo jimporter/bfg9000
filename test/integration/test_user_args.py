@@ -14,6 +14,6 @@ class TestUserArgs(IntegrationTest):
         self.assertOutput([executable('simple')], 'hello from unnamed!\n')
 
     def test_build_with_args(self):
-        self.configure(['--name=foo'])
+        self.configure(extra_args=['--name=foo'])
         self.build(executable('simple'))
         self.assertOutput([executable('simple')], 'hello from foo!\n')

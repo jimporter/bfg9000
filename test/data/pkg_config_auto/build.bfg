@@ -1,0 +1,12 @@
+# -*- python -*-
+
+opts = ['-s'] if env.platform.name == 'linux' else []
+ogg = package('ogg')
+
+hdr = header_file('hello.hpp')
+inner = library('inner', files=['inner.cpp'], packages=[ogg],
+                link_options=opts)
+lib = library('hello', files=['hello.cpp'], libs=[inner])
+
+install(lib, hdr)
+pkg_config('hello')

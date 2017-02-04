@@ -344,3 +344,45 @@ if argv.bar:
 [argparse]: https://docs.python.org/library/argparse.html
 [add_argument]: https://docs.python.org/library/argparse.html#the-add-argument-method
 [namespace]: https://docs.python.org/library/argparse.html#argparse.Namespace
+
+## Generating pkg-config data
+
+When creating libraries for other projects to use, [`pkg-config`][pkg-config] is
+a common tool to simplify using the library. `pkg-config` allows users to look
+up a package and retrieve all the compiler and linker options required to use
+that package. You can generate a `pkg-config` `.pc` file using the
+[*pkg_config()*](reference.md#pkg_config) function. By default (or if the
+*auto_fill* parameter is *True*), this function will automatically fill in the
+values for the package's name, version, installed include directories, and
+installed libraries:
+
+```python
+project('my_project', '1.0')
+
+include = header_directory('include', include='*.hpp')
+lib = library('hello', files=['src/hello.cpp'], includes=[include])
+
+install(lib, include)
+
+pkg_config()
+```
+
+You can also override any or all of the defaulted parameters:
+
+```python
+pkg_config(
+    'my_pkgconfig_project',
+    version='2.0',
+    includes=[include],
+    libs=[lib],
+)
+```
+
+Libraries are perhaps the most interesting part of the *pkg_config()* function.
+If a library listed here depends on any packages or other libraries, they will
+automatically be included in the `pkg-config` info.
+
+There are several other options available to tweak the output of this function,
+detailed in the [reference guide](reference.md#pkg_config).
+
+[pkg-config]: https://www.freedesktop.org/wiki/Software/pkg-config/

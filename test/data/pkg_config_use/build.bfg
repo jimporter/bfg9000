@@ -1,0 +1,5 @@
+# -*- python -*-
+
+pkg = package('hello')
+
+executable('program', files=['program.cpp'], packages=[pkg])

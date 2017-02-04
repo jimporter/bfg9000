@@ -10,6 +10,7 @@
 - Add support for user-defined arguments
 - Add a `library()` function that builds shared and/or static libraries per the
   user's preference
+- Add support for generating pkg-config `.pc` files
 
 ### Breaking changes
 - `directory()` and `header_directory()` no longer automatically include all
