@@ -94,18 +94,22 @@ def merge_into_dict(dst, *args):
     for d in args:
         for k, v in iteritems(d):
             curr = dst.get(k)
-            if curr is None:
-                dst[k] = v
-            elif v is None:
-                continue
-            elif isinstance(curr, dict):
-                merge_into_dict(curr, v)
-            elif isiterable(curr):
-                if not isiterable(v):
+            if isinstance(v, dict):
+                if curr is None:
+                    dst[k] = dict(v)
+                elif isinstance(curr, dict):
+                    merge_into_dict(curr, v)
+                else:
                     raise TypeError('type mismatch for {}'.format(k))
-                curr.extend(v)
-            else:
-                if isiterable(v):
+            elif isiterable(v):
+                if curr is None:
+                    dst[k] = list(v)
+                elif isiterable(curr):
+                    curr.extend(v)
+                elif not isiterable(curr):
+                    raise TypeError('type mismatch for {}'.format(k))
+            elif v is not None:
+                if curr is not None and isiterable(curr):
                     raise TypeError('type mismatch for {}'.format(k))
                 dst[k] = v
 

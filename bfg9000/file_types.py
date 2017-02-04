@@ -201,6 +201,7 @@ class StaticLibrary(Library):
     def __init__(self, path, format, langs, external=False):
         Library.__init__(self, path, format, external)
         self.langs = _listify(langs)
+        self.forward_args = {}
 
 
 class WholeArchive(StaticLibrary):

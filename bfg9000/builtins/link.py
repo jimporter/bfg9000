@@ -12,7 +12,8 @@ from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..build_inputs import build_input, Edge
 from ..file_types import *
-from ..iterutils import first, iterate, listify, merge_dicts, uniques
+from ..iterutils import (first, iterate, listify, merge_dicts, merge_into_dict,
+                         uniques)
 from ..path import Path, Root
 from ..shell import posix as pshell
 
@@ -54,14 +55,12 @@ class Link(Edge):
             builtins['library'](i, kind=self._preferred_lib, lang=lang)
             for i in iterate(libs)
         ]
-        fwd = [i.forward_args for i in self.user_libs
-               if hasattr(i, 'forward_args')]
-        self.libs = sum((i.get('libs', []) for i in fwd), self.user_libs)
+        forward_args = self.__get_forward_args(self.user_libs)
+        self.libs = self.user_libs + forward_args.get('libs', [])
 
         self.user_packages = [builtins['package'](i)
                               for i in iterate(packages)]
-        self.packages = sum((i.get('packages', []) for i in fwd),
-                            self.user_packages)
+        self.packages = self.user_packages + forward_args.get('packages', [])
 
         # XXX: Remove `include` after 0.3 is released.
         self.user_files = builtins['object_files'](
@@ -79,7 +78,7 @@ class Link(Edge):
             raise ValueError('need at least one source file')
 
         self.user_options = pshell.listify(link_options)
-        self.forwarded_options = sum((i.get('options', []) for i in fwd), [])
+        self.forwarded_options = forward_args.get('options', [])
 
         if entry_point:
             self.entry_point = entry_point
@@ -103,7 +102,7 @@ class Link(Edge):
         defines = []
         if self.linker.has_link_macros:
             defines = library_macro(self.name, self.mode)
-        defines = sum((f.get('defines', []) for f in fwd), defines)
+        defines = forward_args.get('defines', []) + defines
 
         for i in self.files:
             if isinstance(i.creator, Compile):
@@ -113,6 +112,7 @@ class Link(Edge):
             self.linker.pre_build(build, self, name)
 
         output = self.linker.output_file(name, self)
+        primary = first(output)
         public_output = None
 
         if hasattr(self.linker, 'post_build'):
@@ -122,7 +122,6 @@ class Link(Edge):
 
         Edge.__init__(self, build, output, public_output, extra_deps)
 
-        primary = first(output)
         if hasattr(self.linker, 'post_install'):
             primary.post_install = self.linker.post_install(output)
         build['defaults'].add(primary)
@@ -131,6 +130,17 @@ class Link(Edge):
     def __name(cls, name):
         head, tail = os.path.split(name)
         return os.path.join(head, cls._prefix + tail)
+
+    @staticmethod
+    def __get_forward_args(libs):
+        result = {}
+        def accumulate(libs):
+            for i in libs:
+                if hasattr(i, 'forward_args'):
+                    merge_into_dict(result, i.forward_args)
+                    accumulate(i.forward_args.get('libs', []))
+        accumulate(libs)
+        return result
 
     def __find_linker(self, env, format, langs):
         for i in langs:
@@ -198,9 +208,9 @@ class StaticLink(Link):
     def _fill_options(self, env, output):
         primary = first(output)
         primary.forward_args = {
-            'options': self.forwarded_options + self.user_options,
-            'libs': self.libs,
-            'packages': self.packages,
+            'options': self.user_options,
+            'libs': self.user_libs,
+            'packages': self.user_packages,
         }
         if self.linker.has_link_macros:
             macro = library_macro(self.name, self.mode)

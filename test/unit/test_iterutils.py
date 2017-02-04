@@ -164,3 +164,8 @@ class TestMergeDicts(unittest.TestCase):
         self.assertEqual(merge_dicts({'foo': 1}, {'foo': 2, 'bar': 3},
                                      {'baz': 4}),
                          {'foo': 2, 'bar': 3, 'baz': 4})
+
+    def test_merge_makes_copies(self):
+        d = {'foo': [1]}
+        self.assertEqual(merge_dicts({}, d, {'foo': [2]}), {'foo': [1, 2]})
+        self.assertEqual(d, {'foo': [1]})
