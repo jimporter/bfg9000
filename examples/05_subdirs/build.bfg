@@ -11,7 +11,7 @@ include = header_directory('include', include='*.hpp')
 # Built files can also be added to subdirectories:
 
 lib = shared_library('sub/library', files=['src/library.cpp'],
-                     include=[include])
+                     includes=[include])
 prog = executable('sub/program', files=['src/program.cpp'], includes=[include],
                   libs=[lib])
 

@@ -61,7 +61,7 @@ class Compile(Edge):
         if pch and not self.compiler.accepts_pch:
             raise TypeError('pch not supported for this compiler')
         self.pch = builtins['precompiled_header'](
-            pch, file=pch, include=include, packages=self.packages,
+            pch, file=pch, includes=includes, packages=self.packages,
             options=self.user_options, lang=lang
         ) if pch else None
 
