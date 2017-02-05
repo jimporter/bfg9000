@@ -24,6 +24,9 @@ in progress
 ### Bug fixes
 - Improved logging of syntax errors in `build.bfg` files
 - Fixed usage of nested shared libraries on Linux (via `-rpath-link`)
+- Installing directories from the srcdir now correctly installs their contents
+  to the installation root for that type (e.g. a header directory of `foo/bar`
+  installs its contents to `$includedir`).
 
 ---
 

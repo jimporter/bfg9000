@@ -141,9 +141,9 @@ def abspath(path):
     return Path(os.path.abspath(path), Root.absolute)
 
 
-def install_path(path, install_root):
+def install_path(path, install_root, directory=False):
     if path.root == Root.srcdir:
-        suffix = os.path.basename(path.suffix)
+        suffix = '.' if directory else os.path.basename(path.suffix)
     else:
         suffix = path.suffix
     return Path(suffix, install_root)

@@ -80,13 +80,20 @@ def _install_commands(backend, build_inputs, buildfile, env):
     def install_line(output):
         cmd = doppel_cmd(output.install_kind)
         if isinstance(output, Directory):
-            src = [i.path.relpath(output.path) for i in output.files]
-            dst = path.install_path(output.path.parent(), output.install_root)
-            return doppel.copy_into(cmd, src, dst, directory=output.path)
-        else:
-            src = output.path
-            dst = path.install_path(src, output.install_root)
-            return doppel.copy_onto(cmd, src, dst)
+            if output.files is not None:
+                src = [i.path.relpath(output.path) for i in output.files]
+                dst = path.install_path(output.path, output.install_root,
+                                        directory=True)
+                return doppel.copy_into(cmd, src, dst, directory=output.path)
+
+            warnings.warn(
+                ('installed directory {!r} has no matching files; did you ' +
+                 'forget to set `include`?').format(output.path)
+            )
+
+        src = output.path
+        dst = path.install_path(src, output.install_root)
+        return doppel.copy_onto(cmd, src, dst)
 
     def post_install(output):
         if output.post_install:
