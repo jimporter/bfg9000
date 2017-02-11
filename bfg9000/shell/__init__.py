@@ -16,14 +16,11 @@ class shell_list(list):
 
 
 def execute(args, shell=False, env=None, quiet=False):
-    stderr = None
-    if quiet:
-        stderr = open(os.devnull, 'wb')
+    stderr = open(os.devnull, 'wb') if quiet else None
     try:
-        result = subprocess.check_output(
+        return subprocess.check_output(
             args, universal_newlines=True, shell=shell, env=env, stderr=stderr
         )
     finally:
-        if quiet:
+        if stderr:
             stderr.close()
-    return result
