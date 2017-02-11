@@ -95,9 +95,11 @@ class HeaderDirectory(Directory):
     install_kind = 'data'
     install_root = _InstallRoot.includedir
 
-    def __init__(self, path, files=None, system=False, external=False):
+    def __init__(self, path, files=None, system=False, langs=None,
+                 external=False):
         Directory.__init__(self, path, files, external)
         self.system = system
+        self.langs = _listify(langs)
 
 
 class Binary(File):
@@ -195,7 +197,7 @@ class DllLibrary(SharedLibrary):
 
 
 class StaticLibrary(Library):
-    def __init__(self, path, format, langs, external=False):
+    def __init__(self, path, format, langs=None, external=False):
         Library.__init__(self, path, format, external)
         self.langs = _listify(langs)
         self.forward_args = {}

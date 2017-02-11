@@ -100,9 +100,10 @@ def _find_files(paths, filter, flat, as_object):
     walker = _walk_flat if flat else _walk_recursive
 
     results, dist_results, seen_dirs = [], [], []
+    filetype = File if isinstance(as_object, bool) else as_object
 
     def do_filter(files, type):
-        cls = File if type == 'f' else lambda p: Directory(p, None)
+        cls = filetype if type == 'f' else lambda p: Directory(p, None)
         for name, path in files:
             fileobj = cls(Path(path, Root.srcdir))
             matched = filter(name, path, type)
