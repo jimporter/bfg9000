@@ -8,7 +8,9 @@
         
         
         <link rel="shortcut icon" href="../../img/favicon.ico">
-        <title>Reference - bfg9000</title>
+
+	<title>Reference - bfg9000</title>
+
         <link href="../../css/bootstrap-custom.min.css" rel="stylesheet">
         <link href="../../css/font-awesome-4.0.3.css" rel="stylesheet">
         <link rel="stylesheet" href="../../css/highlight.css">
@@ -19,7 +21,9 @@
         <!--[if lt IE 9]>
             <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
             <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
-        <![endif]--> 
+        <![endif]-->
+
+        
     </head>
 
     <body>
@@ -36,109 +40,163 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
+
+            <!-- Main title -->
             <a class="navbar-brand" href="../..">bfg9000</a>
         </div>
 
         <!-- Expanded navigation -->
         <div class="navbar-collapse collapse">
-                <!-- Main navigation -->
-                <ul class="nav navbar-nav">
-                    <li >
-                        <a href="../..">Home</a>
-                    </li>
-                    <li >
-                        <a href="../../getting-started/">Getting Started</a>
-                    </li>
-                    <li class="dropdown active">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">User Guide <b class="caret"></b></a>
-                        <ul class="dropdown-menu">
-                            
+            <!-- Main navigation -->
+            <ul class="nav navbar-nav">
+            
+            
+                <li >
+                    <a href="../..">Home</a>
+                </li>
+            
+            
+            
+                <li >
+                    <a href="../../getting-started/">Getting Started</a>
+                </li>
+            
+            
+            
+                <li class="dropdown active">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">User Guide <b class="caret"></b></a>
+                    <ul class="dropdown-menu">
+                    
+                        
 <li >
     <a href="../building/">Building with bfg9000</a>
 </li>
-                            
+
+                    
+                        
 <li >
     <a href="../writing/">Writing a Build File</a>
 </li>
-                            
+
+                    
+                        
 <li class="active">
     <a href="./">Reference</a>
 </li>
-                            
+
+                    
+                        
 <li >
     <a href="../environment-vars/">Environment Variables</a>
 </li>
-                        </ul>
-                    </li>
-                    <li class="dropdown">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Developer Guide <b class="caret"></b></a>
-                        <ul class="dropdown-menu">
-                            
+
+                    
+                    </ul>
+                </li>
+            
+            
+            
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">Developer Guide <b class="caret"></b></a>
+                    <ul class="dropdown-menu">
+                    
+                        
 <li >
     <a href="../../developer/internals/">Internals</a>
 </li>
-                            
+
+                    
+                        
 <li >
     <a href="../../developer/contributing/">Contributing</a>
 </li>
-                        </ul>
-                    </li>
-                    <li class="dropdown">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">About <b class="caret"></b></a>
-                        <ul class="dropdown-menu">
-                            
+
+                    
+                    </ul>
+                </li>
+            
+            
+            
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">About <b class="caret"></b></a>
+                    <ul class="dropdown-menu">
+                    
+                        
 <li >
     <a href="../../about/changes/">Changes</a>
 </li>
-                            
+
+                    
+                        
 <li >
     <a href="../../about/license/">License</a>
 </li>
-                        </ul>
-                    </li>
-                </ul>
 
+                    
+                    </ul>
+                </li>
+            
+            
+            </ul>
+
+            <!-- Search, Navigation and Repo links -->
             <ul class="nav navbar-nav navbar-right">
                 <li>
                     <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
                         <i class="fa fa-search"></i> Search
                     </a>
                 </li>
-                    <li >
-                        <a rel="next" href="../writing/">
-                            <i class="fa fa-arrow-left"></i> Previous
-                        </a>
-                    </li>
-                    <li >
-                        <a rel="prev" href="../environment-vars/">
-                            Next <i class="fa fa-arrow-right"></i>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="https://github.com/jimporter/bfg9000/">
-                                <i class="fa fa-github"></i>GitHub
-                        </a>
-                    </li>
+                <li >
+                    <a rel="next" href="../writing/">
+                        <i class="fa fa-arrow-left"></i> Previous
+                    </a>
+                </li>
+                <li >
+                    <a rel="prev" href="../environment-vars/">
+                        Next <i class="fa fa-arrow-right"></i>
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="https://github.com/jimporter/bfg9000/">
+                        
+                            <i class="fa fa-github"></i>
+                        
+                        GitHub
+                    </a>
+                </li>
+                
             </ul>
         </div>
     </div>
 </div>
 
         <div class="container">
-                <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+            <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
+    
         <li class="main active"><a href="#reference">Reference</a></li>
+        
             <li><a href="#file-types">File types</a></li>
+        
             <li><a href="#build-steps">Build steps</a></li>
+        
             <li><a href="#grouping-rules">Grouping rules</a></li>
+        
             <li><a href="#global-options">Global options</a></li>
+        
             <li><a href="#test-rules">Test rules</a></li>
+        
             <li><a href="#package-resolvers">Package resolvers</a></li>
+        
             <li><a href="#environment">Environment</a></li>
+        
             <li><a href="#utilities">Utilities</a></li>
+        
+    
     </ul>
 </div></div>
-                <div class="col-md-9" role="main">
+            <div class="col-md-9" role="main">
 
 <h1 id="reference">Reference<a class="headerlink" href="#reference" title="Permanent link">§</a></h1>
 <p>Below are listed all the builtin functions and properties available to bfg9000
@@ -244,7 +302,7 @@ file (or a plain string), this function will implicitly call
 <a href="#object_file"><em>object_file</em></a> on it.</p>
 <p>The following arguments may also be specified:</p>
 <ul>
-<li><em>include</em>: Forwarded on to <a href="#object_file"><em>object_file</em></a></li>
+<li><em>includes</em>: Forwarded on to <a href="#object_file"><em>object_file</em></a></li>
 <li><em>pch</em>: Forwarded on to <a href="#object_file"><em>object_file</em></a></li>
 <li><em>libs</em>: A list of library files (see <em>shared_library</em> and <em>static_library</em>)</li>
 <li><em>packages</em>: A list of external <a href="#package-finders">packages</a>; also forwarded on
@@ -274,16 +332,21 @@ arguments:</p>
 <ul>
 <li><em>version</em>: The version number of the library, e.g. <code>1.2.3</code>.</li>
 <li><em>soversion</em>: The API version of the library (used in its soname), e.g. <code>1</code>.</li>
+<li><em>kind</em>: The kind of library to be built; one of <a href="#shared_library"><code>'shared'</code></a>,
+  <a href="#static_library"><code>'static'</code></a>, or <code>'dual'</code> (to build both shared <em>and</em> static
+  versions). If not specified, the default behavior depends on the command-line
+  arguments passed to bfg9000. To enable/disable shared libraries, pass
+  <code>--enable-shared</code>/<code>--disable-shared</code>, and for static libraries, pass
+  <code>--enable-static</code>/<code>--disable-static</code>.</li>
 </ul>
-<p>Depending on the arguments the user passes to bfg9000, this will build either
-a <a href="#shared_library">shared</a> or <a href="#static_library">static</a> library, <em>or both</em>. To
-enable/disable shared libraries, pass <code>--enable-shared</code>/<code>--disable-shared</code>, and
-for static libraries, pass <code>--enable-static</code>/<code>--disable-static</code>.</p>
 <p>Like with <em>executable</em>, if <em>files</em> isn't specified, this function merely
 references an <em>existing</em> library somewhere on the filesystem. In this case,
 <em>name</em> must be specified and is the exact name of the file, relative to
 the source directory. You may also pass in the <em>format</em> argument as with
 <em>executable</em>.</p>
+<p>If <em>name</em> refers to a dual-use library, this function will return the library
+subtype as specified in <em>kind</em> (e.g. passing <code>'shared'</code> will return the shared
+version of the library).</p>
 <p>This build step recognizes the <a href="../environment-vars/#dynamic-linking">dynamic linking environment
 variables</a> or the <a href="../environment-vars/#static-linking">static
 linking environment variables</a>, as well as
@@ -304,9 +367,9 @@ named <em>name</em>; if <em>name</em> is not specified, it takes the file name i
 without the extension.</p>
 <p>The following arguments may also be specified:</p>
 <ul>
-<li><em>include</em>: A list of <a href="#header_directory">directories</a> to search for header
-  files; you may also pass <a href="#header">header files</a>, and their directories will
-  be added to the search list</li>
+<li><em>includes</em>: A list of <a href="#header_directory">directories</a> to search for header
+  files; you may also pass <a href="#header_file">header files</a>, and their directories
+  will be added to the search list</li>
 <li><em>pch</em>: A <a href="#precompiled_header">precompiled header</a> to use during compilation</li>
 <li><em>libs</em>: A list of library files (see <em>shared_library</em> and <em>static_library</em>);
   this is only used by languages that need libraries defined at compile-time,
@@ -390,6 +453,8 @@ references an <em>existing</em> shared library somewhere on the filesystem. In t
 case, <em>name</em> must be specified and is the exact name of the file, relative to
 the source directory. You may also pass in the <em>format</em> argument as with
 <em>executable</em>.</p>
+<p>If <em>name</em> refers to a dual-use library, this function will return the shared
+version of the library.</p>
 <p>This build step recognizes the <a href="../environment-vars/#dynamic-linking">dynamic linking environment
 variables</a> and the <a href="../environment-vars/#compilation-variables">compiler environment
 variable</a> (e.g. <code>CC</code>) for the
@@ -398,8 +463,7 @@ relevant language.</p>
 <p class="admonition-title">Note</p>
 <p>On Windows, this produces <em>two</em> files for native-runtime languages (e.g. C
 or C++): <code>name.dll</code> and <code>name.lib</code>. The latter is the <em>import library</em>, used
-when linking to this library. As a result, <code>my_lib.all</code> returns a list
-containing <em>two</em> files.</p>
+when linking to this library.</p>
 <p>Additionally for native languages on Windows, this step will add a
 preprocessor macro named <code>LIB&lt;NAME&gt;_EXPORTS</code> that can be used for declaring
 public symbols. See <a href="../writing/#building-libraries-on-windows">Building libraries on
@@ -423,6 +487,8 @@ the source directory. In addition, the following arguments may be specified:</p>
 <li><em>lang</em>: The source language(s) of the library; if none is specified, defaults
   to <code>['c']</code></li>
 </ul>
+<p>If <em>name</em> refers to a dual-use library, this function will return the static
+version of the library.</p>
 <p>This build step recognizes the <a href="../environment-vars/#static-linking">static linking environment
 variables</a>.</p>
 <div class="admonition note">
@@ -556,6 +622,54 @@ specifier</a>.</p>
 <a href="../environment-vars/#lib"><code>LIB</code></a>,
 <a href="../environment-vars/#library_path"><code>LIBRARY_PATH</code></a>,
 <a href="../environment-vars/#pkg_config"><code>PKG_CONFIG</code></a>.</p>
+<h3 id="pkg_config">pkg_config([<em>name</em>], [<em>desc_name</em>], [<em>desc</em>], [<em>url</em>], [<em>version</em>], [<em>requires</em>], [<em>requires_private</em>], [<em>conflicts</em>], [<em>includes</em>], [<em>libs</em>], [<em>libs_private</em>], [<em>options</em>], [<em>link_options</em>], [<em>link_options_private</em>], [<em>auto_fill</em>])<a class="headerlink" href="#pkg_config" title="Permanent link">§</a></h3>
+<p class="subtitle">Availability: <code>build.bfg</code></p>
+<p>Create pkg-config information for this project and install it along with the
+rest of the installed files. All of these arguments are optional and will be
+automatically inferred from the rest of the build where possible. Unless
+otherwise noted, these arguments correspond directly to the fields in the
+pkg-config <code>.pc</code> file.</p>
+<ul>
+<li><em>name</em>: The name of the package (to be used at the name of the <code>.pc</code> file)</li>
+<li><em>desc_name</em>: A human-readable name for the package (stored as the <code>Name</code>
+  field in pkg-config); defaults to <em>name</em></li>
+<li><em>desc</em>: A brief description of the package; defaults to <code>&lt;name&gt; library</code></li>
+<li><em>url</em>: A URL where users can learn more about the package</li>
+<li><em>version</em>: The package's version</li>
+<li><em>requires</em>: A list of packages required by this package; these can be strings,
+  a string and version specifier, or the results from <a href="#package"><em>package</em></a>. In
+  the last case, packages resolved by pkg-config are added directly as
+  requirements; those resolved by other means are added to the <code>Libs</code> field in
+  pkg-config</li>
+<li><em>requires_private</em>: A list of packages required by this package but not
+  exposed to users; these can be specified as with <em>requires</em></li>
+<li><em>conflicts</em>: A list of packages that conflict with this package; these can be
+  specified as with <em>requires</em></li>
+<li><em>includes</em>: A list of <a href="#header_directory">directories</a> (or <a href="#header_file">header
+  files</a>) to add to the search path for users of this package</li>
+<li><em>libs</em>: A list of <a href="#library">libraries</a> for users of this package to link to;
+  any dependent libraries, packages, or link options (in the case of static
+  libs) will automatically be added to <em>libs_private</em>, <em>requires_private</em>, and
+  <em>link_options_private</em>, respectively</li>
+<li><em>libs_private</em>: A list of <a href="#library">libraries</a> required by this package but
+  not exposed to users (this is used primarily for static linking); dependent
+  libraries, packages, and link options are added as with <em>libs</em></li>
+<li><em>options</em>: A list of compile options for this package</li>
+<li><em>link_options</em>: A list of link options for this package</li>
+<li><em>link_options_private</em>: A list of link options for this package but not
+  exposed to users (this is used primarily for static linking)</li>
+<li><em>lang</em>: The language of the builder to use when generating option strings;
+  by default, <code>'c'</code></li>
+</ul>
+<p>If <em>auto_fill</em> is true (the default), this function will automatically fill in
+default values for the following fields:</p>
+<ul>
+<li><em>name</em>: The <a href="#project">project's name</a> (this also fills in <em>desc_name</em> and
+  <em>desc</em> with default values)</li>
+<li><em>version</em>: The <a href="#project">project's version</a>, or <code>0.0</code> if none is specified</li>
+<li><em>includes</em>: The list of <a href="#install">installed</a> header files/directories</li>
+<li><em>libs</em>: The list of <a href="#install">installed</a> library files</li>
+</ul>
 <h3 id="system_executable">system_executable(<em>name</em>)<a class="headerlink" href="#system_executable" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Search for an executable named <em>name</em> somewhere in the system's PATH.</p>
@@ -692,38 +806,42 @@ distributions</a>.</p></div>
 
         <footer class="col-md-12">
             <hr>
-                <p>Copyright &copy; 2015-2016 Jim Porter</p>
-            <p>Documentation built with <a href="http://www.mkdocs.org/">MkDocs</a>.</p>
+            
+                <center>Copyright &copy; 2015-2016 Jim Porter</center>
+            
+            <center>Documentation built with <a href="http://www.mkdocs.org/">MkDocs</a>.</center>
         </footer>
+
         <script src="../../js/jquery-1.10.2.min.js"></script>
         <script src="../../js/bootstrap-3.0.3.min.js"></script>
         <script src="../../js/highlight.pack.js"></script>
         <script>var base_url = '../..';</script>
         <script data-main="../../mkdocs/js/search.js" src="../../mkdocs/js/require.js"></script>
-        <script src="../../js/base.js"></script><div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-                <h4 class="modal-title" id="exampleModalLabel">Search</h4>
-            </div>
-            <div class="modal-body">
-                <p>
-                    From here you can search these documents. Enter
-                    your search terms below.
-                </p>
-                <form role="form">
-                    <div class="form-group">
-                        <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query">
+        <script src="../../js/base.js"></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                        <h4 class="modal-title" id="exampleModalLabel">Search</h4>
                     </div>
-                </form>
-                <div id="mkdocs-search-results"></div>
-            </div>
-            <div class="modal-footer">
+                    <div class="modal-body">
+                        <p>
+                            From here you can search these documents. Enter
+                            your search terms below.
+                        </p>
+                        <form role="form">
+                            <div class="form-group">
+                                <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query">
+                            </div>
+                        </form>
+                        <div id="mkdocs-search-results"></div>
+                    </div>
+                    <div class="modal-footer">
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-</div>
-
     </body>
 </html>
