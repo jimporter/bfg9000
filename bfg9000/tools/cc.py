@@ -12,7 +12,7 @@ from .utils import Command, darwin_install_name, SystemPackage
 from ..builtins.symlink import Symlink
 from ..file_types import *
 from ..iterutils import first, iterate, listify, uniques
-from ..path import Path, Root
+from ..path import install_path, Path, Root
 
 
 def recursive_deps(lib):
@@ -271,6 +271,8 @@ class CcLinker(Command):
 
     @property
     def _always_args(self):
+        if self.env.platform.object_format == 'mach-o':
+            return ['-Wl,-headerpad_max_install_names']
         return []
 
     def _lib_dirs(self, libraries, extra_dirs):
@@ -281,38 +283,61 @@ class CcLinker(Command):
         ))
         return ['-L' + i for i in dirs]
 
-    def _rpath(self, libraries, output):
-        if not output or not self.env.platform.has_rpath:
+    def _rpath(self, libraries, extra_dirs, output):
+        if not output:
             return []
 
         runtime_libs = [i.runtime_file for i in libraries if i.runtime_file]
-        if not runtime_libs:
+        if not runtime_libs and not extra_dirs:
             return []
 
-        if output.format == 'elf':
+        if self.env.platform.object_format == 'elf':
             start = output.path.parent()
-            paths = uniques(i.path.parent().relpath(start)
-                            for i in runtime_libs)
-            dep_paths = uniques(i.path.parent() for i in chain.from_iterable(
-                recursive_deps(i) for i in runtime_libs
+            base = '$ORIGIN'
+            paths = uniques(chain((i.path.parent() for i in runtime_libs),
+                                  extra_dirs))
+
+            relpaths = (i.relpath(start) for i in paths)
+            result = ['-Wl,-rpath,{}'.format(':'.join(
+                base if i == '.' else os.path.join(base, i) for i in relpaths
+            ))]
+
+            # Store the final (installed) rpaths so we can apply them with
+            # `patchelf` during installation.
+            output._rpath = uniques(chain(
+                getattr(output, '_rpath', []),
+                (install_path(i.path, i.install_root).parent()
+                 for i in runtime_libs),
+                extra_dirs
             ))
 
-            base = '$ORIGIN'
-            rpaths = ['-Wl,-rpath,{}'.format(':'.join(
-                base if i == '.' else os.path.join(base, i) for i in paths
-            ))]
-            rpath_links = (['-Wl,-rpath-link,' + safe_str.join(dep_paths, ':')]
-                           if dep_paths else [])
+            # GNU's ld doesn't correctly respect $ORIGIN in a shared library's
+            # DT_RPATH/DT_RUNPATH field. This results in ld being unable to
+            # find other shared libraries needed by the directly-linked
+            # library. Other linkers (such as gold) don't need this, but it
+            # doesn't hurt anything, so we'll just do it universally. See
+            # <https://sourceware.org/bugzilla/show_bug.cgi?id=16936> for more
+            # information.
+            deps = chain.from_iterable(recursive_deps(i) for i in runtime_libs)
+            dep_paths = [i for i in uniques(i.path.parent() for i in deps)]
+            if dep_paths:
+                result += ['-Wl,-rpath-link,' + safe_str.join(dep_paths, ':')]
 
-            return rpaths + rpath_links
-        elif output.format == 'mach-o':
+            return result
+        elif self.env.platform.object_format == 'mach-o':
+            # Currently, we set the rpath on macOS to make it easy to load
+            # locally-built shared libraries. Once we install the build, we'll
+            # convert all the rpath-based paths to absolute paths and remove
+            # the rpath from the binary.
             base = '@loader_path'
             path = Path('.').relpath(output.path.parent())
-            return ['-Wl,-headerpad_max_install_names', '-Wl,-rpath,' +
-                    (base if path == '.' else os.path.join(base, path))]
+            # Store the temporary rpath so we can remove it during installation
+            # with `install_name_tool`.
+            output._rpath = (base if path == '.' else os.path.join(base, path))
+            return ['-Wl,-rpath,' + output._rpath]
         else:
-            raise ValueError('unrecognized object format "{}"'
-                             .format(output.format))
+            # This object format must not support rpaths, so just return.
+            return []
 
     def _entry_point(self, entry_point):
         # This only applies to GCJ. XXX: Move GCJ-stuff to a separate class?
@@ -323,9 +348,11 @@ class CcLinker(Command):
     def args(self, options, output, pkg=False):
         libraries = getattr(options, 'libs', [])
         lib_dirs = getattr(options, 'lib_dirs', [])
+        rpath_dirs = getattr(options, 'rpath_dirs', [])
         entry_point = getattr(options, 'entry_point', None)
+
         return ( self._lib_dirs(libraries, lib_dirs) +
-                 self._rpath(libraries, first(output, default=None)) +
+                 self._rpath(libraries, rpath_dirs, output) +
                  self._entry_point(entry_point))
 
     def _link_lib(self, library):
@@ -359,18 +386,25 @@ class CcLinker(Command):
         libraries = getattr(options, 'libs', [])
         return sum((self._link_lib(i) for i in libraries), [])
 
-    def post_install(self, output):
-        if not self.env.platform.has_rpath:
+    def _post_install(self, output, library):
+        if self.env.platform.object_format not in ['elf', 'mach-o']:
             return None
 
-        if output.format == 'elf':
+        path = install_path(output.path, output.install_root)
+        rpath = getattr(output, '_rpath', None)
+        if self.env.platform.object_format == 'elf':
             tool = self.env.tool('patchelf')
-        elif output.format == 'mach-o':
+            return tool(tool, path, rpath)
+        else:  # mach-o
             tool = self.env.tool('install_name_tool')
-        else:
-            raise ValueError('unrecognized object format "{}"'
-                             .format(output.format))
-        return tool(tool, output, output.runtime_deps)
+            changes = [
+                (darwin_install_name(i), install_path(i.path, i.install_root))
+                for i in output.runtime_deps
+            ]
+            return tool(tool, path, path if library else None, rpath, changes)
+
+    def post_install(self, output):
+        return self._post_install(output, False)
 
 
 class CcExecutableLinker(CcLinker):
@@ -459,6 +493,9 @@ class CcSharedLibraryLinker(CcLinker):
         if not pkg:
             args.extend(self._soname(first(output)))
         return args
+
+    def post_install(self, output):
+        return self._post_install(output, True)
 
 
 class CcPackageResolver(object):

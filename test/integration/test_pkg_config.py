@@ -1,12 +1,6 @@
 import os.path
 from . import *
 
-library_path = {
-    'windows': 'PATH',
-    'linux': 'LD_LIBRARY_PATH',
-    'darwin': 'DYLD_LIBRARY_PATH',
-}
-
 
 @unittest.skipIf(platform_name() == 'windows',
                  'no pkg-config on windows (for now)')
@@ -34,8 +28,7 @@ class TestPkgConfig(IntegrationTest):
             'PKG_CONFIG_PATH': os.path.join(self.libdir, 'pkgconfig')
         })
         self.build()
-        self.assertOutput([executable('program')], 'hello, library!\n',
-                          env={library_path[platform_name()]: self.libdir})
+        self.assertOutput([executable('program')], 'hello, library!\n')
 
 
 @unittest.skipIf(platform_name() == 'windows',
@@ -62,5 +55,4 @@ class TestPkgConfigAuto(IntegrationTest):
             'PKG_CONFIG_PATH': os.path.join(self.libdir, 'pkgconfig')
         })
         self.build()
-        self.assertOutput([executable('program')], 'hello, library!\n',
-                          env={library_path[platform_name()]: self.libdir})
+        self.assertOutput([executable('program')], 'hello, library!\n')

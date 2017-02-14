@@ -1,6 +1,6 @@
 from .hooks import tool
-from .utils import darwin_install_name, SimpleCommand
-from ..path import install_path
+from .utils import SimpleCommand
+from ..iterutils import listify
 
 
 @tool('install_name_tool')
@@ -11,13 +11,15 @@ class InstallNameTool(SimpleCommand):
         SimpleCommand.__init__(self, env, 'INSTALL_NAME_TOOL',
                                'install_name_tool')
 
-    def __call__(self, cmd, file, libraries):
-        # XXX: Delete the rpath for `file` too?
-        def change(lib):
-            return ['-change', darwin_install_name(lib),
-                    install_path(lib.path, lib.install_root)]
-        args = sum((change(i) for i in libraries), [])
+    def __call__(self, cmd, file, id=None, delete_rpath=None, changes=[]):
+        rpath = getattr(file, 'darwin_rpath', None)
+
+        args = []
+        if id:
+            args += ['-id', id]
+        if rpath:
+            args += ['-delete_rpath', rpath]
+        args = sum((['-change'] + listify(i) for i in changes), args)
 
         if args:
-            path = install_path(file.path, file.install_root)
-            return [cmd] + args + [path]
+            return [cmd] + args + [file]

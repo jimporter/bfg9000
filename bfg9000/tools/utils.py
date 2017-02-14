@@ -15,7 +15,14 @@ class Command(object):
         self.command = command
 
     def run(self, *args, **kwargs):
-        env = kwargs.pop('env', self.env.variables)
+        env = self.env.variables
+        if 'env' in kwargs:
+            if kwargs.pop('env_update', True):
+                env = env.copy()
+                env.update(kwargs.pop('env'))
+            else:
+                env = kwargs.pop('env')
+
         # XXX: Use shell mode so that the (user-defined) command can have
         # multiple arguments defined in it?
         return shell.execute(

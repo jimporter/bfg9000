@@ -3,7 +3,8 @@ from six import iteritems, itervalues
 
 from .path import Path, Root
 from .file_types import File, Node
-from .iterutils import iterate, listify, objectify, unlistify
+from .iterutils import iterate, listify, unlistify
+from .objutils import objectify
 
 _build_inputs = {}
 

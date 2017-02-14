@@ -1,27 +1,8 @@
 from collections import Iterable
-from itertools import chain
 from six import iteritems, string_types
 
 __all__ = ['first', 'isiterable', 'iterate', 'listify', 'merge_dicts',
-           'merge_into_dict', 'objectify', 'tween', 'uniques', 'unlistify']
-
-
-# XXX: This isn't exactly an iterator utility, but this file is close enough...
-def objectify(thing, valid_type, creator=None, in_type=string_types,
-              **kwargs):
-    if creator is None:
-        creator = valid_type
-
-    if isinstance(thing, valid_type):
-        return thing
-    elif not isinstance(thing, in_type):
-        gen = (i.__name__ for i in chain([valid_type], iterate(in_type)))
-        raise TypeError('expected {}; but got {}'.format(
-            ', '.join(gen), type(thing).__name__
-        ))
-    else:
-        # XXX: Come up with a way to provide args to prepend?
-        return creator(thing, **kwargs)
+           'merge_into_dict', 'tween', 'uniques', 'unlistify']
 
 
 def isiterable(thing):

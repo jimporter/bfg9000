@@ -5,9 +5,10 @@ import warnings
 from .hooks import builtin
 from .find import find
 from ..file_types import Executable, Package
-from ..iterutils import iterate, listify, objectify
-from ..tools.utils import SystemPackage
+from ..iterutils import iterate, listify
+from ..objutils import objectify
 from ..path import Path, Root, which
+from ..tools.utils import SystemPackage
 from ..versioning import check_version, SpecifierSet, Version
 
 

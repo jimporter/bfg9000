@@ -50,10 +50,6 @@ class PosixPlatform(Platform):
         return True
 
     @property
-    def has_rpath(self):
-        return False
-
-    @property
     def include_dirs(self):
         return ['/usr/local/include', '/usr/include']
 
@@ -77,10 +73,6 @@ class LinuxPlatform(PosixPlatform):
     def object_format(self):
         return 'elf'
 
-    @property
-    def has_rpath(self):
-        return True
-
 
 class DarwinPlatform(PosixPlatform):
     _package_map = {
@@ -96,10 +88,6 @@ class DarwinPlatform(PosixPlatform):
     @property
     def shared_library_ext(self):
         return '.dylib'
-
-    @property
-    def has_rpath(self):
-        return True
 
 
 class WindowsPlatform(Platform):
@@ -131,10 +119,6 @@ class WindowsPlatform(Platform):
 
     @property
     def has_versioned_library(self):
-        return False
-
-    @property
-    def has_rpath(self):
         return False
 
     @property

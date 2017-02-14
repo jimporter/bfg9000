@@ -1,6 +1,6 @@
 from .hooks import builtin, optbuiltin
 from .. import versioning as v
-from ..build_inputs import objectify
+from ..objutils import objectify
 
 
 @builtin
