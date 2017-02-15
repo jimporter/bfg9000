@@ -14,12 +14,14 @@ from ..versioning import check_version, SpecifierSet, Version
 
 @builtin.globals('env')
 @builtin.type(Package)
-def package(env, name, lang='c', kind='any', header=None, version=None):
+def package(env, name, lang='c', kind='any', version=None, header=None,
+            header_only=False):
     if kind not in ('any', 'shared', 'static'):
         raise ValueError("kind must be one of 'any', 'shared', or 'static'")
     version = objectify(version or '', SpecifierSet)
 
-    return env.builder(lang).packages.resolve(name, kind, header, version)
+    return env.builder(lang).packages.resolve(name, kind, version, header,
+                                              header_only)
 
 
 # XXX: Remove this after 0.3 is released.

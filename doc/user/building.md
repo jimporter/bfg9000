@@ -1,10 +1,9 @@
 # Building With bfg9000
 
-Like some other tools (e.g. [CMake](https://www.cmake.org/) or
-[autotools](https://www.gnu.org/software/automake/)), bfg9000 isn't actually a
-build system; it's a *build configuration system* or, if you prefer, a
-*meta-build system*. That is, bfg9000 builds build files which you then use to
-run your actual builds.
+Like some other tools (e.g. [CMake][cmake] or [autotools][autotools]), bfg9000
+isn't actually a build system; it's a *build configuration system* or, if you
+prefer, a *meta-build system*. That is, bfg9000 builds build files which you
+then use to run your actual builds.
 
 ## Your first build
 
@@ -61,12 +60,10 @@ bfg9000 configure-into srcdir/ builddir/
 ## Selecting a backend
 
 By default, bfg9000 tries to use the most appropriate build backend for your
-system. In descending order, bfg prefers [`ninja`](https://ninja-build.org/),
-[`make`](https://www.gnu.org/software/make/), and
-[`msbuild`](https://msdn.microsoft.com/en-us/library/dd393574(v=vs.120).aspx).
-If one of these isn't installed, it will try the next best option. However, you
-can explicitly select a backend with the `--backend` option. For instance, to
-build a Makefile even if Ninja is installed:
+system. In descending order, bfg prefers [`ninja`][ninja], [`make`][make], and
+[`msbuild`][msbuild]. If one of these isn't installed, it will try the next best
+option. However, you can explicitly select a backend with the `--backend`
+option. For instance, to build a Makefile even if Ninja is installed:
 
 ```sh
 $ bfg9000 configure builddir/ --backend=make
@@ -121,3 +118,9 @@ following targets: `dist-gzip`, `dist-bzip2`, or `dist-zip`.
 
 !!! warning
     The MSBuild backend doesn't currently support this command.
+
+[cmake]: https://www.cmake.org/
+[autotools]: https://www.gnu.org/software/automake/
+[ninja]: https://ninja-build.org/
+[make]: https://www.gnu.org/software/make/
+[msbuild]: https://msdn.microsoft.com/en-us/library/dd393574(v=vs.120).aspx

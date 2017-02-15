@@ -578,11 +578,12 @@ class CcPackageResolver(object):
 
         raise IOError("unable to find library '{}'".format(name))
 
-    def resolve(self, name, kind='any', header=None, version=None):
+    def resolve(self, name, kind='any', version=None, header=None,
+                header_only=False):
         try:
             return pkg_config.resolve(self.env, name, kind, version)
         except (OSError, ValueError):
             real_name = self.env.platform.transform_package(name)
             includes = [self.header(i) for i in iterate(header)]
-            lib = self.library(real_name, kind)
-            return SystemPackage(name, includes=includes, libraries=[lib])
+            libs = [self.library(real_name, kind)] if not header_only else []
+            return SystemPackage(name, includes=includes, libraries=libs)

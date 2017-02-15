@@ -31,27 +31,23 @@ you can start using bfg to build your software!
     If you're using Ubuntu, you can also install bfg9000 from the following PPA:
     [ppa:jimporter/stable][ppa].
 
-[ppa]: https://launchpad.net/~jimporter/+archive/ubuntu/stable
-
 ### Installing patchelf
 
-On Linux, bfg9000 requires [patchelf](https://nixos.org/patchelf.html) in order
-to modify [rpath](https://en.wikipedia.org/wiki/Rpath)s of executables and
-shared libraries when installing. If you don't already have patchelf installed
-(e.g. via your distro's package manager) and in your `PATH`, bfg9000 will
-automatically install it via the
-[patchelf-wrapper](https://pypi.python.org/pypi/patchelf-wrapper) package. If
-you'd prefer not to install patchelf at all, you can set the `NO_PATCHELF`
-environment variable to 1 before installing bfg9000:
+On Linux, bfg9000 requires [patchelf][patchelf] in order to modify
+[rpath][rpath]s of executables and shared libraries when installing. If you
+don't already have patchelf installed (e.g. via your distro's package manager)
+and in your `PATH`, bfg9000 will automatically install it via the
+[patchelf-wrapper][patchelf-wrapper] package. If you'd prefer not to install
+patchelf at all, you can set the `NO_PATCHELF` environment variable to 1 before
+installing bfg9000:
 
 ```sh
 $ NO_PATCHELF=1 pip install bfg9000
 ```
 
 This will automatically download and install patchelf when installing the rest
-of bfg9000. If you're installing into a
-[virtualenv](https://virtualenv.readthedocs.org/en/latest/), patchelf
-will go into `$VIRTUAL_ENV/bin`.
+of bfg9000. If you're installing into a [virtualenv][virtualenv], patchelf will
+go into `$VIRTUAL_ENV/bin`.
 
 ### Installing MSBuild support
 
@@ -61,3 +57,9 @@ install all the dependencies required for MSBuild, you can run the following:
 ```sh
 $ pip install bfg9000[msbuild]
 ```
+
+[ppa]: https://launchpad.net/~jimporter/+archive/ubuntu/stable
+[patchelf]: https://nixos.org/patchelf.html
+[rpath]: https://en.wikipedia.org/wiki/Rpath
+[patchelf-wrapper]: https://pypi.python.org/pypi/patchelf-wrapper
+[virtualenv]: https://virtualenv.readthedocs.org/en/latest/)

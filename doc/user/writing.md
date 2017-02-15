@@ -183,9 +183,8 @@ don't.
 Most projects have external packages that they depend on. There are lots of
 different ways these packages are organized, and bfg9000 currently supports
 two of them: ["ordinary" packages](reference.md#package) (resolved using either
-[`pkg-config`](https://www.freedesktop.org/wiki/Software/pkg-config/) or
-searched for in the default location for your system) and [Boost
-packages](reference.md#boost_package):
+[`pkg-config`][pkg-config] or searched for in the default location for your
+system) and [Boost packages](reference.md#boost_package):
 
 ```python
 ogg = package('ogg', kind='static')
@@ -341,10 +340,6 @@ if argv.bar:
     pass  # Build the bar module
 ```
 
-[argparse]: https://docs.python.org/library/argparse.html
-[add_argument]: https://docs.python.org/library/argparse.html#the-add-argument-method
-[namespace]: https://docs.python.org/library/argparse.html#argparse.Namespace
-
 ## Generating pkg-config data
 
 When creating libraries for other projects to use, [`pkg-config`][pkg-config] is
@@ -386,3 +381,6 @@ There are several other options available to tweak the output of this function,
 detailed in the [reference guide](reference.md#pkg_config).
 
 [pkg-config]: https://www.freedesktop.org/wiki/Software/pkg-config/
+[argparse]: https://docs.python.org/library/argparse.html
+[add_argument]: https://docs.python.org/library/argparse.html#the-add-argument-method
+[namespace]: https://docs.python.org/library/argparse.html#argparse.Namespace

@@ -22,11 +22,13 @@ $ python setup.py test -s test.integration.test_simple
 
 ## Linting code
 
-bfg9000 uses [flake8](https://flake8.readthedocs.org/en/latest/) for linting.
-Since users generally don't need to worry about linting the codebase, this isn't
-automatically installed by setup.py. You'll need to install it yourself. Once
-installed, you can use the `lint` command like so:
+bfg9000 uses [flake8][flake8] for linting. Since users generally don't need to
+worry about linting the codebase, this isn't automatically installed by
+setup.py. You'll need to install it yourself. Once installed, you can use the
+`lint` command like so:
 
 ```sh
 $ python setup.py lint
 ```
+
+[flake8]: https://flake8.readthedocs.org/en/latest/

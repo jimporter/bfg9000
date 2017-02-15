@@ -48,6 +48,6 @@ $ ninja
 
 From there, you can run your newly-created executable: `./simple`. Hooray!
 
-For further examples, please see the
-[`examples/`](https://github.com/jimporter/bfg9000/tree/master/examples)
-subdirectory.
+For further examples, please see the [`examples/`][examples] subdirectory.
+
+[examples]: https://github.com/jimporter/bfg9000/tree/master/examples

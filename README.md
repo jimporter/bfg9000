@@ -49,14 +49,12 @@ $ ninja
 
 From there, you can run your newly-created executable: `./simple`. Hooray!
 
-For further examples, please see the
-[`examples/`](https://github.com/jimporter/bfg9000/tree/master/examples)
-subdirectory.
+For further examples, please see the [`examples/`][examples] subdirectory.
 
 ## Installation
 
-bfg9000 uses [setuptools](https://pythonhosted.org/setuptools/), so installation
-is much the same as any other Python package:
+bfg9000 uses [setuptools][setuptools], so installation is much the same as any
+other Python package:
 
 ```sh
 $ pip install bfg9000
@@ -64,9 +62,8 @@ $ pip install bfg9000
 
 From there, you can start using bfg to build your software! (If you're using
 Ubuntu, you can also install bfg9000 from the following PPA:
-[ppa:jimporter/stable](https://launchpad.net/~jimporter/+archive/ubuntu/stable)).
-For more information about how to install bfg9000, see the
-[documentation](https://jimporter.github.io/bfg9000/getting-started).
+[ppa:jimporter/stable][ppa]). For more information about how to install bfg9000,
+see the [documentation][getting-started].
 
 ## License
 
@@ -80,3 +77,8 @@ This project is licensed under the BSD 3-clause [license](LICENSE).
 [travis-link]: https://travis-ci.org/jimporter/bfg9000
 [appveyor-image]: https://ci.appveyor.com/api/projects/status/hxvbggf6exq8i2k6/branch/master?svg=true
 [appveyor-link]: https://ci.appveyor.com/project/jimporter/bfg9000/branch/master
+
+[examples]: https://github.com/jimporter/bfg9000/tree/master/examples
+[setuptools]: https://pythonhosted.org/setuptools/
+[ppa]: https://launchpad.net/~jimporter/+archive/ubuntu/stable
+[getting-started]: https://jimporter.github.io/bfg9000/getting-started

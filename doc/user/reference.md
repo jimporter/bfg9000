@@ -60,9 +60,8 @@ project. This can then be used in the *include* argument when
 added to the project's [source
 distribution](writing.md#distributing-your-source).
 
-If *system* is *True*, this directory will be treated as a
-[system directory](https://gcc.gnu.org/onlinedocs/cpp/System-Headers.html) for
-compilers that support this.
+If *system* is *True*, this directory will be treated as a [system
+directory][system-directory] for compilers that support this.
 
 ### header_file(*name*) { #header_file }
 Availability: `build.bfg`
@@ -296,10 +295,6 @@ In addition, the following argument may be specified:
     within the context of a particular source file and will contain all the
     code *up to and including* the header in question.
 
-[gcc-pch]: https://gcc.gnu.org/onlinedocs/gcc/Precompiled-Headers.html
-[clang-pch]: http://clang.llvm.org/docs/UsersManual.html#usersmanual-precompiled-headers
-[msvc-pch]: https://msdn.microsoft.com/en-us/library/szfdksca.aspx
-
 ### shared_library(*name*, [*files*, ..., [*extra_deps*]]) { #shared_library }
 Availability: `build.bfg`
 {: .subtitle}
@@ -372,10 +367,10 @@ variables](environment-vars.md#static-linking).
 Availability: `build.bfg`
 {: .subtitle}
 
-Create a build step that builds a [whole-archive](http://linux.die.net/man/1/ld)
-named *name*. Whole archives ensures that *every* object file in the library is
-included, rather than just the ones whose symbols are referenced. This is
-typically used to turn a static library into a shared library.
+Create a build step that builds a [whole-archive][whole-archive] named *name*.
+Whole archives ensures that *every* object file in the library is included,
+rather than just the ones whose symbols are referenced. This is typically used
+to turn a static library into a shared library.
 
 *whole_archive*'s arguments are the same as for
 [*static_library*](#static_library). In addition, you can pass an existing
@@ -488,12 +483,12 @@ run.
 Availability: `build.bfg`
 {: .subtitle}
 
-Search for a [Boost](https://www.boost.org/) library. You can specify *name* (as
-a string or a list) to specify a specific Boost library (or libraries); for
-instance, `'program_options'`. For header-only libraries, you can omit *name*.
-If *version* is specified, it will ensure that the installed version of Boost
-meets the version requirement; it must be formatted as a Python [version
-specifier](https://www.python.org/dev/peps/pep-0440/#version-specifiers).
+Search for a [Boost][boost] library. You can specify *name* (as a string or a
+list) to specify a specific Boost library (or libraries); for instance,
+`'program_options'`. For header-only libraries, you can omit *name*.  If
+*version* is specified, it will ensure that the installed version of Boost meets
+the version requirement; it must be formatted as a Python [version
+specifier][version-specifier].
 
 This rule recognizes the following environment variables:
 [`BOOST_ROOT`](environment-vars.md#boost_root),
@@ -504,31 +499,34 @@ This rule recognizes the following environment variables:
 [`LIB`](environment-vars.md#lib),
 [`LIBRARY_PATH`](environment-vars.md#library_path).
 
-### package(*name*, [*lang*], [*kind*], [*header*], [*version*]) { #package }
+### package(*name*, [*lang*], [*kind*], [*version*], [*header*], [*header_only*]) { #package }
 Availability: `build.bfg`
 {: .subtitle}
 
 Search for a package named *name*. *lang* is the source language of the library
 (`'c'` by default); this will affect how the package is resolved. For native
-libraries (C, C++, Fortran, etc), this will use
-[`pkg-config`](https://www.freedesktop.org/wiki/Software/pkg-config/) to resolve
-the package if it's installed. Otherwise (or if `pkg-config` can't find the
-package), this will check the system's default library locations.
+libraries (C, C++, Fortran, etc), this will use [`pkg-config`][pkg-config] to
+resolve the package if it's installed. Otherwise (or if pkg-config can't find
+the package), this will check the system's default library locations.
 
 You can also specify *kind* to one of `'any'` (the default), `'shared'`, or
 `'static'`. This allows you to restrict the search to find only static versions
 of a library, for example.
 
+If *version* is specified, it will (if possible) ensure that the installed
+version of the package meets the version requirement; it must be formatted as a
+Python [version specifier][version-specifier].
+
 The *header* argument allows you to specify a header file (or list
 thereof) that you need to use in your source files. This will search for the
 header file and add the appropriate include directory to your build
-configuration. (Note: this doesn't apply when `pkg-config` resolves the package,
-since `pkg-config` should add the appropriate include directories on its own.)
+configuration. (Note: this doesn't apply when pkg-config resolves the package,
+since pkg-config should add the appropriate include directories on its own.)
 
-Finally, if *version* is specified, it will (if possible) ensure that the
-installed version of the package meets the version requirement; it must be
-formatted as a Python [version
-specifier](https://www.python.org/dev/peps/pep-0440/#version-specifiers).
+Finally, the *header_only* argument allows you to indicate that a package
+doesn't use a compiled library. This is helpful when using header-only
+libraries, since bfg9000 can only tell if a library is header-only if it has
+pkg-config info.
 
 This rule recognizes the following environment variables:
 [`CPATH`](environment-vars.md#cpath),
@@ -541,10 +539,10 @@ This rule recognizes the following environment variables:
 Availability: `build.bfg`
 {: .subtitle}
 
-Create pkg-config information for this project and install it along with the
-rest of the installed files. All of these arguments are optional and will be
-automatically inferred from the rest of the build where possible. Unless
-otherwise noted, these arguments correspond directly to the fields in the
+Create [pkg-config][pkg-config] information for this project and install it
+along with the rest of the installed files. All of these arguments are optional
+and will be automatically inferred from the rest of the build where possible.
+Unless otherwise noted, these arguments correspond directly to the fields in the
 pkg-config `.pc` file.
 
 * *name*: The name of the package (to be used at the name of the `.pc` file)
@@ -676,16 +674,12 @@ All other arguments to this function have the same behavior as in
 * `'with'`: As `'enable'`, except the arguments are of the form `--with-<name>`
   and `--without-name`.
 
-[add_argument]: https://docs.python.org/library/argparse.html#the-add-argument-method
-
 ### argv
 Availability: `build.bfg`
 {: .subtitle}
 
 Retrieve the set of [user-defined arguments](writing.md#user-defined-arguments)
 passed to bfg9000; this is an [*argparse.Namespace*][namespace] object.
-
-[namespace]: https://docs.python.org/library/argparse.html#argparse.Namespace
 
 ### \__bfg9000__
 Availability: `build.bfg` and `build.opts`
@@ -700,8 +694,7 @@ Availability: `build.bfg` and `build.opts`
 {: .subtitle}
 
 Set the required *version* for bfg9000 and/or the required *python_version*.
-Each of these is a standard Python [version
-specifier](https://www.python.org/dev/peps/pep-0440/#version-specifiers).
+Each of these is a standard Python [version specifier][version-specifier].
 
 ### bfg9000_version
 Availability: `build.bfg` and `build.opts`
@@ -775,3 +768,15 @@ Set the name (and optionally the version) of the project. If you don't call
 this function to specify a project name, it defaults to the name of the
 project's source directory. This is primarily useful for creating [source
 distributions](writing.md#distributing-your-source).
+
+[system-directory]: https://gcc.gnu.org/onlinedocs/cpp/System-Headers.html
+[gcc-pch]: https://gcc.gnu.org/onlinedocs/gcc/Precompiled-Headers.html
+[clang-pch]: http://clang.llvm.org/docs/UsersManual.html#usersmanual-precompiled-headers
+[msvc-pch]: https://msdn.microsoft.com/en-us/library/szfdksca.aspx
+[whole-archive]: http://linux.die.net/man/1/ld
+[boost]: https://www.boost.org/
+[version-specifier]: https://www.python.org/dev/peps/pep-0440/#version-specifiers
+[pkg-config]: https://www.freedesktop.org/wiki/Software/pkg-config/
+[add_argument]: https://docs.python.org/library/argparse.html#the-add-argument-method
+[namespace]: https://docs.python.org/library/argparse.html#argparse.Namespace
+

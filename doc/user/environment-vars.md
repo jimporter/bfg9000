@@ -293,8 +293,7 @@ Default: `doppel`
 {: .subtitle}
 
 The command to use when installing files and building source distributions. For
-more information about doppel, see its
-[documentation](https://github.com/jimporter/doppel).
+more information about doppel, see its [documentation][doppel].
 
 #### *INSTALL_NAME_TOOL*
 Default: `install_name_tool`
@@ -348,3 +347,5 @@ Default: `14.0`
 
 *Windows-only*. The version of Visual Studio to target when generating MSBuild
 files.
+
+[doppel]: https://github.com/jimporter/doppel
