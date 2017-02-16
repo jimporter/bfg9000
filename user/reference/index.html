@@ -241,9 +241,8 @@ project. This can then be used in the <em>include</em> argument when
 <em>filter</em> are as per <a href="#find_files"><em>find_files</em></a>. Any matching files will be
 added to the project's <a href="../writing/#distributing-your-source">source
 distribution</a>.</p>
-<p>If <em>system</em> is <em>True</em>, this directory will be treated as a
-<a href="https://gcc.gnu.org/onlinedocs/cpp/System-Headers.html">system directory</a> for
-compilers that support this.</p>
+<p>If <em>system</em> is <em>True</em>, this directory will be treated as a <a href="https://gcc.gnu.org/onlinedocs/cpp/System-Headers.html">system
+directory</a> for compilers that support this.</p>
 <h3 id="header_file">header_file(<em>name</em>)<a class="headerlink" href="#header_file" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Create a reference to an existing header named <em>name</em>. This is useful if you'd
@@ -500,10 +499,10 @@ for an example of how to use this macro in your code.</p>
 </div>
 <h3 id="whole_archive">whole_archive(<em>name</em>, [<em>files</em>, ..., [<em>extra_deps</em>]])<a class="headerlink" href="#whole_archive" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
-<p>Create a build step that builds a <a href="http://linux.die.net/man/1/ld">whole-archive</a>
-named <em>name</em>. Whole archives ensures that <em>every</em> object file in the library is
-included, rather than just the ones whose symbols are referenced. This is
-typically used to turn a static library into a shared library.</p>
+<p>Create a build step that builds a <a href="http://linux.die.net/man/1/ld">whole-archive</a> named <em>name</em>.
+Whole archives ensures that <em>every</em> object file in the library is included,
+rather than just the ones whose symbols are referenced. This is typically used
+to turn a static library into a shared library.</p>
 <p><em>whole_archive</em>'s arguments are the same as for
 <a href="#static_library"><em>static_library</em></a>. In addition, you can pass an existing
 static library to <em>whole_archive</em> to convert it into a whole archive.</p>
@@ -582,11 +581,11 @@ run.</p>
 <h2 id="package-resolvers">Package resolvers<a class="headerlink" href="#package-resolvers" title="Permanent link">§</a></h2>
 <h3 id="boost_package">boost_package([<em>name</em>], [<em>version</em>])<a class="headerlink" href="#boost_package" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
-<p>Search for a <a href="https://www.boost.org/">Boost</a> library. You can specify <em>name</em> (as
-a string or a list) to specify a specific Boost library (or libraries); for
-instance, <code>'program_options'</code>. For header-only libraries, you can omit <em>name</em>.
-If <em>version</em> is specified, it will ensure that the installed version of Boost
-meets the version requirement; it must be formatted as a Python <a href="https://www.python.org/dev/peps/pep-0440/#version-specifiers">version
+<p>Search for a <a href="https://www.boost.org/">Boost</a> library. You can specify <em>name</em> (as a string or a
+list) to specify a specific Boost library (or libraries); for instance,
+<code>'program_options'</code>. For header-only libraries, you can omit <em>name</em>.  If
+<em>version</em> is specified, it will ensure that the installed version of Boost meets
+the version requirement; it must be formatted as a Python <a href="https://www.python.org/dev/peps/pep-0440/#version-specifiers">version
 specifier</a>.</p>
 <p>This rule recognizes the following environment variables:
 <a href="../environment-vars/#boost_root"><code>BOOST_ROOT</code></a>,
@@ -596,26 +595,28 @@ specifier</a>.</p>
 <a href="../environment-vars/#include"><code>INCLUDE</code></a>,
 <a href="../environment-vars/#lib"><code>LIB</code></a>,
 <a href="../environment-vars/#library_path"><code>LIBRARY_PATH</code></a>.</p>
-<h3 id="package">package(<em>name</em>, [<em>lang</em>], [<em>kind</em>], [<em>header</em>], [<em>version</em>])<a class="headerlink" href="#package" title="Permanent link">§</a></h3>
+<h3 id="package">package(<em>name</em>, [<em>lang</em>], [<em>kind</em>], [<em>version</em>], [<em>header</em>], [<em>header_only</em>])<a class="headerlink" href="#package" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Search for a package named <em>name</em>. <em>lang</em> is the source language of the library
 (<code>'c'</code> by default); this will affect how the package is resolved. For native
-libraries (C, C++, Fortran, etc), this will use
-<a href="https://www.freedesktop.org/wiki/Software/pkg-config/"><code>pkg-config</code></a> to resolve
-the package if it's installed. Otherwise (or if <code>pkg-config</code> can't find the
-package), this will check the system's default library locations.</p>
+libraries (C, C++, Fortran, etc), this will use <a href="https://www.freedesktop.org/wiki/Software/pkg-config/"><code>pkg-config</code></a> to
+resolve the package if it's installed. Otherwise (or if pkg-config can't find
+the package), this will check the system's default library locations.</p>
 <p>You can also specify <em>kind</em> to one of <code>'any'</code> (the default), <code>'shared'</code>, or
 <code>'static'</code>. This allows you to restrict the search to find only static versions
 of a library, for example.</p>
+<p>If <em>version</em> is specified, it will (if possible) ensure that the installed
+version of the package meets the version requirement; it must be formatted as a
+Python <a href="https://www.python.org/dev/peps/pep-0440/#version-specifiers">version specifier</a>.</p>
 <p>The <em>header</em> argument allows you to specify a header file (or list
 thereof) that you need to use in your source files. This will search for the
 header file and add the appropriate include directory to your build
-configuration. (Note: this doesn't apply when <code>pkg-config</code> resolves the package,
-since <code>pkg-config</code> should add the appropriate include directories on its own.)</p>
-<p>Finally, if <em>version</em> is specified, it will (if possible) ensure that the
-installed version of the package meets the version requirement; it must be
-formatted as a Python <a href="https://www.python.org/dev/peps/pep-0440/#version-specifiers">version
-specifier</a>.</p>
+configuration. (Note: this doesn't apply when pkg-config resolves the package,
+since pkg-config should add the appropriate include directories on its own.)</p>
+<p>Finally, the <em>header_only</em> argument allows you to indicate that a package
+doesn't use a compiled library. This is helpful when using header-only
+libraries, since bfg9000 can only tell if a library is header-only if it has
+pkg-config info.</p>
 <p>This rule recognizes the following environment variables:
 <a href="../environment-vars/#cpath"><code>CPATH</code></a>,
 <a href="../environment-vars/#include"><code>INCLUDE</code></a>,
@@ -624,10 +625,10 @@ specifier</a>.</p>
 <a href="../environment-vars/#pkg_config"><code>PKG_CONFIG</code></a>.</p>
 <h3 id="pkg_config">pkg_config([<em>name</em>], [<em>desc_name</em>], [<em>desc</em>], [<em>url</em>], [<em>version</em>], [<em>requires</em>], [<em>requires_private</em>], [<em>conflicts</em>], [<em>includes</em>], [<em>libs</em>], [<em>libs_private</em>], [<em>options</em>], [<em>link_options</em>], [<em>link_options_private</em>], [<em>auto_fill</em>])<a class="headerlink" href="#pkg_config" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
-<p>Create pkg-config information for this project and install it along with the
-rest of the installed files. All of these arguments are optional and will be
-automatically inferred from the rest of the build where possible. Unless
-otherwise noted, these arguments correspond directly to the fields in the
+<p>Create <a href="https://www.freedesktop.org/wiki/Software/pkg-config/">pkg-config</a> information for this project and install it
+along with the rest of the installed files. All of these arguments are optional
+and will be automatically inferred from the rest of the build where possible.
+Unless otherwise noted, these arguments correspond directly to the fields in the
 pkg-config <code>.pc</code> file.</p>
 <ul>
 <li><em>name</em>: The name of the package (to be used at the name of the <code>.pc</code> file)</li>
@@ -742,8 +743,7 @@ shadowed by a local variable.</p>
 <h3 id="bfg9000_required_version">bfg9000_required_version([<em>version</em>], [<em>python_version</em>])<a class="headerlink" href="#bfg9000_required_version" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code> and <code>build.opts</code></p>
 <p>Set the required <em>version</em> for bfg9000 and/or the required <em>python_version</em>.
-Each of these is a standard Python <a href="https://www.python.org/dev/peps/pep-0440/#version-specifiers">version
-specifier</a>.</p>
+Each of these is a standard Python <a href="https://www.python.org/dev/peps/pep-0440/#version-specifiers">version specifier</a>.</p>
 <h3 id="bfg9000_version">bfg9000_version<a class="headerlink" href="#bfg9000_version" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code> and <code>build.opts</code></p>
 <p>Return the current version of bfg9000. This can be useful if you want to

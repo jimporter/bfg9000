@@ -215,21 +215,19 @@ you can start using bfg to build your software!</p>
 <a href="https://launchpad.net/~jimporter/+archive/ubuntu/stable">ppa:jimporter/stable</a>.</p>
 </div>
 <h3 id="installing-patchelf">Installing patchelf<a class="headerlink" href="#installing-patchelf" title="Permanent link">§</a></h3>
-<p>On Linux, bfg9000 requires <a href="https://nixos.org/patchelf.html">patchelf</a> in order
-to modify <a href="https://en.wikipedia.org/wiki/Rpath">rpath</a>s of executables and
-shared libraries when installing. If you don't already have patchelf installed
-(e.g. via your distro's package manager) and in your <code>PATH</code>, bfg9000 will
-automatically install it via the
-<a href="https://pypi.python.org/pypi/patchelf-wrapper">patchelf-wrapper</a> package. If
-you'd prefer not to install patchelf at all, you can set the <code>NO_PATCHELF</code>
-environment variable to 1 before installing bfg9000:</p>
+<p>On Linux, bfg9000 requires <a href="https://nixos.org/patchelf.html">patchelf</a> in order to modify
+<a href="https://en.wikipedia.org/wiki/Rpath">rpath</a>s of executables and shared libraries when installing. If you
+don't already have patchelf installed (e.g. via your distro's package manager)
+and in your <code>PATH</code>, bfg9000 will automatically install it via the
+<a href="https://pypi.python.org/pypi/patchelf-wrapper">patchelf-wrapper</a> package. If you'd prefer not to install
+patchelf at all, you can set the <code>NO_PATCHELF</code> environment variable to 1 before
+installing bfg9000:</p>
 <pre><code class="sh">$ NO_PATCHELF=1 pip install bfg9000
 </code></pre>
 
 <p>This will automatically download and install patchelf when installing the rest
-of bfg9000. If you're installing into a
-<a href="https://virtualenv.readthedocs.org/en/latest/">virtualenv</a>, patchelf
-will go into <code>$VIRTUAL_ENV/bin</code>.</p>
+of bfg9000. If you're installing into a <a href="https://virtualenv.readthedocs.org/en/latest/)">virtualenv</a>, patchelf will
+go into <code>$VIRTUAL_ENV/bin</code>.</p>
 <h3 id="installing-msbuild-support">Installing MSBuild support<a class="headerlink" href="#installing-msbuild-support" title="Permanent link">§</a></h3>
 <p>Since many users don't need it, MSBuild support is an optional feature. To
 install all the dependencies required for MSBuild, you can run the following:</p>

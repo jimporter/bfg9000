@@ -352,9 +352,8 @@ don't.</p>
 <p>Most projects have external packages that they depend on. There are lots of
 different ways these packages are organized, and bfg9000 currently supports
 two of them: <a href="../reference/#package">"ordinary" packages</a> (resolved using either
-<a href="https://www.freedesktop.org/wiki/Software/pkg-config/"><code>pkg-config</code></a> or
-searched for in the default location for your system) and <a href="../reference/#boost_package">Boost
-packages</a>:</p>
+<a href="https://www.freedesktop.org/wiki/Software/pkg-config/"><code>pkg-config</code></a> or searched for in the default location for your
+system) and <a href="../reference/#boost_package">Boost packages</a>:</p>
 <pre><code class="python">ogg = package('ogg', kind='static')
 prog_opts = boost_package('program_options', version='&gt;=1.55')
 </code></pre>
