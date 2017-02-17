@@ -9,6 +9,7 @@ from ... import path
 from ... import safe_str
 from ... import shell
 from ... import iterutils
+from ...objutils import objectify
 from ...platforms import platform_name
 from ...versioning import Version
 
@@ -129,7 +130,8 @@ class Commands(object):
     def __init__(self, commands, environ=None):
         if not commands:
             raise ValueError('expected at least one command')
-        self.commands = iterutils.listify(commands)
+        self.commands = iterutils.listify(commands, always_copy=True,
+                                          scalar_ok=False)
         self.environ = environ or {}
 
     def use(self):
@@ -146,15 +148,15 @@ class Commands(object):
     def _safe_str(self):
         return self.use()
 
-    @staticmethod
-    def needs_shell(commands, environ=[]):
-        if not commands:
+    @property
+    def needs_shell(self):
+        if not self.commands:
             raise ValueError('expected at least one command')
         return (
-            len(environ) > 0 or
-            len(commands) > 1 or
-            isinstance(commands[0], shell.shell_list) or
-            not iterutils.isiterable(commands[0])
+            len(self.environ) > 0 or
+            len(self.commands) > 1 or
+            isinstance(self.commands[0], shell.shell_list) or
+            not iterutils.isiterable(self.commands[0])
         )
 
 
@@ -199,12 +201,9 @@ class NinjaFile(object):
 
     def rule(self, name, command, depfile=None, deps=None, generator=False,
              pool=None, restat=False):
-        if not isinstance(command, Commands):
-            command = iterutils.listify(command)
-            if Commands.needs_shell(command):
-                command = Commands(command)
-            else:
-                command = command[0]
+        command = objectify(command, Commands, in_type=object)
+        if not command.needs_shell:
+            command = command.commands[0]
 
         if pool is not None:
             if pool == 'console':

@@ -25,10 +25,12 @@ def iterate(thing):
         return generate_one(thing)
 
 
-def listify(thing, always_copy=False):
+def listify(thing, always_copy=False, scalar_ok=True):
     if not always_copy and type(thing) == list:
         return thing
-    return list(iterate(thing))
+    if scalar_ok:
+        thing = iterate(thing)
+    return list(thing)
 
 
 _first_required = object()
