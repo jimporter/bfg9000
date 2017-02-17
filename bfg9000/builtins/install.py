@@ -84,7 +84,7 @@ def _install_commands(backend, build_inputs, buildfile, env):
                 src = [i.path.relpath(output.path) for i in output.files]
                 dst = path.install_path(output.path, output.install_root,
                                         directory=True)
-                return doppel.copy_into(cmd, src, dst, directory=output.path)
+                return doppel(cmd, 'into', src, dst, directory=output.path)
 
             warnings.warn(
                 ('installed directory {!r} has no matching files; did you ' +
@@ -93,7 +93,7 @@ def _install_commands(backend, build_inputs, buildfile, env):
 
         src = output.path
         dst = path.install_path(src, output.install_root)
-        return doppel.copy_onto(cmd, src, dst)
+        return doppel(cmd, 'onto', src, dst)
 
     def post_install(output):
         if output.post_install:

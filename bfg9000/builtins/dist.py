@@ -31,9 +31,11 @@ def _dist_command(backend, format, build_inputs, buildfile, env):
     if project.version:
         dstname += '-' + str(project.version)
 
-    return [doppel.archive(
-        cmd, format, [i.path.relpath(srcdir) for i in build_inputs.sources()],
-        Path(dstname + _exts[format]), directory=srcdir, dest_prefix=dstname
+    return [doppel(
+        cmd, 'archive',
+        [i.path.relpath(srcdir) for i in build_inputs.sources()],
+        Path(dstname + _exts[format]), directory=srcdir, format=format,
+        dest_prefix=dstname
     )]
 
 
