@@ -14,24 +14,22 @@ class Regenerate(object):
 @make.post_rule
 def make_regenerate_rule(build_inputs, buildfile, env):
     bfg9000 = env.tool('bfg9000')
-    bfgcmd = make.cmd_var(bfg9000, buildfile)
 
     make.multitarget_rule(
         buildfile,
         targets=[Path('Makefile')] + build_inputs['regenerate'].outputs,
         deps=[build_inputs.bfgpath],
-        recipe=[bfg9000.regenerate(bfgcmd, Path('.'))]
+        recipe=[bfg9000(Path('.'))]
     )
 
 
 @ninja.post_rule
 def ninja_regenerate_rule(build_inputs, buildfile, env):
     bfg9000 = env.tool('bfg9000')
-    bfgcmd = ninja.cmd_var(bfg9000, buildfile)
 
     buildfile.rule(
         name='regenerate',
-        command=[bfg9000.regenerate(bfgcmd, Path('.'))],
+        command=[bfg9000(Path('.'))],
         generator=True,
         depfile=build_inputs['regenerate'].depfile,
     )

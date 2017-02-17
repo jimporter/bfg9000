@@ -64,11 +64,6 @@ def write(env, build_inputs):
         buildfile.write(out)
 
 
-def cmd_var(cmd, buildfile):
-    name = cmd.command_var
-    return buildfile.variable(name, cmd.command, Section.command, True)
-
-
 def flags_vars(name, value, buildfile):
     gflags = buildfile.variable('global_' + name, value, Section.flags, True)
     flags = buildfile.variable(name, gflags, Section.other, True)
@@ -96,13 +91,15 @@ def command_build(buildfile, env, output, inputs=None, implicit=None,
         extra_implicit = []
 
         if not buildfile.has_rule('command'):
-            buildfile.rule(name='command', command=var('cmd'))
+            buildfile.rule(name='command', command=[var('cmd')])
 
+    cmds = Commands(commands, environ)
+    cmds.convert_args(lambda x: buildfile.cmd_var(x))
     buildfile.build(
         output=output,
         rule=rule_name,
         inputs=inputs,
         implicit=iterutils.listify(implicit) + extra_implicit,
         order_only=order_only,
-        variables={'cmd': Commands(commands, environ)}
+        variables={'cmd': cmds}
     )

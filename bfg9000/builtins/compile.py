@@ -200,14 +200,12 @@ def make_compile(rule, build_inputs, buildfile, env):
         if compiler.deps_flavor == 'gcc':
             depfixer = env.tool('depfixer')
             cmd_kwargs['deps'] = deps = first(output_vars) + '.d'
-            df_cmd = make.cmd_var(depfixer, buildfile)
-            recipe_extra = [make.silent(depfixer(df_cmd, deps))]
+            recipe_extra = [make.Silent(depfixer(deps))]
 
             buildfile.include(rule.output[0].path.addext('.d'), optional=True)
 
         buildfile.define(recipename, [compiler(
-            cmd=make.cmd_var(compiler, buildfile), input=make.qvar('<'),
-            output=output_vars, **cmd_kwargs
+            make.qvar('<'), output_vars, **cmd_kwargs
         )] + recipe_extra)
 
     deps = []
@@ -260,8 +258,7 @@ def ninja_compile(rule, build_inputs, buildfile, env):
             cmd_kwargs['deps'] = True
 
         buildfile.rule(name=compiler.rule_name, command=[compiler(
-            cmd=ninja.cmd_var(compiler, buildfile), input=ninja.var('in'),
-            output=output_vars, **cmd_kwargs
+            ninja.var('in'), output_vars, **cmd_kwargs
         )], depfile=depfile, deps=deps)
 
     inputs = [rule.file]

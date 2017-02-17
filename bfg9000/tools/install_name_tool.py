@@ -11,7 +11,7 @@ class InstallNameTool(SimpleCommand):
         SimpleCommand.__init__(self, env, 'INSTALL_NAME_TOOL',
                                'install_name_tool')
 
-    def __call__(self, cmd, file, id=None, delete_rpath=None, changes=[]):
+    def _call(self, cmd, file, id=None, delete_rpath=None, changes=[]):
         rpath = getattr(file, 'darwin_rpath', None)
 
         args = []

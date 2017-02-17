@@ -11,6 +11,7 @@ from ... import shell
 from ... import iterutils
 from ...objutils import objectify
 from ...platforms import platform_name
+from ...tools.utils import Command
 from ...versioning import Version
 
 __all__ = ['NinjaFile', 'Section', 'Syntax', 'Writer', 'Variable', 'var',
@@ -130,14 +131,12 @@ class Commands(object):
     def __init__(self, commands, environ=None):
         if not commands:
             raise ValueError('expected at least one command')
-        self.commands = iterutils.listify(commands, always_copy=True,
-                                          scalar_ok=False)
+        self.commands = iterutils.listify(commands, scalar_ok=False)
         self.environ = environ or {}
 
     def use(self):
         out = Writer(StringIO())
-        if ( self.needs_shell(self.commands, self.environ) and
-             platform_name() == 'windows'):
+        if self.needs_shell and platform_name() == 'windows':
             out.write_literal('cmd /c ')
 
         env_vars = shell.global_env(self.environ)
@@ -147,6 +146,14 @@ class Commands(object):
 
     def _safe_str(self):
         return self.use()
+
+    def convert_args(self, conv):
+        def convert(args):
+            if iterutils.isiterable(args):
+                return Command.convert_args(args, conv)
+            return args
+
+        self.commands = [convert(i) for i in self.commands]
 
     @property
     def needs_shell(self):
@@ -196,12 +203,17 @@ class NinjaFile(object):
             self._variables[section].append((name, value))
         return name
 
+    def cmd_var(self, cmd):
+        return self.variable(cmd.command_var, cmd.command, Section.command,
+                             exist_ok=True)
+
     def has_variable(self, name):
         return var(name) in self._var_table
 
     def rule(self, name, command, depfile=None, deps=None, generator=False,
              pool=None, restat=False):
         command = objectify(command, Commands, in_type=object)
+        command.convert_args(lambda x: self.cmd_var(x))
         if not command.needs_shell:
             command = command.commands[0]
 

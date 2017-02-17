@@ -69,11 +69,6 @@ def write(env, build_inputs):
         buildfile.write(out)
 
 
-def cmd_var(cmd, buildfile):
-    name = cmd.command_var.upper()
-    return buildfile.variable(name, cmd.command, Section.command, True)
-
-
 def flags_vars(name, value, buildfile):
     name = name.upper()
     gflags = buildfile.variable('GLOBAL_' + name, value, Section.flags, True)
@@ -89,7 +84,7 @@ def multitarget_rule(buildfile, targets, deps=None, order_only=None,
         first_path = first if isinstance(first, path.Path) else first.path
         primary = first_path.addext('.stamp')
         buildfile.rule(target=targets, deps=[primary])
-        recipe = listify(recipe) + [silent([ 'touch', var('@') ])]
+        recipe = listify(recipe) + [Silent([ 'touch', var('@') ])]
     else:
         primary = targets[0]
 
@@ -105,7 +100,7 @@ def directory_rule(build_inputs, buildfile, env):
     buildfile.rule(
         target=pattern,
         recipe=[
-            silent(mkdir_p(cmd_var(mkdir_p, buildfile), path)),
-            silent(['touch', qvar('@')])
+            Silent(mkdir_p(path)),
+            Silent(['touch', qvar('@')])
         ]
     )

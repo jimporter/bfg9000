@@ -37,7 +37,7 @@ class ArLinker(SimpleCommand):
         # and only define the macros if it does.
         return self.env.platform.has_import_library
 
-    def __call__(self, cmd, input, output, args=None):
+    def _call(self, cmd, input, output, args=None):
         result = [cmd]
         result.extend(iterutils.iterate(args))
         result.append(output)

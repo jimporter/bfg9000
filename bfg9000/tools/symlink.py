@@ -10,5 +10,5 @@ class Symlink(SimpleCommand):
         # XXX: Support mklink?
         SimpleCommand.__init__(self, env, 'SYMLINK', 'ln -sf')
 
-    def __call__(self, cmd, input, output):
+    def _call(self, cmd, input, output):
         return [cmd, input, output]

@@ -24,7 +24,6 @@ def extra_dist(builtins, files=None, dirs=None):
 def _dist_command(backend, format, build_inputs, buildfile, env):
     srcdir = Path('.', Root.srcdir)
     doppel = env.tool('doppel')
-    cmd = backend.cmd_var(doppel, buildfile)
 
     project = build_inputs['project']
     dstname = project.name
@@ -32,8 +31,7 @@ def _dist_command(backend, format, build_inputs, buildfile, env):
         dstname += '-' + str(project.version)
 
     return [doppel(
-        cmd, 'archive',
-        [i.path.relpath(srcdir) for i in build_inputs.sources()],
+        'archive', [i.path.relpath(srcdir) for i in build_inputs.sources()],
         Path(dstname + _exts[format]), directory=srcdir, format=format,
         dest_prefix=dstname
     )]

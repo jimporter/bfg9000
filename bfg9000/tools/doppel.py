@@ -15,8 +15,8 @@ class Doppel(SimpleCommand):
     def data_args(self):
         return ['-m', '644']
 
-    def __call__(self, cmd, mode, src, dst, directory=None, format=None,
-                 dest_prefix=None):
+    def _call(self, cmd, mode, src, dst, directory=None, format=None,
+              dest_prefix=None):
         if mode == 'onto':
             return [cmd, '-p', src, dst]
 

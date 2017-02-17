@@ -15,10 +15,10 @@ def make_write_file(rule, build_inputs, buildfile, env):
     printf = env.tool('printf')
     recipename = make.var('RULE_{}'.format(printf.rule_name.upper()))
     if not buildfile.has_variable(recipename):
-        buildfile.define(recipename, [printf(
-            cmd=make.cmd_var(printf, buildfile), format='%s\\n',
-            input=make.var('1'), output=make.qvar('@')
-        )])
+        buildfile.define(
+            recipename,
+            [printf('%s\\n', make.var('1'), make.qvar('@'))]
+        )
 
     buildfile.rule(
         target=rule.output,
@@ -32,10 +32,7 @@ def ninja_write_file(rule, build_inputs, buildfile, env):
     if not buildfile.has_rule(printf.rule_name):
         buildfile.rule(
             name=printf.rule_name,
-            command=[printf(
-                cmd=ninja.cmd_var(printf, buildfile), format='%s\\n',
-                input=ninja.var('text'), output=ninja.var('out')
-            )]
+            command=[printf('%s\\n', ninja.var('text'), ninja.var('out'))]
         )
 
     buildfile.build(
@@ -54,7 +51,7 @@ try:
         output = rule.output[0]
         project = msbuild.ExecProject(
             env, name=output.path.suffix,
-            commands=[printf(printf.command, '%s\\n', rule.text, output.path)],
+            commands=[printf('%s\\n', rule.text, output.path)],
             dependencies=solution.dependencies(rule.extra_deps),
         )
         solution[output] = project

@@ -1,4 +1,3 @@
-from functools import partial
 from six.moves import cStringIO as StringIO
 
 from . import builtin
@@ -150,8 +149,7 @@ def ninja_test_rule(build_inputs, buildfile, env):
     try:
         local_env = shell.local_env
     except AttributeError:
-        setenv = env.tool('setenv')
-        local_env = partial(setenv, ninja.cmd_var(setenv, buildfile))
+        local_env = env.tool('setenv')
 
     commands, more_deps = _build_commands(
         tests.tests, ninja.Writer, shell, local_env

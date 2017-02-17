@@ -12,6 +12,7 @@ from ... import path
 from ... import safe_str
 from ... import shell
 from ...iterutils import isiterable
+from ...tools.utils import Command
 
 __all__ = ['ExecProject', 'NoopProject', 'Solution', 'UuidMap', 'VcxProject',
            'textify', 'textify_each']
@@ -180,7 +181,6 @@ _path_vars = {
 
 def textify(thing, quoted=False, out=True):
     thing = safe_str.safe_str(thing)
-
     if isinstance(thing, safe_str.escaped_str):
         return thing.string
     elif isinstance(thing, string_types):
@@ -408,14 +408,15 @@ class ExecProject(Project):
         target = E.Target({'Name': 'Build'},
             E.MakeDir(Directories='$(OutDir)')
         )
-        for i in self.commands:
+        for line in self.commands:
             # XXX: What to do here with the `out` param? It's not clear what
             # value it should have; do users want to mess with an intermediate
             # file or an output file?
-            if isiterable(i):
-                cmd = ' '.join(textify_each(i, quoted=True))
+            if isiterable(line):
+                line = Command.convert_args(line, lambda x: x.command)
+                cmd = ' '.join(textify_each(line, quoted=True))
             else:
-                cmd = textify(i)
+                cmd = textify(line)
             target.append(E.Exec({
                 'Command': cmd, 'WorkingDirectory': '$(OutDir)'
             }))

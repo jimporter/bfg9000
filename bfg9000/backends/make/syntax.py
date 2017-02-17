@@ -8,12 +8,13 @@ from ... import path
 from ... import safe_str
 from ... import iterutils
 from ...platforms import platform_name
+from ...tools.utils import Command
 
 # XXX: Make currently only supports sh-style shells.
 from ...shell import posix as pshell
 
 __all__ = ['Call', 'Entity', 'Function', 'Makefile', 'Pattern', 'Section',
-           'Syntax', 'Writer', 'Variable', 'var', 'qvar', 'silent',
+           'Syntax', 'Writer', 'Variable', 'var', 'qvar', 'Silent',
            'path_vars']
 
 Rule = namedtuple('Rule', ['targets', 'deps', 'order_only', 'recipe',
@@ -97,6 +98,10 @@ class Writer(object):
             self.write(i, syntax, shell_quote)
 
     def write_shell(self, thing, syntax=Syntax.shell):
+        if isinstance(thing, Silent):
+            self.write_literal('@')
+            thing = thing.data
+
         if iterutils.isiterable(thing):
             self.write_each(thing, syntax)
         else:
@@ -210,11 +215,9 @@ class Call(Function):
         Function.__init__(self, 'call', var(func).name, *args)
 
 
-def silent(command):
-    if isinstance(command, list):
-        return ['@' + command[0]] + command[1:]
-    else:
-        return '@' + command
+class Silent(object):
+    def __init__(self, data):
+        self.data = data
 
 
 path_vars = {
@@ -251,9 +254,16 @@ class Makefile(object):
 
     def define(self, name, value, exist_ok=False):
         name, exists = self._unique_var(name, exist_ok)
+        if iterutils.isiterable(value):
+            value = [self._convert_args(i) for i in value]
+
         if not exists:
             self._defines.append((name, value))
         return name
+
+    def cmd_var(self, cmd):
+        name = cmd.command_var.upper()
+        return self.variable(name, cmd.command, Section.command, exist_ok=True)
 
     def has_variable(self, name):
         return var(name) in self._var_table
@@ -271,8 +281,6 @@ class Makefile(object):
 
     def rule(self, target, deps=None, order_only=None, recipe=None,
              variables=None, phony=False):
-        variables = {var(k): v for k, v in iteritems(variables or {})}
-
         targets = iterutils.listify(target)
         if len(targets) == 0:
             raise ValueError('must have at least one target')
@@ -280,6 +288,12 @@ class Makefile(object):
             if self.has_rule(i):
                 raise ValueError("rule for '{}' already exists".format(i))
             self._targets.add(i)
+
+        if iterutils.isiterable(recipe):
+            recipe = [self._convert_args(i) for i in recipe]
+
+        variables = {var(k): v for k, v in iteritems(variables or {})}
+
         self._rules.append(Rule(
             targets, iterutils.listify(deps), iterutils.listify(order_only),
             recipe, variables, phony
@@ -287,6 +301,16 @@ class Makefile(object):
 
     def has_rule(self, name):
         return name in self._targets
+
+    def _convert_args(self, args):
+        def conv(args):
+            if iterutils.isiterable(args):
+                return Command.convert_args(args, lambda x: self.cmd_var(x))
+            return args
+
+        if isinstance(args, Silent):
+            return Silent(conv(args.data))
+        return conv(args)
 
     def _write_variable(self, out, name, value, syntax=Syntax.shell,
                         target=None):

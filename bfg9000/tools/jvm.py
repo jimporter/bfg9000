@@ -60,14 +60,14 @@ class JvmCompiler(Command):
     def accepts_pch(self):
         return False
 
-    def __call__(self, cmd, input, output, args=None):
+    def _call(self, cmd, input, output, args=None):
         jvmoutput = self.env.tool('jvmoutput')
 
         result = shell_list([cmd])
         result.extend(iterate(args))
         result.extend(['-verbose', '-d', '.'])
-        result.extend([input, safe_str.escaped_str('2>&1 |')] +
-                      jvmoutput(jvmoutput.command, output))
+        result.extend([input, safe_str.escaped_str('2>&1 |')])
+        result.extend(jvmoutput(output))
         return result
 
     def _class_path(self, libraries):
@@ -126,7 +126,7 @@ class JarMaker(Command):
         WriteFile(build, source, text)
         options.manifest = source
 
-    def __call__(self, cmd, input, output, manifest, libs=None, args=None):
+    def _call(self, cmd, input, output, manifest, libs=None, args=None):
         result = [cmd, 'cfm', output, manifest]
         result.extend(iterate(input))
         return result

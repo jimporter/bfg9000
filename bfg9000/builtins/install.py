@@ -67,7 +67,7 @@ def _install_commands(backend, build_inputs, buildfile, env):
     doppel = env.tool('doppel')
 
     def doppel_cmd(kind):
-        cmd = backend.cmd_var(doppel, buildfile)
+        cmd = buildfile.cmd_var(doppel)
         name = cmd.name
 
         if kind != 'program':
@@ -84,7 +84,7 @@ def _install_commands(backend, build_inputs, buildfile, env):
                 src = [i.path.relpath(output.path) for i in output.files]
                 dst = path.install_path(output.path, output.install_root,
                                         directory=True)
-                return doppel(cmd, 'into', src, dst, directory=output.path)
+                return doppel('into', src, dst, directory=output.path, cmd=cmd)
 
             warnings.warn(
                 ('installed directory {!r} has no matching files; did you ' +
@@ -93,17 +93,11 @@ def _install_commands(backend, build_inputs, buildfile, env):
 
         src = output.path
         dst = path.install_path(src, output.install_root)
-        return doppel(cmd, 'onto', src, dst)
-
-    def post_install(output):
-        if output.post_install:
-            line = output.post_install
-            line[0] = backend.cmd_var(line[0], buildfile)
-            return line
+        return doppel('onto', src, dst, cmd=cmd)
 
     return list(chain(
         (install_line(i) for i in install_outputs),
-        ifilter(None, (post_install(i) for i in install_outputs))
+        ifilter(None, (i.post_install for i in install_outputs))
     ))
 
 

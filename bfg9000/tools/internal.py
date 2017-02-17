@@ -13,7 +13,7 @@ class Bfg9000(Command):
         cmd = env.getvar('BFG9000', env.bfgdir.append('bfg9000'))
         Command.__init__(self, env, cmd)
 
-    def regenerate(self, cmd, builddir):
+    def _call(self, cmd, builddir):
         return [cmd, 'refresh', builddir]
 
 
@@ -25,20 +25,20 @@ class Depfixer(Command):
         cmd = env.getvar('DEPFIXER', env.bfgdir.append('bfg9000-depfixer'))
         Command.__init__(self, env, cmd)
 
-    def __call__(self, cmd, depfile):
+    def _call(self, cmd, depfile):
         return shell_list([cmd, escaped_str('<'), depfile, escaped_str('>>'),
                            depfile])
 
 
 @tool('jvmoutput')
 class JvmOutput(Command):
-    rule_name = command_var = 'depfixer'
+    rule_name = command_var = 'jvmoutput'
 
     def __init__(self, env):
         cmd = env.getvar('JVMOUTPUT', env.bfgdir.append('bfg9000-jvmoutput'))
         Command.__init__(self, env, cmd)
 
-    def __call__(self, cmd, output):
+    def _call(self, cmd, output):
         return shell_list([cmd, escaped_str('>'), output])
 
 
@@ -51,7 +51,7 @@ if platform_name() == 'windows':
             cmd = env.getvar('SETENV', env.bfgdir.append('bfg9000-setenv'))
             Command.__init__(self, env, cmd)
 
-        def __call__(self, cmd, env):
+        def _call(self, cmd, env):
             if env:
                 eq = escaped_str('=')
                 return [cmd] + [jbos(safe_str(name), eq, safe_str(value))

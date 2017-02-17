@@ -5,7 +5,7 @@ from six.moves import zip
 
 from .. import shell
 from ..file_types import Package
-from ..iterutils import listify
+from ..iterutils import isiterable, listify
 from ..path import Path, which
 
 
@@ -13,6 +13,24 @@ class Command(object):
     def __init__(self, env, command):
         self.env = env
         self.command = command
+
+    @staticmethod
+    def convert_args(args, conv, in_place=None):
+        if not isiterable(args):
+            raise ValueError('blah')
+
+        if in_place is None:
+            in_place = not any(isinstance(i, Command) for i in args)
+        if not in_place:
+            args = type(args)(args)
+        for i, v in enumerate(args):
+            if isinstance(v, Command):
+                args[i] = conv(v)
+        return args
+
+    def __call__(self, *args, **kwargs):
+        cmd = kwargs.pop('cmd', self)
+        return self._call(cmd, *args, **kwargs)
 
     def run(self, *args, **kwargs):
         env = self.env.variables
@@ -25,10 +43,12 @@ class Command(object):
 
         # XXX: Use shell mode so that the (user-defined) command can have
         # multiple arguments defined in it?
-        return shell.execute(
-            self(self.command, *args, **kwargs),
-            env=env, quiet=True
-        )
+        return shell.execute(self.convert_args(
+            self(*args, **kwargs), lambda x: x.command, True
+        ), env=env, quiet=True)
+
+    def __repr__(self):
+        return '<{}({!r})>'.format(type(self).__name__, self.command)
 
 
 class SimpleCommand(Command):

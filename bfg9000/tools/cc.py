@@ -100,7 +100,7 @@ class CcBaseCompiler(Command):
     def depends_on_libs(self):
         return False
 
-    def __call__(self, cmd, input, output, deps=None, args=None):
+    def _call(self, cmd, input, output, deps=None, args=None):
         result = [cmd, '-x', self._langs[self.lang]]
         result.extend(iterate(args))
         result.extend(['-c', input])
@@ -261,7 +261,7 @@ class CcLinker(Command):
     def num_outputs(self):
         return 1
 
-    def __call__(self, cmd, input, output, libs=None, args=None):
+    def _call(self, cmd, input, output, libs=None, args=None):
         result = [cmd] + self._always_args
         result.extend(iterate(args))
         result.extend(iterate(input))
@@ -393,15 +393,15 @@ class CcLinker(Command):
         path = install_path(output.path, output.install_root)
         rpath = getattr(output, '_rpath', None)
         if self.env.platform.object_format == 'elf':
-            tool = self.env.tool('patchelf')
-            return tool(tool, path, rpath)
+            return self.env.tool('patchelf')(path, rpath)
         else:  # mach-o
-            tool = self.env.tool('install_name_tool')
             changes = [
                 (darwin_install_name(i), install_path(i.path, i.install_root))
                 for i in output.runtime_deps
             ]
-            return tool(tool, path, path if library else None, rpath, changes)
+            return self.env.tool('install_name_tool')(
+                path, path if library else None, rpath, changes
+            )
 
     def post_install(self, output):
         return self._post_install(output, False)
@@ -426,9 +426,9 @@ class CcSharedLibraryLinker(CcLinker):
     def num_outputs(self):
         return 2 if self.env.platform.has_import_library else 1
 
-    def __call__(self, cmd, input, output, libs=None, args=None):
+    def _call(self, cmd, input, output, libs=None, args=None):
         output = listify(output)
-        result = CcLinker.__call__(self, cmd, input, output[0], libs, args)
+        result = CcLinker._call(self, cmd, input, output[0], libs, args)
         if self.env.platform.has_import_library:
             result.append('-Wl,--out-implib=' + output[1])
         return result

@@ -10,5 +10,5 @@ class MkdirP(SimpleCommand):
         default = 'doppel -p' if env.platform.name == 'windows' else 'mkdir -p'
         SimpleCommand.__init__(self, env, 'MKDIR_P', default)
 
-    def __call__(self, cmd, path):
+    def _call(self, cmd, path):
         return [cmd, path]

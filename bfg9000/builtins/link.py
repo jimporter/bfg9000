@@ -387,10 +387,9 @@ def make_link(rule, build_inputs, buildfile, env):
 
     recipename = make.var('RULE_{}'.format(linker.rule_name.upper()))
     if not buildfile.has_variable(recipename):
-        buildfile.define(recipename, [
-            linker(cmd=make.cmd_var(linker, buildfile), input=make.var('1'),
-                   output=output_vars, **cmd_kwargs)
-        ])
+        buildfile.define(recipename, [linker(
+            make.var('1'), output_vars, **cmd_kwargs
+        )])
 
     files = rule.files
     if hasattr(rule.linker, 'transform_input'):
@@ -433,8 +432,7 @@ def ninja_link(rule, build_inputs, buildfile, env):
 
     if not buildfile.has_rule(linker.rule_name):
         buildfile.rule(name=linker.rule_name, command=[linker(
-            cmd=ninja.cmd_var(linker, buildfile), input=input_var,
-            output=output_vars, **cmd_kwargs
+            input_var, output_vars, **cmd_kwargs
         )])
 
     manifest = listify(getattr(rule, 'manifest', None))

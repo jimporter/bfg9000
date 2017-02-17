@@ -83,7 +83,7 @@ class MsvcBaseCompiler(Command):
     def depends_on_libs(self):
         return False
 
-    def __call__(self, cmd, input, output, deps=None, args=None):
+    def _call(self, cmd, input, output, deps=None, args=None):
         result = [cmd]
         result.extend(iterate(args))
         if deps:
@@ -158,9 +158,9 @@ class MsvcPchCompiler(MsvcBaseCompiler):
         # You can't to pass a PCH to a PCH compiler!
         return False
 
-    def __call__(self, cmd, input, output, deps=None, args=None):
-        result = MsvcBaseCompiler.__call__(self, cmd, input, output[1], deps,
-                                           args)
+    def _call(self, cmd, input, output, deps=None, args=None):
+        result = MsvcBaseCompiler._call(self, cmd, input, output[1], deps,
+                                        args)
         result.append('/Fp' + output[0])
         return result
 
@@ -241,7 +241,7 @@ class MsvcLinker(Command):
     def num_outputs(self):
         return 1
 
-    def __call__(self, cmd, input, output, libs=None, args=None):
+    def _call(self, cmd, input, output, libs=None, args=None):
         result = [cmd] + self._always_args
         result.extend(iterate(args))
         result.extend(iterate(input))
@@ -305,8 +305,8 @@ class MsvcSharedLibraryLinker(MsvcLinker):
     def num_outputs(self):
         return 2
 
-    def __call__(self, cmd, input, output, libs=None, args=None):
-        result = MsvcLinker.__call__(self, cmd, input, output[0], libs, args)
+    def _call(self, cmd, input, output, libs=None, args=None):
+        result = MsvcLinker._call(self, cmd, input, output[0], libs, args)
         result.append('/IMPLIB:' + output[1])
         return result
 
@@ -350,7 +350,7 @@ class MsvcStaticLinker(Command):
     def has_link_macros(self):
         return True
 
-    def __call__(self, cmd, input, output, args=None):
+    def _call(self, cmd, input, output, args=None):
         result = [cmd]
         result.extend(iterate(args))
         result.extend(iterate(input))
