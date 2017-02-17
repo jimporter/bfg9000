@@ -1,9 +1,8 @@
 import os.path
 import re
 
-from . import cc, msvc
+from . import builder, cc, msvc
 from .. import shell
-from .hooks import builder
 from .utils import check_which
 from ..languages import language
 

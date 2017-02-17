@@ -1,7 +1,7 @@
 from functools import partial
 from six.moves import cStringIO as StringIO
 
-from .hooks import builtin
+from . import builtin
 from .. import safe_str
 from .. import shell
 from ..backends.make import writer as make

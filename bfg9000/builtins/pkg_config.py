@@ -2,7 +2,7 @@ from collections import Counter, namedtuple, OrderedDict
 from itertools import chain
 from six import iteritems, itervalues, string_types
 
-from .hooks import builtin
+from . import builtin
 from .. import path
 from ..build_inputs import build_input
 from ..file_types import *

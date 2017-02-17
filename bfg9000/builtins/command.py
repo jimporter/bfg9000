@@ -1,8 +1,8 @@
 from itertools import chain, repeat
 from six.moves import cStringIO as StringIO
 
+from . import builtin
 from .file_types import source_file
-from .hooks import builtin
 from .. import safe_str
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja

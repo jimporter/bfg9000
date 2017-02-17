@@ -1,6 +1,5 @@
-from . import cc
+from . import builder, cc
 from .. import shell
-from .hooks import builder
 from .utils import check_which
 from ..languages import language
 

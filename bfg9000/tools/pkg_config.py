@@ -2,7 +2,7 @@ import argparse
 import subprocess
 from collections import namedtuple
 
-from .hooks import tool
+from . import tool
 from .utils import SimpleCommand
 from .. import shell
 from ..file_types import Package

@@ -3,7 +3,7 @@ from itertools import chain
 from six import itervalues
 from six.moves import filter as ifilter
 
-from .hooks import builtin
+from . import builtin
 from .. import path
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja

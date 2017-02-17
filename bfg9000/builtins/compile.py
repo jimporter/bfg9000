@@ -2,7 +2,7 @@ import warnings
 from collections import defaultdict
 from six import string_types
 
-from .hooks import builtin
+from . import builtin
 from .file_types import local_file
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja

@@ -1,5 +1,5 @@
+from . import tool
 from .. import safe_str
-from .hooks import tool
 from .utils import SimpleCommand
 
 

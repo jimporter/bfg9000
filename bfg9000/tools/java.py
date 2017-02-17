@@ -1,8 +1,7 @@
 import re
 
-from . import cc, jvm
+from . import builder, cc, jvm
 from .. import shell
-from .hooks import builder
 from ..builtins.write_file import WriteFile
 from ..file_types import *
 from ..languages import language

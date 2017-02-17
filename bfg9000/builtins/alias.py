@@ -1,4 +1,4 @@
-from .hooks import builtin
+from . import builtin
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..build_inputs import Edge

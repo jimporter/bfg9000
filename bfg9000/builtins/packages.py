@@ -2,7 +2,7 @@ import os.path
 import re
 import warnings
 
-from .hooks import builtin
+from . import builtin
 from .find import find
 from ..file_types import Executable, Package
 from ..iterutils import iterate, listify

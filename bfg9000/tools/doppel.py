@@ -1,4 +1,4 @@
-from .hooks import tool
+from . import tool
 from .utils import SimpleCommand
 
 from ..iterutils import iterate

@@ -4,7 +4,7 @@ import posixpath
 import re
 from enum import IntEnum
 
-from .hooks import builtin
+from . import builtin
 from ..file_types import File, Directory
 from ..iterutils import iterate, listify
 from ..backends.make import writer as make

@@ -5,9 +5,9 @@ from itertools import chain
 from six import string_types
 from six.moves import reduce
 
+from . import builtin
 from .compile import Compile, ObjectFiles
 from .file_types import local_file
-from .hooks import builtin
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..build_inputs import build_input, Edge

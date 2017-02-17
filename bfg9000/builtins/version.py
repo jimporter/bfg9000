@@ -1,4 +1,4 @@
-from .hooks import builtin, optbuiltin
+from . import builtin, optbuiltin
 from .. import versioning as v
 from ..objutils import objectify
 

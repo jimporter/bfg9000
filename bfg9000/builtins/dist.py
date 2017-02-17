@@ -1,6 +1,6 @@
 from collections import OrderedDict
 
-from .hooks import builtin
+from . import builtin
 from ..iterutils import iterate
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja

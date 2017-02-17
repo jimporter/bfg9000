@@ -23,6 +23,7 @@ class Environment(object):
 
     def __new__(cls, *args, **kwargs):
         env = object.__new__(cls)
+        tools.init()
         env.__builders = {}
         env.__tools = {}
         return env

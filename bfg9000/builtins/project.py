@@ -1,6 +1,6 @@
 from collections import namedtuple
 
-from .hooks import builtin
+from . import builtin
 from ..build_inputs import build_input
 
 ProjectInfo = namedtuple('ProjectInfo', ['name', 'version'])

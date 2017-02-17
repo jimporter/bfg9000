@@ -1,7 +1,7 @@
 from six import string_types
 
+from . import builtin
 from .find import exclude_globs, filter_by_platform
-from .hooks import builtin
 from ..file_types import *
 from ..iterutils import iterate, uniques
 from ..path import Path, Root
