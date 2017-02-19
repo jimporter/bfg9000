@@ -106,22 +106,25 @@ def _install_commands(backend, build_inputs, buildfile, env):
 @make.post_rule
 def make_install_rule(build_inputs, buildfile, env):
     recipe = _install_commands(make, build_inputs, buildfile, env)
-    if recipe:
-        buildfile.rule(
-            target='install',
-            deps='all',
-            recipe=recipe,
-            phony=True
-        )
+    if not recipe:
+        return
+
+    for i in path.InstallRoot:
+        buildfile.variable(make.path_vars[i], env.install_dirs[i],
+                           make.Section.path)
+
+    buildfile.rule(target='install', deps='all', recipe=recipe, phony=True)
 
 
 @ninja.post_rule
 def ninja_install_rule(build_inputs, buildfile, env):
     commands = _install_commands(ninja, build_inputs, buildfile, env)
-    if commands:
-        ninja.command_build(
-            buildfile, env,
-            output='install',
-            inputs=['all'],
-            commands=commands
-        )
+    if not commands:
+        return
+
+    for i in path.InstallRoot:
+        buildfile.variable(ninja.path_vars[i], env.install_dirs[i],
+                           ninja.Section.path)
+
+    ninja.command_build(buildfile, env, output='install', inputs=['all'],
+                        commands=commands)

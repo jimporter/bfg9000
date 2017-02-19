@@ -54,9 +54,6 @@ def post_rule(fn):
 def write(env, build_inputs):
     buildfile = Makefile(build_inputs.bfgpath.string(env.base_dirs))
     buildfile.variable(path_vars[path.Root.srcdir], env.srcdir, Section.path)
-    if build_inputs['install']:
-        for i in path.InstallRoot:
-            buildfile.variable(path_vars[i], env.install_dirs[i], Section.path)
 
     for i in _pre_rules:
         i(build_inputs, buildfile, env)
