@@ -117,10 +117,10 @@ class Variable(object):
         return self.name == rhs.name
 
     def __add__(self, rhs):
-        return self.use() + rhs
+        return self.use() + safe_str.safe_str(rhs)
 
     def __radd__(self, lhs):
-        return lhs + self.use()
+        return safe_str.safe_str(lhs) + self.use()
 
 
 def var(v):

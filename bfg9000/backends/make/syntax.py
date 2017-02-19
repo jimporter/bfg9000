@@ -108,7 +108,38 @@ class Writer(object):
             self.write(thing, syntax, shell_quote=None)
 
 
-class Pattern(object):
+class Entity(object):
+    def use(self):
+        raise NotImplementedError()
+
+    def _safe_str(self):
+        return self.use()
+
+    def __str__(self):
+        raise NotImplementedError()
+
+    def __repr__(self):
+        return repr(self.use())
+
+    def __add__(self, rhs):
+        return self.use() + safe_str.safe_str(rhs)
+
+    def __radd__(self, lhs):
+        return safe_str.safe_str(lhs) + self.use()
+
+
+class NamedEntity(Entity):
+    def __init__(self, name):
+        self.name = name
+
+    def __hash__(self):
+        return hash(self.name)
+
+    def __eq__(self, rhs):
+        return type(self) == type(rhs) and self.name == rhs.name
+
+
+class Pattern(Entity):
     def __init__(self, path):
         if len(re.findall(r'([^\\]|^)(\\\\)*%', path)) != 1:
             raise ValueError('exactly one % required')
@@ -118,60 +149,16 @@ class Pattern(object):
         bits = re.split(r'%', self.path)
         return safe_str.join(bits, safe_str.escaped_str('%'))
 
-    def _safe_str(self):
-        return self.use()
-
-    def __str__(self):
-        raise NotImplementedError()
-
-    def __repr__(self):
-        return repr(self.use())
-
     def __hash__(self):
         return hash(self.path)
 
     def __eq__(self, rhs):
-        return self.path == rhs.path
-
-    def __add__(self, rhs):
-        return self.use() + rhs
-
-    def __radd__(self, lhs):
-        return lhs + self.use()
+        return type(self) == type(rhs) and self.path == rhs.path
 
 
-class Entity(object):
-    def __init__(self, name):
-        self.name = name
-
-    def use(self):
-        raise NotImplementedError()
-
-    def _safe_str(self):
-        return self.use()
-
-    def __str__(self):
-        raise NotImplementedError()
-
-    def __repr__(self):
-        return repr(self.use())
-
-    def __hash__(self):
-        return hash(self.name)
-
-    def __eq__(self, rhs):
-        return self.name == rhs.name
-
-    def __add__(self, rhs):
-        return self.use() + rhs
-
-    def __radd__(self, lhs):
-        return lhs + self.use()
-
-
-class Variable(Entity):
+class Variable(NamedEntity):
     def __init__(self, name, quoted=False):
-        Entity.__init__(self, re.sub(r'[\s:#=]', '_', name))
+        NamedEntity.__init__(self, re.sub(r'[\s:#=]', '_', name))
         self.quoted = quoted
 
     def use(self):
@@ -189,9 +176,9 @@ def qvar(v):
     return var(v, True)
 
 
-class Function(Entity):
+class Function(NamedEntity):
     def __init__(self, name, *args, **kwargs):
-        Entity.__init__(self, name)
+        NamedEntity.__init__(self, name)
         self.args = args
         self.quoted = kwargs.get('quoted', False)
 
