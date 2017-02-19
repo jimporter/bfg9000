@@ -73,6 +73,8 @@ def _install_commands(backend, build_inputs, buildfile, env):
         if kind != 'program':
             kind = 'data'
             cmd = [cmd] + doppel.data_args
+        if backend == make:
+            kind = kind.upper()
 
         cmdname = '{name}_{kind}'.format(name=name, kind=kind)
         return buildfile.variable(cmdname, cmd, backend.Section.command, True)
