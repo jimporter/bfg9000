@@ -198,12 +198,14 @@ class PkgConfigInfo(object):
 
         pkg = SystemPackage(
             data['desc_name'],
-            includes=[installify(i) for i in data['includes']],
-            libraries=[installify(i.all[0]) for i in data['libs']]
+            includes=[installify(i, destdir=False) for i in data['includes']],
+            libraries=[installify(i.all[0], destdir=False)
+                       for i in data['libs']]
         )
         pkg_private = SystemPackage(
             data['desc_name'],
-            libraries=[installify(i.all[0]) for i in data['libs_private']]
+            libraries=[installify(i.all[0], destdir=False)
+                       for i in data['libs_private']]
         )
 
         builder = env.builder(self.lang)

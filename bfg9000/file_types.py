@@ -6,10 +6,12 @@ from .path import InstallRoot as _InstallRoot, install_path as _install_path
 from .safe_str import safe_str as _safe_str
 
 
-def installify(file):
+def installify(file, destdir=True):
     file = copy.copy(file)
-    file.path = _install_path(file.path, file.install_root,
-                              directory=isinstance(file, Directory))
+    file.path = _install_path(
+        file.path, file.install_root, directory=isinstance(file, Directory),
+        destdir=destdir
+    )
     return file
 
 

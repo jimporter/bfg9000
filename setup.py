@@ -4,7 +4,7 @@ import subprocess
 import sys
 from setuptools import setup, find_packages, Command
 
-from bfg9000.platform_name import platform_name
+from bfg9000.platforms import platform_name
 from bfg9000.app_version import version
 
 
@@ -135,6 +135,13 @@ setup(
             'make=bfg9000.backends.make.writer',
             'ninja=bfg9000.backends.ninja.writer',
             'msbuild=bfg9000.backends.msbuild.writer [msbuild]',
+        ],
+        'bfg9000.platforms': [
+            'cygwin=bfg9000.platforms.windows:CygwinPlatform',
+            'darwin=bfg9000.platforms.posix:DarwinPlatform',
+            'linux=bfg9000.platforms.posix:LinuxPlatform',
+            'posix=bfg9000.platforms.posix:PosixPlatform',
+            'windows=bfg9000.platforms.windows:WindowsPlatform',
         ],
     },
 

@@ -7,17 +7,26 @@ from contextlib import contextmanager
 
 from . import safe_str
 from .iterutils import listify
-from .platform_name import platform_name
+from .platforms import platform_name, platform_info
 from . import shell
-
 
 Root = Enum('Root', ['srcdir', 'builddir', 'absolute'])
 InstallRoot = Enum('InstallRoot', ['prefix', 'exec_prefix', 'bindir', 'libdir',
                                    'includedir'])
+DestDir = Enum('DestDir', ['destdir'])
 
 
 class Path(safe_str.safe_string):
-    def __init__(self, path, root=Root.builddir):
+    __repr_variables = dict(
+        [(i, '$({})'.format(i.name)) for i in chain(Root, InstallRoot)] +
+        [(DestDir.destdir, '$(DESTDIR)')]
+    )
+
+    def __init__(self, path, root=Root.builddir, destdir=False):
+        if destdir and root not in InstallRoot:
+            raise ValueError('destdir only applies to install paths')
+        self.destdir = destdir
+
         self.suffix = os.path.normpath(path)
         if self.suffix == '.':
             self.suffix = ''
@@ -50,7 +59,7 @@ class Path(safe_str.safe_string):
         return Path(name, self.root)
 
     def split(self):
-        # This is guaranteed to work since `suffix` is normalized
+        # This is guaranteed to work since `suffix` is normalized.
         return self.suffix.split(os.path.sep)
 
     def basename(self):
@@ -68,7 +77,7 @@ class Path(safe_str.safe_string):
         return Path(self.suffix, root)
 
     def to_json(self):
-        return (self.suffix, self.root.name)
+        return (self.suffix, self.root.name, self.destdir)
 
     @staticmethod
     def from_json(data):
@@ -76,13 +85,17 @@ class Path(safe_str.safe_string):
             base = Root[data[1]]
         except:
             base = InstallRoot[data[1]]
-        return Path(data[0], base)
+        return Path(data[0], base, data[2])
 
     def realize(self, variables, executable=False):
         root = variables[self.root] if self.root != Root.absolute else None
         if executable and root is None and os.path.sep not in self.suffix:
             root = '.'
 
+        # Not all platforms (e.g. Windows) support $(DESTDIR), so only emit the
+        # destdir variable if it's defined.
+        if self.destdir and DestDir.destdir in variables:
+            root = variables[DestDir.destdir] + root
         if root is None:
             return self.suffix or '.'
         if not self.suffix:
@@ -114,9 +127,7 @@ class Path(safe_str.safe_string):
         raise NotImplementedError()
 
     def __repr__(self):
-        variables = {i: '$({})'.format(i.name) for i in
-                     chain(Root, InstallRoot)}
-        return '`{}`'.format(self.realize(variables))
+        return '`{}`'.format(self.realize(self.__repr_variables))
 
     def __hash__(self):
         return hash(self.suffix)
@@ -141,12 +152,12 @@ def abspath(path):
     return Path(os.path.abspath(path), Root.absolute)
 
 
-def install_path(path, install_root, directory=False):
+def install_path(path, install_root, directory=False, destdir=True):
     if path.root == Root.srcdir:
         suffix = '.' if directory else os.path.basename(path.suffix)
     else:
         suffix = path.suffix
-    return Path(suffix, install_root)
+    return Path(suffix, install_root, destdir)
 
 
 def exists(path):

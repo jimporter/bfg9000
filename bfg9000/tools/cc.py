@@ -306,7 +306,7 @@ class CcLinker(Command):
             # `patchelf` during installation.
             output._rpath = uniques(chain(
                 getattr(output, '_rpath', []),
-                (install_path(i.path, i.install_root).parent()
+                (install_path(i.path, i.install_root, destdir=False).parent()
                  for i in runtime_libs),
                 extra_dirs
             ))
@@ -395,10 +395,9 @@ class CcLinker(Command):
         if self.env.platform.object_format == 'elf':
             return self.env.tool('patchelf')(path, rpath)
         else:  # mach-o
-            changes = [
-                (darwin_install_name(i), install_path(i.path, i.install_root))
-                for i in output.runtime_deps
-            ]
+            changes = [(darwin_install_name(i),
+                        install_path(i.path, i.install_root, destdir=False))
+                       for i in output.runtime_deps]
             return self.env.tool('install_name_tool')(
                 path, path if library else None, rpath, changes
             )

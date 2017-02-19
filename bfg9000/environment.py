@@ -18,7 +18,7 @@ class EnvVersionError(RuntimeError):
 
 
 class Environment(object):
-    version = 10
+    version = 11
     envfile = '.bfg_environ'
 
     def __new__(cls, *args, **kwargs):
@@ -129,6 +129,13 @@ class Environment(object):
             for i in ('bindir', 'libdir'):
                 if data['install_dirs'][i][1] == 'prefix':
                     data['install_dirs'][i][1] = 'exec_prefix'
+
+        # v11 adds $(DESTDIR) support to Path objects.
+        if version < 11:
+            for i in ('bfgdir', 'srcdir', 'builddir'):
+                data[i] += (False,)
+            for i in data['install_dirs']:
+                data['install_dirs'][i] += (False,)
 
         # Now that we've upgraded, initialize the Environment object.
         env = Environment.__new__(Environment)

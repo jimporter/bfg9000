@@ -9,10 +9,6 @@ class TestInstall(IntegrationTest):
         IntegrationTest.__init__(self, 'install', install=True, *args,
                                  **kwargs)
 
-    def setUp(self):
-        IntegrationTest.setUp(self)
-        cleandir(self.installdir)
-
     def test_default(self):
         self.build()
         self.assertOutput(
@@ -73,3 +69,38 @@ class TestInstall(IntegrationTest):
             'hello from shared a!\nhello from shared b!\n' +
             'hello from static a!\nhello from static b!\n'
         )
+
+
+@unittest.skipIf(platform_name() == 'windows', 'no destdir on windows')
+class TestDestDir(IntegrationTest):
+    def __init__(self, *args, **kwargs):
+        IntegrationTest.__init__(self, 'install', install=True,
+                                 configure=False, *args, **kwargs)
+
+    @skip_if_backend('msbuild')
+    def test_install_destdir(self):
+        self.configure(env={'DESTDIR': '/tmp'})
+        self.build('install')
+
+        self.assertDirectory('/tmp' + self.installdir, [
+            '/tmp' + pjoin(self.includedir, 'shared_a.hpp'),
+            '/tmp' + pjoin(self.includedir, 'static_a.hpp'),
+            '/tmp' + pjoin(self.bindir, executable('program').path),
+            '/tmp' + pjoin(self.libdir, shared_library('shared_a').path),
+            '/tmp' + pjoin(self.libdir, shared_library('shared_b').path),
+            '/tmp' + pjoin(self.libdir, static_library('static_a').path),
+        ])
+
+    @only_if_backend('make')
+    def test_install_override_destdir(self):
+        self.configure()
+        self.build('install', extra_args=['DESTDIR=/tmp'])
+
+        self.assertDirectory('/tmp' + self.installdir, [
+            '/tmp' + pjoin(self.includedir, 'shared_a.hpp'),
+            '/tmp' + pjoin(self.includedir, 'static_a.hpp'),
+            '/tmp' + pjoin(self.bindir, executable('program').path),
+            '/tmp' + pjoin(self.libdir, shared_library('shared_a').path),
+            '/tmp' + pjoin(self.libdir, shared_library('shared_b').path),
+            '/tmp' + pjoin(self.libdir, static_library('static_a').path),
+        ])

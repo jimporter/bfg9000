@@ -112,6 +112,9 @@ def make_install_rule(build_inputs, buildfile, env):
     for i in path.InstallRoot:
         buildfile.variable(make.path_vars[i], env.install_dirs[i],
                            make.Section.path)
+    if path.DestDir.destdir in make.path_vars:
+        buildfile.variable(make.path_vars[path.DestDir.destdir],
+                           env.variables.get('DESTDIR', ''), make.Section.path)
 
     buildfile.rule(target='install', deps='all', recipe=recipe, phony=True)
 
@@ -124,6 +127,10 @@ def ninja_install_rule(build_inputs, buildfile, env):
 
     for i in path.InstallRoot:
         buildfile.variable(ninja.path_vars[i], env.install_dirs[i],
+                           ninja.Section.path)
+    if path.DestDir.destdir in ninja.path_vars:
+        buildfile.variable(ninja.path_vars[path.DestDir.destdir],
+                           env.variables.get('DESTDIR', ''),
                            ninja.Section.path)
 
     ninja.command_build(buildfile, env, output='install', inputs=['all'],

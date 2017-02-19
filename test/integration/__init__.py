@@ -228,8 +228,8 @@ class IntegrationTest(unittest.TestCase):
         )
         os.chdir(builddir)
 
-    def build(self, target=None):
-        args = [os.getenv(self.backend.upper(), self.backend)]
+    def build(self, target=None, extra_args=[]):
+        args = [os.getenv(self.backend.upper(), self.backend)] + extra_args
         if target:
             args.append(self.target_name(target))
         return self.assertPopen(args)
@@ -271,6 +271,7 @@ class IntegrationTest(unittest.TestCase):
             )
 
     def assertDirectory(self, path, contents):
+        path = os.path.normpath(path)
         actual = set(os.path.normpath(os.path.join(path, base, f))
                      for base, dirs, files in os.walk(path) for f in files)
         expected = set(os.path.normpath(os.path.join(path, i))

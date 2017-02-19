@@ -7,7 +7,7 @@ from six.moves import cStringIO as StringIO
 from ... import path
 from ... import safe_str
 from ... import iterutils
-from ...platforms import platform_name
+from ...platforms import platform_name, platform_info
 from ...tools.utils import Command
 
 # XXX: Make currently only supports sh-style shells.
@@ -212,6 +212,10 @@ path_vars = {
     path.Root.builddir: None,
 }
 path_vars.update({i: Variable(i.name) for i in path.InstallRoot})
+
+# Only use destdir on platforms that actually support it (e.g. not Windows).
+if platform_info().destdir:
+    path_vars[path.DestDir.destdir] = Variable('DESTDIR')
 
 
 class Makefile(object):

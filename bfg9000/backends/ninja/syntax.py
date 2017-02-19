@@ -10,7 +10,7 @@ from ... import safe_str
 from ... import shell
 from ... import iterutils
 from ...objutils import objectify
-from ...platforms import platform_name
+from ...platforms import platform_name, platform_info
 from ...tools.utils import Command
 from ...versioning import Version
 
@@ -172,6 +172,10 @@ path_vars = {
     path.Root.builddir: None,
 }
 path_vars.update({i: Variable(i.name) for i in path.InstallRoot})
+
+# Only use destdir on platforms that actually support it (e.g. not Windows).
+if platform_info().destdir:
+    path_vars[path.DestDir.destdir] = Variable('DESTDIR')
 
 
 class NinjaFile(object):
