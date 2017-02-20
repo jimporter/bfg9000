@@ -101,6 +101,12 @@ change the installation prefix (`/usr/local` on POSIX), just specify `--prefix
 and include directories individually, using `--bindir`, `--libdir`, and
 `--includedir`, respectively.
 
+!!! note
+    On POSIX systems, you can additionally specify the $DESTDIR environment
+    variable to perform a staged installation (useful when creating a binary
+    package, for example). For more information about $DESTDIR, see the [GNU
+    coding standards][destdir].
+
 ## Distributing your source
 
 Once you're ready to release your software, you'll want to provide a source
@@ -124,3 +130,4 @@ following targets: `dist-gzip`, `dist-bzip2`, or `dist-zip`.
 [ninja]: https://ninja-build.org/
 [make]: https://www.gnu.org/software/make/
 [msbuild]: https://msdn.microsoft.com/en-us/library/dd393574(v=vs.120).aspx
+[destdir]: https://www.gnu.org/prep/standards/html_node/DESTDIR.html

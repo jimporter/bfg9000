@@ -416,6 +416,7 @@ well.
     library will install the DLL *and* the import library.
 
 This rule recognizes the following environment variables:
+[`DESTDIR`](environment-vars.md#destdir),
 [`INSTALL`](environment-vars.md#install),
 [`INSTALL_NAME_TOOL`](environment-vars.md#install_name_tool),
 [`MKDIR_P`](environment-vars.md#mkdir_p),

@@ -335,6 +335,14 @@ variables for tests.
 ## System variables
 ---
 
+#### *DESTDIR*
+Default: *none*
+{: .subtitle}
+
+*POSIX-only*. A directory to prepend to the install location for the project,
+used in performing staged installs. For more information, see the [GNU coding
+standards][destdir].
+
 #### *PLATFORM*
 Default: `Win32`
 {: .subtitle}
@@ -349,3 +357,4 @@ Default: `14.0`
 files.
 
 [doppel]: https://github.com/jimporter/doppel
+[destdir]: https://www.gnu.org/prep/standards/html_node/DESTDIR.html
