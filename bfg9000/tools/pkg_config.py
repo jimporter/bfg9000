@@ -55,8 +55,6 @@ class PkgConfigPackage(Package):
     def _call(self, *args, **kwargs):
         return shell.split(self._pkg_config.run(*args, **kwargs).strip())
 
-    # XXX: We should probably memoize these results so that we don't run
-    # pkg-config dozens of times for large builds.
     def cflags(self, compiler, output):
         return self._call(self.name, 'cflags', self.static,
                           compiler.flavor == 'msvc')
