@@ -13,7 +13,7 @@ def version(env=os.environ):
         msbuild = path.which(env.get('MSBUILD', ['msbuild', 'xbuild']),
                              env, first_word=True)
         output = shell.execute('{} /version'.format(msbuild),
-                               shell=True, quiet=True)
+                               shell=True, stderr=shell.Mode.devnull)
         m = re.search(r'([\d\.]+)$', output)
         if m:
             return Version(m.group(1))

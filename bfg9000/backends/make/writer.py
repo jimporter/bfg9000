@@ -14,7 +14,7 @@ def version(env=os.environ):
         make = path.which(env.get('MAKE', ['make', 'gmake']),
                           env, first_word=True)
         output = shell.execute('{} --version'.format(make),
-                               shell=True, quiet=True)
+                               shell=True, stderr=shell.Mode.devnull)
         m = re.match(r'GNU Make ([\d\.]+)', output)
         if m:
             return Version(m.group(1))

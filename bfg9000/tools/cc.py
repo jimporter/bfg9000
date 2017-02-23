@@ -29,7 +29,7 @@ class CcBuilder(object):
         self.brand = 'unknown'
         try:
             output = shell.execute('{} --version'.format(command),
-                          shell=True, quiet=True)
+                                   shell=True, stderr=shell.Mode.devnull)
             if 'Free Software Foundation' in output:
                 self.brand = 'gcc'
             elif 'clang' in output:
@@ -511,7 +511,7 @@ class CcPackageResolver(object):
             # XXX: Will this work for cross-compilation?
             output = shell.execute(
                 '{} -print-search-dirs'.format(command),
-                shell=True, quiet=True
+                shell=True, stderr=shell.Mode.devnull
             )
             m = re.search(r'^libraries: (.*)', output, re.MULTILINE)
             system_lib_dirs = re.split(os.pathsep, m.group(1))

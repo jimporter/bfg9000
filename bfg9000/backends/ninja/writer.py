@@ -13,7 +13,7 @@ def version(env=os.environ):
         ninja = path.which(env.get('NINJA', ['ninja', 'ninja-build']),
                            env, first_word=True)
         output = shell.execute('{} --version'.format(ninja),
-                               shell=True, quiet=True)
+                               shell=True, stderr=shell.Mode.devnull)
         return Version(output.strip())
     except IOError:
         pass

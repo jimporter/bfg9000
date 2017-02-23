@@ -17,7 +17,7 @@ class Command(object):
     @staticmethod
     def convert_args(args, conv, in_place=None):
         if not isiterable(args):
-            raise ValueError('blah')
+            raise TypeError('expected a list of command-line arguments')
 
         if in_place is None:
             in_place = not any(isinstance(i, Command) for i in args)
@@ -45,7 +45,7 @@ class Command(object):
         # multiple arguments defined in it?
         return shell.execute(self.convert_args(
             self(*args, **kwargs), lambda x: x.command, True
-        ), env=env, quiet=True)
+        ), env=env, stderr=shell.Mode.devnull)
 
     def __repr__(self):
         return '<{}({!r})>'.format(type(self).__name__, self.command)
