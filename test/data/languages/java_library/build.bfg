@@ -1,5 +1,5 @@
 # -*- python -*-
 
-lib = library('lib', 'lib/library.java')
+lib = library('lib', 'lib/sub/library.java')
 prog = executable('program', 'program.java', entry_point='program', libs=lib)
 install(lib, prog)

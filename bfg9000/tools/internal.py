@@ -38,8 +38,8 @@ class JvmOutput(Command):
         cmd = env.getvar('JVMOUTPUT', env.bfgdir.append('bfg9000-jvmoutput'))
         Command.__init__(self, env, cmd)
 
-    def _call(self, cmd, output):
-        return shell_list([cmd, escaped_str('>'), output])
+    def _call(self, cmd, output, subcmd):
+        return [cmd, '-o', output] + subcmd
 
 
 if platform_name() == 'windows':

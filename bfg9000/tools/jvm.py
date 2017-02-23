@@ -63,12 +63,15 @@ class JvmCompiler(Command):
     def _call(self, cmd, input, output, args=None):
         jvmoutput = self.env.tool('jvmoutput')
 
-        result = shell_list([cmd])
+        result = [cmd]
         result.extend(iterate(args))
-        result.extend(['-verbose', '-d', '.'])
-        result.extend([input, safe_str.escaped_str('2>&1 |')])
-        result.extend(jvmoutput(output))
-        return result
+        result.extend(self._always_args)
+        result.append(input)
+        return jvmoutput(output, result)
+
+    @property
+    def _always_args(self):
+        return ['-verbose', '-d', '.']
 
     def _class_path(self, libraries):
         dirs = uniques(i.path for i in iterate(libraries))
@@ -115,10 +118,14 @@ class JarMaker(Command):
         return False
 
     def pre_build(self, build, options, name):
-        dirs = uniques(i.path for i in iterate(options.libs))
+        libs = getattr(options, 'libs', [])
+
+        dirs = uniques(i.path for i in libs)
+        base = Path(name).parent()
         text = ['Class-Path: {}'.format(
-            os.pathsep.join(i.basename() for i in dirs)
+            ' '.join(i.relpath(base) for i in dirs)
         )]
+
         if getattr(options, 'entry_point', None):
             text.append('Main-Class: {}'.format(options.entry_point))
 

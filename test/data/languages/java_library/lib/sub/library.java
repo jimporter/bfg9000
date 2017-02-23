@@ -1,4 +1,4 @@
-package lib;
+package lib.sub;
 
 public class library {
   public static void say_hello() {
