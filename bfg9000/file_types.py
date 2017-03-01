@@ -85,7 +85,7 @@ class PrecompiledHeader(HeaderFile):
 
 
 class MsvcPrecompiledHeader(PrecompiledHeader):
-    def __init__(self, path, object_path, header_name, format, lang,
+    def __init__(self, path, object_path, header_name, format, lang=None,
                  external=False):
         PrecompiledHeader.__init__(self, path, lang, external)
         self.object_file = ObjectFile(object_path, format, self.lang, external)
@@ -108,21 +108,27 @@ class Binary(File):
     install_kind = 'program'
     install_root = _InstallRoot.libdir
 
-    def __init__(self, path, format, external=False):
+    def __init__(self, path, format, lang=None, external=False):
         File.__init__(self, path, external)
         self.format = format
+        self.lang = lang
 
 
 class ObjectFile(Binary):
-    def __init__(self, path, format, lang, external=False):
-        Binary.__init__(self, path, format, external)
-        self.lang = lang
+    pass
 
 
 # XXX: Perhaps this should be a generic file list that we can use for any kind
 # of file?
 class JvmClassList(ObjectFile):
-    pass
+    def __init__(self, object_file):
+        self.object_file = object_file
+
+    def __getattribute__(self, name):
+        if name in ['object_file', '_safe_str', '__repr__', '__hash__',
+                    '__eq__']:
+            return object.__getattribute__(self, name)
+        return getattr(object.__getattribute__(self, 'object_file'), name)
 
 
 # This is sort of a misnomer. It's really just "a binary that is not an object
@@ -153,7 +159,7 @@ class Library(LinkedBinary):
 # Multiple inheritance is a sign that we should perhaps switch to a trait-based
 # system though...
 class ExecutableLibrary(Executable, Library):
-    install_root = _InstallRoot.bindir
+    install_root = _InstallRoot.libdir
 
 
 class SharedLibrary(Library):
@@ -164,7 +170,8 @@ class SharedLibrary(Library):
 
 class LinkLibrary(SharedLibrary):
     def __init__(self, path, library, external=False):
-        SharedLibrary.__init__(self, path, library.format, external)
+        SharedLibrary.__init__(self, path, library.format, library.lang,
+                               external)
         self.library = library
         self.linktime_deps = [library]
 
@@ -174,8 +181,8 @@ class LinkLibrary(SharedLibrary):
 
 
 class VersionedSharedLibrary(SharedLibrary):
-    def __init__(self, path, format, soname, linkname, external=False):
-        SharedLibrary.__init__(self, path, format, external)
+    def __init__(self, path, format, lang, soname, linkname, external=False):
+        SharedLibrary.__init__(self, path, format, lang, external)
         self.soname = LinkLibrary(soname, self, external)
         self.link = LinkLibrary(linkname, self.soname, external)
 
@@ -191,17 +198,16 @@ class DllLibrary(SharedLibrary):
     install_root = _InstallRoot.bindir
     private = True
 
-    def __init__(self, path, format, import_name, export_name=None,
+    def __init__(self, path, format, lang, import_name, export_name=None,
                  external=False):
-        SharedLibrary.__init__(self, path, format, external)
+        SharedLibrary.__init__(self, path, format, lang, external)
         self.import_lib = LinkLibrary(import_name, self, external)
         self.export_file = ExportFile(export_name, external)
 
 
 class StaticLibrary(Library):
-    def __init__(self, path, format, langs=None, external=False):
-        Library.__init__(self, path, format, external)
-        self.langs = _listify(langs)
+    def __init__(self, *args, **kwargs):
+        Library.__init__(self, *args, **kwargs)
         self.forward_args = {}
 
 

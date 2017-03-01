@@ -23,7 +23,7 @@ world = command('world', cmd='echo world')
 script = source_file('script.py')
 command('script', cmds=[
     'touch file',
-    [sys.executable, script]
+    [script]
 ])
 
 # Some targets don't have their own commands and are just aliases to other

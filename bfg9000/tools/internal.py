@@ -1,7 +1,7 @@
 from . import tool
 from .utils import Command
 from ..platforms import platform_name
-from ..safe_str import escaped_str, jbos, safe_str
+from ..safe_str import jbos, safe_str, shell_literal
 from ..shell import shell_list
 
 
@@ -26,8 +26,8 @@ class Depfixer(Command):
         Command.__init__(self, env, cmd)
 
     def _call(self, cmd, depfile):
-        return shell_list([cmd, escaped_str('<'), depfile, escaped_str('>>'),
-                           depfile])
+        return shell_list([cmd, shell_literal('<'), depfile,
+                           shell_literal('>>'), depfile])
 
 
 @tool('jvmoutput')
@@ -53,7 +53,7 @@ if platform_name() == 'windows':
 
         def _call(self, cmd, env):
             if env:
-                eq = escaped_str('=')
+                eq = shell_literal('=')
                 return [cmd] + [jbos(safe_str(name), eq, safe_str(value))
                                 for name, value in env.iteritems()] + ['--']
             return []

@@ -1,3 +1,5 @@
+import warnings
+from six import string_types
 from six.moves import cStringIO as StringIO
 
 from . import builtin
@@ -6,7 +8,8 @@ from .. import shell
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..build_inputs import build_input
-from ..file_types import Executable, File
+from ..file_types import Executable, File, Node
+from ..iterutils import first, isiterable, iterate, listify
 from ..shell import posix as pshell
 
 
@@ -14,7 +17,6 @@ from ..shell import posix as pshell
 class TestInputs(object):
     def __init__(self, build_inputs, env):
         self.tests = []
-        self.inputs = []
         self.extra_deps = []
 
     def __nonzero__(self):
@@ -24,47 +26,55 @@ class TestInputs(object):
         return bool(self.tests)
 
 
-class TestCase(object):
-    def __init__(self, output, options, env):
-        self.output = output
-        self.options = options
-        self.env = env
+class Test(object):
+    def __init__(self, build, env, cmd, options, environment, driver):
+        # XXX: Remove this after 0.3 is released.
+        if options:
+            warnings.warn("'options' argument is deprecated; add options to " +
+                          "'cmd' instead")
+            cmd = listify(cmd) + pshell.listify(options)
+
+        wrap = not driver or driver.wrap_children
+        self.cmd = env.run_arguments(cmd) if wrap else cmd
+        self.inputs = [i for i in iterate(cmd)
+                       if isinstance(i, Node) and i.creator]
+        self.environment = environment
+
+        primary = first(cmd)
+        if isinstance(primary, Node) and primary.creator:
+            build['defaults'].remove(primary)
+        (driver or build['tests']).tests.append(self)
 
 
-class TestDriver(object):
-    def __init__(self, output, options, env):
-        self.output = output
-        self.options = options
-        self.env = env
+class TestCase(Test):
+    def __init__(self, build, env, cmd, options=None, environment={},
+                 driver=None):
+        if driver and environment:
+            raise TypeError("only one of 'driver' and 'environment' may be " +
+                            "specified")
+        Test.__init__(self, build, env, cmd, options, environment, driver)
+
+
+class TestDriver(Test):
+    def __init__(self, build, env, cmd, options=None, environment={},
+                 parent=None, wrap_children=False):
+        if parent and environment:
+            raise TypeError("only one of 'parent' and 'environment' may be " +
+                            "specified")
+
+        Test.__init__(self, build, env, cmd, options, environment, parent)
         self.tests = []
+        self.wrap_children = wrap_children
 
 
-@builtin.globals('builtins', 'build_inputs')
-def test(builtins, build, test, options=None, environment=None, driver=None):
-    if driver and environment:
-        raise TypeError('only one of "driver" and "environment" may be ' +
-                        'specified')
-
-    test = builtins['generic_file'](test)
-    build['tests'].inputs.append(test)
-    build['defaults'].remove(test)
-
-    case = TestCase(test, pshell.listify(options), environment or {})
-    (driver or build['tests']).tests.append(case)
-    return case
+@builtin.globals('build_inputs', 'env')
+def test(build, env, cmd, **kwargs):
+    return TestCase(build, env, cmd, **kwargs)
 
 
-@builtin.globals('builtins', 'build_inputs', 'env')
-def test_driver(builtins, build, env, driver, options=None, environment=None,
-                parent=None):
-    if parent and environment:
-        raise TypeError('only one of "parent" and "environment" may be ' +
-                        'specified')
-
-    driver = builtins['system_executable'](driver)
-    result = TestDriver(driver, pshell.listify(options), environment or {})
-    (parent or build['tests']).tests.append(result)
-    return result
+@builtin.globals('build_inputs', 'env')
+def test_driver(build, env, cmd, **kwargs):
+    return TestDriver(build, env, cmd, **kwargs)
 
 
 @builtin.globals('build_inputs')
@@ -75,9 +85,12 @@ def test_deps(build, *args):
 
 
 def _build_commands(tests, writer, shell, local_env, collapse=False):
-    def command(test, args=None):
-        env_vars = local_env(test.env)
-        subcmd = env_vars + [test.output] + test.options + (args or [])
+    def command(test, args=[]):
+        cmd = test.cmd
+        if not isiterable(cmd):
+            cmd = [safe_str.shell_literal(cmd) if isinstance(cmd, string_types)
+                   else safe_str.safe_str(cmd)]
+        subcmd = local_env(test.environment) + cmd + args
 
         if collapse:
             out = writer(StringIO())
@@ -85,19 +98,18 @@ def _build_commands(tests, writer, shell, local_env, collapse=False):
             s = out.stream.getvalue()
             if len(subcmd) > 1:
                 s = shell.quote(s)
-            return safe_str.escaped_str(s)
+            return safe_str.literal(s)
         return subcmd
 
     cmd, deps = [], []
     for i in tests:
-        if type(i) == TestDriver:
+        deps.extend(i.inputs)
+        if isinstance(i, TestDriver):
             args, more_deps = _build_commands(
                 i.tests, writer, shell, local_env, True
             )
-            if i.output.creator:
-                deps.append(i.output)
-            deps.extend(more_deps)
             cmd.append(command(i, args))
+            deps.extend(more_deps)
         else:
             cmd.append(command(i))
     return cmd, deps
@@ -109,22 +121,18 @@ def make_test_rule(build_inputs, buildfile, env):
     if not tests:
         return
 
-    deps = []
-    if tests.inputs:
-        buildfile.rule(
-            target='tests',
-            deps=tests.inputs,
-            phony=True
-        )
-        deps.append('tests')
-    deps.extend(tests.extra_deps)
-
-    recipe, more_deps = _build_commands(
+    recipe, deps = _build_commands(
         tests.tests, make.Writer, pshell, pshell.local_env
+    )
+
+    buildfile.rule(
+        target='tests',
+        deps=deps + tests.extra_deps,
+        phony=True
     )
     buildfile.rule(
         target='test',
-        deps=deps + more_deps,
+        deps='tests',
         recipe=recipe,
         phony=True
     )
@@ -136,27 +144,23 @@ def ninja_test_rule(build_inputs, buildfile, env):
     if not tests:
         return
 
-    deps = []
-    if tests.inputs:
-        buildfile.build(
-            output='tests',
-            rule='phony',
-            inputs=tests.inputs
-        )
-        deps.append('tests')
-    deps.extend(tests.extra_deps)
-
     try:
         local_env = shell.local_env
     except AttributeError:
         local_env = env.tool('setenv')
 
-    commands, more_deps = _build_commands(
+    commands, deps = _build_commands(
         tests.tests, ninja.Writer, shell, local_env
+    )
+
+    buildfile.build(
+        output='tests',
+        rule='phony',
+        inputs=deps + tests.extra_deps
     )
     ninja.command_build(
         buildfile, env,
         output='test',
-        inputs=deps + more_deps,
+        inputs='tests',
         commands=commands,
     )

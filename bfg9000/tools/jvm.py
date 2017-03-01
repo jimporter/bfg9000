@@ -1,6 +1,6 @@
 import os
 
-from .utils import Command
+from .utils import Command, SimpleCommand
 from .. import safe_str
 from ..builtins.write_file import WriteFile
 from ..file_types import *
@@ -21,6 +21,7 @@ class JvmBuilder(object):
             'executable': linker,
             'shared_library': linker,
         }
+        self.runner = JvmRunner(env, lang)
 
     @property
     def flavor(self):
@@ -87,7 +88,9 @@ class JvmCompiler(Command):
         return []
 
     def output_file(self, name, options):
-        return JvmClassList(Path(name + '.classlist'), 'jvm', self.lang)
+        return JvmClassList(ObjectFile(
+            Path(name + '.classlist'), 'jvm', self.lang
+        ))
 
 
 class JarMaker(Command):
@@ -152,4 +155,23 @@ class JarMaker(Command):
         return []
 
     def output_file(self, name, options):
-        return ExecutableLibrary(Path(name + '.jar'), 'jvm')
+        if getattr(options, 'entry_point', None):
+            filetype = ExecutableLibrary
+        else:
+            filetype = Library
+        return filetype(Path(name + '.jar'), 'jvm', self.lang)
+
+
+class JvmRunner(SimpleCommand):
+    def __init__(self, env, lang):
+        # XXX: Using lang here works mainly by coincidence. Be more precise?
+        SimpleCommand.__init__(self, env, lang.upper(), lang)
+        self.lang = lang
+        self.rule_name = self.command_var = lang
+
+    def _call(self, cmd, file, jar=False):
+        result = [cmd]
+        if jar and self.lang != 'scala':
+            result.append('-jar')
+        result.append(file)
+        return result

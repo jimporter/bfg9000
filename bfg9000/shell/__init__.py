@@ -15,7 +15,6 @@ Mode = Enum('Mode', ['pipe', 'stdout', 'devnull', 'normal'])
 class shell_list(list):
     """A special subclass of list used to mark that this command line uses
     special shell characters."""
-    pass
 
 
 def execute(args, shell=False, env=None, stdout=Mode.pipe, stderr=Mode.normal):

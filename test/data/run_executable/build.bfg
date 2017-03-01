@@ -1,0 +1,10 @@
+# -*- python -*-
+
+cxx = executable('simple', files=['simple.cpp'])
+command('cxx', cmd=[cxx])
+
+java = executable('program', files=['program.java'], entry_point='program')
+command('java', cmds=[[java]])
+
+python = source_file('script.py')
+command('python', cmd=python)

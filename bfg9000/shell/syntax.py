@@ -22,9 +22,9 @@ class Writer(object):
         shelly = syntax == Syntax.shell
         escaped = False
 
-        if isinstance(thing, safe_str.escaped_str):
-            self.write_literal(thing.string)
+        if isinstance(thing, safe_str.literal_types):
             escaped = True
+            self.write_literal(thing.string)
         elif isinstance(thing, string_types):
             if shelly and shell_quote:
                 thing, escaped = shell_quote(thing)
@@ -46,7 +46,7 @@ class Writer(object):
 
         return escaped
 
-    def write_each(self, things, syntax, delim=safe_str.escaped_str(' '),
+    def write_each(self, things, syntax, delim=safe_str.literal(' '),
                    prefix=None, suffix=None, shell_quote=pshell.quote_info):
         for i in iterutils.tween(things, delim, prefix, suffix):
             self.write(i, syntax, shell_quote)
@@ -57,7 +57,7 @@ class Variable(object):
         self.name = name
 
     def use(self):
-        return safe_str.escaped_str('${{{}}}'.format(self.name))
+        return safe_str.literal('${{{}}}'.format(self.name))
 
     def _safe_str(self):
         return self.use()

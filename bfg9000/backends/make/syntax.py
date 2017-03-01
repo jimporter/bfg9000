@@ -68,9 +68,12 @@ class Writer(object):
         shelly = syntax in [Syntax.function, Syntax.shell]
         escaped = False
 
-        if isinstance(thing, safe_str.escaped_str):
-            self.write_literal(thing.string)
+        if isinstance(thing, safe_str.literal):
             escaped = True
+            self.write_literal(thing.string)
+        elif isinstance(thing, safe_str.shell_literal):
+            escaped = True
+            self.write_literal(self.escape_str(thing.string, syntax))
         elif isinstance(thing, string_types):
             if shelly and shell_quote:
                 thing, escaped = shell_quote(thing)
@@ -92,7 +95,7 @@ class Writer(object):
 
         return escaped
 
-    def write_each(self, things, syntax, delim=safe_str.escaped_str(' '),
+    def write_each(self, things, syntax, delim=safe_str.literal(' '),
                    prefix=None, suffix=None, shell_quote=pshell.quote_info):
         for i in iterutils.tween(things, delim, prefix, suffix):
             self.write(i, syntax, shell_quote)
@@ -147,7 +150,7 @@ class Pattern(Entity):
 
     def use(self):
         bits = re.split(r'%', self.path)
-        return safe_str.join(bits, safe_str.escaped_str('%'))
+        return safe_str.join(bits, safe_str.literal('%'))
 
     def __hash__(self):
         return hash(self.path)
@@ -165,7 +168,7 @@ class Variable(NamedEntity):
         fmt = '${}' if len(self.name) == 1 else '$({})'
         if self.quoted:
             fmt = pshell.quote_escaped(fmt)
-        return safe_str.escaped_str(fmt.format(self.name))
+        return safe_str.literal(fmt.format(self.name))
 
 
 def var(v, quoted=False):
@@ -183,18 +186,18 @@ class Function(NamedEntity):
         self.quoted = kwargs.get('quoted', False)
 
     def use(self):
-        esc = safe_str.escaped_str
+        lit = safe_str.literal
         kwargs = {'shell_quote': None} if self.quoted else {}
 
         out = Writer(StringIO())
         prefix = '$(' + self.name + ' '
-        for i in iterutils.tween(self.args, esc(','), esc(prefix), esc(')')):
+        for i in iterutils.tween(self.args, lit(','), lit(prefix), lit(')')):
             out.write_each(iterutils.iterate(i), Syntax.function, **kwargs)
         result = out.stream.getvalue()
 
         if self.quoted:
             result = pshell.quote_escaped(result)
-        return safe_str.escaped_str(result)
+        return safe_str.literal(result)
 
 
 class Call(Function):
@@ -294,14 +297,14 @@ class Makefile(object):
         return name in self._targets
 
     def _convert_args(self, args):
-        def conv(args):
+        def convert(args):
             if iterutils.isiterable(args):
-                return Command.convert_args(args, lambda x: self.cmd_var(x))
+                return Command.convert_args(args, self.cmd_var)
             return args
 
         if isinstance(args, Silent):
-            return Silent(conv(args.data))
-        return conv(args)
+            return Silent(convert(args.data))
+        return convert(args)
 
     def _write_variable(self, out, name, value, syntax=Syntax.shell,
                         target=None):
@@ -333,9 +336,9 @@ class Makefile(object):
         out.write_each(rule.targets, Syntax.target)
         out.write_literal(':')
 
-        esc = safe_str.escaped_str
-        out.write_each(rule.deps, Syntax.dependency, prefix=esc(' '))
-        out.write_each(rule.order_only, Syntax.dependency, prefix=esc(' | '))
+        lit = safe_str.literal
+        out.write_each(rule.deps, Syntax.dependency, prefix=lit(' '))
+        out.write_each(rule.order_only, Syntax.dependency, prefix=lit(' | '))
 
         if isinstance(rule.recipe, Entity):
             out.write_literal(' ; ')

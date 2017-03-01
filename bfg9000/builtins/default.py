@@ -16,8 +16,9 @@ class DefaultOutputs(object):
             if i.creator:
                 outputs.append(i)
 
-    def remove(self, output):
-        for i, fallback in enumerate(self.fallback_defaults):
+    def remove(self, output, explicit=False):
+        outputs = self.default_outputs if explicit else self.fallback_defaults
+        for i, fallback in enumerate(outputs):
             if output is fallback:
                 self.fallback_defaults.pop(i)
 

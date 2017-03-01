@@ -1,6 +1,6 @@
 import re
 
-from . import builder, cc, jvm
+from . import builder, runner, tool, cc, jvm
 from .. import shell
 from ..builtins.write_file import WriteFile
 from ..file_types import *
@@ -18,6 +18,24 @@ _cmds = {
     'java' : ['javac', 'gcj'],
     'scala': 'scalac',
 }
+
+
+@runner('java', 'scala')
+def run_java(env, lang, file):
+    runner = env.builder(lang).runner
+    if not runner:
+        return
+
+    if isinstance(file, Executable):
+        kwargs = {'jar': True} if lang == 'java' else {}
+        return runner(file, **kwargs)
+    elif isinstance(file, JvmClassList):
+        return runner(file.object_file)
+    elif isinstance(file, ObjectFile):
+        return runner(file)
+    else:
+        raise TypeError('expected an executable or object file for {} to run'
+                        .format(lang))
 
 
 @builder('java', 'scala')

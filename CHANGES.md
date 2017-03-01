@@ -11,6 +11,10 @@
 - Add a `library()` function that builds shared and/or static libraries per the
   user's preference
 - Add support for generating pkg-config `.pc` files
+- Allow executing files that require an interpreter or other wrapper via
+  `command()` or `test()`/`test_driver()` without explicitly specifying the
+  wrapper; supports all languages buildable by bfg9000, plus Lua, Perl, Python,
+  and Ruby
 
 ### Breaking changes
 - `directory()` and `header_directory()` no longer automatically include all
@@ -19,13 +23,17 @@
 - When creating a static library, `link_options` now specifies options that will
   be forwarded along to the dynamic linker, rather than options for the static
   linker itself
+- The `options` argument for `test()`/`test_driver()` has been deprecated; add
+  any options to the first argument (`cmd`) instead
+- `test()` no longer converts its first argument to a `generic_file()`
 
 ### Bug fixes
 - Improved logging of syntax errors in `build.bfg` files
 - Fixed usage of nested shared libraries on Linux (via `-rpath-link`)
 - Installing directories from the srcdir now correctly installs their contents
   to the installation root for that type (e.g. a header directory of `foo/bar`
-  installs its contents to `$includedir`).
+  installs its contents to `$includedir`)
+- Fixed generation of dependencies for the `tests` target
 
 ---
 

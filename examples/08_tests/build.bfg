@@ -12,5 +12,5 @@ test( executable('prog', files=['prog.cpp']) )
 # using the `python` command, but you're free to use any test driver you like
 # (including ones built by the executable() function in bfg9000!).
 
-driver = test_driver(sys.executable)
-test('script.py', driver=driver)
+driver = test_driver(source_file('script.py'))
+test(generic_file('test_data.txt'), driver=driver)

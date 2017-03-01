@@ -89,7 +89,7 @@ class Link(Edge):
 
         self.langs = uniques(chain(
             (i.lang for i in self.files),
-            chain.from_iterable(getattr(i, 'langs', []) for i in self.libs)
+            (j for i in self.libs for j in iterate(i.lang))
         ))
         self.linker = self.__find_linker(env, formats[0], self.langs)
 
@@ -231,7 +231,7 @@ class DualedStaticLink(StaticLink):
 @builtin.type(Executable)
 def executable(builtins, build, env, name, files=None, **kwargs):
     if files is None and 'libs' not in kwargs:
-        params = [('format', env.platform.object_format)]
+        params = [('format', env.platform.object_format), ('lang', 'c')]
         return local_file(build, Executable, name, params, **kwargs)
     return DynamicLink(builtins, build, env, name, files,
                        **kwargs).public_output
@@ -241,14 +241,14 @@ def executable(builtins, build, env, name, files=None, **kwargs):
 @builtin.type(SharedLibrary, in_type=(string_types, DualUseLibrary))
 def shared_library(builtins, build, env, name, files=None, **kwargs):
     if isinstance(name, DualUseLibrary):
-        if files is not None or not set(kwargs.keys()) <= {'format'}:
+        if files is not None or not set(kwargs.keys()) <= {'format', 'lang'}:
             raise TypeError('unexpected arguments')
         return name.shared
 
     if files is None and 'libs' not in kwargs:
         # XXX: What to do for pre-built shared libraries for Windows, which has
         # a separate DLL file?
-        params = [('format', env.platform.object_format)]
+        params = [('format', env.platform.object_format), ('lang', 'c')]
         return local_file(build, SharedLibrary, name, params, **kwargs)
     return SharedLink(builtins, build, env, name, files,
                       **kwargs).public_output

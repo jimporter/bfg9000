@@ -31,6 +31,7 @@ class MsvcBuilder(object):
             ),
         }
         self.packages = MsvcPackageResolver(env, lang)
+        self.runner = None
 
     @property
     def brand(self):
@@ -293,7 +294,7 @@ class MsvcExecutableLinker(MsvcLinker):
 
     def output_file(self, name, options):
         path = Path(name + self.env.platform.executable_ext)
-        return Executable(path, self.env.platform.object_format)
+        return Executable(path, self.env.platform.object_format, self.lang)
 
 
 class MsvcSharedLibraryLinker(MsvcLinker):
@@ -314,8 +315,8 @@ class MsvcSharedLibraryLinker(MsvcLinker):
         dllname = Path(name + self.env.platform.shared_library_ext)
         impname = Path(name + '.lib')
         expname = Path(name + '.exp')
-        dll = DllLibrary(dllname, self.env.platform.object_format, impname,
-                         expname)
+        dll = DllLibrary(dllname, self.env.platform.object_format, self.lang,
+                         impname, expname)
         return [dll, dll.import_lib, dll.export_file]
 
     @property

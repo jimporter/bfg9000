@@ -21,13 +21,13 @@ class TestJava(IntegrationTest):
         self.build('install')
 
         self.assertDirectory(self.installdir, [
-            os.path.join(self.bindir, 'program.jar'),
+            os.path.join(self.libdir, 'program.jar'),
         ])
 
         os.chdir(self.srcdir)
         cleandir(self.builddir)
         self.assertOutput(
-            ['java', '-jar', os.path.join(self.bindir, 'program.jar')],
+            ['java', '-jar', os.path.join(self.libdir, 'program.jar')],
             'hello from java!\n'
         )
 
@@ -63,13 +63,13 @@ class TestJavaLibrary(IntegrationTest):
         self.build('install')
 
         self.assertDirectory(self.installdir, [
-            os.path.join(self.bindir, 'lib.jar'),
-            os.path.join(self.bindir, 'program.jar'),
+            os.path.join(self.libdir, 'lib.jar'),
+            os.path.join(self.libdir, 'program.jar'),
         ])
 
         os.chdir(self.srcdir)
         cleandir(self.builddir)
         self.assertOutput(
-            ['java', '-jar', os.path.join(self.bindir, 'program.jar')],
+            ['java', '-jar', os.path.join(self.libdir, 'program.jar')],
             'hello from library!\n'
         )

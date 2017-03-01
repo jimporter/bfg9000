@@ -8,7 +8,7 @@ from ..build_inputs import build_input
 from ..file_types import *
 from ..iterutils import iterate, uniques
 from ..objutils import objectify
-from ..safe_str import escaped_str
+from ..safe_str import literal, shell_literal
 from ..shell import posix as pshell
 from ..shell.syntax import Syntax, Writer
 from ..tools.pkg_config import PkgConfigPackage
@@ -50,11 +50,11 @@ class SimpleRequirement(object):
 
     def _safe_str(self):
         if not self.version:
-            return escaped_str(self.name)
+            return shell_literal(self.name)
         op = self.version.operator
         if op == '==':
             op = '='
-        return escaped_str('{name} {op} {version}'.format(
+        return shell_literal('{name} {op} {version}'.format(
             name=self.name, op=op, version=self.version.version
         ))
 
@@ -227,11 +227,11 @@ class PkgConfigInfo(object):
         self._write_field(out, 'URL', data['url'])
         self._write_field(out, 'Version', data['version'])
         self._write_field(out, 'Requires', data['requires'], Syntax.shell,
-                          delim=escaped_str(', '))
+                          delim=literal(', '))
         self._write_field(out, 'Requires.private', data['requires_private'],
-                          Syntax.shell, delim=escaped_str(', '))
+                          Syntax.shell, delim=literal(', '))
         self._write_field(out, 'Conflicts', data['conflicts'],
-                          Syntax.shell, delim=escaped_str(', '))
+                          Syntax.shell, delim=literal(', '))
         self._write_field(out, 'Cflags', cflags + data['cflags'], Syntax.shell)
         self._write_field(out, 'Libs', ldflags + data['ldflags'], Syntax.shell)
         self._write_field(out, 'Libs.private', ldflags_private +

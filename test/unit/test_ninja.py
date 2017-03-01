@@ -36,43 +36,64 @@ class TestNinjaWriter(unittest.TestCase):
         out.write('foo: $bar', Syntax.clean)
         self.assertEqual(out.stream.getvalue(), 'foo: $$bar')
 
-    # escaped strings
-    def test_write_escaped_string_output(self):
+    # literals
+    def test_write_literal_output(self):
         out = Writer(StringIO())
-        out.write(safe_str.escaped_str('foo: $bar'), Syntax.output)
+        out.write(safe_str.literal('foo: $bar'), Syntax.output)
         self.assertEqual(out.stream.getvalue(), 'foo: $bar')
 
-    def test_write_escaped_string_input(self):
+    def test_write_literal_input(self):
         out = Writer(StringIO())
-        out.write(safe_str.escaped_str('foo: $bar'), Syntax.input)
+        out.write(safe_str.literal('foo: $bar'), Syntax.input)
         self.assertEqual(out.stream.getvalue(), 'foo: $bar')
 
-    def test_write_escaped_string_shell(self):
+    def test_write_literal_shell(self):
         out = Writer(StringIO())
-        out.write(safe_str.escaped_str('foo: $bar'), Syntax.shell)
+        out.write(safe_str.literal('foo: $bar'), Syntax.shell)
         self.assertEqual(out.stream.getvalue(), 'foo: $bar')
 
-    def test_write_escaped_string_clean(self):
+    def test_write_literal_clean(self):
         out = Writer(StringIO())
-        out.write(safe_str.escaped_str('foo: $bar'), Syntax.clean)
+        out.write(safe_str.literal('foo: $bar'), Syntax.clean)
         self.assertEqual(out.stream.getvalue(), 'foo: $bar')
+
+    # shell literals
+    def test_write_shell_literal_output(self):
+        out = Writer(StringIO())
+        out.write(safe_str.shell_literal('foo: $bar'), Syntax.output)
+        self.assertEqual(out.stream.getvalue(), 'foo$:$ $$bar')
+
+    def test_write_shell_literal_input(self):
+        out = Writer(StringIO())
+        out.write(safe_str.shell_literal('foo: $bar'), Syntax.input)
+        self.assertEqual(out.stream.getvalue(), 'foo:$ $$bar')
+
+    def test_write_shell_literal_shell(self):
+        out = Writer(StringIO())
+        out.write(safe_str.shell_literal('foo: $bar'), Syntax.shell)
+        self.assertEqual(out.stream.getvalue(), 'foo: $$bar')
+
+    def test_write_shell_literal_clean(self):
+        out = Writer(StringIO())
+        out.write(safe_str.shell_literal('foo: $bar'), Syntax.clean)
+        self.assertEqual(out.stream.getvalue(), 'foo: $$bar')
 
     # jbos
     def test_write_jbos_output(self):
         out = Writer(StringIO())
-        s = safe_str.jbos('$foo', safe_str.escaped_str('$bar'))
+        s = safe_str.jbos('$foo', safe_str.literal('$bar'))
         out.write(s, Syntax.output)
         self.assertEqual(out.stream.getvalue(), '$$foo$bar')
 
     def test_write_jbos_input(self):
         out = Writer(StringIO())
-        s = safe_str.jbos('$foo', safe_str.escaped_str('$bar'))
+        s = safe_str.jbos('$foo', safe_str.literal('$bar'))
         out.write(s, Syntax.input)
         self.assertEqual(out.stream.getvalue(), '$$foo$bar')
 
     def test_write_jbos_shell(self):
         out = Writer(StringIO())
-        s = safe_str.jbos('$foo', safe_str.escaped_str('$bar'))
+        s = safe_str.jbos('$foo', safe_str.literal('$bar'))
         out.write(s, Syntax.shell)
         if platform_name() == 'windows':
             expected = '$$foo$bar'
@@ -82,7 +103,7 @@ class TestNinjaWriter(unittest.TestCase):
 
     def test_write_jbos_clean(self):
         out = Writer(StringIO())
-        s = safe_str.jbos('$foo', safe_str.escaped_str('$bar'))
+        s = safe_str.jbos('$foo', safe_str.literal('$bar'))
         out.write(s, Syntax.clean)
         self.assertEqual(out.stream.getvalue(), '$$foo$bar')
 

@@ -28,3 +28,21 @@ class TestCommand(IntegrationTest):
         output = self.build('hello-world')
         assertRegex(self, output, re.compile(r'^\s*hello$', re.MULTILINE))
         assertRegex(self, output, re.compile(r'^\s*world$', re.MULTILINE))
+
+
+@skip_if_backend('msbuild')
+class TestRunExecutable(IntegrationTest):
+    def __init__(self, *args, **kwargs):
+        IntegrationTest.__init__(self, 'run_executable', *args, **kwargs)
+
+    def test_cxx(self):
+        assertRegex(self, self.build('cxx'),
+                    re.compile(r'^\s*hello from c\+\+!$', re.MULTILINE))
+
+    def test_java(self):
+        assertRegex(self, self.build('java'),
+                    re.compile(r'^\s*hello from java!$', re.MULTILINE))
+
+    def test_python(self):
+        assertRegex(self, self.build('python'),
+                    re.compile(r'^\s*hello from python!$', re.MULTILINE))

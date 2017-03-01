@@ -10,6 +10,6 @@ test( executable('b', files=['b.cpp']) )
 script = source_file('script.py')
 command(
     'script',
-    cmds=[ ['touch', 'file'], [sys.executable, script] ],
+    cmds=[ ['touch', 'file'], [script] ],
     environment={'VARIABLE': 'hello script'},
 )

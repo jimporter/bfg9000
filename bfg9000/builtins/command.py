@@ -7,14 +7,15 @@ from .. import safe_str
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..build_inputs import Edge
-from ..file_types import File, Phony
-from ..iterutils import isiterable, listify
+from ..file_types import File, Node, Phony
+from ..iterutils import isiterable, iterate, listify
 from ..path import Path, Root
 from ..shell import posix as pshell
+from ..tools import utils
 
 
 class BaseCommand(Edge):
-    def __init__(self, build, name, outputs, cmd=None, cmds=None,
+    def __init__(self, build, env, name, outputs, cmd=None, cmds=None,
                  environment=None, extra_deps=None):
         if (cmd is None) == (cmds is None):
             raise ValueError('exactly one of "cmd" or "cmds" must be ' +
@@ -22,24 +23,29 @@ class BaseCommand(Edge):
         elif cmds is None:
             cmds = [cmd]
 
+        inputs = [i for line in cmds for i in iterate(line)
+                  if isinstance(i, Node) and i.creator]
+        cmds = [env.run_arguments(line) for line in cmds]
+
         self.name = name
         self.cmds = cmds
+        self.inputs = inputs
         self.env = environment or {}
         Edge.__init__(self, build, outputs, extra_deps=extra_deps)
 
 
 class Command(BaseCommand):
-    def __init__(self, build, name, **kwargs):
-        BaseCommand.__init__(self, build, name, Phony(name), **kwargs)
+    def __init__(self, build, env, name, **kwargs):
+        BaseCommand.__init__(self, build, env, name, Phony(name), **kwargs)
 
 
-@builtin.globals('build_inputs')
-def command(build, name, **kwargs):
-    return Command(build, name, **kwargs).public_output
+@builtin.globals('build_inputs', 'env')
+def command(build, env, name, **kwargs):
+    return Command(build, env, name, **kwargs).public_output
 
 
 class BuildStep(BaseCommand):
-    def __init__(self, build, name, **kwargs):
+    def __init__(self, build, env, name, **kwargs):
         name = listify(name)
         project_name = name[0]
 
@@ -58,7 +64,7 @@ class BuildStep(BaseCommand):
         outputs = [self._make_outputs(*i) for i in
                    zip(name, type, type_args, type_kwargs)]
 
-        BaseCommand.__init__(self, build, project_name, outputs, **kwargs)
+        BaseCommand.__init__(self, build, env, project_name, outputs, **kwargs)
 
     @staticmethod
     def _make_outputs(name, type, args, kwargs):
@@ -69,9 +75,9 @@ class BuildStep(BaseCommand):
         return result
 
 
-@builtin.globals('build_inputs')
-def build_step(build, name, **kwargs):
-    return BuildStep(build, name, **kwargs).public_output
+@builtin.globals('build_inputs', 'env')
+def build_step(build, env, name, **kwargs):
+    return BuildStep(build, env, name, **kwargs).public_output
 
 
 @make.rule_handler(Command, BuildStep)
@@ -80,13 +86,19 @@ def make_command(rule, build_inputs, buildfile, env):
     out = make.Writer(StringIO())
     env_vars = pshell.global_env(rule.env)
 
-    for line in pshell.join_commands(chain(env_vars, rule.cmds)):
+    def convert(args):
+        if isiterable(args):
+            return utils.Command.convert_args(args, buildfile.cmd_var)
+        return args
+
+    cmds = (convert(i) for i in rule.cmds)
+    for line in pshell.join_commands(chain(env_vars, cmds)):
         out.write_shell(line)
 
     buildfile.rule(
         target=rule.output,
-        deps=rule.extra_deps,
-        recipe=[safe_str.escaped_str(out.stream.getvalue())],
+        deps=rule.inputs + rule.extra_deps,
+        recipe=[safe_str.literal(out.stream.getvalue())],
         phony=isinstance(rule, Command)
     )
 
@@ -96,7 +108,7 @@ def ninja_command(rule, build_inputs, buildfile, env):
     ninja.command_build(
         buildfile, env,
         output=rule.output,
-        inputs=rule.extra_deps,
+        inputs=rule.inputs + rule.extra_deps,
         commands=rule.cmds,
         environ=rule.env,
         console=isinstance(rule, Command)

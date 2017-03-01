@@ -181,7 +181,7 @@ _path_vars = {
 
 def textify(thing, quoted=False, out=True):
     thing = safe_str.safe_str(thing)
-    if isinstance(thing, safe_str.escaped_str):
+    if isinstance(thing, safe_str.literal_types):
         return thing.string
     elif isinstance(thing, string_types):
         return shell.quote(thing, escape_percent=True) if quoted else thing

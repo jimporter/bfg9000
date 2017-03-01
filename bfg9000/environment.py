@@ -7,6 +7,8 @@ from six import iteritems
 from . import platforms
 from . import tools
 from .backends import list_backends
+from .file_types import Node
+from .iterutils import first, isiterable, listify
 from .path import InstallRoot, Path, Root
 from .versioning import Version
 
@@ -58,13 +60,28 @@ class Environment(object):
 
     def builder(self, lang):
         if lang not in self.__builders:
-            self.__builders[lang] = tools.get_builder(lang, self)
+            self.__builders[lang] = tools.get_builder(self, lang)
         return self.__builders[lang]
 
     def tool(self, name):
         if name not in self.__tools:
-            self.__tools[name] = tools.get_tool(name, self)
+            self.__tools[name] = tools.get_tool(self, name)
         return self.__tools[name]
+
+    def run_arguments(self, line, lang=None):
+        if isinstance(line, Node):
+            line = [line]
+        elif isiterable(line):
+            line = listify(line)
+        else:
+            return line
+
+        if len(line) == 0 or not isinstance(line[0], Node):
+            return line
+
+        if lang is None:
+            lang = first(getattr(line[0], 'lang', None), default=None)
+        return tools.get_run_arguments(self, lang, line[0]) + line[1:]
 
     def save(self, path):
         with open(os.path.join(path, self.envfile), 'w') as out:

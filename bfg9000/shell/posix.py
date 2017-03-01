@@ -3,7 +3,7 @@ from shlex import shlex
 from six import iteritems, string_types
 
 from .. import iterutils
-from ..safe_str import escaped_str, jbos, safe_str
+from ..safe_str import jbos, safe_str, shell_literal
 
 __all__ = ['split', 'listify', 'escape', 'quote_escaped', 'quote',
            'quote_info', 'join_commands', 'local_env', 'global_env']
@@ -51,16 +51,16 @@ def quote_info(s):
 
 
 def join_commands(commands):
-    return iterutils.tween(commands, escaped_str(' && '))
+    return iterutils.tween(commands, shell_literal(' && '))
 
 
 def local_env(env):
-    eq = escaped_str('=')
+    eq = shell_literal('=')
     return [ jbos(safe_str(name), eq, safe_str(value))
              for name, value in iteritems(env) ]
 
 
 def global_env(env):
-    eq = escaped_str('=')
+    eq = shell_literal('=')
     return [ ['export', jbos(safe_str(name), eq, safe_str(value))]
              for name, value in iteritems(env) ]

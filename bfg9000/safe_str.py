@@ -16,7 +16,7 @@ def safe_str(s):
         raise NotImplementedError(type(s))
 
 
-class escaped_str(safe_string):
+class literal_types(safe_string):
     def __init__(self, string):
         if not isinstance(string, string_types):
             raise TypeError('expected a string')
@@ -29,7 +29,7 @@ class escaped_str(safe_string):
         return '`{}`'.format(self.string)
 
     def __eq__(self, rhs):
-        if not isinstance(rhs, escaped_str):
+        if type(self) is not type(rhs):
             return NotImplemented
         return self.string == rhs.string
 
@@ -38,6 +38,18 @@ class escaped_str(safe_string):
 
     def __radd__(self, lhs):
         return jbos(lhs, self)
+
+
+class shell_literal(literal_types):
+    """A string which has already been escaped for shell purposes, useful if
+    you want to use characters with syntactic meaning in your shell (e.g. to
+    use I/O redirection."""
+
+
+class literal(literal_types):
+    """A string which has already been escaped for *all* purposes (read: both
+    shell and build files), useful if you want to use characters with syntactic
+    meaning in your build script."""
 
 
 class jbos(safe_string):  # Just a Bunch of Strings

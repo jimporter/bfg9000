@@ -124,8 +124,9 @@ Availability: `build.bfg`
 
 Create a build step named *name* that runs a list of arbitrary commands,
 specified in either *cmd* or *cmds*; *cmd* takes a single command, whereas
-*cmds* takes a list of commands. Each command may either be a string to be
-parsed according to shell rules or a list of arguments to be passed directly to
+*cmds* takes a list of commands. Each command may be a string to be
+parsed according to shell rules, a file object (such as an
+[*executable*](#executable)), or a list of arguments to be passed directly to
 the process.
 
 You may also pass a dict to *environment* to set environment variables for the
@@ -453,30 +454,36 @@ can also wrap your tests with a separate driver using
 For cases where you only want to *build* the tests, not run them, you can use
 the `tests` target.
 
-### test(*test*, [*options*], [*environment*|*driver*]) { #test }
+### test(*test*, [*environment*|*driver*]) { #test }
 Availability: `build.bfg`
 {: .subtitle}
 
-Create a test for a single test file named *test*. You may specify additional
-command-line arguments to the test in *options*. You can also pass temporary
-environment variables as a dict via *environment*, or specify a test driver to
-add this test file to via *driver*.
+Create a single test. *cmd* is the base command (possibly with arguments)
+to run; this works much like the *cmd* argument in the [*command*](#command)
+built-in. You can also pass temporary environment variables as a dict via
+*environment*, or specify a test driver to add this test file to via *driver*.
 
-### test_driver(*driver*, [*options*], [*environment*|*parent*]) { #test_driver }
+### test_driver(*cmd*, [*environment*|*parent*], [*wrap_children*]) { #test_driver }
 Availability: `build.bfg`
 {: .subtitle}
 
 Create a test driver which can run a series of tests, specified as command-line
-arguments to the driver. You may specify driver-wide command-line arguments via
-*options*. You can also pass temporary environment variables as a dict with
-*environment*, or specify a parent test driver to wrap this driver via *driver*.
+arguments to the driver. *cmd* is the base command (possibly with arguments)
+to run; this works much like the *cmd* argument in the [*command*](#command)
+built-in. You can also pass temporary environment variables as a dict with
+*environment*, or specify a parent test driver to wrap this driver via *parent*.
+
+Finally, you can specify *wrap_children* to determine how tests using this
+driver are run. If true, each test will be wrapped by
+[*env.run_arguments*](#env-run_arguments); if false (the default), tests will be
+used as-is.
 
 ### test_deps(*...*) { #test_deps }
 Availability: `build.bfg`
 {: .subtitle}
 
-Specify a list of dependencies which must be satisfied before the tests can be
-run.
+Specify a list of extra dependencies which must be satisfied when building the
+tests via the `tests` target.
 
 ## Package resolvers
 
@@ -639,6 +646,11 @@ The linker used with this builder. *mode* is one of `'executable'`,
 `'shared_library'`, or `'static_library'`. Its public properties are the same as
 [*compiler*](#compiler-command) above.
 
+#### builder.runner { #builder-runner }
+
+The runner used with files built by this builder (e.g. `java`). This may be
+*None* for languages which have no runner, such as C and C++.
+
 ### env.platform { #env-platform }
 Availability: `build.bfg` and `build.opts`
 {: .subtitle}
@@ -653,6 +665,14 @@ The "flavor" of the platform. Either `'posix'` or `'windows'`.
 #### platform.name { #platform-name }
 
 The name of the platform, e.g. `'linux'`, `'darwin'` (OS X), or `'windows'`.
+
+### env.run_arguments(*line*, [*lang*]) { #env-run_arguments }
+
+Generate the arguments needed to run the command in *line*. If *line* is a file
+type (or a list beginning with a file type) such as an
+[*executable*](#executable), it will be prepended with the
+[runner](#builder-runner) for *lang* as needed. If *lang* is *None*, the
+language will be determined by the language of *line*'s first element.
 
 ## Utilities
 

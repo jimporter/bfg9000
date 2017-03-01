@@ -58,9 +58,12 @@ class Writer(object):
         shelly = syntax == Syntax.shell
         escaped = False
 
-        if isinstance(thing, safe_str.escaped_str):
-            self.write_literal(thing.string)
+        if isinstance(thing, safe_str.literal):
             escaped = True
+            self.write_literal(thing.string)
+        elif isinstance(thing, safe_str.shell_literal):
+            escaped = True
+            self.write_literal(self.escape_str(thing.string, syntax))
         elif isinstance(thing, string_types):
             if shelly and shell_quote:
                 thing, escaped = shell_quote(thing)
@@ -82,7 +85,7 @@ class Writer(object):
 
         return escaped
 
-    def write_each(self, things, syntax, delim=safe_str.escaped_str(' '),
+    def write_each(self, things, syntax, delim=safe_str.literal(' '),
                    prefix=None, suffix=None):
         for i in iterutils.tween(things, delim, prefix, suffix):
             self.write(i, syntax)
@@ -99,7 +102,7 @@ class Variable(object):
         self.name = re.sub('\W', '_', name)
 
     def use(self):
-        return safe_str.escaped_str('${}'.format(self.name))
+        return safe_str.literal('${}'.format(self.name))
 
     def _safe_str(self):
         return self.use()
@@ -142,7 +145,7 @@ class Commands(object):
         env_vars = shell.global_env(self.environ)
         for line in shell.join_commands(chain(env_vars, self.commands)):
             out.write_shell(line)
-        return safe_str.escaped_str(out.stream.getvalue())
+        return safe_str.literal(out.stream.getvalue())
 
     def _safe_str(self):
         return self.use()
@@ -217,7 +220,7 @@ class NinjaFile(object):
     def rule(self, name, command, depfile=None, deps=None, generator=False,
              pool=None, restat=False):
         command = objectify(command, Commands, in_type=object)
-        command.convert_args(lambda x: self.cmd_var(x))
+        command.convert_args(self.cmd_var)
         if not command.needs_shell:
             command = command.commands[0]
 
@@ -288,10 +291,10 @@ class NinjaFile(object):
         out.write_each(build.outputs, Syntax.output)
         out.write_literal(': ' + build.rule)
 
-        esc = safe_str.escaped_str
-        out.write_each(build.inputs, Syntax.input, prefix=esc(' '))
-        out.write_each(build.implicit, Syntax.input, prefix=esc(' | '))
-        out.write_each(build.order_only, Syntax.input, prefix=esc(' || '))
+        lit = safe_str.literal
+        out.write_each(build.inputs, Syntax.input, prefix=lit(' '))
+        out.write_each(build.implicit, Syntax.input, prefix=lit(' | '))
+        out.write_each(build.order_only, Syntax.input, prefix=lit(' || '))
         out.write_literal('\n')
 
         if build.variables:

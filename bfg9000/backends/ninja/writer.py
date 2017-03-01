@@ -91,7 +91,7 @@ def command_build(buildfile, env, output, inputs=None, implicit=None,
             buildfile.rule(name='command', command=[var('cmd')])
 
     cmds = Commands(commands, environ)
-    cmds.convert_args(lambda x: buildfile.cmd_var(x))
+    cmds.convert_args(buildfile.cmd_var)
     buildfile.build(
         output=output,
         rule=rule_name,

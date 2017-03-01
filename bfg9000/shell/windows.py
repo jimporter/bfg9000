@@ -5,7 +5,7 @@ from enum import Enum
 from six import iteritems
 
 from .. import iterutils
-from ..safe_str import escaped_str, safe_str
+from ..safe_str import safe_str, shell_literal
 
 __all__ = ['split', 'listify', 'escape', 'quote_escaped', 'quote',
            'quote_info', 'join_commands', 'global_env']
@@ -105,7 +105,7 @@ def quote_info(s, escape_percent=False):
 
 
 def join_commands(commands):
-    return iterutils.tween(commands, escaped_str(' && '))
+    return iterutils.tween(commands, shell_literal(' && '))
 
 
 def global_env(env):

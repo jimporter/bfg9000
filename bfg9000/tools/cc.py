@@ -55,6 +55,7 @@ class CcBuilder(object):
             'static_library': ArLinker(env, lang),
         }
         self.packages = CcPackageResolver(env, lang, command)
+        self.runner = None
 
     @property
     def flavor(self):
@@ -413,7 +414,7 @@ class CcExecutableLinker(CcLinker):
 
     def output_file(self, name, options):
         path = Path(name + self.env.platform.executable_ext)
-        return Executable(path, self.env.platform.object_format)
+        return Executable(path, self.env.platform.object_format, self.lang)
 
 
 class CcSharedLibraryLinker(CcLinker):
@@ -456,7 +457,7 @@ class CcSharedLibraryLinker(CcLinker):
             dllprefix = 'cyg' if self.env.platform.name == 'cygwin' else 'lib'
             dllname = lib(head, tail, dllprefix)
             impname = lib(head, tail, suffix='.a')
-            dll = DllLibrary(dllname, fmt, impname)
+            dll = DllLibrary(dllname, fmt, self.lang, impname)
             return [dll, dll.import_lib]
         elif version and self.env.platform.has_versioned_library:
             if self.env.platform.name == 'darwin':
@@ -466,9 +467,9 @@ class CcSharedLibraryLinker(CcLinker):
                 real = lib(head, tail, suffix='.{}'.format(version))
                 soname = lib(head, tail, suffix='.{}'.format(soversion))
             link = lib(head, tail)
-            return VersionedSharedLibrary(real, fmt, soname, link)
+            return VersionedSharedLibrary(real, fmt, self.lang, soname, link)
         else:
-            return SharedLibrary(lib(head, tail), fmt)
+            return SharedLibrary(lib(head, tail), fmt, self.lang)
 
     @property
     def _always_args(self):

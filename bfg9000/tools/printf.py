@@ -1,7 +1,7 @@
 from . import tool
 from .utils import SimpleCommand
 from ..iterutils import iterate
-from ..safe_str import escaped_str
+from ..safe_str import shell_literal
 from ..shell import shell_list
 
 
@@ -16,5 +16,5 @@ class Printf(SimpleCommand):
     def _call(self, cmd, format, input, output):
         result = shell_list([cmd, format])
         result.extend(iterate(input))
-        result.extend([escaped_str('>'), output])
+        result.extend([shell_literal('>'), output])
         return result
