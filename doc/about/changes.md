@@ -12,7 +12,7 @@ in progress
 - Add support for user-defined arguments
 - Add a `library()` function that builds shared and/or static libraries per the
   user's preference
-- Add support for generating pkg-config `.pc` files
+- Add support for generating *pkg-config* `.pc` files
 - Allow executing files that require an interpreter or other wrapper via
   `command()` or `test()`/`test_driver()` without explicitly specifying the
   wrapper; supports all languages buildable by bfg9000, plus Lua, Perl, Python,
@@ -56,14 +56,14 @@ in progress
 - Warn users if necessary build tools can't be found by bfg9000
 - Automatically include runtime dependencies when installing a binary
 - Support `@rpath` on OS X
-- Allow fetching bfg's version from `build.bfg` files via *bfg9000_version*
+- Allow fetching bfg's version from `build.bfg` files via `bfg9000_version`
 - Support versioning of shared libraries on POSIX systems
 - Support resolving packages via pkg-config
 - Locally-built static libraries now forward their options to binaries that link
   to them
-- *whole_archive* now forwards its arguments on to *static_library*
+- `whole_archive()` now forwards its arguments on to `static_library()`
 - Use *doppel* for installing files instead of *install(1)*
-- Support *command* and *alias* rules under MSBuild
+- Support `command()` and `alias()` rules under MSBuild
 - Add support for building a distribution of the sources (`make dist`)
 - Allow running custom build steps via `build_step()`
 
