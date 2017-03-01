@@ -16,6 +16,7 @@ def split(s):
         raise TypeError('expected a string')
     lexer = shlex(s, posix=True)
     lexer.commenters = ''
+    lexer.escape = ''
     lexer.whitespace_split = True
     return list(lexer)
 

@@ -28,14 +28,19 @@ in progress
 - The `options` argument for `test()`/`test_driver()` has been deprecated; add
   any options to the first argument (`cmd`) instead
 - `test()` no longer converts its first argument to a `generic_file()`
+- Splitting POSIX shell strings (used for compile and link options as well as
+  environment vars on POSIX like `CPPFLAGS`) no longer parses escape characters
 
 ### Bug fixes
 - Improved logging of syntax errors in `build.bfg` files
-- Fixed usage of nested shared libraries on Linux (via `-rpath-link`)
+- Fixed usage of nested shared libraries when linking with GNU ld (via
+  `-rpath-link`)
 - Installing directories from the srcdir now correctly installs their contents
   to the installation root for that type (e.g. a header directory of `foo/bar`
   installs its contents to `$includedir`)
 - Fixed generation of dependencies for the `tests` target
+- Improved escaping for paths when using Make on Windows (previously users had
+  to escape backslashes themselves)
 
 ---
 
