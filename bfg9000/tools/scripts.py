@@ -6,7 +6,10 @@ from ..file_types import SourceFile
 from ..languages import language
 from ..path import abspath
 
+language('lua', src_exts=['.lua'])
+language('perl', src_exts=['.pl'])
 language('python', src_exts=['.py'])
+language('ruby', src_exts=['.rb'])
 
 
 @tool('lua')
