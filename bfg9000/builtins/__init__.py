@@ -7,17 +7,13 @@ from itertools import chain
 from six import iteritems, itervalues, string_types
 
 from ..iterutils import iterate
+from ..objutils import memoize
 
 _all_builtins = {}
-_initialized = False
 
 
+@memoize
 def init():
-    global _initialized
-    if _initialized:
-        return
-    _initialized = True
-
     # Import all the packages in this directory so their hooks get run.
     for _, name, _ in pkgutil.walk_packages(__path__, '.'):
         importlib.import_module(name, __package__)

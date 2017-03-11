@@ -2,19 +2,15 @@ import importlib
 import pkgutil
 
 from ..file_types import Executable
+from ..objutils import memoize
 
 _builders = {}
 _tools = {}
 _runners = {}
-_initialized = False
 
 
+@memoize
 def init():
-    global _initialized
-    if _initialized:
-        return
-    _initialized = True
-
     # Import all the packages in this directory so their hooks get run.
     for _, name, _ in pkgutil.walk_packages(__path__, '.'):
         importlib.import_module(name, __package__)

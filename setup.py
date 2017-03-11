@@ -1,10 +1,10 @@
 import os
+import platform
 import re
 import subprocess
 import sys
 from setuptools import setup, find_packages, Command
 
-from bfg9000.platforms import platform_name
 from bfg9000.app_version import version
 
 
@@ -63,13 +63,13 @@ if os.getenv('NO_DOPPEL') not in ['1', 'true']:
 if sys.version_info < (3, 4):
     more_requires.append('enum34')
 
-platform = platform_name()
-if platform == 'windows':
+platform_name = platform.system()
+if platform_name == 'Windows':
     more_scripts.extend([
         'bfg9000-setenv=bfg9000.setenv:main',
         'bfg9000-printf=bfg9000.printf:main',
     ])
-elif platform == 'linux':
+elif platform_name == 'Linux':
     if os.getenv('NO_PATCHELF') not in ['1', 'true']:
         more_requires.append('patchelf-wrapper')
 
