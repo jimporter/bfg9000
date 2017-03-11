@@ -11,7 +11,7 @@ from ... import shell
 from ... import iterutils
 from ...objutils import objectify
 from ...platforms import platform_name, platform_info
-from ...tools.utils import Command
+from ...tools.common import Command
 from ...versioning import Version
 
 __all__ = ['NinjaFile', 'Section', 'Syntax', 'Writer', 'Variable', 'var',

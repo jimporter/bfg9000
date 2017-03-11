@@ -12,7 +12,7 @@ from ... import path
 from ... import safe_str
 from ... import shell
 from ...iterutils import isiterable
-from ...tools.utils import Command
+from ...tools.common import Command
 
 __all__ = ['ExecProject', 'NoopProject', 'Solution', 'UuidMap', 'VcxProject',
            'textify', 'textify_each']

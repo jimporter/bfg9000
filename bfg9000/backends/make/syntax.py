@@ -8,7 +8,7 @@ from ... import path
 from ... import safe_str
 from ... import iterutils
 from ...platforms import platform_name, platform_info
-from ...tools.utils import Command
+from ...tools.common import Command
 
 # XXX: Make currently only supports sh-style shells.
 from ...shell import posix as pshell

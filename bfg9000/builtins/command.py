@@ -11,7 +11,7 @@ from ..file_types import File, Node, Phony
 from ..iterutils import isiterable, iterate, listify
 from ..path import Path, Root
 from ..shell import posix as pshell
-from ..tools import utils
+from ..tools import common as tools
 
 
 class BaseCommand(Edge):
@@ -88,7 +88,7 @@ def make_command(rule, build_inputs, buildfile, env):
 
     def convert(args):
         if isiterable(args):
-            return utils.Command.convert_args(args, buildfile.cmd_var)
+            return tools.Command.convert_args(args, buildfile.cmd_var)
         return args
 
     cmds = (convert(i) for i in rule.cmds)
