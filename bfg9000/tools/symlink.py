@@ -1,5 +1,5 @@
 from . import tool
-from .utils import SimpleCommand
+from .common import SimpleCommand
 
 
 @tool('symlink')

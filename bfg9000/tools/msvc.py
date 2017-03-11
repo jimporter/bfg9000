@@ -2,7 +2,7 @@ import os.path
 from itertools import chain
 
 from . import pkg_config
-from .utils import Command
+from .common import Command
 from .. import shell
 from ..arguments.windows import ArgumentParser
 from ..builtins.write_file import WriteFile

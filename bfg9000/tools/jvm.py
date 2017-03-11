@@ -1,7 +1,7 @@
 import os
 import re
 
-from .utils import Command, SimpleCommand
+from .common import Command
 from .. import safe_str
 from .. import shell
 from ..builtins.write_file import WriteFile

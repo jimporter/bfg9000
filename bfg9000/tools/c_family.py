@@ -3,7 +3,7 @@ import re
 
 from . import builder, cc, msvc
 from .. import shell
-from .utils import check_which
+from .common import check_which
 from ..languages import language
 
 language('c', src_exts=['.c'], hdr_exts=['.h'])

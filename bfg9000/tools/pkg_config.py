@@ -3,7 +3,7 @@ import subprocess
 from collections import namedtuple
 
 from . import tool
-from .utils import SimpleCommand
+from .common import SimpleCommand
 from .. import shell
 from ..file_types import Package
 from ..objutils import memoize

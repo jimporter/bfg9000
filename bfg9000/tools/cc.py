@@ -8,7 +8,7 @@ from . import pkg_config
 from .. import safe_str
 from .. import shell
 from .ar import ArLinker
-from .utils import Command, darwin_install_name
+from .common import Command, darwin_install_name
 from ..builtins.symlink import Symlink
 from ..file_types import *
 from ..iterutils import first, iterate, listify, uniques

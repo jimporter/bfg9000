@@ -5,7 +5,7 @@ from .. import shell
 from ..builtins.write_file import WriteFile
 from ..file_types import *
 from ..languages import language
-from .utils import check_which
+from .common import check_which
 
 language('java', src_exts=['.java'])
 language('scala', src_exts=['.scala'])

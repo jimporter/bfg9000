@@ -1,6 +1,6 @@
 from . import builder, cc
 from .. import shell
-from .utils import check_which
+from .common import check_which
 from ..languages import language
 
 language('f77', src_exts=['.f', '.for', '.ftn'])

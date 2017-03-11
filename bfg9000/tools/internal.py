@@ -1,5 +1,5 @@
 from . import tool
-from .utils import Command
+from .common import Command
 from ..platforms import platform_name
 from ..safe_str import jbos, safe_str, shell_literal
 from ..shell import shell_list

@@ -2,7 +2,7 @@ import os
 
 from .. import shell
 from .. import iterutils
-from .utils import SimpleCommand
+from .common import SimpleCommand
 from ..file_types import StaticLibrary
 from ..path import Path
 

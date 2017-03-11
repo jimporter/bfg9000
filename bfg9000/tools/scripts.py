@@ -1,7 +1,7 @@
 import sys
 
 from . import runner, tool
-from .utils import SimpleCommand
+from .common import SimpleCommand
 from ..file_types import SourceFile
 from ..languages import language
 from ..path import abspath

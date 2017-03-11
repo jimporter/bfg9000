@@ -1,5 +1,5 @@
 from . import tool
-from .utils import SimpleCommand
+from .common import SimpleCommand
 from ..iterutils import iterate
 from ..safe_str import shell_literal
 from ..shell import shell_list
