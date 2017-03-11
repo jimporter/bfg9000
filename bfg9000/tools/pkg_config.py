@@ -76,7 +76,7 @@ class PkgConfigPackage(Package):
         lib_dirs = parser.parse_known_args(dir_args)[0].lib_dirs or []
         options = _PkgConfigOptions([Path(i, Root.absolute) for i in lib_dirs])
 
-        return result + linker.args(options, output, pkg=True)
+        return result + linker.flags(options, output, pkg=True)
 
     def ldlibs(self, linker, output):
         # XXX: How should we ensure that these libs are linked statically when

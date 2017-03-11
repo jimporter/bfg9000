@@ -55,12 +55,12 @@ class Link(Edge):
             builtins['library'](i, kind=self._preferred_lib, lang=lang)
             for i in iterate(libs)
         ]
-        forward_args = self.__get_forward_args(self.user_libs)
-        self.libs = self.user_libs + forward_args.get('libs', [])
+        forward_opts = self.__get_forward_opts(self.user_libs)
+        self.libs = self.user_libs + forward_opts.get('libs', [])
 
         self.user_packages = [builtins['package'](i)
                               for i in iterate(packages)]
-        self.packages = self.user_packages + forward_args.get('packages', [])
+        self.packages = self.user_packages + forward_opts.get('packages', [])
 
         # XXX: Remove `include` after 0.3 is released.
         self.user_files = builtins['object_files'](
@@ -78,7 +78,7 @@ class Link(Edge):
             raise ValueError('need at least one source file')
 
         self.user_options = pshell.listify(link_options)
-        self.forwarded_options = forward_args.get('options', [])
+        self.forwarded_options = forward_opts.get('options', [])
 
         if entry_point:
             self.entry_point = entry_point
@@ -103,7 +103,7 @@ class Link(Edge):
         defines = []
         if self.linker.has_link_macros:
             defines = library_macro(self.name, self.mode)
-        defines = forward_args.get('defines', []) + defines
+        defines = forward_opts.get('defines', []) + defines
 
         for i in self.files:
             if isinstance(i.creator, Compile):
@@ -133,14 +133,14 @@ class Link(Edge):
         return os.path.join(head, cls._prefix + tail)
 
     @staticmethod
-    def __get_forward_args(libs):
+    def __get_forward_opts(libs):
         result = {}
 
         def accumulate(libs):
             for i in libs:
-                if hasattr(i, 'forward_args'):
-                    merge_into_dict(result, i.forward_args)
-                    accumulate(i.forward_args.get('libs', []))
+                if hasattr(i, 'forward_opts'):
+                    merge_into_dict(result, i.forward_opts)
+                    accumulate(i.forward_opts.get('libs', []))
 
         accumulate(libs)
         return result
@@ -165,11 +165,11 @@ class DynamicLink(Link):
                 self.user_options)
 
     def _fill_options(self, env, output):
-        if hasattr(self.linker, 'args'):
+        if hasattr(self.linker, 'flags'):
             self._internal_options = (
                 sum((i.ldflags(self.linker, output)
                      for i in self.packages), []) +
-                self.linker.args(self, output)
+                self.linker.flags(self, output)
             )
         else:
             self._internal_options = []
@@ -214,14 +214,14 @@ class StaticLink(Link):
 
     def _fill_options(self, env, output):
         primary = first(output)
-        primary.forward_args = {
+        primary.forward_opts = {
             'options': self.user_options,
             'libs': self.user_libs,
             'packages': self.user_packages,
         }
         if self.linker.has_link_macros:
             macro = library_macro(self.name, self.mode)
-            primary.forward_args['defines'] = macro
+            primary.forward_opts['defines'] = macro
 
         primary.linktime_deps.extend(self.user_libs)
 
@@ -312,9 +312,9 @@ def library(builtins, build, env, name, files=None, **kwargs):
         # XXX: Try to detect if a string refers to a shared lib?
         return local_file(build, file_type, name, params, **kwargs)
 
-    if kind in ['dual']:
+    if kind == 'dual':
         shared = SharedLink(builtins, build, env, name, files, **kwargs)
-        if not env.builder(shared.linker.lang).can_dual_link:
+        if not shared.linker.builder.can_dual_link:
             return shared.public_output
 
         static = DualedStaticLink(builtins, build, env, name, shared.files,
@@ -346,20 +346,21 @@ def global_link_options(build, options, family='native'):
 
 
 def _get_flags(backend, rule, build_inputs, buildfile):
-    global_ldflags, ldflags = backend.flags_vars(
-        rule.linker.flags_var,
-        ( rule.linker.global_args +
-          build_inputs['link_options'][rule.linker.family] ),
-        buildfile
-    )
-
     variables = {}
-    cmd_kwargs = {'args': ldflags}
+    cmd_kwargs = {}
 
-    if rule.options:
-        variables[ldflags] = [global_ldflags] + rule.options
+    if hasattr(rule.linker, 'flags_var'):
+        global_ldflags, ldflags = backend.flags_vars(
+            rule.linker.flags_var,
+            ( rule.linker.global_flags +
+              build_inputs['link_options'][rule.linker.family] ),
+            buildfile
+        )
+        cmd_kwargs = {'flags': ldflags}
+        if rule.options:
+            variables[ldflags] = [global_ldflags] + rule.options
 
-    if hasattr(rule, 'lib_options'):
+    if hasattr(rule.linker, 'libs_var'):
         global_ldlibs, ldlibs = backend.flags_vars(
             rule.linker.libs_var, rule.linker.global_libs, buildfile
         )
@@ -459,21 +460,21 @@ try:
         compilers = uniques(i.linker for i in creators)
 
         return reduce(merge_dicts, chain(
-            (i.parse_args(msbuild.textify_each(
-                i.global_args + global_cflags[i.lang]
+            (i.parse_flags(msbuild.textify_each(
+                i.global_flags + global_cflags[i.lang]
             )) for i in compilers),
-            (i.linker.parse_args(msbuild.textify_each(
+            (i.linker.parse_flags(msbuild.textify_each(
                 i.options
             )) for i in creators)
         ))
 
     def _parse_common_cflags(compiler, global_cflags):
-        return compiler.parse_args(msbuild.textify_each(
-            compiler.global_args + global_cflags[compiler.lang]
+        return compiler.parse_flags(msbuild.textify_each(
+            compiler.global_flags + global_cflags[compiler.lang]
         ))
 
     def _parse_file_cflags(file, per_compiler_cflags):
-        cflags = file.creator.compiler.parse_args(
+        cflags = file.creator.compiler.parse_flags(
             msbuild.textify_each(file.creator.options)
         )
         if not per_compiler_cflags:
@@ -502,8 +503,8 @@ try:
         for c in compilers:
             key = c.command_var
             if key not in per_compiler_cflags:
-                per_compiler_cflags[key] = c.parse_args(msbuild.textify_each(
-                    c.global_args + build_inputs['compile_options'][c.lang]
+                per_compiler_cflags[key] = c.parse_flags(msbuild.textify_each(
+                    c.global_flags + build_inputs['compile_options'][c.lang]
                 ))
 
         if len(per_compiler_cflags) == 1:
@@ -512,8 +513,8 @@ try:
             common_cflags = None
 
         # Parse linking flags.
-        ldflags = rule.linker.parse_args(msbuild.textify_each(
-            (rule.linker.global_args +
+        ldflags = rule.linker.parse_flags(msbuild.textify_each(
+            (rule.linker.global_flags +
              build_inputs['link_options'][rule.linker.family] + rule.options)
         ))
         ldflags['libs'] = (

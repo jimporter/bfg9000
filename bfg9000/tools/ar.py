@@ -2,19 +2,18 @@ import os
 
 from .. import shell
 from .. import iterutils
-from .common import SimpleCommand
+from .common import BuildCommand, check_which
 from ..file_types import StaticLibrary
 from ..path import Path
 
 
-class ArLinker(SimpleCommand):
-    flags_var = 'arflags'
-
-    def __init__(self, env, lang):
-        SimpleCommand.__init__(self, env, name='ar', env_var='AR',
-                               default='ar', kind='static linker')
-        self.lang = lang
-        self.global_args = shell.split(env.getvar('ARFLAGS', 'cru'))
+class ArLinker(BuildCommand):
+    def __init__(self, builder, env):
+        cmd = check_which(env.getvar('AR', 'ar'), env.variables,
+                          kind='static linker')
+        global_flags = shell.split(env.getvar('ARFLAGS', 'cru'))
+        BuildCommand.__init__(self, builder, env, 'ar', 'ar', cmd,
+                              flags=('arflags', global_flags))
 
     @property
     def flavor(self):
@@ -27,7 +26,7 @@ class ArLinker(SimpleCommand):
         return None
 
     def can_link(self, format, langs):
-        return format == self.env.platform.object_format
+        return format == self.builder.object_format
 
     @property
     def has_link_macros(self):
@@ -37,9 +36,9 @@ class ArLinker(SimpleCommand):
         # and only define the macros if it does.
         return self.env.platform.has_import_library
 
-    def _call(self, cmd, input, output, args=None):
+    def _call(self, cmd, input, output, flags=None):
         result = [cmd]
-        result.extend(iterutils.iterate(args))
+        result.extend(iterutils.iterate(flags))
         result.append(output)
         result.extend(iterutils.iterate(input))
         return result
@@ -47,5 +46,5 @@ class ArLinker(SimpleCommand):
     def output_file(self, name, options):
         head, tail = os.path.split(name)
         path = os.path.join(head, 'lib' + tail + '.a')
-        return StaticLibrary(Path(path), self.env.platform.object_format,
+        return StaticLibrary(Path(path), self.builder.object_format,
                              options.langs)

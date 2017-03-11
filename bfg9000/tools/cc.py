@@ -8,7 +8,7 @@ from . import pkg_config
 from .. import safe_str
 from .. import shell
 from .ar import ArLinker
-from .common import Command, darwin_install_name
+from .common import BuildCommand, darwin_install_name
 from ..builtins.symlink import Symlink
 from ..file_types import *
 from ..iterutils import first, iterate, listify, uniques
@@ -26,6 +26,9 @@ def recursive_deps(lib):
 class CcBuilder(object):
     def __init__(self, env, lang, name, command, cflags_name, cflags, ldflags,
                  ldlibs):
+        self.lang = lang
+        self.object_format = env.platform.object_format
+
         self.brand = 'unknown'
         try:
             output = shell.execute('{} --version'.format(command),
@@ -37,26 +40,24 @@ class CcBuilder(object):
         except:
             pass
 
-        self.object_format = env.platform.object_format
-
-        self.compiler = CcCompiler(env, lang, name, command, cflags_name,
+        self.compiler = CcCompiler(self, env, name, command, cflags_name,
                                    cflags)
         try:
-            self.pch_compiler = CcPchCompiler(env, lang, self.brand, name,
-                                              command, cflags_name, cflags)
+            self.pch_compiler = CcPchCompiler(self, env, name, command,
+                                              cflags_name, cflags)
         except ValueError:
             self.pch_compiler = None
 
         self._linkers = {
             'executable': CcExecutableLinker(
-                env, lang, name, command, ldflags, ldlibs
+                self, env, name, command, ldflags, ldlibs
             ),
             'shared_library': CcSharedLibraryLinker(
-                env, lang, name, command, ldflags, ldlibs
+                self, env, name, command, ldflags, ldlibs
             ),
-            'static_library': ArLinker(env, lang),
+            'static_library': ArLinker(self, env),
         }
-        self.packages = CcPackageResolver(env, lang, command)
+        self.packages = CcPackageResolver(self, env, command)
         self.runner = None
 
     @property
@@ -75,14 +76,11 @@ class CcBuilder(object):
         return self._linkers[mode]
 
 
-class CcBaseCompiler(Command):
-    def __init__(self, env, lang, rule_name, command_var, command, cflags_name,
-                 cflags):
-        Command.__init__(self, env, rule_name, command_var, command)
-        self.lang = lang
-
-        self.flags_var = cflags_name
-        self.global_args = cflags
+class CcBaseCompiler(BuildCommand):
+    def __init__(self, builder, env, rule_name, command_var, command,
+                 cflags_name, cflags):
+        BuildCommand.__init__(self, builder, env, rule_name, command_var,
+                              command, flags=(cflags_name, cflags))
 
     @property
     def flavor(self):
@@ -100,14 +98,18 @@ class CcBaseCompiler(Command):
     def depends_on_libs(self):
         return False
 
-    def _call(self, cmd, input, output, deps=None, args=None):
-        result = [cmd, '-x', self._langs[self.lang]]
-        result.extend(iterate(args))
+    def _call(self, cmd, input, output, deps=None, flags=None):
+        result = [cmd] + self._always_flags
+        result.extend(iterate(flags))
         result.extend(['-c', input])
         if deps:
             result.extend(['-MMD', '-MF', deps])
         result.extend(['-o', output])
         return result
+
+    @property
+    def _always_flags(self):
+        return ['-x', self._langs[self.lang]]
 
     def _include_dir(self, directory):
         is_default = ( directory.path.string(self.env.base_dirs) in
@@ -124,20 +126,20 @@ class CcBaseCompiler(Command):
     def _include_pch(self, pch):
         return ['-include', pch.path.stripext()]
 
-    def args(self, options, output, pkg=False):
+    def flags(self, options, output, pkg=False):
         includes = getattr(options, 'includes', [])
         pch = getattr(options, 'pch', None)
         return sum((self._include_dir(i) for i in includes),
                    self._include_pch(pch) if pch else [])
 
-    def link_args(self, mode, defines):
-        args = []
+    def link_flags(self, mode, defines):
+        flags = []
         if ( mode in ['shared_library', 'static_library'] and
              self.env.platform.flavor != 'windows'):
-            args.append('-fPIC')
+            flags.append('-fPIC')
 
-        args.extend('-D' + i for i in defines)
-        return args
+        flags.extend('-D' + i for i in defines)
+        return flags
 
 
 class CcCompiler(CcBaseCompiler):
@@ -151,8 +153,8 @@ class CcCompiler(CcBaseCompiler):
         'java'  : 'java',
     }
 
-    def __init__(self, env, lang, name, command, cflags_name, cflags):
-        CcBaseCompiler.__init__(self, env, lang, name, name, command,
+    def __init__(self, builder, env, name, command, cflags_name, cflags):
+        CcBaseCompiler.__init__(self, builder, env, name, name, command,
                                 cflags_name, cflags)
 
     @property
@@ -161,7 +163,7 @@ class CcCompiler(CcBaseCompiler):
 
     def output_file(self, name, options):
         # XXX: MinGW's object format doesn't appear to be COFF...
-        return ObjectFile(Path(name + '.o'), self.env.platform.object_format,
+        return ObjectFile(Path(name + '.o'), self.builder.object_format,
                           self.lang)
 
 
@@ -173,12 +175,11 @@ class CcPchCompiler(CcCompiler):
         'objc++': 'objective-c++-header',
     }
 
-    def __init__(self, env, lang, brand, name, command, cflags_name, cflags):
-        if lang == 'java':
+    def __init__(self, builder, env, name, command, cflags_name, cflags):
+        if builder.lang == 'java':
             raise ValueError('Java has no precompiled headers')
-        CcBaseCompiler.__init__(self, env, lang, name + '_pch', name, command,
-                                cflags_name, cflags)
-        self._brand = brand
+        CcBaseCompiler.__init__(self, builder, env, name + '_pch', name,
+                                command, cflags_name, cflags)
 
     @property
     def accepts_pch(self):
@@ -186,14 +187,11 @@ class CcPchCompiler(CcCompiler):
         return False
 
     def output_file(self, name, options):
-        ext = '.gch' if self._brand == 'gcc' else '.pch'
+        ext = '.gch' if self.builder.brand == 'gcc' else '.pch'
         return PrecompiledHeader(Path(name + ext), self.lang)
 
 
-class CcLinker(Command):
-    flags_var = 'ldflags'
-    libs_var = 'ldlibs'
-
+class CcLinker(BuildCommand):
     __allowed_langs = {
         'c'     : {'c'},
         'c++'   : {'c', 'c++', 'f77', 'f95'},
@@ -205,13 +203,12 @@ class CcLinker(Command):
         'java'  : {'java'},
     }
 
-    def __init__(self, env, lang, rule_name, command_var, command, ldflags,
+    def __init__(self, builder, env, rule_name, command_var, command, ldflags,
                  ldlibs):
-        Command.__init__(self, env, rule_name, command_var, command)
-        self.lang = lang
-
-        self.global_args = ldflags
-        self.global_libs = ldlibs
+        BuildCommand.__init__(
+            self, builder, env, rule_name, command_var, command,
+            flags=('ldflags', ldflags), libs=('ldlibs', ldlibs)
+        )
 
         # Create a regular expression to extract the library name for linking
         # with -l.
@@ -243,7 +240,7 @@ class CcLinker(Command):
         return 'native'
 
     def can_link(self, format, langs):
-        return (format == self.env.platform.object_format and
+        return (format == self.builder.object_format and
                 self.__allowed_langs[self.lang].issuperset(langs))
 
     @property
@@ -258,17 +255,17 @@ class CcLinker(Command):
     def num_outputs(self):
         return 1
 
-    def _call(self, cmd, input, output, libs=None, args=None):
-        result = [cmd] + self._always_args
-        result.extend(iterate(args))
+    def _call(self, cmd, input, output, libs=None, flags=None):
+        result = [cmd] + self._always_flags
+        result.extend(iterate(flags))
         result.extend(iterate(input))
         result.extend(iterate(libs))
         result.extend(['-o', output])
         return result
 
     @property
-    def _always_args(self):
-        if self.env.platform.object_format == 'mach-o':
+    def _always_flags(self):
+        if self.builder.object_format == 'mach-o':
             return ['-Wl,-headerpad_max_install_names']
         return []
 
@@ -288,7 +285,7 @@ class CcLinker(Command):
         if not runtime_libs and not extra_dirs:
             return []
 
-        if self.env.platform.object_format == 'elf':
+        if self.builder.object_format == 'elf':
             start = output.path.parent()
             base = '$ORIGIN'
             paths = uniques(chain((i.path.parent() for i in runtime_libs),
@@ -321,7 +318,7 @@ class CcLinker(Command):
                 result += ['-Wl,-rpath-link,' + safe_str.join(dep_paths, ':')]
 
             return result
-        elif self.env.platform.object_format == 'mach-o':
+        elif self.builder.object_format == 'mach-o':
             # Currently, we set the rpath on macOS to make it easy to load
             # locally-built shared libraries. Once we install the build, we'll
             # convert all the rpath-based paths to absolute paths and remove
@@ -342,7 +339,7 @@ class CcLinker(Command):
             return ['--main={}'.format(entry_point)]
         return []
 
-    def args(self, options, output, pkg=False):
+    def flags(self, options, output, pkg=False):
         libraries = getattr(options, 'libs', [])
         lib_dirs = getattr(options, 'lib_dirs', [])
         rpath_dirs = getattr(options, 'rpath_dirs', [])
@@ -384,12 +381,12 @@ class CcLinker(Command):
         return sum((self._link_lib(i) for i in libraries), [])
 
     def _post_install(self, output, library):
-        if self.env.platform.object_format not in ['elf', 'mach-o']:
+        if self.builder.object_format not in ['elf', 'mach-o']:
             return None
 
         path = install_path(output.path, output.install_root)
         rpath = getattr(output, '_rpath', None)
-        if self.env.platform.object_format == 'elf':
+        if self.builder.object_format == 'elf':
             return self.env.tool('patchelf')(path, rpath)
         else:  # mach-o
             changes = [(darwin_install_name(i),
@@ -404,27 +401,27 @@ class CcLinker(Command):
 
 
 class CcExecutableLinker(CcLinker):
-    def __init__(self, env, lang, name, command, ldflags, ldlibs):
-        CcLinker.__init__(self, env, lang, name + '_link', name, command,
+    def __init__(self, builder, env, name, command, ldflags, ldlibs):
+        CcLinker.__init__(self, builder, env, name + '_link', name, command,
                           ldflags, ldlibs)
 
     def output_file(self, name, options):
         path = Path(name + self.env.platform.executable_ext)
-        return Executable(path, self.env.platform.object_format, self.lang)
+        return Executable(path, self.builder.object_format, self.lang)
 
 
 class CcSharedLibraryLinker(CcLinker):
-    def __init__(self, env, lang, name, command, ldflags, ldlibs):
-        CcLinker.__init__(self, env, lang, name + '_linklib', name, command,
+    def __init__(self, builder, env, name, command, ldflags, ldlibs):
+        CcLinker.__init__(self, builder, env, name + '_linklib', name, command,
                           ldflags, ldlibs)
 
     @property
     def num_outputs(self):
         return 2 if self.env.platform.has_import_library else 1
 
-    def _call(self, cmd, input, output, libs=None, args=None):
+    def _call(self, cmd, input, output, libs=None, flags=None):
         output = listify(output)
-        result = CcLinker._call(self, cmd, input, output[0], libs, args)
+        result = CcLinker._call(self, cmd, input, output[0], libs, flags)
         if self.env.platform.has_import_library:
             result.append('-Wl,--out-implib=' + output[1])
         return result
@@ -441,7 +438,7 @@ class CcSharedLibraryLinker(CcLinker):
         soversion = getattr(options, 'soversion', None)
 
         head, tail = os.path.split(name)
-        fmt = self.env.platform.object_format
+        fmt = self.builder.object_format
 
         def lib(head, tail, prefix='lib', suffix=''):
             ext = self.env.platform.shared_library_ext
@@ -468,10 +465,10 @@ class CcSharedLibraryLinker(CcLinker):
             return SharedLibrary(lib(head, tail), fmt, self.lang)
 
     @property
-    def _always_args(self):
+    def _always_flags(self):
         shared = ('-dynamiclib' if self.env.platform.name == 'darwin'
                   else '-shared')
-        return CcLinker._always_args.fget(self) + [shared, '-fPIC']
+        return CcLinker._always_flags.fget(self) + [shared, '-fPIC']
 
     def _soname(self, library):
         if isinstance(library, VersionedSharedLibrary):
@@ -484,20 +481,20 @@ class CcSharedLibraryLinker(CcLinker):
         else:
             return ['-Wl,-soname,' + soname.path.basename()]
 
-    def args(self, options, output, pkg=False):
-        args = CcLinker.args(self, options, output, pkg)
+    def flags(self, options, output, pkg=False):
+        flags = CcLinker.flags(self, options, output, pkg)
         if not pkg:
-            args.extend(self._soname(first(output)))
-        return args
+            flags.extend(self._soname(first(output)))
+        return flags
 
     def post_install(self, output):
         return self._post_install(output, True)
 
 
 class CcPackageResolver(object):
-    def __init__(self, env, lang, command):
+    def __init__(self, builder, env, command):
+        self.builder = builder
         self.env = env
-        self.lang = lang
 
         value = env.getvar('CPATH')
         include_dirs = value.split(os.pathsep) if value else []
@@ -527,6 +524,10 @@ class CcPackageResolver(object):
         self.lib_dirs = [i for i in uniques(chain(
             all_lib_dirs, env.platform.lib_dirs
         )) if os.path.exists(i)]
+
+    @property
+    def lang(self):
+        return self.builder.lang
 
     def header(self, name, search_dirs=None):
         if search_dirs is None:
@@ -569,13 +570,13 @@ class CcPackageResolver(object):
                 fullpath = os.path.join(base, libname)
                 if os.path.exists(fullpath):
                     return libkind(Path(fullpath, Root.absolute),
-                                   format=self.env.platform.object_format,
+                                   format=self.builder.object_format,
                                    external=True, **extra_kwargs)
 
         raise IOError("unable to find library '{}'".format(name))
 
     def resolve(self, name, version, kind, header, header_only):
-        format = self.env.platform.object_format
+        format = self.builder.object_format
         try:
             return pkg_config.resolve(self.env, name, format, version, kind)
         except (OSError, ValueError):

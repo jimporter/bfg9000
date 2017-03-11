@@ -1,7 +1,7 @@
 import os
 import re
 
-from .common import Command
+from .common import BuildCommand
 from .. import safe_str
 from .. import shell
 from ..builtins.write_file import WriteFile
@@ -13,19 +13,15 @@ from ..path import Path, Root
 class JvmBuilder(object):
     def __init__(self, env, lang, run_name, run_command, name, command,
                  jar_command, flags_name, flags):
-        self.brand = 'jvm'  # XXX: Be more specific?
+        self.lang = lang
         self.object_format = 'jvm'
+        self.brand = 'jvm'  # XXX: Be more specific?
 
-        self.compiler = JvmCompiler(env, lang, name, command, flags_name,
+        self.compiler = JvmCompiler(self, env, name, command, flags_name,
                                     flags)
-
-        linker = JarMaker(env, lang, jar_command)
-        self._linkers = {
-            'executable': linker,
-            'shared_library': linker,
-        }
-        self.packages = JvmPackageResolver(env, lang, run_command)
-        self.runner = JvmRunner(env, lang, run_name, run_command)
+        self._linker = JarMaker(self, env, jar_command)
+        self.packages = JvmPackageResolver(self, env, run_command)
+        self.runner = JvmRunner(self, env, run_name, run_command)
 
     @property
     def flavor(self):
@@ -40,16 +36,19 @@ class JvmBuilder(object):
             raise ValueError('static linking not supported with {}'.format(
                 self.brand
             ))
-        return self._linkers[mode]
+        if mode not in ('executable', 'shared_library'):
+            raise KeyError(mode)
+        return self._linker
 
 
-class JvmCompiler(Command):
-    def __init__(self, env, lang, name, command, flags_name, flags):
-        Command.__init__(self, env, name, name, command)
-        self.lang = lang
+class JvmCompiler(BuildCommand):
+    def __init__(self, builder, env, name, command, flags_name, flags):
+        BuildCommand.__init__(self, builder, env, name, name, command,
+                              flags=(flags_name, flags))
 
-        self.flags_var = flags_name
-        self.global_args = flags
+    @property
+    def flavor(self):
+        return 'jvm'
 
     @property
     def deps_flavor(self):
@@ -63,17 +62,17 @@ class JvmCompiler(Command):
     def accepts_pch(self):
         return False
 
-    def _call(self, cmd, input, output, args=None):
+    def _call(self, cmd, input, output, flags=None):
         jvmoutput = self.env.tool('jvmoutput')
 
         result = [cmd]
-        result.extend(iterate(args))
-        result.extend(self._always_args)
+        result.extend(iterate(flags))
+        result.extend(self._always_flags)
         result.append(input)
         return jvmoutput(output, result)
 
     @property
-    def _always_args(self):
+    def _always_flags(self):
         return ['-verbose', '-d', '.']
 
     def _class_path(self, libraries):
@@ -82,28 +81,26 @@ class JvmCompiler(Command):
             return ['-cp', safe_str.join(dirs, os.pathsep)]
         return []
 
-    def args(self, options, output, pkg=False):
+    def flags(self, options, output, pkg=False):
         libraries = getattr(options, 'libs', [])
         return self._class_path(libraries)
 
-    def link_args(self, mode, defines):
+    def link_flags(self, mode, defines):
         return []
 
     def output_file(self, name, options):
         return JvmClassList(ObjectFile(
-            Path(name + '.classlist'), 'jvm', self.lang
+            Path(name + '.classlist'), self.builder.object_format, self.lang
         ))
 
 
-class JarMaker(Command):
+class JarMaker(BuildCommand):
     flags_var = 'jarflags'
 
-    def __init__(self, env, lang, command):
-        Command.__init__(self, env, 'jar', 'jar', command)
-        self.lang = lang
-
-        self.global_args = shell.split(env.getvar('JARFLAGS', 'cfm'))
-        self.global_libs = []
+    def __init__(self, builder, env, command):
+        global_flags = shell.split(env.getvar('JARFLAGS', 'cfm'))
+        BuildCommand.__init__(self, builder, env, 'jar', 'jar', command,
+                              flags=('jarflags', global_flags))
 
     @property
     def flavor(self):
@@ -147,9 +144,9 @@ class JarMaker(Command):
         WriteFile(build, source, text)
         options.manifest = source
 
-    def _call(self, cmd, input, output, manifest, libs=None, args=None):
+    def _call(self, cmd, input, output, manifest, libs=None, flags=None):
         result = [cmd]
-        result.extend(iterate(args))
+        result.extend(iterate(flags))
         result.extend([output, manifest])
         result.extend(iterate(input))
         return result
@@ -163,12 +160,15 @@ class JarMaker(Command):
             filetype = ExecutableLibrary
         else:
             filetype = Library
-        return filetype(Path(name + '.jar'), 'jvm', self.lang)
+        return filetype(Path(name + '.jar'), self.builder.object_format,
+                        self.lang)
 
 
 class JvmPackageResolver(object):
-    def __init__(self, env, lang, command):
-        if lang == 'scala':
+    def __init__(self, builder, env, command):
+        self.builder = builder
+
+        if self.lang == 'scala':
             env_vars = {'JAVA_OPTS': '-XshowSettings:properties'}
             env_vars.update(env.variables)
             cmd = '{} -version'
@@ -186,6 +186,10 @@ class JvmPackageResolver(object):
         self.ext_dirs = self._get_dirs('java.ext.dirs', output)
         self.classpath = self._get_dirs('java.class.path', output)
 
+    @property
+    def lang(self):
+        return self.builder.lang
+
     def _get_dirs(self, key, output):
         ex = r'^(\s*){} = (.*(?:\n\1\s+.*)*)'.format(re.escape(key))
         m = re.search(ex, output, re.MULTILINE)
@@ -198,24 +202,26 @@ class JvmPackageResolver(object):
         for base in self.ext_dirs:
             fullpath = os.path.join(base, jarname)
             if os.path.exists(fullpath):
-                return Library(Path(fullpath, Root.absolute), 'jvm',
+                return Library(Path(fullpath, Root.absolute),
+                               self.builder.object_format,
                                external=True)
 
         for path in self.classpath:
             if os.path.basename(path) == jarname and os.path.exists(path):
-                return Library(Path(path, Root.absolute), 'jvm',
+                return Library(Path(path, Root.absolute),
+                               self.builder.object_format,
                                external=True)
 
         raise IOError("unable to find library '{}'".format(name))
 
     def resolve(self, name, version, kind, header, header_only):
-        return CommonPackage(name, 'jvm', libs=[self._library(name)])
+        return CommonPackage(name, self.builder.object_format,
+                             libs=[self._library(name)])
 
 
-class JvmRunner(Command):
-    def __init__(self, env, lang, name, command):
-        Command.__init__(self, env, name, name, command)
-        self.lang = lang
+class JvmRunner(BuildCommand):
+    def __init__(self, builder, env, name, command):
+        BuildCommand.__init__(self, builder, env, name, name, command)
 
     def _call(self, cmd, file, jar=False):
         result = [cmd]

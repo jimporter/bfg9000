@@ -281,10 +281,10 @@ class CommonPackage(Package):
             raise AttributeError(e)
 
     def cflags(self, compiler, output):
-        return compiler.args(self, output, pkg=True)
+        return compiler.flags(self, output, pkg=True)
 
     def ldflags(self, linker, output):
-        return linker.args(self, output, pkg=True)
+        return linker.flags(self, output, pkg=True)
 
     def ldlibs(self, linker, output):
         return linker.libs(self, output, pkg=True)

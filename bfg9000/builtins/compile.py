@@ -52,7 +52,7 @@ class Compile(Edge):
                 self.header_files.append(i)
             self.includes.append(builtins['header_directory'](i))
 
-        # XXX: Handle forward_args from libs?
+        # XXX: Handle forward_opts from libs?
         self.libs = [builtins['library'](i, lang=lang) for i in iterate(libs)]
 
         self.packages = [builtins['package'](i) for i in iterate(packages)]
@@ -75,7 +75,7 @@ class Compile(Edge):
             public_output = self.compiler.post_build(build, self, output)
 
         self._internal_options = (
-            self.compiler.args(self, output) +
+            self.compiler.flags(self, output) +
             sum((i.cflags(self.compiler, output) for i in self.packages), [])
         )
 
@@ -85,7 +85,7 @@ class Compile(Edge):
             first(output).post_install = self.compiler.post_install(output)
 
     def add_link_options(self, *args, **kwargs):
-        opts = self.compiler.link_args(*args, **kwargs)
+        opts = self.compiler.link_flags(*args, **kwargs)
         self._internal_options.extend(opts)
         if self.pch and self.pch.creator:
             self.pch.creator.add_link_options(*args, **kwargs)
@@ -164,20 +164,21 @@ def global_options(build, options, lang):
 
 
 def _get_flags(backend, rule, build_inputs, buildfile):
-    global_cflags, cflags = backend.flags_vars(
-        rule.compiler.flags_var,
-        ( rule.compiler.global_args +
-          build_inputs['compile_options'][rule.compiler.lang] ),
-        buildfile
-    )
-
     variables = {}
+    cmd_kwargs = {}
 
-    cflags_value = rule.options
-    if cflags_value:
-        variables[cflags] = [global_cflags] + cflags_value
+    if hasattr(rule.compiler, 'flags_var'):
+        global_cflags, cflags = backend.flags_vars(
+            rule.compiler.flags_var,
+            ( rule.compiler.global_flags +
+              build_inputs['compile_options'][rule.compiler.lang] ),
+            buildfile
+        )
+        cmd_kwargs = {'flags': cflags}
+        if rule.options:
+            variables[cflags] = [global_cflags] + rule.options
 
-    return variables, {'args': cflags}
+    return variables, cmd_kwargs
 
 
 @make.rule_handler(CompileSource, CompileHeader)
