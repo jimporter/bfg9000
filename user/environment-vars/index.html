@@ -181,6 +181,8 @@
         
             <li><a href="#linking-variables">Linking variables</a></li>
         
+            <li><a href="#execution-variables">Execution variables</a></li>
+        
             <li><a href="#packaging-variables">Packaging variables</a></li>
         
             <li><a href="#command-variables">Command variables</a></li>
@@ -308,6 +310,28 @@ implementation) requires another library to be explicitly linked with it.</p>
 <h4 id="vclink"><em>VCLINK</em><a class="headerlink" href="#vclink" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <code>link</code></p>
 <p><em>MSVC-only</em>. The command to use when linking shared libraries.</p>
+<h2 id="execution-variables">Execution variables<a class="headerlink" href="#execution-variables" title="Permanent link">§</a></h2>
+<hr />
+<h4 id="javacmd"><em>JAVACMD</em><a class="headerlink" href="#javacmd" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <code>java</code></p>
+<p>The command to use when running Java <code>.class</code> files or <code>.jar</code>s. (Does not apply
+when building with GCJ.)</p>
+<h4 id="lua"><em>LUA</em><a class="headerlink" href="#lua" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <code>lua</code></p>
+<p>The command to use when running Lua scripts.</p>
+<h4 id="perl"><em>PERL</em><a class="headerlink" href="#perl" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <code>perl</code></p>
+<p>The command to use when running Perl scripts.</p>
+<h4 id="python"><em>PYTHON</em><a class="headerlink" href="#python" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <em>sys.executable</em></p>
+<p>The command to use when running Python scripts. By default, this is the
+interpreter used to run bfg9000.</p>
+<h4 id="ruby"><em>RUBY</em><a class="headerlink" href="#ruby" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <code>ruby</code></p>
+<p>The command to use when running Ruby scripts.</p>
+<h4 id="scalacmd"><em>SCALACMD</em><a class="headerlink" href="#scalacmd" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <code>scala</code></p>
+<p>The command to use when running Scala <code>.class</code> files or <code>.jar</code>s.</p>
 <h2 id="packaging-variables">Packaging variables<a class="headerlink" href="#packaging-variables" title="Permanent link">§</a></h2>
 <hr />
 <h4 id="boost_root"><em>BOOST_ROOT</em><a class="headerlink" href="#boost_root" title="Permanent link">§</a></h4>
@@ -322,6 +346,10 @@ implementation) requires another library to be explicitly linked with it.</p>
 <p class="subtitle">Default: <em>none</em></p>
 <p>The root directory where Boost libraries are stored. This takes precedence over
 <a href="#boost_root"><em>BOOST_ROOT</em></a>.</p>
+<h4 id="classpath"><em>CLASSPATH</em><a class="headerlink" href="#classpath" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <em>none</em></p>
+<p>A list of additional directories to search for Java class files. On POSIX
+systems, this is delimited by <code>:</code>; on Windows, by <code>;</code>.</p>
 <h4 id="cpath"><em>CPATH</em><a class="headerlink" href="#cpath" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <em>none</em></p>
 <p>A list of additional directories to search for headers. On POSIX systems, this
@@ -389,6 +417,11 @@ similar to the POSIX <code>env</code> command. This is used when setting environ
 variables for tests.</p>
 <h2 id="system-variables">System variables<a class="headerlink" href="#system-variables" title="Permanent link">§</a></h2>
 <hr />
+<h4 id="destdir"><em>DESTDIR</em><a class="headerlink" href="#destdir" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <em>none</em></p>
+<p><em>POSIX-only</em>. A directory to prepend to the install location for the project,
+used in performing staged installs. For more information, see the <a href="https://www.gnu.org/prep/standards/html_node/DESTDIR.html">GNU coding
+standards</a>.</p>
 <h4 id="platform"><em>PLATFORM</em><a class="headerlink" href="#platform" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <code>Win32</code></p>
 <p><em>Windows-only</em>. The platform type to use when generating MSBuild files.</p>

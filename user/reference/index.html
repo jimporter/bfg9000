@@ -288,8 +288,9 @@ function.</p>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Create a build step named <em>name</em> that runs a list of arbitrary commands,
 specified in either <em>cmd</em> or <em>cmds</em>; <em>cmd</em> takes a single command, whereas
-<em>cmds</em> takes a list of commands. Each command may either be a string to be
-parsed according to shell rules or a list of arguments to be passed directly to
+<em>cmds</em> takes a list of commands. Each command may be a string to be
+parsed according to shell rules, a file object (such as an
+<a href="#executable"><em>executable</em></a>), or a list of arguments to be passed directly to
 the process.</p>
 <p>You may also pass a dict to <em>environment</em> to set environment variables for the
 commands. These override any environment variables set on the command line.</p>
@@ -538,6 +539,7 @@ installed. For instance, on Windows, this means that passing in a shared
 library will install the DLL <em>and</em> the import library.</p>
 </div>
 <p>This rule recognizes the following environment variables:
+<a href="../environment-vars/#destdir"><code>DESTDIR</code></a>,
 <a href="../environment-vars/#install"><code>INSTALL</code></a>,
 <a href="../environment-vars/#install_name_tool"><code>INSTALL_NAME_TOOL</code></a>,
 <a href="../environment-vars/#mkdir_p"><code>MKDIR_P</code></a>,
@@ -562,22 +564,27 @@ can also wrap your tests with a separate driver using
 <a href="#test_driver"><em>test_driver</em></a>.</p>
 <p>For cases where you only want to <em>build</em> the tests, not run them, you can use
 the <code>tests</code> target.</p>
-<h3 id="test">test(<em>test</em>, [<em>options</em>], [<em>environment</em>|<em>driver</em>])<a class="headerlink" href="#test" title="Permanent link">§</a></h3>
+<h3 id="test">test(<em>test</em>, [<em>environment</em>|<em>driver</em>])<a class="headerlink" href="#test" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
-<p>Create a test for a single test file named <em>test</em>. You may specify additional
-command-line arguments to the test in <em>options</em>. You can also pass temporary
-environment variables as a dict via <em>environment</em>, or specify a test driver to
-add this test file to via <em>driver</em>.</p>
-<h3 id="test_driver">test_driver(<em>driver</em>, [<em>options</em>], [<em>environment</em>|<em>parent</em>])<a class="headerlink" href="#test_driver" title="Permanent link">§</a></h3>
+<p>Create a single test. <em>cmd</em> is the base command (possibly with arguments)
+to run; this works much like the <em>cmd</em> argument in the <a href="#command"><em>command</em></a>
+built-in. You can also pass temporary environment variables as a dict via
+<em>environment</em>, or specify a test driver to add this test file to via <em>driver</em>.</p>
+<h3 id="test_driver">test_driver(<em>cmd</em>, [<em>environment</em>|<em>parent</em>], [<em>wrap_children</em>])<a class="headerlink" href="#test_driver" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Create a test driver which can run a series of tests, specified as command-line
-arguments to the driver. You may specify driver-wide command-line arguments via
-<em>options</em>. You can also pass temporary environment variables as a dict with
-<em>environment</em>, or specify a parent test driver to wrap this driver via <em>driver</em>.</p>
+arguments to the driver. <em>cmd</em> is the base command (possibly with arguments)
+to run; this works much like the <em>cmd</em> argument in the <a href="#command"><em>command</em></a>
+built-in. You can also pass temporary environment variables as a dict with
+<em>environment</em>, or specify a parent test driver to wrap this driver via <em>parent</em>.</p>
+<p>Finally, you can specify <em>wrap_children</em> to determine how tests using this
+driver are run. If true, each test will be wrapped by
+<a href="#env-run_arguments"><em>env.run_arguments</em></a>; if false (the default), tests will be
+used as-is.</p>
 <h3 id="test_deps">test_deps(<em>...</em>)<a class="headerlink" href="#test_deps" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
-<p>Specify a list of dependencies which must be satisfied before the tests can be
-run.</p>
+<p>Specify a list of extra dependencies which must be satisfied when building the
+tests via the <code>tests</code> target.</p>
 <h2 id="package-resolvers">Package resolvers<a class="headerlink" href="#package-resolvers" title="Permanent link">§</a></h2>
 <h3 id="boost_package">boost_package([<em>name</em>], [<em>version</em>])<a class="headerlink" href="#boost_package" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
@@ -595,7 +602,7 @@ specifier</a>.</p>
 <a href="../environment-vars/#include"><code>INCLUDE</code></a>,
 <a href="../environment-vars/#lib"><code>LIB</code></a>,
 <a href="../environment-vars/#library_path"><code>LIBRARY_PATH</code></a>.</p>
-<h3 id="package">package(<em>name</em>, [<em>lang</em>], [<em>kind</em>], [<em>version</em>], [<em>header</em>], [<em>header_only</em>])<a class="headerlink" href="#package" title="Permanent link">§</a></h3>
+<h3 id="package">package(<em>name</em>, [<em>version</em>], [<em>lang</em>], [<em>kind</em>], [<em>header</em>], [<em>header_only</em>])<a class="headerlink" href="#package" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Search for a package named <em>name</em>. <em>lang</em> is the source language of the library
 (<code>'c'</code> by default); this will affect how the package is resolved. For native
@@ -618,6 +625,7 @@ doesn't use a compiled library. This is helpful when using header-only
 libraries, since bfg9000 can only tell if a library is header-only if it has
 pkg-config info.</p>
 <p>This rule recognizes the following environment variables:
+<a href="../environment-vars/#classpath"><code>CLASSPATH</code></a>,
 <a href="../environment-vars/#cpath"><code>CPATH</code></a>,
 <a href="../environment-vars/#include"><code>INCLUDE</code></a>,
 <a href="../environment-vars/#lib"><code>LIB</code></a>,
@@ -698,6 +706,8 @@ Possible values are <code>'cc'</code> and <code>'msvc'</code>.</p>
 <h4 id="builder-brand">builder.brand<a class="headerlink" href="#builder-brand" title="Permanent link">§</a></h4>
 <p>The brand of the builder, i.e. the commonad name people use for it. Possible
 values are <code>'gcc'</code>, <code>'clang'</code>, <code>'msvc'</code>, and <code>'unknown'</code>.</p>
+<h4 id="builder-object_format">builder.object_format<a class="headerlink" href="#builder-object_format" title="Permanent link">§</a></h4>
+<p>The object format that the builder outputs, e.g. <code>'elf'</code>, <code>'coff'</code>, or <code>'jvm'</code>.</p>
 <h4 id="builder-compiler">builder.compiler<a class="headerlink" href="#builder-compiler" title="Permanent link">§</a></h4>
 <p>The compiler used with this builder.</p>
 <h5 id="compiler-command">compiler.command<a class="headerlink" href="#compiler-command" title="Permanent link">§</a></h5>
@@ -706,6 +716,9 @@ values are <code>'gcc'</code>, <code>'clang'</code>, <code>'msvc'</code>, and <c
 <p>The linker used with this builder. <em>mode</em> is one of <code>'executable'</code>,
 <code>'shared_library'</code>, or <code>'static_library'</code>. Its public properties are the same as
 <a href="#compiler-command"><em>compiler</em></a> above.</p>
+<h4 id="builder-runner">builder.runner<a class="headerlink" href="#builder-runner" title="Permanent link">§</a></h4>
+<p>The runner used with files built by this builder (e.g. <code>java</code>). This may be
+<em>None</em> for languages which have no runner, such as C and C++.</p>
 <h3 id="env-platform">env.platform<a class="headerlink" href="#env-platform" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code> and <code>build.opts</code></p>
 <p>Return the target platform used for the build (currently the same as the host
@@ -714,6 +727,12 @@ platform).</p>
 <p>The "flavor" of the platform. Either <code>'posix'</code> or <code>'windows'</code>.</p>
 <h4 id="platform-name">platform.name<a class="headerlink" href="#platform-name" title="Permanent link">§</a></h4>
 <p>The name of the platform, e.g. <code>'linux'</code>, <code>'darwin'</code> (OS X), or <code>'windows'</code>.</p>
+<h3 id="env-run_arguments">env.run_arguments(<em>line</em>, [<em>lang</em>])<a class="headerlink" href="#env-run_arguments" title="Permanent link">§</a></h3>
+<p>Generate the arguments needed to run the command in <em>line</em>. If <em>line</em> is a file
+type (or a list beginning with a file type) such as an
+<a href="#executable"><em>executable</em></a>, it will be prepended with the
+<a href="#builder-runner">runner</a> for <em>lang</em> as needed. If <em>lang</em> is <em>None</em>, the
+language will be determined by the language of <em>line</em>'s first element.</p>
 <h2 id="utilities">Utilities<a class="headerlink" href="#utilities" title="Permanent link">§</a></h2>
 <h3 id="argument">argument(<em>names</em>..., [<em>action</em>], [<em>nargs</em>], [<em>const</em>], [<em>default</em>], [<em>type</em>], [<em>choices</em>], [<em>required</em>], [<em>help</em>], [<em>metavar</em>], [<em>dest</em>])<a class="headerlink" href="#argument" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.opts</code></p>

@@ -202,7 +202,11 @@
 <li>Add support for user-defined arguments</li>
 <li>Add a <code>library()</code> function that builds shared and/or static libraries per the
   user's preference</li>
-<li>Add support for generating pkg-config <code>.pc</code> files</li>
+<li>Add support for generating <em>pkg-config</em> <code>.pc</code> files</li>
+<li>Allow executing files that require an interpreter or other wrapper via
+  <code>command()</code> or <code>test()</code>/<code>test_driver()</code> without explicitly specifying the
+  wrapper; supports all languages buildable by bfg9000, plus Lua, Perl, Python,
+  and Ruby</li>
 </ul>
 <h3 id="breaking-changes">Breaking changes<a class="headerlink" href="#breaking-changes" title="Permanent link">§</a></h3>
 <ul>
@@ -212,14 +216,23 @@
 <li>When creating a static library, <code>link_options</code> now specifies options that will
   be forwarded along to the dynamic linker, rather than options for the static
   linker itself</li>
+<li>The <code>options</code> argument for <code>test()</code>/<code>test_driver()</code> has been deprecated; add
+  any options to the first argument (<code>cmd</code>) instead</li>
+<li><code>test()</code> no longer converts its first argument to a <code>generic_file()</code></li>
+<li>Splitting POSIX shell strings (used for compile and link options as well as
+  environment vars on POSIX like <code>CPPFLAGS</code>) no longer parses escape characters</li>
 </ul>
 <h3 id="bug-fixes">Bug fixes<a class="headerlink" href="#bug-fixes" title="Permanent link">§</a></h3>
 <ul>
 <li>Improved logging of syntax errors in <code>build.bfg</code> files</li>
-<li>Fixed usage of nested shared libraries on Linux (via <code>-rpath-link</code>)</li>
+<li>Fixed usage of nested shared libraries when linking with GNU ld (via
+  <code>-rpath-link</code>)</li>
 <li>Installing directories from the srcdir now correctly installs their contents
   to the installation root for that type (e.g. a header directory of <code>foo/bar</code>
-  installs its contents to <code>$includedir</code>).</li>
+  installs its contents to <code>$includedir</code>)</li>
+<li>Fixed generation of dependencies for the <code>tests</code> target</li>
+<li>Improved escaping for paths when using Make on Windows (previously users had
+  to escape backslashes themselves)</li>
 </ul>
 <hr />
 <h2 id="v020">v0.2.0<a class="headerlink" href="#v020" title="Permanent link">§</a></h2>
@@ -233,14 +246,14 @@
 <li>Warn users if necessary build tools can't be found by bfg9000</li>
 <li>Automatically include runtime dependencies when installing a binary</li>
 <li>Support <code>@rpath</code> on OS X</li>
-<li>Allow fetching bfg's version from <code>build.bfg</code> files via <em>bfg9000_version</em></li>
+<li>Allow fetching bfg's version from <code>build.bfg</code> files via <code>bfg9000_version</code></li>
 <li>Support versioning of shared libraries on POSIX systems</li>
 <li>Support resolving packages via pkg-config</li>
 <li>Locally-built static libraries now forward their options to binaries that link
   to them</li>
-<li><em>whole_archive</em> now forwards its arguments on to <em>static_library</em></li>
+<li><code>whole_archive()</code> now forwards its arguments on to <code>static_library()</code></li>
 <li>Use <em>doppel</em> for installing files instead of <em>install(1)</em></li>
-<li>Support <em>command</em> and <em>alias</em> rules under MSBuild</li>
+<li>Support <code>command()</code> and <code>alias()</code> rules under MSBuild</li>
 <li>Add support for building a distribution of the sources (<code>make dist</code>)</li>
 <li>Allow running custom build steps via <code>build_step()</code></li>
 </ul>

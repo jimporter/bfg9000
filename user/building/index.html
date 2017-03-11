@@ -277,6 +277,13 @@ change the installation prefix (<code>/usr/local</code> on POSIX), just specify 
 /path/to/prefix</code> when running bfg9000. You can also specify the binary, library,
 and include directories individually, using <code>--bindir</code>, <code>--libdir</code>, and
 <code>--includedir</code>, respectively.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>On POSIX systems, you can additionally specify the $DESTDIR environment
+variable to perform a staged installation (useful when creating a binary
+package, for example). For more information about $DESTDIR, see the <a href="https://www.gnu.org/prep/standards/html_node/DESTDIR.html">GNU
+coding standards</a>.</p>
+</div>
 <h2 id="distributing-your-source">Distributing your source<a class="headerlink" href="#distributing-your-source" title="Permanent link">§</a></h2>
 <p>Once you're ready to release your software, you'll want to provide a source
 distribution. You can't just archive the entire source directory, since it'll
