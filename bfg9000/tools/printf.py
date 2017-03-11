@@ -7,11 +7,10 @@ from ..shell import shell_list
 
 @tool('printf')
 class Printf(SimpleCommand):
-    rule_name = command_var = 'printf'
-
     def __init__(self, env):
         default = ['printf', env.bfgdir.append('bfg9000-printf')]
-        SimpleCommand.__init__(self, env, 'PRINTF', default)
+        SimpleCommand.__init__(self, env, name='printf', env_var='PRINTF',
+                               default=default)
 
     def _call(self, cmd, format, input, output):
         result = shell_list([cmd, format])

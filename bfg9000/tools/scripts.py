@@ -14,10 +14,9 @@ language('ruby', src_exts=['.rb'])
 
 @tool('lua')
 class Lua(SimpleCommand):
-    rule_name = command_var = 'lua'
-
     def __init__(self, env):
-        SimpleCommand.__init__(self, env, 'LUA', 'lua')
+        SimpleCommand.__init__(self, env, name='lua', env_var='LUA',
+                               default='lua')
 
     def _call(self, cmd, file):
         return [cmd, file]
@@ -25,10 +24,9 @@ class Lua(SimpleCommand):
 
 @tool('perl')
 class Perl(SimpleCommand):
-    rule_name = command_var = 'perl'
-
     def __init__(self, env):
-        SimpleCommand.__init__(self, env, 'PERL', 'perl')
+        SimpleCommand.__init__(self, env, name='perl', env_var='PERL',
+                               default='perl')
 
     def _call(self, cmd, file):
         return [cmd, file]
@@ -36,10 +34,9 @@ class Perl(SimpleCommand):
 
 @tool('python')
 class Python(SimpleCommand):
-    rule_name = command_var = 'python'
-
     def __init__(self, env):
-        SimpleCommand.__init__(self, env, 'PYTHON', abspath(sys.executable))
+        SimpleCommand.__init__(self, env, name='python', env_var='PYTHON',
+                               default=abspath(sys.executable))
 
     def _call(self, cmd, file):
         return [cmd, file]
@@ -47,10 +44,9 @@ class Python(SimpleCommand):
 
 @tool('ruby')
 class Ruby(SimpleCommand):
-    rule_name = command_var = 'ruby'
-
     def __init__(self, env):
-        SimpleCommand.__init__(self, env, 'RUBY', 'ruby')
+        SimpleCommand.__init__(self, env, name='ruby', env_var='RUBY',
+                               default='ruby')
 
     def _call(self, cmd, file):
         return [cmd, file]

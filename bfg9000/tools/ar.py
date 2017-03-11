@@ -8,11 +8,11 @@ from ..path import Path
 
 
 class ArLinker(SimpleCommand):
-    rule_name = command_var = 'ar'
     flags_var = 'arflags'
 
     def __init__(self, env, lang):
-        SimpleCommand.__init__(self, env, 'AR', 'ar', kind='static linker')
+        SimpleCommand.__init__(self, env, name='ar', env_var='AR',
+                               default='ar', kind='static linker')
         self.lang = lang
         self.global_args = shell.split(env.getvar('ARFLAGS', 'cru'))
 

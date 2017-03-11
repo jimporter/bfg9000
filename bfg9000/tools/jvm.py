@@ -45,10 +45,8 @@ class JvmBuilder(object):
 
 class JvmCompiler(Command):
     def __init__(self, env, lang, name, command, flags_name, flags):
-        Command.__init__(self, env, command)
+        Command.__init__(self, env, name, name, command)
         self.lang = lang
-
-        self.rule_name = self.command_var = name
 
         self.flags_var = flags_name
         self.global_args = flags
@@ -98,11 +96,10 @@ class JvmCompiler(Command):
 
 
 class JarMaker(Command):
-    rule_name = command_var = 'jar'
     flags_var = 'jarflags'
 
     def __init__(self, env, lang, command):
-        Command.__init__(self, env, command)
+        Command.__init__(self, env, 'jar', 'jar', command)
         self.lang = lang
 
         self.global_args = shell.split(env.getvar('JARFLAGS', 'cfm'))
@@ -216,10 +213,9 @@ class JvmPackageResolver(object):
 
 
 class JvmRunner(Command):
-    def __init__(self, env, lang, rule_name, command):
-        Command.__init__(self, env, command)
+    def __init__(self, env, lang, name, command):
+        Command.__init__(self, env, name, name, command)
         self.lang = lang
-        self.rule_name = self.command_var = rule_name
 
     def _call(self, cmd, file, jar=False):
         result = [cmd]

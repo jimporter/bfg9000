@@ -15,7 +15,6 @@ _PkgConfigOptions = namedtuple('_PkgConfigOptions', ['rpath_dirs'])
 
 @tool('pkg_config')
 class PkgConfig(SimpleCommand):
-    rule_name = command_var = 'pkg_config'
     _options = {
         'version': ['--modversion'],
         'cflags': ['--cflags'],
@@ -25,7 +24,8 @@ class PkgConfig(SimpleCommand):
     }
 
     def __init__(self, env):
-        SimpleCommand.__init__(self, env, 'PKG_CONFIG', 'pkg-config')
+        SimpleCommand.__init__(self, env, name='pkg_config',
+                               env_var='PKG_CONFIG', default='pkg-config')
 
     def _call(self, cmd, name, type, static=False, msvc_syntax=False):
         result = [cmd, name] + self._options[type]

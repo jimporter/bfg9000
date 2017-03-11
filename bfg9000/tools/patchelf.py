@@ -5,10 +5,9 @@ from .common import SimpleCommand
 
 @tool('patchelf')
 class PatchElf(SimpleCommand):
-    rule_name = command_var = 'patchelf'
-
     def __init__(self, env):
-        SimpleCommand.__init__(self, env, 'PATCHELF', 'patchelf')
+        SimpleCommand.__init__(self, env, name='patchelf', env_var='PATCHELF',
+                               default='patchelf')
 
     def _call(self, cmd, file, rpath=None):
         if rpath:

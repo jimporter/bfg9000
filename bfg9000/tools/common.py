@@ -9,8 +9,10 @@ from ..path import Path, which
 
 
 class Command(object):
-    def __init__(self, env, command):
+    def __init__(self, env, rule_name, command_var, command):
         self.env = env
+        self.rule_name = rule_name
+        self.command_var = command_var
         self.command = command
 
     @staticmethod
@@ -51,9 +53,9 @@ class Command(object):
 
 
 class SimpleCommand(Command):
-    def __init__(self, env, var, default, kind='executable'):
-        command = check_which(env.getvar(var, default), env.variables, kind)
-        Command.__init__(self, env, command)
+    def __init__(self, env, name, env_var, default, kind='executable'):
+        cmd = check_which(env.getvar(env_var, default), env.variables, kind)
+        Command.__init__(self, env, name, name, cmd)
 
 
 def check_which(names, env=os.environ, kind='executable'):

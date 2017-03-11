@@ -61,11 +61,8 @@ class MsvcBuilder(object):
 class MsvcBaseCompiler(Command):
     def __init__(self, env, lang, rule_name, command_var, command, cflags_name,
                  cflags):
-        Command.__init__(self, env, command)
+        Command.__init__(self, env, rule_name, command_var, command)
         self.lang = lang
-
-        self.rule_name = rule_name
-        self.command_var = command_var
 
         self.flags_var = cflags_name
         self.global_args = ['/nologo'] + cflags
@@ -215,11 +212,8 @@ class MsvcLinker(Command):
     }
 
     def __init__(self, env, lang, rule_name, command, ldflags, ldlibs):
-        Command.__init__(self, env, command)
+        Command.__init__(self, env, rule_name, 'vclink', command)
         self.lang = lang
-
-        self.rule_name = rule_name
-        self.command_var = 'vclink'
 
         self.global_args = ['/nologo'] + ldflags
         self.global_libs = ldlibs
@@ -330,10 +324,9 @@ class MsvcStaticLinker(Command):
     flags_var = 'libflags'
 
     def __init__(self, env, lang, command):
-        Command.__init__(self, env, command)
+        Command.__init__(self, env, 'vclib', 'vclib', command)
         self.lang = lang
 
-        self.rule_name = self.command_var = 'vclib'
         self.global_args = shell.split(env.getvar('LIBFLAGS', ''))
 
     @property

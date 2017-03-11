@@ -8,8 +8,10 @@ class InstallNameTool(SimpleCommand):
     rule_name = command_var = 'install_name_tool'
 
     def __init__(self, env):
-        SimpleCommand.__init__(self, env, 'INSTALL_NAME_TOOL',
-                               'install_name_tool')
+        SimpleCommand.__init__(
+            self, env, name='install_name_tool', env_var='INSTALL_NAME_TOOL',
+            default='install_name_tool'
+        )
 
     def _call(self, cmd, file, id=None, delete_rpath=None, changes=[]):
         rpath = getattr(file, 'darwin_rpath', None)

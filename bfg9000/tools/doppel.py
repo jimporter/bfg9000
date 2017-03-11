@@ -6,10 +6,9 @@ from ..iterutils import iterate
 
 @tool('doppel')
 class Doppel(SimpleCommand):
-    rule_name = command_var = 'doppel'
-
     def __init__(self, env):
-        SimpleCommand.__init__(self, env, 'DOPPEL', 'doppel')
+        SimpleCommand.__init__(self, env, name='doppel', env_var='DOPPEL',
+                               default='doppel')
 
     @property
     def data_args(self):

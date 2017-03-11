@@ -78,11 +78,8 @@ class CcBuilder(object):
 class CcBaseCompiler(Command):
     def __init__(self, env, lang, rule_name, command_var, command, cflags_name,
                  cflags):
-        Command.__init__(self, env, command)
+        Command.__init__(self, env, rule_name, command_var, command)
         self.lang = lang
-
-        self.rule_name = rule_name
-        self.command_var = command_var
 
         self.flags_var = cflags_name
         self.global_args = cflags
@@ -210,11 +207,8 @@ class CcLinker(Command):
 
     def __init__(self, env, lang, rule_name, command_var, command, ldflags,
                  ldlibs):
-        Command.__init__(self, env, command)
+        Command.__init__(self, env, rule_name, command_var, command)
         self.lang = lang
-
-        self.rule_name = rule_name
-        self.command_var = command_var
 
         self.global_args = ldflags
         self.global_libs = ldlibs

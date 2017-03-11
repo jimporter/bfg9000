@@ -1,29 +1,25 @@
 from . import tool
-from .common import Command
+from .common import SimpleCommand
 from ..platforms import platform_name
 from ..safe_str import jbos, safe_str, shell_literal
 from ..shell import shell_list
 
 
 @tool('bfg9000')
-class Bfg9000(Command):
-    rule_name = command_var = 'bfg9000'
-
+class Bfg9000(SimpleCommand):
     def __init__(self, env):
-        cmd = env.getvar('BFG9000', env.bfgdir.append('bfg9000'))
-        Command.__init__(self, env, cmd)
+        SimpleCommand.__init__(self, env, name='bfg9000', env_var='BFG9000',
+                               default=env.bfgdir.append('bfg9000'))
 
     def _call(self, cmd, builddir):
         return [cmd, 'refresh', builddir]
 
 
 @tool('depfixer')
-class Depfixer(Command):
-    rule_name = command_var = 'depfixer'
-
+class Depfixer(SimpleCommand):
     def __init__(self, env):
-        cmd = env.getvar('DEPFIXER', env.bfgdir.append('bfg9000-depfixer'))
-        Command.__init__(self, env, cmd)
+        SimpleCommand.__init__(self, env, name='depfixer', env_var='DEPFIXER',
+                               default=env.bfgdir.append('bfg9000-depfixer'))
 
     def _call(self, cmd, depfile):
         return shell_list([cmd, shell_literal('<'), depfile,
@@ -31,12 +27,12 @@ class Depfixer(Command):
 
 
 @tool('jvmoutput')
-class JvmOutput(Command):
-    rule_name = command_var = 'jvmoutput'
-
+class JvmOutput(SimpleCommand):
     def __init__(self, env):
-        cmd = env.getvar('JVMOUTPUT', env.bfgdir.append('bfg9000-jvmoutput'))
-        Command.__init__(self, env, cmd)
+        SimpleCommand.__init__(
+            self, env, name='jvmoutput', env_var='JVMOUTPUT',
+            default=env.bfgdir.append('bfg9000-jvmoutput')
+        )
 
     def _call(self, cmd, output, subcmd):
         return [cmd, '-o', output] + subcmd
@@ -44,12 +40,10 @@ class JvmOutput(Command):
 
 if platform_name() == 'windows':
     @tool('setenv')
-    class SetEnv(Command):
-        rule_name = command_var = 'setenv'
-
+    class SetEnv(SimpleCommand):
         def __init__(self, env):
-            cmd = env.getvar('SETENV', env.bfgdir.append('bfg9000-setenv'))
-            Command.__init__(self, env, cmd)
+            SimpleCommand.__init__(self, env, name='setenv', env_var='SETENV',
+                                   default=env.bfgdir.append('bfg9000-setenv'))
 
         def _call(self, cmd, env):
             if env:
