@@ -165,17 +165,23 @@ class DynamicLink(Link):
                 self.user_options)
 
     def _fill_options(self, env, output):
-        self._internal_options = (
-            sum((i.ldflags(self.linker, output) for i in self.packages), []) +
-            self.linker.args(self, output)
-        )
+        if hasattr(self.linker, 'args'):
+            self._internal_options = (
+                sum((i.ldflags(self.linker, output)
+                     for i in self.packages), []) +
+                self.linker.args(self, output)
+            )
+        else:
+            self._internal_options = []
 
-        linkers = (env.builder(i).linker(self.mode) for i in self.langs)
-        self.lib_options = (
-            sum((i.always_libs(i is self.linker) for i in linkers), []) +
-            sum((i.ldlibs(self.linker, output) for i in self.packages), []) +
-            self.linker.libs(self, output)
-        )
+        if hasattr(self.linker, 'libs'):
+            linkers = (env.builder(i).linker(self.mode) for i in self.langs)
+            self.lib_options = (
+                sum((i.always_libs(i is self.linker) for i in linkers), []) +
+                sum((i.ldlibs(self.linker, output)
+                     for i in self.packages), []) +
+                self.linker.libs(self, output)
+            )
 
         first(output).runtime_deps.extend(
             i.runtime_file for i in self.libs if i.runtime_file

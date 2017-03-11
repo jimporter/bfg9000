@@ -100,7 +100,6 @@ class JvmCompiler(Command):
 class JarMaker(Command):
     rule_name = command_var = 'jar'
     flags_var = 'jarflags'
-    libs_var = 'jarlibs'
 
     def __init__(self, env, lang, command):
         Command.__init__(self, env, command)
@@ -161,15 +160,6 @@ class JarMaker(Command):
     def transform_input(self, input):
         return ['@' + safe_str.safe_str(i) if isinstance(i, JvmClassList)
                 else i for i in input]
-
-    def args(self, options, output, pkg=False):
-        return []
-
-    def always_libs(self, primary):
-        return []
-
-    def libs(self, options, output, pkg=False):
-        return []
 
     def output_file(self, name, options):
         if getattr(options, 'entry_point', None):

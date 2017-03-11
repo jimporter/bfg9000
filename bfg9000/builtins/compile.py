@@ -81,6 +81,9 @@ class Compile(Edge):
 
         Edge.__init__(self, build, output, public_output, extra_deps)
 
+        if hasattr(self.compiler, 'post_install'):
+            first(output).post_install = self.compiler.post_install(output)
+
     def add_link_options(self, *args, **kwargs):
         opts = self.compiler.link_args(*args, **kwargs)
         self._internal_options.extend(opts)
