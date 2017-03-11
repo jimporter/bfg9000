@@ -2,7 +2,7 @@ import os.path
 from itertools import chain
 
 from . import pkg_config
-from .utils import Command, SystemPackage
+from .utils import Command
 from .. import shell
 from ..arguments.windows import ArgumentParser
 from ..builtins.write_file import WriteFile
@@ -15,6 +15,8 @@ from ..path import Path, Root
 class MsvcBuilder(object):
     def __init__(self, env, lang, name, command, link_command, lib_command,
                  cflags_name, cflags, ldflags, ldlibs):
+        self.object_format = env.platform.object_format
+
         self.compiler = MsvcCompiler(env, lang, name, command, cflags_name,
                                      cflags)
         self.pch_compiler = MsvcPchCompiler(env, lang, name, command,
@@ -419,12 +421,12 @@ class MsvcPackageResolver(object):
                                self.env.platform.object_format, external=True)
         raise IOError("unable to find library '{}'".format(name))
 
-    def resolve(self, name, kind='any', version=None, header=None,
-                header_only=False):
+    def resolve(self, name, version, kind, header, header_only):
+        format = self.env.platform.object_format
         try:
-            return pkg_config.resolve(self.env, name, kind, version)
+            return pkg_config.resolve(self.env, name, format, version, kind)
         except (OSError, ValueError):
             real_name = self.env.platform.transform_package(name)
             includes = [self.header(i) for i in iterate(header)]
             libs = [self.library(real_name, kind)] if not header_only else []
-            return SystemPackage(name, includes=includes, libraries=libs)
+            return CommonPackage(name, format, includes=includes, libs=libs)

@@ -1,0 +1,4 @@
+# -*- python -*-
+
+pkg = package('lib', lang='java')
+executable('program', 'program.java', entry_point='program', packages=pkg)

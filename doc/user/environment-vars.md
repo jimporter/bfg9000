@@ -197,6 +197,47 @@ Default: `link`
 
 *MSVC-only*. The command to use when linking shared libraries.
 
+## Execution variables
+---
+
+#### *JAVACMD*
+Default: `java`
+{: .subtitle}
+
+The command to use when running Java `.class` files or `.jar`s. (Does not apply
+when building with GCJ.)
+
+#### *LUA*
+Default: `lua`
+{: .subtitle}
+
+The command to use when running Lua scripts.
+
+#### *PERL*
+Default: `perl`
+{: .subtitle}
+
+The command to use when running Perl scripts.
+
+#### *PYTHON*
+Default: *sys.executable*
+{: .subtitle}
+
+The command to use when running Python scripts. By default, this is the
+interpreter used to run bfg9000.
+
+#### *RUBY*
+Default: `ruby`
+{: .subtitle}
+
+The command to use when running Ruby scripts.
+
+#### *SCALACMD*
+Default: `scala`
+{: .subtitle}
+
+The command to use when running Scala `.class` files or `.jar`s.
+
 ## Packaging variables
 ---
 
@@ -220,6 +261,13 @@ Default: *none*
 
 The root directory where Boost libraries are stored. This takes precedence over
 [*BOOST_ROOT*](#boost_root).
+
+#### *CLASSPATH*
+Default: *none*
+{: .subtitle}
+
+A list of additional directories to search for Java class files. On POSIX
+systems, this is delimited by `:`; on Windows, by `;`.
 
 #### *CPATH*
 Default: *none*

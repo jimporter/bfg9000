@@ -507,7 +507,7 @@ This rule recognizes the following environment variables:
 [`LIB`](environment-vars.md#lib),
 [`LIBRARY_PATH`](environment-vars.md#library_path).
 
-### package(*name*, [*lang*], [*kind*], [*version*], [*header*], [*header_only*]) { #package }
+### package(*name*, [*version*], [*lang*], [*kind*], [*header*], [*header_only*]) { #package }
 Availability: `build.bfg`
 {: .subtitle}
 
@@ -537,6 +537,7 @@ libraries, since bfg9000 can only tell if a library is header-only if it has
 pkg-config info.
 
 This rule recognizes the following environment variables:
+[`CLASSPATH`](environment-vars.md#classpath),
 [`CPATH`](environment-vars.md#cpath),
 [`INCLUDE`](environment-vars.md#include),
 [`LIB`](environment-vars.md#lib),
@@ -631,6 +632,10 @@ Possible values are `'cc'` and `'msvc'`.
 
 The brand of the builder, i.e. the commonad name people use for it. Possible
 values are `'gcc'`, `'clang'`, `'msvc'`, and `'unknown'`.
+
+#### builder.object_format { #builder-object_format }
+
+The object format that the builder outputs, e.g. `'elf'`, `'coff'`, or `'jvm'`.
 
 #### builder.compiler { #builder-compiler }
 

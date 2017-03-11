@@ -73,3 +73,14 @@ class TestJavaLibrary(IntegrationTest):
             ['java', '-jar', os.path.join(self.libdir, 'program.jar')],
             'hello from library!\n'
         )
+
+    def test_package(self):
+        self.build('install')
+
+        self.configure(
+            srcdir=os.path.join('languages', 'java_package'), installdir=None,
+            env={'CLASSPATH': os.path.join(self.libdir, '*')}
+        )
+        self.build()
+        self.assertOutput(['java', '-jar', 'program.jar'],
+                          'hello from library!\n')

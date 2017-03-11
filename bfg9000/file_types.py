@@ -1,4 +1,5 @@
-import copy
+import copy as _copy
+from six import iteritems as _iteritems
 
 from .iterutils import listify as _listify
 from .languages import src2lang as _src2lang, hdr2lang as _hdr2lang
@@ -7,7 +8,7 @@ from .safe_str import safe_str as _safe_str
 
 
 def installify(file, destdir=True):
-    file = copy.copy(file)
+    file = _copy.copy(file)
     file.path = _install_path(
         file.path, file.install_root, directory=isinstance(file, Directory),
         destdir=destdir
@@ -257,14 +258,36 @@ class PkgConfigPcFile(File):
 
 
 class Package(object):
-    def __init__(self, name):
+    def __init__(self, name, format):
         self.name = name
+        self.format = format
 
     def __hash__(self):
         return hash(self.name)
 
     def __eq__(self, rhs):
         return type(self) == type(rhs) and self.name == rhs.name
+
+
+class CommonPackage(Package):
+    def __init__(self, name, format, **kwargs):
+        Package.__init__(self, name, format)
+        self.all_options = kwargs
+
+    def __getattr__(self, name):
+        try:
+            return self.all_options[name]
+        except KeyError as e:
+            raise AttributeError(e)
+
+    def cflags(self, compiler, output):
+        return compiler.args(self, output, pkg=True)
+
+    def ldflags(self, linker, output):
+        return linker.args(self, output, pkg=True)
+
+    def ldlibs(self, linker, output):
+        return linker.libs(self, output, pkg=True)
 
 
 # A reference to a macOS framework. XXX: Maybe put this somewhere else?

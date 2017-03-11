@@ -1,4 +1,4 @@
-from collections import Counter, namedtuple, OrderedDict
+from collections import Counter, defaultdict
 from itertools import chain
 from six import iteritems, itervalues, string_types
 
@@ -12,7 +12,6 @@ from ..safe_str import literal, shell_literal
 from ..shell import posix as pshell
 from ..shell.syntax import Syntax, Writer
 from ..tools.pkg_config import PkgConfigPackage
-from ..tools.utils import SystemPackage
 from ..versioning import simplify_specifiers, SpecifierSet
 
 build_input('pkg_config')(lambda build_inputs, env: [])
@@ -196,25 +195,24 @@ class PkgConfigInfo(object):
         data = self._process_inputs()
         out = Writer(out)
 
-        pkg = SystemPackage(
-            data['desc_name'],
+        pkg = CommonPackage(
+            None, None,
             includes=[installify(i, destdir=False) for i in data['includes']],
-            libraries=[installify(i.all[0], destdir=False)
-                       for i in data['libs']]
+            libs=[installify(i.all[0], destdir=False) for i in data['libs']]
         )
-        pkg_private = SystemPackage(
-            data['desc_name'],
-            libraries=[installify(i.all[0], destdir=False)
-                       for i in data['libs_private']]
+        pkg_private = CommonPackage(
+            None, None,
+            libs=[installify(i.all[0], destdir=False)
+                  for i in data['libs_private']]
         )
 
         builder = env.builder(self.lang)
+        cflags = pkg.cflags(builder.compiler, None)
+
         linker = builder.linker('executable')
-        cflags = builder.compiler.args(pkg, None, pkg=True)
-        ldflags = (linker.args(pkg, None, pkg=True) +
-                   linker.libs(pkg, None, pkg=True))
-        ldflags_private = (linker.args(pkg_private, None, pkg=True) +
-                           linker.libs(pkg_private, None, pkg=True))
+        ldflags = pkg.ldflags(linker, None) + pkg.ldlibs(linker, None)
+        ldflags_private = (pkg_private.ldflags(linker, None) +
+                           pkg_private.ldlibs(linker, None))
 
         for i in path.InstallRoot:
             if i != path.InstallRoot.bindir:
@@ -281,15 +279,26 @@ class PkgConfigInfo(object):
         result['requires_private'] = requires_private.split(single=True)
         result['conflicts'] = conflicts.split()
 
-        # Add all the .includes from each of the publicly-required system
-        # packages.
-        result['includes'] = sum((i.includes for i in extra), includes)
+        # Add all the options from each of the system packages (.includes,
+        # .libs, and occasionally .lib_dirs).
+        def process_packages(pkgs, private=False):
+            def name(x):
+                return x + '_private' if private else x
 
-        result['libs'] = sum((i.libraries for i in extra), libs)
-        result['libs_private'] = sum(
-            (i.libraries for i in chain(extra_private, auto_extra)),
-            libs_private
-        )
+            core = (name('includes'), name('libs'))
+            extra = name('extra_fields')
+            for i in pkgs:
+                for k, v in iteritems(i.all_options):
+                    if isiterable(v):
+                        (result if k in core else result[extra])[k].extend(v)
+
+        result['includes'] = includes
+        result['libs'] = libs
+        result['libs_private'] = libs_private
+        result['extra_fields'] = defaultdict(list)
+
+        process_packages(extra)
+        process_packages(chain(extra_private, auto_extra), private=True)
 
         result['cflags'] = self.options
         result['ldflags'] = self.link_options
@@ -308,7 +317,7 @@ class PkgConfigInfo(object):
                 pkg_config.add(Requirement(*i))
             elif isinstance(i, PkgConfigPackage):
                 pkg_config.add(Requirement(i.name, i.specifier))
-            elif isinstance(i, SystemPackage):
+            elif isinstance(i, CommonPackage):
                 system.append(i)
             else:
                 raise TypeError('unsupported package type: {}'.format(type(i)))

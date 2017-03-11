@@ -1,18 +1,21 @@
 import os
+import re
 
 from .utils import Command, SimpleCommand
 from .. import safe_str
+from .. import shell
 from ..builtins.write_file import WriteFile
 from ..file_types import *
 from ..iterutils import iterate, uniques
-from ..path import Path
-from ..shell import shell_list
+from ..path import Path, Root
 
 
 class JvmBuilder(object):
-    def __init__(self, env, lang, name, command, jar_command, flags_name,
-                 flags):
+    def __init__(self, env, lang, run_name, run_command, name, command,
+                 jar_command, flags_name, flags):
         self.brand = 'jvm'  # XXX: Be more specific?
+        self.object_format = 'jvm'
+
         self.compiler = JvmCompiler(env, lang, name, command, flags_name,
                                     flags)
 
@@ -21,7 +24,8 @@ class JvmBuilder(object):
             'executable': linker,
             'shared_library': linker,
         }
-        self.runner = JvmRunner(env, lang)
+        self.packages = JvmPackageResolver(env, lang, run_command)
+        self.runner = JvmRunner(env, lang, run_name, run_command)
 
     @property
     def flavor(self):
@@ -102,7 +106,7 @@ class JarMaker(Command):
         Command.__init__(self, env, command)
         self.lang = lang
 
-        self.global_args = []
+        self.global_args = shell.split(env.getvar('JARFLAGS', 'cfm'))
         self.global_libs = []
 
     @property
@@ -121,12 +125,23 @@ class JarMaker(Command):
         return False
 
     def pre_build(self, build, options, name):
+        # Fix up paths for the Class-Path field: escape spaces, use forward
+        # slashes on Windows, and prefix Windows drive letters with '/' to
+        # disambiguate them from URLs.
+        def fix_path(p):
+            if self.env.platform.name == 'windows':
+                if p[1] == ':':
+                    p = '/' + p
+                p = p.replace('\\', '/')
+            return p.replace(' ', '%20')
+
         libs = getattr(options, 'libs', [])
+        libs = sum((i.libs for i in getattr(options, 'packages', [])), libs)
 
         dirs = uniques(i.path for i in libs)
         base = Path(name).parent()
         text = ['Class-Path: {}'.format(
-            ' '.join(i.relpath(base) for i in dirs)
+            ' '.join(fix_path(i.relpath(base)) for i in dirs)
         )]
 
         if getattr(options, 'entry_point', None):
@@ -137,7 +152,9 @@ class JarMaker(Command):
         options.manifest = source
 
     def _call(self, cmd, input, output, manifest, libs=None, args=None):
-        result = [cmd, 'cfm', output, manifest]
+        result = [cmd]
+        result.extend(iterate(args))
+        result.extend([output, manifest])
         result.extend(iterate(input))
         return result
 
@@ -162,12 +179,57 @@ class JarMaker(Command):
         return filetype(Path(name + '.jar'), 'jvm', self.lang)
 
 
-class JvmRunner(SimpleCommand):
-    def __init__(self, env, lang):
-        # XXX: Using lang here works mainly by coincidence. Be more precise?
-        SimpleCommand.__init__(self, env, lang.upper(), lang)
+class JvmPackageResolver(object):
+    def __init__(self, env, lang, command):
+        if lang == 'scala':
+            env_vars = {'JAVA_OPTS': '-XshowSettings:properties'}
+            env_vars.update(env.variables)
+            cmd = '{} -version'
+            returncode = 1
+        else:
+            env_vars = env.variables
+            cmd = '{} -XshowSettings:properties -version'
+            returncode = 0
+
+        output = shell.execute(
+            cmd.format(command), shell=True, env=env_vars,
+            stdout=shell.Mode.devnull, stderr=shell.Mode.pipe,
+            returncode=returncode
+        )
+        self.ext_dirs = self._get_dirs('java.ext.dirs', output)
+        self.classpath = self._get_dirs('java.class.path', output)
+
+    def _get_dirs(self, key, output):
+        ex = r'^(\s*){} = (.*(?:\n\1\s+.*)*)'.format(re.escape(key))
+        m = re.search(ex, output, re.MULTILINE)
+        if not m:
+            return []
+        return [i.strip() for i in m.group(2).split('\n')]
+
+    def _library(self, name):
+        jarname = name + '.jar'
+        for base in self.ext_dirs:
+            fullpath = os.path.join(base, jarname)
+            if os.path.exists(fullpath):
+                return Library(Path(fullpath, Root.absolute), 'jvm',
+                               external=True)
+
+        for path in self.classpath:
+            if os.path.basename(path) == jarname and os.path.exists(path):
+                return Library(Path(path, Root.absolute), 'jvm',
+                               external=True)
+
+        raise IOError("unable to find library '{}'".format(name))
+
+    def resolve(self, name, version, kind, header, header_only):
+        return CommonPackage(name, 'jvm', libs=[self._library(name)])
+
+
+class JvmRunner(Command):
+    def __init__(self, env, lang, rule_name, command):
+        Command.__init__(self, env, command)
         self.lang = lang
-        self.rule_name = self.command_var = lang
+        self.rule_name = self.command_var = rule_name
 
     def _call(self, cmd, file, jar=False):
         result = [cmd]

@@ -37,19 +37,19 @@ class PkgConfig(SimpleCommand):
 
 
 class PkgConfigPackage(Package):
-    def __init__(self, name, kind, specifier, pkg_config):
-        Package.__init__(self, name)
-        self.static = kind == 'static'
-        self.specifier = specifier
+    def __init__(self, name, format, specifier, kind, pkg_config):
         self._pkg_config = pkg_config
 
         try:
-            self.version = Version(self._pkg_config.run(
-                self.name, 'version'
-            ).strip())
+            version = Version(self._pkg_config.run(name, 'version').strip())
         except subprocess.CalledProcessError:
             raise ValueError("unable to find package '{}'".format(name))
-        check_version(self.version, self.specifier, self.name)
+
+        check_version(version, specifier, name)
+        self.version = version
+        self.specifier = specifier
+        self.static = kind == 'static'
+        Package.__init__(self, name, format)
 
     @memoize
     def _call(self, *args, **kwargs):
@@ -90,5 +90,6 @@ class PkgConfigPackage(Package):
         )
 
 
-def resolve(env, name, kind='any', version=None):
-    return PkgConfigPackage(name, kind, version, env.tool('pkg_config'))
+def resolve(env, name, format, version=None, kind='any'):
+    return PkgConfigPackage(name, format, version, kind,
+                            env.tool('pkg_config'))

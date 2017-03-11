@@ -4,23 +4,28 @@ import warnings
 
 from . import builtin
 from .find import find
-from ..file_types import Executable, Package
+from ..file_types import Executable, Package, CommonPackage
 from ..iterutils import iterate, listify
 from ..objutils import objectify
 from ..path import Path, Root, which
-from ..tools.utils import SystemPackage
 from ..versioning import check_version, SpecifierSet, Version
+
+
+class BoostPackage(CommonPackage):
+    def __init__(self, name, format, version, **kwargs):
+        name = 'boost({})'.format(','.join(iterate(name)))
+        CommonPackage.__init__(self, name, format, **kwargs)
+        self.version = version
 
 
 @builtin.globals('env')
 @builtin.type(Package)
-def package(env, name, lang='c', kind='any', version=None, header=None,
+def package(env, name, version=None, lang='c', kind='any', header=None,
             header_only=False):
     if kind not in ('any', 'shared', 'static'):
         raise ValueError("kind must be one of 'any', 'shared', or 'static'")
     version = objectify(version or '', SpecifierSet)
-
-    return env.builder(lang).packages.resolve(name, kind, version, header,
+    return env.builder(lang).packages.resolve(name, version, kind, header,
                                               header_only)
 
 
@@ -37,7 +42,7 @@ def system_package(builtins, name, lang='c', kind='any', header=None):
 def pkgconfig_package(builtins, name, lang='c', version=None):
     warnings.warn('pkgconfig_package is deprecated; please use package ' +
                   'instead', DeprecationWarning)
-    return builtins['package'](name, version=version)
+    return builtins['package'](name, version=version, lang=lang)
 
 
 @builtin.globals('env')
@@ -61,11 +66,8 @@ def _boost_version(header, required_version=None):
     raise IOError('unable to parse "boost/version.hpp"')
 
 
-# XXX: This is a bit hacky, and we should try to make it work a little more
-# like the package() function above.
 @builtin.globals('env')
 def boost_package(env, name=None, version=None):
-    final_name = 'boost({})'.format(','.join(iterate(name)))
     version = objectify(version or '', SpecifierSet)
     pkg = env.builder('c++').packages
     version_hpp = 'boost/version.hpp'
@@ -88,11 +90,9 @@ def boost_package(env, name=None, version=None):
                 try:
                     header = pkg.header(version_hpp, [max(dirs)])
                     boost_version = _boost_version(header, version)
-                    return SystemPackage(
-                        final_name,
-                        includes=[header],
-                        lib_dirs=[r'C:\Boost\lib'],
-                        version=boost_version
+                    return BoostPackage(
+                        name, env.builder('c++').object_format, boost_version,
+                        includes=[header], lib_dirs=[r'C:\Boost\lib'],
                     )
                 except IOError:
                     pass
@@ -104,18 +104,15 @@ def boost_package(env, name=None, version=None):
         if not env.builder('c++').auto_link:
             # XXX: Don't require auto-link.
             raise ValueError('Boost on Windows requires auto-link')
-        return SystemPackage(
-            final_name,
-            includes=[header],
-            lib_dirs=listify(libdir),
-            version=boost_version
+        return BoostPackage(
+            name, env.builder('c++').object_format, boost_version,
+            includes=[header], lib_dirs=listify(libdir),
         )
     else:
         dirs = [libdir] if libdir else None
-        return SystemPackage(
-            final_name,
+        return BoostPackage(
+            name, env.builder('c++').object_format, boost_version,
             includes=[header],
-            libraries=[pkg.library('boost_' + i, search_dirs=dirs)
-                       for i in iterate(name)],
-            version=boost_version
+            libs=[pkg.library('boost_' + i, search_dirs=dirs)
+                  for i in iterate(name)],
         )

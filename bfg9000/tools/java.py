@@ -11,12 +11,12 @@ language('java', src_exts=['.java'])
 language('scala', src_exts=['.scala'])
 
 _vars = {
-    'java' : ('JAVAC' , 'JAVAFLAGS' ),
-    'scala': ('SCALAC', 'SCALAFLAGS'),
+    'java' : ('JAVACMD', 'JAVAC' , 'JAVAFLAGS' ),
+    'scala': ('SCALACMD', 'SCALAC', 'SCALAFLAGS'),
 }
 _cmds = {
-    'java' : ['javac', 'gcj'],
-    'scala': 'scalac',
+    'java' : ('java', ('javac', 'gcj')),
+    'scala': ('scala', 'scalac'),
 }
 
 
@@ -40,11 +40,10 @@ def run_java(env, lang, file):
 
 @builder('java', 'scala')
 def java_builder(env, lang):
-    var, flags_var = _vars[lang]
-    low_var, low_flags_var = var.lower(), flags_var.lower()
+    run_var, var, flags_var = _vars[lang]
+    run_cmd, cmd = _cmds[lang]
 
-    cmd = env.getvar(var, _cmds[lang])
-    cmd = check_which(cmd, kind='{} compiler'.format(lang))
+    cmd = check_which(env.getvar(var, cmd), kind='{} compiler'.format(lang))
     flags = shell.split(env.getvar(flags_var, ''))
 
     # XXX: It might make more sense to try to check version strings instead of
@@ -53,10 +52,12 @@ def java_builder(env, lang):
     if re.search(r'gcj(-\d+\.\d+)?(\.exe)?($|\s)', cmd):
         ldflags = shell.split(env.getvar('LDFLAGS', ''))
         ldlibs = shell.split(env.getvar('LDLIBS', ''))
-        return cc.CcBuilder(env, lang, low_var, cmd, low_flags_var, flags,
-                            ldflags, ldlibs)
+        return cc.CcBuilder(env, lang, var.lower(), cmd, flags_var.lower(),
+                            flags, ldflags, ldlibs)
     else:
+        run_cmd = check_which(env.getvar(run_var, run_cmd),
+                              kind='{} runner'.format(lang))
         jar_cmd = env.getvar('JAR', 'jar')
         jar_cmd = check_which(jar_cmd, kind='jar builder')
-        return jvm.JvmBuilder(env, lang, low_var, cmd, jar_cmd, low_flags_var,
-                              flags)
+        return jvm.JvmBuilder(env, lang, run_var.lower(), run_cmd, var.lower(),
+                              cmd, jar_cmd, flags_var.lower(), flags)

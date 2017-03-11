@@ -83,7 +83,8 @@ class Link(Edge):
         if entry_point:
             self.entry_point = entry_point
 
-        formats = uniques(i.format for i in chain(self.files, self.libs))
+        formats = uniques(i.format for i in chain(self.files, self.libs,
+                                                  self.packages))
         if len(formats) > 1:
             raise ValueError('cannot link multiple object formats')
 
@@ -165,16 +166,14 @@ class DynamicLink(Link):
 
     def _fill_options(self, env, output):
         self._internal_options = (
-            sum((i.ldflags(self.linker, output)
-                 for i in self.packages), []) +
+            sum((i.ldflags(self.linker, output) for i in self.packages), []) +
             self.linker.args(self, output)
         )
 
         linkers = (env.builder(i).linker(self.mode) for i in self.langs)
         self.lib_options = (
             sum((i.always_libs(i is self.linker) for i in linkers), []) +
-            sum((i.ldlibs(self.linker, output)
-                 for i in self.packages), []) +
+            sum((i.ldlibs(self.linker, output) for i in self.packages), []) +
             self.linker.libs(self, output)
         )
 

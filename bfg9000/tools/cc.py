@@ -8,7 +8,7 @@ from . import pkg_config
 from .. import safe_str
 from .. import shell
 from .ar import ArLinker
-from .utils import Command, darwin_install_name, SystemPackage
+from .utils import Command, darwin_install_name
 from ..builtins.symlink import Symlink
 from ..file_types import *
 from ..iterutils import first, iterate, listify, uniques
@@ -36,6 +36,8 @@ class CcBuilder(object):
                 self.brand = 'clang'
         except:
             pass
+
+        self.object_format = env.platform.object_format
 
         self.compiler = CcCompiler(env, lang, name, command, cflags_name,
                                    cflags)
@@ -500,6 +502,9 @@ class CcSharedLibraryLinker(CcLinker):
 
 class CcPackageResolver(object):
     def __init__(self, env, lang, command):
+        self.env = env
+        self.lang = lang
+
         value = env.getvar('CPATH')
         include_dirs = value.split(os.pathsep) if value else []
 
@@ -528,9 +533,6 @@ class CcPackageResolver(object):
         self.lib_dirs = [i for i in uniques(chain(
             all_lib_dirs, env.platform.lib_dirs
         )) if os.path.exists(i)]
-
-        self.lang = lang
-        self.env = env
 
     def header(self, name, search_dirs=None):
         if search_dirs is None:
@@ -578,12 +580,12 @@ class CcPackageResolver(object):
 
         raise IOError("unable to find library '{}'".format(name))
 
-    def resolve(self, name, kind='any', version=None, header=None,
-                header_only=False):
+    def resolve(self, name, version, kind, header, header_only):
+        format = self.env.platform.object_format
         try:
-            return pkg_config.resolve(self.env, name, kind, version)
+            return pkg_config.resolve(self.env, name, format, version, kind)
         except (OSError, ValueError):
             real_name = self.env.platform.transform_package(name)
             includes = [self.header(i) for i in iterate(header)]
             libs = [self.library(real_name, kind)] if not header_only else []
-            return SystemPackage(name, includes=includes, libraries=libs)
+            return CommonPackage(name, format, includes=includes, libs=libs)

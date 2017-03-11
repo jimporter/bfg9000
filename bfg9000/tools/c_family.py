@@ -35,14 +35,9 @@ _windows_cmds = {
 @builder('c', 'c++', 'objc', 'objc++')
 def c_family_builder(env, lang):
     var, flags_var = _vars[lang]
-    low_var, low_flags_var = var.lower(), flags_var.lower()
-
-    if env.platform.name == 'windows':
-        default_cmds = _windows_cmds
-    else:
-        default_cmds = _posix_cmds
-    cmd = env.getvar(var, default_cmds[lang])
-    cmd = check_which(cmd, kind='{} compiler'.format(lang))
+    cmd_map = _windows_cmds if env.platform.name == 'windows' else _posix_cmds
+    cmd = check_which(env.getvar(var, cmd_map[lang]),
+                      kind='{} compiler'.format(lang))
 
     cflags = (
         shell.split(env.getvar(flags_var, '')) +
@@ -61,8 +56,8 @@ def c_family_builder(env, lang):
         check_which(link_cmd, kind='dynamic linker'.format(lang))
         check_which(lib_cmd, kind='static linker'.format(lang))
 
-        return msvc.MsvcBuilder(env, lang, low_var, cmd, link_cmd, lib_cmd,
-                                low_flags_var, cflags, ldflags, ldlibs)
+        return msvc.MsvcBuilder(env, lang, var.lower(), cmd, link_cmd, lib_cmd,
+                                flags_var.lower(), cflags, ldflags, ldlibs)
     else:
-        return cc.CcBuilder(env, lang, low_var, cmd, low_flags_var, cflags,
-                            ldflags, ldlibs)
+        return cc.CcBuilder(env, lang, var.lower(), cmd, flags_var.lower(),
+                            cflags, ldflags, ldlibs)

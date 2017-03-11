@@ -17,7 +17,8 @@ class shell_list(list):
     special shell characters."""
 
 
-def execute(args, shell=False, env=None, stdout=Mode.pipe, stderr=Mode.normal):
+def execute(args, shell=False, env=None, stdout=Mode.pipe, stderr=Mode.normal,
+            returncode=0):
     devnull = (open(os.devnull, 'wb') if Mode.devnull in (stdout, stderr)
                else None)
 
@@ -33,7 +34,7 @@ def execute(args, shell=False, env=None, stdout=Mode.pipe, stderr=Mode.normal):
             stdout=conv(stdout), stderr=conv(stderr)
         )
         output = proc.communicate()
-        if proc.returncode != 0:
+        if proc.returncode != returncode:
             raise subprocess.CalledProcessError(proc.returncode, args)
 
         if stdout == Mode.pipe:
