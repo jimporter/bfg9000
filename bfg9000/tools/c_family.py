@@ -7,8 +7,9 @@ from .common import check_which
 from ..languages import language
 
 language('c', src_exts=['.c'], hdr_exts=['.h'])
-language('c++', src_exts=['.cpp', '.cc', '.cp', '.cxx', '.CPP', '.c++', '.C'],
-         hdr_exts=['.hpp'])
+language('c++',
+         src_exts=['.cpp', '.cc', '.cp', '.cxx', '.CPP', '.c++', '.C'],
+         hdr_exts=['.hpp', '.hh', '.hp', '.hxx', '.HPP', '.h++', '.H'])
 language('objc', src_exts=['.m'])
 language('objc++', src_exts=['.mm', '.M'])
 
