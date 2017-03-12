@@ -111,20 +111,23 @@ class TestNinjaWriter(unittest.TestCase):
     def test_write_path_output(self):
         out = Writer(StringIO())
         out.write(path.Path('foo', path.Root.srcdir), Syntax.output)
-        self.assertEqual(out.stream.getvalue(), os.path.join('$srcdir', 'foo'))
+        self.assertEqual(out.stream.getvalue(),
+                         os.path.join('${srcdir}', 'foo'))
 
     def test_write_path_input(self):
         out = Writer(StringIO())
         out.write(path.Path('foo', path.Root.srcdir), Syntax.input)
-        self.assertEqual(out.stream.getvalue(), os.path.join('$srcdir', 'foo'))
+        self.assertEqual(out.stream.getvalue(),
+                         os.path.join('${srcdir}', 'foo'))
 
     def test_write_path_shell(self):
         out = Writer(StringIO())
         out.write(path.Path('foo', path.Root.srcdir), Syntax.shell)
         self.assertEqual(out.stream.getvalue(),
-                         quoted(os.path.join('$srcdir', 'foo')))
+                         quoted(os.path.join('${srcdir}', 'foo')))
 
     def test_write_path_clean(self):
         out = Writer(StringIO())
         out.write(path.Path('foo', path.Root.srcdir), Syntax.clean)
-        self.assertEqual(out.stream.getvalue(), os.path.join('$srcdir', 'foo'))
+        self.assertEqual(out.stream.getvalue(),
+                         os.path.join('${srcdir}', 'foo'))

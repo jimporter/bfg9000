@@ -102,7 +102,7 @@ class Variable(object):
         self.name = re.sub('\W', '_', name)
 
     def use(self):
-        return safe_str.literal('${}'.format(self.name))
+        return safe_str.literal('${{{}}}'.format(self.name))
 
     def _safe_str(self):
         return self.use()
