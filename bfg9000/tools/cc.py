@@ -358,7 +358,9 @@ class CcLinker(BuildCommand):
         elif isinstance(library, StaticLibrary):
             return [library.path]
         elif isinstance(library, Framework):
-            return ['-framework', library.name]
+            if not self.env.platform.has_frameworks:
+                raise TypeError('frameworks not supported on this platform')
+            return ['-framework', library.full_name]
 
         # If we're here, we have a SharedLibrary (or possibly just a Library
         # in the case of MinGW).

@@ -4,7 +4,7 @@ import warnings
 
 from . import builtin
 from .find import find
-from ..file_types import Executable, Package, CommonPackage
+from ..file_types import Executable, Framework, Package, CommonPackage
 from ..iterutils import iterate, listify
 from ..objutils import objectify
 from ..path import Path, Root, which
@@ -52,6 +52,18 @@ def system_executable(env, name, format=None):
         Path(which(name, env.variables, resolve=True), Root.absolute),
         format or env.platform.object_format, external=True
     )
+
+
+@builtin.globals('env')
+def framework(env, name, suffix=None):
+    if not env.platform.has_frameworks:
+        raise ValueError("{} platform doesn't support frameworks".format(
+            env.platform.name
+        ))
+
+    framework = Framework(name, suffix)
+    return CommonPackage(framework.full_name, env.platform.object_format,
+                         libs=[framework])
 
 
 def _boost_version(header, required_version=None):

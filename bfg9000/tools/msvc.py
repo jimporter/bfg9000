@@ -274,7 +274,9 @@ class MsvcLinker(BuildCommand):
 
     def _link_lib(self, library):
         if isinstance(library, WholeArchive):
-            raise ValueError('MSVC does not support whole-archives')
+            raise TypeError('MSVC does not support whole-archives')
+        if isinstance(library, Framework):
+            raise TypeError('MSVC does not support frameworks')
         return [library.path.basename()]
 
     def always_libs(self, primary):

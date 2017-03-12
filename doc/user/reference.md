@@ -507,6 +507,12 @@ This rule recognizes the following environment variables:
 [`LIB`](environment-vars.md#lib),
 [`LIBRARY_PATH`](environment-vars.md#library_path).
 
+### framework(*name*, [*suffix*]) { #framework }
+
+Reference a macOS [framework][framework] named *name* with the optional suffix
+*suffix*. Though not a "package" in name, this can be used wherever packages are
+accepted.
+
 ### package(*name*, [*version*], [*lang*], [*kind*], [*header*], [*header_only*]) { #package }
 Availability: `build.bfg`
 {: .subtitle}
@@ -802,6 +808,7 @@ distributions](writing.md#distributing-your-source).
 [whole-archive]: http://linux.die.net/man/1/ld
 [boost]: https://www.boost.org/
 [version-specifier]: https://www.python.org/dev/peps/pep-0440/#version-specifiers
+[framework]: https://developer.apple.com/library/content/documentation/MacOSX/Conceptual/OSX_Technology_Overview/SystemFrameworks/SystemFrameworks.html
 [pkg-config]: https://www.freedesktop.org/wiki/Software/pkg-config/
 [add_argument]: https://docs.python.org/library/argparse.html#the-add-argument-method
 [namespace]: https://docs.python.org/library/argparse.html#argparse.Namespace

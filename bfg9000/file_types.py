@@ -257,6 +257,10 @@ class PkgConfigPcFile(File):
     install_root = _InstallRoot.libdir
 
 
+# Package-related objects; these aren't files in the same sense as those listed
+# above, but they're very similar.
+
+
 class Package(object):
     def __init__(self, name, format):
         self.name = name
@@ -290,10 +294,15 @@ class CommonPackage(Package):
         return linker.libs(self, output, pkg=True)
 
 
-# A reference to a macOS framework. XXX: Maybe put this somewhere else?
+# A reference to a macOS framework. Can be used in place of Library objects.
 class Framework(object):
-    def __init__(self, name):
+    def __init__(self, name, suffix=None):
         self.name = name
+        self.suffix = suffix
+
+    @property
+    def full_name(self):
+        return self.name + ',' + self.suffix if self.suffix else self.name
 
     @property
     def runtime_file(self):

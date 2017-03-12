@@ -31,6 +31,10 @@ class PosixPlatform(Platform):
         return True
 
     @property
+    def has_frameworks(self):
+        return False
+
+    @property
     def include_dirs(self):
         return ['/usr/local/include', '/usr/include']
 
@@ -73,3 +77,7 @@ class DarwinPlatform(PosixPlatform):
     @property
     def shared_library_ext(self):
         return '.dylib'
+
+    @property
+    def has_frameworks(self):
+        return True

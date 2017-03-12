@@ -34,6 +34,10 @@ class WindowsPlatform(Platform):
         return False
 
     @property
+    def has_frameworks(self):
+        return False
+
+    @property
     def include_dirs(self):
         # Windows doesn't have standard include dirs; for MSVC, this will get
         # pulled in from the $INCLUDE environment variable.
