@@ -36,7 +36,7 @@ _windows_cmds = {
 def c_family_builder(env, lang):
     var, flags_var = _vars[lang]
     cmd_map = _windows_cmds if env.platform.name == 'windows' else _posix_cmds
-    cmd = check_which(env.getvar(var, cmd_map[lang]),
+    cmd = check_which(env.getvar(var, cmd_map[lang]), env.variables,
                       kind='{} compiler'.format(lang))
 
     cflags = (
@@ -49,13 +49,16 @@ def c_family_builder(env, lang):
     # XXX: It might make more sense to try to check version strings instead of
     # filenames, but the command-line arg for version info can't be determined
     # ahead of time.
-    if re.search(r'cl(-\d+\.\d+)?(\.exe)?($|\s)', cmd):
-        origin = os.path.dirname(cmd)
-        link_cmd = env.getvar('VCLINK', os.path.join(origin, 'link'))
-        lib_cmd = env.getvar('VCLIB', os.path.join(origin, 'lib'))
-        check_which(link_cmd, kind='dynamic linker'.format(lang))
-        check_which(lib_cmd, kind='static linker'.format(lang))
-
+    if any(re.search(r'cl(-\d+\.\d+)?(\.exe)?$', i) for i in cmd):
+        origin = os.path.dirname(shell.join(cmd))
+        link_cmd = check_which(
+            env.getvar('VCLINK', os.path.join(origin, 'link')),
+            env.variables, kind='dynamic linker'.format(lang)
+        )
+        lib_cmd = check_which(
+            env.getvar('VCLIB', os.path.join(origin, 'lib')),
+            env.variables, kind='static linker'.format(lang)
+        )
         return msvc.MsvcBuilder(env, lang, var.lower(), cmd, link_cmd, lib_cmd,
                                 flags_var.lower(), cflags, ldflags, ldlibs)
     else:

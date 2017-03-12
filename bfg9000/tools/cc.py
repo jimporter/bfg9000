@@ -31,8 +31,8 @@ class CcBuilder(object):
 
         self.brand = 'unknown'
         try:
-            output = shell.execute('{} --version'.format(command),
-                                   shell=True, stderr=shell.Mode.devnull)
+            output = shell.execute(command + ['--version'], env=env.variables,
+                                   stderr=shell.Mode.devnull)
             if 'Free Software Foundation' in output:
                 self.brand = 'gcc'
             elif 'clang' in output:
@@ -99,9 +99,9 @@ class CcBaseCompiler(BuildCommand):
         return False
 
     def _call(self, cmd, input, output, deps=None, flags=None):
-        result = [cmd] + self._always_flags
-        result.extend(iterate(flags))
-        result.extend(['-c', input])
+        result = list(chain(
+            cmd, self._always_flags, iterate(flags), ['-c', input]
+        ))
         if deps:
             result.extend(['-MMD', '-MF', deps])
         result.extend(['-o', output])
@@ -256,12 +256,10 @@ class CcLinker(BuildCommand):
         return 1
 
     def _call(self, cmd, input, output, libs=None, flags=None):
-        result = [cmd] + self._always_flags
-        result.extend(iterate(flags))
-        result.extend(iterate(input))
-        result.extend(iterate(libs))
-        result.extend(['-o', output])
-        return result
+        return list(chain(
+            cmd, self._always_flags, iterate(flags), iterate(input),
+            iterate(libs), ['-o', output]
+        ))
 
     @property
     def _always_flags(self):
@@ -509,8 +507,7 @@ class CcPackageResolver(object):
         try:
             # XXX: Will this work for cross-compilation?
             output = shell.execute(
-                '{} -print-search-dirs'.format(command),
-                shell=True, stderr=shell.Mode.devnull
+                command + ['-print-search-dirs'], stderr=shell.Mode.devnull
             )
             m = re.search(r'^libraries: (.*)', output, re.MULTILINE)
             system_lib_dirs = re.split(os.pathsep, m.group(1))

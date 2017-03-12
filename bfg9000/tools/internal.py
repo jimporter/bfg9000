@@ -12,7 +12,7 @@ class Bfg9000(SimpleCommand):
                                default=env.bfgdir.append('bfg9000'))
 
     def _call(self, cmd, builddir):
-        return [cmd, 'refresh', builddir]
+        return cmd + ['refresh', builddir]
 
 
 @tool('depfixer')
@@ -22,8 +22,8 @@ class Depfixer(SimpleCommand):
                                default=env.bfgdir.append('bfg9000-depfixer'))
 
     def _call(self, cmd, depfile):
-        return shell_list([cmd, shell_literal('<'), depfile,
-                           shell_literal('>>'), depfile])
+        return shell_list(cmd + [shell_literal('<'), depfile,
+                                 shell_literal('>>'), depfile])
 
 
 @tool('jvmoutput')
@@ -35,7 +35,7 @@ class JvmOutput(SimpleCommand):
         )
 
     def _call(self, cmd, output, subcmd):
-        return [cmd, '-o', output] + subcmd
+        return cmd + ['-o', output] + subcmd
 
 
 if platform_name() == 'windows':
@@ -48,6 +48,6 @@ if platform_name() == 'windows':
         def _call(self, cmd, env):
             if env:
                 eq = shell_literal('=')
-                return [cmd] + [jbos(safe_str(name), eq, safe_str(value))
-                                for name, value in env.iteritems()] + ['--']
+                return cmd + [jbos(safe_str(name), eq, safe_str(value))
+                              for name, value in env.iteritems()] + ['--']
             return []

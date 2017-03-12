@@ -10,10 +10,9 @@ from ...versioning import SpecifierSet, Version
 
 def version(env=os.environ):
     try:
-        ninja = path.which(env.get('NINJA', ['ninja', 'ninja-build']),
-                           env, first_word=True)
-        output = shell.execute('{} --version'.format(ninja),
-                               shell=True, stderr=shell.Mode.devnull)
+        ninja = path.which(env.get('NINJA', ['ninja', 'ninja-build']), env)
+        output = shell.execute(ninja + ['--version'],
+                               stderr=shell.Mode.devnull)
         return Version(output.strip())
     except IOError:
         pass

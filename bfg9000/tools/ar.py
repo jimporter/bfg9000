@@ -1,9 +1,10 @@
 import os
+from itertools import chain
 
 from .. import shell
-from .. import iterutils
 from .common import BuildCommand, check_which
 from ..file_types import StaticLibrary
+from ..iterutils import iterate
 from ..path import Path
 
 
@@ -37,11 +38,9 @@ class ArLinker(BuildCommand):
         return self.env.platform.has_import_library
 
     def _call(self, cmd, input, output, flags=None):
-        result = [cmd]
-        result.extend(iterutils.iterate(flags))
-        result.append(output)
-        result.extend(iterutils.iterate(input))
-        return result
+        return list(chain(
+            cmd, iterate(flags), [output], iterate(input)
+        ))
 
     def output_file(self, name, options):
         head, tail = os.path.split(name)

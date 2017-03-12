@@ -49,7 +49,7 @@ def java_builder(env, lang):
     # XXX: It might make more sense to try to check version strings instead of
     # filenames, but the command-line arg for version info can't be determined
     # ahead of time.
-    if re.search(r'gcj(-\d+\.\d+)?(\.exe)?($|\s)', cmd):
+    if any(re.search(r'gcj(-\d+\.\d+)?(\.exe)?$', i) for i in cmd):
         ldflags = shell.split(env.getvar('LDFLAGS', ''))
         ldlibs = shell.split(env.getvar('LDLIBS', ''))
         return cc.CcBuilder(env, lang, var.lower(), cmd, flags_var.lower(),

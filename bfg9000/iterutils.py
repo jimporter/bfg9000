@@ -1,8 +1,10 @@
 from collections import Iterable
 from six import iteritems, string_types
+from six.moves import range, zip
 
 __all__ = ['first', 'isiterable', 'iterate', 'listify', 'merge_dicts',
-           'merge_into_dict', 'tween', 'uniques', 'unlistify']
+           'merge_into_dict', 'reverse_enumerate', 'tween', 'uniques',
+           'unlistify']
 
 
 def isiterable(thing):
@@ -52,6 +54,10 @@ def unlistify(thing):
         return thing[0]
     else:
         return thing
+
+
+def reverse_enumerate(iterable):
+    return zip(reversed(range(len(iterable))), reversed(iterable))
 
 
 def tween(iterable, delim, prefix=None, suffix=None):

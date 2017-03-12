@@ -17,10 +17,10 @@ class Doppel(SimpleCommand):
     def _call(self, cmd, mode, src, dst, directory=None, format=None,
               dest_prefix=None):
         if mode == 'onto':
-            return [cmd, '-p', src, dst]
+            return cmd + ['-p', src, dst]
 
         elif mode == 'into':
-            result = [cmd, '-ipN']
+            result = cmd + ['-ipN']
             if directory:
                 result.extend(['-C', directory])
             result.extend(iterate(src))
@@ -28,7 +28,7 @@ class Doppel(SimpleCommand):
             return result
 
         elif mode == 'archive':
-            result = [cmd, '-ipN', '-f', format]
+            result = cmd + ['-ipN', '-f', format]
             if directory:
                 result.extend(['-C', directory])
             if dest_prefix:

@@ -11,4 +11,4 @@ class PatchElf(SimpleCommand):
 
     def _call(self, cmd, file, rpath=None):
         if rpath:
-            return [cmd, '--set-rpath', safe_str.join(rpath, ':'), file]
+            return cmd + ['--set-rpath', safe_str.join(rpath, ':'), file]

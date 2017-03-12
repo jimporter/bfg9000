@@ -1,3 +1,5 @@
+from itertools import chain
+
 from . import tool
 from .common import SimpleCommand
 from ..iterutils import iterate
@@ -13,7 +15,6 @@ class Printf(SimpleCommand):
                                default=default)
 
     def _call(self, cmd, format, input, output):
-        result = shell_list([cmd, format])
-        result.extend(iterate(input))
-        result.extend([shell_literal('>'), output])
-        return result
+        return shell_list(chain(
+            cmd, [format], iterate(input), [shell_literal('>'), output]
+        ))

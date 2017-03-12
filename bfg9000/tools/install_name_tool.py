@@ -24,4 +24,4 @@ class InstallNameTool(SimpleCommand):
         args = sum((['-change'] + listify(i) for i in changes), args)
 
         if args:
-            return [cmd] + args + [file]
+            return cmd + args + [file]

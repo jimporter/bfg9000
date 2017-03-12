@@ -11,10 +11,8 @@ from ...versioning import Version
 
 def version(env=os.environ):
     try:
-        make = path.which(env.get('MAKE', ['make', 'gmake']),
-                          env, first_word=True)
-        output = shell.execute('{} --version'.format(make),
-                               shell=True, stderr=shell.Mode.devnull)
+        make = path.which(env.get('MAKE', ['make', 'gmake']), env)
+        output = shell.execute(make + ['--version'], stderr=shell.Mode.devnull)
         m = re.match(r'GNU Make ([\d\.]+)', output)
         if m:
             return Version(m.group(1))

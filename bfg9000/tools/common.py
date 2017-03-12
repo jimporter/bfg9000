@@ -5,7 +5,7 @@ from six import iteritems
 from six.moves import zip
 
 from .. import shell
-from ..iterutils import isiterable, listify
+from ..iterutils import isiterable, listify, reverse_enumerate
 from ..path import Path, which
 
 
@@ -25,13 +25,18 @@ class Command(object):
             in_place = not any(isinstance(i, Command) for i in args)
         if not in_place:
             args = type(args)(args)
-        for i, v in enumerate(args):
+
+        for i, v in reverse_enumerate(args):
             if isinstance(v, Command):
-                args[i] = conv(v)
+                c = conv(v)
+                if isiterable(c):
+                    args[i : i + 1] = c
+                else:
+                    args[i] = c
         return args
 
     def __call__(self, *args, **kwargs):
-        cmd = kwargs.pop('cmd', self)
+        cmd = listify(kwargs.pop('cmd', self))
         return self._call(cmd, *args, **kwargs)
 
     def run(self, *args, **kwargs):
@@ -50,12 +55,15 @@ class Command(object):
         ), env=env, stderr=shell.Mode.devnull)
 
     def __repr__(self):
-        return '<{}({!r})>'.format(type(self).__name__, self.command)
+        return '<{}({})>'.format(
+            type(self).__name__, ', '.join(repr(i) for i in self.command)
+        )
 
 
 class SimpleCommand(Command):
     def __init__(self, env, name, env_var, default, kind='executable'):
-        cmd = check_which(env.getvar(env_var, default), env.variables, kind)
+        cmd = check_which(env.getvar(env_var, default), env.variables,
+                          kind=kind)
         Command.__init__(self, env, name, name, cmd)
 
 
@@ -76,18 +84,14 @@ class BuildCommand(Command):
         return self.builder.lang
 
 
-def check_which(names, env=os.environ, kind='executable'):
+def check_which(names, *args, **kwargs):
     names = listify(names)
     try:
-        return which(names, env, first_word=True)
-    except IOError:
-        warnings.warn("unable to find {kind}{filler} {names}".format(
-            kind=kind, filler='; tried' if len(names) > 1 else '',
-            names=', '.join("'{}'".format(i) for i in names)
-        ))
-
+        return which(names, *args, **kwargs)
+    except IOError as e:
+        warnings.warn(str(e))
         # Assume the first name is the best choice.
-        return names[0]
+        return shell.listify(names[0])
 
 
 def darwin_install_name(library):

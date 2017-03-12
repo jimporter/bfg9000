@@ -2,12 +2,12 @@ from __future__ import division
 
 import re
 from enum import Enum
-from six import iteritems
+from six import iteritems, string_types
 
 from .. import iterutils
 from ..safe_str import safe_str, shell_literal
 
-__all__ = ['split', 'listify', 'escape', 'quote_escaped', 'quote',
+__all__ = ['split', 'join', 'listify', 'escape', 'quote_escaped', 'quote',
            'quote_info', 'join_commands', 'global_env']
 
 # XXX: We need a way to escape cmd.exe-specific characters.
@@ -63,13 +63,14 @@ def split(s):
     return args
 
 
+def join(args):
+    return ' '.join(quote(i) for i in args)
+
+
 def listify(thing):
-    if thing is None:
-        return []
-    elif iterutils.isiterable(thing):
-        return list(thing)
-    else:
+    if isinstance(thing, string_types):
         return split(thing)
+    return iterutils.listify(thing)
 
 
 def escape(s, escape_percent=False):

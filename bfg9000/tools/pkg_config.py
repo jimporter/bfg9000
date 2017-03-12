@@ -28,7 +28,7 @@ class PkgConfig(SimpleCommand):
                                env_var='PKG_CONFIG', default='pkg-config')
 
     def _call(self, cmd, name, type, static=False, msvc_syntax=False):
-        result = [cmd, name] + self._options[type]
+        result = cmd + [name] + self._options[type]
         if static:
             result.append('--static')
         if msvc_syntax:

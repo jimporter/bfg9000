@@ -82,8 +82,7 @@ class MsvcBaseCompiler(BuildCommand):
         return False
 
     def _call(self, cmd, input, output, deps=None, flags=None):
-        result = [cmd]
-        result.extend(iterate(flags))
+        result = list(chain( cmd, self._always_flags, iterate(flags) ))
         if deps:
             result.append('/showIncludes')
         result.extend(['/c', input])
@@ -241,12 +240,10 @@ class MsvcLinker(BuildCommand):
         return 1
 
     def _call(self, cmd, input, output, libs=None, flags=None):
-        result = [cmd] + self._always_flags
-        result.extend(iterate(flags))
-        result.extend(iterate(input))
-        result.extend(iterate(libs))
-        result.append('/OUT:' + output)
-        return result
+        return list(chain(
+            cmd, self._always_flags, iterate(flags), iterate(input),
+            iterate(libs), ['/OUT:' + output]
+        ))
 
     @property
     def _always_flags(self):
@@ -348,11 +345,9 @@ class MsvcStaticLinker(BuildCommand):
         return True
 
     def _call(self, cmd, input, output, flags=None):
-        result = [cmd]
-        result.extend(iterate(flags))
-        result.extend(iterate(input))
-        result.append('/OUT:' + output)
-        return result
+        return list(chain(
+            cmd, iterate(flags), iterate(input), ['/OUT:' + output]
+        ))
 
     def output_file(self, name, options):
         return StaticLibrary(Path(name + '.lib'),

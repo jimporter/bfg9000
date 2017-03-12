@@ -10,4 +10,4 @@ class MkdirP(SimpleCommand):
                                default=default)
 
     def _call(self, cmd, path):
-        return [cmd, path]
+        return cmd + [path]

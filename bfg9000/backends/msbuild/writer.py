@@ -10,10 +10,9 @@ from ...versioning import Version
 
 def version(env=os.environ):
     try:
-        msbuild = path.which(env.get('MSBUILD', ['msbuild', 'xbuild']),
-                             env, first_word=True)
-        output = shell.execute('{} /version'.format(msbuild),
-                               shell=True, stderr=shell.Mode.devnull)
+        msbuild = path.which(env.get('MSBUILD', ['msbuild', 'xbuild']), env)
+        output = shell.execute(msbuild + ['/version'],
+                               stderr=shell.Mode.devnull)
         m = re.search(r'([\d\.]+)$', output)
         if m:
             return Version(m.group(1))

@@ -1,5 +1,6 @@
 import os
 import re
+from itertools import chain
 
 from .common import BuildCommand
 from .. import safe_str
@@ -64,11 +65,9 @@ class JvmCompiler(BuildCommand):
 
     def _call(self, cmd, input, output, flags=None):
         jvmoutput = self.env.tool('jvmoutput')
-
-        result = [cmd]
-        result.extend(iterate(flags))
-        result.extend(self._always_flags)
-        result.append(input)
+        result = list(chain(
+            cmd, self._always_flags, iterate(flags), [input]
+        ))
         return jvmoutput(output, result)
 
     @property
@@ -145,11 +144,9 @@ class JarMaker(BuildCommand):
         options.manifest = source
 
     def _call(self, cmd, input, output, manifest, libs=None, flags=None):
-        result = [cmd]
-        result.extend(iterate(flags))
-        result.extend([output, manifest])
-        result.extend(iterate(input))
-        return result
+        return list(chain(
+            cmd, iterate(flags), [output, manifest], iterate(input)
+        ))
 
     def transform_input(self, input):
         return ['@' + safe_str.safe_str(i) if isinstance(i, JvmClassList)
@@ -171,17 +168,16 @@ class JvmPackageResolver(object):
         if self.lang == 'scala':
             env_vars = {'JAVA_OPTS': '-XshowSettings:properties'}
             env_vars.update(env.variables)
-            cmd = '{} -version'
+            args = ['-version']
             returncode = 1
         else:
             env_vars = env.variables
-            cmd = '{} -XshowSettings:properties -version'
+            args = ['-XshowSettings:properties', '-version']
             returncode = 0
 
         output = shell.execute(
-            cmd.format(command), shell=True, env=env_vars,
-            stdout=shell.Mode.devnull, stderr=shell.Mode.pipe,
-            returncode=returncode
+            command + args, env=env_vars, stdout=shell.Mode.devnull,
+            stderr=shell.Mode.pipe, returncode=returncode
         )
         self.ext_dirs = self._get_dirs('java.ext.dirs', output)
         self.classpath = self._get_dirs('java.class.path', output)
@@ -224,7 +220,7 @@ class JvmRunner(BuildCommand):
         BuildCommand.__init__(self, builder, env, name, name, command)
 
     def _call(self, cmd, file, jar=False):
-        result = [cmd]
+        result = list(cmd)
         if jar and self.lang != 'scala':
             result.append('-jar')
         result.append(file)

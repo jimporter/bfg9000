@@ -19,7 +19,7 @@ class Lua(SimpleCommand):
                                default='lua')
 
     def _call(self, cmd, file):
-        return [cmd, file]
+        return cmd + [file]
 
 
 @tool('perl')
@@ -29,7 +29,7 @@ class Perl(SimpleCommand):
                                default='perl')
 
     def _call(self, cmd, file):
-        return [cmd, file]
+        return cmd + [file]
 
 
 @tool('python')
@@ -39,7 +39,7 @@ class Python(SimpleCommand):
                                default=abspath(sys.executable))
 
     def _call(self, cmd, file):
-        return [cmd, file]
+        return cmd + [file]
 
 
 @tool('ruby')
@@ -49,7 +49,7 @@ class Ruby(SimpleCommand):
                                default='ruby')
 
     def _call(self, cmd, file):
-        return [cmd, file]
+        return cmd + [file]
 
 
 @runner('lua', 'perl', 'python', 'ruby')

@@ -6,7 +6,7 @@ from six import iteritems, string_types
 from contextlib import contextmanager
 
 from . import safe_str
-from .iterutils import listify
+from .iterutils import isiterable, listify
 from .platforms import platform_name, platform_info
 from . import shell
 
@@ -211,29 +211,19 @@ def pushd(dirname, makedirs=False, mode=0o777, exist_ok=False):
     os.chdir(old)
 
 
-def which(names, env=os.environ, first_word=False, resolve=False):
-    def transform(name):
-        # Only check the first word, since some commands have built-in
-        # arguments, like `mkdir -p`.
-        if isinstance(name, string_types):
-            return shell.split(name)[0] if first_word else name
-        elif isinstance(name, Path):
-            return name.string()
-        else:
-            return name
-
+def which(names, env=os.environ, resolve=False, kind='executable'):
     paths = env.get('PATH', os.defpath).split(os.pathsep)
+    exts = ['']
     if platform_name() in ['windows', 'cygwin']:
-        exts = [''] + env.get('PATHEXT', '').split(os.pathsep)
-    else:
-        exts = ['']
+        exts.extend(env.get('PATHEXT', '').split(os.pathsep))
 
     names = listify(names)
     if len(names) == 0:
         raise TypeError('must supply at least one name')
 
     for name in names:
-        check = transform(name)
+        name = shell.listify(name)
+        check = name[0].string() if isinstance(name[0], Path) else name[0]
         if os.path.isabs(check):
             fullpaths = [check]
         else:
@@ -245,6 +235,9 @@ def which(names, env=os.environ, first_word=False, resolve=False):
             for ext in exts:
                 withext = fullpath + ext
                 if os.path.exists(withext):
-                    return withext if resolve else name
+                    return [withext] + name[1:] if resolve else name
 
-    raise IOError("unable to find executable '{}'".format(names[0]))
+    raise IOError("unable to find {kind}{filler} {names}".format(
+        kind=kind, filler='; tried' if len(names) > 1 else '',
+        names=', '.join("'{}'".format(i) for i in names)
+    ))

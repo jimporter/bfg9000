@@ -48,8 +48,9 @@ def pkgconfig_package(builtins, name, lang='c', version=None):
 @builtin.globals('env')
 @builtin.type(Executable)
 def system_executable(env, name, format=None):
+    # XXX: Come up with a better way to handle `which()` returning a list?
     return Executable(
-        Path(which(name, env.variables, resolve=True), Root.absolute),
+        Path(which([[name]], env.variables, resolve=True)[0], Root.absolute),
         format or env.platform.object_format, external=True
     )
 

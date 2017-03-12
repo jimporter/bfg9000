@@ -5,7 +5,7 @@ from six import iteritems, string_types
 from .. import iterutils
 from ..safe_str import jbos, safe_str, shell_literal
 
-__all__ = ['split', 'listify', 'escape', 'quote_escaped', 'quote',
+__all__ = ['split', 'join', 'listify', 'escape', 'quote_escaped', 'quote',
            'quote_info', 'join_commands', 'local_env', 'global_env']
 
 _bad_chars = re.compile(r'[^\w@%+:,./-]')
@@ -21,13 +21,14 @@ def split(s):
     return list(lexer)
 
 
+def join(args):
+    return ' '.join(quote(i) for i in args)
+
+
 def listify(thing):
-    if thing is None:
-        return []
-    elif iterutils.isiterable(thing):
-        return list(thing)
-    else:
+    if isinstance(thing, string_types):
         return split(thing)
+    return iterutils.listify(thing)
 
 
 def escape(s):

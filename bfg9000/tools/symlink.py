@@ -10,4 +10,4 @@ class Symlink(SimpleCommand):
                                default='ln -sf')
 
     def _call(self, cmd, input, output):
-        return [cmd, input, output]
+        return cmd + [input, output]
