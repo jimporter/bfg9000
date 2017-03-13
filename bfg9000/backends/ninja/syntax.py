@@ -140,11 +140,14 @@ class Commands(object):
     def use(self):
         out = Writer(StringIO())
         if self.needs_shell and platform_name() == 'windows':
-            out.write_literal('cmd /c ')
+            out.write_literal('cmd /s /c "')
 
         env_vars = shell.global_env(self.environ)
         for line in shell.join_commands(chain(env_vars, self.commands)):
             out.write_shell(line)
+
+        if self.needs_shell and platform_name() == 'windows':
+            out.write_literal('"')
         return safe_str.literal(out.stream.getvalue())
 
     def _safe_str(self):
