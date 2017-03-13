@@ -1,17 +1,17 @@
 import re
 
-from . import builder, runner, tool, cc, jvm
+from . import builder, runner, cc, jvm
 from .. import shell
-from ..builtins.write_file import WriteFile
-from ..file_types import *
-from ..languages import language
 from .common import check_which
+from ..builtins.write_file import WriteFile
+from ..file_types import Executable, JvmClassList, ObjectFile
+from ..languages import language
 
 language('java', src_exts=['.java'])
 language('scala', src_exts=['.scala'])
 
 _vars = {
-    'java' : ('JAVACMD', 'JAVAC' , 'JAVAFLAGS' ),
+    'java' : ('JAVACMD',  'JAVAC' , 'JAVAFLAGS' ),
     'scala': ('SCALACMD', 'SCALAC', 'SCALAFLAGS'),
 }
 _cmds = {
@@ -27,8 +27,7 @@ def run_java(env, lang, file):
         return
 
     if isinstance(file, Executable):
-        kwargs = {'jar': True} if lang == 'java' else {}
-        return runner(file, **kwargs)
+        return runner(file, jar=True)
     elif isinstance(file, JvmClassList):
         return runner(file.object_file)
     elif isinstance(file, ObjectFile):
