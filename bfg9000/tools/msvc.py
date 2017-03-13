@@ -2,7 +2,7 @@ import os.path
 from itertools import chain
 
 from . import pkg_config
-from .common import BuildCommand
+from .common import BuildCommand, check_which
 from .. import shell
 from ..arguments.windows import ArgumentParser
 from ..builtins.write_file import WriteFile
@@ -13,10 +13,23 @@ from ..path import Path, Root
 
 
 class MsvcBuilder(object):
-    def __init__(self, env, lang, name, command, link_command, lib_command,
-                 cflags_name, cflags, ldflags, ldlibs):
+    def __init__(self, env, lang, name, command, cflags_name, cflags,
+                 version_output):
         self.lang = lang
         self.object_format = env.platform.object_format
+
+        origin = os.path.dirname(shell.join(command))
+        link_command = check_which(
+            env.getvar('VCLINK', os.path.join(origin, 'link')),
+            env.variables, kind='dynamic linker'.format(lang)
+        )
+        lib_command = check_which(
+            env.getvar('VCLIB', os.path.join(origin, 'lib')),
+            env.variables, kind='static linker'.format(lang)
+        )
+
+        ldflags = shell.split(env.getvar('LDFLAGS', ''))
+        ldlibs = shell.split(env.getvar('LDLIBS', ''))
 
         self.compiler = MsvcCompiler(self, env, name, command, cflags_name,
                                      cflags)
@@ -35,6 +48,11 @@ class MsvcBuilder(object):
         }
         self.packages = MsvcPackageResolver(self, env)
         self.runner = None
+
+    @staticmethod
+    def check_command(env, command):
+        return shell.execute(command + ['/?'], env=env.variables,
+                             stderr=shell.Mode.stdout)
 
     @property
     def brand(self):

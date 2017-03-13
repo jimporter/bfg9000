@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 import warnings
 from collections import namedtuple
 from six import iteritems
@@ -156,6 +157,12 @@ class Environment(object):
 
         # Now that we've upgraded, initialize the Environment object.
         env = Environment.__new__(Environment)
+
+        # With Python 2.x on Windows, the environment variables must all be
+        # non-Unicode strings.
+        if platforms.platform_name() == 'windows' and sys.version_info[0] == 2:
+            data['variables'] = {str(k): str(v) for k, v in
+                                 iteritems(data['variables'])}
 
         for i in ('backend', 'extra_args', 'variables'):
             setattr(env, i, data[i])

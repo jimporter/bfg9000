@@ -10,6 +10,7 @@ else:
     from .posix import *
 
 Mode = Enum('Mode', ['pipe', 'stdout', 'devnull', 'normal'])
+CalledProcessError = subprocess.CalledProcessError
 
 
 class shell_list(list):
@@ -35,7 +36,7 @@ def execute(args, shell=False, env=None, stdout=Mode.pipe, stderr=Mode.normal,
         )
         output = proc.communicate()
         if proc.returncode != returncode:
-            raise subprocess.CalledProcessError(proc.returncode, args)
+            raise CalledProcessError(proc.returncode, args)
 
         if stdout == Mode.pipe:
             if stderr == Mode.pipe:

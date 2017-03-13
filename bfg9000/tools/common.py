@@ -5,7 +5,7 @@ from six import iteritems
 from six.moves import zip
 
 from .. import shell
-from ..iterutils import isiterable, listify, reverse_enumerate
+from ..iterutils import first, isiterable, iterate, listify, reverse_enumerate
 from ..path import Path, which
 
 
@@ -92,6 +92,29 @@ def check_which(names, *args, **kwargs):
         warnings.warn(str(e))
         # Assume the first name is the best choice.
         return shell.listify(names[0])
+
+
+def choose_builder(env, lang, candidates, builders, cmd_var, flags_var, flags):
+    try:
+        cmd = which(candidates, env.variables, kind='{} compiler'.format(lang))
+    except IOError as e:
+        warnings.warn(str(e))
+        cmd = first(candidates)
+        builder_type = first(builders)
+        output = ''
+    else:
+        for builder_type in builders:
+            try:
+                output = builder_type.check_command(env, cmd)
+                break
+            except shell.CalledProcessError:
+                pass
+        else:
+            tried = ', '.join(repr(i) for i in iterate(candidates))
+            raise IOError('no working {} compiler found; tried {}'
+                          .format(lang, tried))
+
+    return builder_type(env, lang, cmd_var, cmd, flags_var, flags, output)
 
 
 def darwin_install_name(library):

@@ -2,7 +2,7 @@ import os
 import re
 from itertools import chain
 
-from .common import BuildCommand
+from .common import BuildCommand, check_which
 from .. import safe_str
 from .. import shell
 from ..builtins.write_file import WriteFile
@@ -12,17 +12,30 @@ from ..path import Path, Root
 
 
 class JvmBuilder(object):
-    def __init__(self, env, lang, run_name, run_command, name, command,
-                 jar_command, flags_name, flags):
+    def __init__(self, env, lang, name, command, flags_name, flags,
+                 version_output):
         self.lang = lang
         self.object_format = 'jvm'
         self.brand = 'jvm'  # XXX: Be more specific?
+
+        jar_command = check_which(env.getvar('JAR', 'jar'), kind='jar builder')
+
+        # XXX: This works sort of by coincidence, since it's trivial to predict
+        # the runner's name based on the lang. Be smarter here?
+        run_name = lang.upper() + 'CMD'
+        run_command = check_which(env.getvar(run_name, lang),
+                                  kind='{} runner'.format(lang))
 
         self.compiler = JvmCompiler(self, env, name, command, flags_name,
                                     flags)
         self._linker = JarMaker(self, env, jar_command)
         self.packages = JvmPackageResolver(self, env, run_command)
         self.runner = JvmRunner(self, env, run_name, run_command)
+
+    @staticmethod
+    def check_command(env, command):
+        return shell.execute(command + ['-version'], env=env.variables,
+                             stderr=shell.Mode.devnull)
 
     @property
     def flavor(self):

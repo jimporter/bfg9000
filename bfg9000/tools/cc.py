@@ -24,21 +24,20 @@ def recursive_deps(lib):
 
 
 class CcBuilder(object):
-    def __init__(self, env, lang, name, command, cflags_name, cflags, ldflags,
-                 ldlibs):
+    def __init__(self, env, lang, name, command, cflags_name, cflags,
+                 version_output):
         self.lang = lang
         self.object_format = env.platform.object_format
 
-        self.brand = 'unknown'
-        try:
-            output = shell.execute(command + ['--version'], env=env.variables,
-                                   stderr=shell.Mode.devnull)
-            if 'Free Software Foundation' in output:
-                self.brand = 'gcc'
-            elif 'clang' in output:
-                self.brand = 'clang'
-        except:
-            pass
+        if 'Free Software Foundation' in version_output:
+            self.brand = 'gcc'
+        elif 'clang' in version_output:
+            self.brand = 'clang'
+        else:
+            self.brand = 'unknown'
+
+        ldflags = shell.split(env.getvar('LDFLAGS', ''))
+        ldlibs = shell.split(env.getvar('LDLIBS', ''))
 
         self.compiler = CcCompiler(self, env, name, command, cflags_name,
                                    cflags)
@@ -59,6 +58,11 @@ class CcBuilder(object):
         }
         self.packages = CcPackageResolver(self, env, command)
         self.runner = None
+
+    @staticmethod
+    def check_command(env, command):
+        return shell.execute(command + ['--version'], env=env.variables,
+                             stderr=shell.Mode.devnull)
 
     @property
     def flavor(self):
