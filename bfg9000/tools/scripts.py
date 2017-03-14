@@ -1,6 +1,6 @@
 import sys
 
-from . import runner, tool
+from . import tool
 from .common import SimpleCommand
 from ..file_types import SourceFile
 from ..languages import language
@@ -12,47 +12,49 @@ language('python', src_exts=['.py'])
 language('ruby', src_exts=['.rb'])
 
 
-@tool('lua')
-class Lua(SimpleCommand):
+class ScriptCommand(SimpleCommand):
+    def run_arguments(self, file):
+        if isinstance(file, SourceFile):
+            return self(file)
+        return TypeError('expected a source file for {} to run'
+                         .format(self.rule_name))
+
+
+@tool('lua', lang='lua')
+class Lua(ScriptCommand):
     def __init__(self, env):
-        SimpleCommand.__init__(self, env, name='lua', env_var='LUA',
+        ScriptCommand.__init__(self, env, name='lua', env_var='LUA',
                                default='lua')
 
     def _call(self, cmd, file):
         return cmd + [file]
 
 
-@tool('perl')
-class Perl(SimpleCommand):
+@tool('perl', lang='perl')
+class Perl(ScriptCommand):
     def __init__(self, env):
-        SimpleCommand.__init__(self, env, name='perl', env_var='PERL',
+        ScriptCommand.__init__(self, env, name='perl', env_var='PERL',
                                default='perl')
 
     def _call(self, cmd, file):
         return cmd + [file]
 
 
-@tool('python')
-class Python(SimpleCommand):
+@tool('python', lang='python')
+class Python(ScriptCommand):
     def __init__(self, env):
-        SimpleCommand.__init__(self, env, name='python', env_var='PYTHON',
+        ScriptCommand.__init__(self, env, name='python', env_var='PYTHON',
                                default=abspath(sys.executable))
 
     def _call(self, cmd, file):
         return cmd + [file]
 
 
-@tool('ruby')
-class Ruby(SimpleCommand):
+@tool('ruby', lang='ruby')
+class Ruby(ScriptCommand):
     def __init__(self, env):
-        SimpleCommand.__init__(self, env, name='ruby', env_var='RUBY',
+        ScriptCommand.__init__(self, env, name='ruby', env_var='RUBY',
                                default='ruby')
 
     def _call(self, cmd, file):
         return cmd + [file]
-
-
-@runner('lua', 'perl', 'python', 'ruby')
-def run_script(env, lang, file):
-    if isinstance(file, SourceFile):
-        return env.tool(lang)(file)

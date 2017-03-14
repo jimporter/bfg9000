@@ -1,7 +1,7 @@
 import re
 import warnings
 
-from . import builder, runner, cc, jvm
+from . import builder, cc, jvm
 from .. import shell
 from .common import choose_builder
 from ..builtins.write_file import WriteFile
@@ -21,23 +21,6 @@ _default_cmds = {
 }
 
 _builders = (jvm.JvmBuilder, cc.CcBuilder)
-
-
-@runner('java', 'scala')
-def run_java(env, lang, file):
-    runner = env.builder(lang).runner
-    if not runner:
-        return
-
-    if isinstance(file, Executable):
-        return runner(file, jar=True)
-    elif isinstance(file, JvmClassList):
-        return runner(file.object_file)
-    elif isinstance(file, ObjectFile):
-        return runner(file)
-    else:
-        raise TypeError('expected an executable or object file for {} to run'
-                        .format(lang))
 
 
 @builder('java', 'scala')

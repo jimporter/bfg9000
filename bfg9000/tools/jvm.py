@@ -238,3 +238,13 @@ class JvmRunner(BuildCommand):
             result.append('-jar')
         result.append(file)
         return result
+
+    def run_arguments(self, file):
+        if isinstance(file, Executable):
+            return self(file, jar=True)
+        elif isinstance(file, JvmClassList):
+            return self(file.object_file)
+        elif isinstance(file, ObjectFile):
+            return self(file)
+        raise TypeError('expected an executable or object file for {} to run'
+                        .format(self.lang))

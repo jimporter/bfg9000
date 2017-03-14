@@ -8,7 +8,7 @@ from six import iteritems
 from . import platforms
 from . import tools
 from .backends import list_backends
-from .file_types import Node
+from .file_types import Executable, Node
 from .iterutils import first, isiterable, listify
 from .path import InstallRoot, Path, Root
 from .versioning import Version
@@ -69,6 +69,15 @@ class Environment(object):
             self.__tools[name] = tools.get_tool(self, name)
         return self.__tools[name]
 
+    def _runner(self, lang):
+        try:
+            return self.builder(lang).runner
+        except ValueError:
+            try:
+                return self.tool(tools.get_tool_runner(lang))
+            except ValueError:
+                return None
+
     def run_arguments(self, line, lang=None):
         if isinstance(line, Node):
             line = [line]
@@ -82,7 +91,14 @@ class Environment(object):
 
         if lang is None:
             lang = first(getattr(line[0], 'lang', None), default=None)
-        return tools.get_run_arguments(self, lang, line[0]) + line[1:]
+        runner = self._runner(lang)
+        if runner:
+            return runner.run_arguments(line[0]) + line[1:]
+
+        if not isinstance(line[0], Executable):
+            raise TypeError('expected an executable for {} to run'
+                            .format(lang))
+        return line
 
     def save(self, path):
         with open(os.path.join(path, self.envfile), 'w') as out:

@@ -6,7 +6,7 @@ from ..objutils import memoize
 
 _builders = {}
 _tools = {}
-_runners = {}
+_tool_runners = {}
 
 
 @memoize
@@ -36,9 +36,11 @@ def get_builder(env, lang):
         raise ValueError("unknown language '{}'".format(lang))
 
 
-def tool(name):
+def tool(name, lang=None):
     def wrapper(fn):
         _tools[name] = fn
+        if lang:
+            _tool_runners[lang] = name
         return fn
     return wrapper
 
@@ -50,26 +52,8 @@ def get_tool(env, name):
         raise ValueError("unknown tool '{}'".format(name))
 
 
-def runner(*args):
-    if len(args) == 0:
-        raise TypeError('must provide at least one language')
-    multi = len(args) > 1
-
-    def wrapper(fn):
-        for i in args:
-            _runners[i] = (fn, multi)
-        return fn
-    return wrapper
-
-
-def get_run_arguments(env, lang, file):
-    if lang in _runners:
-        fn, multi = _runners[lang]
-        args = fn(env, lang, file) if multi else fn(env, file)
-        if args is not None:
-            return args
-
-    if not isinstance(file, Executable):
-        raise TypeError('expected an executable for {} to run'
-                        .format(lang))
-    return [file]
+def get_tool_runner(lang):
+    try:
+        return _tool_runners[lang]
+    except KeyError:
+        raise ValueError("unknown tool runner '{}'".format(lang))
