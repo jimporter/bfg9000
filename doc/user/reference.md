@@ -641,6 +641,11 @@ for languages in the C family (including Fortran), this is one of `'gcc'`,
 `'clang'`, `'msvc'`, or `'unknown'`. For languages in the Java family, this is
 one of `'oracle'`, `'openjdk'`, `'epfl'` (for Scala), or `'unknown'`.
 
+#### builder.version { #builder-version }
+
+The version of the builder (specifically, the version of the primary compiler
+for the builder). May be *None* if bfg9000 was unable to detect the version.
+
 #### builder.object_format { #builder-object_format }
 
 The object format that the builder outputs, e.g. `'elf'`, `'coff'`, or `'jvm'`.

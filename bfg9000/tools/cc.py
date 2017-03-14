@@ -13,6 +13,7 @@ from ..builtins.symlink import Symlink
 from ..file_types import *
 from ..iterutils import first, iterate, listify, uniques
 from ..path import install_path, Path, Root
+from ..versioning import detect_version
 
 
 def recursive_deps(lib):
@@ -31,10 +32,13 @@ class CcBuilder(object):
 
         if 'Free Software Foundation' in version_output:
             self.brand = 'gcc'
+            self.version = detect_version(version_output)
         elif 'clang' in version_output:
             self.brand = 'clang'
+            self.version = detect_version(version_output)
         else:
             self.brand = 'unknown'
+            self.version = None
 
         ldflags = shell.split(env.getvar('LDFLAGS', ''))
         ldlibs = shell.split(env.getvar('LDLIBS', ''))

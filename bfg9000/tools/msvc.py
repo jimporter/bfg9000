@@ -10,6 +10,7 @@ from ..file_types import *
 from ..iterutils import iterate, listify, uniques
 from ..languages import lang2src
 from ..path import Path, Root
+from ..versioning import detect_version
 
 
 class MsvcBuilder(object):
@@ -20,9 +21,11 @@ class MsvcBuilder(object):
 
         if 'Microsoft (R)' in version_output:
             self.brand = 'msvc'
+            self.version = detect_version(version_output)
         else:
             # XXX: Detect clang-cl.
             self.brand = 'unknown'
+            self.version = None
 
         # Look for the last argument that looks like our compiler and use its
         # directory as the base directory to find the linkers.

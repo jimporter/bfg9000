@@ -9,6 +9,7 @@ from ..builtins.write_file import WriteFile
 from ..file_types import *
 from ..iterutils import iterate, uniques
 from ..path import Path, Root
+from ..versioning import detect_version
 
 
 class JvmBuilder(object):
@@ -26,6 +27,7 @@ class JvmBuilder(object):
                                   kind='{} runner'.format(lang))
 
         self.brand = 'unknown'
+        self.version = None
         if lang == 'java':
             try:
                 output = shell.execute(
@@ -38,9 +40,11 @@ class JvmBuilder(object):
                     self.brand = 'openjdk'
             except shell.CalledProcessError:
                 pass
+            self.version = detect_version(version_output)
         elif lang == 'scala':
             if 'EPFL' in version_output:
                 self.brand = 'epfl'
+                self.version = detect_version(version_output)
 
         self.compiler = JvmCompiler(self, env, name, command, flags_name,
                                     flags)

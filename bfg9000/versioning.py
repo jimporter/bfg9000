@@ -1,4 +1,5 @@
 import platform
+import re
 from itertools import chain
 from packaging.specifiers import (
     LegacySpecifier as Specifier, Specifier as PythonSpecifier,
@@ -15,7 +16,8 @@ bfg_version = PythonVersion(bfg_version)
 python_version = PythonVersion(platform.python_version())
 
 
-# XXX: Use a LegacySpecifierSet instead once the packaging.specifiers has it.
+# Use a LegacySpecifierSet instead once packaging.specifiers has it. See
+# <https://github.com/pypa/packaging/pull/92>.
 class SpecifierSet(PythonSpecifierSet):
     def __init__(self, specifiers=''):
         specifiers = [s.strip() for s in specifiers.split(',') if s.strip()]
@@ -84,3 +86,8 @@ def check_version(version, specifier, kind):
     msg = "{kind} version {ver} doesn't meet requirement {req}"
     if version not in specifier:
         raise ValueError(msg.format(kind=kind, ver=version, req=specifier))
+
+
+def detect_version(string):
+    m = re.search(r'(\d+(?:\.\d+)+)', string)
+    return Version(m.group(1)) if m else None
