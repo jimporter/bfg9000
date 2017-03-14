@@ -19,6 +19,7 @@ in progress
   and Ruby
 - Added `framework()` to specify macOS frameworks to use for a build
 - Improved detection of compiler flavors by checking version information
+- Automatically colorize clang/gcc output under Ninja
 
 ### Breaking changes
 - `directory()` and `header_directory()` no longer automatically include all

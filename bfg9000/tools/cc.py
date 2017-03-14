@@ -13,7 +13,7 @@ from ..builtins.symlink import Symlink
 from ..file_types import *
 from ..iterutils import first, iterate, listify, uniques
 from ..path import install_path, Path, Root
-from ..versioning import detect_version
+from ..versioning import detect_version, SpecifierSet
 
 
 def recursive_deps(lib):
@@ -117,7 +117,17 @@ class CcBaseCompiler(BuildCommand):
 
     @property
     def _always_flags(self):
-        return ['-x', self._langs[self.lang]]
+        flags = ['-x', self._langs[self.lang]]
+        # Force color diagnostics on Ninja, since it's off by default. See
+        # <https://github.com/ninja-build/ninja/issues/174> for more
+        # information.
+        if self.env.backend == 'ninja':
+            if self.builder.brand == 'clang':
+                flags += ['-fcolor-diagnostics']
+            elif (self.builder.brand == 'gcc' and self.builder.version and
+                  self.builder.version in SpecifierSet('>=4.9')):
+                flags += ['-fdiagnostics-color']
+        return flags
 
     def _include_dir(self, directory):
         is_default = ( directory.path.string(self.env.base_dirs) in
