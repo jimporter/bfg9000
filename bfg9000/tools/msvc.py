@@ -18,7 +18,18 @@ class MsvcBuilder(object):
         self.lang = lang
         self.object_format = env.platform.object_format
 
-        origin = os.path.dirname(shell.join(command))
+        if 'Microsoft (R)' in version_output:
+            self.brand = 'msvc'
+        else:
+            # XXX: Detect clang-cl.
+            self.brand = 'unknown'
+
+        # Look for the last argument that looks like our compiler and use its
+        # directory as the base directory to find the linkers.
+        origin = ''
+        for i in reversed(command):
+            if os.path.basename(i) in ('cl', 'cl.exe'):
+                origin = os.path.dirname(i)
         link_command = check_which(
             env.getvar('VCLINK', os.path.join(origin, 'link')),
             env.variables, kind='dynamic linker'.format(lang)
@@ -53,11 +64,6 @@ class MsvcBuilder(object):
     def check_command(env, command):
         return shell.execute(command + ['/?'], env=env.variables,
                              stderr=shell.Mode.stdout)
-
-    @property
-    def brand(self):
-        # XXX: Detect clang-cl.
-        return 'msvc'
 
     @property
     def flavor(self):
