@@ -5,6 +5,7 @@ from collections import namedtuple
 from . import tool
 from .common import SimpleCommand
 from .. import shell
+from ..exceptions import PackageResolutionError, PackageVersionError
 from ..file_types import Package
 from ..objutils import memoize
 from ..path import Path, Root
@@ -43,9 +44,10 @@ class PkgConfigPackage(Package):
         try:
             version = Version(self._pkg_config.run(name, 'version').strip())
         except subprocess.CalledProcessError:
-            raise ValueError("unable to find package '{}'".format(name))
+            raise PackageResolutionError("unable to find package '{}'"
+                                         .format(name))
 
-        check_version(version, specifier, name)
+        check_version(version, specifier, name, PackageVersionError)
         self.version = version
         self.specifier = specifier
         self.static = kind == 'static'

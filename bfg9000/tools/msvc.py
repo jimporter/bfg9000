@@ -6,8 +6,9 @@ from .common import BuildCommand, check_which
 from .. import shell
 from ..arguments.windows import ArgumentParser
 from ..builtins.write_file import WriteFile
+from ..exceptions import PackageResolutionError
 from ..file_types import *
-from ..iterutils import iterate, listify, uniques
+from ..iterutils import default_sentinel, iterate, listify, uniques
 from ..languages import lang2src
 from ..path import Path, Root
 from ..versioning import detect_version
@@ -424,7 +425,7 @@ class MsvcPackageResolver(object):
                 return HeaderDirectory(Path(base, Root.absolute), None,
                                        system=True, external=True)
 
-        raise IOError("unable to find header '{}'".format(name))
+        raise PackageResolutionError("unable to find header '{}'".format(name))
 
     def library(self, name, kind='any', search_dirs=None):
         if search_dirs is None:
@@ -439,14 +440,16 @@ class MsvcPackageResolver(object):
                 # as a kind of shared lib).
                 return Library(Path(fullpath, Root.absolute),
                                self.builder.object_format, external=True)
-        raise IOError("unable to find library '{}'".format(name))
+        raise PackageResolutionError("unable to find library '{}'"
+                                     .format(name))
 
-    def resolve(self, name, version, kind, header, header_only):
+    def resolve(self, name, version, kind, headers, lib_names):
         format = self.builder.object_format
         try:
             return pkg_config.resolve(self.env, name, format, version, kind)
-        except (OSError, ValueError):
-            real_name = self.env.platform.transform_package(name)
-            includes = [self.header(i) for i in iterate(header)]
-            libs = [self.library(real_name, kind)] if not header_only else []
+        except (OSError, PackageResolutionError):
+            if lib_names is default_sentinel:
+                lib_names = self.env.platform.transform_package(name)
+            includes = [self.header(i) for i in iterate(headers)]
+            libs = [self.library(i, kind) for i in iterate(lib_names)]
             return CommonPackage(name, format, includes=includes, libs=libs)

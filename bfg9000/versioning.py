@@ -10,6 +10,7 @@ from packaging.version import (
 )
 
 from .app_version import version as bfg_version
+from .exceptions import VersionError
 from .iterutils import iterate
 
 bfg_version = PythonVersion(bfg_version)
@@ -82,10 +83,10 @@ def simplify_specifiers(spec):
     )
 
 
-def check_version(version, specifier, kind):
+def check_version(version, specifier, kind, exception_type=VersionError):
     msg = "{kind} version {ver} doesn't meet requirement {req}"
     if version not in specifier:
-        raise ValueError(msg.format(kind=kind, ver=version, req=specifier))
+        raise exception_type(msg.format(kind=kind, ver=version, req=specifier))
 
 
 def detect_version(string):

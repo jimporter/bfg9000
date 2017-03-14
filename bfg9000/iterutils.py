@@ -2,9 +2,12 @@ from collections import Iterable
 from six import iteritems, string_types
 from six.moves import range, zip
 
-__all__ = ['first', 'isiterable', 'iterate', 'listify', 'merge_dicts',
-           'merge_into_dict', 'reverse_enumerate', 'tween', 'uniques',
-           'unlistify']
+__all__ = ['default_sentinel', 'first', 'isiterable', 'iterate', 'listify',
+           'merge_dicts', 'merge_into_dict', 'reverse_enumerate', 'tween',
+           'uniques', 'unlistify']
+
+# XXX: This could go in a funcutils module if we ever create one...
+default_sentinel = object()
 
 
 def isiterable(thing):
@@ -35,14 +38,11 @@ def listify(thing, always_copy=False, scalar_ok=True):
     return list(thing)
 
 
-_first_required = object()
-
-
-def first(thing, default=_first_required):
+def first(thing, default=default_sentinel):
     try:
         return next(iterate(thing))
     except StopIteration:
-        if default is not _first_required:
+        if default is not default_sentinel:
             return default
         raise LookupError()
 

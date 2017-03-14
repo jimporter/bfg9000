@@ -493,10 +493,15 @@ Availability: `build.bfg`
 
 Search for a [Boost][boost] library. You can specify *name* (as a string or a
 list) to specify a specific Boost library (or libraries); for instance,
-`'program_options'`. For header-only libraries, you can omit *name*.  If
+`'program_options'`. For header-only libraries, you can omit *name*. If
 *version* is specified, it will ensure that the installed version of Boost meets
 the version requirement; it must be formatted as a Python [version
 specifier][version-specifier].
+
+If this function is unable to find the specified Boost library, it will raise a
+[*PackageResolutionError*](#packageresolutionerror). If the library is found but
+doesn't match the required version, a
+[*PackageVersionError*](#packageversionerror) will be raised instead.
 
 This rule recognizes the following environment variables:
 [`BOOST_ROOT`](environment-vars.md#boost_root),
@@ -513,7 +518,7 @@ Reference a macOS [framework][framework] named *name* with the optional suffix
 *suffix*. Though not a "package" in name, this can be used wherever packages are
 accepted.
 
-### package(*name*, [*version*], [*lang*], [*kind*], [*header*], [*header_only*]) { #package }
+### package(*name*, [*version*], [*lang*], [*kind*], [*headers*], [*libs*]) { #package }
 Availability: `build.bfg`
 {: .subtitle}
 
@@ -521,7 +526,9 @@ Search for a package named *name*. *lang* is the source language of the library
 (`'c'` by default); this will affect how the package is resolved. For native
 libraries (C, C++, Fortran, etc), this will use [`pkg-config`][pkg-config] to
 resolve the package if it's installed. Otherwise (or if pkg-config can't find
-the package), this will check the system's default library locations.
+the package), this will check the system's default library locations. If this
+function is unable to find the package, it will raise a
+[*PackageResolutionError*](#packageresolutionerror).
 
 You can also specify *kind* to one of `'any'` (the default), `'shared'`, or
 `'static'`. This allows you to restrict the search to find only static versions
@@ -529,18 +536,17 @@ of a library, for example.
 
 If *version* is specified, it will (if possible) ensure that the installed
 version of the package meets the version requirement; it must be formatted as a
-Python [version specifier][version-specifier].
+Python [version specifier][version-specifier]. If this check fails, a
+[*PackageVersionError*](#packageversionerror) will be raised.
 
-The *header* argument allows you to specify a header file (or list
-thereof) that you need to use in your source files. This will search for the
-header file and add the appropriate include directory to your build
-configuration. (Note: this doesn't apply when pkg-config resolves the package,
-since pkg-config should add the appropriate include directories on its own.)
-
-Finally, the *header_only* argument allows you to indicate that a package
-doesn't use a compiled library. This is helpful when using header-only
-libraries, since bfg9000 can only tell if a library is header-only if it has
-pkg-config info.
+The *headers* and *libs* arguments can be used as fallbacks when pkg-config
+fails to resolve the package. *headers* allows you to specify a header file (or
+list thereof) that you need to use in your source files. This will search for
+the header files and add the appropriate include directories to your build
+configuration. *libs* lets you list any library names that are part of this
+package; by default, this is set to the package's *name*. You can also pass
+*None* to *libs* in order to explicitly indicate that the library is
+header-only.
 
 This rule recognizes the following environment variables:
 [`CLASSPATH`](environment-vars.md#classpath),
@@ -733,7 +739,9 @@ Availability: `build.bfg` and `build.opts`
 {: .subtitle}
 
 Set the required *version* for bfg9000 and/or the required *python_version*.
-Each of these is a standard Python [version specifier][version-specifier].
+Each of these is a standard Python [version specifier][version-specifier]. If
+the actual versions don't match the specifiers, a
+[*VersionError*](#versionerror) is raised.
 
 ### bfg9000_version
 Availability: `build.bfg` and `build.opts`
@@ -807,6 +815,32 @@ Set the name (and optionally the version) of the project. If you don't call
 this function to specify a project name, it defaults to the name of the
 project's source directory. This is primarily useful for creating [source
 distributions](writing.md#distributing-your-source).
+
+## Exceptions
+
+### PackageResolutionError
+Availability: `build.bfg` and `build.opts`
+{: .subtitle}
+
+An exception raised when a [package resolution function](#package-resolvers) is
+unable to find the specified package.
+
+### PackageVersionError
+Availability: `build.bfg` and `build.opts`
+{: .subtitle}
+
+An exception raised when a [package resolution function](#package-resolvers)
+found the specified package, but its version doesn't match the version
+specifier. Derived from both
+[*PackageResolutionError*](#packageresolutionerror) and
+[*VersionError*](#versionerror).
+
+### VersionError
+Availability: `build.bfg` and `build.opts`
+{: .subtitle}
+
+An exception raised when a version fails to match the supplied version
+specifier.
 
 [system-directory]: https://gcc.gnu.org/onlinedocs/cpp/System-Headers.html
 [gcc-pch]: https://gcc.gnu.org/onlinedocs/gcc/Precompiled-Headers.html

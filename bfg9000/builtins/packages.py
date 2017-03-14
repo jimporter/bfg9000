@@ -4,8 +4,9 @@ import warnings
 
 from . import builtin
 from .find import find
+from ..exceptions import PackageResolutionError, PackageVersionError
 from ..file_types import Executable, Framework, Package, CommonPackage
-from ..iterutils import iterate, listify
+from ..iterutils import default_sentinel, iterate, listify
 from ..objutils import objectify
 from ..path import Path, Root, which
 from ..versioning import check_version, SpecifierSet, Version
@@ -20,13 +21,13 @@ class BoostPackage(CommonPackage):
 
 @builtin.globals('env')
 @builtin.type(Package)
-def package(env, name, version=None, lang='c', kind='any', header=None,
-            header_only=False):
+def package(env, name, version=None, lang='c', kind='any', headers=None,
+            libs=default_sentinel):
     if kind not in ('any', 'shared', 'static'):
         raise ValueError("kind must be one of 'any', 'shared', or 'static'")
     version = objectify(version or '', SpecifierSet)
-    return env.builder(lang).packages.resolve(name, version, kind, header,
-                                              header_only)
+    return env.builder(lang).packages.resolve(name, version, kind, headers,
+                                              libs)
 
 
 # XXX: Remove this after 0.3 is released.
@@ -34,7 +35,7 @@ def package(env, name, version=None, lang='c', kind='any', header=None,
 def system_package(builtins, name, lang='c', kind='any', header=None):
     warnings.warn('system_package is deprecated; please use package instead',
                   DeprecationWarning)
-    return builtins['package'](name, lang=lang, kind=kind, header=header)
+    return builtins['package'](name, lang=lang, kind=kind, headers=header)
 
 
 # XXX: Remove this after 0.3 is released.
@@ -74,9 +75,10 @@ def _boost_version(header, required_version=None):
             m = re.match(r'#\s*define\s+BOOST_LIB_VERSION\s+"([\d_]+)"', line)
             if m:
                 version = Version(m.group(1).replace('_', '.'))
-                check_version(version, required_version, 'Boost')
+                check_version(version, required_version, 'boost',
+                              PackageVersionError)
                 return version
-    raise IOError('unable to parse "boost/version.hpp"')
+    raise PackageVersionError('unable to parse "boost/version.hpp"')
 
 
 @builtin.globals('env')
@@ -107,7 +109,7 @@ def boost_package(env, name=None, version=None):
                         name, env.builder('c++').object_format, boost_version,
                         includes=[header], lib_dirs=[r'C:\Boost\lib'],
                     )
-                except IOError:
+                except PackageResolutionError:
                     pass
 
         header = pkg.header(version_hpp)
@@ -116,7 +118,7 @@ def boost_package(env, name=None, version=None):
     if env.platform.name == 'windows':
         if not env.builder('c++').auto_link:
             # XXX: Don't require auto-link.
-            raise ValueError('Boost on Windows requires auto-link')
+            raise PackageResolutionError('Boost on Windows requires auto-link')
         return BoostPackage(
             name, env.builder('c++').object_format, boost_version,
             includes=[header], lib_dirs=listify(libdir),

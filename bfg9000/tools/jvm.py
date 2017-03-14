@@ -6,6 +6,7 @@ from .common import BuildCommand, check_which
 from .. import safe_str
 from .. import shell
 from ..builtins.write_file import WriteFile
+from ..exceptions import PackageResolutionError
 from ..file_types import *
 from ..iterutils import iterate, uniques
 from ..path import Path, Root
@@ -241,9 +242,10 @@ class JvmPackageResolver(object):
                                self.builder.object_format,
                                external=True)
 
-        raise IOError("unable to find library '{}'".format(name))
+        raise PackageResolutionError("unable to find library '{}'"
+                                     .format(name))
 
-    def resolve(self, name, version, kind, header, header_only):
+    def resolve(self, name, version, kind, headers, libs):
         return CommonPackage(name, self.builder.object_format,
                              libs=[self._library(name)])
 

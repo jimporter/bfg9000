@@ -6,6 +6,7 @@ import sys
 from itertools import chain
 from six import iteritems, itervalues, string_types
 
+from .. import exceptions
 from ..iterutils import iterate
 from ..objutils import memoize
 
@@ -147,3 +148,10 @@ optbuiltin = Builtin()
 @optbuiltin.getter('env')
 def env(_env):
     return _env
+
+
+for i in dir(exceptions):
+    i = getattr(exceptions, i)
+    if isinstance(i, type):
+        builtin(i)
+        optbuiltin(i)
