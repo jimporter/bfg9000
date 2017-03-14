@@ -16,7 +16,6 @@ class JvmBuilder(object):
                  version_output):
         self.lang = lang
         self.object_format = 'jvm'
-        self.brand = 'jvm'  # XXX: Be more specific?
 
         jar_command = check_which(env.getvar('JAR', 'jar'), kind='jar builder')
 
@@ -25,6 +24,23 @@ class JvmBuilder(object):
         run_name = lang.upper() + 'CMD'
         run_command = check_which(env.getvar(run_name, lang),
                                   kind='{} runner'.format(lang))
+
+        self.brand = 'unknown'
+        if lang == 'java':
+            try:
+                output = shell.execute(
+                    run_command + ['-version'], env=env.variables,
+                    stderr=shell.Mode.stdout
+                )
+                if re.search('Java(TM) (\w+)? Runtime Environment', output):
+                    self.brand = 'oracle'
+                elif 'OpenJDK Runtime Environment' in output:
+                    self.brand = 'openjdk'
+            except shell.CalledProcessError:
+                pass
+        elif lang == 'scala':
+            if 'EPFL' in version_output:
+                self.brand = 'epfl'
 
         self.compiler = JvmCompiler(self, env, name, command, flags_name,
                                     flags)
@@ -35,7 +51,7 @@ class JvmBuilder(object):
     @staticmethod
     def check_command(env, command):
         return shell.execute(command + ['-version'], env=env.variables,
-                             stderr=shell.Mode.devnull)
+                             stderr=shell.Mode.stdout)
 
     @property
     def flavor(self):
