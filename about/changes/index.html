@@ -207,6 +207,9 @@
   <code>command()</code> or <code>test()</code>/<code>test_driver()</code> without explicitly specifying the
   wrapper; supports all languages buildable by bfg9000, plus Lua, Perl, Python,
   and Ruby</li>
+<li>Added <code>framework()</code> to specify macOS frameworks to use for a build</li>
+<li>Improved detection of compiler flavors by checking version information</li>
+<li>Automatically colorize clang/gcc output under Ninja</li>
 </ul>
 <h3 id="breaking-changes">Breaking changes<a class="headerlink" href="#breaking-changes" title="Permanent link">§</a></h3>
 <ul>
@@ -233,6 +236,8 @@
 <li>Fixed generation of dependencies for the <code>tests</code> target</li>
 <li>Improved escaping for paths when using Make on Windows (previously users had
   to escape backslashes themselves)</li>
+<li>Fixed an issue with quotation marks being stripped for some commands on
+  Windows with the Ninja backend</li>
 </ul>
 <hr />
 <h2 id="v020">v0.2.0<a class="headerlink" href="#v020" title="Permanent link">§</a></h2>

@@ -602,6 +602,10 @@ specifier</a>.</p>
 <a href="../environment-vars/#include"><code>INCLUDE</code></a>,
 <a href="../environment-vars/#lib"><code>LIB</code></a>,
 <a href="../environment-vars/#library_path"><code>LIBRARY_PATH</code></a>.</p>
+<h3 id="framework">framework(<em>name</em>, [<em>suffix</em>])<a class="headerlink" href="#framework" title="Permanent link">§</a></h3>
+<p>Reference a macOS <a href="https://developer.apple.com/library/content/documentation/MacOSX/Conceptual/OSX_Technology_Overview/SystemFrameworks/SystemFrameworks.html">framework</a> named <em>name</em> with the optional suffix
+<em>suffix</em>. Though not a "package" in name, this can be used wherever packages are
+accepted.</p>
 <h3 id="package">package(<em>name</em>, [<em>version</em>], [<em>lang</em>], [<em>kind</em>], [<em>header</em>], [<em>header_only</em>])<a class="headerlink" href="#package" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Search for a package named <em>name</em>. <em>lang</em> is the source language of the library
@@ -702,10 +706,15 @@ builder objects are primarily suited to bfg's internals, there are still a few
 useful properties for <code>build.bfg</code> files:</p>
 <h4 id="builder-flavor">builder.flavor<a class="headerlink" href="#builder-flavor" title="Permanent link">§</a></h4>
 <p>The "flavor" of the builder, i.e. the kind of command-line interface it has.
-Possible values are <code>'cc'</code> and <code>'msvc'</code>.</p>
+Possible values are <code>'cc'</code>, <code>'msvc'</code>, and <code>'jvm'</code>.</p>
 <h4 id="builder-brand">builder.brand<a class="headerlink" href="#builder-brand" title="Permanent link">§</a></h4>
-<p>The brand of the builder, i.e. the commonad name people use for it. Possible
-values are <code>'gcc'</code>, <code>'clang'</code>, <code>'msvc'</code>, and <code>'unknown'</code>.</p>
+<p>The brand of the builder, i.e. the command name people use for it. Currently,
+for languages in the C family (including Fortran), this is one of <code>'gcc'</code>,
+<code>'clang'</code>, <code>'msvc'</code>, or <code>'unknown'</code>. For languages in the Java family, this is
+one of <code>'oracle'</code>, <code>'openjdk'</code>, <code>'epfl'</code> (for Scala), or <code>'unknown'</code>.</p>
+<h4 id="builder-version">builder.version<a class="headerlink" href="#builder-version" title="Permanent link">§</a></h4>
+<p>The version of the builder (specifically, the version of the primary compiler
+for the builder). May be <em>None</em> if bfg9000 was unable to detect the version.</p>
 <h4 id="builder-object_format">builder.object_format<a class="headerlink" href="#builder-object_format" title="Permanent link">§</a></h4>
 <p>The object format that the builder outputs, e.g. <code>'elf'</code>, <code>'coff'</code>, or <code>'jvm'</code>.</p>
 <h4 id="builder-compiler">builder.compiler<a class="headerlink" href="#builder-compiler" title="Permanent link">§</a></h4>
