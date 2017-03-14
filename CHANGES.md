@@ -15,6 +15,8 @@
   `command()` or `test()`/`test_driver()` without explicitly specifying the
   wrapper; supports all languages buildable by bfg9000, plus Lua, Perl, Python,
   and Ruby
+- Added `framework()` to specify macOS frameworks to use for a build
+- Improved detection of compiler flavors by checking version information
 
 ### Breaking changes
 - `directory()` and `header_directory()` no longer automatically include all
@@ -39,6 +41,8 @@
 - Fixed generation of dependencies for the `tests` target
 - Improved escaping for paths when using Make on Windows (previously users had
   to escape backslashes themselves)
+- Fixed an issue with quotation marks being stripped for some commands on
+  Windows with the Ninja backend
 
 ---
 

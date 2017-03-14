@@ -632,12 +632,14 @@ useful properties for `build.bfg` files:
 #### builder.flavor { #builder-flavor }
 
 The "flavor" of the builder, i.e. the kind of command-line interface it has.
-Possible values are `'cc'` and `'msvc'`.
+Possible values are `'cc'`, `'msvc'`, and `'jvm'`.
 
 #### builder.brand { #builder-brand }
 
-The brand of the builder, i.e. the commonad name people use for it. Possible
-values are `'gcc'`, `'clang'`, `'msvc'`, and `'unknown'`.
+The brand of the builder, i.e. the command name people use for it. Currently,
+for languages in the C family (including Fortran), this is one of `'gcc'`,
+`'clang'`, `'msvc'`, or `'unknown'`. For languages in the Java family, this is
+one of `'oracle'`, `'openjdk'`, `'epfl'` (for Scala), or `'unknown'`.
 
 #### builder.object_format { #builder-object_format }
 
