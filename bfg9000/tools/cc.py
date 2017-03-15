@@ -373,17 +373,18 @@ class CcLinker(BuildCommand):
                 extra_dirs
             ))
 
-            # GNU's ld doesn't correctly respect $ORIGIN in a shared library's
-            # DT_RPATH/DT_RUNPATH field. This results in ld being unable to
-            # find other shared libraries needed by the directly-linked
-            # library. Other linkers (such as gold) don't need this, but it
-            # doesn't hurt anything, so we'll just do it universally. See
-            # <https://sourceware.org/bugzilla/show_bug.cgi?id=16936> for more
-            # information.
-            deps = chain.from_iterable(recursive_deps(i) for i in runtime_libs)
-            dep_paths = [i for i in uniques(i.path.parent() for i in deps)]
-            if dep_paths:
-                result += ['-Wl,-rpath-link,' + safe_str.join(dep_paths, ':')]
+            # GNU's BFD-based ld doesn't correctly respect $ORIGIN in a shared
+            # library's DT_RPATH/DT_RUNPATH field. This results in ld being
+            # unable to find other shared libraries needed by the directly-
+            # linked library. For more information, see:
+            # <https://sourceware.org/bugzilla/show_bug.cgi?id=16936>.
+            if self.builder.linker('raw').brand == 'bfd':
+                deps = chain.from_iterable(recursive_deps(i)
+                                           for i in runtime_libs)
+                dep_paths = [i for i in uniques(i.path.parent() for i in deps)]
+                if dep_paths:
+                    result += ['-Wl,-rpath-link,' +
+                               safe_str.join(dep_paths, ':')]
 
             return result
         elif self.builder.object_format == 'mach-o':
