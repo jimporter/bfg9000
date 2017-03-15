@@ -94,6 +94,14 @@ class MsvcBaseCompiler(BuildCommand):
                               command, flags=(cflags_name, cflags))
 
     @property
+    def brand(self):
+        return self.builder.brand
+
+    @property
+    def version(self):
+        return self.builder.version
+
+    @property
     def flavor(self):
         return 'msvc'
 
@@ -253,6 +261,14 @@ class MsvcLinker(BuildCommand):
             self, builder, env, rule_name, 'vclink', command,
             flags=('ldflags', ldflags), libs=('ldlibs', ldlibs)
         )
+
+    @property
+    def brand(self):
+        return self.builder.brand
+
+    @property
+    def version(self):
+        return self.builder.version
 
     @property
     def flavor(self):

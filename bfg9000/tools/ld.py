@@ -25,6 +25,10 @@ class LdLinker(object):
     def lang(self):
         return self.builder.lang
 
+    @property
+    def flavor(self):
+        return 'ld'
+
     def search_dirs(self, sysroot='/', strict=False):
         try:
             output = shell.execute(

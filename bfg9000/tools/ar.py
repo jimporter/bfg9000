@@ -5,7 +5,9 @@ from .. import shell
 from .common import BuildCommand, check_which
 from ..file_types import StaticLibrary
 from ..iterutils import iterate
+from ..objutils import memoize
 from ..path import Path
+from ..versioning import detect_version
 
 
 class ArLinker(BuildCommand):
@@ -15,6 +17,27 @@ class ArLinker(BuildCommand):
         global_flags = shell.split(env.getvar('ARFLAGS', 'cru'))
         BuildCommand.__init__(self, builder, env, 'ar', 'ar', cmd,
                               flags=('arflags', global_flags))
+
+    @memoize
+    def _check_version(self):
+        try:
+            output = shell.execute(
+                self.command + ['--version'], env=self.env.variables,
+                stderr=shell.Mode.devnull
+            )
+            if 'GNU ar' in output:
+                return 'gnu', detect_version(output)
+        except shell.CalledProcessError:
+            pass
+        return 'unknown', None
+
+    @property
+    def brand(self):
+        return self._check_version()[0]
+
+    @property
+    def version(self):
+        return self._check_version()[1]
 
     @property
     def flavor(self):

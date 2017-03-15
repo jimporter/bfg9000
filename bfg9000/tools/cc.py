@@ -104,6 +104,14 @@ class CcBaseCompiler(BuildCommand):
                               command, flags=(cflags_name, cflags))
 
     @property
+    def brand(self):
+        return self.builder.brand
+
+    @property
+    def version(self):
+        return self.builder.version
+
+    @property
     def flavor(self):
         return 'cc'
 
@@ -266,6 +274,14 @@ class CcLinker(BuildCommand):
 
         # Get the first non-None group from the match.
         return next(ifilter( None, m.groups() ))
+
+    @property
+    def brand(self):
+        return self.builder.brand
+
+    @property
+    def version(self):
+        return self.builder.version
 
     @property
     def flavor(self):

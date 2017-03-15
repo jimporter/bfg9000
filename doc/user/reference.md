@@ -617,86 +617,152 @@ This rule recognizes the following environment variables:
 
 ## Environment
 
+Occasionally, build scripts need to directly query aspects of the environment.
+In bfg9000, this is performed with the
+[*environment object*](#environment-object) and its various members.
+
+### Environment object
+
 The *environment*, `env`, is a special object that encapsulates information
 about the system outside of bfg9000. It's used internally for nearly all
-platform-specific code, but it can also help in `build.bfg` files when you
-encounter some unavoidable issue with multiplatform compatibility.
+platform-specific code, but it can also help in `build.bfg` (or `build.opts`!)
+files when you encounter some unavoidable issue with multiplatform
+compatibility.
 
 !!! note
     This listing doesn't cover *all* available functions on the environment,
     since many are only useful to internal code. However, the most relevant ones
     for `build.bfg` files are shown below.
 
-### env.builder(*lang*) { #env-builder }
-Availability: `build.bfg` and `build.opts`
-{: .subtitle}
+#### env.builder(*lang*) { #env-builder }
 
-Return the builder used by bfg9000 for a particular language *lang*. While
-builder objects are primarily suited to bfg's internals, there are still a few
-useful properties for `build.bfg` files:
+Return the [builder](#builders) used by bfg9000 for a particular language
+*lang*.
 
-#### builder.flavor { #builder-flavor }
+#### env.getvar(*name*, [*default*]) { #env-getvar }
 
-The "flavor" of the builder, i.e. the kind of command-line interface it has.
-Possible values are `'cc'`, `'msvc'`, and `'jvm'`.
+Equivalent to *[env.variables](#env-variables).get(name, default)*.
 
-#### builder.brand { #builder-brand }
+#### env.platform { #env-platform }
 
-The brand of the builder, i.e. the command name people use for it. Currently,
-for languages in the C family (including Fortran), this is one of `'gcc'`,
-`'clang'`, `'msvc'`, or `'unknown'`. For languages in the Java family, this is
-one of `'oracle'`, `'openjdk'`, `'epfl'` (for Scala), or `'unknown'`.
+Return the target [platform](#platforms) used for the build (currently the same
+as the host platform).
 
-#### builder.version { #builder-version }
-
-The version of the builder (specifically, the version of the primary compiler
-for the builder). May be *None* if bfg9000 was unable to detect the version.
-
-#### builder.object_format { #builder-object_format }
-
-The object format that the builder outputs, e.g. `'elf'`, `'coff'`, or `'jvm'`.
-
-#### builder.compiler { #builder-compiler }
-
-The compiler used with this builder.
-
-##### compiler.command { #compiler-command }
-
-The command to run when invoking this compiler, e.g. `g++-4.9`.
-
-#### builder.linker(*mode*) { #builder-linker }
-
-The linker used with this builder. *mode* is one of `'executable'`,
-`'shared_library'`, or `'static_library'`. Its public properties are the same as
-[*compiler*](#compiler-command) above.
-
-#### builder.runner { #builder-runner }
-
-The runner used with files built by this builder (e.g. `java`). This may be
-*None* for languages which have no runner, such as C and C++.
-
-### env.platform { #env-platform }
-Availability: `build.bfg` and `build.opts`
-{: .subtitle}
-
-Return the target platform used for the build (currently the same as the host
-platform).
-
-#### platform.flavor { #platform-flavor }
-
-The "flavor" of the platform. Either `'posix'` or `'windows'`.
-
-#### platform.name { #platform-name }
-
-The name of the platform, e.g. `'linux'`, `'darwin'` (OS X), or `'windows'`.
-
-### env.run_arguments(*line*, [*lang*]) { #env-run_arguments }
+#### env.run_arguments(*line*, [*lang*]) { #env-run_arguments }
 
 Generate the arguments needed to run the command in *line*. If *line* is a file
 type (or a list beginning with a file type) such as an
 [*executable*](#executable), it will be prepended with the
 [runner](#builder-runner) for *lang* as needed. If *lang* is *None*, the
 language will be determined by the language of *line*'s first element.
+
+#### env.variables
+
+A dict of all the environment variables as they were defined when the build was
+first configured.
+
+---
+
+### Builders
+
+Builder objects represent the toolset used to build [executables](#executable)
+and [libraries](#library) for a particular source language. They can be
+retrieved via [*env.builder*](#env-builder). While builder objects are primarily
+suited to bfg's internals, there are still a few useful properties for
+`build.bfg` files:
+
+#### *builder*.flavor { #builder-flavor }
+
+The "flavor" of the builder, i.e. the kind of command-line interface it has.
+Possible values are `'cc'`, `'msvc'`, and `'jvm'`.
+
+#### *builder*.brand { #builder-brand }
+
+The brand of the builder, i.e. the command name people use for it. Currently,
+for languages in the C family (including Fortran), this is one of `'gcc'`,
+`'clang'`, `'msvc'`, or `'unknown'`. For languages in the Java family, this is
+one of `'oracle'`, `'openjdk'`, `'epfl'` (for Scala), or `'unknown'`.
+
+#### *builder*.version { #builder-version }
+
+The version of the builder (specifically, the version of the primary compiler
+for the builder). May be *None* if bfg9000 was unable to detect the version.
+
+#### *builder*.lang { #builder-lang }
+
+The language of the source files that this builder is designed for.
+
+#### *builder*.object_format { #builder-object_format }
+
+The object format that the builder outputs, e.g. `'elf'`, `'coff'`, or `'jvm'`.
+
+#### *builder*.compiler { #builder-compiler }
+
+The [compiler](#compilers) used with this builder.
+
+#### *builder*.pch_compiler { #builder-compiler }
+
+The [compiler](#compilers) used to build precompiled headers with this builder.
+May be *None* for languages or toolsets that don't support precompiled headers.
+
+#### *builder*.linker(*mode*) { #builder-linker }
+
+The linker used with this builder. *mode* is one of `'executable'`,
+`'shared_library'`, or `'static_library'` Its public properties are the same as
+[*compiler*](#compilers).
+
+`cc`-like builders also support a *mode* of `'raw'`, which returns an object
+representing the actual linker, such as `ld`.
+
+#### *builder*.runner { #builder-runner }
+
+The runner used with files built by this builder (e.g. `java`). This may be
+*None* for languages which have no runner, such as C and C++.
+
+---
+
+### Compilers
+
+Builder objects represent the specific used to compile a
+[source file](#source_file) (generally into an [object file](#object_file)).
+
+#### *compiler*.flavor { #compiler-flavor }
+
+The "flavor" of the compiler, i.e. the kind of command-line interface it has;
+e.g. `'cc'`, `'msvc'`.
+
+#### *compiler*.brand { #compiler-brand }
+
+The brand of the compiler; typically the same as
+[*builder.brand*](#builder-brand).
+
+#### *compiler*.version { #compiler-version }
+
+The version of the compiler; typically the same as
+[*builder.version*](#builder-version).
+
+#### *compiler*.language { #compiler-language }
+
+The language of the compiler; typically the same as
+[*builder.language*](#builder-language).
+
+#### *compiler*.command { #compiler-command }
+
+The command to run when invoking this compiler, e.g. `g++-4.9`.
+
+---
+
+### Platforms
+
+Platform objects represent the platform that the project is being compiled for.
+
+#### *platform*.flavor { #platform-flavor }
+
+The "flavor" of the platform. Either `'posix'` or `'windows'`.
+
+#### *platform*.name { #platform-name }
+
+The name of the platform, e.g. `'linux'`, `'darwin'` (macOS), or `'windows'`.
 
 ## Utilities
 

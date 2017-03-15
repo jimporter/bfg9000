@@ -82,6 +82,14 @@ class JvmCompiler(BuildCommand):
                               flags=(flags_name, flags))
 
     @property
+    def brand(self):
+        return self.builder.brand
+
+    @property
+    def version(self):
+        return self.builder.version
+
+    @property
     def flavor(self):
         return 'jvm'
 
@@ -134,6 +142,14 @@ class JarMaker(BuildCommand):
         global_flags = shell.split(env.getvar('JARFLAGS', 'cfm'))
         BuildCommand.__init__(self, builder, env, 'jar', 'jar', command,
                               flags=('jarflags', global_flags))
+
+    @property
+    def brand(self):
+        return self.builder.brand
+
+    @property
+    def version(self):
+        return self.builder.version
 
     @property
     def flavor(self):
