@@ -89,6 +89,6 @@ def check_version(version, specifier, kind, exception_type=VersionError):
         raise exception_type(msg.format(kind=kind, ver=version, req=specifier))
 
 
-def detect_version(string):
-    m = re.search(r'(\d+(?:\.\d+)+)', string)
+def detect_version(string, pre='', post='', flags=0):
+    m = re.search(pre + r'(\d+(?:\.\d+)+)' + post, string, flags)
     return Version(m.group(1)) if m else None

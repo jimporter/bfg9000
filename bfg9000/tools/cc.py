@@ -9,6 +9,7 @@ from .. import safe_str
 from .. import shell
 from .ar import ArLinker
 from .common import BuildCommand, darwin_install_name
+from .ld import LdLinker
 from ..builtins.symlink import Symlink
 from ..exceptions import PackageResolutionError
 from ..file_types import *
@@ -44,6 +45,16 @@ class CcBuilder(object):
         ldflags = shell.split(env.getvar('LDFLAGS', ''))
         ldlibs = shell.split(env.getvar('LDLIBS', ''))
 
+        stdout, stderr = shell.execute(
+            command + ldflags + ['-v', '-Wl,--version'],
+            stderr=shell.Mode.pipe
+        )
+        for line in stderr.split('\n'):
+            if '--version' in line:
+                ld_command = shell.split(line)[0:1]
+                if os.path.basename(ld_command[0]) != 'collect2':
+                    break
+
         self.compiler = CcCompiler(self, env, name, command, cflags_name,
                                    cflags)
         try:
@@ -60,8 +71,9 @@ class CcBuilder(object):
                 self, env, name, command, ldflags, ldlibs
             ),
             'static_library': ArLinker(self, env),
+            'raw': LdLinker(self, env, ld_command, stdout)
         }
-        self.packages = CcPackageResolver(self, env, command)
+        self.packages = CcPackageResolver(self, env, command, ldflags)
         self.runner = None
 
     @staticmethod
@@ -106,6 +118,11 @@ class CcBaseCompiler(BuildCommand):
     @property
     def depends_on_libs(self):
         return False
+
+    def search_dirs(self, strict=False):
+        cpath = [os.path.abspath(i) for i in
+                 self.env.getvar('CPATH', '').split(os.pathsep)]
+        return cpath + self.env.platform.include_dirs
 
     def _call(self, cmd, input, output, deps=None, flags=None):
         result = list(chain(
@@ -269,6 +286,40 @@ class CcLinker(BuildCommand):
         # approximate this by checking if the platform uses import libraries,
         # and only define the macros if it does.
         return self.env.platform.has_import_library
+
+    def sysroot(self, strict=False):
+        try:
+            # XXX: clang doesn't support -print-sysroot.
+            return shell.execute(
+                self.command + self.global_flags + ['-print-sysroot'],
+                stderr=shell.Mode.devnull, env=self.env.variables
+            ).rstrip()
+        except:
+            if strict:
+                raise
+            # XXX: What to do for Windows?
+            return '/'
+
+    def search_dirs(self, strict=False):
+        try:
+            # XXX: Will this work for cross-compilation?
+            output = shell.execute(
+                self.command + self.global_flags + ['-print-search-dirs'],
+                stderr=shell.Mode.devnull, env=self.env.variables
+            )
+            m = re.search(r'^libraries: =(.*)', output, re.MULTILINE)
+            search_dirs = re.split(os.pathsep, m.group(1))
+
+            # clang doesn't respect LIBRARY_PATH with -print-search-dirs;
+            # see <https://bugs.llvm.org//show_bug.cgi?id=23877>.
+            if self.builder.brand == 'clang':
+                search_dirs = (self.env.getvar('LIBRARY_PATH', '')
+                               .split(os.pathsep)) + search_dirs
+        except shell.CalledProcessError:
+            if strict:
+                raise
+            search_dirs = self.env.getvar('LIBRARY_PATH', '').split(os.pathsep)
+        return [os.path.abspath(i) for i in search_dirs]
 
     @property
     def num_outputs(self):
@@ -511,36 +562,20 @@ class CcSharedLibraryLinker(CcLinker):
 
 
 class CcPackageResolver(object):
-    def __init__(self, builder, env, command):
+    def __init__(self, builder, env, command, ldflags):
         self.builder = builder
         self.env = env
 
-        value = env.getvar('CPATH')
-        include_dirs = value.split(os.pathsep) if value else []
+        self.include_dirs = [i for i in uniques(
+            self.builder.compiler.search_dirs()
+        ) if os.path.exists(i)]
 
-        self.include_dirs = [i for i in uniques(chain(
-            include_dirs, env.platform.include_dirs
-        )) if os.path.exists(i)]
+        cc_lib_dirs = self.builder.linker('executable').search_dirs()
+        sysroot = self.builder.linker('executable').sysroot()
+        ld_lib_dirs = self.builder.linker('raw').search_dirs(sysroot)
 
-        system_lib_dirs = []
-        try:
-            # XXX: Will this work for cross-compilation?
-            output = shell.execute(
-                command + ['-print-search-dirs'], stderr=shell.Mode.devnull
-            )
-            m = re.search(r'^libraries: (.*)', output, re.MULTILINE)
-            system_lib_dirs = re.split(os.pathsep, m.group(1))
-        except:
-            pass
-
-        value = env.getvar('LIBRARY_PATH')
-        user_lib_dirs = value.split(os.pathsep) if value else []
-
-        # XXX: Handle sysroot one day?
-        all_lib_dirs = ( os.path.abspath(re.sub('^=', '', i))
-                         for i in chain(user_lib_dirs, system_lib_dirs) )
         self.lib_dirs = [i for i in uniques(chain(
-            all_lib_dirs, env.platform.lib_dirs
+            cc_lib_dirs, ld_lib_dirs
         )) if os.path.exists(i)]
 
     @property

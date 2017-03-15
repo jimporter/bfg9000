@@ -109,6 +109,13 @@ class MsvcBaseCompiler(BuildCommand):
     def depends_on_libs(self):
         return False
 
+    def search_dirs(self, strict=False):
+        cpath = [os.path.abspath(i) for i in
+                 self.env.getvar('CPATH', '').split(os.pathsep)]
+        include = [os.path.abspath(i) for i in
+                   self.env.getvar('INCLUDE', '').split(os.pathsep)]
+        return cpath + include + self.env.platform.include_dirs
+
     def _call(self, cmd, input, output, deps=None, flags=None):
         result = list(chain( cmd, self._always_flags, iterate(flags) ))
         if deps:
@@ -263,6 +270,13 @@ class MsvcLinker(BuildCommand):
     def has_link_macros(self):
         return True
 
+    def search_dirs(self, strict=False):
+        lib_path = [os.path.abspath(i) for i in
+                    self.env.getvar('LIBRARY_PATH', '').split(os.pathsep)]
+        lib = [os.path.abspath(i) for i in
+               self.env.getvar('LIB').split(os.pathsep)]
+        return lib_path + (lib or self.env.platform.lib_dirs)
+
     @property
     def num_outputs(self):
         return 1
@@ -390,27 +404,13 @@ class MsvcPackageResolver(object):
         self.builder = builder
         self.env = env
 
-        value = env.getvar('CPATH')
-        user_include_dirs = value.split(os.pathsep) if value else []
+        self.include_dirs = [i for i in uniques(
+            self.builder.compiler.search_dirs()
+        ) if os.path.exists(i)]
 
-        value = env.getvar('INCLUDE')
-        system_include_dirs = value.split(os.pathsep) if value else []
-
-        self.include_dirs = [i for i in uniques(chain(
-            user_include_dirs, system_include_dirs, env.platform.include_dirs
-        )) if os.path.exists(i)]
-
-        value = env.getvar('LIB')
-        system_lib_dirs = value.split(os.pathsep) if value else []
-
-        value = env.getvar('LIBRARY_PATH')
-        user_lib_dirs = value.split(os.pathsep) if value else []
-
-        all_lib_dirs = ( os.path.abspath(i) for i in
-                         chain(user_lib_dirs, system_lib_dirs) )
-        self.lib_dirs = [i for i in uniques(chain(
-            all_lib_dirs, env.platform.lib_dirs
-        )) if os.path.exists(i)]
+        self.lib_dirs = [i for i in uniques(
+            self.builder.linker('executable').search_dirs()
+        ) if os.path.exists(i)]
 
     @property
     def lang(self):

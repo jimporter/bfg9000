@@ -3,7 +3,7 @@ import re
 from collections import defaultdict
 from itertools import chain
 from six import string_types
-from six.moves import reduce
+from six.moves import reduce, filter as ifilter
 
 from . import builtin
 from .compile import Compile, ObjectFiles
@@ -528,7 +528,7 @@ try:
             (i.creator.file for i in rule.files),
             chain.from_iterable(i.creator.header_files for i in rule.files),
             chain.from_iterable(i.creator.extra_deps for i in rule.files),
-            filter(None, (getattr(i.creator, 'pch_source', None)
+            ifilter(None, (getattr(i.creator, 'pch_source', None)
                           for i in rule.files)),
             rule.libs, rule.extra_deps
         )
