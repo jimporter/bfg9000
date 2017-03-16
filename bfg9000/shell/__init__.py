@@ -35,7 +35,7 @@ def execute(args, shell=False, env=None, stdout=Mode.pipe, stderr=Mode.normal,
             stdout=conv(stdout), stderr=conv(stderr)
         )
         output = proc.communicate()
-        if proc.returncode != returncode:
+        if returncode is not 'any' and proc.returncode != returncode:
             raise CalledProcessError(proc.returncode, args)
 
         if stdout == Mode.pipe:

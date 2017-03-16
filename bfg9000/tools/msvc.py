@@ -122,7 +122,7 @@ class MsvcBaseCompiler(BuildCommand):
                  self.env.getvar('CPATH', '').split(os.pathsep)]
         include = [os.path.abspath(i) for i in
                    self.env.getvar('INCLUDE', '').split(os.pathsep)]
-        return cpath + include + self.env.platform.include_dirs
+        return cpath + include
 
     def _call(self, cmd, input, output, deps=None, flags=None):
         result = list(chain( cmd, self._always_flags, iterate(flags) ))
@@ -291,7 +291,7 @@ class MsvcLinker(BuildCommand):
                     self.env.getvar('LIBRARY_PATH', '').split(os.pathsep)]
         lib = [os.path.abspath(i) for i in
                self.env.getvar('LIB').split(os.pathsep)]
-        return lib_path + (lib or self.env.platform.lib_dirs)
+        return lib_path + lib
 
     @property
     def num_outputs(self):
@@ -420,9 +420,9 @@ class MsvcPackageResolver(object):
         self.builder = builder
         self.env = env
 
-        self.include_dirs = [i for i in uniques(
-            self.builder.compiler.search_dirs()
-        ) if os.path.exists(i)]
+        self.include_dirs = [i for i in uniques(chain(
+            self.builder.compiler.search_dirs(), self.env.platform.include_dirs
+        )) if os.path.exists(i)]
 
         self.lib_dirs = [i for i in uniques(
             self.builder.linker('executable').search_dirs()

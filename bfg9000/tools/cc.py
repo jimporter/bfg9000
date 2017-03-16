@@ -45,10 +45,14 @@ class CcBuilder(object):
         ldflags = shell.split(env.getvar('LDFLAGS', ''))
         ldlibs = shell.split(env.getvar('LDLIBS', ''))
 
+        # macOS's ld doesn't support --version, but we can still try it out and
+        # grab the command line.
         stdout, stderr = shell.execute(
             command + ldflags + ['-v', '-Wl,--version'],
-            stderr=shell.Mode.pipe
+            stderr=shell.Mode.pipe, returncode='any'
         )
+
+        ld_command = None
         for line in stderr.split('\n'):
             if '--version' in line:
                 ld_command = shell.split(line)[0:1]
@@ -71,8 +75,10 @@ class CcBuilder(object):
                 self, env, name, command, ldflags, ldlibs
             ),
             'static_library': ArLinker(self, env),
-            'raw': LdLinker(self, env, ld_command, stdout)
         }
+        if ld_command:
+            self._linkers['raw'] = LdLinker(self, env, ld_command, stdout)
+
         self.packages = CcPackageResolver(self, env, command, ldflags)
         self.runner = None
 
@@ -128,9 +134,8 @@ class CcBaseCompiler(BuildCommand):
         return False
 
     def search_dirs(self, strict=False):
-        cpath = [os.path.abspath(i) for i in
-                 self.env.getvar('CPATH', '').split(os.pathsep)]
-        return cpath + self.env.platform.include_dirs
+        return [os.path.abspath(i) for i in
+                self.env.getvar('CPATH', '').split(os.pathsep)]
 
     def _call(self, cmd, input, output, deps=None, flags=None):
         result = list(chain(
@@ -583,13 +588,16 @@ class CcPackageResolver(object):
         self.builder = builder
         self.env = env
 
-        self.include_dirs = [i for i in uniques(
-            self.builder.compiler.search_dirs()
-        ) if os.path.exists(i)]
+        self.include_dirs = [i for i in uniques(chain(
+            self.builder.compiler.search_dirs(), self.env.platform.include_dirs
+        )) if os.path.exists(i)]
 
         cc_lib_dirs = self.builder.linker('executable').search_dirs()
-        sysroot = self.builder.linker('executable').sysroot()
-        ld_lib_dirs = self.builder.linker('raw').search_dirs(sysroot)
+        try:
+            sysroot = self.builder.linker('executable').sysroot()
+            ld_lib_dirs = self.builder.linker('raw').search_dirs(sysroot, True)
+        except (KeyError, shell.CalledProcessError):
+            ld_lib_dirs = self.env.platform.lib_dirs
 
         self.lib_dirs = [i for i in uniques(chain(
             cc_lib_dirs, ld_lib_dirs

@@ -43,4 +43,4 @@ class LdLinker(object):
         except:
             if strict:
                 raise
-            return self.env.platform.lib_dirs
+            return []
