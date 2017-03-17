@@ -232,6 +232,8 @@ if platform_info().destdir:
 
 
 class Makefile(object):
+    Section = Section
+
     def __init__(self, bfgfile):
         self._bfgfile = bfgfile
 

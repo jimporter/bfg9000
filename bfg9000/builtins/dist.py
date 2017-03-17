@@ -21,7 +21,7 @@ def extra_dist(builtins, files=None, dirs=None):
         builtins['directory'](i, include='*')
 
 
-def _dist_command(backend, format, build_inputs, buildfile, env):
+def _dist_command(format, build_inputs, buildfile, env):
     srcdir = Path('.', Root.srcdir)
     doppel = env.tool('doppel')
 
@@ -42,7 +42,7 @@ def make_dist_rule(build_inputs, buildfile, env):
     for fmt in _exts:
         buildfile.rule(
             target='dist-{}'.format(fmt),
-            recipe=_dist_command(make, fmt, build_inputs, buildfile, env),
+            recipe=_dist_command(fmt, build_inputs, buildfile, env),
             phony=True
         )
 
@@ -59,7 +59,7 @@ def ninja_dist_rule(build_inputs, buildfile, env):
         ninja.command_build(
             buildfile, env,
             output='dist-{}'.format(fmt),
-            commands=_dist_command(ninja, fmt, build_inputs, buildfile, env)
+            commands=_dist_command(fmt, build_inputs, buildfile, env)
         )
 
     buildfile.build(

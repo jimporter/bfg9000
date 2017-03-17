@@ -18,6 +18,18 @@ class TestSubdirs(IntegrationTest):
         self.build()
         self.assertOutput([executable('sub/program')], 'hello, library!\n')
 
+    def _check_installed(self):
+        extra = []
+        if platform_info().has_import_library:
+            extra = [pjoin(self.libdir, import_library('sub/library').path)]
+
+        self.assertDirectory(self.installdir, [
+            pjoin(self.includedir, 'library.hpp'),
+            pjoin(self.includedir, 'detail', 'export.hpp'),
+            pjoin(self.bindir, executable('sub/program').path),
+            pjoin(self.libdir, shared_library('sub/library').path),
+        ] + extra)
+
     @skip_if_backend('msbuild')
     def test_dist(self):
         dist = output_file('05_subdirs.tar.gz')
@@ -40,17 +52,7 @@ class TestSubdirs(IntegrationTest):
     @skip_if_backend('msbuild')
     def test_install(self):
         self.build('install')
-
-        extra = []
-        if platform_info().has_import_library:
-            extra = [pjoin(self.libdir, import_library('sub/library').path)]
-
-        self.assertDirectory(self.installdir, [
-            pjoin(self.includedir, 'library.hpp'),
-            pjoin(self.includedir, 'detail', 'export.hpp'),
-            pjoin(self.bindir, executable('sub/program').path),
-            pjoin(self.libdir, shared_library('sub/library').path),
-        ] + extra)
+        self._check_installed()
 
         os.chdir(self.srcdir)
         cleandir(self.builddir)
@@ -63,19 +65,17 @@ class TestSubdirs(IntegrationTest):
         makedirs(self.bindir, exist_ok=True)
         makedirs(self.libdir, exist_ok=True)
         self.build('install')
-
-        extra = []
-        if platform_info().has_import_library:
-            extra = [pjoin(self.libdir, import_library('sub/library').path)]
-
-        self.assertDirectory(self.installdir, [
-            pjoin(self.includedir, 'library.hpp'),
-            pjoin(self.includedir, 'detail', 'export.hpp'),
-            pjoin(self.bindir, executable('sub/program').path),
-            pjoin(self.libdir, shared_library('sub/library').path),
-        ] + extra)
+        self._check_installed()
 
         os.chdir(self.srcdir)
         cleandir(self.builddir)
         self.assertOutput([pjoin(self.bindir, executable('sub/program').path)],
                           'hello, library!\n')
+
+    @skip_if_backend('msbuild')
+    def test_uninstall(self):
+        self.build('install')
+        self._check_installed()
+
+        self.build('uninstall')
+        self.assertDirectory(self.installdir, [])

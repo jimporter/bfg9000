@@ -185,6 +185,8 @@ if platform_info().destdir:
 
 
 class NinjaFile(object):
+    Section = Section
+
     def __init__(self, bfgfile):
         self._bfgfile = bfgfile
 

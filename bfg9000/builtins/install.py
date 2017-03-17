@@ -9,6 +9,7 @@ from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..build_inputs import build_input
 from ..file_types import Directory, File
+from ..iterutils import iterate
 
 
 @build_input('install')
@@ -59,34 +60,40 @@ def install(builtins, build, env, *args):
         builtins['default'](i)
 
 
-def _install_commands(backend, build_inputs, buildfile, env):
-    install_outputs = build_inputs['install']
-    if not install_outputs:
-        return None
-
+def _doppel_cmd(env, buildfile):
     doppel = env.tool('doppel')
 
-    def doppel_cmd(kind):
+    def wrapper(kind):
         cmd = buildfile.cmd_var(doppel)
-        name = cmd.name
+        basename = cmd.name
 
         if kind != 'program':
             kind = 'data'
             cmd = [cmd] + doppel.data_args
-        if backend == make:
+        if basename.isupper():
             kind = kind.upper()
 
-        cmdname = '{name}_{kind}'.format(name=name, kind=kind)
-        return buildfile.variable(cmdname, cmd, backend.Section.command, True)
+        name = '{name}_{kind}'.format(name=basename, kind=kind)
+        cmd = buildfile.variable(name, cmd, buildfile.Section.command, True)
+        return lambda *args, **kwargs: doppel(*args, cmd=cmd, **kwargs)
+    return wrapper
 
+
+def _rm_cmd(env, buildfile):
+    rm = env.tool('rm')
+    cmd = buildfile.cmd_var(rm)
+    return lambda *args, **kwargs: rm(*args, cmd=cmd, **kwargs)
+
+
+def _install_commands(install_outputs, doppel):
     def install_line(output):
-        cmd = doppel_cmd(output.install_kind)
+        cmd = doppel(output.install_kind)
         if isinstance(output, Directory):
             if output.files is not None:
                 src = [i.path.relpath(output.path) for i in output.files]
                 dst = path.install_path(output.path, output.install_root,
                                         directory=True)
-                return doppel('into', src, dst, directory=output.path, cmd=cmd)
+                return cmd('into', src, dst, directory=output.path)
 
             warnings.warn(
                 ('installed directory {!r} has no matching files; did you ' +
@@ -95,7 +102,7 @@ def _install_commands(backend, build_inputs, buildfile, env):
 
         src = output.path
         dst = path.install_path(src, output.install_root)
-        return doppel('onto', src, dst, cmd=cmd)
+        return cmd('onto', src, dst)
 
     return list(chain(
         (install_line(i) for i in install_outputs),
@@ -103,10 +110,22 @@ def _install_commands(backend, build_inputs, buildfile, env):
     ))
 
 
+def _uninstall_commands(install_outputs, rm):
+    def uninstall_line(output):
+        if isinstance(output, Directory):
+            dst = path.install_path(output.path, output.install_root,
+                                    directory=True)
+            return [dst.append(i.path.relpath(output.path)) for i in
+                    iterate(output.files)]
+        return [path.install_path(output.path, output.install_root)]
+
+    return [rm(sum((uninstall_line(i) for i in install_outputs), []))]
+
+
 @make.post_rule
 def make_install_rule(build_inputs, buildfile, env):
-    recipe = _install_commands(make, build_inputs, buildfile, env)
-    if not recipe:
+    install_outputs = build_inputs['install']
+    if not install_outputs:
         return
 
     for i in path.InstallRoot:
@@ -116,13 +135,17 @@ def make_install_rule(build_inputs, buildfile, env):
         buildfile.variable(make.path_vars[path.DestDir.destdir],
                            env.variables.get('DESTDIR', ''), make.Section.path)
 
-    buildfile.rule(target='install', deps='all', recipe=recipe, phony=True)
+    install = _install_commands(install_outputs, _doppel_cmd(env, buildfile))
+    buildfile.rule(target='install', deps='all', recipe=install, phony=True)
+
+    uninstall = _uninstall_commands(install_outputs, _rm_cmd(env, buildfile))
+    buildfile.rule(target='uninstall', recipe=uninstall, phony=True)
 
 
 @ninja.post_rule
 def ninja_install_rule(build_inputs, buildfile, env):
-    commands = _install_commands(ninja, build_inputs, buildfile, env)
-    if not commands:
+    install_outputs = build_inputs['install']
+    if not install_outputs:
         return
 
     for i in path.InstallRoot:
@@ -133,5 +156,9 @@ def ninja_install_rule(build_inputs, buildfile, env):
                            env.variables.get('DESTDIR', ''),
                            ninja.Section.path)
 
+    install = _install_commands(install_outputs, _doppel_cmd(env, buildfile))
     ninja.command_build(buildfile, env, output='install', inputs=['all'],
-                        commands=commands)
+                        commands=install)
+
+    uninstall = _uninstall_commands(install_outputs, _rm_cmd(env, buildfile))
+    ninja.command_build(buildfile, env, output='uninstall', commands=uninstall)

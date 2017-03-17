@@ -86,7 +86,9 @@ your system. You can do this by running:
 $ ninja install
 ```
 
-Of course, if you're using the Make backend, you'd run `make install` instead.
+Similarly, you can run `ninja uninstall` to uninstall the files from their
+install location. Of course, if you're using the Make backend, you'd run
+`make install`/`make uninstall` instead.
 
 !!! warning
     The MSBuild backend doesn't currently support this command.
