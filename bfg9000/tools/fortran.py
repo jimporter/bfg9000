@@ -17,6 +17,9 @@ _builders = (cc.CcBuilder,)
 def fortran_builder(env, lang):
     candidates = env.getvar('FC', _default_cmds)
 
-    flags = shell.split(env.getvar('FFLAGS', ''))
+    flags = (
+        shell.split(env.getvar('CPPFLAGS', '')) +
+        shell.split(env.getvar('FFLAGS', ''))
+    )
     return choose_builder(env, lang, candidates, _builders, 'fc', 'fflags',
                           flags)

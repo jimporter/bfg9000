@@ -42,8 +42,8 @@ def c_family_builder(env, lang):
     candidates = env.getvar(var, cmd_map[lang])
 
     flags = (
-        shell.split(env.getvar(flags_var, '')) +
-        shell.split(env.getvar('CPPFLAGS', ''))
+        shell.split(env.getvar('CPPFLAGS', '')) +
+        shell.split(env.getvar(flags_var, ''))
     )
     return choose_builder(env, lang, candidates, _builders, var.lower(),
                           flags_var.lower(), flags)
