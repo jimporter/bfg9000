@@ -556,6 +556,12 @@ This rule recognizes the following environment variables:
 [`LIBRARY_PATH`](environment-vars.md#library_path),
 [`PKG_CONFIG`](environment-vars.md#pkg_config).
 
+!!! note
+    This function can also be used to refer to the pthread library. On many
+    Unix-like systems, instead of using `-lpthread` during the link step, it's
+    preferred to use `-pthread` during compilation *and* linking. Using
+    `package('pthread')` will handle this automatically.
+
 ### pkg_config([*name*], [*desc_name*], [*desc*], [*url*], [*version*], [*requires*], [*requires_private*], [*conflicts*], [*includes*], [*libs*], [*libs_private*], [*options*], [*link_options*], [*link_options_private*], [*auto_fill*]) { #pkg_config }
 Availability: `build.bfg`
 {: .subtitle}

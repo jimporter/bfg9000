@@ -175,11 +175,17 @@ class CcBaseCompiler(BuildCommand):
     def _include_pch(self, pch):
         return ['-include', pch.path.stripext()]
 
+    def _pthread(self, pthread):
+        return ['-pthread'] if pthread else []
+
     def flags(self, options, output, pkg=False):
+        pthread = getattr(options, 'pthread', False)
         includes = getattr(options, 'includes', [])
         pch = getattr(options, 'pch', None)
-        return sum((self._include_dir(i) for i in includes),
-                   self._include_pch(pch) if pch else [])
+
+        return (self._pthread(pthread) +
+                sum((self._include_dir(i) for i in includes), []) +
+                (self._include_pch(pch) if pch else []))
 
     def link_flags(self, mode, defines):
         flags = []
@@ -423,6 +429,12 @@ class CcLinker(BuildCommand):
             # This object format must not support rpaths, so just return.
             return []
 
+    def _pthread(self, pthread):
+        # macOS doesn't expect -pthread when linking.
+        if pthread and self.env.platform.name != 'darwin':
+            return ['-pthread']
+        return []
+
     def _entry_point(self, entry_point):
         # This only applies to GCJ. XXX: Move GCJ-stuff to a separate class?
         if self.lang == 'java' and entry_point:
@@ -430,14 +442,16 @@ class CcLinker(BuildCommand):
         return []
 
     def flags(self, options, output, pkg=False):
+        pthread = getattr(options, 'pthread', False)
         libraries = getattr(options, 'libs', [])
         lib_dirs = getattr(options, 'lib_dirs', [])
         rpath_dirs = getattr(options, 'rpath_dirs', [])
         entry_point = getattr(options, 'entry_point', None)
 
-        return ( self._lib_dirs(libraries, lib_dirs) +
-                 self._rpath(libraries, rpath_dirs, output) +
-                 self._entry_point(entry_point))
+        return (self._pthread(pthread) +
+                self._lib_dirs(libraries, lib_dirs) +
+                self._rpath(libraries, rpath_dirs, output) +
+                self._entry_point(entry_point))
 
     def _link_lib(self, library):
         if isinstance(library, WholeArchive):
@@ -619,9 +633,6 @@ class CcPackageResolver(object):
         raise PackageResolutionError("unable to find header '{}'".format(name))
 
     def library(self, name, kind='any', search_dirs=None):
-        if isinstance(name, Framework):
-            return name
-
         if search_dirs is None:
             search_dirs = self.lib_dirs
 
@@ -662,5 +673,16 @@ class CcPackageResolver(object):
             if lib_names is default_sentinel:
                 lib_names = self.env.platform.transform_package(name)
             includes = [self.header(i) for i in iterate(headers)]
-            libs = [self.library(i, kind) for i in iterate(lib_names)]
-            return CommonPackage(name, format, includes=includes, libs=libs)
+
+            extra_kwargs = {}
+            libs = []
+            for i in iterate(lib_names):
+                if isinstance(i, Framework):
+                    libs.append(i)
+                elif i == 'pthread':
+                    extra_kwargs['pthread'] = True
+                else:
+                    libs.append(self.library(i, kind))
+
+            return CommonPackage(name, format, includes=includes, libs=libs,
+                                 **extra_kwargs)

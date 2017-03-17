@@ -1,0 +1,5 @@
+# -*- python -*-
+
+pthread = package('pthread')
+
+executable('program', files=['program.cpp'], packages=[pthread])
