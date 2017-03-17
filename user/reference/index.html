@@ -643,6 +643,13 @@ header-only.</p>
 <a href="../environment-vars/#lib"><code>LIB</code></a>,
 <a href="../environment-vars/#library_path"><code>LIBRARY_PATH</code></a>,
 <a href="../environment-vars/#pkg_config"><code>PKG_CONFIG</code></a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This function can also be used to refer to the pthread library. On many
+Unix-like systems, instead of using <code>-lpthread</code> during the link step, it's
+preferred to use <code>-pthread</code> during compilation <em>and</em> linking. Using
+<code>package('pthread')</code> will handle this automatically.</p>
+</div>
 <h3 id="pkg_config">pkg_config([<em>name</em>], [<em>desc_name</em>], [<em>desc</em>], [<em>url</em>], [<em>version</em>], [<em>requires</em>], [<em>requires_private</em>], [<em>conflicts</em>], [<em>includes</em>], [<em>libs</em>], [<em>libs_private</em>], [<em>options</em>], [<em>link_options</em>], [<em>link_options_private</em>], [<em>auto_fill</em>])<a class="headerlink" href="#pkg_config" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Create <a href="https://www.freedesktop.org/wiki/Software/pkg-config/">pkg-config</a> information for this project and install it
