@@ -48,8 +48,6 @@ class Command(object):
             else:
                 env = kwargs.pop('env')
 
-        # XXX: Use shell mode so that the (user-defined) command can have
-        # multiple arguments defined in it?
         return shell.execute(self.convert_args(
             self(*args, **kwargs), lambda x: x.command, True
         ), env=env, stderr=shell.Mode.devnull)

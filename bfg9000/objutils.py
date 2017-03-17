@@ -19,7 +19,6 @@ def objectify(thing, valid_type, creator=None, in_type=string_types,
             ', '.join(gen), type(thing).__name__
         ))
     else:
-        # XXX: Come up with a way to provide args to prepend?
         return creator(thing, **kwargs)
 
 
