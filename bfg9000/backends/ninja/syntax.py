@@ -329,8 +329,9 @@ class NinjaFile(object):
 
         for build in self._builds:
             self._write_build(out, build)
+            out.write_literal('\n')
 
         if self._defaults:
-            out.write_literal('\ndefault ')
+            out.write_literal('default ')
             out.write_each(self._defaults, Syntax.input)
             out.write_literal('\n')
