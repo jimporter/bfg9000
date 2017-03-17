@@ -124,10 +124,14 @@ def boost_package(env, name=None, version=None):
             includes=[header], lib_dirs=listify(libdir),
         )
     else:
+        extra_kwargs = {}
+        if env.platform.flavor == 'posix' and 'thread' in iterate(name):
+            extra_kwargs['pthread'] = True
         dirs = [libdir] if libdir else None
         return BoostPackage(
             name, env.builder('c++').object_format, boost_version,
             includes=[header],
             libs=[pkg.library('boost_' + i, search_dirs=dirs)
                   for i in iterate(name)],
+            **extra_kwargs
         )
