@@ -40,7 +40,7 @@ class LdLinker(object):
             ]
             return [sysroot.rstrip('/') + i[1:] if i[0] == '=' else i
                     for i in search_dirs]
-        except:
+        except (OSError, shell.CalledProcessError):
             if strict:
                 raise
             return []

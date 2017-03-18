@@ -93,11 +93,12 @@ def check_which(names, *args, **kwargs):
 
 
 def choose_builder(env, lang, candidates, builders, cmd_var, flags_var, flags):
+    candidates = listify(candidates)
     try:
         cmd = which(candidates, env.variables, kind='{} compiler'.format(lang))
     except IOError as e:
         warnings.warn(str(e))
-        cmd = first(candidates)
+        cmd = shell.listify(candidates[0])
         builder_type = first(builders)
         output = ''
     else:

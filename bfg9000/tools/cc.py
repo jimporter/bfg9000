@@ -47,17 +47,20 @@ class CcBuilder(object):
 
         # macOS's ld doesn't support --version, but we can still try it out and
         # grab the command line.
-        stdout, stderr = shell.execute(
-            command + ldflags + ['-v', '-Wl,--version'],
-            stderr=shell.Mode.pipe, returncode='any'
-        )
-
         ld_command = None
-        for line in stderr.split('\n'):
-            if '--version' in line:
-                ld_command = shell.split(line)[0:1]
-                if os.path.basename(ld_command[0]) != 'collect2':
-                    break
+        try:
+            stdout, stderr = shell.execute(
+                command + ldflags + ['-v', '-Wl,--version'],
+                stderr=shell.Mode.pipe, returncode='any'
+            )
+
+            for line in stderr.split('\n'):
+                if '--version' in line:
+                    ld_command = shell.split(line)[0:1]
+                    if os.path.basename(ld_command[0]) != 'collect2':
+                        break
+        except (OSError, shell.CalledProcessError):
+            pass
 
         self.compiler = CcCompiler(self, env, name, command, cflags_name,
                                    cflags)
@@ -321,7 +324,7 @@ class CcLinker(BuildCommand):
                 self.command + self.global_flags + ['-print-sysroot'],
                 stderr=shell.Mode.devnull, env=self.env.variables
             ).rstrip()
-        except:
+        except (OSError, shell.CalledProcessError):
             if strict:
                 raise
             # XXX: What to do for Windows?
@@ -342,7 +345,7 @@ class CcLinker(BuildCommand):
             if self.builder.brand == 'clang':
                 search_dirs = (self.env.getvar('LIBRARY_PATH', '')
                                .split(os.pathsep)) + search_dirs
-        except shell.CalledProcessError:
+        except (OSError, shell.CalledProcessError):
             if strict:
                 raise
             search_dirs = self.env.getvar('LIBRARY_PATH', '').split(os.pathsep)
@@ -405,7 +408,14 @@ class CcLinker(BuildCommand):
             # unable to find other shared libraries needed by the directly-
             # linked library. For more information, see:
             # <https://sourceware.org/bugzilla/show_bug.cgi?id=16936>.
-            if self.builder.linker('raw').brand == 'bfd':
+            try:
+                brand = self.builder.linker('raw').brand
+            except KeyError:
+                # Assume the brand is bfd, since setting -rpath-link shouldn't
+                # hurt anything.
+                brand = 'bfd'
+
+            if brand == 'bfd':
                 deps = chain.from_iterable(recursive_deps(i)
                                            for i in runtime_libs)
                 dep_paths = [i for i in uniques(i.path.parent() for i in deps)]
@@ -610,7 +620,7 @@ class CcPackageResolver(object):
         try:
             sysroot = self.builder.linker('executable').sysroot()
             ld_lib_dirs = self.builder.linker('raw').search_dirs(sysroot, True)
-        except (KeyError, shell.CalledProcessError):
+        except (KeyError, OSError, shell.CalledProcessError):
             ld_lib_dirs = self.env.platform.lib_dirs
 
         self.lib_dirs = [i for i in uniques(chain(

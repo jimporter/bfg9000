@@ -16,7 +16,7 @@ def version(env=os.environ):
         m = re.match(r'GNU Make ([\d\.]+)', output)
         if m:
             return Version(m.group(1))
-    except IOError:
+    except (IOError, OSError, shell.CalledProcessError):
         pass
     return None
 

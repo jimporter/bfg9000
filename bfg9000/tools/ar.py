@@ -27,7 +27,7 @@ class ArLinker(BuildCommand):
             )
             if 'GNU ar' in output:
                 return 'gnu', detect_version(output)
-        except shell.CalledProcessError:
+        except (OSError, shell.CalledProcessError):
             pass
         return 'unknown', None
 

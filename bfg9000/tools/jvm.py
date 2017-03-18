@@ -39,7 +39,7 @@ class JvmBuilder(object):
                     self.brand = 'oracle'
                 elif 'OpenJDK Runtime Environment' in output:
                     self.brand = 'openjdk'
-            except shell.CalledProcessError:
+            except (OSError, shell.CalledProcessError):
                 pass
             self.version = detect_version(version_output)
         elif lang == 'scala':
@@ -225,12 +225,16 @@ class JvmPackageResolver(object):
             args = ['-XshowSettings:properties', '-version']
             returncode = 0
 
-        output = shell.execute(
-            command + args, env=env_vars, stdout=shell.Mode.devnull,
-            stderr=shell.Mode.pipe, returncode=returncode
-        )
-        self.ext_dirs = self._get_dirs('java.ext.dirs', output)
-        self.classpath = self._get_dirs('java.class.path', output)
+        try:
+            output = shell.execute(
+                command + args, env=env_vars, stdout=shell.Mode.devnull,
+                stderr=shell.Mode.pipe, returncode=returncode
+            )
+            self.ext_dirs = self._get_dirs('java.ext.dirs', output)
+            self.classpath = self._get_dirs('java.class.path', output)
+        except (OSError, shell.CalledProcessError):
+            self.ext_dirs = []
+            self.classpath = []
 
     @property
     def lang(self):
