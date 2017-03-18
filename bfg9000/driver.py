@@ -116,6 +116,8 @@ def add_generic_args(parser):
                         dest='color',
                         help=('show colored output (equivalent to ' +
                               '`--color=always`)'))
+    parser.add_argument('--warn-once', action='store_true',
+                        help='only emit a given warning once')
 
 
 def add_configure_args(parser):
@@ -250,7 +252,7 @@ def main():
     help_p.set_defaults(func=help)
 
     args, extra = parser.parse_known_args()
-    log.init(args.color, debug=args.debug)
+    log.init(args.color, debug=args.debug, warn_once=args.warn_once)
 
     return args.func(parser, args, extra)
 
@@ -266,6 +268,6 @@ def simple_main():
     add_configure_args(parser)
 
     args, extra = parser.parse_known_args()
-    log.init(args.color, debug=args.debug)
+    log.init(args.color, debug=args.debug, warn_once=args.warn_once)
 
     return configure(parser, args, extra)

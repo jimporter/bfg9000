@@ -1,5 +1,6 @@
 import os.path
 import re
+import warnings
 from collections import defaultdict
 from itertools import chain
 from six import string_types
@@ -315,6 +316,8 @@ def library(builtins, build, env, name, files=None, **kwargs):
     if kind == 'dual':
         shared = SharedLink(builtins, build, env, name, files, **kwargs)
         if not shared.linker.builder.can_dual_link:
+            warnings.warn("dual linking not supported with {}"
+                          .format(shared.linker.brand))
             return shared.public_output
 
         static = DualedStaticLink(builtins, build, env, name, shared.files,

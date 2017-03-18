@@ -81,13 +81,16 @@ class StackfulStreamHandler(logging.StreamHandler):
         return logging.StreamHandler.emit(self, record)
 
 
-def init(color='auto', debug=False):
+def init(color='auto', debug=False, warn_once=False):
     if color == 'always':
         colorama.init(strip=False)
     elif color == 'never':
         colorama.init(strip=True, convert=False)
     else:  # color == 'auto'
         colorama.init()
+
+    if warn_once:
+        warnings.filterwarnings('once')
 
     logging.addLevelName(logging.CRITICAL,
                          '\033[1;41;37m' + 'critical' + '\033[0m')
@@ -128,4 +131,3 @@ def _showwarning(message, category, filename, lineno, file=None, line=None):
 
 
 warnings.showwarning = _showwarning
-warnings.filterwarnings('once')

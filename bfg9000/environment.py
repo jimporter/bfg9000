@@ -1,7 +1,6 @@
 import json
 import os
 import sys
-import warnings
 from collections import namedtuple
 from six import iteritems
 

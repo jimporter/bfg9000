@@ -1,5 +1,3 @@
-import warnings
-
 from . import builder, cc
 from .. import shell
 from .common import choose_builder
