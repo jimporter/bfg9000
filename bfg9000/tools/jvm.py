@@ -14,6 +14,11 @@ from ..versioning import detect_version
 
 
 class JvmBuilder(object):
+    _runners = {
+        'java' : ('JAVACMD' , 'java' ),
+        'scala': ('SCALACMD', 'scala'),
+    }
+
     def __init__(self, env, lang, name, command, flags_name, flags,
                  version_output):
         self.lang = lang
@@ -21,10 +26,8 @@ class JvmBuilder(object):
 
         jar_command = check_which(env.getvar('JAR', 'jar'), kind='jar builder')
 
-        # XXX: This works sort of by coincidence, since it's trivial to predict
-        # the runner's name based on the lang. Be smarter here?
-        run_name = lang.upper() + 'CMD'
-        run_command = check_which(env.getvar(run_name, lang),
+        run_name, run_default = self._runners[lang]
+        run_command = check_which(env.getvar(run_name, run_default),
                                   kind='{} runner'.format(lang))
 
         self.brand = 'unknown'
