@@ -481,8 +481,8 @@ class CcLinker(BuildCommand):
         return ['-l' + self._extract_lib_name(library)]
 
     def always_libs(self, primary):
-        # XXX: Don't just asssume that these are these are the right libraries
-        # to use. For instance, clang users might want to use libc++ instead.
+        # XXX: Don't just asssume that these are the right libraries to use.
+        # For instance, clang users might want to use libc++ instead.
         libs = []
         if self.lang in ('c++', 'objc++') and not primary:
             libs.append('-lstdc++')
