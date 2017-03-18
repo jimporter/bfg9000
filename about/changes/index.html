@@ -197,7 +197,8 @@
 <ul>
 <li>Replace <code>system_package()</code> and <code>pkgconfig_package()</code> with a generic package
   resolver: <code>package()</code></li>
-<li>Add <code>header</code> argument to <code>package()</code> to find header files</li>
+<li>Add <code>headers</code> argument to <code>package()</code> to find header files and <code>libs</code> to
+  specify library names if <em>pkg-config</em> lookup fails</li>
 <li>Support Java/Scala</li>
 <li>Add support for user-defined arguments</li>
 <li>Add a <code>library()</code> function that builds shared and/or static libraries per the
@@ -216,7 +217,8 @@
 <ul>
 <li><code>directory()</code> and <code>header_directory()</code> no longer automatically include all
   files within them (pass <code>include='*'</code> for the old behavior)</li>
-<li>The <code>include</code> argument for object files has been replaced by <code>includes</code></li>
+<li>The <code>include</code> argument for compiling object files has been replaced by
+  <code>includes</code></li>
 <li>When creating a static library, <code>link_options</code> now specifies options that will
   be forwarded along to the dynamic linker, rather than options for the static
   linker itself</li>
