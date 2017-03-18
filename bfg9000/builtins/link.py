@@ -14,11 +14,13 @@ from ..backends.ninja import writer as ninja
 from ..build_inputs import build_input, Edge
 from ..file_types import *
 from ..iterutils import (first, iterate, listify, merge_dicts, merge_into_dict,
-                         uniques)
+                         slice_dict, uniques)
 from ..path import Path, Root
 from ..shell import posix as pshell
 
-build_input('link_options')(lambda build_inputs, env: defaultdict(list))
+build_input('link_options')(lambda build_inputs, env: {
+    'dynamic': defaultdict(list), 'static': defaultdict(list)
+})
 
 _modes = {
     'shared_library': 'EXPORTS',
@@ -37,15 +39,9 @@ def library_macro(name, mode):
     )]
 
 
-def library_version(kwargs):
-    version = kwargs.pop('version', None)
-    soversion = kwargs.pop('soversion', None)
-    if (version is None) != (soversion is None):
-        raise ValueError('specify both version and soversion or neither')
-    return version, soversion
-
-
 class Link(Edge):
+    msbuild_output = True
+
     def __init__(self, builtins, build, env, name, files=None, includes=None,
                  include=None, pch=None, libs=None, packages=None,
                  compile_options=None, link_options=None, entry_point=None,
@@ -155,6 +151,7 @@ class Link(Edge):
 
 
 class DynamicLink(Link):
+    base_mode = 'dynamic'
     mode = 'executable'
     msbuild_mode = 'Application'
     _preferred_lib = 'shared'
@@ -194,24 +191,37 @@ class SharedLink(DynamicLink):
     msbuild_mode = 'DynamicLibrary'
     _prefix = 'lib'
 
+    extra_kwargs = ('version', 'soversion')
+
     def __init__(self, *args, **kwargs):
-        self.version, self.soversion = library_version(kwargs)
+        self.version = kwargs.pop('version', None)
+        self.soversion = kwargs.pop('soversion', None)
+        if (self.version is None) != (self.soversion is None):
+            raise ValueError('specify both version and soversion or neither')
         DynamicLink.__init__(self, *args, **kwargs)
 
 
 class StaticLink(Link):
+    base_mode = 'static'
     mode = 'static_library'
     msbuild_mode = 'StaticLibrary'
     _preferred_lib = 'static'
     _prefix = 'lib'
 
+    extra_kwargs = ('static_link_options',)
+
+    def __init__(self, *args, **kwargs):
+        self.static_options = pshell.listify(
+            kwargs.pop('static_link_options', None)
+        )
+        Link.__init__(self, *args, **kwargs)
+
     @property
     def options(self):
-        # Don't pass any options to the static linker. XXX: We used to support
-        # this for users via `link_options`, but that's used for forwarding
-        # options to a dynamic linker now. Should we add support for static
-        # link options back in under a different name?
-        return []
+        # Only pass the static-link options to the static linker. The other
+        # options are forwarded on to the dynamic linker when this library is
+        # used.
+        return self.static_options
 
     def _fill_options(self, env, output):
         primary = first(output)
@@ -225,12 +235,6 @@ class StaticLink(Link):
             primary.forward_opts['defines'] = macro
 
         primary.linktime_deps.extend(self.user_libs)
-
-
-class DualedStaticLink(StaticLink):
-    def __init__(self, *args, **kwargs):
-        library_version(kwargs)
-        StaticLink.__init__(self, *args, **kwargs)
 
 
 @builtin.globals('builtins', 'build_inputs', 'env')
@@ -313,22 +317,27 @@ def library(builtins, build, env, name, files=None, **kwargs):
         # XXX: Try to detect if a string refers to a shared lib?
         return local_file(build, file_type, name, params, **kwargs)
 
+    shared_kwargs = slice_dict(kwargs, SharedLink.extra_kwargs)
+    static_kwargs = slice_dict(kwargs, StaticLink.extra_kwargs)
+    shared_kwargs.update(kwargs)
+    static_kwargs.update(kwargs)
+
     if kind == 'dual':
-        shared = SharedLink(builtins, build, env, name, files, **kwargs)
+        shared = SharedLink(builtins, build, env, name, files, **shared_kwargs)
         if not shared.linker.builder.can_dual_link:
             warnings.warn("dual linking not supported with {}"
                           .format(shared.linker.brand))
             return shared.public_output
 
-        static = DualedStaticLink(builtins, build, env, name, shared.files,
-                                  **kwargs)
+        static = StaticLink(builtins, build, env, name, shared.files,
+                            **static_kwargs)
         return DualUseLibrary(shared.public_output, static.public_output)
     elif kind == 'shared':
         return SharedLink(builtins, build, env, name, files,
-                          **kwargs).public_output
+                          **shared_kwargs).public_output
     else:  # kind == 'static'
-        return DualedStaticLink(builtins, build, env, name, files,
-                                **kwargs).public_output
+        return StaticLink(builtins, build, env, name, files,
+                          **static_kwargs).public_output
 
 
 @builtin.globals('builtins')
@@ -343,9 +352,9 @@ def whole_archive(builtins, name, *args, **kwargs):
 
 
 @builtin.globals('build_inputs')
-def global_link_options(build, options, family='native'):
+def global_link_options(build, options, family='native', mode='dynamic'):
     for i in iterate(family):
-        build['link_options'][i].extend(pshell.listify(options))
+        build['link_options'][mode][i].extend(pshell.listify(options))
 
 
 def _get_flags(backend, rule, build_inputs, buildfile):
@@ -355,8 +364,8 @@ def _get_flags(backend, rule, build_inputs, buildfile):
     if hasattr(rule.linker, 'flags_var'):
         global_ldflags, ldflags = backend.flags_vars(
             rule.linker.flags_var,
-            ( rule.linker.global_flags +
-              build_inputs['link_options'][rule.linker.family] ),
+            (rule.linker.global_flags +
+             build_inputs['link_options'][rule.base_mode][rule.linker.family]),
             buildfile
         )
         cmd_kwargs = {'flags': ldflags}
@@ -379,7 +388,7 @@ def _get_flags(backend, rule, build_inputs, buildfile):
     return variables, cmd_kwargs
 
 
-@make.rule_handler(StaticLink, DynamicLink, SharedLink, DualedStaticLink)
+@make.rule_handler(StaticLink, DynamicLink, SharedLink)
 def make_link(rule, build_inputs, buildfile, env):
     linker = rule.linker
     variables, cmd_kwargs = _get_flags(make, rule, build_inputs, buildfile)
@@ -416,7 +425,7 @@ def make_link(rule, build_inputs, buildfile, env):
     )
 
 
-@ninja.rule_handler(StaticLink, DynamicLink, SharedLink, DualedStaticLink)
+@ninja.rule_handler(StaticLink, DynamicLink, SharedLink)
 def ninja_link(rule, build_inputs, buildfile, env):
     linker = rule.linker
     variables, cmd_kwargs = _get_flags(ninja, rule, build_inputs, buildfile)
@@ -485,8 +494,7 @@ try:
         key = file.creator.compiler.command_var
         return merge_dicts(per_compiler_cflags[key], cflags)
 
-    @msbuild.rule_handler(DynamicLink, SharedLink, StaticLink,
-                          DualedStaticLink)
+    @msbuild.rule_handler(DynamicLink, SharedLink, StaticLink)
     def msbuild_link(rule, build_inputs, solution, env):
         if ( any(i not in ['c', 'c++'] for i in rule.langs) or
              rule.linker.flavor != 'msvc' ):
@@ -518,7 +526,8 @@ try:
         # Parse linking flags.
         ldflags = rule.linker.parse_flags(msbuild.textify_each(
             (rule.linker.global_flags +
-             build_inputs['link_options'][rule.linker.family] + rule.options)
+             build_inputs['link_options'][rule.base_mode][rule.linker.family] +
+             rule.options)
         ))
         ldflags['libs'] = (
             getattr(rule.linker, 'global_libs', []) +

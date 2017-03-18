@@ -81,6 +81,10 @@ class BuildCommand(Command):
     def lang(self):
         return self.builder.lang
 
+    @property
+    def family(self):
+        return self.builder.family
+
 
 def check_which(names, *args, **kwargs):
     names = listify(names)

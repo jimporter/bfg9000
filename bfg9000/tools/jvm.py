@@ -63,6 +63,10 @@ class JvmBuilder(object):
         return 'jvm'
 
     @property
+    def family(self):
+        return 'jvm'
+
+    @property
     def can_dual_link(self):
         return False
 
@@ -154,10 +158,6 @@ class JarMaker(BuildCommand):
     @property
     def flavor(self):
         return 'jar'
-
-    @property
-    def family(self):
-        return 'jvm'
 
     def can_link(self, format, langs):
         return format == 'jvm'

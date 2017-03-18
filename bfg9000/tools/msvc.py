@@ -74,6 +74,10 @@ class MsvcBuilder(object):
         return 'msvc'
 
     @property
+    def family(self):
+        return 'native'
+
+    @property
     def auto_link(self):
         return True
 
@@ -272,10 +276,6 @@ class MsvcLinker(BuildCommand):
     def flavor(self):
         return 'msvc'
 
-    @property
-    def family(self):
-        return 'native'
-
     def can_link(self, format, langs):
         return (format == self.builder.object_format and
                 self.__allowed_langs[self.lang].issuperset(langs))
@@ -386,12 +386,6 @@ class MsvcStaticLinker(BuildCommand):
     @property
     def flavor(self):
         return 'msvc'
-
-    @property
-    def family(self):
-        # Don't return a family to prevent people from applying global link
-        # options to this linker. (This may change one day.)
-        return None
 
     def can_link(self, format, langs):
         return format == self.builder.object_format

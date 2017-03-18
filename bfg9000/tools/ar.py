@@ -43,12 +43,6 @@ class ArLinker(BuildCommand):
     def flavor(self):
         return 'ar'
 
-    @property
-    def family(self):
-        # Don't return a family to prevent people from applying global link
-        # options to this linker. (This may change one day.)
-        return None
-
     def can_link(self, format, langs):
         return format == self.builder.object_format
 

@@ -45,6 +45,8 @@ def command(build, env, name, **kwargs):
 
 
 class BuildStep(BaseCommand):
+    msbuild_output = True
+
     def __init__(self, build, env, name, **kwargs):
         name = listify(name)
         project_name = name[0]

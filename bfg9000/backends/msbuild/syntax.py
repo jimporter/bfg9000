@@ -3,6 +3,7 @@ import ntpath
 import os
 import uuid
 from collections import defaultdict
+from enum import Enum
 from itertools import chain
 from lxml import etree
 from lxml.builder import E
@@ -11,11 +12,14 @@ from six import iteritems, string_types
 from ... import path
 from ... import safe_str
 from ... import shell
+from ...file_types import File
 from ...iterutils import isiterable
 from ...tools.common import Command
 
-__all__ = ['ExecProject', 'NoopProject', 'Solution', 'UuidMap', 'VcxProject',
-           'textify', 'textify_each']
+__all__ = ['BuildDir', 'ExecProject', 'NoopProject', 'Solution', 'UuidMap',
+           'VcxProject', 'textify', 'textify_each']
+
+BuildDir = Enum('BuildDir', ['output', 'intermediate', 'solution'])
 
 
 def uuid_str(uuid):
@@ -168,33 +172,45 @@ class Solution(object):
 
 
 _path_vars = {
-    False: {
+    BuildDir.output: {
+        path.Root.srcdir: '$(SourceDir)',
+        path.Root.builddir: '$(OutDir)',
+    },
+    BuildDir.intermediate: {
         path.Root.srcdir: '$(SourceDir)',
         path.Root.builddir: '$(IntDir)',
     },
-    True: {
+    BuildDir.solution: {
         path.Root.srcdir: '$(SourceDir)',
-        path.Root.builddir: '$(OutDir)',
+        path.Root.builddir: '$(SolutionDir)',
     },
 }
 
 
-def textify(thing, quoted=False, out=True):
+def textify(thing, quoted=False, builddir=BuildDir.output):
+    if isinstance(thing, File):
+        if thing.creator is None:
+            builddir = BuildDir.solution
+        elif getattr(thing.creator, 'msbuild_output', False):
+            builddir = BuildDir.output
+        else:
+            builddir = BuildDir.intermediate
+
     thing = safe_str.safe_str(thing)
     if isinstance(thing, safe_str.literal_types):
         return thing.string
     elif isinstance(thing, string_types):
         return shell.quote(thing, escape_percent=True) if quoted else thing
     elif isinstance(thing, safe_str.jbos):
-        return ''.join(textify(i, quoted, out) for i in thing.bits)
+        return ''.join(textify(i, quoted, builddir) for i in thing.bits)
     elif isinstance(thing, path.Path):
-        return ntpath.normpath(thing.realize(_path_vars[out]))
+        return ntpath.normpath(thing.realize(_path_vars[builddir]))
     else:
         raise TypeError(type(thing))
 
 
-def textify_each(thing, quoted=False, out=True):
-    return (textify(i, quoted, out) for i in thing)
+def textify_each(thing, *args, **kwargs):
+    return (textify(i, *args, **kwargs) for i in thing)
 
 
 class Project(object):
@@ -331,7 +347,9 @@ class VcxProject(Project):
                 # If this prefix is shared with another file, strip it out to
                 # create a unique directory to store this object file.
                 suffix = path.Path(name.path.relpath(prefix))
-                c.append(E.ObjectFileName(textify(suffix, out=False)))
+                c.append(E.ObjectFileName(textify(
+                    suffix, builddir=BuildDir.intermediate
+                )))
             compiles.append(c)
         return compiles
 
@@ -409,9 +427,6 @@ class ExecProject(Project):
             E.MakeDir(Directories='$(OutDir)')
         )
         for line in self.commands:
-            # XXX: What to do here with the `out` param? It's not clear what
-            # value it should have; do users want to mess with an intermediate
-            # file or an output file?
             if isiterable(line):
                 line = Command.convert_args(line, lambda x: x.command)
                 cmd = ' '.join(textify_each(line, quoted=True))

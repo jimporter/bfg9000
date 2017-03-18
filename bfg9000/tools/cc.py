@@ -95,6 +95,10 @@ class CcBuilder(object):
         return 'cc'
 
     @property
+    def family(self):
+        return 'native'
+
+    @property
     def auto_link(self):
         return False
 
@@ -300,10 +304,6 @@ class CcLinker(BuildCommand):
     @property
     def flavor(self):
         return 'cc'
-
-    @property
-    def family(self):
-        return 'native'
 
     def can_link(self, format, langs):
         return (format == self.builder.object_format and

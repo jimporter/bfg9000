@@ -171,11 +171,9 @@ Availability: `build.bfg`
 {: .subtitle}
 
 Create a build step that builds a shared library named *name*. Its arguments are
-the same as [*executable*](#executable), with the following additional
-arguments:
+the same as the superset of [*shared_library*](#shared_library) and
+[*static_library*](#static_library), with the following additional argument:
 
-* *version*: The version number of the library, e.g. `1.2.3`.
-* *soversion*: The API version of the library (used in its soname), e.g. `1`.
 * *kind*: The kind of library to be built; one of [`'shared'`](#shared_library),
   [`'static'`](#static_library), or `'dual'` (to build both shared *and* static
   versions). If not specified, the default behavior depends on the command-line
@@ -337,10 +335,13 @@ Availability: `build.bfg`
 {: .subtitle}
 
 Create a build step that builds a static library named *name*. Its arguments are
-the same as [*executable*](#executable). Link-related arguments (*link_options*,
-*libs*, and libraries from *packages*) have no direct effect on this build
-step. Instead, they're cached and forwarded on to any dynamic linking step that
-uses this static library.
+the same as [*executable*](#executable), with the following additional argument:
+
+* *static_link_options*: Command-line options to pass to the linker
+
+Other link-related arguments (*link_options*, *libs*, and libraries from
+*packages*) have no direct effect on this build step. Instead, they're cached
+and forwarded on to any dynamic linking step that uses this static library.
 
 Like with *executable*, if *files* isn't specified, this function merely
 references an *existing* shared library somewhere on the filesystem. In this
@@ -432,17 +433,18 @@ Availability: `build.bfg`
 Specify some *options* (either as a string or list) to use for all compilation
 steps for the language (or list of languages) *lang*.
 
-### global_link_options(*options*, [*family*]) { #global_link_options }
+### global_link_options(*options*, [*family*], [*mode*]) { #global_link_options }
 Availability: `build.bfg`
 {: .subtitle}
 
-Specify some *options* (either as a string or list) to use for all dynamic link
-steps (i.e. [executables](#executable) and [shared libraries](#shared_library))
-for a given *family* of languages (or a list of families).
+Specify some *options* (either as a string or list) to use for all link steps
+for a given *family* of languages (or a list of families) and linking *mode*.
 
 By default *family* is `'native'`, used for C, C++, and other languages using
 the same linking process. You can also specify `'jvm'` for JVM-based languages
-(Java, Scala).
+(Java, Scala). *mode* may be either `'dynamic'` (the default) to modify
+[executables](#executable) and [shared libraries](#shared_library) or `'static'`
+to modify [static libraries](#static_library).
 
 ## Test rules
 

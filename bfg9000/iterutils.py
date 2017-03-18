@@ -112,3 +112,11 @@ def merge_dicts(*args):
     dst = {}
     merge_into_dict(dst, *args)
     return dst
+
+
+def slice_dict(d, keys):
+    result = {}
+    for k in keys:
+        if k in d:
+            result[k] = d.pop(k)
+    return result
