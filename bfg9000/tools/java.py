@@ -1,10 +1,6 @@
-import re
-
 from . import builder, cc, jvm
 from .. import shell
 from .common import choose_builder
-from ..builtins.write_file import WriteFile
-from ..file_types import Executable, JvmClassList, ObjectFile
 from ..languages import language
 
 language('java', src_exts=['.java'])

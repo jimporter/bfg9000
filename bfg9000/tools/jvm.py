@@ -134,7 +134,7 @@ class JvmCompiler(BuildCommand):
         return []
 
     def output_file(self, name, options):
-        return JvmClassList(ObjectFile(
+        return ObjectFileList(ObjectFile(
             Path(name + '.classlist'), self.builder.object_format, self.lang
         ))
 
@@ -199,7 +199,7 @@ class JarMaker(BuildCommand):
         ))
 
     def transform_input(self, input):
-        return ['@' + safe_str.safe_str(i) if isinstance(i, JvmClassList)
+        return ['@' + safe_str.safe_str(i) if isinstance(i, ObjectFileList)
                 else i for i in input]
 
     def output_file(self, name, options):
@@ -284,7 +284,7 @@ class JvmRunner(BuildCommand):
     def run_arguments(self, file):
         if isinstance(file, Executable):
             return self(file, jar=True)
-        elif isinstance(file, JvmClassList):
+        elif isinstance(file, ObjectFileList):
             return self(file.object_file)
         elif isinstance(file, ObjectFile):
             return self(file)

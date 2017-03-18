@@ -52,7 +52,9 @@ class Compile(Edge):
                 self.header_files.append(i)
             self.includes.append(builtins['header_directory'](i))
 
-        # XXX: Handle forward_opts from libs?
+        # Don't bother handling forward_opts from libs now, since the only
+        # languages that need libs during compilation don't support static
+        # linking anyway.
         self.libs = [builtins['library'](i, lang=lang) for i in iterate(libs)]
 
         self.packages = [builtins['package'](i) for i in iterate(packages)]
