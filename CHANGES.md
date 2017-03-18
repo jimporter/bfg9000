@@ -5,7 +5,8 @@
 ### New features
 - Replace `system_package()` and `pkgconfig_package()` with a generic package
   resolver: `package()`
-- Add `header` argument to `package()` to find header files
+- Add `headers` argument to `package()` to find header files and `libs` to
+  specify library names if *pkg-config* lookup fails
 - Support Java/Scala
 - Add support for user-defined arguments
 - Add a `library()` function that builds shared and/or static libraries per the
@@ -23,7 +24,8 @@
 ### Breaking changes
 - `directory()` and `header_directory()` no longer automatically include all
   files within them (pass `include='*'` for the old behavior)
-- The `include` argument for object files has been replaced by `includes`
+- The `include` argument for compiling object files has been replaced by
+  `includes`
 - When creating a static library, `link_options` now specifies options that will
   be forwarded along to the dynamic linker, rather than options for the static
   linker itself
