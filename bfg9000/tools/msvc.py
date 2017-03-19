@@ -288,7 +288,7 @@ class MsvcLinker(BuildCommand):
         lib_path = [os.path.abspath(i) for i in
                     self.env.getvar('LIBRARY_PATH', '').split(os.pathsep)]
         lib = [os.path.abspath(i) for i in
-               self.env.getvar('LIB').split(os.pathsep)]
+               self.env.getvar('LIB', '').split(os.pathsep)]
         return lib_path + lib
 
     @property
