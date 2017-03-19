@@ -1,10 +1,11 @@
+from contextlib import contextmanager
 from six import string_types
 
 from . import builtin
 from .find import exclude_globs, filter_by_platform
 from ..file_types import *
 from ..iterutils import iterate, uniques
-from ..path import Path, Root
+from ..path import Path, Root, makedirs as _makedirs
 
 
 def local_file(build, file_type, name, params, kwargs):
@@ -16,6 +17,15 @@ def local_file(build, file_type, name, params, kwargs):
             next(iter(kwargs))
         ))
     return build.add_source(file_type(Path(name, Root.srcdir), *extra_args))
+
+
+@contextmanager
+def generated_file(build, env, file, mode='w', makedirs=True):
+    if makedirs:
+        _makedirs(file.path.parent().string(env.base_dirs), exist_ok=True)
+
+    yield open(file.path.string(env.base_dirs), mode)
+    build['regenerate'].outputs.append(file)
 
 
 @builtin.globals('build_inputs')

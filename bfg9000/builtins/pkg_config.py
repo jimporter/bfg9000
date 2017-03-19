@@ -4,6 +4,7 @@ from six import iteritems, itervalues, string_types
 
 from . import builtin
 from .. import path
+from .file_types import generated_file
 from ..build_inputs import build_input
 from ..file_types import *
 from ..iterutils import iterate, uniques
@@ -355,9 +356,6 @@ def finalize_pkg_config(builtins, build, env):
             raise ValueError("duplicate pkg-config package '{}'".format(name))
 
     for info in build['pkg_config']:
-        file = info.output
-        path.makedirs(file.path.parent().string(env.base_dirs), exist_ok=True)
-        with open(file.path.string(env.base_dirs), 'w') as out:
+        with generated_file(build, env, info.output) as out:
             info.write(out, env)
-            build['regenerate'].outputs.append(file)
-            builtins['install'](file)
+            builtins['install'](info.output)

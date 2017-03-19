@@ -5,7 +5,7 @@ from . import pkg_config
 from .common import BuildCommand, check_which
 from .. import shell
 from ..arguments.windows import ArgumentParser
-from ..builtins.write_file import WriteFile
+from ..builtins.file_types import generated_file
 from ..exceptions import PackageResolutionError
 from ..file_types import *
 from ..iterutils import default_sentinel, iterate, listify, uniques
@@ -219,8 +219,8 @@ class MsvcPchCompiler(MsvcBaseCompiler):
                                             header.lang)
             options.inject_include_dir = True
 
-            text = '#include "{}"'.format(header.path.basename())
-            WriteFile(build, options.pch_source, text)
+            with generated_file(build, self.env, options.pch_source) as out:
+                out.write('#include "{}"\n'.format(header.path.basename()))
 
     def _create_pch(self, header):
         return ['/Yc' + header.path.suffix]

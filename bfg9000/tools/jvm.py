@@ -5,7 +5,7 @@ from itertools import chain
 from .common import BuildCommand, check_which
 from .. import safe_str
 from .. import shell
-from ..builtins.write_file import WriteFile
+from ..builtins.file_types import generated_file
 from ..exceptions import PackageResolutionError
 from ..file_types import *
 from ..iterutils import iterate, uniques
@@ -185,16 +185,14 @@ class JarMaker(BuildCommand):
 
         dirs = uniques(i.path for i in libs)
         base = Path(name).parent()
-        text = ['Class-Path: {}'.format(
-            ' '.join(fix_path(i.relpath(base)) for i in dirs)
-        )]
 
-        if getattr(options, 'entry_point', None):
-            text.append('Main-Class: {}'.format(options.entry_point))
+        options.manifest = File(Path(name + '-manifest.txt'))
+        with generated_file(build, self.env, options.manifest) as out:
+            classpath = ' '.join(fix_path(i.relpath(base)) for i in dirs)
+            out.write('Class-Path: {}\n'.format(classpath))
 
-        source = File(Path(name + '-manifest.txt'))
-        WriteFile(build, source, text)
-        options.manifest = source
+            if getattr(options, 'entry_point', None):
+                out.write('Main-Class: {}\n'.format(options.entry_point))
 
     def _call(self, cmd, input, output, manifest, libs=None, flags=None):
         return list(chain(
