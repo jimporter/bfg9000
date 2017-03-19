@@ -10,7 +10,7 @@
 # build files, and then run the generated build file from the build directory:
 #
 #  $ cd examples/01_simple
-#  $ bfg9000 build/
+#  $ 9k build/
 #  $ cd build/
 #  $ make
 #
