@@ -5,7 +5,8 @@ from .common import SimpleCommand
 @tool('symlink')
 class Symlink(SimpleCommand):
     def __init__(self, env):
-        # XXX: Support mklink?
+        # This only supports `ln`, not `mklink`, since only administrators can
+        # symlink with `mklink` by default. Windows sure is weird!
         SimpleCommand.__init__(self, env, name='symlink', env_var='SYMLINK',
                                default='ln -sf')
 
