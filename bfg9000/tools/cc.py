@@ -261,8 +261,7 @@ class CcLinker(BuildCommand):
         'objc++': {'c', 'c++', 'objc', 'objc++', 'f77', 'f95'},
         'f77'   : {'c', 'f77', 'f95'},
         'f95'   : {'c', 'f77', 'f95'},
-        # XXX: Include other languages that should work here?
-        'java'  : {'java'},
+        'java'  : {'java', 'c', 'c++', 'objc', 'objc++', 'f77', 'f95'},
     }
 
     def __init__(self, builder, env, rule_name, command_var, command, ldflags,
@@ -488,6 +487,8 @@ class CcLinker(BuildCommand):
             libs.append('-lobjc')
         if self.lang in ('f77', 'f95') and not primary:
             libs.append('-lgfortran')
+        if self.lang == 'java' and not primary:
+            libs.append('-lgcj')
         return libs
 
     def libs(self, options, output, pkg=False):
