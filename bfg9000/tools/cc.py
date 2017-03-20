@@ -327,12 +327,10 @@ class CcLinker(BuildCommand):
         except (OSError, shell.CalledProcessError):
             if strict:
                 raise
-            # XXX: What to do for Windows?
-            return '/'
+            return '' if self.env.platform.flavor == 'windows' else '/'
 
     def search_dirs(self, strict=False):
         try:
-            # XXX: Will this work for cross-compilation?
             output = shell.execute(
                 self.command + self.global_flags + ['-print-search-dirs'],
                 stderr=shell.Mode.devnull, env=self.env.variables
