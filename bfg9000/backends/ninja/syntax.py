@@ -15,7 +15,7 @@ from ...tools.common import Command
 from ...versioning import Version
 
 __all__ = ['NinjaFile', 'Section', 'Syntax', 'Writer', 'Variable', 'var',
-           'Commands', 'path_vars']
+           'path_vars']
 
 Rule = namedtuple('Rule', ['command', 'depfile', 'deps', 'generator', 'pool',
                            'restat'])
@@ -90,11 +90,15 @@ class Writer(object):
         for i in iterutils.tween(things, delim, prefix, suffix):
             self.write(i, syntax)
 
-    def write_shell(self, thing, syntax=Syntax.shell):
-        if iterutils.isiterable(thing):
-            self.write_each(thing, syntax)
+    def write_shell(self, thing, syntax=Syntax.shell, can_wrap=False):
+        if ( can_wrap and isinstance(thing, shell.shell_list) and
+             platform_name() == 'windows' ):
+            prefix = safe_str.shell_literal('cmd /s /c "')
+            suffix = safe_str.shell_literal('"')
         else:
-            self.write(thing, syntax, shell_quote=None)
+            prefix = suffix = None
+        self.write_each(iterutils.iterate(thing), syntax, prefix=prefix,
+                        suffix=suffix)
 
 
 class Variable(object):
@@ -128,49 +132,6 @@ class Variable(object):
 
 def var(v):
     return v if isinstance(v, Variable) else Variable(v)
-
-
-class Commands(object):
-    def __init__(self, commands, environ=None):
-        if not commands:
-            raise ValueError('expected at least one command')
-        self.commands = iterutils.listify(commands, scalar_ok=False)
-        self.environ = environ or {}
-
-    def use(self):
-        out = Writer(StringIO())
-        if self.needs_shell and platform_name() == 'windows':
-            out.write_literal('cmd /s /c "')
-
-        env_vars = shell.global_env(self.environ)
-        for line in shell.join_commands(chain(env_vars, self.commands)):
-            out.write_shell(line)
-
-        if self.needs_shell and platform_name() == 'windows':
-            out.write_literal('"')
-        return safe_str.literal(out.stream.getvalue())
-
-    def _safe_str(self):
-        return self.use()
-
-    def convert_args(self, conv):
-        def convert(args):
-            if iterutils.isiterable(args):
-                return Command.convert_args(args, conv)
-            return args
-
-        self.commands = [convert(i) for i in self.commands]
-
-    @property
-    def needs_shell(self):
-        if not self.commands:
-            raise ValueError('expected at least one command')
-        return (
-            len(self.environ) > 0 or
-            len(self.commands) > 1 or
-            isinstance(self.commands[0], shell.shell_list) or
-            not iterutils.isiterable(self.commands[0])
-        )
 
 
 path_vars = {
@@ -212,6 +173,7 @@ class NinjaFile(object):
                 raise ValueError("variable {!r} already exists".format(name))
         else:
             self._var_table.add(name)
+            value = self._convert_args(value)
             self._variables[section].append((name, value))
         return name
 
@@ -224,10 +186,7 @@ class NinjaFile(object):
 
     def rule(self, name, command, depfile=None, deps=None, generator=False,
              pool=None, restat=False):
-        command = objectify(command, Commands, in_type=object)
-        command.convert_args(self.cmd_var)
-        if not command.needs_shell:
-            command = command.commands[0]
+        command = self._convert_args(command)
 
         if pool is not None:
             if pool == 'console':
@@ -252,7 +211,8 @@ class NinjaFile(object):
         if rule != 'phony' and not self.has_rule(rule):
             raise ValueError("unknown rule '{}'".format(rule))
 
-        variables = {var(k): v for k, v in iteritems(variables or {})}
+        variables = {var(k): self._convert_args(v) for k, v in
+                     iteritems(variables or {})}
 
         outputs = iterutils.listify(output)
         for i in outputs:
@@ -271,15 +231,22 @@ class NinjaFile(object):
     def default(self, paths):
         self._defaults.extend(paths)
 
-    def _write_variable(self, out, name, value, syntax=Syntax.shell, indent=0):
+    def _convert_args(self, args):
+        if iterutils.isiterable(args):
+            return Command.convert_args(args, self.cmd_var)
+        return args
+
+    def _write_variable(self, out, name, value, syntax=Syntax.shell, indent=0,
+                        can_wrap=False):
         out.write_literal(('  ' * indent) + name.name + ' = ')
-        out.write_shell(value, syntax)
+        out.write_shell(value, syntax, can_wrap)
         out.write_literal('\n')
 
     def _write_rule(self, out, name, rule):
         out.write_literal('rule ' + name + '\n')
 
-        self._write_variable(out, var('command'), rule.command, indent=1)
+        self._write_variable(out, var('command'), rule.command, indent=1,
+                             can_wrap=True)
         if rule.depfile:
             self._write_variable(out, var('depfile'), rule.depfile, indent=1)
         if rule.deps:

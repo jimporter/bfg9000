@@ -67,7 +67,7 @@ def flags_vars(name, value, buildfile):
 
 
 def command_build(buildfile, env, output, inputs=None, implicit=None,
-                  order_only=None, commands=None, environ=None, console=True):
+                  order_only=None, command=[], console=True):
     if console:
         rule_name = 'console_command'
         extra_implicit = ['PHONY']
@@ -77,7 +77,8 @@ def command_build(buildfile, env, output, inputs=None, implicit=None,
             if ( env.backend_version and env.backend_version in
                  SpecifierSet('>=1.5') ):
                 extra_kwargs['pool'] = 'console'
-            buildfile.rule(name='console_command', command=[[var('cmd')]],
+            buildfile.rule(name='console_command',
+                           command=shell.shell_list([var('cmd')]),
                            **extra_kwargs)
 
         if not buildfile.has_build('PHONY'):
@@ -87,15 +88,14 @@ def command_build(buildfile, env, output, inputs=None, implicit=None,
         extra_implicit = []
 
         if not buildfile.has_rule('command'):
-            buildfile.rule(name='command', command=[var('cmd')])
+            buildfile.rule(name='command',
+                           command=shell.shell_list([var('cmd')]))
 
-    cmds = Commands(commands, environ)
-    cmds.convert_args(buildfile.cmd_var)
     buildfile.build(
         output=output,
         rule=rule_name,
         inputs=inputs,
         implicit=iterutils.listify(implicit) + extra_implicit,
         order_only=order_only,
-        variables={'cmd': cmds}
+        variables={'cmd': command}
     )

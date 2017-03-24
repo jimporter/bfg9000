@@ -1,14 +1,16 @@
 from __future__ import division
 
+import itertools
 import re
 from enum import Enum
 from six import iteritems, string_types
 
 from .. import iterutils
+from .list import shell_list
 from ..safe_str import safe_str, shell_literal
 
 __all__ = ['split', 'join', 'listify', 'escape', 'quote_escaped', 'quote',
-           'quote_info', 'join_commands', 'global_env']
+           'quote_info', 'escape_line', 'join_lines', 'global_env']
 
 # XXX: We need a way to escape cmd.exe-specific characters.
 _bad_chars = re.compile(r'(\s|"|\\$)')
@@ -105,11 +107,27 @@ def quote_info(s, escape_percent=False):
     return quote_escaped(s, esc), esc
 
 
-def join_commands(commands):
-    return iterutils.tween(commands, shell_literal(' && '))
+def escape_line(line, listify=False):
+    if iterutils.isiterable(line):
+        return iterutils.listify(line) if listify else line
+
+    line = safe_str(line)
+    if isinstance(line, string_types):
+        line = shell_literal(line)
+    return shell_list([line])
 
 
-def global_env(env):
+def join_lines(lines):
+    result = []
+    for i in iterutils.tween( (escape_line(j, listify=True) for j in lines),
+                              shell_list([shell_literal('&&')]) ):
+        if i:
+            result += i
+    return result
+
+
+def global_env(env, lines=[]):
     # Join the name and value so they get quoted together, if necessary.
-    return [ ['set', safe_str(name) + '=' + safe_str(value)]
-             for name, value in iteritems(env) ]
+    env_vars = (shell_list(['set', safe_str(name) + '=' + safe_str(value)])
+                for name, value in iteritems(env))
+    return join_lines(itertools.chain(env_vars, lines))

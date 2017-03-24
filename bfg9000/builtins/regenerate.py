@@ -29,7 +29,7 @@ def ninja_regenerate_rule(build_inputs, buildfile, env):
 
     buildfile.rule(
         name='regenerate',
-        command=[bfg9000(Path('.'))],
+        command=bfg9000(Path('.')),
         generator=True,
         depfile=build_inputs['regenerate'].depfile,
     )

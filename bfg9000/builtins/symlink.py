@@ -30,7 +30,7 @@ def ninja_symlink(rule, build_inputs, buildfile, env):
     if not buildfile.has_rule(symlink.rule_name):
         buildfile.rule(
             name=symlink.rule_name,
-            command=[symlink(ninja.var('input'), output=ninja.var('out'))]
+            command=symlink(ninja.var('input'), output=ninja.var('out'))
         )
 
     buildfile.build(

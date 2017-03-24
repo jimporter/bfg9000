@@ -1,10 +1,10 @@
 import warnings
 from itertools import chain
 from six import itervalues
-from six.moves import filter as ifilter
 
 from . import builtin
 from .. import path
+from .. import shell
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..build_inputs import build_input
@@ -104,13 +104,11 @@ def _install_commands(install_outputs, doppel):
         dst = path.install_path(src, output.install_root)
         return cmd('onto', src, dst)
 
-    return list(chain(
-        (install_line(i) for i in install_outputs),
-        ifilter(None, (i.post_install for i in install_outputs))
-    ))
+    return ([install_line(i) for i in install_outputs] +
+            [i.post_install for i in install_outputs if i.post_install])
 
 
-def _uninstall_commands(install_outputs, rm):
+def _uninstall_command(install_outputs, rm):
     def uninstall_line(output):
         if isinstance(output, Directory):
             dst = path.install_path(output.path, output.install_root,
@@ -119,7 +117,7 @@ def _uninstall_commands(install_outputs, rm):
                     iterate(output.files)]
         return [path.install_path(output.path, output.install_root)]
 
-    return [rm(sum((uninstall_line(i) for i in install_outputs), []))]
+    return rm(sum((uninstall_line(i) for i in install_outputs), []))
 
 
 @make.post_rule
@@ -138,8 +136,8 @@ def make_install_rule(build_inputs, buildfile, env):
     install = _install_commands(install_outputs, _doppel_cmd(env, buildfile))
     buildfile.rule(target='install', deps='all', recipe=install, phony=True)
 
-    uninstall = _uninstall_commands(install_outputs, _rm_cmd(env, buildfile))
-    buildfile.rule(target='uninstall', recipe=uninstall, phony=True)
+    uninstall = _uninstall_command(install_outputs, _rm_cmd(env, buildfile))
+    buildfile.rule(target='uninstall', recipe=[uninstall], phony=True)
 
 
 @ninja.post_rule
@@ -158,7 +156,7 @@ def ninja_install_rule(build_inputs, buildfile, env):
 
     install = _install_commands(install_outputs, _doppel_cmd(env, buildfile))
     ninja.command_build(buildfile, env, output='install', inputs=['all'],
-                        commands=install)
+                        command=shell.join_lines(install))
 
-    uninstall = _uninstall_commands(install_outputs, _rm_cmd(env, buildfile))
-    ninja.command_build(buildfile, env, output='uninstall', commands=uninstall)
+    uninstall = _uninstall_command(install_outputs, _rm_cmd(env, buildfile))
+    ninja.command_build(buildfile, env, output='uninstall', command=uninstall)

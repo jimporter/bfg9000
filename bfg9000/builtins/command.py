@@ -4,6 +4,7 @@ from six.moves import cStringIO as StringIO
 from . import builtin
 from .file_types import source_file
 from .. import safe_str
+from .. import shell
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..build_inputs import Edge
@@ -85,22 +86,10 @@ def build_step(build, env, name, **kwargs):
 @make.rule_handler(Command, BuildStep)
 def make_command(rule, build_inputs, buildfile, env):
     # Join all the commands onto one line so that users can use 'cd' and such.
-    out = make.Writer(StringIO())
-    env_vars = pshell.global_env(rule.env)
-
-    def convert(args):
-        if isiterable(args):
-            return tools.Command.convert_args(args, buildfile.cmd_var)
-        return args
-
-    cmds = (convert(i) for i in rule.cmds)
-    for line in pshell.join_commands(chain(env_vars, cmds)):
-        out.write_shell(line)
-
     buildfile.rule(
         target=rule.output,
         deps=rule.inputs + rule.extra_deps,
-        recipe=[safe_str.literal(out.stream.getvalue())],
+        recipe=[pshell.global_env(rule.env, rule.cmds)],
         phony=isinstance(rule, Command)
     )
 
@@ -111,8 +100,7 @@ def ninja_command(rule, build_inputs, buildfile, env):
         buildfile, env,
         output=rule.output,
         inputs=rule.inputs + rule.extra_deps,
-        commands=rule.cmds,
-        environ=rule.env,
+        command=shell.global_env(rule.env, rule.cmds),
         console=isinstance(rule, Command)
     )
 

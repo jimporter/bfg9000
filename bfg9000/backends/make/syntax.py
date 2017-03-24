@@ -31,10 +31,6 @@ _comment_tmpl = """
 """.strip()
 
 
-def _escape_backslashes(s):
-    return s.replace('\\', '\\\\'), True
-
-
 class Writer(object):
     # Don't escape ":" if we're using Windows paths.
     __extra_escapes = '' if platform_name() == 'windows' else ':'
@@ -109,16 +105,7 @@ class Writer(object):
             self.write_literal('@')
             thing = thing.data
 
-        if iterutils.isiterable(thing):
-            self.write_each(thing, syntax)
-        else:
-            # Since Make uses an sh-style shell even on Windows, we want to
-            # escape backslashes when writing an already "escaped" command
-            # line. Otherwise, Windows users would be pretty surprised to find
-            # that all the paths they specified like C:\foo\bar are broken!
-            shell_quote = (_escape_backslashes if platform_name() == 'windows'
-                           else None)
-            self.write(thing, syntax, shell_quote=shell_quote)
+        self.write_each(iterutils.iterate(thing), syntax)
 
 
 class Entity(object):
@@ -249,12 +236,14 @@ class Makefile(object):
     def variable(self, name, value, section=Section.other, exist_ok=False):
         name, exists = self._unique_var(name, exist_ok)
         if not exists:
+            value = self._convert_args(value)
             self._global_variables[section].append((name, value))
         return name
 
     def target_variable(self, name, value, exist_ok=False):
         name, exists = self._unique_var(name, exist_ok)
         if not exists:
+            value = self._convert_args(value)
             self._target_variables.append((name, value))
         return name
 

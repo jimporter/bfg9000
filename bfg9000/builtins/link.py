@@ -449,9 +449,9 @@ def ninja_link(rule, build_inputs, buildfile, env):
         input_var = ninja.var('in')
 
     if not buildfile.has_rule(linker.rule_name):
-        buildfile.rule(name=linker.rule_name, command=[linker(
+        buildfile.rule(name=linker.rule_name, command=linker(
             input_var, output_vars, **cmd_kwargs
-        )])
+        ))
 
     manifest = listify(getattr(rule, 'manifest', None))
     buildfile.build(

@@ -3,6 +3,7 @@ import subprocess
 from enum import Enum
 
 from ..platforms import platform_name
+from .list import shell_list
 
 if platform_name() == 'windows':
     from .windows import *
@@ -11,11 +12,6 @@ else:
 
 Mode = Enum('Mode', ['pipe', 'stdout', 'devnull', 'normal'])
 CalledProcessError = subprocess.CalledProcessError
-
-
-class shell_list(list):
-    """A special subclass of list used to mark that this command line uses
-    special shell characters."""
 
 
 def execute(args, shell=False, env=None, stdout=Mode.pipe, stderr=Mode.normal,

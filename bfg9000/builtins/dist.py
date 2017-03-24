@@ -30,11 +30,11 @@ def _dist_command(format, build_inputs, buildfile, env):
     if project.version:
         dstname += '-' + str(project.version)
 
-    return [doppel(
+    return doppel(
         'archive', [i.path.relpath(srcdir) for i in build_inputs.sources()],
         Path(dstname + _exts[format]), directory=srcdir, format=format,
         dest_prefix=dstname
-    )]
+    )
 
 
 @make.post_rule
@@ -42,7 +42,7 @@ def make_dist_rule(build_inputs, buildfile, env):
     for fmt in _exts:
         buildfile.rule(
             target='dist-{}'.format(fmt),
-            recipe=_dist_command(fmt, build_inputs, buildfile, env),
+            recipe=[_dist_command(fmt, build_inputs, buildfile, env)],
             phony=True
         )
 
@@ -59,7 +59,7 @@ def ninja_dist_rule(build_inputs, buildfile, env):
         ninja.command_build(
             buildfile, env,
             output='dist-{}'.format(fmt),
-            commands=_dist_command(fmt, build_inputs, buildfile, env)
+            command=_dist_command(fmt, build_inputs, buildfile, env)
         )
 
     buildfile.build(

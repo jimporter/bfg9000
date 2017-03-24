@@ -263,9 +263,9 @@ def ninja_compile(rule, build_inputs, buildfile, env):
             deps = 'msvc'
             cmd_kwargs['deps'] = True
 
-        buildfile.rule(name=compiler.rule_name, command=[compiler(
+        buildfile.rule(name=compiler.rule_name, command=compiler(
             ninja.var('in'), output_vars, **cmd_kwargs
-        )], depfile=depfile, deps=deps)
+        ), depfile=depfile, deps=deps)
 
     inputs = [rule.file]
     implicit_deps = []

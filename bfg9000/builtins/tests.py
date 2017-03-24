@@ -34,11 +34,16 @@ class Test(object):
                           "'cmd' instead")
             cmd = listify(cmd) + pshell.listify(options)
 
+        # Ensure that bare Node objects are treated as a list of args instead
+        # of a literal command line (the former has shell-characters escaped).
+        if isinstance(cmd, Node):
+            cmd = [cmd]
         wrap = not driver or driver.wrap_children
         self.cmd = env.run_arguments(cmd) if wrap else cmd
+
         self.inputs = [i for i in iterate(cmd)
                        if isinstance(i, Node) and i.creator]
-        self.environment = environment
+        self.env = environment
 
         primary = first(cmd)
         if isinstance(primary, Node) and primary.creator:
@@ -86,11 +91,7 @@ def test_deps(build, *args):
 
 def _build_commands(tests, writer, shell, local_env, collapse=False):
     def command(test, args=[]):
-        cmd = test.cmd
-        if not isiterable(cmd):
-            cmd = [safe_str.shell_literal(cmd) if isinstance(cmd, string_types)
-                   else safe_str.safe_str(cmd)]
-        subcmd = local_env(test.environment) + cmd + args
+        subcmd = local_env(test.env, test.cmd) + args
 
         if collapse:
             out = writer(StringIO())
@@ -162,5 +163,5 @@ def ninja_test_rule(build_inputs, buildfile, env):
         buildfile, env,
         output='test',
         inputs='tests',
-        commands=commands,
+        command=shell.join_lines(commands),
     )

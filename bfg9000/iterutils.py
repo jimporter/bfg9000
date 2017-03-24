@@ -31,7 +31,7 @@ def iterate(thing):
 
 
 def listify(thing, always_copy=False, scalar_ok=True):
-    if not always_copy and type(thing) == list:
+    if not always_copy and isinstance(thing, list):
         return thing
     if scalar_ok:
         thing = iterate(thing)
