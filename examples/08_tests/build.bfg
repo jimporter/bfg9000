@@ -1,7 +1,5 @@
 # -*- python -*-
 
-import sys
-
 # It's important to have tests for your code! Any executable can be run as a
 # test by passing it to the test() function:
 

@@ -1,7 +1,5 @@
 # -*- python -*-
 
-import sys
-
 # Many build scripts contain targets that aren't associated with real files and
 # instead run arbitrary commands. bfg9000 supports this with the command()
 # function. Normally, you should pass the command to be run as an array of

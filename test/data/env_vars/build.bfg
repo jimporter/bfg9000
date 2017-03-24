@@ -1,7 +1,5 @@
 # -*- python -*-
 
-import sys
-
 test( executable('a', files=['a.cpp']),
       environment={'VARIABLE': 'hello world'} )
 
