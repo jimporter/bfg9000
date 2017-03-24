@@ -21,8 +21,10 @@ class Command(object):
         if not isiterable(args):
             raise TypeError('expected a list of command-line arguments')
 
+        args = listify(args)
         if in_place is None:
             in_place = not any(isinstance(i, Command) for i in args)
+
         if not in_place:
             args = type(args)(args)
 

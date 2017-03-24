@@ -239,5 +239,5 @@ def which(names, env=os.environ, resolve=False, kind='executable'):
 
     raise IOError("unable to find {kind}{filler} {names}".format(
         kind=kind, filler='; tried' if len(names) > 1 else '',
-        names=', '.join("'{}'".format(i) for i in names)
+        names=', '.join("{!r}".format(i) for i in names)
     ))
