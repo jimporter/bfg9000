@@ -110,10 +110,9 @@ try:
 
     @msbuild.rule_handler(Command, BuildStep)
     def msbuild_command(rule, build_inputs, solution, env):
-        # XXX: Support environment variables
         project = msbuild.ExecProject(
             env, name=rule.name,
-            commands=rule.cmds,
+            commands=[shell.global_env(rule.env, rule.cmds)],
             dependencies=solution.dependencies(rule.extra_deps),
         )
         solution[rule.output[0]] = project
