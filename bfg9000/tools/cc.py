@@ -443,7 +443,6 @@ class CcLinker(BuildCommand):
         return []
 
     def _entry_point(self, entry_point):
-        # This only applies to GCJ. XXX: Move GCJ-stuff to a separate class?
         if self.lang == 'java' and entry_point:
             return ['--main={}'.format(entry_point)]
         return []

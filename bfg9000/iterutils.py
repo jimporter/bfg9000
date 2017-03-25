@@ -6,7 +6,7 @@ __all__ = ['default_sentinel', 'first', 'isiterable', 'iterate', 'listify',
            'merge_dicts', 'merge_into_dict', 'reverse_enumerate', 'tween',
            'uniques', 'unlistify']
 
-# XXX: This could go in a funcutils module if we ever create one...
+# This could go in a funcutils module if we ever create one...
 default_sentinel = object()
 
 
