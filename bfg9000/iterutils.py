@@ -3,8 +3,7 @@ from six import iteritems, string_types
 from six.moves import range, zip
 
 __all__ = ['default_sentinel', 'first', 'isiterable', 'iterate', 'listify',
-           'merge_dicts', 'merge_into_dict', 'reverse_enumerate', 'tween',
-           'uniques', 'unlistify']
+           'merge_dicts', 'merge_into_dict', 'tween', 'uniques', 'unlistify']
 
 # This could go in a funcutils module if we ever create one...
 default_sentinel = object()
@@ -54,10 +53,6 @@ def unlistify(thing):
         return thing[0]
     else:
         return thing
-
-
-def reverse_enumerate(iterable):
-    return zip(reversed(range(len(iterable))), reversed(iterable))
 
 
 def tween(iterable, delim, prefix=None, suffix=None):

@@ -5,7 +5,7 @@ from six import iteritems
 from six.moves import zip
 
 from .. import shell
-from ..iterutils import first, isiterable, iterate, listify, reverse_enumerate
+from ..iterutils import first, isiterable, iterate, listify
 from ..path import Path, which
 
 
@@ -17,25 +17,21 @@ class Command(object):
         self.command = command
 
     @staticmethod
-    def convert_args(args, conv, in_place=None):
+    def convert_args(args, conv):
         if not isiterable(args):
             raise TypeError('expected a list of command-line arguments')
 
         args = listify(args)
-        if in_place is None:
-            in_place = not any(isinstance(i, Command) for i in args)
+        if not any(isinstance(i, Command) for i in args):
+            return args
 
-        if not in_place:
-            args = type(args)(args)
-
-        for i, v in reverse_enumerate(args):
-            if isinstance(v, Command):
-                c = conv(v)
-                if isiterable(c):
-                    args[i : i + 1] = c
-                else:
-                    args[i] = c
-        return args
+        result = type(args)()
+        for i in args:
+            if isinstance(i, Command):
+                result.extend(listify(conv(i)))
+            else:
+                result.append(i)
+        return result
 
     def __call__(self, *args, **kwargs):
         cmd = listify(kwargs.pop('cmd', self))
@@ -51,7 +47,7 @@ class Command(object):
                 env = kwargs.pop('env')
 
         return shell.execute(self.convert_args(
-            self(*args, **kwargs), lambda x: x.command, True
+            self(*args, **kwargs), lambda x: x.command
         ), env=env, stderr=shell.Mode.devnull)
 
     def __repr__(self):
