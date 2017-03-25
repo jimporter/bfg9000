@@ -96,6 +96,11 @@ class ConfigureHelp(argparse.Action):
         )
 
     def __call__(self, parser, namespace, values, option_string=None):
+        cwd = path.abspath('.')
+        if not hasattr(namespace, 'srcdir') and build.is_srcdir(cwd):
+            namespace.srcdir = cwd
+            namespace.builddir = None
+
         if getattr(namespace, 'srcdir', None):
             env, backend = environment_from_args(namespace)
             build.print_user_help(env, parser)

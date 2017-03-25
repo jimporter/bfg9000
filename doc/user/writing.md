@@ -302,10 +302,10 @@ hdr, src = build_step(['hello.tab.h', 'hello.tab.c'], cmd=[
 Many projects benefit from letting the user configure project-specific elements
 of their builds, e.g. by enabling certain optional features or by using
 different branding for testing and release builds. You can add support for
-options to configure your build by creating a `build.opts` file alongside your
+options to configure your build by creating a `options.bfg` file alongside your
 `build.bfg`.
 
-Inside `build.opts`, you can define arguments with the
+Inside `options.bfg`, you can define arguments with the
 [*argument()*](reference.md#argument) function:
 
 ```python

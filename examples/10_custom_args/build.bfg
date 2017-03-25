@@ -3,9 +3,9 @@
 # Many projects benefit from letting the user configure project-specific
 # elements of their builds, e.g. by enabling certain optional features or by
 # using different branding for testing and release builds. You can add support
-# for options to configure your build by creating a `build.opts` file alongside
-# your `build.bfg`. See `build.opts` for more information about defining these
-# arguments.
+# for options to configure your build by creating a `options.bfg` file
+# alongside your `build.bfg`. See `options.bfg` for more information about
+# defining these arguments.
 #
 # Once these options are defined, you can fetch their results from the built-in
 # argv global in your `build.bfg` file:

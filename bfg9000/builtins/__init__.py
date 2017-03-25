@@ -127,7 +127,6 @@ class Builtin(object):
         return spec.defaults[builtin_bound - len(spec.args)]
 
     def bind(self, **kwargs):
-        init()
         builtins = {}
         for k, v in iteritems(self._builtins):
             builtins[k] = v.bind(builtins=builtins, **kwargs)

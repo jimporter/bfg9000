@@ -1,9 +1,10 @@
 # Reference
 
 Below are listed all the builtin functions and properties available to bfg9000
-scripts (`build.bfg` and `build.opts`). Most are only available to `build.bfg`
+scripts (`build.bfg` and `options.bfg`). Most are only available to `build.bfg`
 files, since that's where most of the build configuration logic belongs, but
-some may be used in `build.opts`. Consult each function to see its availability.
+some may be used in `options.bfg`. Consult each function to see its
+availability.
 
 ## File types
 
@@ -633,7 +634,7 @@ In bfg9000, this is performed with the
 
 The *environment*, `env`, is a special object that encapsulates information
 about the system outside of bfg9000. It's used internally for nearly all
-platform-specific code, but it can also help in `build.bfg` (or `build.opts`!)
+platform-specific code, but it can also help in `build.bfg` (or `options.bfg`!)
 files when you encounter some unavoidable issue with multiplatform
 compatibility.
 
@@ -775,7 +776,7 @@ The name of the platform, e.g. `'linux'`, `'darwin'` (macOS), or `'windows'`.
 ## Utilities
 
 ### argument(*names*..., [*action*], [*nargs*], [*const*], [*default*], [*type*], [*choices*], [*required*], [*help*], [*metavar*], [*dest*]) { #argument }
-Availability: `build.opts`
+Availability: `options.bfg`
 {: .subtitle}
 
 Define how a particular command-line argument will be parsed. *names* is a
@@ -801,7 +802,7 @@ Retrieve the set of [user-defined arguments](writing.md#user-defined-arguments)
 passed to bfg9000; this is an [*argparse.Namespace*][namespace] object.
 
 ### \__bfg9000__
-Availability: `build.bfg` and `build.opts`
+Availability: `build.bfg` and `options.bfg`
 {: .subtitle}
 
 A dictionary containing all the builtin functions and global variables defined
@@ -809,7 +810,7 @@ by bfg9000. This can be useful for feature detection or accessing builtins
 shadowed by a local variable.
 
 ### bfg9000_required_version([*version*], [*python_version*]) { #bfg9000_required_version }
-Availability: `build.bfg` and `build.opts`
+Availability: `build.bfg` and `options.bfg`
 {: .subtitle}
 
 Set the required *version* for bfg9000 and/or the required *python_version*.
@@ -818,7 +819,7 @@ the actual versions don't match the specifiers, a
 [*VersionError*](#versionerror) is raised.
 
 ### bfg9000_version
-Availability: `build.bfg` and `build.opts`
+Availability: `build.bfg` and `options.bfg`
 {: .subtitle}
 
 Return the current version of bfg9000. This can be useful if you want to
@@ -893,14 +894,14 @@ distributions](writing.md#distributing-your-source).
 ## Exceptions
 
 ### PackageResolutionError
-Availability: `build.bfg` and `build.opts`
+Availability: `build.bfg` and `options.bfg`
 {: .subtitle}
 
 An exception raised when a [package resolution function](#package-resolvers) is
 unable to find the specified package.
 
 ### PackageVersionError
-Availability: `build.bfg` and `build.opts`
+Availability: `build.bfg` and `options.bfg`
 {: .subtitle}
 
 An exception raised when a [package resolution function](#package-resolvers)
@@ -910,7 +911,7 @@ specifier. Derived from both
 [*VersionError*](#versionerror).
 
 ### VersionError
-Availability: `build.bfg` and `build.opts`
+Availability: `build.bfg` and `options.bfg`
 {: .subtitle}
 
 An exception raised when a version fails to match the supplied version
