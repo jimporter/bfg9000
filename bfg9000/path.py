@@ -7,8 +7,7 @@ from contextlib import contextmanager
 
 from . import safe_str
 from .iterutils import isiterable, listify
-from .platforms import platform_name, platform_info
-from . import shell
+from .platforms import platform_name
 
 Root = Enum('Root', ['srcdir', 'builddir', 'absolute'])
 InstallRoot = Enum('InstallRoot', ['prefix', 'exec_prefix', 'bindir', 'libdir',
@@ -209,35 +208,3 @@ def pushd(dirname, makedirs=False, mode=0o777, exist_ok=False):
     os.chdir(dirname)
     yield
     os.chdir(old)
-
-
-def which(names, env=os.environ, resolve=False, kind='executable'):
-    paths = env.get('PATH', os.defpath).split(os.pathsep)
-    exts = ['']
-    if platform_name() in ['windows', 'cygwin']:
-        exts.extend(env.get('PATHEXT', '').split(os.pathsep))
-
-    names = listify(names)
-    if len(names) == 0:
-        raise TypeError('must supply at least one name')
-
-    for name in names:
-        name = shell.listify(name)
-        check = name[0].string() if isinstance(name[0], Path) else name[0]
-        if os.path.isabs(check):
-            fullpaths = [check]
-        else:
-            search = ['.'] if os.path.dirname(check) else paths
-            fullpaths = [os.path.normpath(os.path.join(path, check))
-                         for path in search]
-
-        for fullpath in fullpaths:
-            for ext in exts:
-                withext = fullpath + ext
-                if os.path.exists(withext):
-                    return [withext] + name[1:] if resolve else name
-
-    raise IOError("unable to find {kind}{filler} {names}".format(
-        kind=kind, filler='; tried' if len(names) > 1 else '',
-        names=', '.join("{!r}".format(i) for i in names)
-    ))

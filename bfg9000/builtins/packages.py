@@ -8,7 +8,8 @@ from ..exceptions import PackageResolutionError, PackageVersionError
 from ..file_types import Executable, Framework, Package, CommonPackage
 from ..iterutils import default_sentinel, iterate, listify
 from ..objutils import objectify
-from ..path import Path, Root, which
+from ..path import Path, Root
+from ..shell import which
 from ..versioning import check_version, SpecifierSet, Version
 
 

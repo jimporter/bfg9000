@@ -2,8 +2,9 @@ import os
 import subprocess
 from enum import Enum
 
-from ..platforms import platform_name
 from .list import shell_list
+from ..path import Path
+from ..platforms import platform_name
 
 if platform_name() == 'windows':
     from .windows import *
@@ -12,6 +13,38 @@ else:
 
 Mode = Enum('Mode', ['pipe', 'stdout', 'devnull', 'normal'])
 CalledProcessError = subprocess.CalledProcessError
+
+
+def which(names, env=os.environ, resolve=False, kind='executable'):
+    paths = env.get('PATH', os.defpath).split(os.pathsep)
+    exts = ['']
+    if platform_name() in ['windows', 'cygwin']:
+        exts.extend(env.get('PATHEXT', '').split(os.pathsep))
+
+    names = listify(names)
+    if len(names) == 0:
+        raise TypeError('must supply at least one name')
+
+    for name in names:
+        name = listify(name)
+        check = name[0].string() if isinstance(name[0], Path) else name[0]
+        if os.path.isabs(check):
+            fullpaths = [check]
+        else:
+            search = ['.'] if os.path.dirname(check) else paths
+            fullpaths = [os.path.normpath(os.path.join(path, check))
+                         for path in search]
+
+        for fullpath in fullpaths:
+            for ext in exts:
+                withext = fullpath + ext
+                if os.path.exists(withext):
+                    return [withext] + name[1:] if resolve else name
+
+    raise IOError("unable to find {kind}{filler} {names}".format(
+        kind=kind, filler='; tried' if len(names) > 1 else '',
+        names=', '.join("{!r}".format(i) for i in names)
+    ))
 
 
 def execute(args, shell=False, env=None, stdout=Mode.pipe, stderr=Mode.normal,

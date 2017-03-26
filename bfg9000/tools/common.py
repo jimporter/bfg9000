@@ -6,7 +6,7 @@ from six.moves import zip
 
 from .. import shell
 from ..iterutils import first, isiterable, iterate, listify
-from ..path import Path, which
+from ..path import Path
 
 
 class Command(object):
@@ -87,7 +87,7 @@ class BuildCommand(Command):
 def check_which(names, *args, **kwargs):
     names = listify(names)
     try:
-        return which(names, *args, **kwargs)
+        return shell.which(names, *args, **kwargs)
     except IOError as e:
         warnings.warn(str(e))
         # Assume the first name is the best choice.
@@ -97,7 +97,8 @@ def check_which(names, *args, **kwargs):
 def choose_builder(env, lang, candidates, builders, cmd_var, flags_var, flags):
     candidates = listify(candidates)
     try:
-        cmd = which(candidates, env.variables, kind='{} compiler'.format(lang))
+        cmd = shell.which(candidates, env.variables,
+                          kind='{} compiler'.format(lang))
     except IOError as e:
         warnings.warn(str(e))
         cmd = shell.listify(candidates[0])
