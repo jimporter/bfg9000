@@ -1,3 +1,6 @@
+from subprocess import CalledProcessError
+
+
 class PackageResolutionError(Exception):
     pass
 

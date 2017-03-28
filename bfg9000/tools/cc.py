@@ -49,7 +49,7 @@ class CcBuilder(object):
         # grab the command line.
         ld_command = None
         try:
-            stdout, stderr = shell.execute(
+            stdout, stderr = env.execute(
                 command + ldflags + ['-v', '-Wl,--version'],
                 stderr=shell.Mode.pipe, returncode='any'
             )
@@ -87,8 +87,7 @@ class CcBuilder(object):
 
     @staticmethod
     def check_command(env, command):
-        return shell.execute(command + ['--version'], env=env.variables,
-                             stderr=shell.Mode.devnull)
+        return env.execute(command + ['--version'], stderr=shell.Mode.devnull)
 
     @property
     def flavor(self):
@@ -319,9 +318,9 @@ class CcLinker(BuildCommand):
     def sysroot(self, strict=False):
         try:
             # XXX: clang doesn't support -print-sysroot.
-            return shell.execute(
+            return self.env.execute(
                 self.command + self.global_flags + ['-print-sysroot'],
-                stderr=shell.Mode.devnull, env=self.env.variables
+                stderr=shell.Mode.devnull
             ).rstrip()
         except (OSError, shell.CalledProcessError):
             if strict:
@@ -330,9 +329,9 @@ class CcLinker(BuildCommand):
 
     def search_dirs(self, strict=False):
         try:
-            output = shell.execute(
+            output = self.env.execute(
                 self.command + self.global_flags + ['-print-search-dirs'],
-                stderr=shell.Mode.devnull, env=self.env.variables
+                stderr=shell.Mode.devnull
             )
             m = re.search(r'^libraries: =(.*)', output, re.MULTILINE)
             search_dirs = re.split(os.pathsep, m.group(1))

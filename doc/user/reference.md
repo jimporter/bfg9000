@@ -657,15 +657,50 @@ Equivalent to *[env.variables](#env-variables).get(name, default)*.
 Return the target [platform](#platforms) used for the build (currently the same
 as the host platform).
 
-#### env.run_arguments(*line*, [*lang*]) { #env-run_arguments }
+#### env.run_arguments(*args*, [*lang*]) { #env-run_arguments }
 
-Generate the arguments needed to run the command in *line*. If *line* is a file
+Generate the arguments needed to run the command in *args*. If *args* is a file
 type (or a list beginning with a file type) such as an
 [*executable*](#executable), it will be prepended with the
 [runner](#builder-runner) for *lang* as needed. If *lang* is *None*, the
-language will be determined by the language of *line*'s first element.
+language will be determined by the language of *args*'s first element.
 
-#### env.variables
+#### env.Mode { #env-Mode }
+
+An enumeration of output modes for [*env.execute*](#env-execute) and
+[*env.run*](#env-run). Possible values are:
+
+* *normal*: Perform no redirection and output to stdout/stderr normally
+* *pipe*: Pipe the output and return it to the calling process
+* *stdout*: Pipe stderr output to stdout
+* *devnull*: Pipe output to `/dev/null` or equivalent
+
+#### env.execute(*args*, [*env*], [*env_update*], [*shell*], [*stdout*], [*stderr*], [*returncode*]) { #env-execute }
+
+Execute the command-line arguments in *args* and return the output. If *shell*
+is true, *args* should be a string that will be interpreted by the system's
+shell; if not (the default), it should be a series of arguments.
+
+You can also set *env* to be a dictionary of environment variables to pass to
+the child process. If *env_update* is true (the default), these will be added to
+the environment variables in [*env.varables*](#env-variables); otherwise, *env*
+represents *all* the environment variables to pass to the child process.
+
+*stdout* and *stderr* are [*env.Mode*](#env-Mode) values that describe how (or
+if) output should be redirected. By default, *stdout* is *Mode.pipe* and
+*stderr* is *Mode.normal*.
+
+Finally, *returncode* specifies the expected return code from the subprocess.
+This is 0 by default, and may be either a number, a list of numbers, or `'any'`
+to match any return code. If the return code fails to match, a
+[*CalledProcessError*](#CalledProcessError) will be thrown.
+
+#### env.run(*args*, [*lang*], [*env*], [*env_update*], [*stdout*], [*stderr*], [*returncode*]) { #env-run }
+
+Run a command, generating any arguments needed to perform the operation.
+Equivalent to `env.execute(env.run_arguments(arg, lang), ...)`.
+
+#### env.variables { #env-variables }
 
 A dict of all the environment variables as they were defined when the build was
 first configured.
@@ -893,6 +928,14 @@ distributions](writing.md#distributing-your-source).
 
 ## Exceptions
 
+### CalledProcessError
+Availability: `build.bfg` and `options.bfg`
+{: .subtitle}
+
+An exception raised when a subprocess fails to execute successfully. This is
+just an alias for the standard Python error
+[*subprocess.CalledProcessError*][subprocess-CalledProcessError].
+
 ### PackageResolutionError
 Availability: `build.bfg` and `options.bfg`
 {: .subtitle}
@@ -928,4 +971,4 @@ specifier.
 [pkg-config]: https://www.freedesktop.org/wiki/Software/pkg-config/
 [add_argument]: https://docs.python.org/library/argparse.html#the-add-argument-method
 [namespace]: https://docs.python.org/library/argparse.html#argparse.Namespace
-
+[subprocess-CalledProcessError]: https://docs.python.org/library/subprocess.html#subprocess.CalledProcessError

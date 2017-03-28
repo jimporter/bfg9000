@@ -5,7 +5,7 @@ from six import iteritems
 from six.moves import zip
 
 from .. import shell
-from ..iterutils import first, isiterable, iterate, listify
+from ..iterutils import first, isiterable, iterate, listify, slice_dict
 from ..path import Path
 
 
@@ -38,17 +38,11 @@ class Command(object):
         return self._call(cmd, *args, **kwargs)
 
     def run(self, *args, **kwargs):
-        env = self.env.variables
-        if 'env' in kwargs:
-            if kwargs.pop('env_update', True):
-                env = env.copy()
-                env.update(kwargs.pop('env'))
-            else:
-                env = kwargs.pop('env')
+        run_kwargs = slice_dict(kwargs, ('env', 'env_update'))
 
-        return shell.execute(self.convert_args(
-            self(*args, **kwargs), lambda x: x.command
-        ), env=env, stderr=shell.Mode.devnull)
+        return self.env.execute(
+            self(*args, **kwargs), stderr=shell.Mode.devnull, **run_kwargs
+        )
 
     def __repr__(self):
         return '<{}({})>'.format(

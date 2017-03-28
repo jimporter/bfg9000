@@ -3,19 +3,22 @@ import subprocess
 from enum import Enum
 
 from .list import shell_list
+from ..iterutils import listify
 from ..path import Path
 from ..platforms import platform_name
+from ..safe_str import safe_str
 
 if platform_name() == 'windows':
     from .windows import *
 else:
     from .posix import *
 
-Mode = Enum('Mode', ['pipe', 'stdout', 'devnull', 'normal'])
+Mode = Enum('Mode', ['normal', 'pipe', 'stdout', 'devnull'])
 CalledProcessError = subprocess.CalledProcessError
 
 
-def which(names, env=os.environ, resolve=False, kind='executable'):
+def which(names, env=os.environ, base_dirs=None, resolve=False,
+          kind='executable'):
     paths = env.get('PATH', os.defpath).split(os.pathsep)
     exts = ['']
     if platform_name() in ['windows', 'cygwin']:
@@ -27,7 +30,8 @@ def which(names, env=os.environ, resolve=False, kind='executable'):
 
     for name in names:
         name = listify(name)
-        check = name[0].string() if isinstance(name[0], Path) else name[0]
+        check = (name[0].string(base_dirs) if isinstance(name[0], Path)
+                 else name[0])
         if os.path.isabs(check):
             fullpaths = [check]
         else:
@@ -47,16 +51,23 @@ def which(names, env=os.environ, resolve=False, kind='executable'):
     ))
 
 
-def execute(args, shell=False, env=None, stdout=Mode.pipe, stderr=Mode.normal,
-            returncode=0):
+def execute(args, shell=False, env=None, base_dirs=None, stdout=Mode.pipe,
+            stderr=Mode.normal, returncode=0):
+    def stringify(s):
+        s = safe_str(s)
+        return s.string(base_dirs) if isinstance(s, Path) else s
+
+    if not shell:
+        args = [stringify(i) for i in args]
+
     devnull = (open(os.devnull, 'wb') if Mode.devnull in (stdout, stderr)
                else None)
 
     def conv(mode):
-        return ({Mode.pipe:    subprocess.PIPE,
+        return ({Mode.normal:  None,
+                 Mode.pipe:    subprocess.PIPE,
                  Mode.stdout:  subprocess.STDOUT,
-                 Mode.devnull: devnull,
-                 Mode.normal:  None}).get(mode, mode)
+                 Mode.devnull: devnull}).get(mode, mode)
 
     try:
         proc = subprocess.Popen(
@@ -64,7 +75,8 @@ def execute(args, shell=False, env=None, stdout=Mode.pipe, stderr=Mode.normal,
             stdout=conv(stdout), stderr=conv(stderr)
         )
         output = proc.communicate()
-        if returncode is not 'any' and proc.returncode != returncode:
+        if ( returncode is not 'any' and
+             proc.returncode not in listify(returncode) ):
             raise CalledProcessError(proc.returncode, args)
 
         if stdout == Mode.pipe:

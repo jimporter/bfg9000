@@ -31,9 +31,8 @@ class LdLinker(object):
 
     def search_dirs(self, sysroot='/', strict=False):
         try:
-            output = shell.execute(
-                self.command + ['--verbose'],
-                stderr=shell.Mode.devnull, env=self.env.variables
+            output = self.env.execute(
+                self.command + ['--verbose'], stderr=shell.Mode.devnull
             )
             search_dirs = [i.group(1) for i in re.finditer(
                 r'SEARCH_DIR\("((?:[^"\\]|\\.)*)"\)', output)

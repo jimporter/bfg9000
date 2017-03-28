@@ -34,9 +34,8 @@ class JvmBuilder(object):
         self.version = None
         if lang == 'java':
             try:
-                output = shell.execute(
-                    run_command + ['-version'], env=env.variables,
-                    stderr=shell.Mode.stdout
+                output = env.execute(
+                    run_command + ['-version'], stderr=shell.Mode.stdout
                 )
                 if re.search('Java(TM) (\w+)? Runtime Environment', output):
                     self.brand = 'oracle'
@@ -58,8 +57,7 @@ class JvmBuilder(object):
 
     @staticmethod
     def check_command(env, command):
-        return shell.execute(command + ['-version'], env=env.variables,
-                             stderr=shell.Mode.stdout)
+        return env.execute(command + ['-version'], stderr=shell.Mode.stdout)
 
     @property
     def flavor(self):
@@ -217,18 +215,17 @@ class JvmPackageResolver(object):
         self.builder = builder
 
         if self.lang == 'scala':
-            env_vars = {'JAVA_OPTS': '-XshowSettings:properties'}
-            env_vars.update(env.variables)
+            extra_env = {'JAVA_OPTS': '-XshowSettings:properties'}
             args = ['-version']
             returncode = 1
         else:
-            env_vars = env.variables
+            extra_env = None
             args = ['-XshowSettings:properties', '-version']
             returncode = 0
 
         try:
-            output = shell.execute(
-                command + args, env=env_vars, stdout=shell.Mode.devnull,
+            output = env.execute(
+                command + args, env=extra_env, stdout=shell.Mode.devnull,
                 stderr=shell.Mode.pipe, returncode=returncode
             )
             self.ext_dirs = self._get_dirs('java.ext.dirs', output)

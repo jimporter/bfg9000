@@ -6,10 +6,12 @@ from six import iteritems
 
 from . import platforms
 from . import tools
+from . import shell
 from .backends import list_backends
 from .file_types import Executable, Node
 from .iterutils import first, isiterable, listify
 from .path import InstallRoot, Path, Root
+from .tools.common import Command
 from .versioning import Version
 
 LibraryMode = namedtuple('LibraryMode', ['shared', 'static'])
@@ -22,6 +24,8 @@ class EnvVersionError(RuntimeError):
 class Environment(object):
     version = 11
     envfile = '.bfg_environ'
+
+    Mode = shell.Mode
 
     def __new__(cls, *args, **kwargs):
         env = object.__new__(cls)
@@ -77,27 +81,45 @@ class Environment(object):
             except ValueError:
                 return None
 
-    def run_arguments(self, line, lang=None):
-        if isinstance(line, Node):
-            line = [line]
-        elif isiterable(line):
-            line = listify(line)
+    def run_arguments(self, args, lang=None):
+        if isinstance(args, Node):
+            args = [args]
+        elif isiterable(args):
+            args = listify(args)
         else:
-            return line
+            return args
 
-        if len(line) == 0 or not isinstance(line[0], Node):
-            return line
+        if len(args) == 0 or not isinstance(args[0], Node):
+            return args
 
         if lang is None:
-            lang = first(getattr(line[0], 'lang', None), default=None)
+            lang = first(getattr(args[0], 'lang', None), default=None)
         runner = self._runner(lang)
         if runner:
-            return runner.run_arguments(line[0]) + line[1:]
+            return runner.run_arguments(args[0]) + args[1:]
 
-        if not isinstance(line[0], Executable):
+        if not isinstance(args[0], Executable):
             raise TypeError('expected an executable for {} to run'
                             .format(lang))
-        return line
+        return args
+
+    def execute(self, args, env=None, env_update=True, **kwargs):
+        env_vars = self.variables
+        if env:
+            if env_update:
+                env_vars = env_vars.copy()
+                env_vars.update(env)
+            else:
+                env_vars = env
+
+        if not kwargs.get('shell', False):
+            args = Command.convert_args(args, lambda x: x.command)
+
+        return shell.execute(args, env=env_vars, base_dirs=self.base_dirs,
+                             **kwargs)
+
+    def run(self, args, lang=None, *posargs, **kwargs):
+        return self.execute(self.run_arguments(args, lang), *posargs, **kwargs)
 
     def save(self, path):
         with open(os.path.join(path, self.envfile), 'w') as out:

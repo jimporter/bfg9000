@@ -18,7 +18,7 @@ examples_dir = os.path.join(this_dir, '..', '..', 'examples')
 test_data_dir = os.path.join(this_dir, '..', 'data')
 test_stage_dir = os.path.join(this_dir, '..', 'stage')
 
-env = Environment(None, None, None, None, None, None, (False, False), None)
+env = Environment(None, None, None, None, None, {}, (False, False), None)
 
 Target = namedtuple('Target', ['name', 'path'])
 
