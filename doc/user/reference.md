@@ -687,8 +687,7 @@ the environment variables in [*env.varables*](#env-variables); otherwise, *env*
 represents *all* the environment variables to pass to the child process.
 
 *stdout* and *stderr* are [*env.Mode*](#env-Mode) values that describe how (or
-if) output should be redirected. By default, *stdout* is *Mode.pipe* and
-*stderr* is *Mode.normal*.
+if) output should be redirected. By default, both are set to *Mode.normal*.
 
 Finally, *returncode* specifies the expected return code from the subprocess.
 This is 0 by default, and may be either a number, a list of numbers, or `'any'`

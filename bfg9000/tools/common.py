@@ -41,7 +41,8 @@ class Command(object):
         run_kwargs = slice_dict(kwargs, ('env', 'env_update'))
 
         return self.env.execute(
-            self(*args, **kwargs), stderr=shell.Mode.devnull, **run_kwargs
+            self(*args, **kwargs), stdout=shell.Mode.pipe,
+            stderr=shell.Mode.devnull, **run_kwargs
         )
 
     def __repr__(self):

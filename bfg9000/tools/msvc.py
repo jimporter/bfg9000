@@ -66,7 +66,8 @@ class MsvcBuilder(object):
 
     @staticmethod
     def check_command(env, command):
-        return env.execute(command + ['/?'], stderr=shell.Mode.stdout)
+        return env.execute(command + ['/?'], stdout=shell.Mode.pipe,
+                           stderr=shell.Mode.stdout)
 
     @property
     def flavor(self):

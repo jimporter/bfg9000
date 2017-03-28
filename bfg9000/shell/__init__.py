@@ -51,7 +51,7 @@ def which(names, env=os.environ, base_dirs=None, resolve=False,
     ))
 
 
-def execute(args, shell=False, env=None, base_dirs=None, stdout=Mode.pipe,
+def execute(args, shell=False, env=None, base_dirs=None, stdout=Mode.normal,
             stderr=Mode.normal, returncode=0):
     def stringify(s):
         s = safe_str(s)

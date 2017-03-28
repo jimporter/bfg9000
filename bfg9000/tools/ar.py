@@ -22,7 +22,8 @@ class ArLinker(BuildCommand):
     def _check_version(self):
         try:
             output = self.env.execute(
-                self.command + ['--version'], stderr=shell.Mode.devnull
+                self.command + ['--version'], stdout=shell.Mode.pipe,
+                stderr=shell.Mode.devnull
             )
             if 'GNU ar' in output:
                 return 'gnu', detect_version(output)

@@ -12,7 +12,8 @@ from ...versioning import Version
 def version(env=os.environ):
     try:
         make = shell.which(env.get('MAKE', ['make', 'gmake']), env)
-        output = shell.execute(make + ['--version'], stderr=shell.Mode.devnull)
+        output = shell.execute(make + ['--version'], stdout=shell.Mode.pipe,
+                               stderr=shell.Mode.devnull)
         m = re.match(r'GNU Make ([\d\.]+)', output)
         if m:
             return Version(m.group(1))

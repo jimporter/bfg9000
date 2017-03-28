@@ -35,7 +35,8 @@ class JvmBuilder(object):
         if lang == 'java':
             try:
                 output = env.execute(
-                    run_command + ['-version'], stderr=shell.Mode.stdout
+                    run_command + ['-version'], stdout=shell.Mode.pipe,
+                    stderr=shell.Mode.stdout
                 )
                 if re.search('Java(TM) (\w+)? Runtime Environment', output):
                     self.brand = 'oracle'
@@ -57,7 +58,8 @@ class JvmBuilder(object):
 
     @staticmethod
     def check_command(env, command):
-        return env.execute(command + ['-version'], stderr=shell.Mode.stdout)
+        return env.execute(command + ['-version'], stdout=shell.Mode.pipe,
+                           stderr=shell.Mode.stdout)
 
     @property
     def flavor(self):

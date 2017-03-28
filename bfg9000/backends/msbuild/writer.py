@@ -11,7 +11,7 @@ from ...versioning import Version
 def version(env=os.environ):
     try:
         msbuild = shell.which(env.get('MSBUILD', ['msbuild', 'xbuild']), env)
-        output = shell.execute(msbuild + ['/version'],
+        output = shell.execute(msbuild + ['/version'], stdout=shell.Mode.pipe,
                                stderr=shell.Mode.devnull)
         m = re.search(r'([\d\.]+)$', output)
         if m:

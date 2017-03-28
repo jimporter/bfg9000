@@ -11,7 +11,7 @@ from ...versioning import SpecifierSet, Version
 def version(env=os.environ):
     try:
         ninja = shell.which(env.get('NINJA', ['ninja', 'ninja-build']), env)
-        output = shell.execute(ninja + ['--version'],
+        output = shell.execute(ninja + ['--version'], stdout=shell.Mode.pipe,
                                stderr=shell.Mode.devnull)
         return Version(output.strip())
     except (IOError, OSError, shell.CalledProcessError):
