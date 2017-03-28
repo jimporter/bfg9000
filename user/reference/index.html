@@ -754,8 +754,7 @@ the child process. If <em>env_update</em> is true (the default), these will be a
 the environment variables in <a href="#env-variables"><em>env.varables</em></a>; otherwise, <em>env</em>
 represents <em>all</em> the environment variables to pass to the child process.</p>
 <p><em>stdout</em> and <em>stderr</em> are <a href="#env-Mode"><em>env.Mode</em></a> values that describe how (or
-if) output should be redirected. By default, <em>stdout</em> is <em>Mode.pipe</em> and
-<em>stderr</em> is <em>Mode.normal</em>.</p>
+if) output should be redirected. By default, both are set to <em>Mode.normal</em>.</p>
 <p>Finally, <em>returncode</em> specifies the expected return code from the subprocess.
 This is 0 by default, and may be either a number, a list of numbers, or <code>'any'</code>
 to match any return code. If the return code fails to match, a
