@@ -1,7 +1,7 @@
 site_name: bfg9000
 docs_dir: doc
 repo_url: https://github.com/jimporter/bfg9000/
-copyright: Copyright &copy; 2015-2016 Jim Porter
+copyright: Copyright &copy; 2015-2017 Jim Porter
 
 theme: yeti
 extra_css:
