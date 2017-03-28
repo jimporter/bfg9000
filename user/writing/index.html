@@ -445,9 +445,9 @@ to forward arguments along to <em>type</em>:</p>
 <p>Many projects benefit from letting the user configure project-specific elements
 of their builds, e.g. by enabling certain optional features or by using
 different branding for testing and release builds. You can add support for
-options to configure your build by creating a <code>build.opts</code> file alongside your
+options to configure your build by creating a <code>options.bfg</code> file alongside your
 <code>build.bfg</code>.</p>
-<p>Inside <code>build.opts</code>, you can define arguments with the
+<p>Inside <code>options.bfg</code>, you can define arguments with the
 <a href="../reference/#argument"><em>argument()</em></a> function:</p>
 <pre><code class="python"># Adds --name/--x-name to the list of available command-line options, e.g.:
 #   9k build/ --name=foobar
