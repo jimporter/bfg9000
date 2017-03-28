@@ -34,6 +34,7 @@ cache:
   - C:\ProgramData\chocolatey\lib -> appveyor.yml
 
 install:
+  - cinst curl ninja gnuwin32-coreutils.portable %CHOCO_EXTRAS%
   - |
     curl -LO http://downloads.xiph.org/releases/ogg/%LIBOGG%.zip
     7z x -y %LIBOGG%.zip > nul
@@ -41,7 +42,6 @@ install:
     mkdir lib
     copy %LIBOGG%\win32\VS2010\%LIBOGG_PLAT%\%LIBOGG_CONFIG%\libogg_static.lib lib\ogg.lib
     robocopy %LIBOGG%\include include *.h /E & exit 0
-  - cinst ninja gnuwin32-coreutils.portable %CHOCO_EXTRAS%
   - if defined VS call "%VS%" x86
   - set PATH=%PYTHON_PATH%;%PYTHON_PATH%\Scripts;%MINGW_PATH%;%PATH%
   - pip install lxml==3.6.0 .
