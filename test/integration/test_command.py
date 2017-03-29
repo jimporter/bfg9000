@@ -35,6 +35,9 @@ class TestRunExecutable(IntegrationTest):
     def __init__(self, *args, **kwargs):
         IntegrationTest.__init__(self, 'run_executable', *args, **kwargs)
 
+    def test_env_run(self):
+        self.assertExists(output_file('file.txt'))
+
     def test_cxx(self):
         assertRegex(self, self.build('cxx'),
                     re.compile(r'^\s*hello from c\+\+!$', re.MULTILINE))

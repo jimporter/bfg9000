@@ -8,3 +8,5 @@ command('java', cmds=[[java]])
 
 python = source_file('script.py')
 command('python', cmd=python)
+
+env.run([source_file('config_script.py'), env.builddir])
