@@ -649,7 +649,7 @@ class CcPackageResolver(object):
         if kind in ('any', 'shared'):
             libname = 'lib' + name + self.env.platform.shared_library_ext
             if self.env.platform.has_import_library:
-                libnames.append((libname + '.a', ImportLibrary, {}))
+                libnames.append((libname + '.a', LinkLibrary, {}))
             else:
                 libnames.append((libname, SharedLibrary, {}))
         if kind in ('any', 'static'):
@@ -661,7 +661,7 @@ class CcPackageResolver(object):
             # We don't actually know what kind of library this is. It could be
             # a static library or an import library (which we classify as a
             # kind of shared lib).
-            libnames.append((name + '.lib', Library))
+            libnames.append((name + '.lib', Library, {}))
 
         for base in search_dirs:
             for libname, libkind, extra_kwargs in libnames:
