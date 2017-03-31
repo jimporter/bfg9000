@@ -40,7 +40,7 @@ class InstallOutputs(object):
         return iter(self._outputs)
 
 
-def _can_install(env):
+def can_install(env):
     return all(i is not None for i in itervalues(env.install_dirs))
 
 
@@ -49,13 +49,13 @@ def install(builtins, build, env, *args):
     if len(args) == 0:
         raise ValueError('expected at least one argument')
 
-    can_install = _can_install(env)
-    if not can_install:
+    can_inst = can_install(env)
+    if not can_inst:
         warnings.warn('unset installation directories; installation of this ' +
                       'build disabled')
 
     for i in args:
-        if can_install:
+        if can_inst:
             build['install'].add(i)
         builtins['default'](i)
 

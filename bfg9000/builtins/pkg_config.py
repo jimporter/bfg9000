@@ -5,6 +5,7 @@ from six import iteritems, itervalues, string_types
 from . import builtin
 from .. import path
 from .file_types import generated_file
+from .install import can_install
 from ..build_inputs import build_input
 from ..file_types import *
 from ..iterutils import iterate, uniques
@@ -327,7 +328,8 @@ class PkgConfigInfo(object):
 
 @builtin.globals('builtins', 'build_inputs', 'env')
 def pkg_config(builtins, build, env, name=None, **kwargs):
-    build['pkg_config'].append(PkgConfigInfo(builtins, name, **kwargs))
+    if can_install(env):
+        build['pkg_config'].append(PkgConfigInfo(builtins, name, **kwargs))
 
 
 @builtin.post('builtins', 'build_inputs', 'env')
