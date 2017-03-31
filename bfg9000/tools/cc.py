@@ -2,7 +2,6 @@ import os.path
 import re
 import subprocess
 from itertools import chain
-from six.moves import filter as ifilter
 
 from . import pkg_config
 from .. import safe_str
@@ -291,7 +290,7 @@ class CcLinker(BuildCommand):
                              .format(basename))
 
         # Get the first non-None group from the match.
-        return next(ifilter( None, m.groups() ))
+        return next(i for i in m.groups() if i is not None)
 
     @property
     def brand(self):
