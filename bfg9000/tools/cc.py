@@ -460,18 +460,18 @@ class CcLinker(BuildCommand):
                 self._rpath(libraries, rpath_dirs, output) +
                 self._entry_point(entry_point))
 
-    def _link_lib(self, library):
+    def _link_lib(self, library, raw_static):
         if isinstance(library, WholeArchive):
             if self.env.platform.name == 'darwin':
                 return ['-Wl,-force_load', library.path]
             return ['-Wl,--whole-archive', library.path,
                     '-Wl,--no-whole-archive']
-        elif isinstance(library, StaticLibrary):
-            return [library.path]
         elif isinstance(library, Framework):
             if not self.env.platform.has_frameworks:
                 raise TypeError('frameworks not supported on this platform')
             return ['-framework', library.full_name]
+        elif isinstance(library, StaticLibrary) and raw_static:
+            return [library.path]
 
         # If we're here, we have a SharedLibrary (or possibly just a Library
         # in the case of MinGW).
@@ -493,7 +493,8 @@ class CcLinker(BuildCommand):
 
     def libs(self, options, output, pkg=False):
         libraries = getattr(options, 'libs', [])
-        return sum((self._link_lib(i) for i in libraries), [])
+        raw_static = getattr(options, 'raw_static', True)
+        return sum((self._link_lib(i, raw_static) for i in libraries), [])
 
     def _post_install(self, output, library):
         if self.builder.object_format not in ['elf', 'mach-o']:
