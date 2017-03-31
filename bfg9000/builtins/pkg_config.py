@@ -255,7 +255,7 @@ class PkgConfigInfo(object):
         conflicts = self.conflicts or RequirementSet()
 
         fwd_ldflags = sum(
-            (i.forward_args['options'] if hasattr(i, 'forward_args') else []
+            (i.forward_opts['options'] if hasattr(i, 'forward_opts') else []
              for i in chain(libs, libs_private)), []
         )
 
@@ -263,7 +263,7 @@ class PkgConfigInfo(object):
         # already in libs.
         libs_private = uniques(chain(
             chain.from_iterable(
-                i.forward_args['libs'] if hasattr(i, 'forward_args') else []
+                i.forward_opts['libs'] if hasattr(i, 'forward_opts') else []
                 for i in chain(libs, libs_private) if i not in libs
             ), libs_private
         ))

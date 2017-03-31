@@ -209,7 +209,7 @@ class DllLibrary(SharedLibrary):
 class StaticLibrary(Library):
     def __init__(self, *args, **kwargs):
         Library.__init__(self, *args, **kwargs)
-        self.forward_args = {}
+        self.forward_opts = {}
 
 
 class WholeArchive(StaticLibrary):
@@ -249,8 +249,8 @@ class DualUseLibrary(object):
         return self.shared.package_deps
 
     @property
-    def forward_args(self):
-        return self.static.forward_args
+    def forward_opts(self):
+        return self.static.forward_opts
 
 
 class PkgConfigPcFile(File):
