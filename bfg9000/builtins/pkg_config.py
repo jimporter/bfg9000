@@ -198,12 +198,12 @@ class PkgConfigInfo(object):
         out = Writer(out)
 
         pkg = CommonPackage(
-            None, None, raw_static=False,
+            None, None, syntax='cc', raw_static=False,
             includes=[installify(i, destdir=False) for i in data['includes']],
             libs=[installify(i.all[0], destdir=False) for i in data['libs']]
         )
         pkg_private = CommonPackage(
-            None, None, raw_static=False,
+            None, None, syntax='cc', raw_static=False,
             libs=[installify(i.all[0], destdir=False)
                   for i in data['libs_private']]
         )

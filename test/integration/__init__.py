@@ -138,7 +138,6 @@ class IntegrationTest(unittest.TestCase):
         if install:
             self.installdir = os.path.join(test_stage_dir,
                                            srcname + '-install')
-            self.extra_args = ['--prefix', self.installdir]
 
             install_dirs = platform_info().install_dirs.copy()
             install_dirs[InstallRoot.prefix] = Path(
@@ -218,12 +217,16 @@ class IntegrationTest(unittest.TestCase):
             shutil.copytree(orig_srcdir, srcdir)
         os.chdir(srcdir)
         cleandir(builddir)
+
         if installdir:
             cleandir(installdir)
+            install_args = ['--prefix', installdir]
+        else:
+            install_args = []
 
         self.assertPopen(
             ['bfg9000', '--debug', 'configure', builddir,
-             '--backend', self.backend] + extra_args,
+             '--backend', self.backend] + install_args + extra_args,
             env=env, env_update=True
         )
         os.chdir(builddir)

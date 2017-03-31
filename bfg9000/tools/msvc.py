@@ -1,4 +1,5 @@
 import os.path
+import re
 from itertools import chain
 
 from . import pkg_config
@@ -138,16 +139,18 @@ class MsvcBaseCompiler(BuildCommand):
     def _always_flags(self):
         return ['/nologo']
 
-    def _include_dir(self, directory):
-        return ['/I' + directory.path]
+    def _include_dir(self, directory, syntax):
+        prefix = '-I' if syntax == 'cc' else '/I'
+        return [prefix + directory.path]
 
     def _include_pch(self, pch):
         return ['/Yu' + pch.header_name]
 
     def flags(self, options, output, pkg=False):
+        syntax = getattr(options, 'syntax', 'msvc')
         includes = getattr(options, 'includes', [])
         pch = getattr(options, 'pch', None)
-        return sum((self._include_dir(i) for i in includes),
+        return sum((self._include_dir(i, syntax) for i in includes),
                    self._include_pch(pch) if pch else [])
 
     def link_flags(self, mode, defines):
@@ -226,13 +229,14 @@ class MsvcPchCompiler(MsvcBaseCompiler):
         return ['/Yc' + header.path.suffix]
 
     def flags(self, options, output):
+        syntax = getattr(options, 'syntax', 'msvc')
         header = getattr(options, 'file', None)
         flags = []
         if getattr(options, 'inject_include_dir', False):
             # Add the include path for the generated header; see pre_build()
             # above for more details.
             d = Directory(header.path.parent(), None)
-            flags.extend(self._include_dir(d))
+            flags.extend(self._include_dir(d, syntax))
 
         flags.extend(MsvcBaseCompiler.flags(self, options, output) +
                     (self._create_pch(header) if header else []))
@@ -253,6 +257,7 @@ class MsvcLinker(BuildCommand):
     flags_var = 'ldflags'
     libs_var = 'ldlibs'
 
+    __lib_re = re.compile(r'(.*)\.lib$')
     __allowed_langs = {
         'c'     : {'c'},
         'c++'   : {'c', 'c++'},
@@ -263,6 +268,14 @@ class MsvcLinker(BuildCommand):
             self, builder, env, rule_name, 'vclink', command,
             flags=('ldflags', ldflags), libs=('ldlibs', ldlibs)
         )
+
+    def _extract_lib_name(self, library):
+        basename = library.path.basename()
+        m = self.__lib_re.match(basename)
+        if not m:
+            raise ValueError("'{}' is not a valid library name"
+                             .format(basename))
+        return m.group(1)
 
     @property
     def brand(self):
@@ -305,17 +318,19 @@ class MsvcLinker(BuildCommand):
     def _always_flags(self):
         return ['/nologo']
 
-    def _lib_dirs(self, libraries, extra_dirs):
+    def _lib_dirs(self, libraries, extra_dirs, syntax):
         dirs = uniques(chain(
             (i.path.parent() for i in iterate(libraries)),
             extra_dirs
         ))
-        return ['/LIBPATH:' + i for i in dirs]
+        prefix = '-L' if syntax == 'cc' else '/LIBPATH:'
+        return [prefix + i for i in dirs]
 
     def flags(self, options, output, pkg=False):
+        syntax = getattr(options, 'syntax', 'msvc')
         libraries = getattr(options, 'libs', [])
         lib_dirs = getattr(options, 'lib_dirs', [])
-        return self._lib_dirs(libraries, lib_dirs)
+        return self._lib_dirs(libraries, lib_dirs, syntax)
 
     def parse_flags(self, flags):
         parser = ArgumentParser()
@@ -325,19 +340,24 @@ class MsvcLinker(BuildCommand):
         result['extra'] = extra
         return result
 
-    def _link_lib(self, library):
+    def _link_lib(self, library, syntax):
         if isinstance(library, WholeArchive):
             raise TypeError('MSVC does not support whole-archives')
         if isinstance(library, Framework):
             raise TypeError('MSVC does not support frameworks')
-        return [library.path.basename()]
+
+        if syntax == 'cc':
+            return ['-l' + self._extract_lib_name(library)]
+        else:
+            return [library.path.basename()]
 
     def always_libs(self, primary):
         return []
 
     def libs(self, options, output, pkg=False):
+        syntax = getattr(options, 'syntax', 'msvc')
         libraries = getattr(options, 'libs', [])
-        return sum((self._link_lib(i) for i in libraries), [])
+        return sum((self._link_lib(i, syntax) for i in libraries), [])
 
 
 class MsvcExecutableLinker(MsvcLinker):

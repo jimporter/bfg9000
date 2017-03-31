@@ -7,6 +7,7 @@ from .common import SimpleCommand
 from .. import shell
 from ..exceptions import PackageResolutionError, PackageVersionError
 from ..file_types import Package
+from ..iterutils import first
 from ..objutils import memoize
 from ..path import Path, Root
 from ..versioning import check_version, Version
@@ -64,7 +65,7 @@ class PkgConfigPackage(Package):
     def ldflags(self, linker, output):
         result = self._call(self.name, 'ldflags', self.static,
                             linker.flavor == 'msvc')
-        if output.format != 'elf' or self.static:
+        if first(output).format != 'elf' or self.static:
             return result
 
         # pkg-config packages don't generally include rpath information, so we
