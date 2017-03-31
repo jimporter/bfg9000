@@ -374,7 +374,7 @@ class MsvcSharedLibraryLinker(MsvcLinker):
 
     @property
     def _always_flags(self):
-        return ['/DLL']
+        return MsvcLinker._always_flags.fget(self) + ['/DLL']
 
 
 class MsvcStaticLinker(BuildCommand):
