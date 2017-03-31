@@ -188,24 +188,6 @@ class VersionedSharedLibrary(SharedLibrary):
         self.link = LinkLibrary(linkname, self.soname, external)
 
 
-class ExportFile(File):
-    private = True
-
-
-# This refers specifically to DLL files that have an import library, not just
-# anything with a .dll extension (for instance, .NET DLLs are just regular
-# shared libraries.
-class DllLibrary(SharedLibrary):
-    install_root = _InstallRoot.bindir
-    private = True
-
-    def __init__(self, path, format, lang, import_name, export_name=None,
-                 external=False):
-        SharedLibrary.__init__(self, path, format, lang, external)
-        self.import_lib = LinkLibrary(import_name, self, external)
-        self.export_file = ExportFile(export_name, external)
-
-
 class StaticLibrary(Library):
     def __init__(self, *args, **kwargs):
         Library.__init__(self, *args, **kwargs)
@@ -220,6 +202,25 @@ class WholeArchive(StaticLibrary):
         if name in ['library', '_safe_str', '__repr__', '__hash__', '__eq__']:
             return object.__getattribute__(self, name)
         return getattr(object.__getattribute__(self, 'library'), name)
+
+
+class ExportFile(File):
+    private = True
+
+
+# This refers specifically to DLL files that have an import library, not just
+# anything with a .dll extension (for instance, .NET DLLs are just regular
+# shared libraries. While this is a "library" in some senses, since you can't
+# link to it during building, we just consider it a LinkedBinary.
+class DllBinary(LinkedBinary):
+    install_root = _InstallRoot.bindir
+    private = True
+
+    def __init__(self, path, format, lang, import_name, export_name=None,
+                 external=False):
+        LinkedBinary.__init__(self, path, format, lang, external)
+        self.import_lib = LinkLibrary(import_name, self, external)
+        self.export_file = ExportFile(export_name, external)
 
 
 class DualUseLibrary(object):

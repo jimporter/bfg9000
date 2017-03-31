@@ -565,7 +565,7 @@ class CcSharedLibraryLinker(CcLinker):
             dllprefix = 'cyg' if self.env.platform.name == 'cygwin' else 'lib'
             dllname = lib(head, tail, dllprefix)
             impname = lib(head, tail, suffix='.a')
-            dll = DllLibrary(dllname, fmt, self.lang, impname)
+            dll = DllBinary(dllname, fmt, self.lang, impname)
             return [dll, dll.import_lib]
         elif version and self.env.platform.has_versioned_library:
             if self.env.platform.name == 'darwin':

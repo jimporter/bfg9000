@@ -368,8 +368,8 @@ class MsvcSharedLibraryLinker(MsvcLinker):
         dllname = Path(name + self.env.platform.shared_library_ext)
         impname = Path(name + '.lib')
         expname = Path(name + '.exp')
-        dll = DllLibrary(dllname, self.builder.object_format, self.lang,
-                         impname, expname)
+        dll = DllBinary(dllname, self.builder.object_format, self.lang,
+                        impname, expname)
         return [dll, dll.import_lib, dll.export_file]
 
     @property
