@@ -261,11 +261,12 @@ class PkgConfigInfo(object):
 
         # Add all the (unique) dependent libs to libs_private, unless they're
         # already in libs.
+        fwd = chain.from_iterable(
+            i.forward_opts['libs'] if hasattr(i, 'forward_opts') else []
+            for i in chain(libs, libs_private)
+        )
         libs_private = uniques(chain(
-            chain.from_iterable(
-                i.forward_opts['libs'] if hasattr(i, 'forward_opts') else []
-                for i in chain(libs, libs_private) if i not in libs
-            ), libs_private
+            (i for i in fwd if i not in libs), libs_private
         ))
 
         # Get the package dependencies for all the libs (public and private)
@@ -340,7 +341,9 @@ def finalize_pkg_config(builtins, build, env):
         'version': build['project'].version or '0.0',
         'includes': [i for i in install
                      if isinstance(i, (HeaderFile, HeaderDirectory))],
-        'libs': uniques(getattr(i, 'parent', i) for i in install
+        # Get all the explicitly-installed libraries, fetching the
+        # DualUseLibrary (i.e. the `parent`) if applicable.
+        'libs': uniques(getattr(i, 'parent', i) for i in install.explicit
                         if isinstance(i, Library)),
     }
 

@@ -15,29 +15,36 @@ from ..iterutils import iterate
 @build_input('install')
 class InstallOutputs(object):
     def __init__(self, build_inputs, env):
-        self._outputs = []
+        self.explicit = []
+        self.implicit = []
 
-    def add(self, item):
+    def add(self, item, explicit=True):
         for i in item.all:
-            if i not in self._outputs:
-                if not isinstance(i, File):
-                    raise TypeError('expected a file or directory')
-                if i.external:
-                    raise ValueError('external files are not installable')
+            if not isinstance(i, File):
+                raise TypeError('expected a file or directory')
+            if i.external:
+                raise ValueError('external files are not installable')
 
-                self._outputs.append(i)
+            if explicit:
+                if i in self.implicit:
+                    self.implicit.remove(i)
+                if i not in self.explicit:
+                    self.explicit.append(i)
+            else:
+                if i not in self.explicit and i not in self.implicit:
+                    self.implicit.append(i)
 
             for j in i.install_deps:
-                self.add(j)
+                self.add(j, explicit=False)
 
     def __nonzero__(self):
         return self.__bool__()
 
     def __bool__(self):
-        return bool(self._outputs)
+        return bool(self.explicit) or bool(self.implicit)
 
     def __iter__(self):
-        return iter(self._outputs)
+        return chain(self.explicit, self.implicit)
 
 
 def can_install(env):
