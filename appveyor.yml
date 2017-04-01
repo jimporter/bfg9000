@@ -35,7 +35,7 @@ cache:
   - C:\ProgramData\chocolatey\lib -> appveyor.yml
 
 install:
-  - cinst curl gnuwin32-coreutils.portable ninja %CHOCO_EXTRAS%
+  - cinst gnuwin32-coreutils.portable ninja %CHOCO_EXTRAS%
 
   # Fetch and install pkg-config.
   - curl -LO %GNOME_BASE%/dependencies/pkg-config_0.26-1_win32.zip
