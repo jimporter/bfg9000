@@ -16,10 +16,14 @@
   `command()` or `test()`/`test_driver()` without explicitly specifying the
   wrapper; supports all languages buildable by bfg9000, plus Lua, Perl, Python,
   and Ruby
-- Added `framework()` to specify macOS frameworks to use for a build
-- Improved detection of compiler flavors by checking version information
+- Add `env.run()`, `env.execute()`, and `env.run_arguments()` to simplify
+  executing programs during configuration
+- Add a `framework()` function to specify macOS frameworks to use for a build
+- Improve detection of compiler flavors by checking version information
 - Automatically colorize clang/gcc output under Ninja
 - Add support for uninstalling builds
+- Add `static_link_options` to `static_library()` to specify options to pass to
+  the static linker
 
 ### Breaking changes
 - `directory()` and `header_directory()` no longer automatically include all
