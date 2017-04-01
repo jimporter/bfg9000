@@ -208,10 +208,14 @@
   <code>command()</code> or <code>test()</code>/<code>test_driver()</code> without explicitly specifying the
   wrapper; supports all languages buildable by bfg9000, plus Lua, Perl, Python,
   and Ruby</li>
-<li>Added <code>framework()</code> to specify macOS frameworks to use for a build</li>
-<li>Improved detection of compiler flavors by checking version information</li>
+<li>Add <code>env.run()</code>, <code>env.execute()</code>, and <code>env.run_arguments()</code> to simplify
+  executing programs during configuration</li>
+<li>Add a <code>framework()</code> function to specify macOS frameworks to use for a build</li>
+<li>Improve detection of compiler flavors by checking version information</li>
 <li>Automatically colorize clang/gcc output under Ninja</li>
 <li>Add support for uninstalling builds</li>
+<li>Add <code>static_link_options</code> to <code>static_library()</code> to specify options to pass to
+  the static linker</li>
 </ul>
 <h3 id="breaking-changes">Breaking changes<a class="headerlink" href="#breaking-changes" title="Permanent link">§</a></h3>
 <ul>
