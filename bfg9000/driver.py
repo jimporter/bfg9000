@@ -1,5 +1,6 @@
 import os
 import sys
+from six import iteritems
 
 from . import build
 from . import log
@@ -35,6 +36,10 @@ refresh_desc = """
 Regenerate an existing set of build files needed to perform actual builds. This
 is typically run automatically if bfg9000 determines that the build files are
 out of date.
+"""
+
+env_desc = """
+Print the environment variables stored by this build configuration.
 """
 
 
@@ -211,6 +216,28 @@ def refresh(parser, args, extra):
         return 1
 
 
+def env(parser, args, extra):
+    if extra:
+        parser.error('unrecongized arguments: {}'.format(' '.join(extra)))
+
+    if build.is_srcdir(args.builddir):
+        parser.error('build directory must not contain a {} file'
+                     .format(build.bfgfile))
+
+    try:
+        env = Environment.load(args.builddir.string())
+
+        for k, v in sorted(iteritems(env.variables)):
+            if not args.unique or os.getenv(k) != v:
+                print('{}={}'.format(k, v))
+    except Exception as e:
+        msg = 'Unable to reload environment'
+        if str(e):
+            msg += ': {}'.format(str(e))
+        logger.error(msg, exc_info=True)
+        return 1
+
+
 def help(parser, args, extra):
     parser.parse_args(extra + ['--help'])
 
@@ -250,6 +277,17 @@ def main():
     refresh_p.add_argument('builddir', type=Directory(must_exist=True),
                            metavar='BUILDDIR', nargs='?', default='.',
                            help='build directory')
+
+    env_p = subparsers.add_parser(
+        'env', description=env_desc, help='print environment'
+    )
+    env_p.set_defaults(func=env)
+    env_p.add_argument('-u', '--unique', action='store_true',
+                       help='only show variables that differ from the ' +
+                       'current environment')
+    env_p.add_argument('builddir', type=Directory(must_exist=True),
+                       metavar='BUILDDIR', nargs='?', default='.',
+                       help='build directory')
 
     help_p = subparsers.add_parser(
         'help', help='show this help message and exit', add_help=False
