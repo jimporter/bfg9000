@@ -36,7 +36,6 @@ matrix:
 addons:
   apt:
     packages:
-      - default-jdk
       - freeglut3-dev
       - gfortran
       - gobjc
@@ -47,6 +46,7 @@ addons:
       - libgl1-mesa-dev
       - libogg-dev
       - ninja-build
+      - openjdk-7-jdk
       - scala
 cache:
   - apt
@@ -61,6 +61,9 @@ before_install:
       if [ "${PYTHON}" = "python3" ]; then
         brew install ${PYTHON}
       fi
+    else
+      export JAVA_HOME=/usr/lib/jvm/java-7-openjdk-amd64
+      unset _JAVA_OPTIONS
     fi
 install:
   - |
