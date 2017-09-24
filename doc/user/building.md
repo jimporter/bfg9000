@@ -69,7 +69,10 @@ option. For instance, to build a Makefile even if Ninja is installed:
 $ bfg9000 configure builddir/ --backend=make
 ```
 
-## Setting options
+For a complete description of the available command-line options for bfg9000,
+see the [Command-line Reference](command-line.md) chapter.
+
+## Setting build options
 
 Many options for building can be set via the environment. These generally follow
 the UNIX naming conventions, so you can use, say,

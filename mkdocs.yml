@@ -20,6 +20,7 @@ pages:
       - Building with bfg9000: user/building.md
       - Writing a Build File: user/writing.md
       - Reference: user/reference.md
+      - Command-Line Reference: user/command-line.md
       - Environment Variables: user/environment-vars.md
   - Developer Guide:
       - Internals: developer/internals.md
