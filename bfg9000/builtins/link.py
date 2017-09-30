@@ -86,9 +86,12 @@ class Link(Edge):
             raise ValueError('cannot link multiple object formats')
 
         self.langs = uniques(chain(
-            (i.lang for i in self.files),
+            (i.lang for i in self.files if i.lang is not None),
             (j for i in self.libs for j in iterate(i.lang))
         ))
+        if not self.langs:
+            raise ValueError('unable to determine language')
+
         self.linker = self.__find_linker(env, formats[0], self.langs)
 
         # To handle the different import/export rules for libraries, we need to

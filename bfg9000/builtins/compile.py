@@ -103,6 +103,9 @@ class CompileSource(Compile):
         if name is None:
             name = self.file.path.stripext().suffix
 
+        if self.file.lang is None:
+            raise ValueError("unable to determine language for file {!r}"
+                             .format(self.file.path))
         self.compiler = env.builder(self.file.lang).compiler
         Compile.__init__(self, builtins, build, env, name, **kwargs)
 
@@ -118,6 +121,9 @@ class CompileHeader(Compile):
             source, lang=self.file.lang
         ) if source else None
 
+        if self.file.lang is None:
+            raise ValueError("unable to determine language for file {!r}"
+                             .format(self.file.path))
         self.compiler = env.builder(self.file.lang).pch_compiler
         Compile.__init__(self, builtins, build, env, name, **kwargs)
 
