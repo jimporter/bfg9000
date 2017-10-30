@@ -1,0 +1,8 @@
+[run]
+source = bfg9000
+parallel = True
+
+[paths]
+source =
+  bfg9000/
+  /usr/local/lib/*/site-packages/bfg9000/

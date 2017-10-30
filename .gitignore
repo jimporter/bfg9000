@@ -1,7 +1,10 @@
 *.pyc
+/.coverage
+/.coverage.*
 /bfg9000.egg-info/
 /build/
 /deb_dist/
+/htmlcov/
 /dist/
 /site/
 /test/stage/

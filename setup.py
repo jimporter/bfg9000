@@ -7,6 +7,8 @@ from setuptools import setup, find_packages, Command
 
 from bfg9000.app_version import version
 
+root_dir = os.path.abspath(os.path.dirname(__file__))
+
 
 class DocServe(Command):
     description = 'serve the documentation locally'
@@ -21,7 +23,9 @@ class DocServe(Command):
         pass
 
     def run(self):
-        subprocess.call(['mkdocs', 'serve', '--dev-addr=' + self.dev_addr])
+        subprocess.check_call([
+            'mkdocs', 'serve', '--dev-addr=' + self.dev_addr
+        ])
 
 
 class DocDeploy(Command):
@@ -35,12 +39,40 @@ class DocDeploy(Command):
         pass
 
     def run(self):
-        subprocess.call(['mkdocs', 'gh-deploy', '--clean'])
+        subprocess.check_call(['mkdocs', 'gh-deploy', '--clean'])
+
+
+class Coverage(Command):
+    description = 'run tests with code coverage'
+    user_options = []
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        env = dict(os.environ)
+        pythonpath = os.path.join(root_dir, 'test', 'scripts')
+        if env.get('PYTHONPATH'):
+            pythonpath += os.pathsep + env['PYTHONPATH']
+        env.update({
+            'PYTHONPATH': pythonpath,
+            'COVERAGE_FILE': os.path.join(root_dir, '.coverage'),
+            'COVERAGE_PROCESS_START': os.path.join(root_dir, '.coveragerc'),
+        })
+
+        subprocess.check_call(['coverage', 'erase'])
+        subprocess.check_call(['coverage', 'run', 'setup.py', 'test'] +
+                              (['-q'] if self.verbose == 0 else []), env=env)
+        subprocess.check_call(['coverage', 'combine'])
 
 
 custom_cmds = {
     'doc_serve': DocServe,
     'doc_deploy': DocDeploy,
+    'coverage': Coverage,
 }
 
 try:
@@ -70,7 +102,7 @@ elif platform_name == 'Linux':
     if os.getenv('NO_PATCHELF') not in ['1', 'true']:
         more_requires.append('patchelf-wrapper')
 
-with open(os.path.join(os.path.dirname(__file__), 'README.md'), 'r') as f:
+with open(os.path.join(root_dir, 'README.md'), 'r') as f:
     # Read from the file and strip out the badges.
     long_desc = re.sub(r'(^# bfg9000.*)\n\n(.+\n)*', r'\1', f.read())
 
@@ -115,9 +147,9 @@ setup(
         more_requires
     ),
     extras_require={
-        'deploy': ['pypandoc'],
-        'doc': ['mkdocs', 'mkdocs-bootswatch'],
-        'lint': ['flake8 >= 3.0'],
+        'dev': ['coverage', 'flake8 >= 3.0', 'mkdocs', 'mkdocs-bootswatch',
+                'pypandoc'],
+        'test': ['coverage', 'flake8 >= 3.0'],
         'msbuild': ['lxml'],
     },
 

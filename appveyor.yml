@@ -60,6 +60,8 @@ install:
 
   - if defined VS call "%VS%" x86
   - set PATH=%PYTHON_PATH%;%PYTHON_PATH%\Scripts;%MINGW_PATH%;%PATH%
-  - pip install lxml==3.6.0 .
+  - pip install codecov lxml==3.6.0 .[test]
 test_script:
-  - python setup.py test -q
+  - python setup.py coverage -q
+on_success:
+  - codecov
