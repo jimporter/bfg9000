@@ -67,7 +67,7 @@
         }, 
         {
             "location": "/user/building/", 
-            "text": "Building With bfg9000\n\u00a7\n\n\nLike some other tools (e.g. \nCMake\n or \nautotools\n), bfg9000\nisn't actually a build system; it's a \nbuild configuration system\n or, if you\nprefer, a \nmeta-build system\n. That is, bfg9000 builds build files which you\nthen use to run your actual builds.\n\n\nYour first build\n\u00a7\n\n\nInvoking bfg9000 is simple. Assuming you have an existing project that uses\nbfg9000, just call \nbfg9000 configure builddir\n and it will generate the final\nbuild script (\nbuild.ninja\n in this case) in \nbuilddir\n to use for\nbuilding your project:\n\n\n$ cd /path/to/src/\n$ bfg9000 configure build/\n$ cd build/\n$ ninja\n\n\n\n\nSince the configure command is easily the most common thing to run when using\nbfg9000, you can use the following shorthand instead of\n\nbfg9000 configure build/\n:\n\n\n$ 9k build/\n\n\n\n\n\n\nNote\n\n\nOn Windows, using bfg9000 requires a bit more care. Since the MSVC tools\naren't in the \nPATH\n by default, you can't just open any command prompt.\nYou need to pick the \ncorrect\n prompt. Thankfully, Visual Studio provides\nStart Menu items such as \"VS2015 Developer Command Prompt\". These add the\nappropiate directories to the \nPATH\n, allowing you to use whichever version\nof the MSVC tools that you'd like.\n\n\n\n\nBuild directories\n\u00a7\n\n\nYou might have noticed above that \nbuild.ninja\n was placed in a separate\ndirectory. This is because bfg9000 exclusively uses \nout-of-tree builds\n; that\nis, the build directory must be different from the source directory. While\nslightly more inconvenient for one-off builds (users will have to \ncd\n into\nanother directory to start the build), the benefits are significant. First, it\nensures that cleaning a build is trivial: just remove the build directory.\nSecond, simplifies building in multiple configurations, a very useful feature\nfor development; you can easily have debug and optimized builds sitting\nside-by-side.\n\n\nIn our example above, we specified the build directory to place the final build\nfiles. However, you can also run bfg9000 \nfrom\n the build directory, in which\ncase you'd run \nbfg9000 configure srcdir/\n (or, equivalently, \n9k srcdir/\n). If\nneither the source nor build directories are your current working directory, you\ncan run:\n\n\nbfg9000 configure-into srcdir/ builddir/\n\n\n\n\nSelecting a backend\n\u00a7\n\n\nBy default, bfg9000 tries to use the most appropriate build backend for your\nsystem. In descending order, bfg prefers \nninja\n, \nmake\n, and\n\nmsbuild\n. If one of these isn't installed, it will try the next best\noption. However, you can explicitly select a backend with the \n--backend\n\noption. For instance, to build a Makefile even if Ninja is installed:\n\n\n$ bfg9000 configure builddir/ --backend=make\n\n\n\n\nSetting options\n\u00a7\n\n\nMany options for building can be set via the environment. These generally follow\nthe UNIX naming conventions, so you can use, say,\n\nCXX\n to change the C++ compiler that bfg9000 uses.\nFor a full listing of the recognized environment variables, see the \nEnvironment\nVariables\n chapter.\n\n\nInstalling your software\n\u00a7\n\n\nAfter building your software, you may wish to install it to another directory on\nyour system. You can do this by running:\n\n\n$ ninja install\n\n\n\n\nSimilarly, you can run \nninja uninstall\n to uninstall the files from their\ninstall location. Of course, if you're using the Make backend, you'd run\n\nmake install\n/\nmake uninstall\n instead.\n\n\n\n\nWarning\n\n\nThe MSBuild backend doesn't currently support this command.\n\n\n\n\nInstall locations\n\u00a7\n\n\nBy default, bfg9000 will install them into the appropriate place for your\nplatform (e.g. \n/usr/local/bin\n for exectuables on POSIX systems).  However, you\ncan specify where you'd like to install your project when invoking bfg9000. To\nchange the installation prefix (\n/usr/local\n on POSIX), just specify \n--prefix\n/path/to/prefix\n when running bfg9000. You can also specify the binary, library,\nand include directories individually, using \n--bindir\n, \n--libdir\n, and\n\n--includedir\n, respectively.\n\n\n\n\nNote\n\n\nOn POSIX systems, you can additionally specify the $DESTDIR environment\nvariable to perform a staged installation (useful when creating a binary\npackage, for example). For more information about $DESTDIR, see the \nGNU\ncoding standards\n.\n\n\n\n\nDistributing your source\n\u00a7\n\n\nOnce you're ready to release your software, you'll want to provide a source\ndistribution. You can't just archive the entire source directory, since it'll\ninclude things that don't belong like \n.gitignore\n. Instead, you should run:\n\n\n$ ninja dist\n\n\n\n\n(Of course, you should run \nmake dist\n for the Make backend.) This will produce\na \ntar.gz\n file containing all the source files necessary for building your\nproject. If you'd like to specify another file format, you can use one of the\nfollowing targets: \ndist-gzip\n, \ndist-bzip2\n, or \ndist-zip\n.\n\n\n\n\nWarning\n\n\nThe MSBuild backend doesn't currently support this command.", 
+            "text": "Building With bfg9000\n\u00a7\n\n\nLike some other tools (e.g. \nCMake\n or \nautotools\n), bfg9000\nisn't actually a build system; it's a \nbuild configuration system\n or, if you\nprefer, a \nmeta-build system\n. That is, bfg9000 builds build files which you\nthen use to run your actual builds.\n\n\nYour first build\n\u00a7\n\n\nInvoking bfg9000 is simple. Assuming you have an existing project that uses\nbfg9000, just call \nbfg9000 configure builddir\n and it will generate the final\nbuild script (\nbuild.ninja\n in this case) in \nbuilddir\n to use for\nbuilding your project:\n\n\n$ cd /path/to/src/\n$ bfg9000 configure build/\n$ cd build/\n$ ninja\n\n\n\n\nSince the configure command is easily the most common thing to run when using\nbfg9000, you can use the following shorthand instead of\n\nbfg9000 configure build/\n:\n\n\n$ 9k build/\n\n\n\n\n\n\nNote\n\n\nOn Windows, using bfg9000 requires a bit more care. Since the MSVC tools\naren't in the \nPATH\n by default, you can't just open any command prompt.\nYou need to pick the \ncorrect\n prompt. Thankfully, Visual Studio provides\nStart Menu items such as \"VS2015 Developer Command Prompt\". These add the\nappropiate directories to the \nPATH\n, allowing you to use whichever version\nof the MSVC tools that you'd like.\n\n\n\n\nBuild directories\n\u00a7\n\n\nYou might have noticed above that \nbuild.ninja\n was placed in a separate\ndirectory. This is because bfg9000 exclusively uses \nout-of-tree builds\n; that\nis, the build directory must be different from the source directory. While\nslightly more inconvenient for one-off builds (users will have to \ncd\n into\nanother directory to start the build), the benefits are significant. First, it\nensures that cleaning a build is trivial: just remove the build directory.\nSecond, simplifies building in multiple configurations, a very useful feature\nfor development; you can easily have debug and optimized builds sitting\nside-by-side.\n\n\nIn our example above, we specified the build directory to place the final build\nfiles. However, you can also run bfg9000 \nfrom\n the build directory, in which\ncase you'd run \nbfg9000 configure srcdir/\n (or, equivalently, \n9k srcdir/\n). If\nneither the source nor build directories are your current working directory, you\ncan run:\n\n\nbfg9000 configure-into srcdir/ builddir/\n\n\n\n\nSelecting a backend\n\u00a7\n\n\nBy default, bfg9000 tries to use the most appropriate build backend for your\nsystem. In descending order, bfg prefers \nninja\n, \nmake\n, and\n\nmsbuild\n. If one of these isn't installed, it will try the next best\noption. However, you can explicitly select a backend with the \n--backend\n\noption. For instance, to build a Makefile even if Ninja is installed:\n\n\n$ bfg9000 configure builddir/ --backend=make\n\n\n\n\nFor a complete description of the available command-line options for bfg9000,\nsee the \nCommand-line Reference\n chapter.\n\n\nSetting build options\n\u00a7\n\n\nMany options for building can be set via the environment. These generally follow\nthe UNIX naming conventions, so you can use, say,\n\nCXX\n to change the C++ compiler that bfg9000 uses.\nFor a full listing of the recognized environment variables, see the \nEnvironment\nVariables\n chapter.\n\n\nInstalling your software\n\u00a7\n\n\nAfter building your software, you may wish to install it to another directory on\nyour system. You can do this by running:\n\n\n$ ninja install\n\n\n\n\nSimilarly, you can run \nninja uninstall\n to uninstall the files from their\ninstall location. Of course, if you're using the Make backend, you'd run\n\nmake install\n/\nmake uninstall\n instead.\n\n\n\n\nWarning\n\n\nThe MSBuild backend doesn't currently support this command.\n\n\n\n\nInstall locations\n\u00a7\n\n\nBy default, bfg9000 will install them into the appropriate place for your\nplatform (e.g. \n/usr/local/bin\n for exectuables on POSIX systems).  However, you\ncan specify where you'd like to install your project when invoking bfg9000. To\nchange the installation prefix (\n/usr/local\n on POSIX), just specify \n--prefix\n/path/to/prefix\n when running bfg9000. You can also specify the binary, library,\nand include directories individually, using \n--bindir\n, \n--libdir\n, and\n\n--includedir\n, respectively.\n\n\n\n\nNote\n\n\nOn POSIX systems, you can additionally specify the $DESTDIR environment\nvariable to perform a staged installation (useful when creating a binary\npackage, for example). For more information about $DESTDIR, see the \nGNU\ncoding standards\n.\n\n\n\n\nDistributing your source\n\u00a7\n\n\nOnce you're ready to release your software, you'll want to provide a source\ndistribution. You can't just archive the entire source directory, since it'll\ninclude things that don't belong like \n.gitignore\n. Instead, you should run:\n\n\n$ ninja dist\n\n\n\n\n(Of course, you should run \nmake dist\n for the Make backend.) This will produce\na \ntar.gz\n file containing all the source files necessary for building your\nproject. If you'd like to specify another file format, you can use one of the\nfollowing targets: \ndist-gzip\n, \ndist-bzip2\n, or \ndist-zip\n.\n\n\n\n\nWarning\n\n\nThe MSBuild backend doesn't currently support this command.", 
             "title": "Building with bfg9000"
         }, 
         {
@@ -87,13 +87,13 @@
         }, 
         {
             "location": "/user/building/#selecting-a-backend", 
-            "text": "By default, bfg9000 tries to use the most appropriate build backend for your\nsystem. In descending order, bfg prefers  ninja ,  make , and msbuild . If one of these isn't installed, it will try the next best\noption. However, you can explicitly select a backend with the  --backend \noption. For instance, to build a Makefile even if Ninja is installed:  $ bfg9000 configure builddir/ --backend=make", 
+            "text": "By default, bfg9000 tries to use the most appropriate build backend for your\nsystem. In descending order, bfg prefers  ninja ,  make , and msbuild . If one of these isn't installed, it will try the next best\noption. However, you can explicitly select a backend with the  --backend \noption. For instance, to build a Makefile even if Ninja is installed:  $ bfg9000 configure builddir/ --backend=make  For a complete description of the available command-line options for bfg9000,\nsee the  Command-line Reference  chapter.", 
             "title": "Selecting a backend"
         }, 
         {
-            "location": "/user/building/#setting-options", 
+            "location": "/user/building/#setting-build-options", 
             "text": "Many options for building can be set via the environment. These generally follow\nthe UNIX naming conventions, so you can use, say, CXX  to change the C++ compiler that bfg9000 uses.\nFor a full listing of the recognized environment variables, see the  Environment\nVariables  chapter.", 
-            "title": "Setting options"
+            "title": "Setting build options"
         }, 
         {
             "location": "/user/building/#installing-your-software", 
@@ -614,6 +614,121 @@
             "location": "/user/reference/#versionerror", 
             "text": "Availability:  build.bfg  and  options.bfg  An exception raised when a version fails to match the supplied version\nspecifier.", 
             "title": "VersionError"
+        }, 
+        {
+            "location": "/user/command-line/", 
+            "text": "Command-Line Reference\n\u00a7\n\n\nGlobal options\n\u00a7\n\n\n-h, --help\n\u00a7\n\n\nPrint a help message and exit. Equivalent to the \nhelp\n subcommand.\n\n\n--version\n\u00a7\n\n\nPrint the version number and exit.\n\n\n-c, --color \nWHEN\n\u00a7\n\n\nShow colored output; \nWHEN\n is one of \nalways\n, \nnever\n, or \nauto\n and defaults\nto \nauto\n (i.e. show colored output when the terminal is a tty). \n-c\n is\nequivalent to \n--color=always\n.\n\n\n--warn-once\n\u00a7\n\n\nOnly emit a given warning once.\n\n\nSub-commands\n\u00a7\n\n\nbfg9000 help [\nSUBCOMMAND\n]\n\u00a7\n\n\nPrint a help message and exit. If \nSUBCOMMAND\n is specified, print help for that\nsubcommand.\n\n\nbfg9000 configure \nDIRECTORY\n\u00a7\n\n\nGenerate the necessary build files to perform actual builds. If \nDIRECTORY\n is a\nsource directory (i.e. it contains a build.bfg file), the build files will be\ncreated in the current directory. Otherwise, \nDIRECTORY\n is treated as the build\ndirectory, and bfg9000 will look for a build.bfg file in the current directory.\n\n\n--backend \nBACKEND\n\u00a7\n\n\nThe kind of build files to generate; one of \nninja\n, \nmake\n, or \nmsbuild\n. The\ndefault value depends on what build backends you have installed, but if \nninja\n\nis present on your system, it will be the default.\n\n\n--enable-shared, --disable-shared\n\u00a7\n\n\nEnable/disable building shared libraries when using\n\nlibrary\n()\n in your build.bfg files. Defaults to enabled.\n\n\n--enable-static, --disable-static\n\u00a7\n\n\nEnable/disable building static libraries when using\n\nlibrary\n()\n in your build.bfg files. Defaults to enabled.\n\n\n--prefix \nPATH\n\u00a7\n\n\nThe installation prefix to use when installing built files. On Linux and macOS,\nthis defaults to \n/usr/local\n; on Windows, there is no default (thus, to\ninstall built files on Windows, you must either set \n--prefix\n or one of the\nother install path options below).\n\n\n--exec-prefix \nPATH\n\u00a7\n\n\nThe installation prefix to use when installing architecture-dependent files\n(e.g. executables). This defaults to the value of\n\n--prefix\n.\n\n\n--bindir \nPATH\n\u00a7\n\n\nThe installation prefix to use for executables. Defaults to \nprefix\n/bin\n on\nLinux and macOS, and \nprefix\n on Windows.\n\n\n--libdir \nPATH\n\u00a7\n\n\nThe installation prefix to use for libraries. Defaults to \nprefix\n/lib\n on\nLinux and macOS, and \nprefix\n on Windows.\n\n\n--includedir \nPATH\n\u00a7\n\n\nThe installation prefix to use for headers. Defaults to \nprefix\n/include\n on\nLinux and macOS, and \nprefix\n on Windows.\n\n\nbfg9000 configure-into \nSRCDIR\n \nBUILDDIR\n\u00a7\n\n\nGenerate the necessary build files (as with \nbfg9000 configure\n)\nto perform actual builds from a build.bfg file in \nSRCDIR\n, and place them in\n\nBUILDDIR\n.\n\n\nbfg9000 refresh [\nBUILDDIR\n]\n\u00a7\n\n\nRegenerate an existing set of build files in \nBUILDDIR\n needed to perform actual\nbuilds. This is run automatically if bfg9000 determines that the build files are\nout of date.\n\n\nbfg9000 env [\nBUILDDIR\n]\n\u00a7\n\n\nPrint the environment variables stored by the build configuration in \nBUILDDIR\n.\n\n\n-u, --unique\n\u00a7\n\n\nOnly show environment variables that differ from the current environment.\n\n\n9k shorthand\n\u00a7\n\n\n9k\n is a special shorthand to make it easier to configure your build. It's\nequivalent to \nbfg9000 configure\n.", 
+            "title": "Command-Line Reference"
+        }, 
+        {
+            "location": "/user/command-line/#command-line-reference", 
+            "text": "", 
+            "title": "Command-Line Reference"
+        }, 
+        {
+            "location": "/user/command-line/#global-options", 
+            "text": "", 
+            "title": "Global options"
+        }, 
+        {
+            "location": "/user/command-line/#help-option", 
+            "text": "Print a help message and exit. Equivalent to the  help  subcommand.", 
+            "title": "-h, --help"
+        }, 
+        {
+            "location": "/user/command-line/#version", 
+            "text": "Print the version number and exit.", 
+            "title": "--version"
+        }, 
+        {
+            "location": "/user/command-line/#color", 
+            "text": "Show colored output;  WHEN  is one of  always ,  never , or  auto  and defaults\nto  auto  (i.e. show colored output when the terminal is a tty).  -c  is\nequivalent to  --color=always .", 
+            "title": "-c, --color WHEN"
+        }, 
+        {
+            "location": "/user/command-line/#warn-once", 
+            "text": "Only emit a given warning once.", 
+            "title": "--warn-once"
+        }, 
+        {
+            "location": "/user/command-line/#sub-commands", 
+            "text": "", 
+            "title": "Sub-commands"
+        }, 
+        {
+            "location": "/user/command-line/#help", 
+            "text": "Print a help message and exit. If  SUBCOMMAND  is specified, print help for that\nsubcommand.", 
+            "title": "bfg9000 help [SUBCOMMAND]"
+        }, 
+        {
+            "location": "/user/command-line/#configure", 
+            "text": "Generate the necessary build files to perform actual builds. If  DIRECTORY  is a\nsource directory (i.e. it contains a build.bfg file), the build files will be\ncreated in the current directory. Otherwise,  DIRECTORY  is treated as the build\ndirectory, and bfg9000 will look for a build.bfg file in the current directory.", 
+            "title": "bfg9000 configure DIRECTORY"
+        }, 
+        {
+            "location": "/user/command-line/#configure-backend", 
+            "text": "The kind of build files to generate; one of  ninja ,  make , or  msbuild . The\ndefault value depends on what build backends you have installed, but if  ninja \nis present on your system, it will be the default.", 
+            "title": "--backend BACKEND"
+        }, 
+        {
+            "location": "/user/command-line/#configure-enable-shared", 
+            "text": "Enable/disable building shared libraries when using library ()  in your build.bfg files. Defaults to enabled.", 
+            "title": "--enable-shared, --disable-shared"
+        }, 
+        {
+            "location": "/user/command-line/#configure-enable-static", 
+            "text": "Enable/disable building static libraries when using library ()  in your build.bfg files. Defaults to enabled.", 
+            "title": "--enable-static, --disable-static"
+        }, 
+        {
+            "location": "/user/command-line/#configure-prefix", 
+            "text": "The installation prefix to use when installing built files. On Linux and macOS,\nthis defaults to  /usr/local ; on Windows, there is no default (thus, to\ninstall built files on Windows, you must either set  --prefix  or one of the\nother install path options below).", 
+            "title": "--prefix PATH"
+        }, 
+        {
+            "location": "/user/command-line/#configure-exec-prefix", 
+            "text": "The installation prefix to use when installing architecture-dependent files\n(e.g. executables). This defaults to the value of --prefix .", 
+            "title": "--exec-prefix PATH"
+        }, 
+        {
+            "location": "/user/command-line/#configure-bindir", 
+            "text": "The installation prefix to use for executables. Defaults to  prefix /bin  on\nLinux and macOS, and  prefix  on Windows.", 
+            "title": "--bindir PATH"
+        }, 
+        {
+            "location": "/user/command-line/#configure-libdir", 
+            "text": "The installation prefix to use for libraries. Defaults to  prefix /lib  on\nLinux and macOS, and  prefix  on Windows.", 
+            "title": "--libdir PATH"
+        }, 
+        {
+            "location": "/user/command-line/#configure-includedir", 
+            "text": "The installation prefix to use for headers. Defaults to  prefix /include  on\nLinux and macOS, and  prefix  on Windows.", 
+            "title": "--includedir PATH"
+        }, 
+        {
+            "location": "/user/command-line/#configure-into", 
+            "text": "Generate the necessary build files (as with  bfg9000 configure )\nto perform actual builds from a build.bfg file in  SRCDIR , and place them in BUILDDIR .", 
+            "title": "bfg9000 configure-into SRCDIR BUILDDIR"
+        }, 
+        {
+            "location": "/user/command-line/#refresh", 
+            "text": "Regenerate an existing set of build files in  BUILDDIR  needed to perform actual\nbuilds. This is run automatically if bfg9000 determines that the build files are\nout of date.", 
+            "title": "bfg9000 refresh [BUILDDIR]"
+        }, 
+        {
+            "location": "/user/command-line/#env", 
+            "text": "Print the environment variables stored by the build configuration in  BUILDDIR .", 
+            "title": "bfg9000 env [BUILDDIR]"
+        }, 
+        {
+            "location": "/user/command-line/#env-unique", 
+            "text": "Only show environment variables that differ from the current environment.", 
+            "title": "-u, --unique"
+        }, 
+        {
+            "location": "/user/command-line/#9k-shorthand", 
+            "text": "9k  is a special shorthand to make it easier to configure your build. It's\nequivalent to  bfg9000 configure .", 
+            "title": "9k shorthand"
         }, 
         {
             "location": "/user/environment-vars/", 
