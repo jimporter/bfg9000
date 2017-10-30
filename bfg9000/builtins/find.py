@@ -57,7 +57,7 @@ def _listdir(path):
                 dirs.append((name, curpath))
             else:
                 nondirs.append((name, curpath))
-    except:
+    except Exception:
         pass
     return dirs, nondirs
 

@@ -82,7 +82,7 @@ class Path(safe_str.safe_string):
     def from_json(data):
         try:
             base = Root[data[1]]
-        except:
+        except KeyError:
             base = InstallRoot[data[1]]
         return Path(data[0], base, data[2])
 

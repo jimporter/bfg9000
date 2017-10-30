@@ -569,5 +569,5 @@ try:
             dependencies=solution.dependencies(deps),
         )
         solution[output] = project
-except:
+except ImportError:
     pass

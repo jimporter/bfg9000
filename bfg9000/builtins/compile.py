@@ -314,5 +314,5 @@ try:
     def msbuild_compile(rule, build_inputs, solution, env):
         # MSBuild does compilation and linking in one unit; see link.py.
         pass
-except:
+except ImportError:
     pass

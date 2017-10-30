@@ -104,7 +104,7 @@ def choose_builder(env, lang, candidates, builders, cmd_var, flags_var, flags):
             try:
                 output = builder_type.check_command(env, cmd)
                 break
-            except:
+            except Exception:
                 pass
         else:
             tried = ', '.join(repr(i) for i in iterate(candidates))

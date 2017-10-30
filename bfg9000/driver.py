@@ -34,7 +34,8 @@ file in SRCDIR, and place them in BUILDDIR.
 
 refresh_desc = """
 Regenerate an existing set of build files needed to perform actual builds. This
-is run automatically if bfg9000 determines that the build files are out of date.
+is run automatically if bfg9000 determines that the build files are out of
+date.
 """
 
 env_desc = """

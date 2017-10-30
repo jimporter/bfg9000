@@ -51,7 +51,7 @@ try:
             return ['setup.py', 'bfg9000', 'examples', 'test']
 
     custom_cmds['lint'] = LintCommand
-except:
+except ImportError:
     pass
 
 more_scripts = []

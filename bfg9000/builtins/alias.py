@@ -44,5 +44,5 @@ try:
             dependencies=solution.dependencies(rule.extra_deps),
         )
         solution[output] = project
-except:
+except ImportError:
     pass
