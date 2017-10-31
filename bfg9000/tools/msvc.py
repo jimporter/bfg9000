@@ -436,9 +436,10 @@ class MsvcPackageResolver(object):
             self.builder.compiler.search_dirs(), self.env.platform.include_dirs
         )) if os.path.exists(i)]
 
-        self.lib_dirs = [i for i in uniques(
-            self.builder.linker('executable').search_dirs()
-        ) if os.path.exists(i)]
+        self.lib_dirs = [i for i in uniques(chain(
+            self.builder.linker('executable').search_dirs(),
+            self.env.platform.lib_dirs
+        )) if os.path.exists(i)]
 
     @property
     def lang(self):

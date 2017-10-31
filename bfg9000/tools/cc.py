@@ -623,7 +623,7 @@ class CcPackageResolver(object):
             ld_lib_dirs = self.env.platform.lib_dirs
 
         self.lib_dirs = [i for i in uniques(chain(
-            cc_lib_dirs, ld_lib_dirs
+            cc_lib_dirs, ld_lib_dirs, self.env.platform.lib_dirs
         )) if os.path.exists(i)]
 
     @property
