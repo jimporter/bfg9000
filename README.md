@@ -4,6 +4,7 @@
 [![Documentation][documentation-image]][documentation-link]
 [![Travis build status][travis-image]][travis-link]
 [![Appveyor build status][appveyor-image]][appveyor-link]
+[![Coverage status][codecov-image]][codecov-link]
 
 **bfg9000** is a cross-platform *build configuration system* with an emphasis on
 making it easy to define how to build your software. It converts a Python-based
@@ -77,6 +78,8 @@ This project is licensed under the BSD 3-clause [license](LICENSE).
 [travis-link]: https://travis-ci.org/jimporter/bfg9000
 [appveyor-image]: https://ci.appveyor.com/api/projects/status/hxvbggf6exq8i2k6/branch/master?svg=true
 [appveyor-link]: https://ci.appveyor.com/project/jimporter/bfg9000/branch/master
+[codecov-image]: https://img.shields.io/codecov/c/github/jimporter/bfg9000/master.svg
+[codecov-link]: https://codecov.io/gh/jimporter/bfg9000
 
 [examples]: https://github.com/jimporter/bfg9000/tree/master/examples
 [setuptools]: https://pythonhosted.org/setuptools/
