@@ -78,7 +78,7 @@ This project is licensed under the BSD 3-clause [license](LICENSE).
 [travis-link]: https://travis-ci.org/jimporter/bfg9000
 [appveyor-image]: https://ci.appveyor.com/api/projects/status/hxvbggf6exq8i2k6/branch/master?svg=true
 [appveyor-link]: https://ci.appveyor.com/project/jimporter/bfg9000/branch/master
-[codecov-image]: https://img.shields.io/codecov/c/github/jimporter/bfg9000/master.svg
+[codecov-image]: https://codecov.io/gh/jimporter/bfg9000/branch/master/graph/badge.svg
 [codecov-link]: https://codecov.io/gh/jimporter/bfg9000
 
 [examples]: https://github.com/jimporter/bfg9000/tree/master/examples
