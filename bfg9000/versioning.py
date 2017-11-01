@@ -42,8 +42,8 @@ def simplify_specifiers(spec):
             return False
         return True
 
-    def err():
-        return ValueError('inconsistent specifier set {}'.format(spec))
+    def err(reason='inconsistent'):
+        return ValueError('{} specifier set {}'.format(reason, spec))
 
     gt = None
     lt = None
@@ -63,7 +63,7 @@ def simplify_specifiers(spec):
         elif i.operator in ['<', '<=']:
             lt = i if lt is None else min(lt, i, key=key)
         else:
-            raise err()
+            raise err('invalid')
 
     ne = [i for i in ne if in_bounds(i.version, gt, lt)]
     if eq:
