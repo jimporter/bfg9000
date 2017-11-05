@@ -14,13 +14,11 @@ class InstallNameTool(SimpleCommand):
         )
 
     def _call(self, cmd, file, id=None, delete_rpath=None, changes=[]):
-        rpath = getattr(file, 'darwin_rpath', None)
-
         args = []
         if id:
             args += ['-id', id]
-        if rpath:
-            args += ['-delete_rpath', rpath]
+        if delete_rpath:
+            args += ['-delete_rpath', delete_rpath]
         args = sum((['-change'] + listify(i) for i in changes), args)
 
         if args:
