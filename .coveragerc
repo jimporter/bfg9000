@@ -6,3 +6,9 @@ parallel = True
 source =
   bfg9000/
   /usr/local/lib/*/site-packages/bfg9000/
+
+[report]
+exclude_lines =
+  raise NotImplementedError
+  return NotImplemented
+  def __repr__
