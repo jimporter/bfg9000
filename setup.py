@@ -44,10 +44,13 @@ class DocDeploy(Command):
 
 class Coverage(Command):
     description = 'run tests with code coverage'
-    user_options = []
+    user_options = [
+        ('test-suite=', 's',
+         "test suite to run (e.g. 'some_module.test_suite')"),
+    ]
 
     def initialize_options(self):
-        pass
+        self.test_suite = None
 
     def finalize_options(self):
         pass
@@ -64,8 +67,12 @@ class Coverage(Command):
         })
 
         subprocess.check_call(['coverage', 'erase'])
-        subprocess.check_call(['coverage', 'run', 'setup.py', 'test'] +
-                              (['-q'] if self.verbose == 0 else []), env=env)
+        subprocess.check_call(
+            ['coverage', 'run', 'setup.py', 'test'] +
+            (['-q'] if self.verbose == 0 else []) +
+            (['-s', self.test_suite] if self.test_suite else []),
+            env=env
+        )
         subprocess.check_call(['coverage', 'combine'])
 
 
