@@ -1,3 +1,5 @@
+from six import assertRegex
+
 from . import *
 
 
@@ -17,3 +19,20 @@ class TestUserArgs(IntegrationTest):
         self.configure(extra_args=['--name=foo'])
         self.build(executable('simple'))
         self.assertOutput([executable('simple')], 'hello from foo!\n')
+
+    def test_help(self):
+        os.chdir(self.srcdir)
+        output = self.assertPopen(
+            ['bfg9000', 'help', 'configure']
+        )
+        assertRegex(self, output, r'(?m)^project-defined arguments:$')
+        assertRegex(self, output,
+                    r'(?m)^\s+--name NAME\s+set the name to greet$')
+
+    def test_help_explicit_srcdir(self):
+        output = self.assertPopen(
+            ['bfg9000', 'help', 'configure', self.srcdir]
+        )
+        assertRegex(self, output, r'(?m)^project-defined arguments:$')
+        assertRegex(self, output,
+                    r'(?m)^\s+--name NAME\s+set the name to greet$')
