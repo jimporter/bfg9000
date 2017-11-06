@@ -129,7 +129,7 @@ class CompileHeader(Compile):
 
 
 @builtin.globals('builtins', 'build_inputs', 'env')
-@builtin.type(ObjectFile, in_type=(string_types, type(None)))
+@builtin.type(ObjectFile, in_type=string_types + (type(None),))
 def object_file(builtins, build, env, name=None, file=None, **kwargs):
     if file is None:
         if name is None:
@@ -141,7 +141,7 @@ def object_file(builtins, build, env, name=None, file=None, **kwargs):
 
 
 @builtin.globals('builtins', 'build_inputs', 'env')
-@builtin.type(ObjectFile, in_type=(string_types, SourceFile))
+@builtin.type(ObjectFile, in_type=string_types + (SourceFile,))
 def _make_object_file(builtins, build, env, file, **kwargs):
     return CompileSource(builtins, build, env, None, file,
                          **kwargs).public_output
@@ -154,7 +154,7 @@ def object_files(builtins, build, env, files, **kwargs):
 
 
 @builtin.globals('builtins', 'build_inputs', 'env')
-@builtin.type(PrecompiledHeader, in_type=(string_types, type(None)))
+@builtin.type(PrecompiledHeader, in_type=string_types + (type(None),))
 def precompiled_header(builtins, build, env, name=None, file=None, **kwargs):
     if file is None:
         if name is None:

@@ -60,7 +60,7 @@ def _find(builtins, name, include, type, exclude, filter, as_object=True):
 
 
 @builtin.globals('builtins', 'build_inputs')
-@builtin.type(Directory, in_type=(string_types, File))
+@builtin.type(Directory, in_type=string_types + (File,))
 def directory(builtins, build, name, include=None, exclude=exclude_globs,
               filter=filter_by_platform):
     if isinstance(name, File):
@@ -73,7 +73,7 @@ def directory(builtins, build, name, include=None, exclude=exclude_globs,
 
 
 @builtin.globals('builtins', 'build_inputs')
-@builtin.type(HeaderDirectory, in_type=(string_types, HeaderFile))
+@builtin.type(HeaderDirectory, in_type=string_types + (HeaderFile,))
 def header_directory(builtins, build, name, include=None,
                      exclude=exclude_globs, filter=filter_by_platform,
                      system=False, lang=None):

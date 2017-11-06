@@ -251,7 +251,7 @@ def executable(builtins, build, env, name, files=None, **kwargs):
 
 
 @builtin.globals('builtins', 'build_inputs', 'env')
-@builtin.type(SharedLibrary, in_type=(string_types, DualUseLibrary))
+@builtin.type(SharedLibrary, in_type=string_types + (DualUseLibrary,))
 def shared_library(builtins, build, env, name, files=None, **kwargs):
     if isinstance(name, DualUseLibrary):
         if files is not None or not set(kwargs.keys()) <= {'format', 'lang'}:
@@ -268,7 +268,7 @@ def shared_library(builtins, build, env, name, files=None, **kwargs):
 
 
 @builtin.globals('builtins', 'build_inputs', 'env')
-@builtin.type(StaticLibrary, in_type=(string_types, DualUseLibrary))
+@builtin.type(StaticLibrary, in_type=string_types + (DualUseLibrary,))
 def static_library(builtins, build, env, name, files=None, **kwargs):
     if isinstance(name, DualUseLibrary):
         if files is not None or not set(kwargs.keys()) <= {'format', 'lang'}:
@@ -283,7 +283,7 @@ def static_library(builtins, build, env, name, files=None, **kwargs):
 
 
 @builtin.globals('builtins', 'build_inputs', 'env')
-@builtin.type(Library, in_type=(string_types, DualUseLibrary))
+@builtin.type(Library, in_type=string_types + (DualUseLibrary,))
 def library(builtins, build, env, name, files=None, **kwargs):
     if env.library_mode.shared and env.library_mode.static:
         kind = 'dual'
@@ -344,7 +344,7 @@ def library(builtins, build, env, name, files=None, **kwargs):
 
 
 @builtin.globals('builtins')
-@builtin.type(WholeArchive, in_type=(string_types, StaticLibrary))
+@builtin.type(WholeArchive, in_type=string_types + (StaticLibrary,))
 def whole_archive(builtins, name, *args, **kwargs):
     if isinstance(name, StaticLibrary):
         if len(args) or len(kwargs):
