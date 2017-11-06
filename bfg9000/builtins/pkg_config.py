@@ -14,7 +14,7 @@ from ..safe_str import literal, shell_literal
 from ..shell import posix as pshell
 from ..shell.syntax import Syntax, Writer
 from ..tools.pkg_config import PkgConfigPackage
-from ..versioning import simplify_specifiers, SpecifierSet
+from ..versioning import simplify_specifiers, Specifier, SpecifierSet
 
 build_input('pkg_config')(lambda build_inputs, env: [])
 
@@ -24,8 +24,20 @@ class Requirement(object):
         self.name = name
         self.version = objectify(version or '', SpecifierSet)
 
-    def merge(self, req):
-        self.version = self.version & req.version
+    def __and__(self, rhs):
+        result = Requirement(self.name, self.version)
+        result &= rhs
+        return result
+
+    def __iand__(self, rhs):
+        if self.name != rhs.name:
+            raise ValueError('requirement names do not match')
+        self.version = self.version & rhs.version
+        return self
+
+    def __eq__(self, rhs):
+        return (type(self) == type(rhs) and self.name == rhs.name and
+                self.version == rhs.version)
 
     def split(self, single=False):
         specs = simplify_specifiers(self.version)
@@ -38,6 +50,9 @@ class Requirement(object):
             )
         return [SimpleRequirement(self.name, i) for i in specs]
 
+    def __hash__(self):
+        return hash((self.name, self.version))
+
     def __repr__(self):
         return '<Requirement({!r}, {!r})>'.format(
             self.name, str(self.version)
@@ -47,7 +62,12 @@ class Requirement(object):
 class SimpleRequirement(object):
     def __init__(self, name, version=None):
         self.name = name
-        self.version = version
+        self.version = (None if version is None else
+                        objectify(version, Specifier))
+
+    def __eq__(self, rhs):
+        return (type(self) == type(rhs) and self.name == rhs.name and
+                self.version == rhs.version)
 
     def _safe_str(self):
         if not self.version:
@@ -58,6 +78,9 @@ class SimpleRequirement(object):
         return shell_literal('{name} {op} {version}'.format(
             name=self.name, op=op, version=self.version.version
         ))
+
+    def __hash__(self):
+        return hash((self.name, self.version))
 
     def __repr__(self):
         return '<SimpleRequirement({!r}, {!r})>'.format(
@@ -76,10 +99,10 @@ class RequirementSet(object):
         if item.name not in self._reqs:
             self._reqs[item.name] = item
         else:
-            self._reqs[item.name].merge(item)
+            self._reqs[item.name] &= item
 
-    def remove(self, item):
-        del self._reqs[item.name]
+    def remove(self, name):
+        del self._reqs[name]
 
     def update(self, other):
         for i in other:
@@ -89,8 +112,8 @@ class RequirementSet(object):
         items = list(other)
         for i in items:
             if i.name in self._reqs:
-                self._reqs[i.name].merge(i)
-                other.remove(i)
+                self._reqs[i.name] &= i
+                other.remove(i.name)
 
     def split(self, single=False):
         return sorted(sum((i.split(single) for i in self), []),
