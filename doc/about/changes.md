@@ -26,6 +26,8 @@ in progress
 - Add support for uninstalling builds
 - Add `static_link_options` to `static_library()` to specify options to pass to
   the static linker
+- Add a `bfg9000 env` command to print the environment variables used during
+  configuration
 
 ### Breaking changes
 - `directory()` and `header_directory()` no longer automatically include all
