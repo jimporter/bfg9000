@@ -12,17 +12,10 @@ from .ld import LdLinker
 from ..builtins.symlink import Symlink
 from ..exceptions import PackageResolutionError
 from ..file_types import *
-from ..iterutils import default_sentinel, first, iterate, listify, uniques
+from ..iterutils import (default_sentinel, first, iterate, listify, uniques,
+                         recursive_walk)
 from ..path import install_path, Path, Root
 from ..versioning import detect_version, SpecifierSet
-
-
-def recursive_deps(lib):
-    for i in lib.runtime_deps:
-        yield i
-        for i in lib.runtime_deps:
-            for j in recursive_deps(i):
-                yield j
 
 
 class CcBuilder(object):
@@ -413,7 +406,7 @@ class CcLinker(BuildCommand):
                 brand = 'bfd'
 
             if brand == 'bfd':
-                deps = chain.from_iterable(recursive_deps(i)
+                deps = chain.from_iterable(recursive_walk(i, 'runtime_deps')
                                            for i in runtime_libs)
                 dep_paths = [i for i in uniques(i.path.parent() for i in deps)]
                 if dep_paths:

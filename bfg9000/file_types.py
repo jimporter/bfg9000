@@ -250,6 +250,10 @@ class DualUseLibrary(object):
         return self.shared.package_deps
 
     @property
+    def install_deps(self):
+        return self.shared.install_deps
+
+    @property
     def forward_opts(self):
         return self.static.forward_opts
 

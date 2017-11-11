@@ -79,6 +79,14 @@ def uniques(iterable):
     return list(generate_uniques(iterable))
 
 
+def recursive_walk(thing, attr, children_attr=None):
+    for i in getattr(thing, attr):
+        yield i
+    for i in getattr(thing, children_attr or attr):
+        for j in recursive_walk(i, attr, children_attr):
+            yield j
+
+
 def merge_into_dict(dst, *args):
     for d in args:
         for k, v in iteritems(d):

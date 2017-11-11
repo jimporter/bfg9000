@@ -30,7 +30,7 @@ class TestPkgConfig(IntegrationTest):
 
         self.assertEqual(pkg_config(['hello', '--libs-only-l']), '-lhello')
         self.assertEqual(pkg_config(['hello', '--libs-only-l', '--static']),
-                         '-lhello')
+                         '-lhello -logg')
 
     @unittest.skipIf(is_msvc, 'dual-use libraries collide on msvc')
     def test_configure_dual(self):
@@ -39,7 +39,7 @@ class TestPkgConfig(IntegrationTest):
 
         self.assertEqual(pkg_config(['hello', '--libs-only-l']), '-lhello')
         self.assertEqual(pkg_config(['hello', '--libs-only-l', '--static']),
-                         '-lhello -linner')
+                         '-lhello -linner -logg')
 
     def test_configure_static(self):
         self.configure(extra_args=['--disable-shared', '--enable-static'])
@@ -47,7 +47,7 @@ class TestPkgConfig(IntegrationTest):
 
         self.assertEqual(pkg_config(['hello', '--libs-only-l']), '-lhello')
         self.assertEqual(pkg_config(['hello', '--libs-only-l', '--static']),
-                         '-lhello -linner')
+                         '-lhello -linner -logg')
 
     def test_install(self):
         self.configure()
@@ -89,7 +89,7 @@ class TestPkgConfigAuto(IntegrationTest):
 
         self.assertEqual(pkg_config(['hello', '--libs-only-l']), '-lhello')
         self.assertEqual(pkg_config(['hello', '--libs-only-l', '--static']),
-                         '-lhello')
+                         '-lhello -logg')
 
     @unittest.skipIf(is_msvc, 'dual-use libraries collide on msvc')
     def test_configure_dual(self):
@@ -98,7 +98,7 @@ class TestPkgConfigAuto(IntegrationTest):
 
         self.assertEqual(pkg_config(['hello', '--libs-only-l']), '-lhello')
         self.assertEqual(pkg_config(['hello', '--libs-only-l', '--static']),
-                         '-lhello -linner')
+                         '-lhello -linner -logg')
 
     def test_configure_static(self):
         self.configure(extra_args=['--disable-shared', '--enable-static'])
@@ -106,7 +106,7 @@ class TestPkgConfigAuto(IntegrationTest):
 
         self.assertEqual(pkg_config(['hello', '--libs-only-l']), '-lhello')
         self.assertEqual(pkg_config(['hello', '--libs-only-l', '--static']),
-                         '-lhello -linner')
+                         '-lhello -linner -logg')
 
     def test_install(self):
         self.configure()

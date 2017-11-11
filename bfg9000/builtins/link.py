@@ -116,6 +116,8 @@ class Link(Edge):
         primary = first(output)
         public_output = None
 
+        primary.package_deps.extend(self.packages)
+
         if hasattr(self.linker, 'post_build'):
             public_output = self.linker.post_build(build, self, output)
 

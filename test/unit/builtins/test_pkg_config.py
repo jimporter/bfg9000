@@ -81,12 +81,12 @@ class TestPkgConfigRequirementSet(unittest.TestCase):
                                   Requirement('bar', '>=3.0'),
                                   Requirement('baz', '>=4.0')})
 
-    def test_merge_into(self):
+    def test_merge_from(self):
         a = RequirementSet([Requirement('foo', '>=1.0'),
                             Requirement('bar', '>=3.0')])
         b = RequirementSet([Requirement('foo', '<=2.0'),
                             Requirement('baz', '>=4.0')])
-        a.merge_into(b)
+        a.merge_from(b)
         self.assertEqual(set(a), {Requirement('foo', '>=1.0,<=2.0'),
                                   Requirement('bar', '>=3.0')})
         self.assertEqual(set(b), {Requirement('baz', '>=4.0')})

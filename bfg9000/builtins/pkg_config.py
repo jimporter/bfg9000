@@ -1,3 +1,4 @@
+import warnings
 from collections import Counter, defaultdict
 from itertools import chain
 from six import iteritems, itervalues, string_types
@@ -8,7 +9,7 @@ from .file_types import generated_file
 from .install import can_install
 from ..build_inputs import build_input
 from ..file_types import *
-from ..iterutils import iterate, uniques, isiterable
+from ..iterutils import iterate, uniques, isiterable, recursive_walk
 from ..objutils import objectify
 from ..safe_str import literal, shell_literal
 from ..shell import posix as pshell
@@ -54,9 +55,10 @@ class Requirement(object):
         return hash((self.name, self.version))
 
     def __repr__(self):
-        return '<Requirement({!r}, {!r})>'.format(
-            self.name, str(self.version)
-        )
+        return '<Requirement({!r})>'.format(self.string())
+
+    def string(self):
+        return self.name + str(self.version)
 
 
 class SimpleRequirement(object):
@@ -83,9 +85,10 @@ class SimpleRequirement(object):
         return hash((self.name, self.version))
 
     def __repr__(self):
-        return '<SimpleRequirement({!r}, {!r})>'.format(
-            self.name, str(self.version)
-        )
+        return '<SimpleRequirement({!r})>'.format(self.string())
+
+    def string(self):
+        return self.name + str(self.version)
 
 
 class RequirementSet(object):
@@ -108,7 +111,7 @@ class RequirementSet(object):
         for i in other:
             self.add(i)
 
-    def merge_into(self, other):
+    def merge_from(self, other):
         items = list(other)
         for i in items:
             if i.name in self._reqs:
@@ -121,6 +124,11 @@ class RequirementSet(object):
 
     def __iter__(self):
         return itervalues(self._reqs)
+
+    def __repr__(self):
+        return '<RequirementSet({!r})>'.format(
+            [i.string() for i in iter(self)]
+        )
 
 
 class PkgConfigInfo(object):
@@ -223,12 +231,14 @@ class PkgConfigInfo(object):
         pkg = CommonPackage(
             None, None, syntax='cc', raw_static=False,
             includes=[installify(i, destdir=False) for i in data['includes']],
-            libs=[installify(i.all[0], destdir=False) for i in data['libs']]
+            libs=[installify(i.all[0], destdir=False) for i in data['libs']],
+            **data['extra_fields']
         )
         pkg_private = CommonPackage(
             None, None, syntax='cc', raw_static=False,
             libs=[installify(i.all[0], destdir=False)
-                  for i in data['libs_private']]
+                  for i in data['libs_private']],
+            **data['extra_fields_private']
         )
 
         builder = env.builder(self.lang)
@@ -295,42 +305,56 @@ class PkgConfigInfo(object):
         # Get the package dependencies for all the libs (public and private)
         # that were passed in.
         auto_requires, auto_extra = self._filter_packages(chain.from_iterable(
-            i.package_deps for i in chain(libs, libs_private)
+            recursive_walk(i, 'package_deps', 'install_deps')
+            for i in chain(libs, libs_private)
         ))
 
         requires_private.update(auto_requires)
-        requires.merge_into(requires_private)
+        requires.merge_from(requires_private)
 
         result['requires'] = requires.split(single=True)
         result['requires_private'] = requires_private.split(single=True)
         result['conflicts'] = conflicts.split()
 
-        # Add all the options from each of the system packages (.includes,
-        # .libs, and occasionally .lib_dirs).
-        def process_packages(pkgs, private=False):
-            def name(x):
-                return x + '_private' if private else x
-
-            core = (name('includes'), name('libs'))
-            extra = name('extra_fields')
-            for i in pkgs:
-                for k, v in iteritems(i.all_options):
-                    if isiterable(v):
-                        (result if k in core else result[extra])[k].extend(v)
-
         result['includes'] = includes
         result['libs'] = libs
         result['libs_private'] = libs_private
-        result['extra_fields'] = defaultdict(list)
+        result['extra_fields'] = {}
+        result['extra_fields_private'] = {}
 
-        process_packages(extra)
-        process_packages(chain(extra_private, auto_extra), private=True)
+        self._process_packages(result, extra)
+        self._process_packages(result, chain(extra_private, auto_extra),
+                               private=True)
 
         result['cflags'] = self.options
         result['ldflags'] = self.link_options
         result['ldflags_private'] = fwd_ldflags + self.link_options_private
 
         return result
+
+    @staticmethod
+    def _process_packages(result, pkgs, private=False):
+        # Add the options from each of the system packages (.includes, .libs,
+        # and occasionally .lib_dirs).
+        def key(x):
+            return x + '_private' if private else x
+
+        extra = result[key('extra_fields')]
+        for i in pkgs:
+            for k, v in iteritems(i.all_options):
+                if k == 'includes':
+                    if not private:
+                        result[k].extend(v)
+                if k == 'libs':
+                    result[key(k)].extend(v)
+                elif k == 'pthread':
+                    extra[k] = v or extra.get(k, False)
+                elif isiterable(v):
+                    if k not in v:
+                        extra[k] = []
+                    extra[k].extend(v)
+                else:
+                    warnings.warn('unhandled package option {!r}'.format(k))
 
     @staticmethod
     def _filter_packages(packages):
