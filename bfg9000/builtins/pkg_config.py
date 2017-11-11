@@ -8,7 +8,7 @@ from .file_types import generated_file
 from .install import can_install
 from ..build_inputs import build_input
 from ..file_types import *
-from ..iterutils import iterate, uniques
+from ..iterutils import iterate, uniques, isiterable
 from ..objutils import objectify
 from ..safe_str import literal, shell_literal
 from ..shell import posix as pshell
