@@ -3,7 +3,8 @@ from six import iteritems, string_types
 from six.moves import range, zip
 
 __all__ = ['default_sentinel', 'first', 'isiterable', 'iterate', 'listify',
-           'merge_dicts', 'merge_into_dict', 'tween', 'uniques', 'unlistify']
+           'merge_dicts', 'merge_into_dict', 'recursive_walk', 'slice_dict',
+           'tween', 'uniques', 'unlistify']
 
 # This could go in a funcutils module if we ever create one...
 default_sentinel = object()
@@ -15,8 +16,7 @@ def isiterable(thing):
 
 def iterate(thing):
     def generate_none():
-        return
-        yield
+        return iter(())
 
     def generate_one(x):
         yield x
@@ -103,7 +103,7 @@ def merge_into_dict(dst, *args):
                     dst[k] = list(v)
                 elif isiterable(curr):
                     curr.extend(v)
-                elif not isiterable(curr):
+                else:
                     raise TypeError('type mismatch for {}'.format(k))
             elif v is not None:
                 if curr is not None and isiterable(curr):
