@@ -132,7 +132,8 @@ class Path(safe_str.safe_string):
         return hash(self.suffix)
 
     def __eq__(self, rhs):
-        return self.root == rhs.root and self.suffix == rhs.suffix
+        return (self.root == rhs.root and self.suffix == rhs.suffix and
+                self.destdir == rhs.destdir)
 
     def __nonzero__(self):
         return self.__bool__()
@@ -159,6 +160,19 @@ def install_path(path, install_root, directory=False, destdir=True):
     return Path(suffix, install_root, destdir)
 
 
+def commonprefix(paths):
+    if not paths or any(i.root != paths[0].root for i in paths):
+        return None
+
+    split = [i.split() for i in paths]
+    lo, hi = min(split), max(split)
+
+    for i, bit in enumerate(lo):
+        if bit != hi[i]:
+            return Path(os.path.sep.join(lo[:i]), paths[0].root)
+    return Path(os.path.sep.join(lo), paths[0].root)
+
+
 def exists(path):
     return os.path.exists(path.string())
 
@@ -171,19 +185,6 @@ def samefile(path1, path2):
         # be necessary for Windows with Python 2.x.
         return (os.path.realpath(path1.string()) ==
                 os.path.realpath(path2.string()))
-
-
-def commonprefix(paths):
-    if not paths or any(i.root != paths[0].root for i in paths):
-        return None
-
-    split = [i.split() for i in paths]
-    lo, hi = min(split), max(split)
-
-    for i, bit in enumerate(lo):
-        if bit != hi[i]:
-            return Path(os.path.sep.join(lo[:i]), paths[0].root)
-    return Path(os.path.sep.join(lo), paths[0].root)
 
 
 def makedirs(path, mode=0o777, exist_ok=False):
