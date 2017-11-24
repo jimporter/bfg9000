@@ -54,7 +54,7 @@ def simplify_specifiers(spec):
         if i.operator == '==':
             if eq is None:
                 eq = i
-            elif eq != i:
+            elif eq != i:  # pragma: no branch
                 raise err()
         elif i.operator == '!=':
             ne.append(i)

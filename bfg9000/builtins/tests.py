@@ -29,7 +29,7 @@ class TestInputs(object):
 class Test(object):
     def __init__(self, build, env, cmd, options, environment, driver):
         # XXX: Remove this after 0.3 is released.
-        if options:
+        if options:  # pragma: no cover
             warnings.warn("'options' argument is deprecated; add options to " +
                           "'cmd' instead")
             cmd = listify(cmd) + pshell.listify(options)

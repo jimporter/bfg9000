@@ -55,9 +55,9 @@ class Requirement(object):
         return hash((self.name, self.version))
 
     def __repr__(self):
-        return '<Requirement({!r})>'.format(self.string())
+        return '<Requirement({!r})>'.format(self._string())
 
-    def string(self):
+    def _string(self):  # pragma: no cover
         return self.name + str(self.version)
 
 
@@ -85,9 +85,9 @@ class SimpleRequirement(object):
         return hash((self.name, self.version))
 
     def __repr__(self):
-        return '<SimpleRequirement({!r})>'.format(self.string())
+        return '<SimpleRequirement({!r})>'.format(self._string())
 
-    def string(self):
+    def _string(self):  # pragma: no cover
         return self.name + str(self.version)
 
 
@@ -127,7 +127,7 @@ class RequirementSet(object):
 
     def __repr__(self):
         return '<RequirementSet({!r})>'.format(
-            [i.string() for i in iter(self)]
+            [i._string() for i in iter(self)]
         )
 
 

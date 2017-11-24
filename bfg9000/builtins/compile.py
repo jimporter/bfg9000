@@ -40,7 +40,7 @@ class Compile(Edge):
                  pch=None, libs=None, packages=None, options=None, lang=None,
                  extra_deps=None):
         # XXX: Remove this after 0.3 is released.
-        if include is not None:
+        if include is not None:  # pragma: no cover
             warnings.warn("'include' keyword argument is deprecated; use " +
                           "'includes' instead")
             includes = include

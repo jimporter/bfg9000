@@ -32,7 +32,7 @@ def package(env, name, version=None, lang='c', kind='any', headers=None,
 
 
 # XXX: Remove this after 0.3 is released.
-@builtin.globals('builtins')
+@builtin.globals('builtins')  # pragma: no cover
 def system_package(builtins, name, lang='c', kind='any', header=None):
     warnings.warn('system_package is deprecated; please use package instead',
                   DeprecationWarning)
@@ -40,7 +40,7 @@ def system_package(builtins, name, lang='c', kind='any', header=None):
 
 
 # XXX: Remove this after 0.3 is released.
-@builtin.globals('builtins')
+@builtin.globals('builtins')  # pragma: no cover
 def pkgconfig_package(builtins, name, lang='c', version=None):
     warnings.warn('pkgconfig_package is deprecated; please use package ' +
                   'instead', DeprecationWarning)
