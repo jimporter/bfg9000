@@ -24,7 +24,7 @@ matrix:
       os: osx
       env: PYTHON=python2 PIP=pip2 CC=clang CXX=clang++ NO_SCALA_TEST=1 NO_GCJ_TEST=1
     - language: generic
-      python: 3.5
+      python: 3.6
       os: osx
       env: PYTHON=python3 PIP=pip3 CC=clang CXX=clang++ NO_SCALA_TEST=1 NO_GCJ_TEST=1
     - python: 2.7
