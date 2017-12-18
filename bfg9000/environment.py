@@ -166,7 +166,7 @@ class Environment(object):
 
         # v7 replaces bfgpath with bfgdir.
         if version < 7:
-            bfgdir = Path.from_json(data['bfgpath']).parent()
+            bfgdir = Path.from_json(data['bfgpath'] + (False,)).parent()
             data['bfgdir'] = bfgdir.to_json()
             del data['bfgpath']
 
