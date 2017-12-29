@@ -99,17 +99,23 @@ class Builtin(object):
 
             @functools.wraps(fn)
             def wrapper(*args, **kwargs):
-                thing = cls._get_value(spec, wrapper._builtin_bound, args,
-                                       kwargs)
-                if isinstance(thing, wrapper.type):
-                    return thing
-                if not isinstance(thing, wrapper.in_type):
-                    gen = (i.__name__ for i in chain(
-                        [wrapper.type], iterate(wrapper.in_type))
-                    )
-                    raise TypeError('expected {}; but got {}'.format(
-                        ', '.join(gen), type(thing).__name__
-                    ))
+                # Try to get the first argument to this function. If it's the
+                # output type, just return it immediately; otherwise, check if
+                # it's a valid input type and then call the function.
+                try:
+                    thing = cls._get_value(spec, wrapper._builtin_bound, args,
+                                           kwargs)
+                    if isinstance(thing, wrapper.type):
+                        return thing
+                    if not isinstance(thing, wrapper.in_type):
+                        gen = (i.__name__ for i in chain(
+                            [wrapper.type], iterate(wrapper.in_type))
+                        )
+                        raise TypeError('expected {}; but got {}'.format(
+                            ', '.join(gen), type(thing).__name__
+                        ))
+                except IndexError:
+                    pass
                 return fn(*args, **kwargs)
 
             wrapper.type = out_type
@@ -119,12 +125,14 @@ class Builtin(object):
 
     @staticmethod
     def _get_value(spec, builtin_bound, args, kwargs):
+        # Get the value of the first argument to this function, whether it's
+        # passed positionally or as a keyword argument.
         if len(args) > builtin_bound:
             return args[builtin_bound]
         name = spec.args[builtin_bound]
         if name in kwargs:
             return kwargs[name]
-        return spec.defaults[builtin_bound - len(spec.args)]
+        raise IndexError('unable to find user-provided argument')
 
     def bind(self, **kwargs):
         builtins = {}
