@@ -10,8 +10,8 @@ from ..path import Path, Root, makedirs as _makedirs
 
 def local_file(build, file_type, name, params, kwargs):
     extra_args = []
-    for name, default in params:
-        extra_args.append(kwargs.pop(name, default))
+    for key, default in params:
+        extra_args.append(kwargs.pop(key, default))
     if kwargs:
         raise TypeError("unexpected keyword argument '{}'".format(
             next(iter(kwargs))
