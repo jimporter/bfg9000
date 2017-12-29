@@ -472,23 +472,15 @@ try:
     from .compile import CompileHeader
     from ..backends.msbuild import writer as msbuild
 
-    def _reduce_compile_options(files, global_cflags):
-        creators = [i.creator for i in files if i.creator]
-        compilers = uniques(i.linker for i in creators)
-
-        return reduce(merge_dicts, chain(
-            (i.parse_flags(msbuild.textify_each(
-                i.global_flags + global_cflags[i.lang]
-            )) for i in compilers),
-            (i.linker.parse_flags(msbuild.textify_each(
-                i.options
-            )) for i in creators)
-        ))
-
-    def _parse_common_cflags(compiler, global_cflags):
-        return compiler.parse_flags(msbuild.textify_each(
-            compiler.global_flags + global_cflags[compiler.lang]
-        ))
+    def _parse_compiler_cflags(compilers, global_cflags):
+        per_compiler_cflags = {}
+        for c in compilers:
+            key = c.command_var
+            if key not in per_compiler_cflags:
+                per_compiler_cflags[key] = c.parse_flags(msbuild.textify_each(
+                    c.global_flags + global_cflags[c.lang]
+                ))
+        return per_compiler_cflags
 
     def _parse_file_cflags(file, per_compiler_cflags):
         cflags = file.creator.compiler.parse_flags(
@@ -515,14 +507,9 @@ try:
         obj_creators = [i.creator for i in rule.files]
         compilers = uniques(i.compiler for i in obj_creators)
 
-        per_compiler_cflags = {}
-        for c in compilers:
-            key = c.command_var
-            if key not in per_compiler_cflags:
-                per_compiler_cflags[key] = c.parse_flags(msbuild.textify_each(
-                    c.global_flags + build_inputs['compile_options'][c.lang]
-                ))
-
+        per_compiler_cflags = _parse_compiler_cflags(
+            compilers, build_inputs['compile_options']
+        )
         if len(per_compiler_cflags) == 1:
             common_cflags = per_compiler_cflags.popitem()[1]
         else:
