@@ -43,6 +43,16 @@ Print the environment variables stored by this build configuration.
 """
 
 
+def handle_reload_exception(e, suggest_rerun=False):
+    msg = 'Unable to reload environment'
+    if str(e):
+        msg += ': {}'.format(str(e))
+    if suggest_rerun and isinstance(e, EnvVersionError):
+        msg += '\n  Please re-run bfg9000 manually'
+    logger.error(msg, exc_info=True)
+    return 1
+
+
 def environment_from_args(args, extra_args=None):
     # Get the bin directory holding bfg's executables.
     bfgdir = path.abspath(sys.argv[0]).parent()
@@ -207,13 +217,7 @@ def refresh(parser, args, extra):
         build_inputs = build.execute_script(env, argv)
         backend.write(env, build_inputs)
     except Exception as e:
-        msg = 'Unable to reload environment'
-        if str(e):
-            msg += ': {}'.format(str(e))
-        if isinstance(e, EnvVersionError):
-            msg += '\n  Please re-run bfg9000 manually'
-        logger.error(msg, exc_info=True)
-        return 1
+        return handle_reload_exception(e, suggest_rerun=True)
 
 
 def env(parser, args, extra):
@@ -231,11 +235,7 @@ def env(parser, args, extra):
             if not args.unique or os.getenv(k) != v:
                 print('{}={}'.format(k, v))
     except Exception as e:
-        msg = 'Unable to reload environment'
-        if str(e):
-            msg += ': {}'.format(str(e))
-        logger.error(msg, exc_info=True)
-        return 1
+        return handle_reload_exception(e)
 
 
 def help(parser, args, extra):
