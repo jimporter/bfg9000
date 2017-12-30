@@ -30,7 +30,7 @@ class ObjectFiles(list):
             for i in self:
                 if i.creator and i.creator.file.path == key:
                     return i
-            raise ValueError("{!r} not found".format(key))
+            raise IndexError("{!r} not found".format(key))
         else:
             return list.__getitem__(self, key)
 
@@ -135,7 +135,7 @@ def object_file(builtins, build, env, name=None, file=None, **kwargs):
         if name is None:
             raise TypeError('expected name')
         params = [('format', env.platform.object_format), ('lang', 'c')]
-        return local_file(build, ObjectFile, name, params, **kwargs)
+        return local_file(build, ObjectFile, name, params, kwargs)
     return CompileSource(builtins, build, env, name, file,
                          **kwargs).public_output
 
@@ -160,7 +160,7 @@ def precompiled_header(builtins, build, env, name=None, file=None, **kwargs):
         if name is None:
             raise TypeError('expected name')
         params = [('lang', 'c')]
-        return local_file(build, PrecompiledHeader, name, params, **kwargs)
+        return local_file(build, PrecompiledHeader, name, params, kwargs)
     return CompileHeader(builtins, build, env, name, file,
                          **kwargs).public_output
 
