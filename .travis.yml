@@ -57,7 +57,10 @@ before_install:
       shell_session_update() { :; }
       brew update
       brew cask uninstall oclint
-      brew install ${PYTHON} gcc libogg ninja
+      brew install gcc libogg ninja
+      if [ "${PYTHON}" = "python3" ]; then
+        brew install ${PYTHON}
+      fi
       cp test/scripts/sitecustomize.py .
     else
       export JAVA_HOME=/usr/lib/jvm/java-7-openjdk-amd64
