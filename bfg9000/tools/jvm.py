@@ -189,7 +189,8 @@ class JarMaker(BuildCommand):
         options.manifest = File(Path(name + '-manifest.txt'))
         with generated_file(build, self.env, options.manifest) as out:
             classpath = ' '.join(fix_path(i.relpath(base)) for i in dirs)
-            out.write('Class-Path: {}\n'.format(classpath))
+            if classpath:
+                out.write('Class-Path: {}\n'.format(classpath))
 
             if getattr(options, 'entry_point', None):
                 out.write('Main-Class: {}\n'.format(options.entry_point))
