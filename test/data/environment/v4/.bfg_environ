@@ -1,0 +1,21 @@
+{
+  "version": 4,
+  "data": {
+    "bfgpath": "/path/to/bfg9000",
+    "backend": "make",
+
+    "srcdir": "/root/srcdir",
+    "builddir": "/root/builddir",
+    "install_dirs": {
+      "prefix": ["/root/prefix", "absolute"],
+      "bindir": ["bin", "prefix"],
+      "libdir": ["lib", "prefix"],
+      "includedir": ["include", "prefix"]
+    },
+
+    "platform": "linux",
+    "variables": {
+      "HOME": "/home/user"
+    }
+  }
+}
