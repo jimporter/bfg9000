@@ -155,8 +155,8 @@ setup(
     ),
     extras_require={
         'dev': ['coverage', 'flake8 >= 3.0', 'mkdocs', 'mkdocs-bootswatch',
-                'pypandoc', 'stdeb'],
-        'test': ['coverage', 'flake8 >= 3.0'],
+                'mock', 'pypandoc', 'stdeb'],
+        'test': ['coverage', 'flake8 >= 3.0', 'mock'],
         'msbuild': ['lxml'],
     },
 
