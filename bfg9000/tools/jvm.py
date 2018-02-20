@@ -34,11 +34,13 @@ class JvmBuilder(object):
         self.version = None
         if lang == 'java':
             try:
+                # Get the brand from the run command (rather than the compile
+                # command).
                 output = env.execute(
                     run_command + ['-version'], stdout=shell.Mode.pipe,
                     stderr=shell.Mode.stdout
                 )
-                if re.search('Java(TM) (\w+)? Runtime Environment', output):
+                if re.search(r'Java\(TM\) (\w+ )?Runtime Environment', output):
                     self.brand = 'oracle'
                 elif 'OpenJDK Runtime Environment' in output:
                     self.brand = 'openjdk'
