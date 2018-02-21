@@ -40,6 +40,8 @@ class TestMsvcBuilder(unittest.TestCase):
         self.assertEqual(cc.compiler.accepts_pch, True)
         self.assertEqual(cc.pch_compiler.accepts_pch, False)
 
+        self.assertRaises(KeyError, lambda: cc.linker('unknown'))
+
     def test_msvc(self):
         version = ('Microsoft (R) C/C++ Optimizing Compiler Version ' +
                    '19.12.25831 for x86')

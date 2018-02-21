@@ -51,6 +51,8 @@ class TestCcBuilder(unittest.TestCase):
         self.assertEqual(cc.compiler.accepts_pch, True)
         self.assertEqual(cc.pch_compiler.accepts_pch, False)
 
+        self.assertRaises(KeyError, lambda: cc.linker('unknown'))
+
     def test_gcc(self):
         version = ('g++ (Ubuntu 5.4.0-6ubuntu1~16.04.6) 5.4.0 20160609\n' +
                    'Copyright (C) 2015 Free Software Foundation, Inc.')

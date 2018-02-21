@@ -27,6 +27,10 @@ class TestJvmBuilder(unittest.TestCase):
         self.assertEqual(jvm.compiler.depends_on_libs, True)
         self.assertEqual(jvm.compiler.accepts_pch, False)
 
+        self.assertRaises(AttributeError, lambda: jvm.pch_compiler)
+        self.assertRaises(KeyError, lambda: jvm.linker('unknown'))
+        self.assertRaises(ValueError, lambda: jvm.linker('static_library'))
+
     def test_oracle(self):
         version = 'javac 1.7.0_55'
         run_version = ('java version "1.7.0_55"\n' +
@@ -94,6 +98,24 @@ class TestJvmBuilder(unittest.TestCase):
                         lambda *args, **kwargs: version):
             jvm = JvmBuilder(env, 'java', 'JAVAC', ['javac'], 'JAVAFLAGS', [],
                              version)
+
+        self.assertEqual(jvm.brand, 'unknown')
+        self.assertEqual(jvm.compiler.brand, 'unknown')
+        self.assertEqual(jvm.linker('executable').brand, 'unknown')
+        self.assertEqual(jvm.linker('shared_library').brand, 'unknown')
+
+        self.assertEqual(jvm.version, None)
+        self.assertEqual(jvm.compiler.version, None)
+        self.assertEqual(jvm.linker('executable').version, None)
+        self.assertEqual(jvm.linker('shared_library').version, None)
+
+    def test_broken_brand(self):
+        def mock_execute(*args, **kwargs):
+            raise OSError()
+
+        with mock.patch('bfg9000.shell.execute', mock_execute):
+            jvm = JvmBuilder(env, 'java', 'JAVAC', ['javac'], 'JAVAFLAGS', [],
+                             'version')
 
         self.assertEqual(jvm.brand, 'unknown')
         self.assertEqual(jvm.compiler.brand, 'unknown')
