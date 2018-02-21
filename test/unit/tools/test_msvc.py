@@ -8,10 +8,13 @@ from bfg9000.versioning import Version
 env = Environment(None, None, None, None, None, {}, (False, False), None)
 
 
+def mock_which(*args, **kwargs):
+    return ['command']
+
+
 class TestMsvcBuilder(unittest.TestCase):
     def test_properties(self):
-        with mock.patch('bfg9000.shell.which',
-                        lambda *args, **kwargs: ['command']):
+        with mock.patch('bfg9000.shell.which', mock_which):
             cc = MsvcBuilder(env, 'c++', 'CXX', ['cl'], 'CXXFLAGS', [],
                              'version')
 
@@ -45,8 +48,8 @@ class TestMsvcBuilder(unittest.TestCase):
     def test_msvc(self):
         version = ('Microsoft (R) C/C++ Optimizing Compiler Version ' +
                    '19.12.25831 for x86')
-        with mock.patch('bfg9000.shell.which',
-                        lambda *args, **kwargs: ['command']):
+
+        with mock.patch('bfg9000.shell.which', mock_which):
             cc = MsvcBuilder(env, 'c++', 'CXX', ['cl'], 'CXXFLAGS', [],
                              version)
 
@@ -66,8 +69,8 @@ class TestMsvcBuilder(unittest.TestCase):
 
     def test_unknown_brand(self):
         version = 'unknown'
-        with mock.patch('bfg9000.shell.which',
-                        lambda *args, **kwargs: ['command']):
+
+        with mock.patch('bfg9000.shell.which', mock_which):
             cc = MsvcBuilder(env, 'c++', 'CXX', ['c++'], 'CXXFLAGS', [],
                              version)
 

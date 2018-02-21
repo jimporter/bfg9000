@@ -8,6 +8,10 @@ from bfg9000.versioning import Version
 env = Environment(None, None, None, None, None, {}, (False, False), None)
 
 
+def mock_which(*args, **kwargs):
+    return ['command']
+
+
 def mock_execute(args, **kwargs):
     if args[-1] == '-Wl,--version':
         return ['', '/usr/bin/ld --version\n']
@@ -21,7 +25,8 @@ def mock_execute(args, **kwargs):
 
 class TestCcBuilder(unittest.TestCase):
     def test_properties(self):
-        with mock.patch('bfg9000.shell.execute', mock_execute):
+        with mock.patch('bfg9000.shell.which', mock_which), \
+             mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
             cc = CcBuilder(env, 'c++', 'CXX', ['c++'], 'CXXFLAGS', [],
                            'version')
 
@@ -57,7 +62,8 @@ class TestCcBuilder(unittest.TestCase):
         version = ('g++ (Ubuntu 5.4.0-6ubuntu1~16.04.6) 5.4.0 20160609\n' +
                    'Copyright (C) 2015 Free Software Foundation, Inc.')
 
-        with mock.patch('bfg9000.shell.execute', mock_execute):
+        with mock.patch('bfg9000.shell.which', mock_which), \
+             mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
             cc = CcBuilder(env, 'c++', 'CXX', ['g++'], 'CXXFLAGS', [], version)
 
         self.assertEqual(cc.brand, 'gcc')
@@ -75,7 +81,8 @@ class TestCcBuilder(unittest.TestCase):
     def test_clang(self):
         version = 'clang version 3.8.0-2ubuntu4 (tags/RELEASE_380/final)'
 
-        with mock.patch('bfg9000.shell.execute', mock_execute):
+        with mock.patch('bfg9000.shell.which', mock_which), \
+             mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
             cc = CcBuilder(env, 'c++', 'CXX', ['clang++'], 'CXXFLAGS', [],
                            version)
 
@@ -93,7 +100,9 @@ class TestCcBuilder(unittest.TestCase):
 
     def test_unknown_brand(self):
         version = 'unknown'
-        with mock.patch('bfg9000.shell.execute', mock_execute):
+
+        with mock.patch('bfg9000.shell.which', mock_which), \
+             mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
             cc = CcBuilder(env, 'c++', 'CXX', ['c++'], 'CXXFLAGS', [], version)
 
         self.assertEqual(cc.brand, 'unknown')
