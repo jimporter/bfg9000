@@ -46,6 +46,10 @@ class TestRunExecutable(IntegrationTest):
         assertRegex(self, self.build('java'),
                     re.compile(r'^\s*hello from java!$', re.MULTILINE))
 
+    def test_java_classlist(self):
+        assertRegex(self, self.build('java-classlist'),
+                    re.compile(r'^\s*hello from java!$', re.MULTILINE))
+
     def test_python(self):
         assertRegex(self, self.build('python'),
                     re.compile(r'^\s*hello from python!$', re.MULTILINE))

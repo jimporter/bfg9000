@@ -139,9 +139,8 @@ class JvmCompiler(BuildCommand):
         return []
 
     def output_file(self, name, options):
-        return ObjectFileList(ObjectFile(
-            Path(name + '.classlist'), self.builder.object_format, self.lang
-        ))
+        return ObjectFileList(Path(name + '.classlist'), Path(name + '.class'),
+                              self.builder.object_format, self.lang)
 
 
 class JarMaker(BuildCommand):
@@ -277,10 +276,12 @@ class JvmRunner(BuildCommand):
     def __init__(self, builder, env, name, command):
         BuildCommand.__init__(self, builder, env, name, name, command)
 
-    def _call(self, cmd, file, jar=False):
+    def _call(self, cmd, file, cp=None, jar=False):
         result = list(cmd)
         if jar and self.lang != 'scala':
             result.append('-jar')
+        if cp:
+            result.extend(['-cp', cp])
         result.append(file)
         return result
 
@@ -288,8 +289,8 @@ class JvmRunner(BuildCommand):
         if isinstance(file, Executable):
             return self(file, jar=True)
         elif isinstance(file, ObjectFileList):
-            return self(file.object_file)
+            return self.run_arguments(file.object_file)
         elif isinstance(file, ObjectFile):
-            return self(file)
+            return self(file.path.stripext().basename(), cp=file.path.parent())
         raise TypeError('expected an executable or object file for {} to run'
                         .format(self.lang))

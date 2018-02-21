@@ -3,8 +3,10 @@
 cxx = executable('simple', files=['simple.cpp'])
 command('cxx', cmd=[cxx])
 
-java = executable('program', files=['program.java'], entry_point='program')
+jobj = object_file(file='program.java')
+java = executable('program', files=jobj, entry_point='program')
 command('java', cmds=[[java]])
+command('java-classlist', cmd=[jobj])
 
 python = source_file('script.py')
 command('python', cmd=python)
