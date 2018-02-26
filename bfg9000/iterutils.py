@@ -34,6 +34,8 @@ def listify(thing, always_copy=False, scalar_ok=True):
         return thing
     if scalar_ok:
         thing = iterate(thing)
+    elif not isiterable(thing):
+        raise TypeError('expected an iterable')
     return list(thing)
 
 

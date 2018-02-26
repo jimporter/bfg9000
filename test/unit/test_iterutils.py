@@ -54,6 +54,7 @@ class TestListify(unittest.TestCase):
 
     def test_no_scalar(self):
         self.assertRaises(TypeError, listify, 1, scalar_ok=False)
+        self.assertRaises(TypeError, listify, 'foo', scalar_ok=False)
 
 
 class TestFirst(unittest.TestCase):
