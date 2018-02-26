@@ -6,7 +6,7 @@ from . import tool
 from .common import SimpleCommand
 from .. import shell
 from ..exceptions import PackageResolutionError, PackageVersionError
-from ..file_types import Package
+from ..file_types import Package, PackageKind
 from ..iterutils import first
 from ..objutils import memoize
 from ..path import Path, Root
@@ -22,7 +22,7 @@ class PkgConfig(SimpleCommand):
         'cflags': ['--cflags'],
         'lib_dirs': ['--libs-only-L'],
         'ldflags': ['--libs-only-L', '--libs-only-other'],
-        'ldlibs': ['--libs-only-l']
+        'ldlibs': ['--libs-only-l'],
     }
 
     def __init__(self, env):
@@ -51,7 +51,7 @@ class PkgConfigPackage(Package):
         check_version(version, specifier, name, PackageVersionError)
         self.version = version
         self.specifier = specifier
-        self.static = kind == 'static'
+        self.static = kind == PackageKind.static
         Package.__init__(self, name, format)
 
     @memoize
@@ -93,6 +93,6 @@ class PkgConfigPackage(Package):
         )
 
 
-def resolve(env, name, format, version=None, kind='any'):
+def resolve(env, name, format, version=None, kind=PackageKind.any):
     return PkgConfigPackage(name, format, version, kind,
                             env.tool('pkg_config'))

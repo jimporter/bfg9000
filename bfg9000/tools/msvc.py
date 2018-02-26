@@ -456,7 +456,7 @@ class MsvcPackageResolver(object):
 
         raise PackageResolutionError("unable to find header '{}'".format(name))
 
-    def library(self, name, kind='any', search_dirs=None):
+    def library(self, name, kind=PackageKind.any, search_dirs=None):
         if search_dirs is None:
             search_dirs = self.lib_dirs
         libname = name + '.lib'

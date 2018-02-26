@@ -14,7 +14,7 @@ def mock_which(*args, **kwargs):
 
 def mock_execute(args, **kwargs):
     if args[-1] == '-Wl,--version':
-        return ['', '/usr/bin/ld --version\n']
+        return '', '/usr/bin/ld --version\n'
     elif args[-1] == '-print-search-dirs':
         return 'libraries: =/lib/search/dir1:/lib/search/dir2\n'
     elif args[-1] == '-print-sysroot':

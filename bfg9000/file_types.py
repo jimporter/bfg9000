@@ -1,5 +1,10 @@
 import copy as _copy
-from six import iteritems as _iteritems
+from six import iteritems as _iteritems, with_metaclass as _with_metaclass
+
+try:
+    from enum import EnumMeta as _EnumMeta, Flag as _Flag
+except ImportError:
+    from enum import EnumMeta as _EnumMeta, IntEnum as _Flag
 
 from .iterutils import listify as _listify
 from .languages import src2lang as _src2lang, hdr2lang as _hdr2lang
@@ -259,6 +264,23 @@ class PkgConfigPcFile(File):
 
 # Package-related objects; these aren't files in the same sense as those listed
 # above, but they're very similar.
+
+
+class _PackageKindMeta(_EnumMeta):
+    def __getitem__(cls, name):
+        try:
+            return _EnumMeta.__getitem__(cls, name)
+        except KeyError:
+            pass
+        raise ValueError('kind must be one of: {}'.format(', '.join(
+            "'{}'".format(i.name) for i in cls
+        )))
+
+
+class PackageKind(_with_metaclass(_PackageKindMeta, _Flag)):
+        static = 1
+        shared = 2
+        any = static | shared
 
 
 class Package(object):

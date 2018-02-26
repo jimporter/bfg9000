@@ -5,7 +5,7 @@ import warnings
 from . import builtin
 from .find import find
 from ..exceptions import PackageResolutionError, PackageVersionError
-from ..file_types import Executable, Framework, Package, CommonPackage
+from ..file_types import *
 from ..iterutils import default_sentinel, iterate, listify
 from ..objutils import objectify
 from ..path import Path, Root
@@ -22,11 +22,10 @@ class BoostPackage(CommonPackage):
 
 @builtin.globals('env')
 @builtin.type(Package)
-def package(env, name, version=None, lang='c', kind='any', headers=None,
-            libs=default_sentinel):
-    if kind not in ('any', 'shared', 'static'):
-        raise ValueError("kind must be one of 'any', 'shared', or 'static'")
+def package(env, name, version=None, lang='c', kind=PackageKind.any.name,
+            headers=None, libs=default_sentinel):
     version = objectify(version or '', SpecifierSet)
+    kind = PackageKind[kind]
     return env.builder(lang).packages.resolve(name, version, kind, headers,
                                               libs)
 
@@ -59,9 +58,9 @@ def system_executable(env, name, format=None):
 @builtin.globals('env')
 def framework(env, name, suffix=None):
     if not env.platform.has_frameworks:
-        raise ValueError("{} platform doesn't support frameworks".format(
-            env.platform.name
-        ))
+        raise PackageResolutionError(
+            "{} platform doesn't support frameworks".format(env.platform.name)
+        )
 
     framework = Framework(name, suffix)
     return CommonPackage(framework.full_name, env.platform.object_format,

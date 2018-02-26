@@ -634,18 +634,18 @@ class CcPackageResolver(object):
 
         raise PackageResolutionError("unable to find header '{}'".format(name))
 
-    def library(self, name, kind='any', search_dirs=None):
+    def library(self, name, kind=PackageKind.any, search_dirs=None):
         if search_dirs is None:
             search_dirs = self.lib_dirs
 
         libnames = []
-        if kind in ('any', 'shared'):
+        if kind & PackageKind.shared:
             libname = 'lib' + name + self.env.platform.shared_library_ext
             if self.env.platform.has_import_library:
                 libnames.append((libname + '.a', LinkLibrary, {}))
             else:
                 libnames.append((libname, SharedLibrary, {}))
-        if kind in ('any', 'static'):
+        if kind & PackageKind.static:
             libnames.append(('lib' + name + '.a', StaticLibrary,
                              {'lang': self.lang}))
 
