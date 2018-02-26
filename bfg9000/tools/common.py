@@ -18,10 +18,7 @@ class Command(object):
 
     @staticmethod
     def convert_args(args, conv):
-        if not isiterable(args):
-            raise TypeError('expected a list of command-line arguments')
-
-        args = listify(args)
+        args = listify(args, scalar_ok=False)
         if not any(isinstance(i, Command) for i in args):
             return args
 
@@ -89,7 +86,7 @@ def check_which(names, *args, **kwargs):
         return shell.listify(names[0])
 
 
-def choose_builder(env, lang, candidates, builders, cmd_var, flags_var, flags):
+def choose_builder(env, lang, candidates, builders, cmd_var, *args, **kwargs):
     candidates = listify(candidates)
     try:
         cmd = shell.which(candidates, env.variables,
@@ -111,7 +108,8 @@ def choose_builder(env, lang, candidates, builders, cmd_var, flags_var, flags):
             raise IOError('no working {} compiler found; tried {}'
                           .format(lang, tried))
 
-    return builder_type(env, lang, cmd_var, cmd, flags_var, flags, output)
+    return builder_type(env, lang, cmd_var, cmd, *args, version_output=output,
+                        **kwargs)
 
 
 def darwin_install_name(library):
