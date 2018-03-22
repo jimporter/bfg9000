@@ -59,7 +59,7 @@ before_install:
       brew cask uninstall oclint
       brew install gcc libogg ninja
       if [ "${PYTHON}" = "python3" ]; then
-        brew install ${PYTHON}
+        brew install ${PYTHON} || brew upgrade ${PYTHON}
       fi
       cp test/scripts/sitecustomize.py .
     else
