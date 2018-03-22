@@ -1,6 +1,6 @@
 import unittest
 
-from bfg9000.builtins import link
+from bfg9000.builtins import builtin, link
 from bfg9000 import file_types
 from bfg9000.build_inputs import BuildInputs
 from bfg9000.environment import Environment, LibraryMode
@@ -12,6 +12,7 @@ class BaseTest(unittest.TestCase):
         self.env = Environment(None, None, None, None, None, {},
                                (False, False), None)
         self.build = BuildInputs(self.env, Path('build.bfg', Root.srcdir))
+        self.builtin_dict = builtin.bind(build_inputs=self.build, env=self.env)
 
 
 class TestExecutable(BaseTest):
@@ -162,12 +163,7 @@ class TestWholeArchive(BaseTest):
         self.assertEqual(result, lib)
 
     def test_src_file(self):
-        builtins = {
-            'static_library': lambda *args, **kwargs: link.static_library(
-                None, self.build, self.env, *args, **kwargs
-            ),
-        }
-        result = link.whole_archive(builtins, 'static')
+        result = link.whole_archive(self.builtin_dict, 'static')
         self.assertEqual(result, file_types.WholeArchive(
             file_types.StaticLibrary(Path('static', Root.srcdir), None)
         ))

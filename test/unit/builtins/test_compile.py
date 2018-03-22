@@ -1,7 +1,7 @@
 import unittest
 from collections import namedtuple
 
-from bfg9000.builtins import compile
+from bfg9000.builtins import builtin, compile
 from bfg9000 import file_types
 from bfg9000.build_inputs import BuildInputs
 from bfg9000.environment import Environment
@@ -15,6 +15,7 @@ class BaseTest(unittest.TestCase):
         self.env = Environment(None, None, None, None, None, {},
                                (False, False), None)
         self.build = BuildInputs(self.env, Path('build.bfg', Root.srcdir))
+        self.builtin_dict = builtin.bind(build_inputs=self.build, env=self.env)
 
 
 class TestObjectFile(BaseTest):
@@ -62,11 +63,8 @@ class TestObjectFiles(BaseTest):
             for f, s in zip(files, src_files):
                 f.creator = MockCompile(s)
 
-        builtins = {'_make_object_file':
-                    lambda *args, **kwargs: compile._make_object_file(
-                        builtins, self.build, self.env, *args, **kwargs
-                    )}
-        obj_files = compile.object_files(builtins, self.build, self.env, files)
+        obj_files = compile.object_files(self.builtin_dict, self.build,
+                                         self.env, files)
 
         if make_src:
             return obj_files, files, src_files

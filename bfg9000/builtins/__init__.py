@@ -10,8 +10,6 @@ from .. import exceptions
 from ..iterutils import iterate
 from ..objutils import memoize
 
-_all_builtins = {}
-
 
 @memoize
 def init():
