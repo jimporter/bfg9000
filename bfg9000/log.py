@@ -32,7 +32,8 @@ def _filter_stack(stack):
 
 
 def _format_stack(stack):
-    return ''.join(traceback.format_list(stack))
+    # Put the newline at the beginning, since this helps our formatting later.
+    return '\n' + ''.join(traceback.format_list(stack)).rstrip()
 
 
 class StackFilter(object):
@@ -66,15 +67,15 @@ class StackfulStreamHandler(logging.StreamHandler):
         pre, stack, post = _filter_stack(record.full_stack)
 
         if len(stack):
-            record.stack_pre = '\n' + _format_stack(pre).rstrip()
-            record.stack = '\n' + _format_stack(stack).rstrip()
-            record.stack_post = '\n' + _format_stack(post).rstrip()
+            record.stack_pre = _format_stack(pre) if len(pre) else ''
+            record.stack = _format_stack(stack)
+            record.stack_post = _format_stack(post) if len(post) else ''
 
             record.user_pathname = stack[-1][0]
             record.user_lineno = stack[-1][1]
         else:
             record.show_stack = False
-            record.stack = '\n' + _format_stack(pre).rstrip()
+            record.stack = _format_stack(pre)
             logging.root.handle(record)
             return
 
