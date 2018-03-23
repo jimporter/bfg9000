@@ -16,8 +16,8 @@ class ScriptCommand(SimpleCommand):
     def run_arguments(self, file):
         if isinstance(file, SourceFile):
             return self(file)
-        return TypeError('expected a source file for {} to run'
-                         .format(self.rule_name))
+        raise TypeError('expected a source file for {} to run'
+                        .format(self.rule_name))
 
 
 @tool('lua', lang='lua')
