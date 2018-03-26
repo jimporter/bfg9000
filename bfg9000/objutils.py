@@ -40,4 +40,8 @@ def memoize(fn):
         result = cache[key] = fn(*args, **kwargs)
         return result
 
+    def reset():
+        cache.clear()
+
+    wrapper._reset = reset
     return wrapper

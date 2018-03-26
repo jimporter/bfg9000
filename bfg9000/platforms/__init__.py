@@ -34,7 +34,7 @@ def platform_name():
             ).lower()
             if uname.startswith('cygwin'):
                 return 'cygwin'
-        except WindowsError:
+        except OSError:
             pass
 
     return platform_name
