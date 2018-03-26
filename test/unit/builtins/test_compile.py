@@ -15,7 +15,8 @@ class BaseTest(unittest.TestCase):
         self.env = Environment(None, None, None, None, None, {},
                                (False, False), None)
         self.build = BuildInputs(self.env, Path('build.bfg', Root.srcdir))
-        self.builtin_dict = builtin.bind(build_inputs=self.build, env=self.env)
+        self.builtin_dict = builtin.bind(build_inputs=self.build, env=self.env,
+                                         argv=None)
 
 
 class TestObjectFile(BaseTest):

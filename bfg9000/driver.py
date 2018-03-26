@@ -79,9 +79,13 @@ class Directory(object):
     def __call__(self, string):
         if os.path.exists(string):
             if not os.path.isdir(string):
-                raise ValueError("'{}' is not a directory".format(string))
+                raise argparse.ArgumentTypeError(
+                    "'{}' is not a directory".format(string)
+                )
         elif self.must_exist:
-            raise ValueError("'{}' does not exist".format(string))
+            raise argparse.ArgumentTypeError(
+                "'{}' does not exist".format(string)
+            )
 
         return path.abspath(string)
 
@@ -176,18 +180,17 @@ def add_configure_args(parser):
                              help=path_help[root.name])
 
 
-def configure(parser, args, extra):
+def configure(parser, subparser, args, extra):
+    if path.samefile(args.srcdir, args.builddir):
+        subparser.error('source and build directories must be different')
     if not build.is_srcdir(args.srcdir):
-        parser.error('source directory must contain a {} file'
-                     .format(build.bfgfile))
+        subparser.error('source directory must contain a {} file'
+                        .format(build.bfgfile))
     if build.is_srcdir(args.builddir):
-        parser.error('build directory must not contain a {} file'
-                     .format(build.bfgfile))
+        subparser.error('build directory must not contain a {} file'
+                        .format(build.bfgfile))
 
-    if path.exists(args.builddir):
-        if path.samefile(args.srcdir, args.builddir):
-            parser.error('source and build directories must be different')
-    else:
+    if not path.exists(args.builddir):
         os.mkdir(args.builddir.string())
 
     env, backend = environment_from_args(args, extra)
@@ -201,13 +204,13 @@ def configure(parser, args, extra):
         return 1
 
 
-def refresh(parser, args, extra):
+def refresh(parser, subparser, args, extra):
     if extra:
-        parser.error('unrecongized arguments: {}'.format(' '.join(extra)))
+        subparser.error('unrecognized arguments: {}'.format(' '.join(extra)))
 
     if build.is_srcdir(args.builddir):
-        parser.error('build directory must not contain a {} file'
-                     .format(build.bfgfile))
+        subparser.error('build directory must not contain a {} file'
+                        .format(build.bfgfile))
 
     try:
         env = Environment.load(args.builddir.string())
@@ -220,13 +223,13 @@ def refresh(parser, args, extra):
         return handle_reload_exception(e, suggest_rerun=True)
 
 
-def env(parser, args, extra):
+def env(parser, subparser, args, extra):
     if extra:
-        parser.error('unrecongized arguments: {}'.format(' '.join(extra)))
+        subparser.error('unrecognized arguments: {}'.format(' '.join(extra)))
 
     if build.is_srcdir(args.builddir):
-        parser.error('build directory must not contain a {} file'
-                     .format(build.bfgfile))
+        subparser.error('build directory must not contain a {} file'
+                        .format(build.bfgfile))
 
     try:
         env = Environment.load(args.builddir.string())
@@ -238,7 +241,7 @@ def env(parser, args, extra):
         return handle_reload_exception(e)
 
 
-def help(parser, args, extra):
+def help(parser, subparser, args, extra):
     parser.parse_args(extra + ['--help'])
 
 
@@ -252,7 +255,7 @@ def main():
         'configure', description=configure_desc, add_help=False,
         help='create build files'
     )
-    conf_p.set_defaults(func=configure)
+    conf_p.set_defaults(func=configure, parser=conf_p)
     conf_p.add_argument(argparse.SUPPRESS,
                         action=directory_pair('srcdir', 'builddir'),
                         type=Directory(), metavar='DIRECTORY',
@@ -267,13 +270,13 @@ def main():
                             metavar='SRCDIR', help='source directory')
     confinto_p.add_argument('builddir', type=Directory(), metavar='BUILDDIR',
                             help='build directory')
-    confinto_p.set_defaults(func=configure)
+    confinto_p.set_defaults(func=configure, parser=confinto_p)
     add_configure_args(confinto_p)
 
     refresh_p = subparsers.add_parser(
         'refresh', description=refresh_desc, help='regenerate build files'
     )
-    refresh_p.set_defaults(func=refresh)
+    refresh_p.set_defaults(func=refresh, parser=refresh_p)
     refresh_p.add_argument('builddir', type=Directory(must_exist=True),
                            metavar='BUILDDIR', nargs='?', default='.',
                            help='build directory')
@@ -281,7 +284,7 @@ def main():
     env_p = subparsers.add_parser(
         'env', description=env_desc, help='print environment'
     )
-    env_p.set_defaults(func=env)
+    env_p.set_defaults(func=env, parser=env_p)
     env_p.add_argument('-u', '--unique', action='store_true',
                        help='only show variables that differ from the ' +
                        'current environment')
@@ -292,12 +295,12 @@ def main():
     help_p = subparsers.add_parser(
         'help', help='show this help message and exit', add_help=False
     )
-    help_p.set_defaults(func=help)
+    help_p.set_defaults(func=help, parser=help_p)
 
     args, extra = parser.parse_known_args()
     log.init(args.color, debug=args.debug, warn_once=args.warn_once)
 
-    return args.func(parser, args, extra)
+    return args.func(parser, args.parser, args, extra)
 
 
 def simple_main():
@@ -313,4 +316,4 @@ def simple_main():
     args, extra = parser.parse_known_args()
     log.init(args.color, debug=args.debug, warn_once=args.warn_once)
 
-    return configure(parser, args, extra)
+    return configure(parser, parser, args, extra)

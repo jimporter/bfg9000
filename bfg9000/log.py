@@ -82,7 +82,7 @@ class StackfulStreamHandler(logging.StreamHandler):
         return logging.StreamHandler.emit(self, record)
 
 
-def init(color='auto', debug=False, warn_once=False):
+def init(color='auto', debug=False, warn_once=False, stream=None):
     if color == 'always':
         colorama.init(strip=False)
     elif color == 'never':
@@ -102,7 +102,7 @@ def init(color='auto', debug=False, warn_once=False):
 
     logging.root.setLevel(logging.DEBUG if debug else logging.WARNING)
 
-    stackless = logging.StreamHandler()
+    stackless = logging.StreamHandler(stream)
     stackless.addFilter(StackFilter(has_stack=False))
 
     fmt = '%(levelname)s: %(message)s'
@@ -112,7 +112,7 @@ def init(color='auto', debug=False, warn_once=False):
     stackless.setFormatter(logging.Formatter(fmt))
     logging.root.addHandler(stackless)
 
-    stackful = StackfulStreamHandler()
+    stackful = StackfulStreamHandler(stream)
     stackful.addFilter(StackFilter(has_stack=True))
 
     fmt = '%(levelname)s: %(user_pathname)s:%(user_lineno)d: %(message)s'

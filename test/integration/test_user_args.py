@@ -30,6 +30,7 @@ class TestUserArgs(IntegrationTest):
                     r'(?m)^\s+--name NAME\s+set the name to greet$')
 
     def test_help_explicit_srcdir(self):
+        os.chdir(this_dir)
         output = self.assertPopen(
             ['bfg9000', 'help', 'configure', self.srcdir]
         )

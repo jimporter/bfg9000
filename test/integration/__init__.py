@@ -108,7 +108,7 @@ def assertNotRegex(self, *args, **kwargs):
         return self.assertNotRegexpMatches(*args, **kwargs)
 
 
-class IntegrationTest(unittest.TestCase):
+class BasicIntegrationTest(unittest.TestCase):
     def __init__(self, srcdir, *args, **kwargs):
         install = kwargs.pop('install', False)
 
@@ -158,15 +158,9 @@ class IntegrationTest(unittest.TestCase):
         return self._make_builddir(self.srcdir)
 
     def parameterize(self):
-        result = []
-        for i in backends:
-            try:
-                result.append(self.__class__(
-                    backend=i, *self._args, **self._kwargs
-                ))
-            except unittest.SkipTest:
-                pass
-        return result
+        return [self.__class__(
+            backend='', *self._args, **self._kwargs
+        )]
 
     def shortDescription(self):
         return self.backend
@@ -196,7 +190,8 @@ class IntegrationTest(unittest.TestCase):
             self.configure()
 
     def configure(self, srcdir=None, builddir=None, installdir=_unset,
-                  orig_srcdir=_unset, extra_args=_unset, env=_unset):
+                  orig_srcdir=_unset, extra_args=_unset, env=_unset,
+                  backend=_unset):
         if srcdir:
             srcdir = os.path.join(test_data_dir, srcdir)
         else:
@@ -211,6 +206,8 @@ class IntegrationTest(unittest.TestCase):
             extra_args = self.extra_args
         if env is _unset:
             env = self.env
+        if backend is _unset:
+            backend = self.backend
 
         if orig_srcdir:
             cleandir(srcdir, recreate=False)
@@ -226,7 +223,7 @@ class IntegrationTest(unittest.TestCase):
 
         self.assertPopen(
             ['bfg9000', '--debug', 'configure', builddir,
-             '--backend', self.backend] + install_args + extra_args,
+             '--backend', backend] + install_args + extra_args,
             env=env, env_update=True
         )
         os.chdir(builddir)
@@ -240,7 +237,7 @@ class IntegrationTest(unittest.TestCase):
     def wait(self, t=1):
         time.sleep(t)
 
-    def assertPopen(self, command, env=None, env_update=True):
+    def assertPopen(self, command, env=None, env_update=True, returncode=0):
         if env is not None and env_update:
             overrides = env
             env = dict(os.environ)
@@ -252,7 +249,7 @@ class IntegrationTest(unittest.TestCase):
             env=env, universal_newlines=True
         )
         output = proc.communicate()[0]
-        if proc.returncode != 0:
+        if proc.returncode != returncode:
             raise SubprocessError(output)
         return output
 
@@ -285,6 +282,19 @@ class IntegrationTest(unittest.TestCase):
             raise unittest.TestCase.failureException(
                 'missing: {}, extra: {}'.format(missing, extra)
             )
+
+
+class IntegrationTest(BasicIntegrationTest):
+    def parameterize(self):
+        result = []
+        for i in backends:
+            try:
+                result.append(self.__class__(
+                    backend=i, *self._args, **self._kwargs
+                ))
+            except unittest.SkipTest:
+                pass
+        return result
 
 
 def output_file(name):
