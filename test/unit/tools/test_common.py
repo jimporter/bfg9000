@@ -1,5 +1,6 @@
 import mock
 import unittest
+from six import assertRaisesRegex
 
 from bfg9000.environment import Environment
 from bfg9000.tools import cc, common
@@ -58,6 +59,6 @@ class TestChooseBuilder(unittest.TestCase):
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', bad_execute):  # noqa
             msg = "^no working c compiler found; tried 'cc'$"
-            with self.assertRaisesRegexp(IOError, msg):
+            with assertRaisesRegex(self, IOError, msg):
                 common.choose_builder(self.env, 'c', 'cc', (cc.CcBuilder, ),
                                       'CC', 'CFLAGS', [])
