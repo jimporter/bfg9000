@@ -1,5 +1,6 @@
 import mock
 import os
+import re
 import unittest
 from collections import namedtuple
 
@@ -7,8 +8,9 @@ from bfg9000 import file_types
 from bfg9000.builtins import packages
 from bfg9000.environment import Environment
 from bfg9000.exceptions import PackageResolutionError
+from bfg9000.file_types import HeaderDirectory
 from bfg9000.path import abspath
-from bfg9000.platforms import platform_name
+from bfg9000.platforms import platform_name, platform_info
 from bfg9000.versioning import SpecifierSet, Version
 
 
@@ -108,6 +110,40 @@ class TestPackage(BaseTest):
     def test_invalid_kind(self):
         with self.assertRaises(ValueError):
             packages.package(self.env, 'name', kind='bad')
+
+
+class TestBoostPackage(BaseTest):
+    @unittest.skipIf(platform_name() != 'windows',
+                     'special default location only applies to windows')
+    def test_windows_default_location(self):
+        exists = os.path.exists
+        boost_dir = os.path.abspath('boost-1.23')
+
+        def mock_find(*args, **kwargs):
+            return [boost_dir]
+
+        def mock_boost_version(*args, **kwargs):
+            return Version('1.23')
+
+        def mock_exists(x):
+            if re.search(r'[/\\]boost[/\\]version.hpp$', x):
+                return True
+            return exists(x)
+
+        # Clear the environment variables to force this to use the default
+        # location.
+        self.env.variables = {}
+
+        with mock.patch('bfg9000.builtins.packages.find', mock_find), \
+             mock.patch('bfg9000.builtins.packages._boost_version',
+                        mock_boost_version), \
+             mock.patch('os.path.exists', mock_exists):  # noqa
+            pkg = packages.boost_package(self.env, 'thread')
+            self.assertEqual(pkg.name, 'boost(thread)')
+            self.assertEqual(pkg.all_options['lib_dirs'], [r'C:\Boost\lib'])
+            self.assertEqual(pkg.all_options['includes'], [HeaderDirectory(
+                abspath(boost_dir)
+            )])
 
 
 class TestSystemExecutable(BaseTest):

@@ -315,6 +315,11 @@ class CommonPackage(Package):
     def ldlibs(self, linker, output):
         return linker.libs(self, output, pkg=True)
 
+    def __repr__(self):
+        return '<{type} {name}>'.format(
+            type=type(self).__name__, name=repr(self.name)
+        )
+
 
 # A reference to a macOS framework. Can be used in place of Library objects.
 class Framework(object):
