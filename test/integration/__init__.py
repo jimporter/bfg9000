@@ -108,7 +108,64 @@ def assertNotRegex(self, *args, **kwargs):
         return self.assertNotRegexpMatches(*args, **kwargs)
 
 
-class BasicIntegrationTest(unittest.TestCase):
+class TestCase(unittest.TestCase):
+    def parameterize(self):
+        return [self]
+
+    def target_name(self, target):
+        if self.backend == 'msbuild':
+            if isinstance(target, Target):
+                target = target.name
+            return '/target:' + target
+        else:
+            if isinstance(target, Target):
+                target = target.path
+            return target
+
+    def target_path(self, target):
+        if isinstance(target, Target):
+            prefix = '.'
+            if self.backend == 'msbuild':
+                prefix = 'Debug'
+                if os.getenv('PLATFORM') == 'X64':
+                    prefix = os.path.join('X64', prefix)
+            return os.path.join(prefix, target.path)
+        return target
+
+    def assertPopen(self, command, env=None, env_update=True, returncode=0):
+        if env is not None and env_update:
+            overrides = env
+            env = dict(os.environ)
+            env.update(overrides)
+
+        command = [self.target_path(i) for i in command]
+        proc = subprocess.Popen(
+            command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+            env=env, universal_newlines=True
+        )
+        output = proc.communicate()[0]
+        if proc.returncode != returncode:
+            raise SubprocessError(output)
+        return output
+
+    def assertOutput(self, command, output, *args, **kwargs):
+        self.assertEqual(self.assertPopen(command, *args, **kwargs), output)
+
+    def assertDirectory(self, path, contents):
+        path = os.path.normpath(path)
+        actual = set(os.path.normpath(os.path.join(path, base, f))
+                     for base, dirs, files in os.walk(path) for f in files)
+        expected = set(os.path.normpath(os.path.join(path, i))
+                       for i in contents)
+        if actual != expected:
+            missing = [os.path.relpath(i, path) for i in (expected - actual)]
+            extra = [os.path.relpath(i, path) for i in (actual - expected)]
+            raise unittest.TestCase.failureException(
+                'missing: {}, extra: {}'.format(missing, extra)
+            )
+
+
+class BasicIntegrationTest(TestCase):
     def __init__(self, srcdir, *args, **kwargs):
         install = kwargs.pop('install', False)
 
@@ -165,26 +222,6 @@ class BasicIntegrationTest(unittest.TestCase):
     def shortDescription(self):
         return self.backend
 
-    def target_name(self, target):
-        if self.backend == 'msbuild':
-            if isinstance(target, Target):
-                target = target.name
-            return '/target:' + target
-        else:
-            if isinstance(target, Target):
-                target = target.path
-            return target
-
-    def target_path(self, target):
-        if isinstance(target, Target):
-            prefix = '.'
-            if self.backend == 'msbuild':
-                prefix = 'Debug'
-                if os.getenv('PLATFORM') == 'X64':
-                    prefix = os.path.join('X64', prefix)
-            return os.path.join(prefix, target.path)
-        return target
-
     def setUp(self):
         if self._configure:
             self.configure()
@@ -237,25 +274,6 @@ class BasicIntegrationTest(unittest.TestCase):
     def wait(self, t=1):
         time.sleep(t)
 
-    def assertPopen(self, command, env=None, env_update=True, returncode=0):
-        if env is not None and env_update:
-            overrides = env
-            env = dict(os.environ)
-            env.update(overrides)
-
-        command = [self.target_path(i) for i in command]
-        proc = subprocess.Popen(
-            command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-            env=env, universal_newlines=True
-        )
-        output = proc.communicate()[0]
-        if proc.returncode != returncode:
-            raise SubprocessError(output)
-        return output
-
-    def assertOutput(self, command, output, *args, **kwargs):
-        self.assertEqual(self.assertPopen(command, *args, **kwargs), output)
-
     def assertExists(self, path):
         realpath = self.target_path(path)
         if not os.path.exists(realpath):
@@ -268,19 +286,6 @@ class BasicIntegrationTest(unittest.TestCase):
         if os.path.exists(realpath):
             raise unittest.TestCase.failureException(
                 "'{}' exists".format(os.path.normpath(realpath))
-            )
-
-    def assertDirectory(self, path, contents):
-        path = os.path.normpath(path)
-        actual = set(os.path.normpath(os.path.join(path, base, f))
-                     for base, dirs, files in os.walk(path) for f in files)
-        expected = set(os.path.normpath(os.path.join(path, i))
-                       for i in contents)
-        if actual != expected:
-            missing = [os.path.relpath(i, path) for i in (expected - actual)]
-            extra = [os.path.relpath(i, path) for i in (actual - expected)]
-            raise unittest.TestCase.failureException(
-                'missing: {}, extra: {}'.format(missing, extra)
             )
 
 

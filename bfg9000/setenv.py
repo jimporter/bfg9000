@@ -26,9 +26,9 @@ def main():
             os.environ[name] = value
         else:
             break
-
-    if i == len(args):
+    else:
         sys.stderr.write('{prog}: COMMAND is required\n'
                          .format(prog=parser.prog))
         return 1
+
     return subprocess.call(args[i:])
