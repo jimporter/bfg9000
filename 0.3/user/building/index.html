@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../../img/favicon.ico">
+        <title>Building with bfg9000 - bfg9000</title>
+        <link href="../../css/bootstrap-custom.min.css" rel="stylesheet">
+        <link href="../../css/font-awesome-4.5.0.css" rel="stylesheet">
+        <link href="../../css/base.css" rel="stylesheet">
+        <link rel="stylesheet" href="../../css/highlight.css">
+        <link href="../../css/extra.css" rel="stylesheet">
+        <link href="../../css/version-select.css" rel="stylesheet">
+        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+        <![endif]-->
+
+        <script src="../../js/jquery-1.10.2.min.js"></script>
+        <script src="../../js/bootstrap-3.0.3.min.js"></script>
+        <script src="../../js/highlight.pack.js"></script> 
+    </head>
+
+    <body>
+
+        <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+
+        <!-- Collapsed navigation -->
+        <div class="navbar-header">
+            <!-- Expander button -->
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="../..">bfg9000</a>
+        </div>
+
+        <!-- Expanded navigation -->
+        <div class="navbar-collapse collapse">
+                <!-- Main navigation -->
+                <ul class="nav navbar-nav">
+                    <li >
+                        <a href="../..">Home</a>
+                    </li>
+                    <li >
+                        <a href="../../getting-started/">Getting Started</a>
+                    </li>
+                    <li class="dropdown active">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">User Guide <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                            
+<li class="active">
+    <a href="./">Building with bfg9000</a>
+</li>
+                            
+<li >
+    <a href="../writing/">Writing a Build File</a>
+</li>
+                            
+<li >
+    <a href="../reference/">Reference</a>
+</li>
+                            
+<li >
+    <a href="../command-line/">Command-Line Reference</a>
+</li>
+                            
+<li >
+    <a href="../environment-vars/">Environment Variables</a>
+</li>
+                        </ul>
+                    </li>
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Developer Guide <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                            
+<li >
+    <a href="../../developer/internals/">Internals</a>
+</li>
+                            
+<li >
+    <a href="../../developer/contributing/">Contributing</a>
+</li>
+                        </ul>
+                    </li>
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">About <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                            
+<li >
+    <a href="../../about/changes/">Changes</a>
+</li>
+                            
+<li >
+    <a href="../../about/license/">License</a>
+</li>
+                        </ul>
+                    </li>
+                </ul>
+
+            <ul class="nav navbar-nav navbar-right">
+                <li>
+                    <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
+                        <i class="fa fa-search"></i> Search
+                    </a>
+                </li>
+                    <li >
+                        <a rel="next" href="../../getting-started/">
+                            <i class="fa fa-arrow-left"></i> Previous
+                        </a>
+                    </li>
+                    <li >
+                        <a rel="prev" href="../writing/">
+                            Next <i class="fa fa-arrow-right"></i>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://github.com/jimporter/bfg9000/"><i class="fa fa-github"></i> GitHub</a>
+                    </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+        <div class="container">
+                <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+        <li class="main active"><a href="#building-with-bfg9000">Building With bfg9000</a></li>
+            <li><a href="#your-first-build">Your first build</a></li>
+            <li><a href="#build-directories">Build directories</a></li>
+            <li><a href="#selecting-a-backend">Selecting a backend</a></li>
+            <li><a href="#setting-build-options">Setting build options</a></li>
+            <li><a href="#installing-your-software">Installing your software</a></li>
+            <li><a href="#distributing-your-source">Distributing your source</a></li>
+    </ul>
+</div></div>
+                <div class="col-md-9" role="main">
+
+<h1 id="building-with-bfg9000">Building With bfg9000<a class="headerlink" href="#building-with-bfg9000" title="Permanent link">§</a></h1>
+<p>Like some other tools (e.g. <a href="https://www.cmake.org/">CMake</a> or <a href="https://www.gnu.org/software/automake/">autotools</a>), bfg9000
+isn't actually a build system; it's a <em>build configuration system</em> or, if you
+prefer, a <em>meta-build system</em>. That is, bfg9000 builds build files which you
+then use to run your actual builds.</p>
+<h2 id="your-first-build">Your first build<a class="headerlink" href="#your-first-build" title="Permanent link">§</a></h2>
+<p>Invoking bfg9000 is simple. Assuming you have an existing project that uses
+bfg9000, just call <code>bfg9000 configure builddir</code> and it will generate the final
+build script (<code>build.ninja</code> in this case) in <code>builddir</code> to use for
+building your project:</p>
+<pre><code class="sh">$ cd /path/to/src/
+$ bfg9000 configure build/
+$ cd build/
+$ ninja
+</code></pre>
+
+<p>Since the configure command is easily the most common thing to run when using
+bfg9000, you can use the following shorthand instead of
+<code>bfg9000 configure build/</code>:</p>
+<pre><code class="sh">$ 9k build/
+</code></pre>
+
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>On Windows, using bfg9000 requires a bit more care. Since the MSVC tools
+aren't in the <code>PATH</code> by default, you can't just open any command prompt.
+You need to pick the <em>correct</em> prompt. Thankfully, Visual Studio provides
+Start Menu items such as "VS2015 Developer Command Prompt". These add the
+appropiate directories to the <code>PATH</code>, allowing you to use whichever version
+of the MSVC tools that you'd like.</p>
+</div>
+<h2 id="build-directories">Build directories<a class="headerlink" href="#build-directories" title="Permanent link">§</a></h2>
+<p>You might have noticed above that <code>build.ninja</code> was placed in a separate
+directory. This is because bfg9000 exclusively uses <em>out-of-tree builds</em>; that
+is, the build directory must be different from the source directory. While
+slightly more inconvenient for one-off builds (users will have to <code>cd</code> into
+another directory to start the build), the benefits are significant. First, it
+ensures that cleaning a build is trivial: just remove the build directory.
+Second, simplifies building in multiple configurations, a very useful feature
+for development; you can easily have debug and optimized builds sitting
+side-by-side.</p>
+<p>In our example above, we specified the build directory to place the final build
+files. However, you can also run bfg9000 <em>from</em> the build directory, in which
+case you'd run <code>bfg9000 configure srcdir/</code> (or, equivalently, <code>9k srcdir/</code>). If
+neither the source nor build directories are your current working directory, you
+can run:</p>
+<pre><code class="sh">bfg9000 configure-into srcdir/ builddir/
+</code></pre>
+
+<h2 id="selecting-a-backend">Selecting a backend<a class="headerlink" href="#selecting-a-backend" title="Permanent link">§</a></h2>
+<p>By default, bfg9000 tries to use the most appropriate build backend for your
+system. In descending order, bfg prefers <a href="https://ninja-build.org/"><code>ninja</code></a>, <a href="https://www.gnu.org/software/make/"><code>make</code></a>, and
+<a href="https://msdn.microsoft.com/en-us/library/dd393574(v=vs.120).aspx"><code>msbuild</code></a>. If one of these isn't installed, it will try the next best
+option. However, you can explicitly select a backend with the <code>--backend</code>
+option. For instance, to build a Makefile even if Ninja is installed:</p>
+<pre><code class="sh">$ bfg9000 configure builddir/ --backend=make
+</code></pre>
+
+<p>For a complete description of the available command-line options for bfg9000,
+see the <a href="../command-line/">Command-line Reference</a> chapter.</p>
+<h2 id="setting-build-options">Setting build options<a class="headerlink" href="#setting-build-options" title="Permanent link">§</a></h2>
+<p>Many options for building can be set via the environment. These generally follow
+the UNIX naming conventions, so you can use, say,
+<a href="../environment-vars/#cxx"><code>CXX</code></a> to change the C++ compiler that bfg9000 uses.
+For a full listing of the recognized environment variables, see the <a href="../environment-vars/">Environment
+Variables</a> chapter.</p>
+<h2 id="installing-your-software">Installing your software<a class="headerlink" href="#installing-your-software" title="Permanent link">§</a></h2>
+<p>After building your software, you may wish to install it to another directory on
+your system. You can do this by running:</p>
+<pre><code class="sh">$ ninja install
+</code></pre>
+
+<p>Similarly, you can run <code>ninja uninstall</code> to uninstall the files from their
+install location. Of course, if you're using the Make backend, you'd run
+<code>make install</code>/<code>make uninstall</code> instead.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The MSBuild backend doesn't currently support this command.</p>
+</div>
+<h3 id="install-locations">Install locations<a class="headerlink" href="#install-locations" title="Permanent link">§</a></h3>
+<p>By default, bfg9000 will install them into the appropriate place for your
+platform (e.g. <code>/usr/local/bin</code> for exectuables on POSIX systems).  However, you
+can specify where you'd like to install your project when invoking bfg9000. To
+change the installation prefix (<code>/usr/local</code> on POSIX), just specify <code>--prefix
+/path/to/prefix</code> when running bfg9000. You can also specify the binary, library,
+and include directories individually, using <code>--bindir</code>, <code>--libdir</code>, and
+<code>--includedir</code>, respectively.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>On POSIX systems, you can additionally specify the $DESTDIR environment
+variable to perform a staged installation (useful when creating a binary
+package, for example). For more information about $DESTDIR, see the <a href="https://www.gnu.org/prep/standards/html_node/DESTDIR.html">GNU
+coding standards</a>.</p>
+</div>
+<h2 id="distributing-your-source">Distributing your source<a class="headerlink" href="#distributing-your-source" title="Permanent link">§</a></h2>
+<p>Once you're ready to release your software, you'll want to provide a source
+distribution. You can't just archive the entire source directory, since it'll
+include things that don't belong like <code>.gitignore</code>. Instead, you should run:</p>
+<pre><code class="sh">$ ninja dist
+</code></pre>
+
+<p>(Of course, you should run <code>make dist</code> for the Make backend.) This will produce
+a <code>tar.gz</code> file containing all the source files necessary for building your
+project. If you'd like to specify another file format, you can use one of the
+following targets: <code>dist-gzip</code>, <code>dist-bzip2</code>, or <code>dist-zip</code>.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The MSBuild backend doesn't currently support this command.</p>
+</div></div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+                <p>Copyright &copy; 2015-2017 Jim Porter</p>
+            <p>Documentation built with <a href="http://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script>var base_url = '../..';</script>
+        <script src="../../js/base.js"></script>
+        <script src="../../js/version-select.js"></script>
+        <script src="../../search/main.js"></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="exampleModalLabel">Search</h4>
+            </div>
+            <div class="modal-body">
+                <p>
+                    From here you can search these documents. Enter
+                    your search terms below.
+                </p>
+                <form role="form">
+                    <div class="form-group">
+                        <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="Keyboard Shortcuts Modal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="exampleModalLabel">Keyboard Shortcuts</h4>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td><kbd>&larr;</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td><kbd>&rarr;</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+
+    </body>
+</html>
