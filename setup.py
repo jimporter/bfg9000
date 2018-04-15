@@ -10,38 +10,6 @@ from bfg9000.app_version import version
 root_dir = os.path.abspath(os.path.dirname(__file__))
 
 
-class DocServe(Command):
-    description = 'serve the documentation locally'
-    user_options = [
-        ('dev-addr=', None, 'address to host the documentation on'),
-    ]
-
-    def initialize_options(self):
-        self.dev_addr = '0.0.0.0:8000'
-
-    def finalize_options(self):
-        pass
-
-    def run(self):
-        subprocess.check_call([
-            'mkdocs', 'serve', '--dev-addr=' + self.dev_addr
-        ])
-
-
-class DocDeploy(Command):
-    description = 'push the documentation to GitHub'
-    user_options = []
-
-    def initialize_options(self):
-        pass
-
-    def finalize_options(self):
-        pass
-
-    def run(self):
-        subprocess.check_call(['mkdocs', 'gh-deploy', '--clean'])
-
-
 class Coverage(Command):
     description = 'run tests with code coverage'
     user_options = [
@@ -77,10 +45,52 @@ class Coverage(Command):
 
 
 custom_cmds = {
-    'doc_serve': DocServe,
-    'doc_deploy': DocDeploy,
     'coverage': Coverage,
 }
+
+try:
+    from packaging.version import Version
+
+    class DocServe(Command):
+        description = 'serve the documentation locally'
+        user_options = [
+            ('dev-addr=', None, 'address to host the documentation on'),
+        ]
+
+        def initialize_options(self):
+            self.dev_addr = '0.0.0.0:8000'
+
+        def finalize_options(self):
+            pass
+
+        def run(self):
+            subprocess.check_call([
+                'mike', 'serve', '--dev-addr=' + self.dev_addr
+            ])
+
+    class DocDeploy(Command):
+        description = 'push the documentation to GitHub'
+        user_options = []
+
+        def initialize_options(self):
+            pass
+
+        def finalize_options(self):
+            pass
+
+        def run(self):
+            v = Version(version)
+            alias = 'dev' if v.is_devrelease else 'latest'
+            title = '{} ({})'.format(v.base_version, alias)
+            short_version = '{}.{}'.format(*v.release[:2])
+            subprocess.check_call(
+                ['mike', 'deploy', '-t', title, short_version, alias]
+            )
+
+    custom_cmds['doc_serve'] = DocServe
+    custom_cmds['doc_deploy'] = DocDeploy
+except ImportError:
+    pass
 
 try:
     from flake8.main.setuptools_command import Flake8
@@ -129,7 +139,7 @@ setup(
     url='https://jimporter.github.io/bfg9000/',
 
     author='Jim Porter',
-    author_email='porterj@alum.rit.edu',
+    author_email='itsjimporter@gmail.com',
     license='BSD',
 
     classifiers=[
@@ -145,12 +155,13 @@ setup(
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
     ],
 
     packages=find_packages(exclude=['test', 'test.*']),
 
     install_requires=(
-        ['colorama', 'packaging', 'setuptools', 'six'] +
+        ['colorama', 'packaging >= 17.0', 'setuptools', 'six'] +
         more_requires
     ),
     extras_require={
