@@ -147,17 +147,17 @@ It converts a Python-based build script into the appropriate files for your
 underlying build system of choice.</p>
 <h2 id="why-bfg9000">Why bfg9000?<a class="headerlink" href="#why-bfg9000" title="Permanent link">§</a></h2>
 <hr />
-<h4 id="already-familiar">Already familiar<a class="headerlink" href="#already-familiar" title="Permanent link">§</a></h4>
+<h4 id="familiar-syntax">Familiar syntax<a class="headerlink" href="#familiar-syntax" title="Permanent link">§</a></h4>
 <p><code>build.bfg</code> files are just Python scripts with some new functions added, so you
 may already know how to write them; and when your build gets complicated, you
 can rely on the existing Python ecosystem to get you out of trouble.</p>
-<h4 id="build-fast">Build fast<a class="headerlink" href="#build-fast" title="Permanent link">§</a></h4>
-<p>Python may be slow, but bfg9000 gets out of the way as quickly as possible and
-relies on existing, mature build systems like Make and Ninja to do the heavy
-lifting of building your software.</p>
+<h4 id="fast-builds">Fast builds<a class="headerlink" href="#fast-builds" title="Permanent link">§</a></h4>
+<p>bfg9000 ensures your builds are fast by relying on existing, mature build
+systems like Make and Ninja to do the heavy lifting of building your software;
+often, incremental builds don't need to execute bfg9000 at all!</p>
 <h4 id="stay-sane">Stay sane<a class="headerlink" href="#stay-sane" title="Permanent link">§</a></h4>
 <p>Building your code shouldn't be the hard part of developing your project. Above
-all else, bfg9000 strives to make it easy to write your build scripts.</p>
+all else, bfg9000 strives to help you get your build right the <em>first</em> time.</p>
 <hr />
 <h2 id="a-brief-example">A brief example<a class="headerlink" href="#a-brief-example" title="Permanent link">§</a></h2>
 <p>You can't get much simpler than the simplest <code>build.bfg</code> file:</p>
@@ -256,5 +256,5 @@ $ ninja
 
 <!--
 MkDocs version : 0.17.2
-Build Date UTC : 2018-04-15 02:19:54
+Build Date UTC : 2018-04-19 20:46:37
 -->
