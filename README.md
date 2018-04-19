@@ -13,22 +13,22 @@ choice (Ninja, Make, or MSBuild).
 
 ## Why bfg9000?
 
-#### Already familiar
+#### Familiar syntax
 
 `build.bfg` files are just Python scripts with some new functions added, so you
 may already know how to write them; and when your build gets complicated, you
 can rely on the existing Python ecosystem to get you out of trouble.
 
-#### Build fast
+#### Fast builds
 
-Python may be slow, but bfg9000 gets out of the way as quickly as possible and
-relies on existing, mature build systems like Make and Ninja to do the heavy
-lifting of building your software.
+bfg9000 ensures your builds are fast by relying on existing, mature build
+systems like Make and Ninja to do the heavy lifting of building your software;
+often, incremental builds don't need to execute bfg9000 at all!
 
 #### Stay sane
 
 Building your code shouldn't be the hard part of developing your project. Above
-all else, bfg9000 strives to make it easy to write your build scripts.
+all else, bfg9000 strives to help you get your build right the *first* time.
 
 ## A brief example
 
