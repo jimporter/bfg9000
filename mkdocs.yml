@@ -27,7 +27,9 @@ pages:
       - Command-Line Reference: user/command-line.md
       - Environment Variables: user/environment-vars.md
   - Developer Guide:
-      - Internals: developer/internals.md
+      - Build Backends: developer/backends.md
+      - Build Tools: developer/tools.md
+      - Builtins: developer/builtins.md
       - Contributing: developer/contributing.md
   - About:
       - Changes: about/changes.md
