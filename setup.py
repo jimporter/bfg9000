@@ -54,18 +54,21 @@ try:
     class DocServe(Command):
         description = 'serve the documentation locally'
         user_options = [
+            ('working', 'w', 'use the documentation in the working directory'),
             ('dev-addr=', None, 'address to host the documentation on'),
         ]
 
         def initialize_options(self):
+            self.working = False
             self.dev_addr = '0.0.0.0:8000'
 
         def finalize_options(self):
             pass
 
         def run(self):
+            cmd = 'mkdocs' if self.working else 'mike'
             subprocess.check_call([
-                'mike', 'serve', '--dev-addr=' + self.dev_addr
+                cmd, 'serve', '--dev-addr=' + self.dev_addr
             ])
 
     class DocDeploy(Command):
