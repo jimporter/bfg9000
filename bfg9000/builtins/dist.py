@@ -13,7 +13,7 @@ _exts = OrderedDict(
 )
 
 
-@builtin.globals('builtins')
+@builtin.function('builtins')
 def extra_dist(builtins, files=None, dirs=None):
     for i in iterate(files):
         builtins['generic_file'](i)

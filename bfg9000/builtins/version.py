@@ -1,10 +1,9 @@
-from . import builtin, optbuiltin
+from . import builtin
 from .. import versioning as v
 from ..objutils import objectify
 
 
-@builtin
-@optbuiltin
+@builtin.function(context='*')
 def bfg9000_required_version(version=None, python_version=None):
     version = objectify(version or '', v.PythonSpecifierSet, prereleases=True)
     python_version = objectify(python_version or '', v.PythonSpecifierSet,
@@ -14,7 +13,6 @@ def bfg9000_required_version(version=None, python_version=None):
     v.check_version(v.python_version, python_version, kind='python')
 
 
-@builtin.getter()
-@optbuiltin.getter()
+@builtin.getter(context='*')
 def bfg9000_version():
     return v.bfg_version

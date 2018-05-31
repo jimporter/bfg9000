@@ -27,7 +27,7 @@ class DefaultOutputs(object):
         return self.default_outputs or self.fallback_defaults
 
 
-@builtin.globals('build_inputs')
+@builtin.function('build_inputs')
 def default(build, *args):
     for i in args:
         build['defaults'].add(i, explicit=True)

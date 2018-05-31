@@ -51,7 +51,7 @@ def can_install(env):
     return all(i is not None for i in itervalues(env.install_dirs))
 
 
-@builtin.globals('builtins', 'build_inputs', 'env')
+@builtin.function('builtins', 'build_inputs', 'env')
 def install(builtins, build, env, *args):
     if len(args) == 0:
         raise ValueError('expected at least one argument')

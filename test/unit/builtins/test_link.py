@@ -1,22 +1,11 @@
-import unittest
-
-from bfg9000.builtins import builtin, link
+from .common import BuiltinTest
+from bfg9000.builtins import link
 from bfg9000 import file_types
-from bfg9000.build_inputs import BuildInputs
-from bfg9000.environment import Environment, LibraryMode
+from bfg9000.environment import LibraryMode
 from bfg9000.path import Path, Root
 
 
-class BaseTest(unittest.TestCase):
-    def setUp(self):
-        self.env = Environment(None, None, None, None, None, {},
-                               (False, False), None)
-        self.build = BuildInputs(self.env, Path('build.bfg', Root.srcdir))
-        self.builtin_dict = builtin.bind(build_inputs=self.build, env=self.env,
-                                         argv=None)
-
-
-class TestExecutable(BaseTest):
+class TestExecutable(BuiltinTest):
     def test_identity(self):
         exe = file_types.Executable(Path('executable', Root.srcdir), None)
         result = link.executable(None, self.build, self.env, exe)
@@ -29,7 +18,7 @@ class TestExecutable(BaseTest):
         ))
 
 
-class TestSharedLibrary(BaseTest):
+class TestSharedLibrary(BuiltinTest):
     def test_identity(self):
         lib = file_types.SharedLibrary(Path('shared', Root.srcdir), None)
         result = link.shared_library(None, self.build, self.env, lib)
@@ -58,7 +47,7 @@ class TestSharedLibrary(BaseTest):
                           self.env, lib, files=['foo.cpp'])
 
 
-class TestStaticLibrary(BaseTest):
+class TestStaticLibrary(BuiltinTest):
     def test_identity(self):
         lib = file_types.StaticLibrary(Path('static', Root.srcdir), None)
         result = link.static_library(None, self.build, self.env, lib)
@@ -87,7 +76,7 @@ class TestStaticLibrary(BaseTest):
                           self.env, lib, files=['foo.cpp'])
 
 
-class TestLibrary(BaseTest):
+class TestLibrary(BuiltinTest):
     def test_identity(self):
         self.env.library_mode = LibraryMode(True, True)
         lib = file_types.DualUseLibrary(
@@ -155,7 +144,7 @@ class TestLibrary(BaseTest):
                           'library', kind='dual')
 
 
-class TestWholeArchive(BaseTest):
+class TestWholeArchive(BuiltinTest):
     def test_identity(self):
         lib = file_types.WholeArchive(
             file_types.StaticLibrary(Path('static', Root.srcdir), None)

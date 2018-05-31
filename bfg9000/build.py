@@ -2,7 +2,7 @@ import errno
 import os
 
 from .arguments.parser import ArgumentParser
-from .builtins import builtin, init as builtin_init, optbuiltin, user_arguments
+from .builtins import builtin, init as builtin_init, user_arguments
 from .build_inputs import BuildInputs
 from .path import exists, Path, pushd, Root
 from .iterutils import listify
@@ -21,6 +21,14 @@ def is_srcdir(path):
     return exists(path.append(bfgfile))
 
 
+def _execute_file(f, filename, builtin_dict):
+    code = compile(f.read(), filename, 'exec')
+    try:
+        exec(code, builtin_dict)
+    except SystemExit:
+        pass
+
+
 def _fill_parser(env, parent=None, filename=optsfile, usage='parse'):
     builtin_init()
 
@@ -36,11 +44,9 @@ def _fill_parser(env, parent=None, filename=optsfile, usage='parse'):
                                               description=user_description)
             group.usage = usage
 
-            builtin_dict = optbuiltin.bind(env=env, parser=group)
-            code = compile(f.read(), filename, 'exec')
-            exec(code, builtin_dict)
-    except SystemExit:
-        pass
+            builtin_dict = builtin.options.bind(env=env, parser=group)
+            _execute_file(f, filename, builtin_dict)
+            builtin.options.run_post(builtin_dict, env=env, parser=group)
     except IOError as e:
         if e.errno != errno.ENOENT:
             raise
@@ -63,15 +69,11 @@ def execute_script(env, argv, filename=bfgfile):
 
     bfgpath = Path(filename, Root.srcdir)
     build = BuildInputs(env, bfgpath)
-    builtin_dict = builtin.bind(build_inputs=build, argv=argv, env=env)
+    builtin_dict = builtin.build.bind(build_inputs=build, argv=argv, env=env)
 
     with open(bfgpath.string(env.base_dirs), 'r') as f, \
          pushd(env.srcdir.string()):  # noqa
-        code = compile(f.read(), filename, 'exec')
-        try:
-            exec(code, builtin_dict)
-        except SystemExit:
-            pass
-
-    builtin.run_post(builtin_dict, build_inputs=build, argv=argv, env=env)
+        _execute_file(f, filename, builtin_dict)
+        builtin.build.run_post(builtin_dict, build_inputs=build, argv=argv,
+                               env=env)
     return build

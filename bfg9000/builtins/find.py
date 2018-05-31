@@ -19,7 +19,7 @@ depfile_name = '.bfg_find_deps'
 exclude_globs = ['.*#', '*~', '#*#']
 
 
-@builtin
+@builtin.function()
 class FindResult(IntEnum):
     include = 0
     not_now = 1
@@ -128,7 +128,7 @@ def find(path='.', name='*', type='*', flat=False):
     return _find_files(listify(path), _filter_from_glob(name, type), flat)[0]
 
 
-@builtin.globals('env')
+@builtin.function('env')
 def filter_by_platform(env, name, path, type):
     my_plat = set([env.platform.name, env.platform.flavor])
     sub = '|'.join(re.escape(i) for i in known_platforms if i not in my_plat)
@@ -136,7 +136,7 @@ def filter_by_platform(env, name, path, type):
     return FindResult.not_now if re.search(ex, path) else FindResult.include
 
 
-@builtin.globals('builtins', 'build_inputs', 'env')
+@builtin.function('builtins', 'build_inputs', 'env')
 def find_files(builtins, build_inputs, env, path='.', name='*', type='*',
                extra=None, exclude=exclude_globs, filter=filter_by_platform,
                flat=False, cache=True, dist=True, as_object=False):

@@ -1,25 +1,14 @@
-import unittest
 from collections import namedtuple
 
-from bfg9000.builtins import builtin, compile
+from .common import BuiltinTest
+from bfg9000.builtins import compile
 from bfg9000 import file_types
-from bfg9000.build_inputs import BuildInputs
-from bfg9000.environment import Environment
 from bfg9000.path import Path, Root
 
 MockCompile = namedtuple('MockCompile', ['file'])
 
 
-class BaseTest(unittest.TestCase):
-    def setUp(self):
-        self.env = Environment(None, None, None, None, None, {},
-                               (False, False), None)
-        self.build = BuildInputs(self.env, Path('build.bfg', Root.srcdir))
-        self.builtin_dict = builtin.bind(build_inputs=self.build, env=self.env,
-                                         argv=None)
-
-
-class TestObjectFile(BaseTest):
+class TestObjectFile(BuiltinTest):
     def test_identity(self):
         obj = file_types.ObjectFile(Path('object', Root.srcdir), None)
         result = compile.object_file(None, self.build, self.env, obj)
@@ -36,7 +25,7 @@ class TestObjectFile(BaseTest):
                           self.env)
 
 
-class TestPrecompiledHeader(BaseTest):
+class TestPrecompiledHeader(BuiltinTest):
     def test_identity(self):
         obj = file_types.PrecompiledHeader(Path('header', Root.srcdir), None)
         result = compile.precompiled_header(None, self.build, self.env, obj)
@@ -54,7 +43,7 @@ class TestPrecompiledHeader(BaseTest):
                           self.build, self.env)
 
 
-class TestObjectFiles(BaseTest):
+class TestObjectFiles(BuiltinTest):
     def make_object_files(self, make_src=False):
         files = [file_types.ObjectFile(Path(i, Root.srcdir), None)
                  for i in ['obj1', 'obj2']]

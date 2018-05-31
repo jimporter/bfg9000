@@ -374,7 +374,7 @@ class PkgConfigInfo(object):
         return pkg_config, uniques(system)
 
 
-@builtin.globals('builtins', 'build_inputs', 'env')
+@builtin.function('builtins', 'build_inputs', 'env')
 def pkg_config(builtins, build, env, name=None, **kwargs):
     if can_install(env):
         build['pkg_config'].append(PkgConfigInfo(builtins, name, **kwargs))

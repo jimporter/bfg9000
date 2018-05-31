@@ -1,20 +1,10 @@
-import unittest
-
-from bfg9000.builtins import builtin, dist, file_types, regenerate
-from bfg9000.build_inputs import BuildInputs
-from bfg9000.environment import Environment
+from .common import BuiltinTest
+from bfg9000.builtins import dist, file_types, regenerate
 from bfg9000.path import Path, Root
 from bfg9000.file_types import File, Directory
 
 
-class TestExtraDist(unittest.TestCase):
-    def setUp(self):
-        self.env = Environment(None, None, None, None, None, {},
-                               (False, False), None)
-        self.build = BuildInputs(self.env, Path('build.bfg', Root.srcdir))
-        self.builtin_dict = builtin.bind(build_inputs=self.build, env=self.env,
-                                         argv=None)
-
+class TestExtraDist(BuiltinTest):
     def test_file(self):
         dist.extra_dist(self.builtin_dict, files='file')
         self.assertEqual(list(self.build.sources()), [

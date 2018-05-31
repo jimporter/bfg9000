@@ -40,7 +40,7 @@ class Command(BaseCommand):
         BaseCommand.__init__(self, build, env, name, Phony(name), **kwargs)
 
 
-@builtin.globals('build_inputs', 'env')
+@builtin.function('build_inputs', 'env')
 def command(build, env, name, **kwargs):
     return Command(build, env, name, **kwargs).public_output
 
@@ -78,7 +78,7 @@ class BuildStep(BaseCommand):
         return result
 
 
-@builtin.globals('build_inputs', 'env')
+@builtin.function('build_inputs', 'env')
 def build_step(build, env, name, **kwargs):
     return BuildStep(build, env, name, **kwargs).public_output
 

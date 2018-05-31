@@ -20,7 +20,7 @@ class BoostPackage(CommonPackage):
         self.version = version
 
 
-@builtin.globals('env')
+@builtin.function('env')
 @builtin.type(Package)
 def package(env, name, version=None, lang='c', kind=PackageKind.any.name,
             headers=None, libs=default_sentinel):
@@ -31,7 +31,7 @@ def package(env, name, version=None, lang='c', kind=PackageKind.any.name,
 
 
 # XXX: Remove this after 0.3 is released.
-@builtin.globals('builtins')  # pragma: no cover
+@builtin.function('builtins')  # pragma: no cover
 def system_package(builtins, name, lang='c', kind='any', header=None):
     warnings.warn('system_package is deprecated; please use package instead',
                   DeprecationWarning)
@@ -39,14 +39,14 @@ def system_package(builtins, name, lang='c', kind='any', header=None):
 
 
 # XXX: Remove this after 0.3 is released.
-@builtin.globals('builtins')  # pragma: no cover
+@builtin.function('builtins')  # pragma: no cover
 def pkgconfig_package(builtins, name, lang='c', version=None):
     warnings.warn('pkgconfig_package is deprecated; please use package ' +
                   'instead', DeprecationWarning)
     return builtins['package'](name, version=version, lang=lang)
 
 
-@builtin.globals('env')
+@builtin.function('env')
 @builtin.type(Executable)
 def system_executable(env, name, format=None):
     return Executable(
@@ -55,7 +55,7 @@ def system_executable(env, name, format=None):
     )
 
 
-@builtin.globals('env')
+@builtin.function('env')
 def framework(env, name, suffix=None):
     if not env.platform.has_frameworks:
         raise PackageResolutionError(
@@ -80,7 +80,7 @@ def _boost_version(header, required_version=None):
     raise PackageVersionError('unable to parse "boost/version.hpp"')
 
 
-@builtin.globals('env')
+@builtin.function('env')
 def boost_package(env, name=None, version=None):
     version = objectify(version or '', SpecifierSet)
     pkg = env.builder('c++').packages

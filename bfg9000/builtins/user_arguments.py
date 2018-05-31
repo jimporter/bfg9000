@@ -1,4 +1,4 @@
-from . import builtin, optbuiltin
+from . import builtin
 from ..arguments.parser import add_user_argument
 
 
@@ -7,7 +7,7 @@ def argv(_argv):
     return _argv
 
 
-@optbuiltin.globals('parser')
+@builtin.function('parser', context='options')
 def argument(parser, *args, **kwargs):
     names = ['--' + i for i in args]
     add_user_argument(parser, *names, **kwargs)

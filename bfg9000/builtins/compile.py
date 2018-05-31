@@ -128,7 +128,7 @@ class CompileHeader(Compile):
         Compile.__init__(self, builtins, build, env, name, **kwargs)
 
 
-@builtin.globals('builtins', 'build_inputs', 'env')
+@builtin.function('builtins', 'build_inputs', 'env')
 @builtin.type(ObjectFile, in_type=string_types + (type(None),))
 def object_file(builtins, build, env, name=None, file=None, **kwargs):
     if file is None:
@@ -140,20 +140,20 @@ def object_file(builtins, build, env, name=None, file=None, **kwargs):
                          **kwargs).public_output
 
 
-@builtin.globals('builtins', 'build_inputs', 'env')
+@builtin.function('builtins', 'build_inputs', 'env')
 @builtin.type(ObjectFile, in_type=string_types + (SourceFile,))
 def _make_object_file(builtins, build, env, file, **kwargs):
     return CompileSource(builtins, build, env, None, file,
                          **kwargs).public_output
 
 
-@builtin.globals('builtins', 'build_inputs', 'env')
+@builtin.function('builtins', 'build_inputs', 'env')
 @builtin.type(ObjectFiles, in_type=object)
 def object_files(builtins, build, env, files, **kwargs):
     return ObjectFiles(builtins, build, env, files, **kwargs)
 
 
-@builtin.globals('builtins', 'build_inputs', 'env')
+@builtin.function('builtins', 'build_inputs', 'env')
 @builtin.type(PrecompiledHeader, in_type=string_types + (type(None),))
 def precompiled_header(builtins, build, env, name=None, file=None, **kwargs):
     if file is None:
@@ -165,7 +165,7 @@ def precompiled_header(builtins, build, env, name=None, file=None, **kwargs):
                          **kwargs).public_output
 
 
-@builtin.globals('build_inputs')
+@builtin.function('build_inputs')
 def global_options(build, options, lang):
     for i in iterate(lang):
         build['compile_options'][i].extend(pshell.listify(options))

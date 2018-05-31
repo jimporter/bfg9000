@@ -10,6 +10,6 @@ build_input('project')(lambda build_inputs, env: ProjectInfo(
 ))
 
 
-@builtin.globals('build_inputs')
+@builtin.function('build_inputs')
 def project(build, name, version=None):
     build['project'] = ProjectInfo(name, version)

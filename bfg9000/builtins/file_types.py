@@ -28,19 +28,19 @@ def generated_file(build, env, file, mode='w', makedirs=True):
     build['regenerate'].outputs.append(file)
 
 
-@builtin.globals('build_inputs')
+@builtin.function('build_inputs')
 @builtin.type(File)
 def generic_file(build, name):
     return build.add_source(File(Path(name, Root.srcdir)))
 
 
-@builtin.globals('build_inputs')
+@builtin.function('build_inputs')
 @builtin.type(SourceFile)
 def source_file(build, name, lang=None):
     return build.add_source(SourceFile(Path(name, Root.srcdir), lang))
 
 
-@builtin.globals('build_inputs')
+@builtin.function('build_inputs')
 @builtin.type(HeaderFile)
 def header_file(build, name, lang=None):
     return build.add_source(HeaderFile(Path(name, Root.srcdir), lang))
@@ -59,7 +59,7 @@ def _find(builtins, name, include, type, exclude, filter, as_object=True):
                                   as_object=as_object)
 
 
-@builtin.globals('builtins', 'build_inputs')
+@builtin.function('builtins', 'build_inputs')
 @builtin.type(Directory, in_type=string_types + (File,))
 def directory(builtins, build, name, include=None, exclude=exclude_globs,
               filter=filter_by_platform):
@@ -72,7 +72,7 @@ def directory(builtins, build, name, include=None, exclude=exclude_globs,
     return Directory(path, files)
 
 
-@builtin.globals('builtins', 'build_inputs')
+@builtin.function('builtins', 'build_inputs')
 @builtin.type(HeaderDirectory, in_type=string_types + (HeaderFile,))
 def header_directory(builtins, build, name, include=None,
                      exclude=exclude_globs, filter=filter_by_platform,

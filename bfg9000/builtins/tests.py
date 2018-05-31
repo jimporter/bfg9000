@@ -72,17 +72,17 @@ class TestDriver(Test):
         self.wrap_children = wrap_children
 
 
-@builtin.globals('build_inputs', 'env')
+@builtin.function('build_inputs', 'env')
 def test(build, env, cmd, **kwargs):
     return TestCase(build, env, cmd, **kwargs)
 
 
-@builtin.globals('build_inputs', 'env')
+@builtin.function('build_inputs', 'env')
 def test_driver(build, env, cmd, **kwargs):
     return TestDriver(build, env, cmd, **kwargs)
 
 
-@builtin.globals('build_inputs')
+@builtin.function('build_inputs')
 def test_deps(build, *args):
     if len(args) == 0:
         raise ValueError('expected at least one argument')

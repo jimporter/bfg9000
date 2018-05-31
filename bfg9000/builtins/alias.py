@@ -10,7 +10,7 @@ class Alias(Edge):
         Edge.__init__(self, build, Phony(name), extra_deps=deps)
 
 
-@builtin.globals('build_inputs')
+@builtin.function('build_inputs')
 def alias(build, *args, **kwargs):
     return Alias(build, *args, **kwargs).public_output
 

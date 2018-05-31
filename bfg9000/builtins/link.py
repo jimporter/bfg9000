@@ -242,7 +242,7 @@ class StaticLink(Link):
         primary.linktime_deps.extend(self.user_libs)
 
 
-@builtin.globals('builtins', 'build_inputs', 'env')
+@builtin.function('builtins', 'build_inputs', 'env')
 @builtin.type(Executable)
 def executable(builtins, build, env, name, files=None, **kwargs):
     if files is None and 'libs' not in kwargs:
@@ -252,7 +252,7 @@ def executable(builtins, build, env, name, files=None, **kwargs):
                        **kwargs).public_output
 
 
-@builtin.globals('builtins', 'build_inputs', 'env')
+@builtin.function('builtins', 'build_inputs', 'env')
 @builtin.type(SharedLibrary, in_type=string_types + (DualUseLibrary,))
 def shared_library(builtins, build, env, name, files=None, **kwargs):
     if isinstance(name, DualUseLibrary):
@@ -269,7 +269,7 @@ def shared_library(builtins, build, env, name, files=None, **kwargs):
                       **kwargs).public_output
 
 
-@builtin.globals('builtins', 'build_inputs', 'env')
+@builtin.function('builtins', 'build_inputs', 'env')
 @builtin.type(StaticLibrary, in_type=string_types + (DualUseLibrary,))
 def static_library(builtins, build, env, name, files=None, **kwargs):
     if isinstance(name, DualUseLibrary):
@@ -284,7 +284,7 @@ def static_library(builtins, build, env, name, files=None, **kwargs):
                       **kwargs).public_output
 
 
-@builtin.globals('builtins', 'build_inputs', 'env')
+@builtin.function('builtins', 'build_inputs', 'env')
 @builtin.type(Library, in_type=string_types + (DualUseLibrary,))
 def library(builtins, build, env, name, files=None, **kwargs):
     explicit_kind = False
@@ -347,7 +347,7 @@ def library(builtins, build, env, name, files=None, **kwargs):
                           **static_kwargs).public_output
 
 
-@builtin.globals('builtins')
+@builtin.function('builtins')
 @builtin.type(WholeArchive, in_type=string_types + (StaticLibrary,))
 def whole_archive(builtins, name, *args, **kwargs):
     if isinstance(name, StaticLibrary):
@@ -358,7 +358,7 @@ def whole_archive(builtins, name, *args, **kwargs):
         return WholeArchive(builtins['static_library'](name, *args, **kwargs))
 
 
-@builtin.globals('build_inputs')
+@builtin.function('build_inputs')
 def global_link_options(build, options, family='native', mode='dynamic'):
     for i in iterate(family):
         build['link_options'][mode][i].extend(pshell.listify(options))
