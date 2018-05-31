@@ -155,10 +155,10 @@ class Solution(object):
             configs.add(p.config_plat)
             project_info.append(Var('{uuid}.{cfg}.ActiveCfg'.format(
                 uuid=p.uuid_str, cfg=p.config_plat
-            ), p.config_plat))
+            ), p.real_config_plat))
             project_info.append(Var('{uuid}.{cfg}.Build.0'.format(
                 uuid=p.uuid_str, cfg=p.config_plat
-            ), p.config_plat))
+            ), p.real_config_plat))
 
         S.Global()(
             S.GlobalSection('SolutionConfigurationPlatforms', 'preSolution')
@@ -225,7 +225,13 @@ class Project(object):
         self.dependencies = dependencies or []
 
         self.version = env.getvar('VISUALSTUDIOVERSION', '14.0')
+
+        # Some projects map one platform name to another in the .sln file (e.g.
+        # "x86" => "Win32"). I'm not sure why this is, but we replicate it via
+        # a "platform" and "real platform"so that C++ builds work from a VS
+        # 2017 command prompt.
         self.platform = env.getvar('PLATFORM', 'Win32')
+        self.real_platform = self.platform
         self.srcdir = env.srcdir
 
     @property
@@ -249,19 +255,27 @@ class Project(object):
             platform=self.platform
         )
 
+    @property
+    def real_config_plat(self):
+        return '{config}|{platform}'.format(
+            config=self.configuration,
+            platform=self.real_platform
+        )
+
     def _write(self, out, children):
         project = E.Project({'DefaultTargets': 'Build',
                              'ToolsVersion': self.version,
                              'xmlns': self._XMLNS},
             E.ItemGroup({'Label': 'ProjectConfigurations'},
-                E.ProjectConfiguration({'Include' : self.config_plat},
+                E.ProjectConfiguration({'Include' : self.real_config_plat},
                     E.Configuration(self.configuration),
-                    E.Platform(self.platform)
+                    E.Platform(self.real_platform)
                 )
             ),
             E.PropertyGroup({'Label': 'Globals'},
                 E.ProjectGuid(self.uuid_str),
                 E.RootNamespace(self.name),
+                E.Platform(self.real_platform),
                 E.SourceDir(textify(self.srcdir))
             ),
             *children
@@ -292,9 +306,12 @@ class VcxProject(Project):
         self.compile_options = compile_options or {}
         self.link_options = link_options or {}
 
-    @property
-    def toolset(self):
-        return 'v' + self.version.replace('.', '')
+        version = env.getvar('VCTOOLSVERSION', self.version)
+        self.toolset = 'v' + version.replace('.', '')[0:3]
+
+        # As above, VS 2017 remaps x86 to Win32 for C++ projects.
+        if self.real_platform == 'x86':
+            self.real_platform = 'Win32'
 
     def write(self, out):
         target_name = safe_str.safe_str(self.output_file).basename()

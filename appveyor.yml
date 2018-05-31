@@ -1,11 +1,15 @@
 build: false
 version: "{branch}-{build}"
 
+image:
+  - Visual Studio 2013
+  - Visual Studio 2015
+  - Visual Studio 2017
+
 environment:
   GNOME_BASE: https://ftp.gnome.org/pub/gnome/binaries/win32
-  BOOST_INCLUDEDIR: C:\Libraries\boost
-  BOOST_LIBRARYDIR: C:\Libraries\boost\lib32-msvc-12.0
-  LIBOGG: libogg-1.3.2
+  LIBOGG: libogg-1.3.3
+  LIBOGG_VS: VS2015
   LIBOGG_CONFIG: Release
   LIBOGG_PLAT: Win32
   LIBRARY_PATH: C:\projects\bfg9000\lib
@@ -13,17 +17,51 @@ environment:
   NO_SCALA_TEST: 1
   NO_GCJ_TEST: 1
   BACKENDS: ninja make msbuild
+  CPPFLAGS: /IC:\projects\bfg9000\include /WX /EHsc
 
   matrix:
-    - VS: C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall.bat
+    - COMPILER: vs
+    - COMPILER: mingw
+
+matrix:
+  exclude:
+    - image: Visual Studio 2013
+      COMPILER: mingw
+    - image: Visual Studio 2015
+      COMPILER: mingw
+
+for:
+  - matrix:
+      only:
+        - image: Visual Studio 2013
+    environment:
+      VS: C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall.bat
+      BOOST_INCLUDEDIR: C:\Libraries\boost_1_58_0
+      BOOST_LIBRARYDIR: C:\Libraries\boost_1_58_0\lib32-msvc-12.0
+      LIBOGG: libogg-1.3.2
+      LIBOGG_VS: VS2010
       CHOCO_EXTRAS: gnuwin32-make.portable
-      CPPFLAGS: /IC:\projects\bfg9000\include /WX /EHsc
-    - VS: C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat
+  - matrix:
+      only:
+        - image: Visual Studio 2015
+    environment:
+      VS: C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat
+      BOOST_INCLUDEDIR: C:\Libraries\boost_1_63_0
+      BOOST_LIBRARYDIR: C:\Libraries\boost_1_63_0\lib32-msvc-14.0
       CHOCO_EXTRAS: gnuwin32-make.portable
-      CPPFLAGS: /IC:\projects\bfg9000\include /WX /EHsc
-      BOOST_INCLUDEDIR: C:\Libraries\boost_1_59_0
-      BOOST_LIBRARYDIR: C:\Libraries\boost_1_59_0\lib32-msvc-14.0
-    - BACKENDS: ninja make
+  - matrix:
+      only:
+        - image: Visual Studio 2017
+    environment:
+      VS: C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat
+      BOOST_INCLUDEDIR: C:\Libraries\boost_1_67_0
+      BOOST_LIBRARYDIR: C:\Libraries\boost_1_67_0\lib32-msvc-14.1
+      CHOCO_EXTRAS: gnuwin32-make.portable
+  - matrix:
+      only:
+        - COMPILER: mingw
+    environment:
+      BACKENDS: ninja make
       CC: gcc
       CXX: g++
       CPPFLAGS: -IC:\projects\bfg9000\include -Wall -Werror
@@ -50,16 +88,20 @@ install:
   - curl -LO http://downloads.xiph.org/releases/ogg/%LIBOGG%.zip
   - 7z x -y %LIBOGG%.zip > nul
   - >
-    msbuild %LIBOGG%\win32\VS2010\libogg_static.sln
+    msbuild %LIBOGG%\win32\%LIBOGG_VS%\libogg_static.sln
     /p:Configuration=%LIBOGG_CONFIG% /p:Platform=%LIBOGG_PLAT%
   - mkdir lib
   - >
-    copy %LIBOGG%\win32\VS2010\%LIBOGG_PLAT%\%LIBOGG_CONFIG%\libogg_static.lib
+    copy
+    %LIBOGG%\win32\%LIBOGG_VS%\%LIBOGG_PLAT%\%LIBOGG_CONFIG%\libogg_static.lib
     lib\ogg.lib
   - robocopy %LIBOGG%\include include *.h /E & exit 0
 
+  # Set up paths and other necessary bits for the compiler.
   - if defined VS call "%VS%" x86
   - set PATH=%PYTHON_PATH%;%PYTHON_PATH%\Scripts;%MINGW_PATH%;%PATH%
+
+  # Install our stuff.
   - pip install codecov lxml==3.6.0 .[test]
 test_script:
   - python setup.py coverage -q
