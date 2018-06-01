@@ -4,7 +4,7 @@
     
     <url>
      <loc>/</loc>
-     <lastmod>2018-04-19</lastmod>
+     <lastmod>2018-06-01</lastmod>
      <changefreq>daily</changefreq>
     </url>
     
@@ -12,7 +12,7 @@
     
     <url>
      <loc>/getting-started/</loc>
-     <lastmod>2018-04-19</lastmod>
+     <lastmod>2018-06-01</lastmod>
      <changefreq>daily</changefreq>
     </url>
     
@@ -20,32 +20,38 @@
     
         
     <url>
+     <loc>/user/features/</loc>
+     <lastmod>2018-06-01</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
+    <url>
      <loc>/user/building/</loc>
-     <lastmod>2018-04-19</lastmod>
+     <lastmod>2018-06-01</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/user/writing/</loc>
-     <lastmod>2018-04-19</lastmod>
+     <lastmod>2018-06-01</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/user/reference/</loc>
-     <lastmod>2018-04-19</lastmod>
+     <lastmod>2018-06-01</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/user/command-line/</loc>
-     <lastmod>2018-04-19</lastmod>
+     <lastmod>2018-06-01</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/user/environment-vars/</loc>
-     <lastmod>2018-04-19</lastmod>
+     <lastmod>2018-06-01</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
@@ -54,14 +60,26 @@
     
         
     <url>
-     <loc>/developer/internals/</loc>
-     <lastmod>2018-04-19</lastmod>
+     <loc>/developer/backends/</loc>
+     <lastmod>2018-06-01</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
+    <url>
+     <loc>/developer/tools/</loc>
+     <lastmod>2018-06-01</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
+    <url>
+     <loc>/developer/builtins/</loc>
+     <lastmod>2018-06-01</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/developer/contributing/</loc>
-     <lastmod>2018-04-19</lastmod>
+     <lastmod>2018-06-01</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
@@ -71,13 +89,13 @@
         
     <url>
      <loc>/about/changes/</loc>
-     <lastmod>2018-04-19</lastmod>
+     <lastmod>2018-06-01</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/about/license/</loc>
-     <lastmod>2018-04-19</lastmod>
+     <lastmod>2018-06-01</lastmod>
      <changefreq>daily</changefreq>
     </url>
         

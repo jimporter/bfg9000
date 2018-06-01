@@ -8,7 +8,7 @@
         
         
         <link rel="shortcut icon" href="../../img/favicon.ico">
-        <title>Internals - bfg9000</title>
+        <title>Features - bfg9000</title>
         <link href="../../css/bootstrap-custom.min.css" rel="stylesheet">
         <link href="../../css/font-awesome-4.5.0.css" rel="stylesheet">
         <link href="../../css/base.css" rel="stylesheet">
@@ -53,41 +53,53 @@
                     <li >
                         <a href="../../getting-started/">Getting Started</a>
                     </li>
-                    <li class="dropdown">
+                    <li class="dropdown active">
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown">User Guide <b class="caret"></b></a>
                         <ul class="dropdown-menu">
                             
-<li >
-    <a href="../../user/building/">Building with bfg9000</a>
+<li class="active">
+    <a href="./">Features</a>
 </li>
                             
 <li >
-    <a href="../../user/writing/">Writing a Build File</a>
+    <a href="../building/">Building with bfg9000</a>
 </li>
                             
 <li >
-    <a href="../../user/reference/">Reference</a>
+    <a href="../writing/">Writing a Build File</a>
 </li>
                             
 <li >
-    <a href="../../user/command-line/">Command-Line Reference</a>
+    <a href="../reference/">Reference</a>
 </li>
                             
 <li >
-    <a href="../../user/environment-vars/">Environment Variables</a>
+    <a href="../command-line/">Command-Line Reference</a>
+</li>
+                            
+<li >
+    <a href="../environment-vars/">Environment Variables</a>
 </li>
                         </ul>
                     </li>
-                    <li class="dropdown active">
+                    <li class="dropdown">
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown">Developer Guide <b class="caret"></b></a>
                         <ul class="dropdown-menu">
                             
-<li class="active">
-    <a href="./">Internals</a>
+<li >
+    <a href="../../developer/backends/">Build Backends</a>
 </li>
                             
 <li >
-    <a href="../contributing/">Contributing</a>
+    <a href="../../developer/tools/">Build Tools</a>
+</li>
+                            
+<li >
+    <a href="../../developer/builtins/">Builtins</a>
+</li>
+                            
+<li >
+    <a href="../../developer/contributing/">Contributing</a>
 </li>
                         </ul>
                     </li>
@@ -113,12 +125,12 @@
                     </a>
                 </li>
                     <li >
-                        <a rel="next" href="../../user/environment-vars/">
+                        <a rel="next" href="../../getting-started/">
                             <i class="fa fa-arrow-left"></i> Previous
                         </a>
                     </li>
                     <li >
-                        <a rel="prev" href="../contributing/">
+                        <a rel="prev" href="../building/">
                             Next <i class="fa fa-arrow-right"></i>
                         </a>
                     </li>
@@ -133,37 +145,63 @@
         <div class="container">
                 <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
-        <li class="main active"><a href="#developer-documentation">Developer Documentation</a></li>
-            <li><a href="#how-a-buildbfg-file-is-compiled">How a build.bfg file is compiled</a></li>
+        <li class="main active"><a href="#features">Features</a></li>
+            <li><a href="#supported-languagesplatforms">Supported languages/platforms</a></li>
+            <li><a href="#rich-scripting">Rich scripting</a></li>
+            <li><a href="#intelligent-rpath-support">Intelligent rpath support</a></li>
+            <li><a href="#auto-sudo-during-installation">Auto-sudo during installation</a></li>
+            <li><a href="#pkg-config-lookup-and-generation">pkg-config lookup and generation</a></li>
+            <li><a href="#project-defined-arguments">Project-defined arguments</a></li>
     </ul>
 </div></div>
                 <div class="col-md-9" role="main">
 
-<h1 id="developer-documentation">Developer Documentation<a class="headerlink" href="#developer-documentation" title="Permanent link">§</a></h1>
-<p>At its core, a build file is just a DAG (directed acyclic graph) that gets
-walked through by the build system, where the nodes are files and the edges are
-build steps. A bfg9000 build file is no different.</p>
-<h2 id="how-a-buildbfg-file-is-compiled">How a build.bfg file is compiled<a class="headerlink" href="#how-a-buildbfg-file-is-compiled" title="Permanent link">§</a></h2>
-<h3 id="snapshot-the-environment">Snapshot the environment<a class="headerlink" href="#snapshot-the-environment" title="Permanent link">§</a></h3>
-<p>When bfg9000 is invoked, it first takes a snapshot of the current environment
-(the operating system, environment variables, compiler to use, etc). This is
-important to provide a stable state for regeneration of the build file if
-necessary (e.g. if build.bfg is changed).</p>
-<h3 id="build-an-internal-dependency-graph">Build an internal dependency graph<a class="headerlink" href="#build-an-internal-dependency-graph" title="Permanent link">§</a></h3>
-<p>Next, it executes the build.bfg file. Most bfg9000 functions represent build
-steps or other related parts of the dependency graph. When called, these build
-up an internal DAG structure with all the backend-agnostic data filled in (e.g.
-virtual filenames are resolved to real ones, such as "foo" to "libfoo.so").</p>
-<h3 id="emit-the-final-build-file">Emit the final build file<a class="headerlink" href="#emit-the-final-build-file" title="Permanent link">§</a></h3>
-<p>Once this is complete, the DAG is passed to the appropriate backend, which
-iterates over all the known edges (build steps) and emits the backend-specific
-code for them. Since all the backends handle walking the DAG on their own,
-bfg9000 can safely avoid worrying about trying to do this efficiently in Python.</p></div>
+<h1 id="features">Features<a class="headerlink" href="#features" title="Permanent link">§</a></h1>
+<h2 id="supported-languagesplatforms">Supported languages/platforms<a class="headerlink" href="#supported-languagesplatforms" title="Permanent link">§</a></h2>
+<p>bfg9000 is designed to work on Linux, OS X, and Windows; other POSIX systems
+should work as well, but they aren't explicitly supported (if you'd like to help
+add support for your favorite platform, just file a pull request!). In addition,
+bfg9000 supports building code written in the following languages:</p>
+<ul>
+<li>C</li>
+<li>C++</li>
+<li>Fortran (partial)</li>
+<li>Java</li>
+<li>Objective C/C++</li>
+<li>Scala</li>
+</ul>
+<p>Finally, bfg supports generating build files for <a href="https://www.gnu.org/software/make/">Make</a>, <a href="https://ninja-build.org/">Ninja</a>,
+and <a href="https://msdn.microsoft.com/en-us/library/dd393574(v=vs.120).aspx">MSBuild</a>, defaulting to Ninja.</p>
+<h2 id="rich-scripting">Rich scripting<a class="headerlink" href="#rich-scripting" title="Permanent link">§</a></h2>
+<p>Since <code>build.bfg</code> (and <code>options.bfg</code>!) files are just Python scripts with some
+extra builtins, it's possible to use the entirety of the Python ecosystem in
+your build scripts. This allows you to perform complex operations in your build
+scripts without having to roll everything yourself or provide a layer of "glue"
+to some external scripts in your build process.</p>
+<h2 id="intelligent-rpath-support">Intelligent rpath support<a class="headerlink" href="#intelligent-rpath-support" title="Permanent link">§</a></h2>
+<p>bfg9000 automatically specifies rpaths on platforms that support them
+(currently Linux and macOS), making it easier to produce correct builds. When
+building, bfg always produces relative rpaths to allow moving your build
+directory without breaking things; however, when installing your build, these
+rpaths are modified to absolute paths (using <a href="https://nixos.org/patchelf.html"><code>patchelf</code></a> on Linux and
+<a href="https://www.unix.com/man-page/osx/1/install_name_tool/"><code>install_name_tool</code></a> on macOS).</p>
+<h2 id="auto-sudo-during-installation">Auto-sudo during installation<a class="headerlink" href="#auto-sudo-during-installation" title="Permanent link">§</a></h2>
+<p>When installing your builds, the install tool (<a href="https://github.com/jimporter/doppel"><code>doppel</code></a>) will
+automatically request sudo priveleges if the installation directory requires it.
+This allows you to run <code>ninja install</code> as a non-root user, preventing
+permissions issues with intermediate files as well as being more secure.</p>
+<h2 id="pkg-config-lookup-and-generation">pkg-config lookup and generation<a class="headerlink" href="#pkg-config-lookup-and-generation" title="Permanent link">§</a></h2>
+<p>bfg9000 supports <a href="https://www.freedesktop.org/wiki/Software/pkg-config/"><code>pkg-config</code></a> both for looking up packages as well
+as <a href="../reference/#pkg_config">generating</a> <code>.pc</code> files for your own packages.</p>
+<h2 id="project-defined-arguments">Project-defined arguments<a class="headerlink" href="#project-defined-arguments" title="Permanent link">§</a></h2>
+<p>Projects can specify their own options, complete with help instructions, in the
+<a href="../writing/#options"><code>options.bfg</code></a>, making it easy to help users get your
+project configured for their system.</p></div>
         </div>
 
         <footer class="col-md-12">
             <hr>
-                <p>Copyright &copy; 2015-2017 Jim Porter</p>
+                <p>Copyright &copy; 2015-2018 Jim Porter</p>
             <p>Documentation built with <a href="http://www.mkdocs.org/">MkDocs</a>.</p>
         </footer>
         <script>var base_url = '../..';</script>

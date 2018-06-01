@@ -8,7 +8,7 @@
         
         
         <link rel="shortcut icon" href="../../img/favicon.ico">
-        <title>Command-Line Reference - bfg9000</title>
+        <title>Build Tools - bfg9000</title>
         <link href="../../css/bootstrap-custom.min.css" rel="stylesheet">
         <link href="../../css/font-awesome-4.5.0.css" rel="stylesheet">
         <link href="../../css/base.css" rel="stylesheet">
@@ -53,53 +53,53 @@
                     <li >
                         <a href="../../getting-started/">Getting Started</a>
                     </li>
-                    <li class="dropdown active">
+                    <li class="dropdown">
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown">User Guide <b class="caret"></b></a>
                         <ul class="dropdown-menu">
                             
 <li >
-    <a href="../features/">Features</a>
+    <a href="../../user/features/">Features</a>
 </li>
                             
 <li >
-    <a href="../building/">Building with bfg9000</a>
+    <a href="../../user/building/">Building with bfg9000</a>
 </li>
                             
 <li >
-    <a href="../writing/">Writing a Build File</a>
+    <a href="../../user/writing/">Writing a Build File</a>
 </li>
                             
 <li >
-    <a href="../reference/">Reference</a>
-</li>
-                            
-<li class="active">
-    <a href="./">Command-Line Reference</a>
+    <a href="../../user/reference/">Reference</a>
 </li>
                             
 <li >
-    <a href="../environment-vars/">Environment Variables</a>
+    <a href="../../user/command-line/">Command-Line Reference</a>
+</li>
+                            
+<li >
+    <a href="../../user/environment-vars/">Environment Variables</a>
 </li>
                         </ul>
                     </li>
-                    <li class="dropdown">
+                    <li class="dropdown active">
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown">Developer Guide <b class="caret"></b></a>
                         <ul class="dropdown-menu">
                             
 <li >
-    <a href="../../developer/backends/">Build Backends</a>
+    <a href="../backends/">Build Backends</a>
+</li>
+                            
+<li class="active">
+    <a href="./">Build Tools</a>
 </li>
                             
 <li >
-    <a href="../../developer/tools/">Build Tools</a>
+    <a href="../builtins/">Builtins</a>
 </li>
                             
 <li >
-    <a href="../../developer/builtins/">Builtins</a>
-</li>
-                            
-<li >
-    <a href="../../developer/contributing/">Contributing</a>
+    <a href="../contributing/">Contributing</a>
 </li>
                         </ul>
                     </li>
@@ -125,12 +125,12 @@
                     </a>
                 </li>
                     <li >
-                        <a rel="next" href="../reference/">
+                        <a rel="next" href="../backends/">
                             <i class="fa fa-arrow-left"></i> Previous
                         </a>
                     </li>
                     <li >
-                        <a rel="prev" href="../environment-vars/">
+                        <a rel="prev" href="../builtins/">
                             Next <i class="fa fa-arrow-right"></i>
                         </a>
                     </li>
@@ -145,78 +145,39 @@
         <div class="container">
                 <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
-        <li class="main active"><a href="#command-line-reference">Command-Line Reference</a></li>
-            <li><a href="#global-options">Global options</a></li>
-            <li><a href="#sub-commands">Sub-commands</a></li>
-            <li><a href="#9k-shorthand">9k shorthand</a></li>
+        <li class="main active"><a href="#build-tools">Build Tools</a></li>
+            <li><a href="#decorators">Decorators</a></li>
+            <li><a href="#accessors">Accessors</a></li>
     </ul>
 </div></div>
                 <div class="col-md-9" role="main">
 
-<h1 id="command-line-reference">Command-Line Reference<a class="headerlink" href="#command-line-reference" title="Permanent link">§</a></h1>
-<h2 id="global-options">Global options<a class="headerlink" href="#global-options" title="Permanent link">§</a></h2>
-<h4 id="help-option">-h, --help<a class="headerlink" href="#help-option" title="Permanent link">§</a></h4>
-<p>Print a help message and exit. Equivalent to the <a href="#help"><code>help</code></a> subcommand.</p>
-<h4 id="version">--version<a class="headerlink" href="#version" title="Permanent link">§</a></h4>
-<p>Print the version number and exit.</p>
-<h4 id="color">-c, --color <em>WHEN</em><a class="headerlink" href="#color" title="Permanent link">§</a></h4>
-<p>Show colored output; <em>WHEN</em> is one of <code>always</code>, <code>never</code>, or <code>auto</code> and defaults
-to <code>auto</code> (i.e. show colored output when the terminal is a tty). <code>-c</code> is
-equivalent to <code>--color=always</code>.</p>
-<h4 id="warn-once">--warn-once<a class="headerlink" href="#warn-once" title="Permanent link">§</a></h4>
-<p>Only emit a given warning once.</p>
-<h2 id="sub-commands">Sub-commands<a class="headerlink" href="#sub-commands" title="Permanent link">§</a></h2>
-<h3 id="help">bfg9000 help [<em>SUBCOMMAND</em>]<a class="headerlink" href="#help" title="Permanent link">§</a></h3>
-<p>Print a help message and exit. If <em>SUBCOMMAND</em> is specified, print help for that
-subcommand.</p>
-<h3 id="configure">bfg9000 configure <em>DIRECTORY</em><a class="headerlink" href="#configure" title="Permanent link">§</a></h3>
-<p>Generate the necessary build files to perform actual builds. If <em>DIRECTORY</em> is a
-source directory (i.e. it contains a build.bfg file), the build files will be
-created in the current directory. Otherwise, <em>DIRECTORY</em> is treated as the build
-directory, and bfg9000 will look for a build.bfg file in the current directory.</p>
-<h4 id="configure-backend">--backend <em>BACKEND</em><a class="headerlink" href="#configure-backend" title="Permanent link">§</a></h4>
-<p>The kind of build files to generate; one of <code>ninja</code>, <code>make</code>, or <code>msbuild</code>. The
-default value depends on what build backends you have installed, but if <code>ninja</code>
-is present on your system, it will be the default.</p>
-<h4 id="configure-enable-shared">--enable-shared, --disable-shared<a class="headerlink" href="#configure-enable-shared" title="Permanent link">§</a></h4>
-<p>Enable/disable building shared libraries when using
-<a href="../reference/#library"><em>library</em>()</a> in your build.bfg files. Defaults to enabled.</p>
-<h4 id="configure-enable-static">--enable-static, --disable-static<a class="headerlink" href="#configure-enable-static" title="Permanent link">§</a></h4>
-<p>Enable/disable building static libraries when using
-<a href="../reference/#library"><em>library</em>()</a> in your build.bfg files. Defaults to enabled.</p>
-<h4 id="configure-prefix">--prefix <em>PATH</em><a class="headerlink" href="#configure-prefix" title="Permanent link">§</a></h4>
-<p>The installation prefix to use when installing built files. On Linux and macOS,
-this defaults to <code>/usr/local</code>; on Windows, there is no default (thus, to
-install built files on Windows, you must either set <code>--prefix</code> or one of the
-other install path options below).</p>
-<h4 id="configure-exec-prefix">--exec-prefix <em>PATH</em><a class="headerlink" href="#configure-exec-prefix" title="Permanent link">§</a></h4>
-<p>The installation prefix to use when installing architecture-dependent files
-(e.g. executables). This defaults to the value of
-<a href="#configure-prefix"><code>--prefix</code></a>.</p>
-<h4 id="configure-bindir">--bindir <em>PATH</em><a class="headerlink" href="#configure-bindir" title="Permanent link">§</a></h4>
-<p>The installation prefix to use for executables. Defaults to <code>&lt;prefix&gt;/bin</code> on
-Linux and macOS, and <code>&lt;prefix&gt;</code> on Windows.</p>
-<h4 id="configure-libdir">--libdir <em>PATH</em><a class="headerlink" href="#configure-libdir" title="Permanent link">§</a></h4>
-<p>The installation prefix to use for libraries. Defaults to <code>&lt;prefix&gt;/lib</code> on
-Linux and macOS, and <code>&lt;prefix&gt;</code> on Windows.</p>
-<h4 id="configure-includedir">--includedir <em>PATH</em><a class="headerlink" href="#configure-includedir" title="Permanent link">§</a></h4>
-<p>The installation prefix to use for headers. Defaults to <code>&lt;prefix&gt;/include</code> on
-Linux and macOS, and <code>&lt;prefix&gt;</code> on Windows.</p>
-<h3 id="configure-into">bfg9000 configure-into <em>SRCDIR</em> <em>BUILDDIR</em><a class="headerlink" href="#configure-into" title="Permanent link">§</a></h3>
-<p>Generate the necessary build files (as with <a href="#configure"><code>bfg9000 configure</code></a>)
-to perform actual builds from a build.bfg file in <em>SRCDIR</em>, and place them in
-<em>BUILDDIR</em>.</p>
-<h3 id="refresh">bfg9000 refresh [<em>BUILDDIR</em>]<a class="headerlink" href="#refresh" title="Permanent link">§</a></h3>
-<p>Regenerate an existing set of build files in <em>BUILDDIR</em> needed to perform actual
-builds. This is run automatically if bfg9000 determines that the build files are
-out of date.</p>
-<h3 id="env">bfg9000 env [<em>BUILDDIR</em>]<a class="headerlink" href="#env" title="Permanent link">§</a></h3>
-<p>Print the environment variables stored by the build configuration in <em>BUILDDIR</em>.</p>
-<h4 id="env-unique">-u, --unique<a class="headerlink" href="#env-unique" title="Permanent link">§</a></h4>
-<p>Only show environment variables that differ from the current environment.</p>
-<h2 id="9k-shorthand">9k shorthand<a class="headerlink" href="#9k-shorthand" title="Permanent link">§</a></h2>
-<p><code>9k</code> is a special shorthand to make it easier to configure your build. It's
-equivalent to <a href="#configure"><code>bfg9000 configure</code></a>.</p></div>
+<h1 id="build-tools">Build Tools<a class="headerlink" href="#build-tools" title="Permanent link">§</a></h1>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Build tools aren't currently extendable by third parties. However, this is
+<a href="https://github.com/jimporter/bfg9000/issues/48">planned</a>.</p>
+</div>
+<p>As a build configuration system, bfg9000 naturally interacts with many other
+tools; this interaction is defined for each tool in <a href="https://github.com/jimporter/bfg9000/tree/master/bfg9000/tools"><code>bfg9000/tools/</code></a>;
+each file is automatically imported and the tools are added to a dict ultimately
+used by the <a href="../../user/reference/#environment-object"><em>environment object</em></a>.</p>
+<h2 id="decorators">Decorators<a class="headerlink" href="#decorators" title="Permanent link">§</a></h2>
+<h3 id="builderlang">@builder(<em>lang</em>, ...)<a class="headerlink" href="#builderlang" title="Permanent link">§</a></h3>
+<p>Define a builder for one or more <em>lang</em>s. The API for builders is somewhat
+complex and currently beyond the scope of this document.</p>
+<h3 id="toolname-lang">@tool(<em>name</em>, [<em>lang</em>])<a class="headerlink" href="#toolname-lang" title="Permanent link">§</a></h3>
+<p>Define a tool named <em>name</em> that optionally acts as a runner for files with the
+language <em>lang</em>. The API for tools is somewhat complex and currently beyond the
+scope of this document.</p>
+<h2 id="accessors">Accessors<a class="headerlink" href="#accessors" title="Permanent link">§</a></h2>
+<h3 id="get_builderenv-lang">get_builder(<em>env</em>, <em>lang</em>)<a class="headerlink" href="#get_builderenv-lang" title="Permanent link">§</a></h3>
+<p>Get the builder associated with <em>lang</em>, passing <em>env</em> (and <em>lang</em> if the builder
+was defined for multiple languages) to the builder type.</p>
+<h3 id="get_toolenv-name">get_tool(<em>env</em>, <em>name</em>)<a class="headerlink" href="#get_toolenv-name" title="Permanent link">§</a></h3>
+<p>Get the tool named <em>name</em>, passing <em>env</em> to the tool type.</p>
+<h3 id="get_tool_runnerlang">get_tool_runner(<em>lang</em>)<a class="headerlink" href="#get_tool_runnerlang" title="Permanent link">§</a></h3>
+<p>Get the name of the tool specified to run files with language <em>lang</em>.</p></div>
         </div>
 
         <footer class="col-md-12">
