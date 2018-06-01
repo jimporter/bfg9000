@@ -1,6 +1,6 @@
 # Changes
 
-## v0.3.0 (in progress)
+## v0.3.0 (2018-06-01)
 
 ### New features
 - Replace `system_package()` and `pkgconfig_package()` with a generic package
