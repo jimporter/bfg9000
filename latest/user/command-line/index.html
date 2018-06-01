@@ -8,7 +8,7 @@
         
         
         <link rel="shortcut icon" href="../../img/favicon.ico">
-        <title>Changes - bfg9000</title>
+        <title>Command-Line Reference - bfg9000</title>
         <link href="../../css/bootstrap-custom.min.css" rel="stylesheet">
         <link href="../../css/font-awesome-4.5.0.css" rel="stylesheet">
         <link href="../../css/base.css" rel="stylesheet">
@@ -53,32 +53,32 @@
                     <li >
                         <a href="../../getting-started/">Getting Started</a>
                     </li>
-                    <li class="dropdown">
+                    <li class="dropdown active">
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown">User Guide <b class="caret"></b></a>
                         <ul class="dropdown-menu">
                             
 <li >
-    <a href="../../user/features/">Features</a>
+    <a href="../features/">Features</a>
 </li>
                             
 <li >
-    <a href="../../user/building/">Building with bfg9000</a>
+    <a href="../building/">Building with bfg9000</a>
 </li>
                             
 <li >
-    <a href="../../user/writing/">Writing a Build File</a>
+    <a href="../writing/">Writing a Build File</a>
 </li>
                             
 <li >
-    <a href="../../user/reference/">Reference</a>
+    <a href="../reference/">Reference</a>
+</li>
+                            
+<li class="active">
+    <a href="./">Command-Line Reference</a>
 </li>
                             
 <li >
-    <a href="../../user/command-line/">Command-Line Reference</a>
-</li>
-                            
-<li >
-    <a href="../../user/environment-vars/">Environment Variables</a>
+    <a href="../environment-vars/">Environment Variables</a>
 </li>
                         </ul>
                     </li>
@@ -103,16 +103,16 @@
 </li>
                         </ul>
                     </li>
-                    <li class="dropdown active">
+                    <li class="dropdown">
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown">About <b class="caret"></b></a>
                         <ul class="dropdown-menu">
                             
-<li class="active">
-    <a href="./">Changes</a>
+<li >
+    <a href="../../about/changes/">Changes</a>
 </li>
                             
 <li >
-    <a href="../license/">License</a>
+    <a href="../../about/license/">License</a>
 </li>
                         </ul>
                     </li>
@@ -125,12 +125,12 @@
                     </a>
                 </li>
                     <li >
-                        <a rel="next" href="../../developer/contributing/">
+                        <a rel="next" href="../reference/">
                             <i class="fa fa-arrow-left"></i> Previous
                         </a>
                     </li>
                     <li >
-                        <a rel="prev" href="../license/">
+                        <a rel="prev" href="../environment-vars/">
                             Next <i class="fa fa-arrow-right"></i>
                         </a>
                     </li>
@@ -145,126 +145,78 @@
         <div class="container">
                 <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
-        <li class="main active"><a href="#changes">Changes</a></li>
-            <li><a href="#v030">v0.3.0</a></li>
-            <li><a href="#v020">v0.2.0</a></li>
-            <li><a href="#v011">v0.1.1</a></li>
-            <li><a href="#v010">v0.1.0</a></li>
+        <li class="main active"><a href="#command-line-reference">Command-Line Reference</a></li>
+            <li><a href="#global-options">Global options</a></li>
+            <li><a href="#sub-commands">Sub-commands</a></li>
+            <li><a href="#9k-shorthand">9k shorthand</a></li>
     </ul>
 </div></div>
                 <div class="col-md-9" role="main">
 
-<h1 id="changes">Changes<a class="headerlink" href="#changes" title="Permanent link">§</a></h1>
-<h2 id="v030">v0.3.0<a class="headerlink" href="#v030" title="Permanent link">§</a></h2>
-<p class="subtitle">2018-06-01</p>
-<h3 id="new-features">New features<a class="headerlink" href="#new-features" title="Permanent link">§</a></h3>
-<ul>
-<li>Replace <code>system_package()</code> and <code>pkgconfig_package()</code> with a generic package
-  resolver: <code>package()</code></li>
-<li>Add <code>headers</code> argument to <code>package()</code> to find header files and <code>libs</code> to
-  specify library names if <em>pkg-config</em> lookup fails</li>
-<li>Support Java/Scala</li>
-<li>Add support for user-defined arguments</li>
-<li>Add a <code>library()</code> function that builds shared and/or static libraries per the
-  user's preference</li>
-<li>Add support for generating <em>pkg-config</em> <code>.pc</code> files</li>
-<li>Allow executing files that require an interpreter or other wrapper via
-  <code>command()</code> or <code>test()</code>/<code>test_driver()</code> without explicitly specifying the
-  wrapper; supports all languages buildable by bfg9000, plus Lua, Perl, Python,
-  and Ruby</li>
-<li>Add <code>env.run()</code>, <code>env.execute()</code>, and <code>env.run_arguments()</code> to simplify
-  executing programs during configuration</li>
-<li>Add a <code>framework()</code> function to specify macOS frameworks to use for a build</li>
-<li>Improve detection of compiler flavors by checking version information</li>
-<li>Automatically colorize clang/gcc output under Ninja</li>
-<li>Add support for uninstalling builds</li>
-<li>Add <code>static_link_options</code> to <code>static_library()</code> to specify options to pass to
-  the static linker</li>
-<li>Add a <code>bfg9000 env</code> command to print the environment variables used during
-  configuration</li>
-<li>Automatically request sudo elevation when installing builds to a system
-  directory</li>
-</ul>
-<h3 id="breaking-changes">Breaking changes<a class="headerlink" href="#breaking-changes" title="Permanent link">§</a></h3>
-<ul>
-<li><code>directory()</code> and <code>header_directory()</code> no longer automatically include all
-  files within them (pass <code>include='*'</code> for the old behavior)</li>
-<li>The <code>include</code> argument for compiling object files has been replaced by
-  <code>includes</code></li>
-<li>When creating a static library, <code>link_options</code> now specifies options that will
-  be forwarded along to the dynamic linker, rather than options for the static
-  linker itself</li>
-<li>The <code>options</code> argument for <code>test()</code>/<code>test_driver()</code> has been deprecated; add
-  any options to the first argument (<code>cmd</code>) instead</li>
-<li><code>test()</code> no longer converts its first argument to a <code>generic_file()</code></li>
-<li>Splitting POSIX shell strings (used for compile and link options as well as
-  environment vars on POSIX like <code>CPPFLAGS</code>) no longer parses escape characters</li>
-</ul>
-<h3 id="bug-fixes">Bug fixes<a class="headerlink" href="#bug-fixes" title="Permanent link">§</a></h3>
-<ul>
-<li>Improve logging of syntax errors in <code>build.bfg</code> files</li>
-<li>Fix usage of nested shared libraries when linking with GNU ld (via
-  <code>-rpath-link</code>)</li>
-<li>Installing directories from the srcdir now correctly installs their contents
-  to the installation root for that type (e.g. a header directory of <code>foo/bar</code>
-  installs its contents to <code>$includedir</code>)</li>
-<li>Fix generation of dependencies for the <code>tests</code> target</li>
-<li>Improve escaping for paths when using Make on Windows (previously users had
-  to escape backslashes themselves)</li>
-<li>Fix an issue with quotation marks being stripped for some commands on Windows
-  with the Ninja backend</li>
-</ul>
-<hr />
-<h2 id="v020">v0.2.0<a class="headerlink" href="#v020" title="Permanent link">§</a></h2>
-<p class="subtitle">2016-06-26</p>
-<h3 id="new-features_1">New features<a class="headerlink" href="#new-features_1" title="Permanent link">§</a></h3>
-<ul>
-<li>Support Objective C/C++</li>
-<li>Partially support Fortran (simple projects work, but more complex things
-  probably don't)</li>
-<li>Improved error reporting</li>
-<li>Warn users if necessary build tools can't be found by bfg9000</li>
-<li>Automatically include runtime dependencies when installing a binary</li>
-<li>Support <code>@rpath</code> on OS X</li>
-<li>Allow fetching bfg's version from <code>build.bfg</code> files via <code>bfg9000_version</code></li>
-<li>Support versioning of shared libraries on POSIX systems</li>
-<li>Support resolving packages via pkg-config</li>
-<li>Locally-built static libraries now forward their options to binaries that link
-  to them</li>
-<li><code>whole_archive()</code> now forwards its arguments on to <code>static_library()</code></li>
-<li>Use <em>doppel</em> for installing files instead of <em>install(1)</em></li>
-<li>Support <code>command()</code> and <code>alias()</code> rules under MSBuild</li>
-<li>Add support for building a distribution of the sources (<code>make dist</code>)</li>
-<li>Allow running custom build steps via <code>build_step()</code></li>
-</ul>
-<h3 id="breaking-changes_1">Breaking changes<a class="headerlink" href="#breaking-changes_1" title="Permanent link">§</a></h3>
-<ul>
-<li>Configuring a build is now performed by <code>bfg9000 configure DIRECTORY</code></li>
-<li><code>header()</code> renamed to <code>header_file()</code></li>
-<li><code>env.compiler(lang)</code> replaced by <code>env.builder(lang).compiler</code></li>
-<li><code>env.linker(lang, mode)</code> replaced by <code>env.builder(lang).linker(mode)</code></li>
-<li><code>env.compiler(lang).flavor</code> replaced by <code>env.builder(lang).flavor</code></li>
-</ul>
-<h3 id="bug-fixes_1">Bug fixes<a class="headerlink" href="#bug-fixes_1" title="Permanent link">§</a></h3>
-<ul>
-<li>Fix fetching <code>CFLAGS</code> from the environment (it used to try <code>CCFLAGS</code>)</li>
-<li>Fix execution context of <code>build.bfg</code> files; this caused strange issues with
-  list/generator comprehensions</li>
-</ul>
-<hr />
-<h2 id="v011">v0.1.1<a class="headerlink" href="#v011" title="Permanent link">§</a></h2>
-<p class="subtitle">2016-01-21</p>
-<ul>
-<li>Fix an issue with installing the package from PyPI</li>
-</ul>
-<hr />
-<h2 id="v010">v0.1.0<a class="headerlink" href="#v010" title="Permanent link">§</a></h2>
-<p class="subtitle">2016-01-20</p>
-<ul>
-<li>Initial release</li>
-<li>Support for C and C++ builds on Linux, Mac, and Windows (MinGW included) via
-  Make, Ninja, and MSBuild.</li>
-</ul></div>
+<h1 id="command-line-reference">Command-Line Reference<a class="headerlink" href="#command-line-reference" title="Permanent link">§</a></h1>
+<h2 id="global-options">Global options<a class="headerlink" href="#global-options" title="Permanent link">§</a></h2>
+<h4 id="help-option">-h, --help<a class="headerlink" href="#help-option" title="Permanent link">§</a></h4>
+<p>Print a help message and exit. Equivalent to the <a href="#help"><code>help</code></a> subcommand.</p>
+<h4 id="version">--version<a class="headerlink" href="#version" title="Permanent link">§</a></h4>
+<p>Print the version number and exit.</p>
+<h4 id="color">-c, --color <em>WHEN</em><a class="headerlink" href="#color" title="Permanent link">§</a></h4>
+<p>Show colored output; <em>WHEN</em> is one of <code>always</code>, <code>never</code>, or <code>auto</code> and defaults
+to <code>auto</code> (i.e. show colored output when the terminal is a tty). <code>-c</code> is
+equivalent to <code>--color=always</code>.</p>
+<h4 id="warn-once">--warn-once<a class="headerlink" href="#warn-once" title="Permanent link">§</a></h4>
+<p>Only emit a given warning once.</p>
+<h2 id="sub-commands">Sub-commands<a class="headerlink" href="#sub-commands" title="Permanent link">§</a></h2>
+<h3 id="help">bfg9000 help [<em>SUBCOMMAND</em>]<a class="headerlink" href="#help" title="Permanent link">§</a></h3>
+<p>Print a help message and exit. If <em>SUBCOMMAND</em> is specified, print help for that
+subcommand.</p>
+<h3 id="configure">bfg9000 configure <em>DIRECTORY</em><a class="headerlink" href="#configure" title="Permanent link">§</a></h3>
+<p>Generate the necessary build files to perform actual builds. If <em>DIRECTORY</em> is a
+source directory (i.e. it contains a build.bfg file), the build files will be
+created in the current directory. Otherwise, <em>DIRECTORY</em> is treated as the build
+directory, and bfg9000 will look for a build.bfg file in the current directory.</p>
+<h4 id="configure-backend">--backend <em>BACKEND</em><a class="headerlink" href="#configure-backend" title="Permanent link">§</a></h4>
+<p>The kind of build files to generate; one of <code>ninja</code>, <code>make</code>, or <code>msbuild</code>. The
+default value depends on what build backends you have installed, but if <code>ninja</code>
+is present on your system, it will be the default.</p>
+<h4 id="configure-enable-shared">--enable-shared, --disable-shared<a class="headerlink" href="#configure-enable-shared" title="Permanent link">§</a></h4>
+<p>Enable/disable building shared libraries when using
+<a href="../reference/#library"><em>library</em>()</a> in your build.bfg files. Defaults to enabled.</p>
+<h4 id="configure-enable-static">--enable-static, --disable-static<a class="headerlink" href="#configure-enable-static" title="Permanent link">§</a></h4>
+<p>Enable/disable building static libraries when using
+<a href="../reference/#library"><em>library</em>()</a> in your build.bfg files. Defaults to enabled.</p>
+<h4 id="configure-prefix">--prefix <em>PATH</em><a class="headerlink" href="#configure-prefix" title="Permanent link">§</a></h4>
+<p>The installation prefix to use when installing built files. On Linux and macOS,
+this defaults to <code>/usr/local</code>; on Windows, there is no default (thus, to
+install built files on Windows, you must either set <code>--prefix</code> or one of the
+other install path options below).</p>
+<h4 id="configure-exec-prefix">--exec-prefix <em>PATH</em><a class="headerlink" href="#configure-exec-prefix" title="Permanent link">§</a></h4>
+<p>The installation prefix to use when installing architecture-dependent files
+(e.g. executables). This defaults to the value of
+<a href="#configure-prefix"><code>--prefix</code></a>.</p>
+<h4 id="configure-bindir">--bindir <em>PATH</em><a class="headerlink" href="#configure-bindir" title="Permanent link">§</a></h4>
+<p>The installation prefix to use for executables. Defaults to <code>&lt;prefix&gt;/bin</code> on
+Linux and macOS, and <code>&lt;prefix&gt;</code> on Windows.</p>
+<h4 id="configure-libdir">--libdir <em>PATH</em><a class="headerlink" href="#configure-libdir" title="Permanent link">§</a></h4>
+<p>The installation prefix to use for libraries. Defaults to <code>&lt;prefix&gt;/lib</code> on
+Linux and macOS, and <code>&lt;prefix&gt;</code> on Windows.</p>
+<h4 id="configure-includedir">--includedir <em>PATH</em><a class="headerlink" href="#configure-includedir" title="Permanent link">§</a></h4>
+<p>The installation prefix to use for headers. Defaults to <code>&lt;prefix&gt;/include</code> on
+Linux and macOS, and <code>&lt;prefix&gt;</code> on Windows.</p>
+<h3 id="configure-into">bfg9000 configure-into <em>SRCDIR</em> <em>BUILDDIR</em><a class="headerlink" href="#configure-into" title="Permanent link">§</a></h3>
+<p>Generate the necessary build files (as with <a href="#configure"><code>bfg9000 configure</code></a>)
+to perform actual builds from a build.bfg file in <em>SRCDIR</em>, and place them in
+<em>BUILDDIR</em>.</p>
+<h3 id="refresh">bfg9000 refresh [<em>BUILDDIR</em>]<a class="headerlink" href="#refresh" title="Permanent link">§</a></h3>
+<p>Regenerate an existing set of build files in <em>BUILDDIR</em> needed to perform actual
+builds. This is run automatically if bfg9000 determines that the build files are
+out of date.</p>
+<h3 id="env">bfg9000 env [<em>BUILDDIR</em>]<a class="headerlink" href="#env" title="Permanent link">§</a></h3>
+<p>Print the environment variables stored by the build configuration in <em>BUILDDIR</em>.</p>
+<h4 id="env-unique">-u, --unique<a class="headerlink" href="#env-unique" title="Permanent link">§</a></h4>
+<p>Only show environment variables that differ from the current environment.</p>
+<h2 id="9k-shorthand">9k shorthand<a class="headerlink" href="#9k-shorthand" title="Permanent link">§</a></h2>
+<p><code>9k</code> is a special shorthand to make it easier to configure your build. It's
+equivalent to <a href="#configure"><code>bfg9000 configure</code></a>.</p></div>
         </div>
 
         <footer class="col-md-12">
