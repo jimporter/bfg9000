@@ -1,5 +1,13 @@
 # Changes
 
+## v0.4.0
+in progress
+{: .subtitle}
+
+No changes yet!
+
+---
+
 ## v0.3.0
 2018-06-01
 {: .subtitle}
