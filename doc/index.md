@@ -24,7 +24,8 @@ often, incremental builds don't need to execute bfg9000 at all!
 #### Stay sane
 
 Building your code shouldn't be the hard part of developing your project. Above
-all else, bfg9000 strives to help you get your build right the *first* time.
+all else, bfg9000 strives to help you get your build right the *first* time with
+many helpful [features](user/features.md).
 
 ---
 

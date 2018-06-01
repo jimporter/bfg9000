@@ -28,6 +28,8 @@ in progress
   the static linker
 - Add a `bfg9000 env` command to print the environment variables used during
   configuration
+- Automatically request sudo elevation when installing builds to a system
+  directory
 
 ### Breaking changes
 - `directory()` and `header_directory()` no longer automatically include all

@@ -28,7 +28,8 @@ often, incremental builds don't need to execute bfg9000 at all!
 #### Stay sane
 
 Building your code shouldn't be the hard part of developing your project. Above
-all else, bfg9000 strives to help you get your build right the *first* time.
+all else, bfg9000 strives to help you get your build right the *first* time with
+many helpful [features][features].
 
 ## A brief example
 
@@ -81,6 +82,7 @@ This project is licensed under the [BSD 3-clause license](LICENSE).
 [codecov-image]: https://codecov.io/gh/jimporter/bfg9000/branch/master/graph/badge.svg
 [codecov-link]: https://codecov.io/gh/jimporter/bfg9000
 
+[features]: https://jimporter.github.io/bfg9000/user/features
 [examples]: https://github.com/jimporter/bfg9000/tree/master/examples
 [setuptools]: https://pythonhosted.org/setuptools/
 [ppa]: https://launchpad.net/~jimporter/+archive/ubuntu/stable

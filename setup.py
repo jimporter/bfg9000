@@ -110,7 +110,7 @@ more_scripts = []
 more_requires = []
 
 if os.getenv('NO_DOPPEL') not in ['1', 'true']:
-    more_requires.append('doppel >= 0.2')
+    more_requires.append('doppel >= 0.3.1')
 
 if sys.version_info < (3, 4):
     more_requires.append('enum34')

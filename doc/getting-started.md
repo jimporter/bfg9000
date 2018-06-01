@@ -14,6 +14,9 @@ bfg9000 supports building code written in the following languages:
 * Objective C/C++
 * Scala
 
+For more details on what you can do with bfg9000, see the
+[features](user/features.md) page.
+
 ## Installation
 
 bfg9000 uses [setuptools](https://pythonhosted.org/setuptools/), so installation

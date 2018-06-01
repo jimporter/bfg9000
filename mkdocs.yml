@@ -21,6 +21,7 @@ pages:
   - Home: index.md
   - Getting Started: getting-started.md
   - User Guide:
+      - Features: user/features.md
       - Building with bfg9000: user/building.md
       - Writing a Build File: user/writing.md
       - Reference: user/reference.md
