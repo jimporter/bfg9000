@@ -1,6 +1,12 @@
 # Changes
 
-## v0.4.0 (2018-06-01)
+## v0.4.0 (in progress)
+
+No changes yet!
+
+---
+
+## v0.3.1 (2018-06-01)
 
 ### Bug fixes
 - Fix an issue with creating the build directory during the configuration
