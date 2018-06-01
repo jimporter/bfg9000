@@ -27,6 +27,15 @@ class TestConfigure(IntegrationTest):
         )
         self.checkBuild()
 
+    def test_configure_makes_dir(self):
+        cleandir(self.builddir, recreate=False)
+        os.chdir(self.srcdir)
+        self.assertPopen(
+            ['bfg9000', '--debug', 'configure', self.builddir, '--backend',
+             self.backend]
+        )
+        self.checkBuild()
+
     def test_configure_into(self):
         self.assertPopen(
             ['bfg9000', '--debug', 'configure-into', self.srcdir,

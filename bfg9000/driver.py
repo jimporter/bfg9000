@@ -181,7 +181,8 @@ def add_configure_args(parser):
 
 
 def configure(parser, subparser, args, extra):
-    if path.samefile(args.srcdir, args.builddir):
+    if ( path.exists(args.builddir) and
+         path.samefile(args.srcdir, args.builddir) ):
         subparser.error('source and build directories must be different')
     if not build.is_srcdir(args.srcdir):
         subparser.error('source directory must contain a {} file'
