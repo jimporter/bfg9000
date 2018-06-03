@@ -12,7 +12,6 @@ env:
   global:
     - PYTHON=python
     - PIP=pip
-    - TEST_COMMAND="coverage -q"
     - CPPFLAGS="-Wall -Werror"
   matrix:
     - CC=gcc CXX=g++
@@ -23,14 +22,19 @@ matrix:
     - language: generic
       python: 2.7
       os: osx
-      env: PYTHON=python2 PIP=pip2 CC=clang CXX=clang++ NO_SCALA_TEST=1 NO_GCJ_TEST=1
+      env: >
+        PYTHON=python2 PIP=pip2 CC=clang CXX=clang++ NO_SCALA_TEST=1
+        NO_GCJ_TEST=1
     - language: generic
       python: 3.6
       os: osx
-      env: PYTHON=python3 PIP=pip3 CC=clang CXX=clang++ NO_SCALA_TEST=1 NO_GCJ_TEST=1
+      env: >
+        PYTHON=python3 PIP=pip3 CC=clang CXX=clang++ NO_SCALA_TEST=1
+        NO_GCJ_TEST=1
     - python: 2.7
       os: linux
-      env: TEST_COMMAND=lint
+      env: JOB=lint
+      script: ${PYTHON} setup.py lint
 
 addons:
   apt:
@@ -69,6 +73,6 @@ before_install:
 install:
   - ${PIP} install codecov .[test]
 script:
-  - ${PYTHON} setup.py ${TEST_COMMAND}
+  - ${PYTHON} setup.py coverage -q
 after_success:
   - codecov
