@@ -19,6 +19,9 @@ env:
 
 matrix:
   include:
+
+    # macOS builds
+
     - language: generic
       python: 2.7
       os: osx
@@ -31,10 +34,55 @@ matrix:
       env: >
         PYTHON=python3 PIP=pip3 CC=clang CXX=clang++ NO_SCALA_TEST=1
         NO_GCJ_TEST=1
+
+    # bdist_wheel builds
+
     - python: 2.7
+      os: linux
+      env: JOB=bdist_wheel
+      install: true
+      script:
+        - export VENV_BIN=`dirname \`which python\``
+        - |
+          virtualenv py3 --python=/usr/bin/python3
+          . py3/bin/activate
+          python setup.py bdist_wheel
+          deactivate
+        - |
+          . ${VENV_BIN}/activate
+          pip install dist/*.whl
+          pip show patchelf-wrapper
+          pip show enum34
+          ! pip show pysetenv
+          deactivate
+      after_success: false
+    - python: 3.6
+      os: linux
+      env: JOB=bdist_wheel
+      install: true
+      script:
+        - export VENV_BIN=`dirname \`which python\``
+        - |
+          virtualenv py2 --python=/usr/bin/python
+          . py2/bin/activate
+          python setup.py bdist_wheel
+          deactivate
+        - |
+          . ${VENV_BIN}/activate
+          pip install dist/*.whl
+          pip show patchelf-wrapper
+          ! pip show enum34
+          ! pip show pysetenv
+          deactivate
+      after_success: false
+
+    # Linting
+
+    - python: 3.6
       os: linux
       env: JOB=lint
       script: ${PYTHON} setup.py lint
+      after_success: false
 
 addons:
   apt:

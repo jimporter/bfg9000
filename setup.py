@@ -2,7 +2,6 @@ import os
 import platform
 import re
 import subprocess
-import sys
 from setuptools import setup, find_packages, Command
 
 from bfg9000.app_version import version
@@ -106,21 +105,12 @@ try:
 except ImportError:
     pass
 
-more_scripts = []
 more_requires = []
 
 if os.getenv('NO_DOPPEL') not in ['1', 'true']:
     more_requires.append('doppel >= 0.3.1')
-
-if sys.version_info < (3, 4):
-    more_requires.append('enum34')
-
-platform_name = platform.system()
-if platform_name == 'Windows':
-    more_scripts.append('bfg9000-setenv=bfg9000.setenv:main')
-elif platform_name == 'Linux':
-    if os.getenv('NO_PATCHELF') not in ['1', 'true']:
-        more_requires.append('patchelf-wrapper')
+if os.getenv('NO_PATCHELF') not in ['1', 'true']:
+    more_requires.append('patchelf-wrapper;platform_system=="Linux"')
 
 with open(os.path.join(root_dir, 'README.md'), 'r') as f:
     # Read from the file and strip out the badges.
@@ -164,7 +154,9 @@ setup(
     packages=find_packages(exclude=['test', 'test.*']),
 
     install_requires=(
-        ['colorama', 'packaging >= 17.0', 'setuptools', 'six'] +
+        ['colorama', 'packaging >= 17.0', 'setuptools', 'six',
+         'enum34;python_version<"3.4"',
+         'pysetenv;platform_system=="Windows"'] +
         more_requires
     ),
     extras_require={
@@ -180,7 +172,7 @@ setup(
             '9k=bfg9000.driver:simple_main',
             'bfg9000-depfixer=bfg9000.depfixer:main',
             'bfg9000-jvmoutput=bfg9000.jvmoutput:main',
-        ] + more_scripts,
+        ],
         'bfg9000.backends': [
             'make=bfg9000.backends.make.writer',
             'ninja=bfg9000.backends.ninja.writer',
