@@ -17,7 +17,7 @@ environment:
   NO_SCALA_TEST: 1
   NO_GCJ_TEST: 1
   BACKENDS: ninja make msbuild
-  CPPFLAGS: /IC:\projects\bfg9000\include /WX /EHsc
+  CPPFLAGS: /IC:\projects\bfg9000\include /WX
 
   matrix:
     - COMPILER: vs

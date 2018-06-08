@@ -137,7 +137,7 @@ class MsvcBaseCompiler(BuildCommand):
 
     @property
     def _always_flags(self):
-        return ['/nologo']
+        return ['/nologo', '/EHsc']
 
     def _include_dir(self, directory, syntax):
         prefix = '-I' if syntax == 'cc' else '/I'
