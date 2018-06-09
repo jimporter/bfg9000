@@ -30,22 +30,6 @@ def package(env, name, version=None, lang='c', kind=PackageKind.any.name,
                                               libs)
 
 
-# XXX: Remove this after 0.3 is released.
-@builtin.function('builtins')  # pragma: no cover
-def system_package(builtins, name, lang='c', kind='any', header=None):
-    warnings.warn('system_package is deprecated; please use package instead',
-                  DeprecationWarning)
-    return builtins['package'](name, lang=lang, kind=kind, headers=header)
-
-
-# XXX: Remove this after 0.3 is released.
-@builtin.function('builtins')  # pragma: no cover
-def pkgconfig_package(builtins, name, lang='c', version=None):
-    warnings.warn('pkgconfig_package is deprecated; please use package ' +
-                  'instead', DeprecationWarning)
-    return builtins['package'](name, version=version, lang=lang)
-
-
 @builtin.function('env')
 @builtin.type(Executable)
 def system_executable(env, name, format=None):

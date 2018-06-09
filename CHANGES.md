@@ -2,7 +2,9 @@
 
 ## v0.4.0 (in progress)
 
-No changes yet!
+### Breaking changes
+- MSVC builds now automatically set `/EHsc` to improve standards-compliance and
+  mimic Visual Studio's default MSBuild configuration
 
 ---
 

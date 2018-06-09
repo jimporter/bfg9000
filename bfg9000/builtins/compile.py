@@ -36,15 +36,9 @@ class ObjectFiles(list):
 
 
 class Compile(Edge):
-    def __init__(self, builtins, build, env, name, includes=None, include=None,
-                 pch=None, libs=None, packages=None, options=None, lang=None,
+    def __init__(self, builtins, build, env, name, includes=None, pch=None,
+                 libs=None, packages=None, options=None, lang=None,
                  extra_deps=None):
-        # XXX: Remove this after 0.3 is released.
-        if include is not None:  # pragma: no cover
-            warnings.warn("'include' keyword argument is deprecated; use " +
-                          "'includes' instead")
-            includes = include
-
         self.header_files = []
         self.includes = []
         for i in iterate(includes):

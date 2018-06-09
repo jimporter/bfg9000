@@ -43,9 +43,9 @@ class Link(Edge):
     msbuild_output = True
 
     def __init__(self, builtins, build, env, name, files=None, includes=None,
-                 include=None, pch=None, libs=None, packages=None,
-                 compile_options=None, link_options=None, entry_point=None,
-                 lang=None, extra_deps=None):
+                 pch=None, libs=None, packages=None, compile_options=None,
+                 link_options=None, entry_point=None, lang=None,
+                 extra_deps=None):
         self.name = self.__name(name)
 
         self.user_libs = [
@@ -59,11 +59,9 @@ class Link(Edge):
                               for i in iterate(packages)]
         self.packages = self.user_packages + forward_opts.get('packages', [])
 
-        # XXX: Remove `include` after 0.3 is released.
         self.user_files = builtins['object_files'](
-            files, includes=includes, include=include, pch=pch,
-            libs=self.user_libs, packages=self.user_packages,
-            options=compile_options, lang=lang
+            files, includes=includes, pch=pch, libs=self.user_libs,
+            packages=self.user_packages, options=compile_options, lang=lang
         )
         self.files = sum(
             (getattr(i, 'extra_objects', []) for i in self.user_files),

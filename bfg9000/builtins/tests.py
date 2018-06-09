@@ -27,13 +27,7 @@ class TestInputs(object):
 
 
 class Test(object):
-    def __init__(self, build, env, cmd, options, environment, driver):
-        # XXX: Remove this after 0.3 is released.
-        if options:  # pragma: no cover
-            warnings.warn("'options' argument is deprecated; add options to " +
-                          "'cmd' instead")
-            cmd = listify(cmd) + pshell.listify(options)
-
+    def __init__(self, build, env, cmd, environment, driver):
         # Ensure that bare Node objects are treated as a list of args instead
         # of a literal command line (the former has shell-characters escaped).
         if isinstance(cmd, Node):
@@ -52,22 +46,21 @@ class Test(object):
 
 
 class TestCase(Test):
-    def __init__(self, build, env, cmd, options=None, environment={},
-                 driver=None):
+    def __init__(self, build, env, cmd, environment={}, driver=None):
         if driver and environment:
             raise TypeError("only one of 'driver' and 'environment' may be " +
                             "specified")
-        Test.__init__(self, build, env, cmd, options, environment, driver)
+        Test.__init__(self, build, env, cmd, environment, driver)
 
 
 class TestDriver(Test):
-    def __init__(self, build, env, cmd, options=None, environment={},
-                 parent=None, wrap_children=False):
+    def __init__(self, build, env, cmd, environment={}, parent=None,
+                 wrap_children=False):
         if parent and environment:
             raise TypeError("only one of 'parent' and 'environment' may be " +
                             "specified")
 
-        Test.__init__(self, build, env, cmd, options, environment, parent)
+        Test.__init__(self, build, env, cmd, environment, parent)
         self.tests = []
         self.wrap_children = wrap_children
 
