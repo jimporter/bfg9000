@@ -108,7 +108,7 @@ class Link(Edge):
                 i.creator.add_link_options(self.mode, defines)
 
         if hasattr(self.linker, 'pre_build'):
-            self.linker.pre_build(build, self, name)
+            self.linker.pre_build(build, name, self)
 
         output = self.linker.output_file(name, self)
         primary = first(output)
@@ -117,7 +117,7 @@ class Link(Edge):
         primary.package_deps.extend(self.packages)
 
         if hasattr(self.linker, 'post_build'):
-            public_output = self.linker.post_build(build, self, output)
+            public_output = self.linker.post_build(build, output, self)
 
         self._fill_options(env, output)
 
@@ -170,7 +170,7 @@ class DynamicLink(Link):
             self._internal_options = (
                 sum((i.ldflags(self.linker, output)
                      for i in self.packages), []) +
-                self.linker.flags(self, output)
+                self.linker.flags(output, self)
             )
         else:
             self._internal_options = []
@@ -181,7 +181,7 @@ class DynamicLink(Link):
                 sum((i.always_libs(i is self.linker) for i in linkers), []) +
                 sum((i.ldlibs(self.linker, output)
                      for i in self.packages), []) +
-                self.linker.libs(self, output)
+                self.linker.libs(output, self)
             )
 
         first(output).runtime_deps.extend(

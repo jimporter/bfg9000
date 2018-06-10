@@ -146,10 +146,10 @@ class MsvcBaseCompiler(BuildCommand):
     def _include_pch(self, pch):
         return ['/Yu' + pch.header_name]
 
-    def flags(self, options, output, pkg=False):
-        syntax = getattr(options, 'syntax', 'msvc')
-        includes = getattr(options, 'includes', [])
-        pch = getattr(options, 'pch', None)
+    def flags(self, output, context, pkg=False):
+        syntax = getattr(context, 'syntax', 'msvc')
+        includes = getattr(context, 'includes', [])
+        pch = getattr(context, 'pch', None)
         return sum((self._include_dir(i, syntax) for i in includes),
                    self._include_pch(pch) if pch else [])
 
@@ -185,11 +185,11 @@ class MsvcCompiler(MsvcBaseCompiler):
     def accepts_pch(self):
         return True
 
-    def output_file(self, name, options):
+    def output_file(self, name, context):
         output = ObjectFile(Path(name + '.obj'),
                             self.builder.object_format, self.lang)
-        if options.pch:
-            output.extra_objects = [options.pch.object_file]
+        if context.pch:
+            output.extra_objects = [context.pch.object_file]
         return output
 
 
@@ -214,42 +214,42 @@ class MsvcPchCompiler(MsvcBaseCompiler):
         result.append('/Fp' + output[0])
         return result
 
-    def pre_build(self, build, options, name):
-        if options.pch_source is None:
-            header = getattr(options, 'file', None)
+    def pre_build(self, build, name, context):
+        if context.pch_source is None:
+            header = getattr(context, 'file', None)
             ext = lang2src[header.lang][0]
-            options.pch_source = SourceFile(header.path.stripext(ext).reroot(),
+            context.pch_source = SourceFile(header.path.stripext(ext).reroot(),
                                             header.lang)
-            options.inject_include_dir = True
+            context.inject_include_dir = True
 
-            with generated_file(build, self.env, options.pch_source) as out:
+            with generated_file(build, self.env, context.pch_source) as out:
                 out.write('#include "{}"\n'.format(header.path.basename()))
 
     def _create_pch(self, header):
         return ['/Yc' + header.path.suffix]
 
-    def flags(self, options, output):
-        syntax = getattr(options, 'syntax', 'msvc')
-        header = getattr(options, 'file', None)
+    def flags(self, output, context):
+        syntax = getattr(context, 'syntax', 'msvc')
+        header = getattr(context, 'file', None)
         flags = []
-        if getattr(options, 'inject_include_dir', False):
+        if getattr(context, 'inject_include_dir', False):
             # Add the include path for the generated header; see pre_build()
             # above for more details.
             d = Directory(header.path.parent(), None)
             flags.extend(self._include_dir(d, syntax))
 
-        flags.extend(MsvcBaseCompiler.flags(self, options, output) +
-                    (self._create_pch(header) if header else []))
+        flags.extend(MsvcBaseCompiler.flags(self, output, context) +
+                     (self._create_pch(header) if header else []))
         return flags
 
-    def output_file(self, name, options):
+    def output_file(self, name, context):
         pchpath = Path(name).stripext('.pch')
-        objpath = options.pch_source.path.stripext('.obj').reroot()
+        objpath = context.pch_source.path.stripext('.obj').reroot()
         output = MsvcPrecompiledHeader(
             pchpath, objpath, name, self.builder.object_format, self.lang
         )
-        if options.pch:
-            output.extra_objects = [options.pch.object_file]
+        if context.pch:
+            output.extra_objects = [context.pch.object_file]
         return [output, output.object_file]
 
 
@@ -326,10 +326,10 @@ class MsvcLinker(BuildCommand):
         prefix = '-L' if syntax == 'cc' else '/LIBPATH:'
         return [prefix + i for i in dirs]
 
-    def flags(self, options, output, pkg=False):
-        syntax = getattr(options, 'syntax', 'msvc')
-        libraries = getattr(options, 'libs', [])
-        lib_dirs = getattr(options, 'lib_dirs', [])
+    def flags(self, output, context, pkg=False):
+        syntax = getattr(context, 'syntax', 'msvc')
+        libraries = getattr(context, 'libs', [])
+        lib_dirs = getattr(context, 'lib_dirs', [])
         return self._lib_dirs(libraries, lib_dirs, syntax)
 
     def parse_flags(self, flags):
@@ -354,9 +354,9 @@ class MsvcLinker(BuildCommand):
     def always_libs(self, primary):
         return []
 
-    def libs(self, options, output, pkg=False):
-        syntax = getattr(options, 'syntax', 'msvc')
-        libraries = getattr(options, 'libs', [])
+    def libs(self, output, context, pkg=False):
+        syntax = getattr(context, 'syntax', 'msvc')
+        libraries = getattr(context, 'libs', [])
         return sum((self._link_lib(i, syntax) for i in libraries), [])
 
 
@@ -365,7 +365,7 @@ class MsvcExecutableLinker(MsvcLinker):
         MsvcLinker.__init__(self, builder, env, 'vclink', command, ldflags,
                             ldlibs)
 
-    def output_file(self, name, options):
+    def output_file(self, name, context):
         path = Path(name + self.env.platform.executable_ext)
         return Executable(path, self.builder.object_format, self.lang)
 
@@ -384,7 +384,7 @@ class MsvcSharedLibraryLinker(MsvcLinker):
         result.append('/IMPLIB:' + output[1])
         return result
 
-    def output_file(self, name, options):
+    def output_file(self, name, context):
         dllname = Path(name + self.env.platform.shared_library_ext)
         impname = Path(name + '.lib')
         expname = Path(name + '.exp')
@@ -419,9 +419,9 @@ class MsvcStaticLinker(BuildCommand):
             cmd, iterate(flags), iterate(input), ['/OUT:' + output]
         ))
 
-    def output_file(self, name, options):
+    def output_file(self, name, context):
         return StaticLibrary(Path(name + '.lib'),
-                             self.builder.object_format, options.langs)
+                             self.builder.object_format, context.langs)
 
     def parse_flags(self, flags):
         return {'other': flags}

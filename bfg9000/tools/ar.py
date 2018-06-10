@@ -59,8 +59,8 @@ class ArLinker(BuildCommand):
             cmd, iterate(flags), [output], iterate(input)
         ))
 
-    def output_file(self, name, options):
+    def output_file(self, name, context):
         head, tail = os.path.split(name)
         path = os.path.join(head, 'lib' + tail + '.a')
         return StaticLibrary(Path(path), self.builder.object_format,
-                             options.langs)
+                             context.langs)

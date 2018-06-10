@@ -178,10 +178,10 @@ class CcBaseCompiler(BuildCommand):
     def _pthread(self, pthread):
         return ['-pthread'] if pthread else []
 
-    def flags(self, options, output, pkg=False):
-        pthread = getattr(options, 'pthread', False)
-        includes = getattr(options, 'includes', [])
-        pch = getattr(options, 'pch', None)
+    def flags(self, output, context, pkg=False):
+        pthread = getattr(context, 'pthread', False)
+        includes = getattr(context, 'includes', [])
+        pch = getattr(context, 'pch', None)
 
         return (self._pthread(pthread) +
                 sum((self._include_dir(i) for i in includes), []) +
@@ -216,7 +216,7 @@ class CcCompiler(CcBaseCompiler):
     def accepts_pch(self):
         return True
 
-    def output_file(self, name, options):
+    def output_file(self, name, context):
         # XXX: MinGW's object format doesn't appear to be COFF...
         return ObjectFile(Path(name + '.o'), self.builder.object_format,
                           self.lang)
@@ -241,7 +241,7 @@ class CcPchCompiler(CcCompiler):
         # You can't pass a PCH to a PCH compiler!
         return False
 
-    def output_file(self, name, options):
+    def output_file(self, name, context):
         ext = '.gch' if self.builder.brand == 'gcc' else '.pch'
         return PrecompiledHeader(Path(name + ext), self.lang)
 
@@ -440,12 +440,12 @@ class CcLinker(BuildCommand):
             return ['--main={}'.format(entry_point)]
         return []
 
-    def flags(self, options, output, pkg=False):
-        pthread = getattr(options, 'pthread', False)
-        libraries = getattr(options, 'libs', [])
-        lib_dirs = getattr(options, 'lib_dirs', [])
-        rpath_dirs = getattr(options, 'rpath_dirs', [])
-        entry_point = getattr(options, 'entry_point', None)
+    def flags(self, output, context, pkg=False):
+        pthread = getattr(context, 'pthread', False)
+        libraries = getattr(context, 'libs', [])
+        lib_dirs = getattr(context, 'lib_dirs', [])
+        rpath_dirs = getattr(context, 'rpath_dirs', [])
+        entry_point = getattr(context, 'entry_point', None)
 
         return (self._pthread(pthread) +
                 self._lib_dirs(libraries, lib_dirs) +
@@ -483,9 +483,9 @@ class CcLinker(BuildCommand):
             libs.append('-lgcj')
         return libs
 
-    def libs(self, options, output, pkg=False):
-        libraries = getattr(options, 'libs', [])
-        raw_static = getattr(options, 'raw_static', True)
+    def libs(self, output, context, pkg=False):
+        libraries = getattr(context, 'libs', [])
+        raw_static = getattr(context, 'raw_static', True)
         return sum((self._link_lib(i, raw_static) for i in libraries), [])
 
     def _post_install(self, output, library):
@@ -513,7 +513,7 @@ class CcExecutableLinker(CcLinker):
         CcLinker.__init__(self, builder, env, name + '_link', name, command,
                           ldflags, ldlibs)
 
-    def output_file(self, name, options):
+    def output_file(self, name, context):
         path = Path(name + self.env.platform.executable_ext)
         return Executable(path, self.builder.object_format, self.lang)
 
@@ -534,16 +534,16 @@ class CcSharedLibraryLinker(CcLinker):
             result.append('-Wl,--out-implib=' + output[1])
         return result
 
-    def post_build(self, build, options, output):
+    def post_build(self, build, output, context):
         if isinstance(output, VersionedSharedLibrary):
             # Make symlinks for the various versions of the shared lib.
             Symlink(build, output.soname, output)
             Symlink(build, output.link, output.soname)
             return output.link
 
-    def output_file(self, name, options):
-        version = getattr(options, 'version', None)
-        soversion = getattr(options, 'soversion', None)
+    def output_file(self, name, context):
+        version = getattr(context, 'version', None)
+        soversion = getattr(context, 'soversion', None)
 
         head, tail = os.path.split(name)
         fmt = self.builder.object_format
@@ -589,8 +589,8 @@ class CcSharedLibraryLinker(CcLinker):
         else:
             return ['-Wl,-soname,' + soname.path.basename()]
 
-    def flags(self, options, output, pkg=False):
-        flags = CcLinker.flags(self, options, output, pkg)
+    def flags(self, output, context, pkg=False):
+        flags = CcLinker.flags(self, output, context, pkg)
         if not pkg:
             flags.extend(self._soname(first(output)))
         return flags

@@ -77,9 +77,9 @@ class PkgConfigPackage(Package):
         parser = argparse.ArgumentParser()
         parser.add_argument('-L', action='append', dest='lib_dirs')
         lib_dirs = parser.parse_known_args(dir_args)[0].lib_dirs or []
-        options = _PkgConfigOptions([Path(i, Root.absolute) for i in lib_dirs])
+        context = _PkgConfigOptions([Path(i, Root.absolute) for i in lib_dirs])
 
-        return result + linker.flags(options, output, pkg=True)
+        return result + linker.flags(output, context, pkg=True)
 
     def ldlibs(self, linker, output):
         # XXX: How should we ensure that these libs are linked statically when

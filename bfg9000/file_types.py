@@ -307,13 +307,13 @@ class CommonPackage(Package):
             raise AttributeError(e)
 
     def cflags(self, compiler, output):
-        return compiler.flags(self, output, pkg=True)
+        return compiler.flags(output, self, pkg=True)
 
     def ldflags(self, linker, output):
-        return linker.flags(self, output, pkg=True)
+        return linker.flags(output, self, pkg=True)
 
     def ldlibs(self, linker, output):
-        return linker.libs(self, output, pkg=True)
+        return linker.libs(output, self, pkg=True)
 
     def __repr__(self):
         return '<{type} {name}>'.format(

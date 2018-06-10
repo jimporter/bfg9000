@@ -131,14 +131,14 @@ class JvmCompiler(BuildCommand):
             return ['-cp', safe_str.join(dirs, os.pathsep)]
         return []
 
-    def flags(self, options, output, pkg=False):
-        libraries = getattr(options, 'libs', [])
+    def flags(self, output, context, pkg=False):
+        libraries = getattr(context, 'libs', [])
         return self._class_path(libraries)
 
     def link_flags(self, mode, defines):
         return []
 
-    def output_file(self, name, options):
+    def output_file(self, name, context):
         return ObjectFileList(Path(name + '.classlist'), Path(name + '.class'),
                               self.builder.object_format, self.lang)
 
@@ -170,7 +170,7 @@ class JarMaker(BuildCommand):
     def has_link_macros(self):
         return False
 
-    def pre_build(self, build, options, name):
+    def pre_build(self, build, name, context):
         # Fix up paths for the Class-Path field: escape spaces, use forward
         # slashes on Windows, and prefix Windows drive letters with '/' to
         # disambiguate them from URLs.
@@ -181,20 +181,20 @@ class JarMaker(BuildCommand):
                 p = p.replace('\\', '/')
             return p.replace(' ', '%20')
 
-        libs = getattr(options, 'libs', [])
-        libs = sum((i.libs for i in getattr(options, 'packages', [])), libs)
+        libs = getattr(context, 'libs', [])
+        libs = sum((i.libs for i in getattr(context, 'packages', [])), libs)
 
         dirs = uniques(i.path for i in libs)
         base = Path(name).parent()
 
-        options.manifest = File(Path(name + '-manifest.txt'))
-        with generated_file(build, self.env, options.manifest) as out:
+        context.manifest = File(Path(name + '-manifest.txt'))
+        with generated_file(build, self.env, context.manifest) as out:
             classpath = ' '.join(fix_path(i.relpath(base)) for i in dirs)
             if classpath:
                 out.write('Class-Path: {}\n'.format(classpath))
 
-            if getattr(options, 'entry_point', None):
-                out.write('Main-Class: {}\n'.format(options.entry_point))
+            if getattr(context, 'entry_point', None):
+                out.write('Main-Class: {}\n'.format(context.entry_point))
 
     def _call(self, cmd, input, output, manifest, libs=None, flags=None):
         return list(chain(
@@ -205,8 +205,8 @@ class JarMaker(BuildCommand):
         return ['@' + safe_str.safe_str(i) if isinstance(i, ObjectFileList)
                 else i for i in input]
 
-    def output_file(self, name, options):
-        if getattr(options, 'entry_point', None):
+    def output_file(self, name, context):
+        if getattr(context, 'entry_point', None):
             filetype = ExecutableLibrary
         else:
             filetype = Library

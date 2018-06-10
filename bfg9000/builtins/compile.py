@@ -62,16 +62,16 @@ class Compile(Edge):
         ) if pch else None
 
         if hasattr(self.compiler, 'pre_build'):
-            self.compiler.pre_build(build, self, name)
+            self.compiler.pre_build(build, name, self)
 
         output = self.compiler.output_file(name, self)
         public_output = None
 
         if hasattr(self.compiler, 'post_build'):
-            public_output = self.compiler.post_build(build, self, output)
+            public_output = self.compiler.post_build(build, output, self)
 
         self._internal_options = (
-            self.compiler.flags(self, output) +
+            self.compiler.flags(output, self) +
             sum((i.cflags(self.compiler, output) for i in self.packages), [])
         )
 
