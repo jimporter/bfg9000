@@ -248,8 +248,6 @@ class MsvcPchCompiler(MsvcBaseCompiler):
         output = MsvcPrecompiledHeader(
             pchpath, objpath, name, self.builder.object_format, self.lang
         )
-        if context.pch:
-            output.extra_objects = [context.pch.object_file]
         return [output, output.object_file]
 
 
