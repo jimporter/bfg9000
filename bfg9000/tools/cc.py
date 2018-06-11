@@ -178,7 +178,7 @@ class CcBaseCompiler(BuildCommand):
     def _pthread(self, pthread):
         return ['-pthread'] if pthread else []
 
-    def flags(self, output, context, pkg=False):
+    def flags(self, output, context):
         pthread = getattr(context, 'pthread', False)
         includes = getattr(context, 'includes', [])
         pch = getattr(context, 'pch', None)
@@ -440,7 +440,7 @@ class CcLinker(BuildCommand):
             return ['--main={}'.format(entry_point)]
         return []
 
-    def flags(self, output, context, pkg=False):
+    def flags(self, output, context):
         pthread = getattr(context, 'pthread', False)
         libraries = getattr(context, 'libs', [])
         lib_dirs = getattr(context, 'lib_dirs', [])
@@ -483,7 +483,7 @@ class CcLinker(BuildCommand):
             libs.append('-lgcj')
         return libs
 
-    def libs(self, output, context, pkg=False):
+    def libs(self, output, context):
         libraries = getattr(context, 'libs', [])
         raw_static = getattr(context, 'raw_static', True)
         return sum((self._link_lib(i, raw_static) for i in libraries), [])
@@ -589,9 +589,10 @@ class CcSharedLibraryLinker(CcLinker):
         else:
             return ['-Wl,-soname,' + soname.path.basename()]
 
-    def flags(self, output, context, pkg=False):
-        flags = CcLinker.flags(self, output, context, pkg)
-        if not pkg:
+    def flags(self, output, context):
+        is_package = getattr(context, 'is_package', False)
+        flags = CcLinker.flags(self, output, context)
+        if not is_package:
             flags.extend(self._soname(first(output)))
         return flags
 

@@ -1,6 +1,5 @@
 import argparse
 import subprocess
-from collections import namedtuple
 
 from . import tool
 from .common import SimpleCommand
@@ -12,7 +11,12 @@ from ..objutils import memoize
 from ..path import Path, Root
 from ..versioning import check_version, Version
 
-_PkgConfigOptions = namedtuple('_PkgConfigOptions', ['rpath_dirs'])
+
+class _PkgConfigOptions(object):
+    is_package = True
+
+    def __init__(self, rpath_dirs):
+        self.rpath_dirs = rpath_dirs
 
 
 @tool('pkg_config')
@@ -79,7 +83,7 @@ class PkgConfigPackage(Package):
         lib_dirs = parser.parse_known_args(dir_args)[0].lib_dirs or []
         context = _PkgConfigOptions([Path(i, Root.absolute) for i in lib_dirs])
 
-        return result + linker.flags(output, context, pkg=True)
+        return result + linker.flags(output, context)
 
     def ldlibs(self, linker, output):
         # XXX: How should we ensure that these libs are linked statically when

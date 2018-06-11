@@ -296,6 +296,8 @@ class Package(object):
 
 
 class CommonPackage(Package):
+    is_package = True
+
     def __init__(self, name, format, **kwargs):
         Package.__init__(self, name, format)
         self.all_options = kwargs
@@ -307,13 +309,13 @@ class CommonPackage(Package):
             raise AttributeError(e)
 
     def cflags(self, compiler, output):
-        return compiler.flags(output, self, pkg=True)
+        return compiler.flags(output, self)
 
     def ldflags(self, linker, output):
-        return linker.flags(output, self, pkg=True)
+        return linker.flags(output, self)
 
     def ldlibs(self, linker, output):
-        return linker.libs(output, self, pkg=True)
+        return linker.libs(output, self)
 
     def __repr__(self):
         return '<{type} {name}>'.format(

@@ -146,7 +146,7 @@ class MsvcBaseCompiler(BuildCommand):
     def _include_pch(self, pch):
         return ['/Yu' + pch.header_name]
 
-    def flags(self, output, context, pkg=False):
+    def flags(self, output, context):
         syntax = getattr(context, 'syntax', 'msvc')
         includes = getattr(context, 'includes', [])
         pch = getattr(context, 'pch', None)
@@ -324,7 +324,7 @@ class MsvcLinker(BuildCommand):
         prefix = '-L' if syntax == 'cc' else '/LIBPATH:'
         return [prefix + i for i in dirs]
 
-    def flags(self, output, context, pkg=False):
+    def flags(self, output, context):
         syntax = getattr(context, 'syntax', 'msvc')
         libraries = getattr(context, 'libs', [])
         lib_dirs = getattr(context, 'lib_dirs', [])
@@ -352,7 +352,7 @@ class MsvcLinker(BuildCommand):
     def always_libs(self, primary):
         return []
 
-    def libs(self, output, context, pkg=False):
+    def libs(self, output, context):
         syntax = getattr(context, 'syntax', 'msvc')
         libraries = getattr(context, 'libs', [])
         return sum((self._link_lib(i, syntax) for i in libraries), [])

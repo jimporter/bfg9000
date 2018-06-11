@@ -131,7 +131,7 @@ class JvmCompiler(BuildCommand):
             return ['-cp', safe_str.join(dirs, os.pathsep)]
         return []
 
-    def flags(self, output, context, pkg=False):
+    def flags(self, output, context):
         libraries = getattr(context, 'libs', [])
         return self._class_path(libraries)
 
