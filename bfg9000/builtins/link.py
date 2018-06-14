@@ -13,8 +13,8 @@ from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..build_inputs import build_input, Edge
 from ..file_types import *
-from ..iterutils import (first, iterate, listify, merge_dicts, merge_into_dict,
-                         slice_dict, uniques)
+from ..iterutils import (first, flatten, iterate, listify, merge_dicts,
+                         merge_into_dict, slice_dict, uniques)
 from ..path import Path, Root
 from ..shell import posix as pshell
 
@@ -63,9 +63,8 @@ class Link(Edge):
             files, includes=includes, pch=pch, libs=self.user_libs,
             packages=self.user_packages, options=compile_options, lang=lang
         )
-        self.files = sum(
-            (getattr(i, 'extra_objects', []) for i in self.user_files),
-            self.user_files
+        self.files = self.user_files + flatten(
+            getattr(i, 'extra_objects', []) for i in self.user_files
         )
 
         if ( len(self.files) == 0 and
@@ -168,8 +167,8 @@ class DynamicLink(Link):
     def _fill_options(self, env, output):
         if hasattr(self.linker, 'flags'):
             self._internal_options = (
-                sum((i.ldflags(self.linker, output)
-                     for i in self.packages), []) +
+                flatten(i.ldflags(self.linker, output)
+                        for i in self.packages) +
                 self.linker.flags(output, self)
             )
         else:
@@ -178,9 +177,8 @@ class DynamicLink(Link):
         if hasattr(self.linker, 'libs'):
             linkers = (env.builder(i).linker(self.mode) for i in self.langs)
             self.lib_options = (
-                sum((i.always_libs(i is self.linker) for i in linkers), []) +
-                sum((i.ldlibs(self.linker, output)
-                     for i in self.packages), []) +
+                flatten(i.always_libs(i is self.linker) for i in linkers) +
+                flatten(i.ldlibs(self.linker, output) for i in self.packages) +
                 self.linker.libs(output, self)
             )
 

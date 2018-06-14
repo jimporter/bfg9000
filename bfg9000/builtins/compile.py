@@ -8,7 +8,7 @@ from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..build_inputs import build_input, Edge
 from ..file_types import *
-from ..iterutils import first, iterate, listify, uniques
+from ..iterutils import first, flatten, iterate, listify, uniques
 from ..path import Path, Root
 from ..shell import posix as pshell
 
@@ -72,7 +72,7 @@ class Compile(Edge):
 
         self._internal_options = (
             self.compiler.flags(output, self) +
-            sum((i.cflags(self.compiler, output) for i in self.packages), [])
+            flatten(i.cflags(self.compiler, output) for i in self.packages)
         )
 
         Edge.__init__(self, build, output, public_output, extra_deps)

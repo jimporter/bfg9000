@@ -85,6 +85,27 @@ class TestUnlistify(unittest.TestCase):
         self.assertTrue(x is res)
 
 
+class TestFlatten(unittest.TestCase):
+    def test_empty(self):
+        self.assertEqual(flatten([]), [])
+        self.assertEqual(flatten(i for i in range(0)), [])
+
+    def test_default_type(self):
+        self.assertEqual(flatten([[0, 1]] * 3), [0, 1, 0, 1, 0, 1])
+        self.assertEqual(flatten([i, i + 1] for i in range(3)),
+                         [0, 1, 1, 2, 2, 3])
+
+    def test_custom_type(self):
+        class custom_list(list):
+            def __eq__(self, rhs):
+                return type(self) == type(rhs) and list.__eq__(self, rhs)
+
+        self.assertEqual(flatten([[0, 1]] * 3, custom_list),
+                         custom_list([0, 1, 0, 1, 0, 1]))
+        self.assertEqual(flatten(([i, i + 1] for i in range(3)), custom_list),
+                         custom_list([0, 1, 1, 2, 2, 3]))
+
+
 class TestTween(unittest.TestCase):
     def test_none(self):
         self.assertEqual(list(tween([], ',')), [])

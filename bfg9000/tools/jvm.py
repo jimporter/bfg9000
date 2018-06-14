@@ -8,7 +8,7 @@ from .. import shell
 from ..builtins.file_types import generated_file
 from ..exceptions import PackageResolutionError
 from ..file_types import *
-from ..iterutils import iterate, uniques
+from ..iterutils import flatten, iterate, uniques
 from ..path import Path, Root
 from ..versioning import detect_version
 
@@ -181,9 +181,9 @@ class JarMaker(BuildCommand):
                 p = p.replace('\\', '/')
             return p.replace(' ', '%20')
 
-        libs = getattr(context, 'libs', [])
-        libs = sum((i.libs for i in getattr(context, 'packages', [])), libs)
-
+        libs = getattr(context, 'libs', []) + flatten(
+            i.libs for i in getattr(context, 'packages', [])
+        )
         dirs = uniques(i.path for i in libs)
         base = Path(name).parent()
 

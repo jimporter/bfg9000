@@ -12,8 +12,8 @@ from .ld import LdLinker
 from ..builtins.symlink import Symlink
 from ..exceptions import PackageResolutionError
 from ..file_types import *
-from ..iterutils import (default_sentinel, first, iterate, listify, uniques,
-                         recursive_walk)
+from ..iterutils import (default_sentinel, first, flatten, iterate, listify,
+                         uniques, recursive_walk)
 from ..path import install_path, Path, Root
 from ..versioning import detect_version, SpecifierSet
 
@@ -184,7 +184,7 @@ class CcBaseCompiler(BuildCommand):
         pch = getattr(context, 'pch', None)
 
         return (self._pthread(pthread) +
-                sum((self._include_dir(i) for i in includes), []) +
+                flatten(self._include_dir(i) for i in includes) +
                 (self._include_pch(pch) if pch else []))
 
     def link_flags(self, mode, defines):
@@ -486,7 +486,7 @@ class CcLinker(BuildCommand):
     def libs(self, output, context):
         libraries = getattr(context, 'libs', [])
         raw_static = getattr(context, 'raw_static', True)
-        return sum((self._link_lib(i, raw_static) for i in libraries), [])
+        return flatten(self._link_lib(i, raw_static) for i in libraries)
 
     def _post_install(self, output, library):
         if self.builder.object_format not in ['elf', 'mach-o']:

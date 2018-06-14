@@ -9,7 +9,7 @@ from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..build_inputs import build_input
 from ..file_types import Directory, File
-from ..iterutils import iterate
+from ..iterutils import flatten, iterate
 
 
 @build_input('install')
@@ -124,7 +124,7 @@ def _uninstall_command(install_outputs, rm):
                     iterate(output.files)]
         return [path.install_path(output.path, output.install_root)]
 
-    return rm(sum((uninstall_line(i) for i in install_outputs), []))
+    return rm(flatten(uninstall_line(i) for i in install_outputs))
 
 
 @make.post_rule

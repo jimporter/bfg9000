@@ -2,9 +2,9 @@ from collections import Iterable
 from six import iteritems, string_types
 from six.moves import range, zip
 
-__all__ = ['default_sentinel', 'first', 'isiterable', 'iterate', 'listify',
-           'merge_dicts', 'merge_into_dict', 'recursive_walk', 'slice_dict',
-           'tween', 'uniques', 'unlistify']
+__all__ = ['default_sentinel', 'first', 'flatten', 'isiterable', 'iterate',
+           'listify', 'merge_dicts', 'merge_into_dict', 'recursive_walk',
+           'slice_dict', 'tween', 'uniques', 'unlistify']
 
 # This could go in a funcutils module if we ever create one...
 default_sentinel = object()
@@ -55,6 +55,17 @@ def unlistify(thing):
         return thing[0]
     else:
         return thing
+
+
+def flatten(iterables, type=list):
+    result = type()
+    # Performance tests on the kinds of data common in bfg (generators calling
+    # a function returning a list on each step) show that this is consistently
+    # faster than using `list(chain.from_iterable(iterables))`. It's also
+    # *much* faster than using `sum(iterables, [])`.
+    for i in iterables:
+        result.extend(i)
+    return result
 
 
 def tween(iterable, delim, prefix=None, suffix=None):

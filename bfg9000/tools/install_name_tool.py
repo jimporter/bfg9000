@@ -1,6 +1,6 @@
 from . import tool
 from .common import SimpleCommand
-from ..iterutils import listify
+from ..iterutils import flatten, listify
 
 
 @tool('install_name_tool')
@@ -19,7 +19,7 @@ class InstallNameTool(SimpleCommand):
             args += ['-id', id]
         if delete_rpath:
             args += ['-delete_rpath', delete_rpath]
-        args = sum((['-change'] + listify(i) for i in changes), args)
+        args += flatten(['-change'] + listify(i) for i in changes)
 
         if args:
             return cmd + args + [file]

@@ -9,7 +9,7 @@ from .file_types import generated_file
 from .install import can_install
 from ..build_inputs import build_input
 from ..file_types import *
-from ..iterutils import iterate, uniques, isiterable, recursive_walk
+from ..iterutils import flatten, iterate, uniques, isiterable, recursive_walk
 from ..objutils import objectify
 from ..safe_str import literal, shell_literal
 from ..shell import posix as pshell
@@ -119,7 +119,7 @@ class RequirementSet(object):
                 other.remove(i.name)
 
     def split(self, single=False):
-        return sorted(sum((i.split(single) for i in self), []),
+        return sorted(flatten(i.split(single) for i in self),
                       key=lambda x: x.name)
 
     def __iter__(self):
@@ -287,9 +287,9 @@ class PkgConfigInfo(object):
                                            [RequirementSet(), []])
         conflicts = self.conflicts or RequirementSet()
 
-        fwd_ldflags = sum(
-            (i.forward_opts['options'] if hasattr(i, 'forward_opts') else []
-             for i in chain(libs, libs_private)), []
+        fwd_ldflags = flatten(
+            i.forward_opts['options'] if hasattr(i, 'forward_opts') else []
+            for i in chain(libs, libs_private)
         )
 
         # Add all the (unique) dependent libs to libs_private, unless they're

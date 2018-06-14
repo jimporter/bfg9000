@@ -9,7 +9,7 @@ from ..arguments.windows import ArgumentParser
 from ..builtins.file_types import generated_file
 from ..exceptions import PackageResolutionError
 from ..file_types import *
-from ..iterutils import default_sentinel, iterate, listify, uniques
+from ..iterutils import default_sentinel, flatten, iterate, listify, uniques
 from ..languages import lang2src
 from ..path import Path, Root
 from ..versioning import detect_version
@@ -150,8 +150,8 @@ class MsvcBaseCompiler(BuildCommand):
         syntax = getattr(context, 'syntax', 'msvc')
         includes = getattr(context, 'includes', [])
         pch = getattr(context, 'pch', None)
-        return sum((self._include_dir(i, syntax) for i in includes),
-                   self._include_pch(pch) if pch else [])
+        return ((self._include_pch(pch) if pch else []) +
+                flatten(self._include_dir(i, syntax) for i in includes))
 
     def link_flags(self, mode, defines):
         return ['/D' + i for i in defines]
@@ -355,7 +355,7 @@ class MsvcLinker(BuildCommand):
     def libs(self, output, context):
         syntax = getattr(context, 'syntax', 'msvc')
         libraries = getattr(context, 'libs', [])
-        return sum((self._link_lib(i, syntax) for i in libraries), [])
+        return flatten(self._link_lib(i, syntax) for i in libraries)
 
 
 class MsvcExecutableLinker(MsvcLinker):
