@@ -51,9 +51,16 @@ class TestPath(unittest.TestCase):
         p = Path('', Root.srcdir)
         self.assertRaises(ValueError, p.parent)
 
+        p = Path('foo/bar', InstallRoot.bindir, True)
+        self.assertEqual(p.parent(), Path('foo', InstallRoot.bindir, True))
+
     def test_append(self):
         p = Path('foo', Root.srcdir)
         self.assertEqual(p.append('bar'), Path('foo/bar', Root.srcdir))
+
+        p = Path('foo', InstallRoot.bindir, True)
+        self.assertEqual(p.append('bar'),
+                         Path('foo/bar', InstallRoot.bindir, True))
 
     def test_ext(self):
         p = Path('foo.txt', Root.srcdir)
@@ -63,12 +70,23 @@ class TestPath(unittest.TestCase):
         p = Path('foo', Root.srcdir)
         self.assertEqual(p.addext('.txt'), Path('foo.txt', Root.srcdir))
 
+        p = Path('foo', InstallRoot.bindir, True)
+        self.assertEqual(p.addext('.txt'),
+                         Path('foo.txt', InstallRoot.bindir, True))
+
     def test_stripext(self):
         p = Path('foo.txt', Root.srcdir)
         self.assertEqual(p.stripext(), Path('foo', Root.srcdir))
-
         p = Path('foo.txt', Root.srcdir)
         self.assertEqual(p.stripext('.cpp'), Path('foo.cpp', Root.srcdir))
+
+        p = Path('foo', Root.srcdir)
+        self.assertEqual(p.stripext(), Path('foo', Root.srcdir))
+        p = Path('foo', Root.srcdir)
+        self.assertEqual(p.stripext('.cpp'), Path('foo.cpp', Root.srcdir))
+
+        p = Path('foo.txt', InstallRoot.bindir, True)
+        self.assertEqual(p.stripext(), Path('foo', InstallRoot.bindir, True))
 
     def test_split(self):
         p = Path('foo/bar/baz', Root.srcdir)
@@ -112,6 +130,10 @@ class TestPath(unittest.TestCase):
         p = Path('foo/bar', Root.srcdir)
         self.assertEqual(p.reroot(Root.builddir),
                          Path('foo/bar', Root.builddir))
+
+        p = Path('foo/bar', InstallRoot.bindir, True)
+        self.assertEqual(p.reroot(InstallRoot.libdir),
+                         Path('foo/bar', InstallRoot.libdir, True))
 
     def test_to_json(self):
         p = Path('foo', Root.srcdir)

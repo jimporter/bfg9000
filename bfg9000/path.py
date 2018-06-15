@@ -40,22 +40,22 @@ class Path(safe_str.safe_string):
     def parent(self):
         if not self.suffix:
             raise ValueError('already at root')
-        return Path(os.path.dirname(self.suffix), self.root)
+        return Path(os.path.dirname(self.suffix), self.root, self.destdir)
 
     def append(self, path):
-        return Path(os.path.join(self.suffix, path), self.root)
+        return Path(os.path.join(self.suffix, path), self.root, self.destdir)
 
     def ext(self):
         return os.path.splitext(self.suffix)[1]
 
     def addext(self, ext):
-        return Path(self.suffix + ext, self.root)
+        return Path(self.suffix + ext, self.root, self.destdir)
 
     def stripext(self, replace=None):
         name = os.path.splitext(self.suffix)[0]
         if replace:
             name += replace
-        return Path(name, self.root)
+        return Path(name, self.root, self.destdir)
 
     def split(self):
         # This is guaranteed to work since `suffix` is normalized.
@@ -73,7 +73,7 @@ class Path(safe_str.safe_string):
             return os.path.relpath(self.suffix or '.', start.suffix or '.')
 
     def reroot(self, root=Root.builddir):
-        return Path(self.suffix, root)
+        return Path(self.suffix, root, self.destdir)
 
     def to_json(self):
         return (self.suffix, self.root.name, self.destdir)
@@ -152,7 +152,13 @@ def abspath(path):
     return Path(os.path.abspath(path), Root.absolute)
 
 
-def install_path(path, install_root, directory=False, destdir=True):
+def install_path(path, install_root, directory=False, destdir=True,
+                 absolute_ok=False):
+    if path.root == Root.absolute:
+        if not absolute_ok:
+            raise TypeError('path is absolute')
+        return path
+
     if path.root == Root.srcdir:
         suffix = '.' if directory else os.path.basename(path.suffix)
     else:

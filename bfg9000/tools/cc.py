@@ -388,7 +388,8 @@ class CcLinker(BuildCommand):
             # `patchelf` during installation.
             output._rpath = uniques(chain(
                 getattr(output, '_rpath', []),
-                (install_path(i.path, i.install_root, destdir=False).parent()
+                (install_path(i.path, i.install_root, destdir=False,
+                              absolute_ok=True).parent()
                  for i in runtime_libs),
                 extra_dirs
             ))

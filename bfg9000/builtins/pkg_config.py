@@ -225,19 +225,21 @@ class PkgConfigInfo(object):
             out.write_literal('\n')
 
     def write(self, out, env):
+        def pkg_installify(f):
+            return installify(f, destdir=False, absolute_ok=True)
+
         data = self._process_inputs()
         out = Writer(out)
 
         pkg = CommonPackage(
             None, None, syntax='cc', raw_static=False,
-            includes=[installify(i, destdir=False) for i in data['includes']],
-            libs=[installify(i.all[0], destdir=False) for i in data['libs']],
+            includes=[pkg_installify(i) for i in data['includes']],
+            libs=[pkg_installify(i.all[0]) for i in data['libs']],
             **data['extra_fields']
         )
         pkg_private = CommonPackage(
             None, None, syntax='cc', raw_static=False,
-            libs=[installify(i.all[0], destdir=False)
-                  for i in data['libs_private']],
+            libs=[pkg_installify(i.all[0]) for i in data['libs_private']],
             **data['extra_fields_private']
         )
 

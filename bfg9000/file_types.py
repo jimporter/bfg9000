@@ -12,11 +12,11 @@ from .path import InstallRoot as _InstallRoot, install_path as _install_path
 from .safe_str import safe_str as _safe_str
 
 
-def installify(file, destdir=True):
+def installify(file, *args, **kwargs):
     file = _copy.copy(file)
     file.path = _install_path(
         file.path, file.install_root, directory=isinstance(file, Directory),
-        destdir=destdir
+        *args, **kwargs
     )
     return file
 

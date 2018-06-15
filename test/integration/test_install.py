@@ -1,4 +1,6 @@
-import os.path
+import os
+import tempfile
+import shutil
 
 from . import *
 pjoin = os.path.join
@@ -77,33 +79,51 @@ class TestDestDir(IntegrationTest):
         IntegrationTest.__init__(self, 'install', install=True,
                                  configure=False, *args, **kwargs)
 
-    def _check_installed(self, destdir=''):
-        self.assertDirectory(destdir + self.installdir, [
-            '/tmp' + pjoin(self.includedir, 'shared_a.hpp'),
-            '/tmp' + pjoin(self.includedir, 'static_a.hpp'),
-            '/tmp' + pjoin(self.bindir, executable('program').path),
-            '/tmp' + pjoin(self.libdir, shared_library('shared_a').path),
-            '/tmp' + pjoin(self.libdir, shared_library('shared_b').path),
-            '/tmp' + pjoin(self.libdir, static_library('static_a').path),
+    def setUp(self):
+        self.destdir = tempfile.mkdtemp(prefix='destdir-')
+
+    def tearDown(self):
+        cleandir(self.destdir, recreate=False)
+
+    def _check_installed(self):
+        self.assertDirectory(self.destdir + self.installdir, [
+            self.destdir + pjoin(self.includedir, 'shared_a.hpp'),
+            self.destdir + pjoin(self.includedir, 'static_a.hpp'),
+            self.destdir + pjoin(self.bindir, executable('program').path),
+            self.destdir + pjoin(self.libdir, shared_library('shared_a').path),
+            self.destdir + pjoin(self.libdir, shared_library('shared_b').path),
+            self.destdir + pjoin(self.libdir, static_library('static_a').path),
         ])
+
+    def _check_run(self):
+        path = os.path.normpath(self.destdir + self.installdir)
+        for i in os.listdir(path):
+            shutil.move(pjoin(path, i), self.installdir)
+        self.assertOutput(
+            [pjoin(self.bindir, executable('program').path)],
+            'hello from shared a!\nhello from shared b!\n' +
+            'hello from static a!\nhello from static b!\n'
+        )
 
     @skip_if_backend('msbuild')
     def test_install_destdir(self):
-        self.configure(env={'DESTDIR': '/tmp'})
+        self.configure(env={'DESTDIR': self.destdir})
         self.build('install')
-        self._check_installed('/tmp')
+        self._check_installed()
+        self._check_run()
 
     @only_if_backend('make')
     def test_install_override_destdir(self):
         self.configure()
-        self.build('install', extra_args=['DESTDIR=/tmp'])
-        self._check_installed('/tmp')
+        self.build('install', extra_args=['DESTDIR={}'.format(self.destdir)])
+        self._check_installed()
+        self._check_run()
 
     @skip_if_backend('msbuild')
     def test_uninstall_destdir(self):
-        self.configure(env={'DESTDIR': '/tmp'})
+        self.configure(env={'DESTDIR': self.destdir})
         self.build('install')
-        self._check_installed('/tmp')
+        self._check_installed()
 
         self.build('uninstall')
-        self.assertDirectory('/tmp' + self.installdir, [])
+        self.assertDirectory(self.destdir + self.installdir, [])
