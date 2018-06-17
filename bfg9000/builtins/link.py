@@ -123,7 +123,7 @@ class Link(Edge):
         Edge.__init__(self, build, output, public_output, extra_deps)
 
         if hasattr(self.linker, 'post_install'):
-            primary.post_install = self.linker.post_install(output)
+            primary.post_install = self.linker.post_install(output, self)
         build['defaults'].add(primary)
 
     @classmethod

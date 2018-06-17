@@ -424,7 +424,7 @@ class CcLinker(BuildCommand):
             path = Path('.').relpath(output.path.parent())
             # Store the temporary rpath so we can remove it during installation
             # with `install_name_tool`.
-            output._rpath = (base if path == '.' else os.path.join(base, path))
+            output._rpath = base if path == '.' else os.path.join(base, path)
             return ['-Wl,-rpath,' + output._rpath]
         else:
             # This object format must not support rpaths, so just return.
@@ -489,7 +489,7 @@ class CcLinker(BuildCommand):
         raw_static = getattr(context, 'raw_static', True)
         return flatten(self._link_lib(i, raw_static) for i in libraries)
 
-    def _post_install(self, output, library):
+    def _post_install(self, output, is_library, context):
         if self.builder.object_format not in ['elf', 'mach-o']:
             return None
 
@@ -502,11 +502,11 @@ class CcLinker(BuildCommand):
                         install_path(i.path, i.install_root, destdir=False))
                        for i in output.runtime_deps]
             return self.env.tool('install_name_tool')(
-                path, path if library else None, rpath, changes
+                path, path if is_library else None, rpath, changes
             )
 
-    def post_install(self, output):
-        return self._post_install(output, False)
+    def post_install(self, output, context):
+        return self._post_install(output, False, context)
 
 
 class CcExecutableLinker(CcLinker):
@@ -597,8 +597,8 @@ class CcSharedLibraryLinker(CcLinker):
             flags.extend(self._soname(first(output)))
         return flags
 
-    def post_install(self, output):
-        return self._post_install(output, True)
+    def post_install(self, output, context):
+        return self._post_install(output, True, context)
 
 
 class CcPackageResolver(object):
