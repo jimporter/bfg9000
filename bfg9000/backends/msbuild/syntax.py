@@ -228,7 +228,7 @@ class Project(object):
 
         # Some projects map one platform name to another in the .sln file (e.g.
         # "x86" => "Win32"). I'm not sure why this is, but we replicate it via
-        # a "platform" and "real platform"so that C++ builds work from a VS
+        # a "platform" and "real platform" so that C++ builds work from a VS
         # 2017 command prompt.
         self.platform = env.getvar('PLATFORM', 'Win32')
         self.real_platform = self.platform

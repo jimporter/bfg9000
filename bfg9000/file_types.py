@@ -308,13 +308,13 @@ class CommonPackage(Package):
         except KeyError as e:
             raise AttributeError(e)
 
-    def cflags(self, compiler, output):
-        return compiler.flags(output, self)
+    def compile_options(self, compiler, output):
+        return compiler.options(output, self)
 
-    def ldflags(self, linker, output):
-        return linker.flags(output, self)
+    def link_options(self, linker, output):
+        return linker.options(output, self)
 
-    def ldlibs(self, linker, output):
+    def link_libs(self, linker, output):
         return linker.libs(output, self)
 
     def __repr__(self):

@@ -131,11 +131,11 @@ class JvmCompiler(BuildCommand):
             return ['-cp', safe_str.join(dirs, os.pathsep)]
         return []
 
-    def flags(self, output, context):
+    def options(self, output, context):
         libraries = getattr(context, 'libs', [])
         return self._class_path(libraries)
 
-    def link_flags(self, mode, defines):
+    def link_options(self, mode, defines):
         return []
 
     def output_file(self, name, context):

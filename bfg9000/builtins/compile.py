@@ -12,7 +12,7 @@ from ..iterutils import first, flatten, iterate, listify, uniques
 from ..path import Path, Root
 from ..shell import posix as pshell
 
-build_input('compile_options')(lambda build_inputs, env: defaultdict(list))
+build_input('compile_flags')(lambda build_inputs, env: defaultdict(list))
 
 
 class ObjectFiles(list):
@@ -72,8 +72,9 @@ class Compile(Edge):
             public_output = self.compiler.post_build(build, output, self)
 
         self._internal_options = (
-            self.compiler.flags(output, self) +
-            flatten(i.cflags(self.compiler, output) for i in self.packages)
+            flatten(i.compile_options(self.compiler, output)
+                    for i in self.packages) +
+            self.compiler.options(output, self)
         )
 
         Edge.__init__(self, build, output, public_output, extra_deps)
@@ -82,13 +83,13 @@ class Compile(Edge):
             primary.post_install = self.compiler.post_install(output, self)
 
     def add_link_options(self, *args, **kwargs):
-        opts = self.compiler.link_flags(*args, **kwargs)
+        opts = self.compiler.link_options(*args, **kwargs)
         self._internal_options.extend(opts)
         if self.pch and self.pch.creator:
             self.pch.creator.add_link_options(*args, **kwargs)
 
     @property
-    def options(self):
+    def flags(self):
         return self._internal_options + self.user_options
 
 
@@ -163,7 +164,7 @@ def precompiled_header(builtins, build, env, name=None, file=None, **kwargs):
 @builtin.function('build_inputs')
 def global_options(build, options, lang):
     for i in iterate(lang):
-        build['compile_options'][i].extend(pshell.listify(options))
+        build['compile_flags'][i].extend(pshell.listify(options))
 
 
 def _get_flags(backend, rule, build_inputs, buildfile):
@@ -174,12 +175,13 @@ def _get_flags(backend, rule, build_inputs, buildfile):
         global_cflags, cflags = backend.flags_vars(
             rule.compiler.flags_var,
             ( rule.compiler.global_flags +
-              build_inputs['compile_options'][rule.compiler.lang] ),
+              build_inputs['compile_flags'][rule.compiler.lang] ),
             buildfile
         )
-        cmd_kwargs = {'flags': cflags}
-        if rule.options:
-            variables[cflags] = [global_cflags] + rule.options
+        cmd_kwargs['flags'] = cflags
+        flags = rule.flags
+        if flags:
+            variables[cflags] = [global_cflags] + flags
 
     return variables, cmd_kwargs
 

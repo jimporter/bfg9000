@@ -146,14 +146,14 @@ class MsvcBaseCompiler(BuildCommand):
     def _include_pch(self, pch):
         return ['/Yu' + pch.header_name]
 
-    def flags(self, output, context):
+    def options(self, output, context):
         syntax = getattr(context, 'syntax', 'msvc')
         includes = getattr(context, 'includes', [])
         pch = getattr(context, 'pch', None)
         return ((self._include_pch(pch) if pch else []) +
                 flatten(self._include_dir(i, syntax) for i in includes))
 
-    def link_flags(self, mode, defines):
+    def link_options(self, mode, defines):
         return ['/D' + i for i in defines]
 
     def parse_flags(self, flags):
@@ -228,19 +228,19 @@ class MsvcPchCompiler(MsvcBaseCompiler):
     def _create_pch(self, header):
         return ['/Yc' + header.path.suffix]
 
-    def flags(self, output, context):
+    def options(self, output, context):
         syntax = getattr(context, 'syntax', 'msvc')
         header = getattr(context, 'file', None)
-        flags = []
+        options = []
         if getattr(context, 'inject_include_dir', False):
             # Add the include path for the generated header; see pre_build()
             # above for more details.
             d = Directory(header.path.parent(), None)
-            flags.extend(self._include_dir(d, syntax))
+            options.extend(self._include_dir(d, syntax))
 
-        flags.extend(MsvcBaseCompiler.flags(self, output, context) +
-                     (self._create_pch(header) if header else []))
-        return flags
+        options.extend(MsvcBaseCompiler.options(self, output, context) +
+                       (self._create_pch(header) if header else []))
+        return options
 
     def output_file(self, name, context):
         pchpath = Path(name).stripext('.pch')
@@ -324,7 +324,7 @@ class MsvcLinker(BuildCommand):
         prefix = '-L' if syntax == 'cc' else '/LIBPATH:'
         return [prefix + i for i in dirs]
 
-    def flags(self, output, context):
+    def options(self, output, context):
         syntax = getattr(context, 'syntax', 'msvc')
         libraries = getattr(context, 'libs', [])
         lib_dirs = getattr(context, 'lib_dirs', [])

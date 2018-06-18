@@ -244,12 +244,12 @@ class PkgConfigInfo(object):
         )
 
         builder = env.builder(self.lang)
-        cflags = pkg.cflags(builder.compiler, None)
+        cflags = pkg.compile_options(builder.compiler, None)
 
         linker = builder.linker('executable')
-        ldflags = pkg.ldflags(linker, None) + pkg.ldlibs(linker, None)
-        ldflags_private = (pkg_private.ldflags(linker, None) +
-                           pkg_private.ldlibs(linker, None))
+        ldflags = pkg.link_options(linker, None) + pkg.link_libs(linker, None)
+        ldflags_private = (pkg_private.link_options(linker, None) +
+                           pkg_private.link_libs(linker, None))
 
         for i in path.InstallRoot:
             if i != path.InstallRoot.bindir:

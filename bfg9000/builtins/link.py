@@ -18,7 +18,7 @@ from ..iterutils import (first, flatten, iterate, listify, merge_dicts,
 from ..path import Path, Root
 from ..shell import posix as pshell
 
-build_input('link_options')(lambda build_inputs, env: {
+build_input('link_flags')(lambda build_inputs, env: {
     'dynamic': defaultdict(list), 'static': defaultdict(list)
 })
 
@@ -160,25 +160,26 @@ class DynamicLink(Link):
     _prefix = ''
 
     @property
-    def options(self):
+    def flags(self):
         return (self._internal_options + self.forwarded_options +
                 self.user_options)
 
     def _fill_options(self, env, output):
-        if hasattr(self.linker, 'flags'):
+        if hasattr(self.linker, 'options'):
             self._internal_options = (
-                flatten(i.ldflags(self.linker, output)
+                flatten(i.link_options(self.linker, output)
                         for i in self.packages) +
-                self.linker.flags(output, self)
+                self.linker.options(output, self)
             )
         else:
             self._internal_options = []
 
         if hasattr(self.linker, 'libs'):
             linkers = (env.builder(i).linker(self.mode) for i in self.langs)
-            self.lib_options = (
+            self.lib_flags = (
                 flatten(i.always_libs(i is self.linker) for i in linkers) +
-                flatten(i.ldlibs(self.linker, output) for i in self.packages) +
+                flatten(i.link_libs(self.linker, output)
+                        for i in self.packages) +
                 self.linker.libs(output, self)
             )
 
@@ -218,7 +219,7 @@ class StaticLink(Link):
         Link.__init__(self, *args, **kwargs)
 
     @property
-    def options(self):
+    def flags(self):
         # Only pass the static-link options to the static linker. The other
         # options are forwarded on to the dynamic linker when this library is
         # used.
@@ -357,7 +358,7 @@ def whole_archive(builtins, name, *args, **kwargs):
 @builtin.function('build_inputs')
 def global_link_options(build, options, family='native', mode='dynamic'):
     for i in iterate(family):
-        build['link_options'][mode][i].extend(pshell.listify(options))
+        build['link_flags'][mode][i].extend(pshell.listify(options))
 
 
 def _get_flags(backend, rule, build_inputs, buildfile):
@@ -368,20 +369,22 @@ def _get_flags(backend, rule, build_inputs, buildfile):
         global_ldflags, ldflags = backend.flags_vars(
             rule.linker.flags_var,
             (rule.linker.global_flags +
-             build_inputs['link_options'][rule.base_mode][rule.linker.family]),
+             build_inputs['link_flags'][rule.base_mode][rule.linker.family]),
             buildfile
         )
-        cmd_kwargs = {'flags': ldflags}
-        if rule.options:
-            variables[ldflags] = [global_ldflags] + rule.options
+        cmd_kwargs['flags'] = ldflags
+        flags = rule.flags
+        if flags:
+            variables[ldflags] = [global_ldflags] + flags
 
     if hasattr(rule.linker, 'libs_var'):
         global_ldlibs, ldlibs = backend.flags_vars(
             rule.linker.libs_var, rule.linker.global_libs, buildfile
         )
         cmd_kwargs['libs'] = ldlibs
-        if rule.lib_options:
-            variables[ldlibs] = [global_ldlibs] + rule.lib_options
+        lib_flags = rule.lib_flags
+        if lib_flags:
+            variables[ldlibs] = [global_ldlibs] + lib_flags
 
     if hasattr(rule, 'manifest'):
         var = backend.var('manifest')
@@ -482,7 +485,7 @@ try:
 
     def _parse_file_cflags(file, per_compiler_cflags):
         cflags = file.creator.compiler.parse_flags(
-            msbuild.textify_each(file.creator.options)
+            msbuild.textify_each(file.creator.flags)
         )
         if not per_compiler_cflags:
             return cflags
@@ -506,7 +509,7 @@ try:
         compilers = uniques(i.compiler for i in obj_creators)
 
         per_compiler_cflags = _parse_compiler_cflags(
-            compilers, build_inputs['compile_options']
+            compilers, build_inputs['compile_flags']
         )
         if len(per_compiler_cflags) == 1:
             common_cflags = per_compiler_cflags.popitem()[1]
@@ -516,12 +519,12 @@ try:
         # Parse linking flags.
         ldflags = rule.linker.parse_flags(msbuild.textify_each(
             (rule.linker.global_flags +
-             build_inputs['link_options'][rule.base_mode][rule.linker.family] +
-             rule.options)
+             build_inputs['link_flags'][rule.base_mode][rule.linker.family] +
+             rule.flags)
         ))
         ldflags['libs'] = (
             getattr(rule.linker, 'global_libs', []) +
-            getattr(rule, 'lib_options', [])
+            getattr(rule, 'lib_flags', [])
         )
         if hasattr(output, 'import_lib'):
             ldflags['import_lib'] = output.import_lib

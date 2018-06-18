@@ -62,11 +62,11 @@ class PkgConfigPackage(Package):
     def _call(self, *args, **kwargs):
         return shell.split(self._pkg_config.run(*args, **kwargs).strip())
 
-    def cflags(self, compiler, output):
+    def compile_options(self, compiler, output):
         return self._call(self.name, 'cflags', self.static,
                           compiler.flavor == 'msvc')
 
-    def ldflags(self, linker, output):
+    def link_options(self, linker, output):
         result = self._call(self.name, 'ldflags', self.static,
                             linker.flavor == 'msvc')
         if first(output).format != 'elf' or self.static:
@@ -83,9 +83,9 @@ class PkgConfigPackage(Package):
         lib_dirs = parser.parse_known_args(dir_args)[0].lib_dirs or []
         context = _PkgConfigOptions([Path(i, Root.absolute) for i in lib_dirs])
 
-        return result + linker.flags(output, context)
+        return result + linker.options(output, context)
 
-    def ldlibs(self, linker, output):
+    def link_libs(self, linker, output):
         # XXX: How should we ensure that these libs are linked statically when
         # necessary?
         return self._call(self.name, 'ldlibs', self.static,
