@@ -13,6 +13,7 @@ env:
     - PYTHON=python
     - PIP=pip
     - CPPFLAGS="-Wall -Werror"
+    - GCJ_TEST=1
   matrix:
     - CC=gcc CXX=g++
     - CC=clang CXX=clang++
@@ -27,13 +28,13 @@ matrix:
       os: osx
       env: >
         PYTHON=python2 PIP=pip2 CC=clang CXX=clang++ NO_SCALA_TEST=1
-        NO_GCJ_TEST=1
+        GCJ_TEST=0
     - language: generic
       python: 3.6
       os: osx
       env: >
         PYTHON=python3 PIP=pip3 CC=clang CXX=clang++ NO_SCALA_TEST=1
-        NO_GCJ_TEST=1
+        GCJ_TEST=0
 
     # bdist_wheel builds
 
