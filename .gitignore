@@ -1,6 +1,7 @@
 *.pyc
 /.coverage
 /.coverage.*
+/.eggs/
 /bfg9000.egg-info/
 /build/
 /deb_dist/
