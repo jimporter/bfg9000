@@ -1,8 +1,8 @@
 import re
 
 from . import builder, cc, msvc
-from .. import shell
 from .common import choose_builder
+from .. import shell
 from ..languages import language
 
 language('c', src_exts=['.c'], hdr_exts=['.h'])

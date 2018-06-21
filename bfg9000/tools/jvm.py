@@ -3,8 +3,7 @@ import re
 from itertools import chain
 
 from .common import BuildCommand, check_which
-from .. import safe_str
-from .. import shell
+from .. import options as opts, safe_str, shell
 from ..builtins.file_types import generated_file
 from ..exceptions import PackageResolutionError
 from ..file_types import *
@@ -133,10 +132,19 @@ class JvmCompiler(BuildCommand):
 
     def options(self, output, context):
         libraries = getattr(context, 'libs', [])
-        return self._class_path(libraries)
+        return opts.option_list(self._class_path(libraries))
 
     def link_options(self, mode, defines):
-        return []
+        return opts.option_list()
+
+    def flags(self, options):
+        flags = []
+        for i in options:
+            if isinstance(i, safe_str.stringy_types):
+                flags.append(i)
+            else:
+                raise TypeError('unknown option type {!r}'.format(type(i)))
+        return flags
 
     def output_file(self, name, context):
         return ObjectFileList(Path(name + '.classlist'), Path(name + '.class'),
@@ -204,6 +212,15 @@ class JarMaker(BuildCommand):
     def transform_input(self, input):
         return ['@' + safe_str.safe_str(i) if isinstance(i, ObjectFileList)
                 else i for i in input]
+
+    def flags(self, options):
+        flags = []
+        for i in options:
+            if isinstance(i, safe_str.stringy_types):
+                flags.append(i)
+            else:
+                raise TypeError('unknown option type {!r}'.format(type(i)))
+        return flags
 
     def output_file(self, name, context):
         if getattr(context, 'entry_point', None):

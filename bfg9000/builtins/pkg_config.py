@@ -4,9 +4,9 @@ from itertools import chain
 from six import iteritems, itervalues, string_types
 
 from . import builtin
-from .. import path
 from .file_types import generated_file
 from .install import can_install
+from .. import path
 from ..build_inputs import build_input
 from ..file_types import *
 from ..iterutils import flatten, iterate, uniques, isiterable, recursive_walk
@@ -244,12 +244,14 @@ class PkgConfigInfo(object):
         )
 
         builder = env.builder(self.lang)
-        cflags = pkg.compile_options(builder.compiler, None)
-
+        compiler = builder.compiler
         linker = builder.linker('executable')
-        ldflags = pkg.link_options(linker, None) + pkg.link_libs(linker, None)
-        ldflags_private = (pkg_private.link_options(linker, None) +
-                           pkg_private.link_libs(linker, None))
+
+        cflags = compiler.flags(pkg.compile_options(compiler, None))
+        ldflags = linker.flags(pkg.link_options(linker, None) +
+                               pkg.link_libs(linker, None))
+        ldflags_private = linker.flags(pkg_private.link_options(linker, None) +
+                                       pkg_private.link_libs(linker, None))
 
         for i in path.InstallRoot:
             if i != path.InstallRoot.bindir:
@@ -343,14 +345,12 @@ class PkgConfigInfo(object):
 
         extra = result[key('extra_fields')]
         for i in pkgs:
-            for k, v in iteritems(i.all_options):
+            for k, v in iteritems(i.extra_options):
                 if k == 'includes':
                     if not private:
                         result[k].extend(v)
                 if k == 'libs':
                     result[key(k)].extend(v)
-                elif k == 'pthread':
-                    extra[k] = v or extra.get(k, False)
                 elif isiterable(v):
                     if k not in v:
                         extra[k] = []

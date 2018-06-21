@@ -4,6 +4,7 @@ import warnings
 
 from . import builtin
 from .find import find
+from .. import options as opts
 from ..exceptions import PackageResolutionError, PackageVersionError
 from ..file_types import *
 from ..iterutils import default_sentinel, iterate, listify
@@ -107,14 +108,17 @@ def boost_package(env, name=None, version=None):
             includes=[header], lib_dirs=listify(libdir),
         )
     else:
-        extra_kwargs = {}
+        compile_options = opts.option_list()
+        link_options = opts.option_list()
         if env.platform.flavor == 'posix' and 'thread' in iterate(name):
-            extra_kwargs['pthread'] = True
+            compile_options.append(opts.pthread())
+            link_options.append(opts.pthread())
         dirs = [libdir] if libdir else None
         return BoostPackage(
             name, env.builder('c++').object_format, boost_version,
             includes=[header],
+            compile_options=compile_options,
+            link_options=link_options,
             libs=[pkg.library('boost_' + i, search_dirs=dirs)
-                  for i in iterate(name)],
-            **extra_kwargs
+                  for i in iterate(name)]
         )

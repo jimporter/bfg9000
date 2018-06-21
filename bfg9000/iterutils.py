@@ -29,14 +29,14 @@ def iterate(thing):
         return generate_one(thing)
 
 
-def listify(thing, always_copy=False, scalar_ok=True):
-    if not always_copy and isinstance(thing, list):
+def listify(thing, always_copy=False, scalar_ok=True, type=list):
+    if not always_copy and isinstance(thing, type):
         return thing
     if scalar_ok:
         thing = iterate(thing)
     elif not isiterable(thing):
         raise TypeError('expected an iterable')
-    return list(thing)
+    return type(thing)
 
 
 def first(thing, default=default_sentinel):
@@ -113,7 +113,7 @@ def merge_into_dict(dst, *args):
                     raise TypeError('type mismatch for {}'.format(k))
             elif isiterable(v):
                 if curr is None:
-                    dst[k] = list(v)
+                    dst[k] = type(v)(v)
                 elif isiterable(curr):
                     curr.extend(v)
                 else:

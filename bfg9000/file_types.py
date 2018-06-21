@@ -8,6 +8,7 @@ except ImportError:
 
 from .iterutils import listify as _listify
 from .languages import src2lang as _src2lang, hdr2lang as _hdr2lang
+from .options import option_list as _option_list
 from .path import InstallRoot as _InstallRoot, install_path as _install_path
 from .safe_str import safe_str as _safe_str
 
@@ -298,21 +299,24 @@ class Package(object):
 class CommonPackage(Package):
     is_package = True
 
-    def __init__(self, name, format, **kwargs):
+    def __init__(self, name, format, compile_options=None, link_options=None,
+                 **kwargs):
         Package.__init__(self, name, format)
-        self.all_options = kwargs
+        self._compile_options = compile_options or _option_list()
+        self._link_options = link_options or _option_list()
+        self.extra_options = kwargs
 
     def __getattr__(self, name):
         try:
-            return self.all_options[name]
+            return self.extra_options[name]
         except KeyError as e:
             raise AttributeError(e)
 
     def compile_options(self, compiler, output):
-        return compiler.options(output, self)
+        return self._compile_options + compiler.options(output, self)
 
     def link_options(self, linker, output):
-        return linker.options(output, self)
+        return self._link_options + linker.options(output, self)
 
     def link_libs(self, linker, output):
         return linker.libs(output, self)

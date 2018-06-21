@@ -4,8 +4,7 @@ import subprocess
 from itertools import chain
 
 from . import pkg_config
-from .. import safe_str
-from .. import shell
+from .. import options as opts, safe_str, shell
 from .ar import ArLinker
 from .common import BuildCommand, darwin_install_name
 from .ld import LdLinker
@@ -175,25 +174,33 @@ class CcBaseCompiler(BuildCommand):
     def _include_pch(self, pch):
         return ['-include', pch.path.stripext()]
 
-    def _pthread(self, pthread):
-        return ['-pthread'] if pthread else []
-
     def options(self, output, context):
-        pthread = getattr(context, 'pthread', False)
         includes = getattr(context, 'includes', [])
         pch = getattr(context, 'pch', None)
 
-        return (self._pthread(pthread) +
-                flatten(self._include_dir(i) for i in includes) +
-                (self._include_pch(pch) if pch else []))
+        return opts.option_list(
+            flatten(self._include_dir(i) for i in includes) +
+            (self._include_pch(pch) if pch else [])
+        )
 
     def link_options(self, mode, defines):
-        flags = []
+        flags = opts.option_list()
         if ( mode in ['shared_library', 'static_library'] and
              self.env.platform.flavor != 'windows'):
             flags.append('-fPIC')
 
         flags.extend('-D' + i for i in defines)
+        return flags
+
+    def flags(self, options):
+        flags = []
+        for i in options:
+            if isinstance(i, opts.pthread):
+                flags.append('-pthread')
+            elif isinstance(i, safe_str.stringy_types):
+                flags.append(i)
+            else:
+                raise TypeError('unknown option type {!r}'.format(type(i)))
         return flags
 
 
@@ -430,28 +437,22 @@ class CcLinker(BuildCommand):
             # This object format must not support rpaths, so just return.
             return []
 
-    def _pthread(self, pthread):
-        # macOS doesn't expect -pthread when linking.
-        if pthread and self.env.platform.name != 'darwin':
-            return ['-pthread']
-        return []
-
     def _entry_point(self, entry_point):
         if self.lang == 'java' and entry_point:
             return ['--main={}'.format(entry_point)]
         return []
 
     def options(self, output, context):
-        pthread = getattr(context, 'pthread', False)
         libraries = getattr(context, 'libs', [])
         lib_dirs = getattr(context, 'lib_dirs', [])
         rpath_dirs = getattr(context, 'rpath_dirs', [])
         entry_point = getattr(context, 'entry_point', None)
 
-        return (self._pthread(pthread) +
-                self._lib_dirs(libraries, lib_dirs) +
-                self._rpath(libraries, rpath_dirs, output) +
-                self._entry_point(entry_point))
+        return opts.option_list(
+            self._lib_dirs(libraries, lib_dirs) +
+            self._rpath(libraries, rpath_dirs, output) +
+            self._entry_point(entry_point)
+        )
 
     def _link_lib(self, library, raw_static):
         if isinstance(library, WholeArchive):
@@ -473,7 +474,7 @@ class CcLinker(BuildCommand):
     def always_libs(self, primary):
         # XXX: Don't just asssume that these are the right libraries to use.
         # For instance, clang users might want to use libc++ instead.
-        libs = []
+        libs = opts.option_list()
         if self.lang in ('c++', 'objc++') and not primary:
             libs.append('-lstdc++')
         if self.lang in ('objc', 'objc++'):
@@ -487,7 +488,20 @@ class CcLinker(BuildCommand):
     def libs(self, output, context):
         libraries = getattr(context, 'libs', [])
         raw_static = getattr(context, 'raw_static', True)
-        return flatten(self._link_lib(i, raw_static) for i in libraries)
+        return opts.flatten(self._link_lib(i, raw_static) for i in libraries)
+
+    def flags(self, options):
+        flags = []
+        for i in options:
+            if isinstance(i, opts.pthread):
+                # macOS doesn't expect -pthread when linking.
+                if self.env.platform.name != 'darwin':
+                    flags.append('-pthread')
+            elif isinstance(i, safe_str.stringy_types):
+                flags.append(i)
+            else:
+                raise TypeError('unknown option type {!r}'.format(type(i)))
+        return flags
 
     def _post_install(self, output, is_library, context):
         if self.builder.object_format not in ['elf', 'mach-o']:
@@ -678,15 +692,18 @@ class CcPackageResolver(object):
                 lib_names = self.env.platform.transform_package(name)
             includes = [self.header(i) for i in iterate(headers)]
 
-            extra_kwargs = {}
+            compile_options = opts.option_list()
+            link_options = opts.option_list()
             libs = []
             for i in iterate(lib_names):
                 if isinstance(i, Framework):
                     libs.append(i)
                 elif i == 'pthread':
-                    extra_kwargs['pthread'] = True
+                    compile_options.append(opts.pthread())
+                    link_options.append(opts.pthread())
                 else:
                     libs.append(self.library(i, kind))
 
-            return CommonPackage(name, format, includes=includes, libs=libs,
-                                 **extra_kwargs)
+            return CommonPackage(name, format, includes=includes,
+                                 compile_options=compile_options,
+                                 link_options=link_options, libs=libs)

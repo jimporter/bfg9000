@@ -140,8 +140,8 @@ class TestBoostPackage(BaseTest):
              mock.patch('os.path.exists', mock_exists):  # noqa
             pkg = packages.boost_package(self.env, 'thread')
             self.assertEqual(pkg.name, 'boost(thread)')
-            self.assertEqual(pkg.all_options['lib_dirs'], [r'C:\Boost\lib'])
-            self.assertEqual(pkg.all_options['includes'], [HeaderDirectory(
+            self.assertEqual(pkg.extra_options['lib_dirs'], [r'C:\Boost\lib'])
+            self.assertEqual(pkg.extra_options['includes'], [HeaderDirectory(
                 abspath(boost_dir)
             )])
 

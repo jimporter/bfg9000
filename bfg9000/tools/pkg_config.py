@@ -3,7 +3,7 @@ import subprocess
 
 from . import tool
 from .common import SimpleCommand
-from .. import shell
+from .. import options as opts, shell
 from ..exceptions import PackageResolutionError, PackageVersionError
 from ..file_types import Package, PackageKind
 from ..iterutils import first
@@ -60,7 +60,8 @@ class PkgConfigPackage(Package):
 
     @memoize
     def _call(self, *args, **kwargs):
-        return shell.split(self._pkg_config.run(*args, **kwargs).strip())
+        return shell.split(self._pkg_config.run(*args, **kwargs).strip(),
+                           type=opts.option_list)
 
     def compile_options(self, compiler, output):
         return self._call(self.name, 'cflags', self.static,

@@ -2,11 +2,12 @@ from __future__ import division
 
 import itertools
 import re
+from collections import MutableSequence
 from enum import Enum
 from six import iteritems, string_types
 
-from .. import iterutils
 from .list import shell_list
+from .. import iterutils
 from ..safe_str import safe_str, shell_literal
 
 __all__ = ['split', 'join', 'listify', 'escape', 'quote_escaped', 'quote',
@@ -37,9 +38,13 @@ def _tokenize(s):
             escapes = 0
 
 
-def split(s):
+def split(s, type=list):
+    if not isinstance(s, string_types):
+        raise TypeError('expected a string')
+
+    mutable = isinstance(type, MutableSequence)
     state = _State.between
-    args = []
+    args = (type if mutable else list)()
 
     for tok, value in _tokenize(s):
         if state == _State.between:
@@ -62,17 +67,17 @@ def split(s):
             else:
                 args[-1] += value
 
-    return args
+    return args if mutable else type(args)
 
 
 def join(args):
     return ' '.join(quote(i) for i in args)
 
 
-def listify(thing):
+def listify(thing, type=list):
     if isinstance(thing, string_types):
-        return split(thing)
-    return iterutils.listify(thing)
+        return split(thing, type)
+    return iterutils.listify(thing, type=type)
 
 
 def escape(s, escape_percent=False):

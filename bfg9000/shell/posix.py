@@ -15,24 +15,24 @@ __all__ = ['split', 'join', 'listify', 'escape', 'quote_escaped', 'quote',
 _bad_chars = re.compile(r'[^\w@%+:,./-]')
 
 
-def split(s):
+def split(s, type=list):
     if not isinstance(s, string_types):
         raise TypeError('expected a string')
     lexer = shlex(s, posix=True)
     lexer.commenters = ''
     lexer.escape = ''
     lexer.whitespace_split = True
-    return list(lexer)
+    return type(lexer)
 
 
 def join(args):
     return ' '.join(quote(i) for i in args)
 
 
-def listify(thing):
+def listify(thing, type=list):
     if isinstance(thing, string_types):
-        return split(thing)
-    return iterutils.listify(thing)
+        return split(thing, type)
+    return iterutils.listify(thing, type=type)
 
 
 def escape(s):

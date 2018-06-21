@@ -1,6 +1,6 @@
 from . import builder, cc
-from .. import shell
 from .common import choose_builder
+from .. import shell
 from ..iterutils import first
 from ..languages import language
 

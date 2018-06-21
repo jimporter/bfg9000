@@ -1,7 +1,7 @@
 import os
 from itertools import chain
 
-from .. import shell
+from .. import safe_str, shell
 from .common import BuildCommand, check_which
 from ..file_types import StaticLibrary
 from ..iterutils import iterate
@@ -53,6 +53,15 @@ class ArLinker(BuildCommand):
         # approximate this by checking if the platform uses import libraries,
         # and only define the macros if it does.
         return self.env.platform.has_import_library
+
+    def flags(self, options):
+        flags = []
+        for i in options:
+            if isinstance(i, safe_str.stringy_types):
+                flags.append(i)
+            else:
+                raise TypeError('unknown option type {!r}'.format(type(i)))
+        return flags
 
     def _call(self, cmd, input, output, flags=None):
         return list(chain(

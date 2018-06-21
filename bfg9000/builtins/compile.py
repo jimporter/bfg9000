@@ -3,6 +3,7 @@ from collections import defaultdict
 from six import string_types
 
 from . import builtin
+from .. import options as opts
 from .file_types import local_file
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
@@ -52,7 +53,7 @@ class Compile(Edge):
         self.libs = [builtins['library'](i, lang=lang) for i in iterate(libs)]
 
         self.packages = [builtins['package'](i) for i in iterate(packages)]
-        self.user_options = pshell.listify(options)
+        self.user_options = pshell.listify(options, type=opts.option_list)
 
         if pch and not self.compiler.accepts_pch:
             raise TypeError('pch not supported for this compiler')
@@ -72,8 +73,8 @@ class Compile(Edge):
             public_output = self.compiler.post_build(build, output, self)
 
         self._internal_options = (
-            flatten(i.compile_options(self.compiler, output)
-                    for i in self.packages) +
+            opts.flatten(i.compile_options(self.compiler, output)
+                         for i in self.packages) +
             self.compiler.options(output, self)
         )
 
@@ -90,7 +91,7 @@ class Compile(Edge):
 
     @property
     def flags(self):
-        return self._internal_options + self.user_options
+        return self.compiler.flags(self._internal_options + self.user_options)
 
 
 class CompileSource(Compile):

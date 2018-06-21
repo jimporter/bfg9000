@@ -4,7 +4,7 @@ from itertools import chain
 
 from . import pkg_config
 from .common import BuildCommand, check_which
-from .. import shell
+from .. import options as opts, safe_str, shell
 from ..arguments.windows import ArgumentParser
 from ..builtins.file_types import generated_file
 from ..exceptions import PackageResolutionError
@@ -150,11 +150,22 @@ class MsvcBaseCompiler(BuildCommand):
         syntax = getattr(context, 'syntax', 'msvc')
         includes = getattr(context, 'includes', [])
         pch = getattr(context, 'pch', None)
-        return ((self._include_pch(pch) if pch else []) +
-                flatten(self._include_dir(i, syntax) for i in includes))
+        return opts.option_list(
+            (self._include_pch(pch) if pch else []) +
+            flatten(self._include_dir(i, syntax) for i in includes)
+        )
 
     def link_options(self, mode, defines):
-        return ['/D' + i for i in defines]
+        return opts.option_list('/D' + i for i in defines)
+
+    def flags(self, options):
+        flags = []
+        for i in options:
+            if isinstance(i, safe_str.stringy_types):
+                flags.append(i)
+            else:
+                raise TypeError('unknown option type {!r}'.format(type(i)))
+        return flags
 
     def parse_flags(self, flags):
         parser = ArgumentParser()
@@ -231,15 +242,16 @@ class MsvcPchCompiler(MsvcBaseCompiler):
     def options(self, output, context):
         syntax = getattr(context, 'syntax', 'msvc')
         header = getattr(context, 'file', None)
-        options = []
+
+        options = opts.option_list()
         if getattr(context, 'inject_include_dir', False):
             # Add the include path for the generated header; see pre_build()
             # above for more details.
             d = Directory(header.path.parent(), None)
             options.extend(self._include_dir(d, syntax))
 
-        options.extend(MsvcBaseCompiler.options(self, output, context) +
-                       (self._create_pch(header) if header else []))
+        options.extend(MsvcBaseCompiler.options(self, output, context))
+        options.extend(self._create_pch(header) if header else [])
         return options
 
     def output_file(self, name, context):
@@ -328,15 +340,9 @@ class MsvcLinker(BuildCommand):
         syntax = getattr(context, 'syntax', 'msvc')
         libraries = getattr(context, 'libs', [])
         lib_dirs = getattr(context, 'lib_dirs', [])
-        return self._lib_dirs(libraries, lib_dirs, syntax)
-
-    def parse_flags(self, flags):
-        parser = ArgumentParser()
-        parser.add('/nologo')
-
-        result, extra = parser.parse_known(flags)
-        result['extra'] = extra
-        return result
+        return opts.option_list(
+            self._lib_dirs(libraries, lib_dirs, syntax)
+        )
 
     def _link_lib(self, library, syntax):
         if isinstance(library, WholeArchive):
@@ -350,12 +356,29 @@ class MsvcLinker(BuildCommand):
             return [library.path.basename()]
 
     def always_libs(self, primary):
-        return []
+        return opts.option_list()
 
     def libs(self, output, context):
         syntax = getattr(context, 'syntax', 'msvc')
         libraries = getattr(context, 'libs', [])
-        return flatten(self._link_lib(i, syntax) for i in libraries)
+        return opts.flatten(self._link_lib(i, syntax) for i in libraries)
+
+    def flags(self, options):
+        flags = []
+        for i in options:
+            if isinstance(i, safe_str.stringy_types):
+                flags.append(i)
+            else:
+                raise TypeError('unknown option type {!r}'.format(type(i)))
+        return flags
+
+    def parse_flags(self, flags):
+        parser = ArgumentParser()
+        parser.add('/nologo')
+
+        result, extra = parser.parse_known(flags)
+        result['extra'] = extra
+        return result
 
 
 class MsvcExecutableLinker(MsvcLinker):
@@ -416,6 +439,15 @@ class MsvcStaticLinker(BuildCommand):
         return list(chain(
             cmd, iterate(flags), iterate(input), ['/OUT:' + output]
         ))
+
+    def flags(self, options):
+        flags = []
+        for i in options:
+            if isinstance(i, safe_str.stringy_types):
+                flags.append(i)
+            else:
+                raise TypeError('unknown option type {!r}'.format(type(i)))
+        return flags
 
     def output_file(self, name, context):
         return StaticLibrary(Path(name + '.lib'),

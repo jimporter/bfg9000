@@ -1,6 +1,6 @@
 from . import tool
-from .. import safe_str
 from .common import SimpleCommand
+from .. import safe_str
 
 
 @tool('patchelf')

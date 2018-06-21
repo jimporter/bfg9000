@@ -2,6 +2,7 @@ import unittest
 from collections import namedtuple
 
 from bfg9000.iterutils import *
+from bfg9000.shell.list import shell_list
 
 
 class TestIsIterable(unittest.TestCase):
@@ -55,6 +56,15 @@ class TestListify(unittest.TestCase):
     def test_no_scalar(self):
         self.assertRaises(TypeError, listify, 1, scalar_ok=False)
         self.assertRaises(TypeError, listify, 'foo', scalar_ok=False)
+
+    def test_type(self):
+        x = 'foo'
+        res = listify(x, type=tuple)
+        self.assertEqual(res, ('foo',))
+
+        y = ['foo', 'bar']
+        res = listify(y, type=tuple)
+        self.assertEqual(res, ('foo', 'bar'))
 
 
 class TestFirst(unittest.TestCase):
@@ -180,6 +190,15 @@ class TestMergeIntoDict(unittest.TestCase):
         d = {'foo': 1}
         merge_into_dict(d, {'foo': 2}, {'foo': 3})
         self.assertEqual(d, {'foo': 3})
+
+    def test_merge_lists(self):
+        d = {'foo': [1]}
+        merge_into_dict(d, {'foo': [2]})
+        self.assertEqual(d, {'foo': [1, 2]})
+
+        d = {'foo': shell_list([1])}
+        merge_into_dict(d, {'foo': shell_list([2])})
+        self.assertEqual(d, {'foo': shell_list([1, 2])})
 
 
 class TestMergeDicts(unittest.TestCase):

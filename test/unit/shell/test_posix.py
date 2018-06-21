@@ -14,6 +14,27 @@ class TestSplit(unittest.TestCase):
         self.assertEqual(split('foo "bar baz"'), ['foo', 'bar baz'])
         self.assertEqual(split('foo"bar baz"'), ['foobar baz'])
 
+    def test_type(self):
+        self.assertEqual(split('foo bar baz', type=tuple),
+                         ('foo', 'bar', 'baz'))
+
+    def test_invalid(self):
+        self.assertRaises(TypeError, split, 1)
+
+
+class TestListify(unittest.TestCase):
+    def test_string(self):
+        self.assertEqual(listify('foo bar baz'), ['foo', 'bar', 'baz'])
+
+    def test_list(self):
+        self.assertEqual(listify(['foo bar', 'baz']), ['foo bar', 'baz'])
+
+    def test_type(self):
+        self.assertEqual(listify('foo bar baz', type=tuple),
+                         ('foo', 'bar', 'baz'))
+        self.assertEqual(listify(['foo bar', 'baz'], type=tuple),
+                         ('foo bar', 'baz'))
+
 
 class TestQuote(unittest.TestCase):
     def test_simple(self):

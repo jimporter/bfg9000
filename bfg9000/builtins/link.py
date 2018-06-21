@@ -7,6 +7,7 @@ from six import string_types
 from six.moves import reduce, filter as ifilter
 
 from . import builtin
+from .. import options as opts
 from .compile import Compile, ObjectFiles
 from .file_types import local_file
 from ..backends.make import writer as make
@@ -71,8 +72,10 @@ class Link(Edge):
              not any(isinstance(i, WholeArchive) for i in self.user_libs) ):
             raise ValueError('need at least one source file')
 
-        self.user_options = pshell.listify(link_options)
-        self.forwarded_options = forward_opts.get('options', [])
+        self.user_options = pshell.listify(link_options, type=opts.option_list)
+        self.forwarded_options = forward_opts.get(
+            'options', opts.option_list()
+        )
 
         if entry_point:
             self.entry_point = entry_point
@@ -161,25 +164,31 @@ class DynamicLink(Link):
 
     @property
     def flags(self):
-        return (self._internal_options + self.forwarded_options +
-                self.user_options)
+        return self.linker.flags(
+            self._internal_options + self.forwarded_options + self.user_options
+        )
+
+    @property
+    def lib_flags(self):
+        return self.linker.flags(self._lib_options)
 
     def _fill_options(self, env, output):
         if hasattr(self.linker, 'options'):
             self._internal_options = (
-                flatten(i.link_options(self.linker, output)
-                        for i in self.packages) +
+                opts.flatten(i.link_options(self.linker, output)
+                             for i in self.packages) +
                 self.linker.options(output, self)
             )
         else:
-            self._internal_options = []
+            self._internal_options = opts.option_list()
 
         if hasattr(self.linker, 'libs'):
             linkers = (env.builder(i).linker(self.mode) for i in self.langs)
-            self.lib_flags = (
-                flatten(i.always_libs(i is self.linker) for i in linkers) +
-                flatten(i.link_libs(self.linker, output)
-                        for i in self.packages) +
+            self._lib_options = (
+                opts.flatten(i.always_libs(i is self.linker)
+                             for i in linkers) +
+                opts.flatten(i.link_libs(self.linker, output)
+                             for i in self.packages) +
                 self.linker.libs(output, self)
             )
 
@@ -214,7 +223,8 @@ class StaticLink(Link):
 
     def __init__(self, *args, **kwargs):
         self.static_options = pshell.listify(
-            kwargs.pop('static_link_options', None)
+            kwargs.pop('static_link_options', None),
+            type=opts.option_list
         )
         Link.__init__(self, *args, **kwargs)
 
@@ -223,7 +233,7 @@ class StaticLink(Link):
         # Only pass the static-link options to the static linker. The other
         # options are forwarded on to the dynamic linker when this library is
         # used.
-        return self.static_options
+        return self.linker.flags(self.static_options)
 
     def _fill_options(self, env, output):
         primary = first(output)
