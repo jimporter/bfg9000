@@ -233,8 +233,9 @@ class CcPchCompiler(CcCompiler):
     }
 
     def __init__(self, builder, env, name, command, cflags_name, cflags):
-        if builder.lang == 'java':
-            raise ValueError('Java has no precompiled headers')
+        if builder.lang not in self._langs:
+            raise ValueError('{} has no precompiled headers'
+                             .format(builder.lang))
         CcBaseCompiler.__init__(self, builder, env, name + '_pch', name,
                                 command, cflags_name, cflags)
 
