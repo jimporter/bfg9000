@@ -77,6 +77,7 @@ class Compile(Edge):
         self._internal_options = (
             opts.flatten(i.compile_options(self.compiler, output)
                          for i in self.packages) +
+            opts.option_list(opts.include_dir(i) for i in self.includes) +
             self.compiler.options(output, self)
         )
 

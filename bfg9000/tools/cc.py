@@ -175,13 +175,8 @@ class CcBaseCompiler(BuildCommand):
         return ['-include', pch.path.stripext()]
 
     def options(self, output, context):
-        includes = getattr(context, 'includes', [])
         pch = getattr(context, 'pch', None)
-
-        return opts.option_list(
-            flatten(self._include_dir(i) for i in includes) +
-            (self._include_pch(pch) if pch else [])
-        )
+        return opts.option_list(self._include_pch(pch) if pch else [])
 
     def flags(self, options, mode='normal'):
         flags = []
@@ -190,6 +185,8 @@ class CcBaseCompiler(BuildCommand):
                 flags.append('-pthread')
             elif isinstance(i, opts.pic):
                 flags.append('-fPIC')
+            elif isinstance(i, opts.include_dir):
+                flags.extend(self._include_dir(i.directory))
             elif isinstance(i, opts.define):
                 flags.append('-D' + i.name)
             elif isinstance(i, safe_str.stringy_types):
@@ -601,7 +598,7 @@ class CcSharedLibraryLinker(CcLinker):
             return ['-Wl,-soname,' + soname.path.basename()]
 
     def compile_options(self, context):
-        options = opts.option_list([opts.pic()])
+        options = opts.to_list(opts.pic())
         if self.has_link_macros:
             options.append(opts.define(library_macro(
                 context.name, 'shared_library'
@@ -692,13 +689,15 @@ class CcPackageResolver(object):
         try:
             return pkg_config.resolve(self.env, name, format, version, kind)
         except (OSError, PackageResolutionError):
-            if lib_names is default_sentinel:
-                lib_names = self.env.platform.transform_package(name)
-            includes = [self.header(i) for i in iterate(headers)]
-
             compile_options = opts.option_list()
             link_options = opts.option_list()
             libs = []
+
+            compile_options.extend(opts.include_dir(self.header(i))
+                                   for i in iterate(headers))
+
+            if lib_names is default_sentinel:
+                lib_names = self.env.platform.transform_package(name)
             for i in iterate(lib_names):
                 if isinstance(i, Framework):
                     libs.append(i)
@@ -708,6 +707,5 @@ class CcPackageResolver(object):
                 else:
                     libs.append(self.library(i, kind))
 
-            return CommonPackage(name, format, includes=includes,
-                                 compile_options=compile_options,
-                                 link_options=link_options, libs=libs)
+            return CommonPackage(name, format, compile_options, link_options,
+                                 libs=libs)

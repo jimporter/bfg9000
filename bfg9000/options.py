@@ -26,6 +26,9 @@ class option_list(object):
     def __len__(self):
         return len(self._options)
 
+    def __eq__(self, rhs):
+        return type(self) == type(rhs) and self._options == rhs._options
+
     def __repr__(self):
         return '<option_list({})>'.format(repr(self._options))
 
@@ -42,23 +45,43 @@ class option_list(object):
         return self
 
 
+def to_list(*args):
+    return option_list(args)
+
+
 def flatten(iterables):
     return iterutils.flatten(iterables, option_list)
 
 
-class pthread(object):
-    def matches(self, rhs):
-        return type(self) == type(rhs)
+class Option(object):
+    __slots__ = ()
 
-
-class pic(object):
-    def matches(self, rhs):
-        return type(self) == type(rhs)
-
-
-class define(object):
-    def __init__(self, name):
-        self.name = name
+    def __init__(self, *args):
+        if len(args) != len(self.__slots__):
+            raise TypeError('__init__() takes exactly {} arguments ({} given)'
+                            .format(len(self.__slots__) + 1, len(args) + 1))
+        for k, v in zip(self.__slots__, args):
+            setattr(self, k, v)
 
     def matches(self, rhs):
-        return type(self) == type(rhs) and self.name == rhs.name
+        return self == rhs
+
+    def __eq__(self, rhs):
+        return type(self) == type(rhs) and all(
+            getattr(self, i) == getattr(rhs, i) for i in self.__slots__
+        )
+
+    def __repr__(self):
+        return '<{}({})>'.format(self.__class__.__name__, ','.join(
+            repr(getattr(self, i)) for i in self.__slots__
+        ))
+
+
+def option(name, attrs=()):
+    return type(name, (Option,), {'__slots__': attrs})
+
+
+pthread = option('pthread')
+pic = option('pic')
+define = option('define', ('name',))
+include_dir = option('include_dir', ('directory',))

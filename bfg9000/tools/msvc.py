@@ -139,27 +139,21 @@ class MsvcBaseCompiler(BuildCommand):
     def _always_flags(self):
         return ['/nologo', '/EHsc']
 
-    def _include_dir(self, directory, syntax):
-        prefix = '-I' if syntax == 'cc' else '/I'
-        return [prefix + directory.path]
-
     def _include_pch(self, pch):
         return ['/Yu' + pch.header_name]
 
     def options(self, output, context):
-        syntax = getattr(context, 'syntax', 'msvc')
-        includes = getattr(context, 'includes', [])
         pch = getattr(context, 'pch', None)
-        return opts.option_list(
-            flatten(self._include_dir(i, syntax) for i in includes) +
-            (self._include_pch(pch) if pch else [])
-        )
+        return opts.option_list(self._include_pch(pch) if pch else [])
 
     def flags(self, options, mode='normal'):
         flags = []
         for i in options:
             if isinstance(i, safe_str.stringy_types):
                 flags.append(i)
+            elif isinstance(i, opts.include_dir):
+                prefix = '-I' if mode == 'pkg-config' else '/I'
+                flags.append(prefix + i.directory.path)
             elif isinstance(i, opts.define):
                 prefix = '-D' if mode == 'pkg-config' else '/D'
                 flags.append(prefix + i.name)
@@ -240,15 +234,14 @@ class MsvcPchCompiler(MsvcBaseCompiler):
         return ['/Yc' + header.path.suffix]
 
     def options(self, output, context):
-        syntax = getattr(context, 'syntax', 'msvc')
         header = getattr(context, 'file', None)
 
         options = opts.option_list()
         if getattr(context, 'inject_include_dir', False):
             # Add the include path for the generated header; see pre_build()
             # above for more details.
-            d = Directory(header.path.parent())
-            options.extend(self._include_dir(d, syntax))
+            d = HeaderDirectory(header.path.parent())
+            options.append(opts.include_dir(d))
 
         options.extend(MsvcBaseCompiler.options(self, output, context))
         options.extend(self._create_pch(header) if header else [])
@@ -528,6 +521,9 @@ class MsvcPackageResolver(object):
         except (OSError, PackageResolutionError):
             if lib_names is default_sentinel:
                 lib_names = self.env.platform.transform_package(name)
-            includes = [self.header(i) for i in iterate(headers)]
+
+            compile_options = opts.option_list(
+                opts.include_dir(self.header(i)) for i in iterate(headers)
+            )
             libs = [self.library(i, kind) for i in iterate(lib_names)]
-            return CommonPackage(name, format, includes=includes, libs=libs)
+            return CommonPackage(name, format, compile_options, libs=libs)

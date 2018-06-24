@@ -15,9 +15,9 @@ from ..versioning import check_version, SpecifierSet, Version
 
 
 class BoostPackage(CommonPackage):
-    def __init__(self, name, format, version, **kwargs):
+    def __init__(self, name, format, version, *args, **kwargs):
         name = 'boost({})'.format(','.join(iterate(name)))
-        CommonPackage.__init__(self, name, format, **kwargs)
+        CommonPackage.__init__(self, name, format, *args, **kwargs)
         self.version = version
 
 
@@ -91,7 +91,8 @@ def boost_package(env, name=None, version=None):
                     boost_version = _boost_version(header, version)
                     return BoostPackage(
                         name, env.builder('c++').object_format, boost_version,
-                        includes=[header], lib_dirs=[r'C:\Boost\lib'],
+                        opts.to_list(opts.include_dir(header)),
+                        lib_dirs=[r'C:\Boost\lib']
                     )
                 except PackageResolutionError:
                     pass
@@ -105,10 +106,10 @@ def boost_package(env, name=None, version=None):
             raise PackageResolutionError('Boost on Windows requires auto-link')
         return BoostPackage(
             name, env.builder('c++').object_format, boost_version,
-            includes=[header], lib_dirs=listify(libdir),
+            opts.to_list(opts.include_dir(header)), lib_dirs=listify(libdir)
         )
     else:
-        compile_options = opts.option_list()
+        compile_options = opts.to_list(opts.include_dir(header))
         link_options = opts.option_list()
         if env.platform.flavor == 'posix' and 'thread' in iterate(name):
             compile_options.append(opts.pthread())
@@ -116,9 +117,7 @@ def boost_package(env, name=None, version=None):
         dirs = [libdir] if libdir else None
         return BoostPackage(
             name, env.builder('c++').object_format, boost_version,
-            includes=[header],
-            compile_options=compile_options,
-            link_options=link_options,
+            compile_options, link_options,
             libs=[pkg.library('boost_' + i, search_dirs=dirs)
                   for i in iterate(name)]
         )

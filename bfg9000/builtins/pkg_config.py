@@ -6,7 +6,7 @@ from six import iteritems, itervalues, string_types
 from . import builtin
 from .file_types import generated_file
 from .install import can_install
-from .. import path
+from .. import options as opts, path
 from ..build_inputs import build_input
 from ..file_types import *
 from ..iterutils import flatten, iterate, uniques, isiterable, recursive_walk
@@ -233,7 +233,6 @@ class PkgConfigInfo(object):
 
         pkg = CommonPackage(
             None, None, syntax='cc', raw_static=False,
-            includes=[pkg_installify(i) for i in data['includes']],
             libs=[pkg_installify(i.all[0]) for i in data['libs']],
             **data['extra_fields']
         )
@@ -247,13 +246,25 @@ class PkgConfigInfo(object):
         compiler = builder.compiler
         linker = builder.linker('executable')
 
-        cflags = compiler.flags(pkg.compile_options(compiler, None),
-                                mode='pkg-config')
-        ldflags = linker.flags(pkg.link_options(linker, None) +
-                               pkg.link_libs(linker, None), mode='pkg-config')
-        ldflags_private = linker.flags(pkg_private.link_options(linker, None) +
-                                       pkg_private.link_libs(linker, None),
-                                       mode='pkg-config')
+        cflags = compiler.flags(
+            (opts.option_list(opts.include_dir(pkg_installify(i))
+                              for i in data['includes']) +
+             pkg.compile_options(compiler, None) +
+             opts.option_list(data['cflags'])),
+            mode='pkg-config'
+        )
+        ldflags = linker.flags(
+            (pkg.link_options(linker, None) +
+             pkg.link_libs(linker, None) +
+             opts.option_list(data['ldflags'])),
+            mode='pkg-config'
+        )
+        ldflags_private = linker.flags(
+            (pkg_private.link_options(linker, None) +
+             pkg_private.link_libs(linker, None) +
+             opts.option_list(data['ldflags_private'])),
+            mode='pkg-config'
+        )
 
         for i in path.InstallRoot:
             if i != path.InstallRoot.bindir:
@@ -271,10 +282,9 @@ class PkgConfigInfo(object):
                           Syntax.shell, delim=literal(', '))
         self._write_field(out, 'Conflicts', data['conflicts'],
                           Syntax.shell, delim=literal(', '))
-        self._write_field(out, 'Cflags', cflags + data['cflags'], Syntax.shell)
-        self._write_field(out, 'Libs', ldflags + data['ldflags'], Syntax.shell)
-        self._write_field(out, 'Libs.private', ldflags_private +
-                          data['ldflags_private'], Syntax.shell)
+        self._write_field(out, 'Cflags', cflags, Syntax.shell)
+        self._write_field(out, 'Libs', ldflags, Syntax.shell)
+        self._write_field(out, 'Libs.private', ldflags_private, Syntax.shell)
 
     def _process_inputs(self):
         result = {
@@ -348,9 +358,6 @@ class PkgConfigInfo(object):
         extra = result[key('extra_fields')]
         for i in pkgs:
             for k, v in iteritems(i.extra_options):
-                if k == 'includes':
-                    if not private:
-                        result[k].extend(v)
                 if k == 'libs':
                     result[key(k)].extend(v)
                 elif isiterable(v):

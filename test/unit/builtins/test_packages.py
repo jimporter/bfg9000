@@ -4,7 +4,7 @@ import re
 import unittest
 from collections import namedtuple
 
-from bfg9000 import file_types
+from bfg9000 import file_types, options as opts
 from bfg9000.builtins import packages
 from bfg9000.environment import Environment
 from bfg9000.exceptions import PackageResolutionError
@@ -140,10 +140,10 @@ class TestBoostPackage(BaseTest):
              mock.patch('os.path.exists', mock_exists):  # noqa
             pkg = packages.boost_package(self.env, 'thread')
             self.assertEqual(pkg.name, 'boost(thread)')
+            self.assertEqual(pkg._compile_options, opts.to_list(
+                opts.include_dir(HeaderDirectory(abspath(boost_dir)))
+            ))
             self.assertEqual(pkg.extra_options['lib_dirs'], [r'C:\Boost\lib'])
-            self.assertEqual(pkg.extra_options['includes'], [HeaderDirectory(
-                abspath(boost_dir)
-            )])
 
 
 class TestSystemExecutable(BaseTest):
