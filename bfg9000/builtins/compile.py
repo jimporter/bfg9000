@@ -50,7 +50,9 @@ class Compile(Edge):
         # Don't bother handling forward_opts from libs now, since the only
         # languages that need libs during compilation don't support static
         # linking anyway.
-        self.libs = [builtins['library'](i, lang=lang) for i in iterate(libs)]
+        if self.compiler.needs_libs:
+            self.libs = [builtins['library'](i, lang=lang)
+                         for i in iterate(libs)]
 
         self.packages = [builtins['package'](i) for i in iterate(packages)]
         self.user_options = pshell.listify(options, type=opts.option_list)
@@ -226,7 +228,7 @@ def make_compile(rule, build_inputs, buildfile, env):
     if rule.pch:
         deps.append(rule.pch)
     deps.extend(rule.header_files)
-    if compiler.depends_on_libs:
+    if compiler.needs_libs:
         deps.extend(rule.libs)
 
     dirs = uniques(i.path.parent() for i in rule.output)
@@ -280,7 +282,7 @@ def ninja_compile(rule, build_inputs, buildfile, env):
         inputs = [rule.pch_source]
         implicit_deps.append(rule.file)
     implicit_deps.extend(rule.header_files)
-    if compiler.depends_on_libs:
+    if compiler.needs_libs:
         implicit_deps.extend(rule.libs)
 
     # Ninja doesn't support multiple outputs and deps-parsing at the same time,

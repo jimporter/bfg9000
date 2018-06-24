@@ -106,7 +106,7 @@ class JvmCompiler(BuildCommand):
         return None
 
     @property
-    def depends_on_libs(self):
+    def needs_libs(self):
         return True
 
     @property

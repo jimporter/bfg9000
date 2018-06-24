@@ -31,7 +31,7 @@ class TestJvmBuilder(unittest.TestCase):
         self.assertEqual(jvm.can_dual_link, False)
 
         self.assertEqual(jvm.compiler.deps_flavor, None)
-        self.assertEqual(jvm.compiler.depends_on_libs, True)
+        self.assertEqual(jvm.compiler.needs_libs, True)
         self.assertEqual(jvm.compiler.accepts_pch, False)
 
         self.assertRaises(AttributeError, lambda: jvm.pch_compiler)

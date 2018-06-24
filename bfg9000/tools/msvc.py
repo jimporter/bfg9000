@@ -117,7 +117,7 @@ class MsvcBaseCompiler(BuildCommand):
         return 1
 
     @property
-    def depends_on_libs(self):
+    def needs_libs(self):
         return False
 
     def search_dirs(self, strict=False):

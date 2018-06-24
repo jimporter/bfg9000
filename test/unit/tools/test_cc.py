@@ -50,8 +50,8 @@ class TestCcBuilder(unittest.TestCase):
         self.assertEqual(cc.compiler.deps_flavor, 'gcc')
         self.assertEqual(cc.pch_compiler.deps_flavor, 'gcc')
 
-        self.assertEqual(cc.compiler.depends_on_libs, False)
-        self.assertEqual(cc.pch_compiler.depends_on_libs, False)
+        self.assertEqual(cc.compiler.needs_libs, False)
+        self.assertEqual(cc.pch_compiler.needs_libs, False)
 
         self.assertEqual(cc.compiler.accepts_pch, True)
         self.assertEqual(cc.pch_compiler.accepts_pch, False)
