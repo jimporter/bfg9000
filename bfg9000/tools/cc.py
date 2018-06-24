@@ -6,7 +6,7 @@ from itertools import chain
 from . import pkg_config
 from .. import options as opts, safe_str, shell
 from .ar import ArLinker
-from .common import BuildCommand, darwin_install_name
+from .common import BuildCommand, darwin_install_name, library_macro
 from .ld import LdLinker
 from ..builtins.symlink import Symlink
 from ..exceptions import PackageResolutionError
@@ -183,20 +183,15 @@ class CcBaseCompiler(BuildCommand):
             (self._include_pch(pch) if pch else [])
         )
 
-    def link_options(self, mode, defines):
-        flags = opts.option_list()
-        if ( mode in ['shared_library', 'static_library'] and
-             self.env.platform.flavor != 'windows'):
-            flags.append('-fPIC')
-
-        flags.extend('-D' + i for i in defines)
-        return flags
-
-    def flags(self, options):
+    def flags(self, options, mode='normal'):
         flags = []
         for i in options:
             if isinstance(i, opts.pthread):
                 flags.append('-pthread')
+            elif isinstance(i, opts.pic):
+                flags.append('-fPIC')
+            elif isinstance(i, opts.define):
+                flags.append('-D' + i.name)
             elif isinstance(i, safe_str.stringy_types):
                 flags.append(i)
             else:
@@ -490,7 +485,7 @@ class CcLinker(BuildCommand):
         raw_static = getattr(context, 'raw_static', True)
         return opts.flatten(self._link_lib(i, raw_static) for i in libraries)
 
-    def flags(self, options):
+    def flags(self, options, mode='normal'):
         flags = []
         for i in options:
             if isinstance(i, opts.pthread):
@@ -603,6 +598,14 @@ class CcSharedLibraryLinker(CcLinker):
             return ['-install_name', darwin_install_name(soname)]
         else:
             return ['-Wl,-soname,' + soname.path.basename()]
+
+    def compile_options(self, context):
+        options = opts.option_list([opts.pic()])
+        if self.has_link_macros:
+            options.append(opts.define(library_macro(
+                context.name, 'shared_library'
+            )))
+        return options
 
     def options(self, output, context):
         is_package = getattr(context, 'is_package', False)

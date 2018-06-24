@@ -3,7 +3,7 @@ import re
 from itertools import chain
 
 from . import pkg_config
-from .common import BuildCommand, check_which
+from .common import BuildCommand, check_which, library_macro
 from .. import options as opts, safe_str, shell
 from ..arguments.windows import ArgumentParser
 from ..builtins.file_types import generated_file
@@ -151,18 +151,18 @@ class MsvcBaseCompiler(BuildCommand):
         includes = getattr(context, 'includes', [])
         pch = getattr(context, 'pch', None)
         return opts.option_list(
-            (self._include_pch(pch) if pch else []) +
-            flatten(self._include_dir(i, syntax) for i in includes)
+            flatten(self._include_dir(i, syntax) for i in includes) +
+            (self._include_pch(pch) if pch else [])
         )
 
-    def link_options(self, mode, defines):
-        return opts.option_list('/D' + i for i in defines)
-
-    def flags(self, options):
+    def flags(self, options, mode='normal'):
         flags = []
         for i in options:
             if isinstance(i, safe_str.stringy_types):
                 flags.append(i)
+            elif isinstance(i, opts.define):
+                prefix = '-D' if mode == 'pkg-config' else '/D'
+                flags.append(prefix + i.name)
             else:
                 raise TypeError('unknown option type {!r}'.format(type(i)))
         return flags
@@ -247,7 +247,7 @@ class MsvcPchCompiler(MsvcBaseCompiler):
         if getattr(context, 'inject_include_dir', False):
             # Add the include path for the generated header; see pre_build()
             # above for more details.
-            d = Directory(header.path.parent(), None)
+            d = Directory(header.path.parent())
             options.extend(self._include_dir(d, syntax))
 
         options.extend(MsvcBaseCompiler.options(self, output, context))
@@ -363,7 +363,7 @@ class MsvcLinker(BuildCommand):
         libraries = getattr(context, 'libs', [])
         return opts.flatten(self._link_lib(i, syntax) for i in libraries)
 
-    def flags(self, options):
+    def flags(self, options, mode='normal'):
         flags = []
         for i in options:
             if isinstance(i, safe_str.stringy_types):
@@ -405,6 +405,18 @@ class MsvcSharedLibraryLinker(MsvcLinker):
         result.append('/IMPLIB:' + output[1])
         return result
 
+    @property
+    def _always_flags(self):
+        return MsvcLinker._always_flags.fget(self) + ['/DLL']
+
+    def compile_options(self, context):
+        options = opts.option_list()
+        if self.has_link_macros:
+            options.append(opts.define(library_macro(
+                context.name, 'shared_library'
+            )))
+        return options
+
     def output_file(self, name, context):
         dllname = Path(name + self.env.platform.shared_library_ext)
         impname = Path(name + '.lib')
@@ -412,10 +424,6 @@ class MsvcSharedLibraryLinker(MsvcLinker):
         dll = DllBinary(dllname, self.builder.object_format, self.lang,
                         impname, expname)
         return [dll, dll.import_lib, dll.export_file]
-
-    @property
-    def _always_flags(self):
-        return MsvcLinker._always_flags.fget(self) + ['/DLL']
 
 
 class MsvcStaticLinker(BuildCommand):
@@ -440,7 +448,18 @@ class MsvcStaticLinker(BuildCommand):
             cmd, iterate(flags), iterate(input), ['/OUT:' + output]
         ))
 
-    def flags(self, options):
+    def compile_options(self, context):
+        return self.forwarded_compile_options(context)
+
+    def forwarded_compile_options(self, context):
+        options = opts.option_list()
+        if self.has_link_macros:
+            options.append(opts.define(library_macro(
+                context.name, 'static_library'
+            )))
+        return options
+
+    def flags(self, options, mode='normal'):
         flags = []
         for i in options:
             if isinstance(i, safe_str.stringy_types):

@@ -1,8 +1,8 @@
 import os
 from itertools import chain
 
-from .. import safe_str, shell
-from .common import BuildCommand, check_which
+from .. import options as opts, safe_str, shell
+from .common import BuildCommand, check_which, library_macro
 from ..file_types import StaticLibrary
 from ..iterutils import iterate
 from ..objutils import memoize
@@ -54,7 +54,19 @@ class ArLinker(BuildCommand):
         # and only define the macros if it does.
         return self.env.platform.has_import_library
 
-    def flags(self, options):
+    def compile_options(self, context):
+        return (opts.option_list([opts.pic()]) +
+                self.forwarded_compile_options(context))
+
+    def forwarded_compile_options(self, context):
+        options = opts.option_list()
+        if self.has_link_macros:
+            options.append(opts.define(library_macro(
+                context.name, 'static_library'
+            )))
+        return options
+
+    def flags(self, options, mode='normal'):
         flags = []
         for i in options:
             if isinstance(i, safe_str.stringy_types):

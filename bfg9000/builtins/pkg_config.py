@@ -247,11 +247,13 @@ class PkgConfigInfo(object):
         compiler = builder.compiler
         linker = builder.linker('executable')
 
-        cflags = compiler.flags(pkg.compile_options(compiler, None))
+        cflags = compiler.flags(pkg.compile_options(compiler, None),
+                                mode='pkg-config')
         ldflags = linker.flags(pkg.link_options(linker, None) +
-                               pkg.link_libs(linker, None))
+                               pkg.link_libs(linker, None), mode='pkg-config')
         ldflags_private = linker.flags(pkg_private.link_options(linker, None) +
-                                       pkg_private.link_libs(linker, None))
+                                       pkg_private.link_libs(linker, None),
+                                       mode='pkg-config')
 
         for i in path.InstallRoot:
             if i != path.InstallRoot.bindir:

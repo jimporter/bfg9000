@@ -49,3 +49,16 @@ def flatten(iterables):
 class pthread(object):
     def matches(self, rhs):
         return type(self) == type(rhs)
+
+
+class pic(object):
+    def matches(self, rhs):
+        return type(self) == type(rhs)
+
+
+class define(object):
+    def __init__(self, name):
+        self.name = name
+
+    def matches(self, rhs):
+        return type(self) == type(rhs) and self.name == rhs.name

@@ -83,11 +83,12 @@ class Compile(Edge):
         if hasattr(self.compiler, 'post_install'):
             primary.post_install = self.compiler.post_install(output, self)
 
-    def add_link_options(self, *args, **kwargs):
-        opts = self.compiler.link_options(*args, **kwargs)
-        self._internal_options.extend(opts)
-        if self.pch and self.pch.creator:
-            self.pch.creator.add_link_options(*args, **kwargs)
+    def add_extra_options(self, options):
+        self._internal_options.extend(options)
+        # PCH files should always be built with the same options as files using
+        # them, so forward the extra options onto the PCH if it exists.
+        if self.pch and hasattr(self.pch.creator, 'add_extra_options'):
+            self.pch.creator.add_extra_options(options)
 
     @property
     def flags(self):

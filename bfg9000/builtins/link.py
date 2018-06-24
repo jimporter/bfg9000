@@ -23,22 +23,6 @@ build_input('link_flags')(lambda build_inputs, env: {
     'dynamic': defaultdict(list), 'static': defaultdict(list)
 })
 
-_modes = {
-    'shared_library': 'EXPORTS',
-    'static_library': 'STATIC',
-}
-
-
-def library_macro(name, mode):
-    if mode not in _modes:
-        return []
-
-    # Since the name always begins with "lib", this always produces a valid
-    # macro name.
-    return ['{name}_{suffix}'.format(
-        name=re.sub(r'\W', '_', name.upper()), suffix=_modes[mode]
-    )]
-
 
 class Link(Edge):
     msbuild_output = True
@@ -94,20 +78,15 @@ class Link(Edge):
 
         self.linker = self.__find_linker(env, formats[0], self.langs)
 
-        # To handle the different import/export rules for libraries, we need to
-        # provide some LIBFOO_EXPORTS/LIBFOO_STATIC macros so the build knows
-        # how to annotate public API functions in the headers. XXX: One day, we
-        # could pass these as "semantic options" (i.e. options that are
-        # specified like define('FOO') instead of '-DFOO'). Then the linkers
-        # could generate those options in a more generic way.
-        defines = []
-        if self.linker.has_link_macros:
-            defines = library_macro(self.name, self.mode)
-        defines = forward_opts.get('defines', []) + defines
-
+        # Forward any necessary options to the compile step.
+        if hasattr(self.linker, 'compile_options'):
+            compile_opts = self.linker.compile_options(self)
+        else:
+            compile_opts = opts.option_list()
+        compile_opts.extend(forward_opts.get('compile_options', []))
         for i in self.files:
-            if isinstance(i.creator, Compile):
-                i.creator.add_link_options(self.mode, defines)
+            if hasattr(i.creator, 'add_extra_options'):
+                i.creator.add_extra_options(compile_opts)
 
         if hasattr(self.linker, 'pre_build'):
             self.linker.pre_build(build, name, self)
@@ -238,13 +217,15 @@ class StaticLink(Link):
     def _fill_options(self, env, output):
         primary = first(output)
         primary.forward_opts = {
+            'compile_options': opts.option_list(),
             'options': self.user_options,
             'libs': self.user_libs,
             'packages': self.user_packages,
         }
-        if self.linker.has_link_macros:
-            macro = library_macro(self.name, self.mode)
-            primary.forward_opts['defines'] = macro
+        if hasattr(self.linker, 'forwarded_compile_options'):
+            primary.forward_opts['compile_options'].extend(
+                self.linker.forwarded_compile_options(self)
+            )
 
         primary.linktime_deps.extend(self.user_libs)
 

@@ -1,4 +1,5 @@
 import os
+import re
 import subprocess
 import warnings
 from six import iteritems
@@ -7,6 +8,19 @@ from six.moves import zip
 from .. import shell
 from ..iterutils import first, isiterable, iterate, listify, slice_dict
 from ..path import Path
+
+_modes = {
+    'shared_library': 'EXPORTS',
+    'static_library': 'STATIC',
+}
+
+
+def library_macro(name, mode):
+    # Since the name always begins with "lib", this always produces a valid
+    # macro name. (FIXME: this isn't true)
+    return '{name}_{suffix}'.format(
+        name=re.sub(r'\W', '_', name.upper()), suffix=_modes[mode]
+    )
 
 
 class Command(object):
