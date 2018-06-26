@@ -14,7 +14,7 @@ class ArLinker(BuildCommand):
     def __init__(self, builder, env):
         cmd = check_which(env.getvar('AR', 'ar'), env.variables,
                           kind='static linker')
-        global_flags = shell.split(env.getvar('ARFLAGS', 'cru'))
+        global_flags = shell.split(env.getvar('ARFLAGS', 'cr'))
         BuildCommand.__init__(self, builder, env, 'ar', 'ar', cmd,
                               flags=('arflags', global_flags))
 
