@@ -12,13 +12,6 @@ from ..path import Path, Root
 from ..versioning import check_version, Version
 
 
-class _PkgConfigOptions(object):
-    is_package = True
-
-    def __init__(self, rpath_dirs):
-        self.rpath_dirs = rpath_dirs
-
-
 @tool('pkg_config')
 class PkgConfig(SimpleCommand):
     _options = {
@@ -82,9 +75,9 @@ class PkgConfigPackage(Package):
         parser = argparse.ArgumentParser()
         parser.add_argument('-L', action='append', dest='lib_dirs')
         lib_dirs = parser.parse_known_args(dir_args)[0].lib_dirs or []
-        context = _PkgConfigOptions([Path(i, Root.absolute) for i in lib_dirs])
+        self.rpath_dirs = [Path(i, Root.absolute) for i in lib_dirs]
 
-        return result + linker.options(output, context)
+        return result + linker.options(output, self)
 
     def link_libs(self, linker, output):
         # XXX: How should we ensure that these libs are linked statically when

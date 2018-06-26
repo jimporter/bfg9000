@@ -17,9 +17,6 @@ class option_list(object):
     def copy(self):
         return option_list(self._options)
 
-    def filter(self, type):
-        return (i for i in self if isinstance(i, type))
-
     def __iter__(self):
         return iter(self._options)
 
@@ -85,3 +82,5 @@ pthread = option('pthread')
 pic = option('pic')
 define = option('define', ('name',))
 include_dir = option('include_dir', ('directory',))
+rpath_dir = option('rpath_dir', ('path',))
+rpath_link_dir = option('rpath_link_dir', ('path',))

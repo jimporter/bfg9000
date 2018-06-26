@@ -380,9 +380,8 @@ class CcLinker(BuildCommand):
                                   extra_dirs))
 
             relpaths = (i.relpath(start) for i in paths)
-            result = ['-Wl,-rpath,{}'.format(':'.join(
-                base if i == '.' else os.path.join(base, i) for i in relpaths
-            ))]
+            result = [opts.rpath_dir(base if i == '.' else
+                                     os.path.join(base, i)) for i in relpaths]
 
             # Store the final (installed) rpaths so we can apply them with
             # `patchelf` during installation.
@@ -409,10 +408,8 @@ class CcLinker(BuildCommand):
             if brand == 'bfd':
                 deps = chain.from_iterable(recursive_walk(i, 'runtime_deps')
                                            for i in runtime_libs)
-                dep_paths = [i for i in uniques(i.path.parent() for i in deps)]
-                if dep_paths:
-                    result += ['-Wl,-rpath-link,' +
-                               safe_str.join(dep_paths, ':')]
+                result.extend(opts.rpath_link_dir(i.path.parent())
+                              for i in deps)
 
             return result
         elif self.builder.object_format == 'mach-o':
@@ -484,16 +481,25 @@ class CcLinker(BuildCommand):
         return opts.flatten(self._link_lib(i, raw_static) for i in libraries)
 
     def flags(self, options, mode='normal'):
-        flags = []
+        flags, rpaths, rpath_links = [], [], []
         for i in options:
             if isinstance(i, opts.pthread):
                 # macOS doesn't expect -pthread when linking.
                 if self.env.platform.name != 'darwin':
                     flags.append('-pthread')
+            elif isinstance(i, opts.rpath_dir):
+                rpaths.append(i.path)
+            elif isinstance(i, opts.rpath_link_dir):
+                rpath_links.append(i.path)
             elif isinstance(i, safe_str.stringy_types):
                 flags.append(i)
             else:
                 raise TypeError('unknown option type {!r}'.format(type(i)))
+
+        if rpaths:
+            flags.append('-Wl,-rpath,' + ':'.join(rpaths))
+        if rpath_links:
+            flags.append('-Wl,-rpath-link,' + safe_str.join(rpath_links, ':'))
         return flags
 
     def _post_install(self, output, is_library, context):

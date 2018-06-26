@@ -285,6 +285,8 @@ class PackageKind(_with_metaclass(_PackageKindMeta, _Flag)):
 
 
 class Package(object):
+    is_package = True
+
     def __init__(self, name, format):
         self.name = name
         self.format = format
@@ -297,8 +299,6 @@ class Package(object):
 
 
 class CommonPackage(Package):
-    is_package = True
-
     def __init__(self, name, format, compile_options=None, link_options=None,
                  **kwargs):
         Package.__init__(self, name, format)
