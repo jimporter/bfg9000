@@ -88,8 +88,7 @@ class Link(Edge):
             if hasattr(i.creator, 'add_extra_options'):
                 i.creator.add_extra_options(compile_opts)
 
-        if hasattr(self.linker, 'pre_build'):
-            self.linker.pre_build(build, name, self)
+        self.linker.pre_build(build, name, self)
 
         output = self.linker.output_file(name, self)
         primary = first(output)
@@ -97,15 +96,13 @@ class Link(Edge):
 
         primary.package_deps.extend(self.packages)
 
-        if hasattr(self.linker, 'post_build'):
-            public_output = self.linker.post_build(build, output, self)
+        public_output = self.linker.post_build(build, output, self)
 
         self._fill_options(env, output)
 
         Edge.__init__(self, build, output, public_output, extra_deps)
 
-        if hasattr(self.linker, 'post_install'):
-            primary.post_install = self.linker.post_install(output, self)
+        primary.post_install = self.linker.post_install(output, self)
         build['defaults'].add(primary)
 
     @classmethod

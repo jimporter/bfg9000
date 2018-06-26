@@ -89,6 +89,15 @@ class BuildCommand(Command):
     def family(self):
         return self.builder.family
 
+    def pre_build(self, build, name, context):
+        pass
+
+    def post_build(self, build, output, context):
+        return None
+
+    def post_install(self, output, context):
+        return None
+
 
 def check_which(names, *args, **kwargs):
     names = listify(names)

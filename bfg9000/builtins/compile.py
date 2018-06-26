@@ -64,15 +64,13 @@ class Compile(Edge):
             options=self.user_options, lang=lang
         ) if pch else None
 
-        if hasattr(self.compiler, 'pre_build'):
-            self.compiler.pre_build(build, name, self)
+        self.compiler.pre_build(build, name, self)
 
         output = self.compiler.output_file(name, self)
         primary = first(output)
         public_output = None
 
-        if hasattr(self.compiler, 'post_build'):
-            public_output = self.compiler.post_build(build, output, self)
+        public_output = self.compiler.post_build(build, output, self)
 
         self._internal_options = (
             opts.flatten(i.compile_options(self.compiler, output)
@@ -83,8 +81,7 @@ class Compile(Edge):
 
         Edge.__init__(self, build, output, public_output, extra_deps)
 
-        if hasattr(self.compiler, 'post_install'):
-            primary.post_install = self.compiler.post_install(output, self)
+        primary.post_install = self.compiler.post_install(output, self)
 
     def add_extra_options(self, options):
         self._internal_options.extend(options)
