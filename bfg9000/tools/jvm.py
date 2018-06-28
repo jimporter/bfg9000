@@ -124,26 +124,19 @@ class JvmCompiler(BuildCommand):
     def _always_flags(self):
         return ['-verbose', '-d', '.']
 
-    def _class_path(self, libraries):
-        dirs = uniques(i.path for i in iterate(libraries))
-        if dirs:
-            return ['-cp', safe_str.join(dirs, os.pathsep)]
-        return []
-
-    def options(self, output, context):
-        libraries = getattr(context, 'libs', [])
-        return opts.option_list(self._class_path(libraries))
-
-    def link_options(self, mode, defines):
-        return opts.option_list()
-
     def flags(self, options):
-        flags = []
+        flags, class_path = [], []
         for i in options:
-            if isinstance(i, safe_str.stringy_types):
+            if isinstance(i, opts.lib):
+                class_path.append(i.library.path)
+            elif isinstance(i, safe_str.stringy_types):
                 flags.append(i)
             else:
                 raise TypeError('unknown option type {!r}'.format(type(i)))
+
+        if class_path:
+            flags.extend(['-cp', safe_str.join(uniques(class_path),
+                                               os.pathsep)])
         return flags
 
     def output_file(self, name, context):
@@ -173,6 +166,10 @@ class JarMaker(BuildCommand):
 
     def can_link(self, format, langs):
         return format == 'jvm'
+
+    @property
+    def needs_libs(self):
+        return False
 
     @property
     def has_link_macros(self):
@@ -231,6 +228,18 @@ class JarMaker(BuildCommand):
                         self.lang)
 
 
+class JvmPackage(Package):
+    def __init__(self, name, format, libs=None):
+        Package.__init__(self, name, format)
+        self.libs = libs or []
+
+    def compile_options(self, compiler, output):
+        return opts.option_list(opts.lib(i) for i in self.libs)
+
+    def link_options(self, linker, output):
+        return opts.option_list()
+
+
 class JvmPackageResolver(object):
     def __init__(self, builder, env, command):
         self.builder = builder
@@ -285,8 +294,8 @@ class JvmPackageResolver(object):
                                      .format(name))
 
     def resolve(self, name, version, kind, headers, libs):
-        return CommonPackage(name, self.builder.object_format,
-                             libs=[self._library(name)])
+        return JvmPackage(name, self.builder.object_format,
+                          libs=[self._library(name)])
 
 
 class JvmRunner(BuildCommand):

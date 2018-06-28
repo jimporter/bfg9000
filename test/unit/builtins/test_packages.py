@@ -8,7 +8,7 @@ from bfg9000 import file_types, options as opts
 from bfg9000.builtins import packages
 from bfg9000.environment import Environment
 from bfg9000.exceptions import PackageResolutionError
-from bfg9000.file_types import HeaderDirectory
+from bfg9000.file_types import CommonPackage, Directory, HeaderDirectory
 from bfg9000.path import abspath
 from bfg9000.platforms import platform_name, platform_info
 from bfg9000.versioning import SpecifierSet, Version
@@ -47,18 +47,24 @@ class TestFramework(BaseTest):
     @unittest.skipIf(platform_name() != 'darwin',
                      'frameworks only exist on macOS')
     def test_framework(self):
-        self.assertEqual(packages.framework(self.env, 'name'),
-                         file_types.CommonPackage(
-                             'name', self.env.platform.object_format,
-                             libs=[file_types.Framework('name')]))
+        self.assertEqual(
+            packages.framework(self.env, 'name'),
+            CommonPackage('name', self.env.platform.object_format,
+                          link_options=opts.to_list(opts.lib(
+                              file_types.Framework('name')
+                          )))
+        )
 
     @unittest.skipIf(platform_name() != 'darwin',
                      'frameworks only exist on macOS')
     def test_framework_suffix(self):
-        self.assertEqual(packages.framework(self.env, 'name', 'suffix'),
-                         file_types.CommonPackage(
-                             'name,suffix', self.env.platform.object_format,
-                             libs=[file_types.Framework('name', 'suffix')]))
+        self.assertEqual(
+            packages.framework(self.env, 'name', 'suffix'),
+            CommonPackage('name,suffix', self.env.platform.object_format,
+                          link_options=opts.to_list(opts.lib(
+                              file_types.Framework('name', 'suffix')
+                          )))
+        )
 
     @unittest.skipIf(platform_name() == 'darwin',
                      'frameworks only exist on macOS')
@@ -143,7 +149,9 @@ class TestBoostPackage(BaseTest):
             self.assertEqual(pkg._compile_options, opts.to_list(
                 opts.include_dir(HeaderDirectory(abspath(boost_dir)))
             ))
-            self.assertEqual(pkg.extra_options['lib_dirs'], [r'C:\Boost\lib'])
+            self.assertEqual(pkg._link_options, opts.to_list(
+                opts.lib_dir(Directory(abspath(r'C:\Boost\lib')))
+            ))
 
 
 class TestSystemExecutable(BaseTest):

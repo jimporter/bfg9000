@@ -75,9 +75,12 @@ class Compile(Edge):
         self._internal_options = (
             opts.flatten(i.compile_options(self.compiler, output)
                          for i in self.packages) +
-            opts.option_list(opts.include_dir(i) for i in self.includes) +
-            self.compiler.options(output, self)
+            opts.option_list(opts.include_dir(i) for i in self.includes)
         )
+        if self.compiler.needs_libs:
+            self._internal_options.extend(opts.lib(i) for i in self.libs)
+        if hasattr(self.compiler, 'options'):
+            self._internal_options.extend(self.compiler.options(output, self))
 
         Edge.__init__(self, build, output, public_output, extra_deps)
 
@@ -91,8 +94,12 @@ class Compile(Edge):
             self.pch.creator.add_extra_options(options)
 
     @property
+    def options(self):
+        return self._internal_options + self.user_options
+
+    @property
     def flags(self):
-        return self.compiler.flags(self._internal_options + self.user_options)
+        return self.compiler.flags(self.options)
 
 
 class CompileSource(Compile):

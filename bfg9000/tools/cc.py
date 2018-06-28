@@ -2,6 +2,7 @@ import os.path
 import re
 import subprocess
 from itertools import chain
+from six import string_types
 
 from . import pkg_config
 from .. import options as opts, safe_str, shell
@@ -302,6 +303,10 @@ class CcLinker(BuildCommand):
                 self.__allowed_langs[self.lang].issuperset(langs))
 
     @property
+    def needs_libs(self):
+        return True
+
+    @property
     def has_link_macros(self):
         # We only need to define LIBFOO_EXPORTS/LIBFOO_STATIC macros on
         # platforms that have different import/export rules for libraries. We
@@ -356,14 +361,6 @@ class CcLinker(BuildCommand):
         if self.builder.object_format == 'mach-o':
             return ['-Wl,-headerpad_max_install_names']
         return []
-
-    def _lib_dirs(self, libraries, extra_dirs):
-        dirs = uniques(chain(
-            (i.path.parent() for i in iterate(libraries)
-             if isinstance(i, Library) and not isinstance(i, StaticLibrary)),
-            extra_dirs
-        ))
-        return ['-L' + i for i in dirs]
 
     def _rpath(self, libraries, extra_dirs, output):
         if not output:
@@ -432,14 +429,26 @@ class CcLinker(BuildCommand):
             return ['--main={}'.format(entry_point)]
         return []
 
+    def always_libs(self, primary):
+        # XXX: Don't just asssume that these are the right libraries to use.
+        # For instance, clang users might want to use libc++ instead.
+        libs = opts.option_list()
+        if self.lang in ('c++', 'objc++') and not primary:
+            libs.append(opts.lib('stdc++'))
+        if self.lang in ('objc', 'objc++'):
+            libs.append(opts.lib('objc'))
+        if self.lang in ('f77', 'f95') and not primary:
+            libs.append(opts.lib('gfortran'))
+        if self.lang == 'java' and not primary:
+            libs.append(opts.lib('gcj'))
+        return libs
+
     def options(self, output, context):
         libraries = getattr(context, 'libs', [])
-        lib_dirs = getattr(context, 'lib_dirs', [])
         rpath_dirs = getattr(context, 'rpath_dirs', [])
         entry_point = getattr(context, 'entry_point', None)
 
         return opts.option_list(
-            self._lib_dirs(libraries, lib_dirs) +
             self._rpath(libraries, rpath_dirs, output) +
             self._entry_point(entry_point)
         )
@@ -458,48 +467,51 @@ class CcLinker(BuildCommand):
             return [library.path]
 
         # If we're here, we have a SharedLibrary (or possibly just a Library
-        # in the case of MinGW).
-        return ['-l' + self._extract_lib_name(library)]
-
-    def always_libs(self, primary):
-        # XXX: Don't just asssume that these are the right libraries to use.
-        # For instance, clang users might want to use libc++ instead.
-        libs = opts.option_list()
-        if self.lang in ('c++', 'objc++') and not primary:
-            libs.append('-lstdc++')
-        if self.lang in ('objc', 'objc++'):
-            libs.append('-lobjc')
-        if self.lang in ('f77', 'f95') and not primary:
-            libs.append('-lgfortran')
-        if self.lang == 'java' and not primary:
-            libs.append('-lgcj')
-        return libs
-
-    def libs(self, output, context):
-        libraries = getattr(context, 'libs', [])
-        raw_static = getattr(context, 'raw_static', True)
-        return opts.flatten(self._link_lib(i, raw_static) for i in libraries)
+        # in the case of MinGW) or a string (from `._always_libs`).
+        libname = (library if isinstance(library, string_types) else
+                   self._extract_lib_name(library))
+        return ['-l' + libname]
 
     def flags(self, options, mode='normal'):
-        flags, rpaths, rpath_links = [], [], []
+        raw_static = mode != 'pkg-config'
+        flags, rpaths, rpath_links, lib_dirs = [], [], [], []
         for i in options:
             if isinstance(i, opts.pthread):
                 # macOS doesn't expect -pthread when linking.
                 if self.env.platform.name != 'darwin':
                     flags.append('-pthread')
+            elif isinstance(i, opts.lib_dir):
+                lib_dirs.append(i.directory.path)
+            elif isinstance(i, opts.lib):
+                if ( isinstance(i.library, Library) and not
+                     (raw_static and isinstance(i.library, StaticLibrary)) ):
+                    lib_dirs.append(i.library.path.parent())
             elif isinstance(i, opts.rpath_dir):
                 rpaths.append(i.path)
             elif isinstance(i, opts.rpath_link_dir):
                 rpath_links.append(i.path)
             elif isinstance(i, safe_str.stringy_types):
                 flags.append(i)
+            elif isinstance(i, opts.lib_literal):
+                pass
             else:
                 raise TypeError('unknown option type {!r}'.format(type(i)))
 
+        flags.extend('-L' + i for i in uniques(lib_dirs))
         if rpaths:
             flags.append('-Wl,-rpath,' + ':'.join(rpaths))
         if rpath_links:
             flags.append('-Wl,-rpath-link,' + safe_str.join(rpath_links, ':'))
+        return flags
+
+    def lib_flags(self, options, mode='normal'):
+        raw_static = mode != 'pkg-config'
+        flags = []
+        for i in options:
+            if isinstance(i, opts.lib):
+                flags.extend(self._link_lib(i.library, raw_static))
+            elif isinstance(i, opts.lib_literal):
+                flags.append(i.value)
         return flags
 
     def _post_install(self, output, is_library, context):
@@ -697,7 +709,6 @@ class CcPackageResolver(object):
         except (OSError, PackageResolutionError):
             compile_options = opts.option_list()
             link_options = opts.option_list()
-            libs = []
 
             compile_options.extend(opts.include_dir(self.header(i))
                                    for i in iterate(headers))
@@ -706,12 +717,11 @@ class CcPackageResolver(object):
                 lib_names = self.env.platform.transform_package(name)
             for i in iterate(lib_names):
                 if isinstance(i, Framework):
-                    libs.append(i)
+                    link_options.append(opts.lib(i))
                 elif i == 'pthread':
                     compile_options.append(opts.pthread())
                     link_options.append(opts.pthread())
                 else:
-                    libs.append(self.library(i, kind))
+                    link_options.append(opts.lib(self.library(i, kind)))
 
-            return CommonPackage(name, format, compile_options, link_options,
-                                 libs=libs)
+            return CommonPackage(name, format, compile_options, link_options)

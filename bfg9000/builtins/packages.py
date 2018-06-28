@@ -49,7 +49,7 @@ def framework(env, name, suffix=None):
 
     framework = Framework(name, suffix)
     return CommonPackage(framework.full_name, env.platform.object_format,
-                         libs=[framework])
+                         link_options=opts.option_list(opts.lib(framework)))
 
 
 def _boost_version(header, required_version=None):
@@ -88,11 +88,12 @@ def boost_package(env, name=None, version=None):
             if dirs:
                 try:
                     header = pkg.header(version_hpp, [max(dirs)])
+                    lib_dir = Directory(Path(r'C:\Boost\lib'))
                     boost_version = _boost_version(header, version)
                     return BoostPackage(
                         name, env.builder('c++').object_format, boost_version,
                         opts.to_list(opts.include_dir(header)),
-                        lib_dirs=[r'C:\Boost\lib']
+                        opts.to_list(opts.lib_dir(lib_dir))
                     )
                 except PackageResolutionError:
                     pass
@@ -104,20 +105,29 @@ def boost_package(env, name=None, version=None):
         if not env.builder('c++').auto_link:
             # XXX: Don't require auto-link.
             raise PackageResolutionError('Boost on Windows requires auto-link')
+
+        link_options = opts.option_list()
+        if libdir:
+            link_options.append(opts.lib_dir(Directory(Path(libdir))))
         return BoostPackage(
             name, env.builder('c++').object_format, boost_version,
-            opts.to_list(opts.include_dir(header)), lib_dirs=listify(libdir)
+            opts.to_list(opts.include_dir(header)), link_options
         )
     else:
-        compile_options = opts.to_list(opts.include_dir(header))
+        dirs = [libdir] if libdir else None
+        libs = (pkg.library('boost_' + i, search_dirs=dirs)
+                for i in iterate(name))
+
+        compile_options = opts.option_list()
         link_options = opts.option_list()
         if env.platform.flavor == 'posix' and 'thread' in iterate(name):
             compile_options.append(opts.pthread())
             link_options.append(opts.pthread())
-        dirs = [libdir] if libdir else None
+
+        compile_options.append(opts.include_dir(header))
+        link_options.extend(opts.lib(i) for i in libs)
+
         return BoostPackage(
             name, env.builder('c++').object_format, boost_version,
-            compile_options, link_options,
-            libs=[pkg.library('boost_' + i, search_dirs=dirs)
-                  for i in iterate(name)]
+            compile_options, link_options
         )

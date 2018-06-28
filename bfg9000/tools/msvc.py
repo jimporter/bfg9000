@@ -297,6 +297,10 @@ class MsvcLinker(BuildCommand):
                 self.__allowed_langs[self.lang].issuperset(langs))
 
     @property
+    def needs_libs(self):
+        return True
+
+    @property
     def has_link_macros(self):
         return True
 
@@ -321,21 +325,8 @@ class MsvcLinker(BuildCommand):
     def _always_flags(self):
         return ['/nologo']
 
-    def _lib_dirs(self, libraries, extra_dirs, syntax):
-        dirs = uniques(chain(
-            (i.path.parent() for i in iterate(libraries)),
-            extra_dirs
-        ))
-        prefix = '-L' if syntax == 'cc' else '/LIBPATH:'
-        return [prefix + i for i in dirs]
-
-    def options(self, output, context):
-        syntax = getattr(context, 'syntax', 'msvc')
-        libraries = getattr(context, 'libs', [])
-        lib_dirs = getattr(context, 'lib_dirs', [])
-        return opts.option_list(
-            self._lib_dirs(libraries, lib_dirs, syntax)
-        )
+    def always_libs(self, primary):
+        return opts.option_list()
 
     def _link_lib(self, library, syntax):
         if isinstance(library, WholeArchive):
@@ -343,26 +334,40 @@ class MsvcLinker(BuildCommand):
         if isinstance(library, Framework):
             raise TypeError('MSVC does not support frameworks')
 
+        # Unlike the cc linker, we only support Library objects here (strings
+        # aren't allowed!)
         if syntax == 'cc':
             return ['-l' + self._extract_lib_name(library)]
         else:
             return [library.path.basename()]
 
-    def always_libs(self, primary):
-        return opts.option_list()
-
-    def libs(self, output, context):
-        syntax = getattr(context, 'syntax', 'msvc')
-        libraries = getattr(context, 'libs', [])
-        return opts.flatten(self._link_lib(i, syntax) for i in libraries)
-
     def flags(self, options, mode='normal'):
-        flags = []
+        syntax = 'cc' if mode == 'pkg-config' else 'msvc'
+        flags, lib_dirs = [], []
         for i in options:
-            if isinstance(i, safe_str.stringy_types):
+            if isinstance(i, opts.lib_dir):
+                lib_dirs.append(i.directory.path)
+            elif isinstance(i, opts.lib):
+                lib_dirs.append(i.library.path.parent())
+            elif isinstance(i, safe_str.stringy_types):
                 flags.append(i)
+            elif isinstance(i, opts.lib_literal):
+                pass
             else:
                 raise TypeError('unknown option type {!r}'.format(type(i)))
+
+        prefix = '-L' if syntax == 'cc' else '/LIBPATH:'
+        flags.extend(prefix + i for i in uniques(lib_dirs))
+        return flags
+
+    def lib_flags(self, options, mode='normal'):
+        syntax = 'cc' if mode == 'pkg-config' else 'msvc'
+        flags = []
+        for i in options:
+            if isinstance(i, opts.lib):
+                flags.extend(self._link_lib(i.library, syntax))
+            elif isinstance(i, opts.lib_literal):
+                flags.append(i.value)
         return flags
 
     def parse_flags(self, flags):
@@ -525,5 +530,7 @@ class MsvcPackageResolver(object):
             compile_options = opts.option_list(
                 opts.include_dir(self.header(i)) for i in iterate(headers)
             )
-            libs = [self.library(i, kind) for i in iterate(lib_names)]
-            return CommonPackage(name, format, compile_options, libs=libs)
+            link_options = opts.option_list(
+                opts.lib(self.library(i, kind)) for i in iterate(lib_names)
+            )
+            return CommonPackage(name, format, compile_options, link_options)

@@ -168,9 +168,10 @@ class PkgConfigInfo(object):
         self.includes = includes
         self.libs = libs
         self.libs_private = libs_private
-        self.options = pshell.listify(options)
-        self.link_options = pshell.listify(link_options)
-        self.link_options_private = pshell.listify(link_options_private)
+        self.options = pshell.listify(options, type=opts.option_list)
+        self.link_options = pshell.listify(link_options, type=opts.option_list)
+        self.link_options_private = pshell.listify(link_options_private,
+                                                   type=opts.option_list)
 
     @property
     def output(self):
@@ -225,46 +226,9 @@ class PkgConfigInfo(object):
             out.write_literal('\n')
 
     def write(self, out, env):
-        def pkg_installify(f):
-            return installify(f, destdir=False, absolute_ok=True)
-
-        data = self._process_inputs()
         out = Writer(out)
 
-        pkg = CommonPackage(
-            None, None, syntax='cc', raw_static=False,
-            libs=[pkg_installify(i.all[0]) for i in data['libs']],
-            **data['extra_fields']
-        )
-        pkg_private = CommonPackage(
-            None, None, syntax='cc', raw_static=False,
-            libs=[pkg_installify(i.all[0]) for i in data['libs_private']],
-            **data['extra_fields_private']
-        )
-
-        builder = env.builder(self.lang)
-        compiler = builder.compiler
-        linker = builder.linker('executable')
-
-        cflags = compiler.flags(
-            (opts.option_list(opts.include_dir(pkg_installify(i))
-                              for i in data['includes']) +
-             pkg.compile_options(compiler, None) +
-             opts.option_list(data['cflags'])),
-            mode='pkg-config'
-        )
-        ldflags = linker.flags(
-            (pkg.link_options(linker, None) +
-             pkg.link_libs(linker, None) +
-             opts.option_list(data['ldflags'])),
-            mode='pkg-config'
-        )
-        ldflags_private = linker.flags(
-            (pkg_private.link_options(linker, None) +
-             pkg_private.link_libs(linker, None) +
-             opts.option_list(data['ldflags_private'])),
-            mode='pkg-config'
-        )
+        data = self._process_inputs(env)
 
         for i in path.InstallRoot:
             if i != path.InstallRoot.bindir:
@@ -282,19 +246,16 @@ class PkgConfigInfo(object):
                           Syntax.shell, delim=literal(', '))
         self._write_field(out, 'Conflicts', data['conflicts'],
                           Syntax.shell, delim=literal(', '))
-        self._write_field(out, 'Cflags', cflags, Syntax.shell)
-        self._write_field(out, 'Libs', ldflags, Syntax.shell)
-        self._write_field(out, 'Libs.private', ldflags_private, Syntax.shell)
+        self._write_field(out, 'Cflags', data['cflags'], Syntax.shell)
+        self._write_field(out, 'Libs', data['ldflags'], Syntax.shell)
+        self._write_field(out, 'Libs.private', data['ldflags_private'],
+                          Syntax.shell)
 
-    def _process_inputs(self):
-        result = {
-            'name': self.name,
-            'desc_name': self.desc_name or self.name,
-            'url': self.url,
-            'version': self.version,
-        }
-        result['desc'] = self.desc or '{} library'.format(result['desc_name'])
+    def _process_inputs(self, env):
+        def pkg_installify(f):
+            return installify(f, destdir=False, absolute_ok=True)
 
+        desc_name = self.desc_name or self.name
         includes = self.includes or []
         libs = self.libs or []
         libs_private = self.libs_private or []
@@ -303,8 +264,8 @@ class PkgConfigInfo(object):
                                            [RequirementSet(), []])
         conflicts = self.conflicts or RequirementSet()
 
-        fwd_ldflags = flatten(
-            i.forward_opts['options'] if hasattr(i, 'forward_opts') else []
+        fwd_ldflags = opts.flatten(
+            getattr(i, 'forward_opts', {}).get('link_options', [])
             for i in chain(libs, libs_private)
         )
 
@@ -328,44 +289,49 @@ class PkgConfigInfo(object):
         requires_private.update(auto_requires)
         requires.merge_from(requires_private)
 
-        result['requires'] = requires.split(single=True)
-        result['requires_private'] = requires_private.split(single=True)
-        result['conflicts'] = conflicts.split()
+        # Get the compiler and linker to use for generating flags.
+        builder = env.builder(self.lang)
+        compiler = builder.compiler
+        linker = builder.linker('executable')
 
-        result['includes'] = includes
-        result['libs'] = libs
-        result['libs_private'] = libs_private
-        result['extra_fields'] = {}
-        result['extra_fields_private'] = {}
+        compile_options = opts.option_list(
+            opts.include_dir(pkg_installify(i)) for i in includes
+        ) + self.options
+        link_options = (opts.option_list(opts.lib(pkg_installify(i.all[0]))
+                                         for i in libs) +
+                        self.link_options)
+        link_options_private = (
+            opts.option_list(opts.lib(pkg_installify(i.all[0]))
+                             for i in libs_private) +
+            fwd_ldflags + self.link_options_private
+        )
 
-        self._process_packages(result, extra)
-        self._process_packages(result, chain(extra_private, auto_extra),
-                               private=True)
+        # Add the options from each of the system packages.
+        for pkg in extra:
+            compile_options.extend(pkg.compile_options(compiler, None))
+            link_options.extend(pkg.link_options(linker, None))
+        for pkg in chain(extra_private, auto_extra):
+            compile_options.extend(pkg.compile_options(compiler, None))
+            link_options_private.extend(pkg.link_options(linker, None))
 
-        result['cflags'] = self.options
-        result['ldflags'] = self.link_options
-        result['ldflags_private'] = fwd_ldflags + self.link_options_private
+        return {
+            'desc_name': desc_name,
+            'desc': self.desc or '{} library'.format(desc_name),
+            'url': self.url,
+            'version': self.version,
 
-        return result
+            'requires': requires.split(single=True),
+            'requires_private': requires_private.split(single=True),
+            'conflicts': conflicts.split(),
 
-    @staticmethod
-    def _process_packages(result, pkgs, private=False):
-        # Add the options from each of the system packages (.includes, .libs,
-        # and occasionally .lib_dirs).
-        def key(x):
-            return x + '_private' if private else x
-
-        extra = result[key('extra_fields')]
-        for i in pkgs:
-            for k, v in iteritems(i.extra_options):
-                if k == 'libs':
-                    result[key(k)].extend(v)
-                elif isiterable(v):
-                    if k not in v:
-                        extra[k] = []
-                    extra[k].extend(v)
-                else:
-                    warnings.warn('unhandled package option {!r}'.format(k))
+            'cflags': compiler.flags(compile_options, mode='pkg-config'),
+            'ldflags': (linker.flags(link_options, mode='pkg-config') +
+                        linker.lib_flags(link_options, mode='pkg-config')),
+            'ldflags_private': (
+                linker.flags(link_options_private, mode='pkg-config') +
+                linker.lib_flags(link_options_private, mode='pkg-config')
+            )
+        }
 
     @staticmethod
     def _filter_packages(packages):

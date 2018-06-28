@@ -297,34 +297,27 @@ class Package(object):
     def __eq__(self, rhs):
         return type(self) == type(rhs) and self.name == rhs.name
 
-
-class CommonPackage(Package):
-    def __init__(self, name, format, compile_options=None, link_options=None,
-                 **kwargs):
-        Package.__init__(self, name, format)
-        self._compile_options = compile_options or _option_list()
-        self._link_options = link_options or _option_list()
-        self.extra_options = kwargs
-
-    def __getattr__(self, name):
-        try:
-            return self.extra_options[name]
-        except KeyError as e:
-            raise AttributeError(e)
-
-    def compile_options(self, compiler, output):
-        return self._compile_options + compiler.options(output, self)
-
-    def link_options(self, linker, output):
-        return self._link_options + linker.options(output, self)
-
-    def link_libs(self, linker, output):
-        return linker.libs(output, self)
-
     def __repr__(self):
         return '<{type} {name}>'.format(
             type=type(self).__name__, name=repr(self.name)
         )
+
+
+class CommonPackage(Package):
+    def __init__(self, name, format, compile_options=None, link_options=None):
+        Package.__init__(self, name, format)
+        self._compile_options = compile_options or _option_list()
+        self._link_options = link_options or _option_list()
+
+    def compile_options(self, compiler, output):
+        if hasattr(compiler, 'options'):
+            return self._compile_options + compiler.options(output, self)
+        return self._compile_options
+
+    def link_options(self, linker, output):
+        if hasattr(linker, 'options'):
+            return self._link_options + linker.options(output, self)
+        return self._link_options
 
 
 # A reference to a macOS framework. Can be used in place of Library objects.

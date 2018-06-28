@@ -57,9 +57,6 @@ class Link(Edge):
             raise ValueError('need at least one source file')
 
         self.user_options = pshell.listify(link_options, type=opts.option_list)
-        self.forwarded_options = forward_opts.get(
-            'options', opts.option_list()
-        )
 
         if entry_point:
             self.entry_point = entry_point
@@ -98,7 +95,7 @@ class Link(Edge):
 
         public_output = self.linker.post_build(build, output, self)
 
-        self._fill_options(env, output)
+        self._fill_options(env, forward_opts, output)
 
         Edge.__init__(self, build, output, public_output, extra_deps)
 
@@ -139,34 +136,33 @@ class DynamicLink(Link):
     _prefix = ''
 
     @property
+    def options(self):
+        return self._internal_options + self.user_options
+
+    @property
     def flags(self):
-        return self.linker.flags(
-            self._internal_options + self.forwarded_options + self.user_options
-        )
+        return self.linker.flags(self.options)
 
     @property
     def lib_flags(self):
-        return self.linker.flags(self._lib_options)
+        return self.linker.lib_flags(self.options)
 
-    def _fill_options(self, env, output):
+    def _fill_options(self, env, forward_opts, output):
+        linkers = (env.builder(i).linker(self.mode) for i in self.langs)
+        self._internal_options = opts.flatten(
+            i.link_options(self.linker, output) for i in self.packages
+        )
+
         if hasattr(self.linker, 'options'):
-            self._internal_options = (
-                opts.flatten(i.link_options(self.linker, output)
-                             for i in self.packages) +
-                self.linker.options(output, self)
-            )
-        else:
-            self._internal_options = opts.option_list()
+            self._internal_options.extend(self.linker.options(output, self))
 
-        if hasattr(self.linker, 'libs'):
-            linkers = (env.builder(i).linker(self.mode) for i in self.langs)
-            self._lib_options = (
-                opts.flatten(i.always_libs(i is self.linker)
-                             for i in linkers) +
-                opts.flatten(i.link_libs(self.linker, output)
-                             for i in self.packages) +
-                self.linker.libs(output, self)
-            )
+        if self.linker.needs_libs:
+            self._internal_options.extend(chain.from_iterable(
+                i.always_libs(i is self.linker) for i in linkers
+            ))
+            self._internal_options.extend(opts.lib(i) for i in self.libs)
+
+        self._internal_options.extend(forward_opts.get('link_options', []))
 
         first(output).runtime_deps.extend(
             i.runtime_file for i in self.libs if i.runtime_file
@@ -211,12 +207,14 @@ class StaticLink(Link):
         # used.
         return self.linker.flags(self.static_options)
 
-    def _fill_options(self, env, output):
+    def _fill_options(self, env, forward_opts, output):
         primary = first(output)
         primary.forward_opts = {
             'compile_options': opts.option_list(),
-            'options': self.user_options,
-            'libs': self.user_libs,
+            # Don't include libs in link_options, since later link steps will
+            # handle adding them to their LDFLAGS.
+            'link_options': self.user_options,
+            'libs': self.libs,
             'packages': self.user_packages,
         }
         if hasattr(self.linker, 'forwarded_compile_options'):

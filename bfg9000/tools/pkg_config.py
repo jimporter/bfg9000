@@ -61,10 +61,17 @@ class PkgConfigPackage(Package):
                           compiler.flavor == 'msvc')
 
     def link_options(self, linker, output):
-        result = self._call(self.name, 'ldflags', self.static,
-                            linker.flavor == 'msvc')
+        flags = self._call(self.name, 'ldflags', self.static,
+                           linker.flavor == 'msvc')
+
+        # XXX: How should we ensure that these libs are linked statically when
+        # necessary?
+        libs = self._call(self.name, 'ldlibs', self.static,
+                          linker.flavor == 'msvc')
+        libs = opts.option_list(opts.lib_literal(i) for i in libs)
+
         if first(output).format != 'elf' or self.static:
-            return result
+            return flags + libs
 
         # pkg-config packages don't generally include rpath information, so we
         # need to generate it ourselves.
@@ -77,13 +84,7 @@ class PkgConfigPackage(Package):
         lib_dirs = parser.parse_known_args(dir_args)[0].lib_dirs or []
         self.rpath_dirs = [Path(i, Root.absolute) for i in lib_dirs]
 
-        return result + linker.options(output, self)
-
-    def link_libs(self, linker, output):
-        # XXX: How should we ensure that these libs are linked statically when
-        # necessary?
-        return self._call(self.name, 'ldlibs', self.static,
-                          linker.flavor == 'msvc')
+        return flags + libs + linker.options(output, self)
 
     def __repr__(self):
         return '<PkgConfigPackage({!r}, {!r})>'.format(
