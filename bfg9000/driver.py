@@ -248,7 +248,8 @@ def help(parser, subparser, args, extra):
 
 def main():
     parser = argparse.ArgumentParser(prog='bfg9000', description=description)
-    subparsers = parser.add_subparsers()
+    subparsers = parser.add_subparsers(metavar='COMMAND')
+    subparsers.required = True
 
     add_generic_args(parser)
 
