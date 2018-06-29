@@ -139,13 +139,6 @@ class MsvcBaseCompiler(BuildCommand):
     def _always_flags(self):
         return ['/nologo', '/EHsc']
 
-    def _include_pch(self, pch):
-        return ['/Yu' + pch.header_name]
-
-    def options(self, output, context):
-        pch = getattr(context, 'pch', None)
-        return opts.option_list(self._include_pch(pch) if pch else [])
-
     def flags(self, options, mode='normal'):
         flags = []
         for i in options:
@@ -157,6 +150,8 @@ class MsvcBaseCompiler(BuildCommand):
             elif isinstance(i, opts.define):
                 prefix = '-D' if mode == 'pkg-config' else '/D'
                 flags.append(prefix + i.name)
+            elif isinstance(i, opts.pch):
+                flags.append('/Yu' + i.header.header_name)
             else:
                 raise TypeError('unknown option type {!r}'.format(type(i)))
         return flags
@@ -230,9 +225,6 @@ class MsvcPchCompiler(MsvcBaseCompiler):
             with generated_file(build, self.env, context.pch_source) as out:
                 out.write('#include "{}"\n'.format(header.path.basename()))
 
-    def _create_pch(self, header):
-        return ['/Yc' + header.path.suffix]
-
     def options(self, output, context):
         header = getattr(context, 'file', None)
 
@@ -243,8 +235,9 @@ class MsvcPchCompiler(MsvcBaseCompiler):
             d = HeaderDirectory(header.path.parent())
             options.append(opts.include_dir(d))
 
-        options.extend(MsvcBaseCompiler.options(self, output, context))
-        options.extend(self._create_pch(header) if header else [])
+        if header:
+            # Add flag to create PCH file.
+            options.append('/Yc' + header.path.suffix)
         return options
 
     def output_file(self, name, context):

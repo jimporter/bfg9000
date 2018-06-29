@@ -72,10 +72,10 @@ class Compile(Edge):
 
         public_output = self.compiler.post_build(build, output, self)
 
-        self._internal_options = (
-            opts.flatten(i.compile_options(self.compiler, output)
-                         for i in self.packages) +
-            opts.option_list(opts.include_dir(i) for i in self.includes)
+        self._internal_options = opts.option_list(
+            (i.compile_options(self.compiler, output) for i in self.packages),
+            (opts.include_dir(i) for i in self.includes),
+            opts.pch(self.pch) if self.pch else None
         )
         if self.compiler.needs_libs:
             self._internal_options.extend(opts.lib(i) for i in self.libs)

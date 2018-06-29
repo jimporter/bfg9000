@@ -149,7 +149,7 @@ class DynamicLink(Link):
 
     def _fill_options(self, env, forward_opts, output):
         linkers = (env.builder(i).linker(self.mode) for i in self.langs)
-        self._internal_options = opts.flatten(
+        self._internal_options = opts.option_list(
             i.link_options(self.linker, output) for i in self.packages
         )
 
@@ -157,10 +157,10 @@ class DynamicLink(Link):
             self._internal_options.extend(self.linker.options(output, self))
 
         if self.linker.needs_libs:
-            self._internal_options.extend(chain.from_iterable(
-                i.always_libs(i is self.linker) for i in linkers
-            ))
-            self._internal_options.extend(opts.lib(i) for i in self.libs)
+            self._internal_options.collect(
+                (i.always_libs(i is self.linker) for i in linkers),
+                (opts.lib(i) for i in self.libs)
+            )
 
         self._internal_options.extend(forward_opts.get('link_options', []))
 

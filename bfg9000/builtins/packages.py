@@ -92,8 +92,8 @@ def boost_package(env, name=None, version=None):
                     boost_version = _boost_version(header, version)
                     return BoostPackage(
                         name, env.builder('c++').object_format, boost_version,
-                        opts.to_list(opts.include_dir(header)),
-                        opts.to_list(opts.lib_dir(lib_dir))
+                        opts.option_list(opts.include_dir(header)),
+                        opts.option_list(opts.lib_dir(lib_dir))
                     )
                 except PackageResolutionError:
                     pass
@@ -111,7 +111,7 @@ def boost_package(env, name=None, version=None):
             link_options.append(opts.lib_dir(Directory(Path(libdir))))
         return BoostPackage(
             name, env.builder('c++').object_format, boost_version,
-            opts.to_list(opts.include_dir(header)), link_options
+            opts.option_list(opts.include_dir(header)), link_options
         )
     else:
         dirs = [libdir] if libdir else None

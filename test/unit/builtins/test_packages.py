@@ -50,7 +50,7 @@ class TestFramework(BaseTest):
         self.assertEqual(
             packages.framework(self.env, 'name'),
             CommonPackage('name', self.env.platform.object_format,
-                          link_options=opts.to_list(opts.lib(
+                          link_options=opts.option_list(opts.lib(
                               file_types.Framework('name')
                           )))
         )
@@ -61,7 +61,7 @@ class TestFramework(BaseTest):
         self.assertEqual(
             packages.framework(self.env, 'name', 'suffix'),
             CommonPackage('name,suffix', self.env.platform.object_format,
-                          link_options=opts.to_list(opts.lib(
+                          link_options=opts.option_list(opts.lib(
                               file_types.Framework('name', 'suffix')
                           )))
         )
@@ -146,10 +146,10 @@ class TestBoostPackage(BaseTest):
              mock.patch('os.path.exists', mock_exists):  # noqa
             pkg = packages.boost_package(self.env, 'thread')
             self.assertEqual(pkg.name, 'boost(thread)')
-            self.assertEqual(pkg._compile_options, opts.to_list(
+            self.assertEqual(pkg._compile_options, opts.option_list(
                 opts.include_dir(HeaderDirectory(abspath(boost_dir)))
             ))
-            self.assertEqual(pkg._link_options, opts.to_list(
+            self.assertEqual(pkg._link_options, opts.option_list(
                 opts.lib_dir(Directory(abspath(r'C:\Boost\lib')))
             ))
 

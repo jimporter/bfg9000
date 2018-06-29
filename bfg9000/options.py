@@ -2,8 +2,9 @@ from . import iterutils, safe_str
 
 
 class option_list(object):
-    def __init__(self, *args, **kwargs):
-        self._options = list(*args, **kwargs)
+    def __init__(self, *args):
+        self._options = []
+        self.collect(*args)
 
     def append(self, option):
         if ( isinstance(option, safe_str.stringy_types) or
@@ -13,6 +14,14 @@ class option_list(object):
     def extend(self, options):
         for i in options:
             self.append(i)
+
+    def collect(self, *args):
+        for i in args:
+            if iterutils.isiterable(i):
+                for j in i:
+                    self.collect(j)
+            elif i is not None:
+                self.append(i)
 
     def copy(self):
         return option_list(self._options)
@@ -40,14 +49,6 @@ class option_list(object):
                             .format(type(rhs)))
         self._options.extend(rhs._options)
         return self
-
-
-def to_list(*args):
-    return option_list(args)
-
-
-def flatten(iterables):
-    return iterutils.flatten(iterables, option_list)
 
 
 class Option(object):
@@ -82,8 +83,10 @@ pthread = option('pthread')
 pic = option('pic')
 define = option('define', ('name',))
 include_dir = option('include_dir', ('directory',))
+pch = option('pch', ('header',))
 lib_dir = option('lib_dir', ('directory',))
 lib = option('lib', ('library',))
 rpath_dir = option('rpath_dir', ('path',))
 rpath_link_dir = option('rpath_link_dir', ('path',))
 lib_literal = option('lib_literal', ('value',))
+entry_point = option('entry_point', ('value',))

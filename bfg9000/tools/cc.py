@@ -172,13 +172,6 @@ class CcBaseCompiler(BuildCommand):
         else:
             return ['-I' + directory.path]
 
-    def _include_pch(self, pch):
-        return ['-include', pch.path.stripext()]
-
-    def options(self, output, context):
-        pch = getattr(context, 'pch', None)
-        return opts.option_list(self._include_pch(pch) if pch else [])
-
     def flags(self, options, mode='normal'):
         flags = []
         for i in options:
@@ -190,6 +183,8 @@ class CcBaseCompiler(BuildCommand):
                 flags.extend(self._include_dir(i.directory))
             elif isinstance(i, opts.define):
                 flags.append('-D' + i.name)
+            elif isinstance(i, opts.pch):
+                flags.extend(['-include', i.header.path.stripext()])
             elif isinstance(i, safe_str.stringy_types):
                 flags.append(i)
             else:
@@ -424,11 +419,6 @@ class CcLinker(BuildCommand):
             # This object format must not support rpaths, so just return.
             return []
 
-    def _entry_point(self, entry_point):
-        if self.lang == 'java' and entry_point:
-            return ['--main={}'.format(entry_point)]
-        return []
-
     def always_libs(self, primary):
         # XXX: Don't just asssume that these are the right libraries to use.
         # For instance, clang users might want to use libc++ instead.
@@ -449,8 +439,8 @@ class CcLinker(BuildCommand):
         entry_point = getattr(context, 'entry_point', None)
 
         return opts.option_list(
-            self._rpath(libraries, rpath_dirs, output) +
-            self._entry_point(entry_point)
+            self._rpath(libraries, rpath_dirs, output),
+            opts.entry_point(entry_point) if entry_point else None
         )
 
     def _link_lib(self, library, raw_static):
@@ -490,6 +480,10 @@ class CcLinker(BuildCommand):
                 rpaths.append(i.path)
             elif isinstance(i, opts.rpath_link_dir):
                 rpath_links.append(i.path)
+            elif isinstance(i, opts.entry_point):
+                if self.lang != 'java':
+                    raise ValueError('entry point only applies to java')
+                flags.append('--main={}'.format(i.value))
             elif isinstance(i, safe_str.stringy_types):
                 flags.append(i)
             elif isinstance(i, opts.lib_literal):
@@ -616,7 +610,7 @@ class CcSharedLibraryLinker(CcLinker):
             return ['-Wl,-soname,' + soname.path.basename()]
 
     def compile_options(self, context):
-        options = opts.to_list(opts.pic())
+        options = opts.option_list(opts.pic())
         if self.has_link_macros:
             options.append(opts.define(library_macro(
                 context.name, 'shared_library'

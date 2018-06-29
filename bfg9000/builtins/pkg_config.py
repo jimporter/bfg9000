@@ -264,7 +264,7 @@ class PkgConfigInfo(object):
                                            [RequirementSet(), []])
         conflicts = self.conflicts or RequirementSet()
 
-        fwd_ldflags = opts.flatten(
+        fwd_ldflags = opts.option_list(
             getattr(i, 'forward_opts', {}).get('link_options', [])
             for i in chain(libs, libs_private)
         )
@@ -295,15 +295,16 @@ class PkgConfigInfo(object):
         linker = builder.linker('executable')
 
         compile_options = opts.option_list(
-            opts.include_dir(pkg_installify(i)) for i in includes
-        ) + self.options
-        link_options = (opts.option_list(opts.lib(pkg_installify(i.all[0]))
-                                         for i in libs) +
-                        self.link_options)
-        link_options_private = (
-            opts.option_list(opts.lib(pkg_installify(i.all[0]))
-                             for i in libs_private) +
-            fwd_ldflags + self.link_options_private
+            (opts.include_dir(pkg_installify(i)) for i in includes),
+            self.options
+        )
+        link_options = opts.option_list(
+            (opts.lib(pkg_installify(i.all[0])) for i in libs),
+            self.link_options
+        )
+        link_options_private = opts.option_list(
+            (opts.lib(pkg_installify(i.all[0])) for i in libs_private),
+            fwd_ldflags, self.link_options_private
         )
 
         # Add the options from each of the system packages.
