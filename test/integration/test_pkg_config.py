@@ -28,6 +28,10 @@ class TestPkgConfig(IntegrationTest):
         self.configure()
         self.assertExists(os.path.join('pkgconfig', 'hello.pc'))
 
+        if platform_name() == 'linux':
+            self.assertEqual(pkg_config(['hello', '--print-requires']), '')
+            self.assertEqual(pkg_config(['hello', '--print-requires-private']),
+                             'ogg')
         self.assertEqual(pkg_config(['hello', '--libs-only-l']), '-lhello')
         self.assertEqual(pkg_config(['hello', '--libs-only-l', '--static']),
                          '-lhello -logg')
@@ -37,6 +41,10 @@ class TestPkgConfig(IntegrationTest):
         self.configure(extra_args=['--enable-shared', '--enable-static'])
         self.assertExists(os.path.join('pkgconfig', 'hello.pc'))
 
+        if platform_name() == 'linux':
+            self.assertEqual(pkg_config(['hello', '--print-requires']), '')
+            self.assertEqual(pkg_config(['hello', '--print-requires-private']),
+                             'ogg')
         self.assertEqual(pkg_config(['hello', '--libs-only-l']), '-lhello')
         self.assertEqual(pkg_config(['hello', '--libs-only-l', '--static']),
                          '-lhello -linner -logg')
@@ -45,9 +53,23 @@ class TestPkgConfig(IntegrationTest):
         self.configure(extra_args=['--disable-shared', '--enable-static'])
         self.assertExists(os.path.join('pkgconfig', 'hello.pc'))
 
+        if platform_name() == 'linux':
+            self.assertEqual(pkg_config(['hello', '--print-requires']), '')
+            self.assertEqual(pkg_config(['hello', '--print-requires-private']),
+                             'ogg')
         self.assertEqual(pkg_config(['hello', '--libs-only-l']), '-lhello')
         self.assertEqual(pkg_config(['hello', '--libs-only-l', '--static']),
                          '-lhello -linner -logg')
+
+    def test_configure_using_system_pkg(self):
+        self.configure(env={'PKG_CONFIG': 'nonexist'})
+        self.assertExists(os.path.join('pkgconfig', 'hello.pc'))
+
+        self.assertEqual(pkg_config(['hello', '--print-requires']), '')
+        self.assertEqual(pkg_config(['hello', '--print-requires-private']), '')
+        self.assertEqual(pkg_config(['hello', '--libs-only-l']), '-lhello')
+        self.assertEqual(pkg_config(['hello', '--libs-only-l', '--static']),
+                         '-lhello -logg')
 
     def test_install(self):
         self.configure()
