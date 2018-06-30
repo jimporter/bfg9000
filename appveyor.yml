@@ -51,6 +51,7 @@ for:
   - matrix:
       only:
         - image: Visual Studio 2017
+          COMPILER: vs
     environment:
       VS: C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat
       BOOST_INCLUDEDIR: C:\Libraries\boost_1_67_0
@@ -58,7 +59,8 @@ for:
       CHOCO_EXTRAS: gnuwin32-make.portable
   - matrix:
       only:
-        - COMPILER: mingw
+        - image: Visual Studio 2017
+          COMPILER: mingw
     environment:
       BACKENDS: ninja make
       CC: gcc
