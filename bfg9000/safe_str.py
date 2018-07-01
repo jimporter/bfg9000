@@ -1,4 +1,5 @@
 from six import string_types
+from six.moves import zip
 
 from . import iterutils
 
@@ -35,6 +36,9 @@ class literal_types(safe_string):
         if type(self) is not type(rhs):
             return NotImplemented
         return self.string == rhs.string
+
+    def __ne__(self, rhs):
+        return not (self == rhs)
 
     def __add__(self, rhs):
         return jbos(self, rhs)
@@ -79,6 +83,15 @@ class jbos(safe_string):  # Just a Bunch of Strings
 
     def __repr__(self):
         return 'jbos({})'.format(', '.join(repr(i) for i in self.bits))
+
+    def __eq__(self, rhs):
+        if type(self) is not type(rhs):
+            return NotImplemented
+        return ( len(self.bits) == len(rhs.bits) and
+                 all(i == j for i, j in zip(self.bits, rhs.bits)) )
+
+    def __ne__(self, rhs):
+        return not (self == rhs)
 
     def __add__(self, rhs):
         if isinstance(rhs, stringy_types):

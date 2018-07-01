@@ -14,6 +14,7 @@ from ..exceptions import PackageResolutionError
 from ..file_types import *
 from ..iterutils import (default_sentinel, first, flatten, iterate, listify,
                          uniques, recursive_walk)
+from ..packages import CommonPackage, PackageKind
 from ..path import install_path, Path, Root
 from ..versioning import detect_version, SpecifierSet
 
@@ -175,14 +176,19 @@ class CcBaseCompiler(BuildCommand):
     def flags(self, options, mode='normal'):
         flags = []
         for i in options:
-            if isinstance(i, opts.pthread):
+            if isinstance(i, opts.include_dir):
+                flags.extend(self._include_dir(i.directory))
+            elif isinstance(i, opts.define):
+                if i.value:
+                    flags.append('-D' + i.name + '=' + i.value)
+                else:
+                    flags.append('-D' + i.name)
+            elif isinstance(i, opts.std):
+                flags.append('-std=' + i.value)
+            elif isinstance(i, opts.pthread):
                 flags.append('-pthread')
             elif isinstance(i, opts.pic):
                 flags.append('-fPIC')
-            elif isinstance(i, opts.include_dir):
-                flags.extend(self._include_dir(i.directory))
-            elif isinstance(i, opts.define):
-                flags.append('-D' + i.name)
             elif isinstance(i, opts.pch):
                 flags.extend(['-include', i.header.path.stripext()])
             elif isinstance(i, safe_str.stringy_types):
@@ -466,11 +472,7 @@ class CcLinker(BuildCommand):
         raw_static = mode != 'pkg-config'
         flags, rpaths, rpath_links, lib_dirs = [], [], [], []
         for i in options:
-            if isinstance(i, opts.pthread):
-                # macOS doesn't expect -pthread when linking.
-                if self.env.platform.name != 'darwin':
-                    flags.append('-pthread')
-            elif isinstance(i, opts.lib_dir):
+            if isinstance(i, opts.lib_dir):
                 lib_dirs.append(i.directory.path)
             elif isinstance(i, opts.lib):
                 if ( isinstance(i.library, Library) and not
@@ -480,6 +482,10 @@ class CcLinker(BuildCommand):
                 rpaths.append(i.path)
             elif isinstance(i, opts.rpath_link_dir):
                 rpath_links.append(i.path)
+            elif isinstance(i, opts.pthread):
+                # macOS doesn't expect -pthread when linking.
+                if self.env.platform.name != 'darwin':
+                    flags.append('-pthread')
             elif isinstance(i, opts.entry_point):
                 if self.lang != 'java':
                     raise ValueError('entry point only applies to java')

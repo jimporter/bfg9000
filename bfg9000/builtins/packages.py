@@ -9,6 +9,7 @@ from ..exceptions import PackageResolutionError, PackageVersionError
 from ..file_types import *
 from ..iterutils import default_sentinel, iterate, listify
 from ..objutils import objectify
+from ..packages import CommonPackage, Package, PackageKind
 from ..path import Path, Root
 from ..shell import which
 from ..versioning import check_version, SpecifierSet, Version

@@ -11,6 +11,7 @@ from ..build_inputs import build_input
 from ..file_types import *
 from ..iterutils import flatten, iterate, uniques, isiterable, recursive_walk
 from ..objutils import objectify
+from ..packages import CommonPackage
 from ..safe_str import literal, shell_literal
 from ..shell import posix as pshell
 from ..shell.syntax import Syntax, Writer

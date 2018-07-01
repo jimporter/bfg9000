@@ -33,14 +33,20 @@ class TestLiteral(unittest.TestCase):
                           lambda: str(shell_literal('foo')))
 
     def test_equality(self):
-        self.assertEqual(literal('foo'), literal('foo'))
-        self.assertEqual(shell_literal('foo'), shell_literal('foo'))
+        self.assertTrue(literal('foo') == literal('foo'))
+        self.assertTrue(shell_literal('foo') == shell_literal('foo'))
+        self.assertFalse(literal('foo') != literal('foo'))
+        self.assertFalse(shell_literal('foo') != shell_literal('foo'))
 
-        self.assertNotEqual(literal('foo'), literal('bar'))
-        self.assertNotEqual(shell_literal('foo'), shell_literal('bar'))
+        self.assertFalse(literal('foo') == literal('bar'))
+        self.assertFalse(shell_literal('foo') == shell_literal('bar'))
+        self.assertTrue(literal('foo') != literal('bar'))
+        self.assertTrue(shell_literal('foo') != shell_literal('bar'))
 
-        self.assertNotEqual(literal('foo'), shell_literal('foo'))
-        self.assertNotEqual(shell_literal('foo'), literal('foo'))
+        self.assertFalse(literal('foo') == shell_literal('foo'))
+        self.assertFalse(shell_literal('foo') == literal('foo'))
+        self.assertTrue(literal('foo') != shell_literal('foo'))
+        self.assertTrue(shell_literal('foo') != literal('foo'))
 
     def test_concatenate(self):
         s = literal('foo') + 'bar'
@@ -98,6 +104,27 @@ class TestJbos(unittest.TestCase):
 
         s = 'foo' + jbos('bar', 'baz')
         self.assertEqual(s.bits, ('foo', 'bar', 'baz'))
+
+    def test_equality(self):
+        self.assertTrue(jbos() == jbos())
+        self.assertFalse(jbos() != jbos())
+
+        self.assertTrue(jbos('foo', 'bar') == jbos('foo', 'bar'))
+        self.assertTrue(jbos('foo', literal('bar')) ==
+                        jbos('foo', literal('bar')))
+        self.assertFalse(jbos('foo', 'bar') != jbos('foo', 'bar'))
+        self.assertFalse(jbos('foo', literal('bar')) !=
+                         jbos('foo', literal('bar')))
+
+        self.assertFalse(jbos('foo', 'bar') == jbos('foo', 'quux'))
+        self.assertFalse(jbos('foo', literal('bar')) ==
+                         jbos('foo', literal('quux')))
+        self.assertTrue(jbos('foo', 'bar') != jbos('foo', 'quux'))
+        self.assertTrue(jbos('foo', literal('bar')) !=
+                        jbos('foo', literal('quux')))
+
+        self.assertFalse(jbos('foo') == jbos('foo', 'bar'))
+        self.assertTrue(jbos('foo') != jbos('foo', 'bar'))
 
 
 class TestJoin(unittest.TestCase):

@@ -8,7 +8,8 @@ from bfg9000 import file_types, options as opts
 from bfg9000.builtins import packages
 from bfg9000.environment import Environment
 from bfg9000.exceptions import PackageResolutionError
-from bfg9000.file_types import CommonPackage, Directory, HeaderDirectory
+from bfg9000.file_types import Directory, HeaderDirectory
+from bfg9000.packages import CommonPackage
 from bfg9000.path import abspath
 from bfg9000.platforms import platform_name, platform_info
 from bfg9000.versioning import SpecifierSet, Version

@@ -5,9 +5,9 @@ from . import tool
 from .common import SimpleCommand
 from .. import options as opts, shell
 from ..exceptions import PackageResolutionError, PackageVersionError
-from ..file_types import Package, PackageKind
 from ..iterutils import first
 from ..objutils import memoize
+from ..packages import Package, PackageKind
 from ..path import Path, Root
 from ..versioning import check_version, Version
 

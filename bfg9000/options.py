@@ -1,4 +1,9 @@
-from . import iterutils, safe_str
+from six import add_metaclass
+from six.moves import zip
+
+from . import path, safe_str
+from .iterutils import isiterable, iterate
+from .file_types import *
 
 
 class option_list(object):
@@ -17,7 +22,7 @@ class option_list(object):
 
     def collect(self, *args):
         for i in args:
-            if iterutils.isiterable(i):
+            if isiterable(i):
                 for j in i:
                     self.collect(j)
             elif i is not None:
@@ -35,6 +40,9 @@ class option_list(object):
     def __eq__(self, rhs):
         return type(self) == type(rhs) and self._options == rhs._options
 
+    def __ne__(self, rhs):
+        return not (self == rhs)
+
     def __repr__(self):
         return '<option_list({})>'.format(repr(self._options))
 
@@ -47,18 +55,42 @@ class option_list(object):
         if not isinstance(rhs, option_list):
             raise TypeError('expected an option_list, got a {!r}'
                             .format(type(rhs)))
-        self._options.extend(rhs._options)
+        self.extend(rhs)
         return self
 
 
-class Option(object):
-    __slots__ = ()
+class OptionMeta(type):
+    def __new__(cls, name, bases, attrs):
+        fields = attrs.pop('_fields', [])
+        slots = tuple(i[0] if isiterable(i) else i for i in fields)
+        types = tuple(i[1] if isiterable(i) else None for i in fields)
+        attrs.update({'__slots__': slots, '_types': types})
 
-    def __init__(self, *args):
-        if len(args) != len(self.__slots__):
-            raise TypeError('__init__() takes exactly {} arguments ({} given)'
-                            .format(len(self.__slots__) + 1, len(args) + 1))
-        for k, v in zip(self.__slots__, args):
+        if '__init__' not in attrs:
+            exec('def __init__(self, {0}):\n    self._init({0})'
+                 .format(', '.join(slots)), globals(), attrs)
+
+        return type.__new__(cls, name, bases, attrs)
+
+    def __init__(cls, name, bases, attrs):
+        is_root = not any(type(i) == OptionMeta for i in bases)
+        if is_root:
+            cls.registry = {}
+        else:
+            cls.registry[name] = cls
+
+        type.__init__(cls, name, bases, attrs)
+
+
+@add_metaclass(OptionMeta)
+class Option(object):
+    def _init(self, *args):
+        assert len(args) == len(self.__slots__)
+        for k, t, v in zip(self.__slots__, self._types, args):
+            if t and not isinstance(v, t):
+                raise TypeError('expected {}; but got {}'.format(
+                    ', '.join(i.__name__ for i in iterate(t)), type(v).__name__
+                ))
             setattr(self, k, v)
 
     def matches(self, rhs):
@@ -69,24 +101,41 @@ class Option(object):
             getattr(self, i) == getattr(rhs, i) for i in self.__slots__
         )
 
+    def __ne__(self, rhs):
+        return not (self == rhs)
+
     def __repr__(self):
-        return '<{}({})>'.format(self.__class__.__name__, ','.join(
+        return '<{}({})>'.format(self.__class__.__name__, ', '.join(
             repr(getattr(self, i)) for i in self.__slots__
         ))
 
 
-def option(name, attrs=()):
-    return type(name, (Option,), {'__slots__': attrs})
+def option(name, fields=()):
+    return type(name, (Option,), {'_fields': fields})
 
 
-pthread = option('pthread')
+# Compilation options
+include_dir = option('include_dir', [('directory', HeaderDirectory)])
+std = option('std', [('value', str)])
 pic = option('pic')
-define = option('define', ('name',))
-include_dir = option('include_dir', ('directory',))
-pch = option('pch', ('header',))
-lib_dir = option('lib_dir', ('directory',))
-lib = option('lib', ('library',))
-rpath_dir = option('rpath_dir', ('path',))
-rpath_link_dir = option('rpath_link_dir', ('path',))
-lib_literal = option('lib_literal', ('value',))
-entry_point = option('entry_point', ('value',))
+pch = option('pch', [('header', PrecompiledHeader)])
+
+
+class define(Option):
+    _fields = [ ('name', str),
+                ('value', (str, type(None))) ]
+
+    def __init__(self, name, value=None):
+        Option._init(self, name, value)
+
+
+# Link options
+lib_dir = option('lib_dir', [('directory', Directory)])
+lib = option('lib', [('library', (Library, Framework, str))])
+rpath_dir = option('rpath_dir', [('path', str)])
+rpath_link_dir = option('rpath_link_dir', [('path', path.Path)])
+lib_literal = option('lib_literal', [('value', safe_str.stringy_types)])
+entry_point = option('entry_point', [('value', str)])
+
+# General options
+pthread = option('pthread')

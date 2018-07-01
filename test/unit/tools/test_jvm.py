@@ -1,7 +1,11 @@
 import mock
+import os
 import unittest
 
+from bfg9000 import file_types, options as opts
 from bfg9000.environment import Environment
+from bfg9000.path import Path
+from bfg9000.safe_str import jbos
 from bfg9000.tools.jvm import JvmBuilder
 from bfg9000.versioning import Version
 
@@ -138,3 +142,58 @@ class TestJvmBuilder(unittest.TestCase):
         self.assertEqual(jvm.compiler.version, None)
         self.assertEqual(jvm.linker('executable').version, None)
         self.assertEqual(jvm.linker('shared_library').version, None)
+
+
+class TestJvmCompiler(unittest.TestCase):
+    def setUp(self):
+        def mock_execute(*args, **kwargs):
+            return 'version'
+
+        with mock.patch('bfg9000.shell.which', mock_which), \
+             mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
+            self.compiler = JvmBuilder(env, 'java', 'JAVAC', ['javac'],
+                                       'JAVAFLAGS', [], 'version').compiler
+
+    def test_flags_empty(self):
+        self.assertEqual(self.compiler.flags(opts.option_list()), [])
+
+    def test_flags_lib(self):
+        lib1 = Path('/path/to/lib/libfoo.jar')
+        lib2 = Path('/path/to/lib/libbar.jar')
+
+        self.assertEqual(self.compiler.flags(opts.option_list(
+            opts.lib(file_types.StaticLibrary(lib1, 'jvm'))
+        )), ['-cp', jbos(lib1)])
+        self.assertEqual(self.compiler.flags(opts.option_list(
+            opts.lib(file_types.StaticLibrary(lib1, 'jvm')),
+            opts.lib(file_types.StaticLibrary(lib2, 'jvm'))
+        )), ['-cp', lib1 + os.pathsep + lib2])
+
+    def test_flags_string(self):
+        self.assertEqual(self.compiler.flags(opts.option_list('-v')), ['-v'])
+
+    def test_flags_invalid(self):
+        with self.assertRaises(TypeError):
+            self.compiler.flags(opts.option_list(123))
+
+
+class TestJvmLinker(unittest.TestCase):
+    def setUp(self):
+        def mock_execute(*args, **kwargs):
+            return 'version'
+
+        with mock.patch('bfg9000.shell.which', mock_which), \
+             mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
+            self.linker = JvmBuilder(
+                env, 'java', 'JAVAC', ['javac'], 'JAVAFLAGS', [], 'version'
+            ).linker('executable')
+
+    def test_flags_empty(self):
+        self.assertEqual(self.linker.flags(opts.option_list()), [])
+
+    def test_flags_string(self):
+        self.assertEqual(self.linker.flags(opts.option_list('-v')), ['-v'])
+
+    def test_flags_invalid(self):
+        with self.assertRaises(TypeError):
+            self.linker.flags(opts.option_list(123))

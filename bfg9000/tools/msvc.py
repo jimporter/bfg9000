@@ -11,6 +11,7 @@ from ..exceptions import PackageResolutionError
 from ..file_types import *
 from ..iterutils import default_sentinel, flatten, iterate, listify, uniques
 from ..languages import lang2src
+from ..packages import CommonPackage, PackageKind
 from ..path import Path, Root
 from ..versioning import detect_version
 
@@ -140,18 +141,24 @@ class MsvcBaseCompiler(BuildCommand):
         return ['/nologo', '/EHsc']
 
     def flags(self, options, mode='normal'):
+        syntax = 'cc' if mode == 'pkg-config' else 'msvc'
         flags = []
         for i in options:
-            if isinstance(i, safe_str.stringy_types):
-                flags.append(i)
-            elif isinstance(i, opts.include_dir):
-                prefix = '-I' if mode == 'pkg-config' else '/I'
+            if isinstance(i, opts.include_dir):
+                prefix = '-I' if syntax == 'cc' else '/I'
                 flags.append(prefix + i.directory.path)
             elif isinstance(i, opts.define):
-                prefix = '-D' if mode == 'pkg-config' else '/D'
-                flags.append(prefix + i.name)
+                prefix = '-D' if syntax == 'cc' else '/D'
+                if i.value:
+                    flags.append(prefix + i.name + '=' + i.value)
+                else:
+                    flags.append(prefix + i.name)
+            elif isinstance(i, opts.std):
+                flags.append('/std:' + i.value)
             elif isinstance(i, opts.pch):
                 flags.append('/Yu' + i.header.header_name)
+            elif isinstance(i, safe_str.stringy_types):
+                flags.append(i)
             else:
                 raise TypeError('unknown option type {!r}'.format(type(i)))
         return flags

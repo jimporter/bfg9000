@@ -1,3 +1,4 @@
+import functools
 from itertools import chain
 from six import iteritems, string_types
 
@@ -33,6 +34,7 @@ def hashify(thing):
 def memoize(fn):
     cache = {}
 
+    @functools.wraps(fn)
     def wrapper(*args, **kwargs):
         key = (hashify(args), hashify(kwargs))
         if key in cache:

@@ -1,7 +1,9 @@
 import mock
 import unittest
 
+from bfg9000 import file_types, options as opts
 from bfg9000.environment import Environment
+from bfg9000.path import Path
 from bfg9000.tools.msvc import MsvcBuilder
 from bfg9000.versioning import Version
 
@@ -85,3 +87,156 @@ class TestMsvcBuilder(unittest.TestCase):
         self.assertEqual(cc.pch_compiler.version, None)
         self.assertEqual(cc.linker('executable').version, None)
         self.assertEqual(cc.linker('shared_library').version, None)
+
+
+class TestMsvcCompiler(unittest.TestCase):
+    def setUp(self):
+        with mock.patch('bfg9000.shell.which', mock_which):
+            self.compiler = MsvcBuilder(env, 'c++', 'CXX', ['cl'], 'CXXFLAGS',
+                                        [], 'version').compiler
+
+    def test_flags_empty(self):
+        self.assertEqual(self.compiler.flags(opts.option_list()), [])
+
+    def test_flags_include_dir(self):
+        p = Path('/path/to/include')
+        self.assertEqual(self.compiler.flags(opts.option_list(
+            opts.include_dir(file_types.HeaderDirectory(p))
+        )), ['/I' + p])
+        self.assertEqual(self.compiler.flags(opts.option_list(
+            opts.include_dir(file_types.HeaderDirectory(p))
+        ), mode='pkg-config'), ['-I' + p])
+
+    def test_flags_define(self):
+        self.assertEqual(self.compiler.flags(opts.option_list(
+            opts.define('NAME')
+        )), ['/DNAME'])
+        self.assertEqual(self.compiler.flags(opts.option_list(
+            opts.define('NAME')
+        ), mode='pkg-config'), ['-DNAME'])
+
+        self.assertEqual(self.compiler.flags(opts.option_list(
+            opts.define('NAME', 'value')
+        )), ['/DNAME=value'])
+        self.assertEqual(self.compiler.flags(opts.option_list(
+            opts.define('NAME', 'value')
+        ), mode='pkg-config'), ['-DNAME=value'])
+
+    def test_flags_std(self):
+        self.assertEqual(self.compiler.flags(opts.option_list(
+            opts.std('c++14')
+        )), ['/std:c++14'])
+
+    def test_flags_include_pch(self):
+        p = Path('/path/to/header.hpp')
+        self.assertEqual(self.compiler.flags(opts.option_list(
+            opts.pch(file_types.MsvcPrecompiledHeader(p, None, 'header',
+                                                      'native'))
+        )), ['/Yuheader'])
+
+    def test_flags_string(self):
+        self.assertEqual(self.compiler.flags(opts.option_list('-v')), ['-v'])
+
+    def test_flags_invalid(self):
+        with self.assertRaises(TypeError):
+            self.compiler.flags(opts.option_list(123))
+
+
+class TestMsvcLinker(unittest.TestCase):
+    def setUp(self):
+        with mock.patch('bfg9000.shell.which', mock_which):
+            self.linker = MsvcBuilder(env, 'c++', 'CXX', ['cl'], 'CXXFLAGS',
+                                      [], 'version').linker('executable')
+
+    def test_flags_empty(self):
+        self.assertEqual(self.linker.flags(opts.option_list()), [])
+
+    def test_flags_lib_dir(self):
+        libdir = Path('/path/to/lib')
+        lib = Path('/path/to/lib/foo.so')
+
+        # Lib dir
+        self.assertEqual(self.linker.flags(opts.option_list(
+            opts.lib_dir(file_types.Directory(libdir))
+        )), ['/LIBPATH:' + libdir])
+        self.assertEqual(self.linker.flags(opts.option_list(
+            opts.lib_dir(file_types.Directory(libdir))
+        ), mode='pkg-config'), ['-L' + libdir])
+
+        # Shared library
+        self.assertEqual(self.linker.flags(opts.option_list(
+            opts.lib(file_types.SharedLibrary(lib, 'native'))
+        )), ['/LIBPATH:' + libdir])
+
+        # Static library
+        self.assertEqual(self.linker.flags(opts.option_list(
+            opts.lib(file_types.StaticLibrary(lib, 'native'))
+        )), ['/LIBPATH:' + libdir])
+
+        # Mixed
+        self.assertEqual(self.linker.flags(opts.option_list(
+            opts.lib_dir(file_types.Directory(libdir)),
+            opts.lib(file_types.SharedLibrary(lib, 'native'))
+        )), ['/LIBPATH:' + libdir])
+
+    def test_flags_string(self):
+        self.assertEqual(self.linker.flags(opts.option_list('-v')), ['-v'])
+
+    def test_flags_lib_literal(self):
+        self.assertEqual(self.linker.flags(opts.option_list(
+            opts.lib_literal('-lfoo')
+        )), [])
+
+    def test_flags_invalid(self):
+        with self.assertRaises(TypeError):
+            self.linker.flags(opts.option_list(123))
+
+    def test_lib_flags_empty(self):
+        self.assertEqual(self.linker.lib_flags(opts.option_list()), [])
+
+    def test_lib_flags_lib(self):
+        lib = Path('/path/to/lib/foo.lib')
+
+        self.assertEqual(self.linker.lib_flags(opts.option_list(
+            opts.lib(file_types.SharedLibrary(lib, 'native'))
+        )), [lib.basename()])
+        self.assertEqual(self.linker.lib_flags(opts.option_list(
+            opts.lib(file_types.SharedLibrary(lib, 'native'))
+        ), mode='pkg-config'), ['-lfoo'])
+
+        with self.assertRaises(TypeError):
+            self.linker.lib_flags(opts.option_list(
+                opts.lib(file_types.WholeArchive(
+                    file_types.StaticLibrary(lib, 'native')
+                ))
+            ))
+
+        with self.assertRaises(TypeError):
+            self.linker.lib_flags(opts.option_list(
+                opts.lib(file_types.Framework('cocoa'))
+            ))
+
+    def test_lib_flags_lib_literal(self):
+        self.assertEqual(self.linker.lib_flags(opts.option_list(
+            opts.lib_literal('/?')
+        )), ['/?'])
+
+    def test_lib_flags_ignored(self):
+        self.assertEqual(self.linker.lib_flags(opts.option_list('-Lfoo')), [])
+
+
+class TestMsvcStaticLinker(unittest.TestCase):
+    def setUp(self):
+        with mock.patch('bfg9000.shell.which', mock_which):
+            self.linker = MsvcBuilder(env, 'c++', 'CXX', ['cl'], 'CXXFLAGS',
+                                      [], 'version').linker('static_library')
+
+    def test_flags_empty(self):
+        self.assertEqual(self.linker.flags(opts.option_list()), [])
+
+    def test_flags_string(self):
+        self.assertEqual(self.linker.flags(opts.option_list('-v')), ['-v'])
+
+    def test_flags_invalid(self):
+        with self.assertRaises(TypeError):
+            self.linker.flags(opts.option_list(123))

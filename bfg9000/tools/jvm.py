@@ -8,6 +8,7 @@ from ..builtins.file_types import generated_file
 from ..exceptions import PackageResolutionError
 from ..file_types import *
 from ..iterutils import flatten, iterate, uniques
+from ..packages import Package
 from ..path import Path, Root
 from ..versioning import detect_version
 
