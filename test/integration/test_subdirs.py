@@ -44,7 +44,7 @@ class TestSubdirs(IntegrationTest):
                 '05_subdirs/src/program.cpp',
             })
 
-    @only_if_backend('make')
+    @only_if_backend('make', hide=True)
     def test_dir_sentinels(self):
         self.build()
         self.assertTrue(os.path.isfile('sub/.dir'))

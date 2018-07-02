@@ -47,18 +47,39 @@ def cleandir(path, recreate=True):
         makedirs(path)
 
 
-def skip_pred(predicate, msg='skipped'):
+def _add_hide_func(thing, predicate):
+    if not hasattr(thing, '_test_hide_if'):
+        thing._test_hide_if = predicate
+    else:
+        old = thing._test_hide_if
+        thing._test_hide_if = lambda self: old(self) or predicate(self)
+
+
+def skip_if(skip, msg='skipped', hide=False):
+    if hide:
+        def wrap(fn):
+            if skip:
+                _add_hide_func(fn, lambda self: True)
+            return fn
+
+        return wrap
+    return unittest.skipIf(skip, msg)
+
+
+def skip_pred(predicate, msg='skipped', hide=False):
     def wrap(fn):
+        if hide:
+            _add_hide_func(fn, predicate)
+            return fn
+
         if isinstance(fn, type):
-            # XXX: Actually show these tests as skipped; right now they're
-            # totally hidden.
             @functools.wraps(fn, assigned=['__name__', '__module__'],
                              updated=[])
             class Wrap(fn):
-                def __init__(self, *args, **kwargs):
-                    fn.__init__(self, *args, **kwargs)
+                def setUp(self):
                     if predicate(self):
                         raise unittest.SkipTest(msg)
+                    fn.setUp(self)
 
             return Wrap
         else:
@@ -70,14 +91,14 @@ def skip_pred(predicate, msg='skipped'):
     return wrap
 
 
-def skip_if_backend(backend):
+def skip_if_backend(backend, hide=False):
     return skip_pred(lambda x: x.backend == backend,
-                     'not supported for backend "{}"'.format(backend))
+                     'not supported for backend "{}"'.format(backend), hide)
 
 
-def only_if_backend(backend):
+def only_if_backend(backend, hide=False):
     return skip_pred(lambda x: x.backend != backend,
-                     'only supported for backend "{}"'.format(backend))
+                     'only supported for backend "{}"'.format(backend), hide)
 
 
 def xfail_if(xfail):
@@ -109,8 +130,15 @@ def assertNotRegex(self, *args, **kwargs):
 
 
 class TestCase(unittest.TestCase):
+    def _hideTest(self):
+        test_method = getattr(self, self._testMethodName)
+        return ( (hasattr(self, '_test_hide_if') and
+                  self._test_hide_if()) or
+                 (hasattr(test_method, '_test_hide_if') and
+                  test_method._test_hide_if(self)) )
+
     def parameterize(self):
-        return [self]
+        return [] if self._hideTest() else [self]
 
     def target_name(self, target):
         if self.backend == 'msbuild':
@@ -215,9 +243,8 @@ class BasicIntegrationTest(TestCase):
         return self._make_builddir(self.srcdir)
 
     def parameterize(self):
-        return [self.__class__(
-            backend='', *self._args, **self._kwargs
-        )]
+        return ([] if self._hideTest() else
+                [self.__class__(backend='', *self._args, **self._kwargs)])
 
     def shortDescription(self):
         return self.backend
@@ -294,9 +321,9 @@ class IntegrationTest(BasicIntegrationTest):
         result = []
         for i in backends:
             try:
-                result.append(self.__class__(
-                    backend=i, *self._args, **self._kwargs
-                ))
+                copy = self.__class__(backend=i, *self._args, **self._kwargs)
+                if not copy._hideTest():
+                    result.append(copy)
             except unittest.SkipTest:
                 pass
         return result

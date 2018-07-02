@@ -26,8 +26,8 @@ class TestMixedLibrary(IntegrationTest):
 
 
 # This fails on OS X, probably because of a version mismatch somewhere.
-@unittest.skipIf(env.platform.name == 'windows', 'no fortran on windows')
-@unittest.skipIf(env.platform.name == 'darwin', 'fortran on os x is weird')
+@skip_if(env.platform.name == 'windows', 'no fortran on windows')
+@skip_if(env.platform.name == 'darwin', 'fortran on os x is weird')
 class TestMixedFortran(IntegrationTest):
     def __init__(self, *args, **kwargs):
         IntegrationTest.__init__(

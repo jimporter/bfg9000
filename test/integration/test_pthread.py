@@ -3,7 +3,7 @@ import tarfile
 from . import *
 
 
-@unittest.skipIf(env.platform.name == 'windows', 'no pthread on windows')
+@skip_if(env.platform.name == 'windows', hide=True)
 class TestPthread(IntegrationTest):
     def __init__(self, *args, **kwargs):
         IntegrationTest.__init__(self, 'pthread', *args, **kwargs)

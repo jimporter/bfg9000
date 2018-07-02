@@ -73,7 +73,8 @@ class TestInstall(IntegrationTest):
         self.assertDirectory(self.installdir, [])
 
 
-@unittest.skipIf(platform_name() == 'windows', 'no destdir on windows')
+# No DESTDIR on Windows.
+@skip_if(env.platform.name == 'windows', hide=True)
 class TestDestDir(IntegrationTest):
     def __init__(self, *args, **kwargs):
         IntegrationTest.__init__(self, 'install', install=True,
@@ -112,7 +113,7 @@ class TestDestDir(IntegrationTest):
         self._check_installed()
         self._check_run()
 
-    @only_if_backend('make')
+    @only_if_backend('make', hide=True)
     def test_install_override_destdir(self):
         self.configure()
         self.build('install', extra_args=['DESTDIR={}'.format(self.destdir)])

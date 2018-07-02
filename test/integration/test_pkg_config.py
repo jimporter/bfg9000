@@ -16,7 +16,7 @@ def pkg_config(args, path='pkgconfig'):
 
 
 @skip_if_backend('msbuild')
-@unittest.skipIf(is_mingw, 'no libogg on mingw (yet)')
+@skip_if(is_mingw, 'no libogg on mingw (yet)')
 class TestPkgConfig(IntegrationTest):
     def __init__(self, *args, **kwargs):
         IntegrationTest.__init__(
@@ -36,7 +36,8 @@ class TestPkgConfig(IntegrationTest):
         self.assertEqual(pkg_config(['hello', '--libs-only-l', '--static']),
                          '-lhello -logg')
 
-    @unittest.skipIf(is_msvc, 'dual-use libraries collide on msvc')
+    # Dual-use libraries collide on MSVC.
+    @skip_if(is_msvc, hide=True)
     def test_configure_dual(self):
         self.configure(extra_args=['--enable-shared', '--enable-static'])
         self.assertExists(os.path.join('pkgconfig', 'hello.pc'))
@@ -99,7 +100,7 @@ class TestPkgConfig(IntegrationTest):
 
 
 @skip_if_backend('msbuild')
-@unittest.skipIf(is_mingw, 'no libogg on mingw (yet)')
+@skip_if(is_mingw, 'no libogg on mingw (yet)')
 class TestPkgConfigAuto(IntegrationTest):
     def __init__(self, *args, **kwargs):
         IntegrationTest.__init__(self, 'pkg_config_auto', configure=False,
@@ -113,7 +114,8 @@ class TestPkgConfigAuto(IntegrationTest):
         self.assertEqual(pkg_config(['hello', '--libs-only-l', '--static']),
                          '-lhello -logg')
 
-    @unittest.skipIf(is_msvc, 'dual-use libraries collide on msvc')
+    # Dual-use libraries collide on MSVC.
+    @skip_if(is_msvc, hide=True)
     def test_configure_dual(self):
         self.configure(extra_args=['--enable-shared', '--enable-static'])
         self.assertExists(os.path.join('pkgconfig', 'hello.pc'))

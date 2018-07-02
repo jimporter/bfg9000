@@ -29,7 +29,8 @@ class TestLibrary(IntegrationTest):
         self.assertExists(static_library('library'))
         self.assertNotExists(shared_library('library'))
 
-    @unittest.skipIf(is_msvc, 'dual-use libraries collide on msvc')
+    # Dual-use libraries collide on MSVC.
+    @skip_if(is_msvc, hide=True)
     def test_dual(self):
         self.configure(extra_args=['--enable-shared', '--enable-static'])
         self.build()
@@ -40,7 +41,7 @@ class TestLibrary(IntegrationTest):
         self.assertExists(static_library('library'))
 
 
-@unittest.skipIf(is_mingw, 'xfail on mingw (not sure why)')
+@skip_if(is_mingw, 'xfail on mingw (not sure why)')
 class TestSharedLibrary(IntegrationTest):
     def __init__(self, *args, **kwargs):
         IntegrationTest.__init__(self, 'shared_library', install=True, *args,
@@ -137,7 +138,8 @@ class TestDualUseLibrary(IntegrationTest):
             self.assertNotExists(shared_library(i))
             self.assertExists(static_library(i))
 
-    @unittest.skipIf(is_msvc, 'dual-use libraries collide on msvc')
+    # Dual-use libraries collide on MSVC.
+    @skip_if(is_msvc, hide=True)
     def test_dual(self):
         self.configure(extra_args=['--enable-shared', '--enable-static'])
         self.build()
@@ -148,7 +150,8 @@ class TestDualUseLibrary(IntegrationTest):
                 self.assertExists(import_library(i))
             self.assertNotExists(static_library(i))
 
-    @unittest.skipIf(is_msvc, 'dual-use libraries collide on msvc')
+    # Dual-use libraries collide on MSVC.
+    @skip_if(is_msvc, hide=True)
     def test_dual_shared(self):
         self.configure(extra_args=['--enable-shared', '--enable-static'])
         self.build(shared_library('outer'))
@@ -158,7 +161,8 @@ class TestDualUseLibrary(IntegrationTest):
                 self.assertExists(import_library(i))
             self.assertNotExists(static_library(i))
 
-    @unittest.skipIf(is_msvc, 'dual-use libraries collide on msvc')
+    # Dual-use libraries collide on MSVC.
+    @skip_if(is_msvc, hide=True)
     def test_dual_static(self):
         self.configure(extra_args=['--enable-shared', '--enable-static'])
         self.build(static_library('outer'))
@@ -168,7 +172,8 @@ class TestDualUseLibrary(IntegrationTest):
                 self.assertNotExists(import_library(i))
             self.assertExists(static_library(i))
 
-    @unittest.skipIf(is_msvc, 'dual-use libraries collide on msvc')
+    # Dual-use libraries collide on MSVC.
+    @skip_if(is_msvc, hide=True)
     @skip_if_backend('msbuild')
     def test_dual_install(self):
         self.configure(extra_args=['--enable-shared', '--enable-static'] +
@@ -181,7 +186,8 @@ class TestDualUseLibrary(IntegrationTest):
              for i in self.lib_names]
         ))
 
-    @unittest.skipIf(is_msvc, 'dual-use libraries collide on msvc')
+    # Dual-use libraries collide on MSVC.
+    @skip_if(is_msvc, hide=True)
     @skip_if_backend('msbuild')
     def test_dual_install_libs(self):
         self.configure(extra_args=['--enable-shared', '--enable-static',
@@ -200,8 +206,8 @@ class TestDualUseLibrary(IntegrationTest):
         ))
 
 
-@unittest.skipIf(env.platform.name == 'windows',
-                 'no versioned libraries on windows')
+# No versioned libraries on Windows.
+@skip_if(env.platform.name == 'windows', hide=True)
 class TestVersionedLibrary(IntegrationTest):
     def __init__(self, *args, **kwargs):
         IntegrationTest.__init__(
