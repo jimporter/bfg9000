@@ -1,3 +1,5 @@
+import errno
+import mock
 import os
 import unittest
 
@@ -285,6 +287,18 @@ class TestInstallPath(unittest.TestCase):
         self.assertEqual(install_path(p, InstallRoot.bindir, True, False),
                          Path('foo/bar', InstallRoot.bindir))
 
+    def test_install_path_absolute_ok(self):
+        p = abspath('/foo/bar')
+        self.assertEqual(install_path(p, InstallRoot.bindir,
+                                      absolute_ok=True), p)
+        self.assertEqual(install_path(p, InstallRoot.bindir, True,
+                                      absolute_ok=True), p)
+
+    def test_install_path_absolute_not_ok(self):
+        p = abspath('/foo/bar')
+        self.assertRaises(TypeError, install_path, p, InstallRoot.bindir)
+        self.assertRaises(TypeError, install_path, p, InstallRoot.bindir, True)
+
 
 class TestCommonPrefix(unittest.TestCase):
     def test_empty(self):
@@ -312,3 +326,79 @@ class TestCommonPrefix(unittest.TestCase):
         p = Path('foo/bar')
         q = Path('baz/quux')
         self.assertEqual(commonprefix([p, q]), Path(''))
+
+
+class TestExists(unittest.TestCase):
+    def test_exists(self):
+        with mock.patch('os.path.exists', lambda x: True):
+            self.assertEqual(exists(Path('/foo/bar')), True)
+
+
+class TestSamefile(unittest.TestCase):
+    def test_real(self):
+        with mock.patch('os.path.samefile', lambda x, y: x == y, create=True):
+            self.assertEqual(samefile(Path('/foo/bar'), Path('/foo/bar')),
+                             True)
+
+    def test_polyfill(self):
+        class OsPath(object):
+            def __init__(self):
+                for i in ('isabs', 'normpath', 'realpath'):
+                    setattr(self, i, getattr(os.path, i))
+
+        with mock.patch('os.path', OsPath()):
+            self.assertEqual(samefile(Path('/foo/bar'), Path('/foo/bar')),
+                             True)
+
+
+class TestMakedirs(unittest.TestCase):
+    def test_success(self):
+        with mock.patch('os.makedirs') as os_makedirs:
+            makedirs('foo')
+            makedirs('bar', 0o666)
+            self.assertEqual(os_makedirs.mock_calls, [
+                mock.call('foo', 0o777),
+                mock.call('bar', 0o666),
+            ])
+
+    def test_exists(self):
+        def mock_makedirs(path, mode):
+            raise OSError(errno.EEXIST, 'msg')
+
+        with mock.patch('os.makedirs', mock_makedirs), \
+             mock.patch('os.path.isdir', lambda x: x == 'dir'):  # noqa
+            self.assertRaises(OSError, makedirs, 'file')
+            self.assertRaises(OSError, makedirs, 'file', exist_ok=True)
+            self.assertRaises(OSError, makedirs, 'dir')
+            makedirs('dir', exist_ok=True)
+
+    def test_other_error(self):
+        def mock_makedirs(path, mode):
+            raise OSError(errno.EPERM, 'msg')
+
+        with mock.patch('os.makedirs', mock_makedirs):
+            self.assertRaises(OSError, makedirs, 'file')
+
+
+class TestPushd(unittest.TestCase):
+    def test_basic(self):
+        with mock.patch('os.getcwd', lambda: 'cwd'), \
+             mock.patch('os.chdir') as os_chdir:  # noqa
+            with pushd('foo'):
+                self.assertEqual(os_chdir.mock_calls, [mock.call('foo')])
+            self.assertEqual(os_chdir.mock_calls, [
+                mock.call('foo'), mock.call('cwd')
+            ])
+
+    def test_makedirs(self):
+        with mock.patch('os.makedirs') as os_makedirs, \
+             mock.patch('os.getcwd', lambda: 'cwd'), \
+             mock.patch('os.chdir') as os_chdir:  # noqa
+            with pushd('foo', makedirs=True):
+                self.assertEqual(os_makedirs.mock_calls, [
+                    mock.call('foo', 0o777)
+                ])
+                self.assertEqual(os_chdir.mock_calls, [mock.call('foo')])
+            self.assertEqual(os_chdir.mock_calls, [
+                mock.call('foo'), mock.call('cwd')
+            ])
