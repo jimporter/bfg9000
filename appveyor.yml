@@ -21,13 +21,18 @@ environment:
   matrix:
     - COMPILER: vs
     - COMPILER: mingw
+    - COMPILER: cygwin
 
 matrix:
   exclude:
     - image: Visual Studio 2013
       COMPILER: mingw
+    - image: Visual Studio 2013
+      COMPILER: cygwin
     - image: Visual Studio 2015
       COMPILER: mingw
+    - image: Visual Studio 2015
+      COMPILER: cygwin
 
 for:
   - matrix:
@@ -68,6 +73,24 @@ for:
       CPPFLAGS: -IC:\projects\bfg9000\include -Wall -Werror
       MAKE: mingw32-make
       MINGW_PATH: C:\msys64\mingw64\bin
+  - matrix:
+      only:
+        - image: Visual Studio 2017
+          COMPILER: cygwin
+    environment:
+      BACKENDS: ninja make
+      CPPFLAGS: -Wall -Werror
+    install:
+      - >
+        C:\cygwin64\setup-x86_64 -qnNd -l C:\cygwin64\var\cache\setup
+        -R c:\cygwin64 -P python2 -P python2-pip -P ninja
+    build_script:
+      - xcopy /i /q /s /h C:\projects\bfg9000 C:\cygwin64\home\appveyor\bfg9000
+      - C:\cygwin64\bin\bash -lc "cd bfg9000 && pip2 install codecov .[test]"
+    test_script:
+      - C:\cygwin64\bin\bash -lc "cd bfg9000 && python setup.py coverage -s test.integration.test_executable"
+    on_success:
+      - C:\cygwin64\bin\bash -lc "cd bfg9000 && codecov"
 
 cache:
   - C:\ProgramData\chocolatey\bin -> appveyor.yml
@@ -101,8 +124,7 @@ install:
   # Set up paths and other necessary bits for the compiler.
   - if defined VS call "%VS%" x86
   - set PATH=%PYTHON_PATH%;%PYTHON_PATH%\Scripts;%MINGW_PATH%;%PATH%
-
-  # Install our stuff.
+build_script:
   - pip install codecov lxml==3.6.0 .[test]
 test_script:
   - python setup.py coverage -q
