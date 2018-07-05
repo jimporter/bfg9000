@@ -149,6 +149,7 @@
             <li><a href="#file-types">File types</a></li>
             <li><a href="#build-steps">Build steps</a></li>
             <li><a href="#grouping-rules">Grouping rules</a></li>
+            <li><a href="#semantic-options">Semantic options</a></li>
             <li><a href="#global-options">Global options</a></li>
             <li><a href="#test-rules">Test rules</a></li>
             <li><a href="#package-resolvers">Package resolvers</a></li>
@@ -507,6 +508,20 @@ library will install the DLL <em>and</em> the import library.</p>
 <a href="../environment-vars/#install_name_tool"><code>INSTALL_NAME_TOOL</code></a>,
 <a href="../environment-vars/#mkdir_p"><code>MKDIR_P</code></a>,
 <a href="../environment-vars/#patchelf"><code>PATCHELF</code></a>.</p>
+<h2 id="semantic-options">Semantic options<a class="headerlink" href="#semantic-options" title="Permanent link">§</a></h2>
+<p>Semantic options are a collection of objects that allow a build to define
+options in a tool-agnostic way. These options will automatically be converted to
+the appropriate string form for the tool when generating the build file.</p>
+<h3 id="optsdefinename-value">opts.define(<em>name</em>, [<em>value</em>])<a class="headerlink" href="#optsdefinename-value" title="Permanent link">§</a></h3>
+<p>Create a preprocessor macro named <em>name</em> and with an optional value <em>value</em>.
+Note that if you'd like the value to be a string literal, you need to escape the
+string like so:</p>
+<pre><code class="python">opts.define('MY_MACRO', '&quot;This is a string, isn\'t it?&quot;')
+</code></pre>
+
+<h3 id="optsstdvalue">opts.std(<em>value</em>)<a class="headerlink" href="#optsstdvalue" title="Permanent link">§</a></h3>
+<p>Specify the version of the language's standard (e.g. <code>"c++14"</code>) to use when
+building.</p>
 <h2 id="global-options">Global options<a class="headerlink" href="#global-options" title="Permanent link">§</a></h2>
 <h3 id="global_options">global_options(<em>options</em>, <em>lang</em>)<a class="headerlink" href="#global_options" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>

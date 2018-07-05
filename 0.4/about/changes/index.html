@@ -159,7 +159,16 @@
 <h1 id="changes">Changes<a class="headerlink" href="#changes" title="Permanent link">§</a></h1>
 <h2 id="v040">v0.4.0<a class="headerlink" href="#v040" title="Permanent link">§</a></h2>
 <p class="subtitle">in progress</p>
-<p>No changes yet!</p>
+<h3 id="new-features">New features<a class="headerlink" href="#new-features" title="Permanent link">§</a></h3>
+<ul>
+<li>Compilers and linkers now support semantic options, abstracting away the
+  differences between compiler flavors</li>
+</ul>
+<h3 id="breaking-changes">Breaking changes<a class="headerlink" href="#breaking-changes" title="Permanent link">§</a></h3>
+<ul>
+<li>MSVC builds now automatically set <code>/EHsc</code> to improve standards-compliance and
+  mimic Visual Studio's default MSBuild configuration</li>
+</ul>
 <hr />
 <h2 id="v031">v0.3.1<a class="headerlink" href="#v031" title="Permanent link">§</a></h2>
 <p class="subtitle">2018-06-01</p>
@@ -171,7 +180,7 @@
 <hr />
 <h2 id="v030">v0.3.0<a class="headerlink" href="#v030" title="Permanent link">§</a></h2>
 <p class="subtitle">2018-06-01</p>
-<h3 id="new-features">New features<a class="headerlink" href="#new-features" title="Permanent link">§</a></h3>
+<h3 id="new-features_1">New features<a class="headerlink" href="#new-features_1" title="Permanent link">§</a></h3>
 <ul>
 <li>Replace <code>system_package()</code> and <code>pkgconfig_package()</code> with a generic package
   resolver: <code>package()</code></li>
@@ -199,7 +208,7 @@
 <li>Automatically request sudo elevation when installing builds to a system
   directory</li>
 </ul>
-<h3 id="breaking-changes">Breaking changes<a class="headerlink" href="#breaking-changes" title="Permanent link">§</a></h3>
+<h3 id="breaking-changes_1">Breaking changes<a class="headerlink" href="#breaking-changes_1" title="Permanent link">§</a></h3>
 <ul>
 <li><code>directory()</code> and <code>header_directory()</code> no longer automatically include all
   files within them (pass <code>include='*'</code> for the old behavior)</li>
@@ -231,7 +240,7 @@
 <hr />
 <h2 id="v020">v0.2.0<a class="headerlink" href="#v020" title="Permanent link">§</a></h2>
 <p class="subtitle">2016-06-26</p>
-<h3 id="new-features_1">New features<a class="headerlink" href="#new-features_1" title="Permanent link">§</a></h3>
+<h3 id="new-features_2">New features<a class="headerlink" href="#new-features_2" title="Permanent link">§</a></h3>
 <ul>
 <li>Support Objective C/C++</li>
 <li>Partially support Fortran (simple projects work, but more complex things
@@ -251,7 +260,7 @@
 <li>Add support for building a distribution of the sources (<code>make dist</code>)</li>
 <li>Allow running custom build steps via <code>build_step()</code></li>
 </ul>
-<h3 id="breaking-changes_1">Breaking changes<a class="headerlink" href="#breaking-changes_1" title="Permanent link">§</a></h3>
+<h3 id="breaking-changes_2">Breaking changes<a class="headerlink" href="#breaking-changes_2" title="Permanent link">§</a></h3>
 <ul>
 <li>Configuring a build is now performed by <code>bfg9000 configure DIRECTORY</code></li>
 <li><code>header()</code> renamed to <code>header_file()</code></li>
