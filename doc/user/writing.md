@@ -85,11 +85,26 @@ global_options(['-Wall', '-Werror'], lang='c++')
 global_link_options(['-static-libstdc++'])
 ```
 
-Naturally, the interpretations of these arguments depend on the compiler being
-used, so it's important to be sure the compiler understands the arguments. You
-can determine the kind of compiler being used by consulting the build's
+In addition to passing options as lists as above, you can also pass them as a
+single string, which will be split according to the rules for sh-style command
+line arguments.
+
+#### Semantic options
+
+Naturally, the interpretations of these options depend on the compiler (or
+linker!) being used. One method is simply to the kind of compiler being used and
+supply the appropriate option strings. You can do this by consulting the build's
 [Environment](reference.md#environment) and checking the compiler's
 [*flavor*](reference.md#compiler-flavor).
+
+However, it's often better to use [*semantic
+options*](reference.md#semantic-options), options that are defined as objects
+which will automatically be interpreted by the compiler:
+
+```python
+executable('simple', files=['simple.cpp'],
+           compile_options=[opts.define('DEBUG')])
+```
 
 ## Building libraries
 

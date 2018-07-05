@@ -2,6 +2,10 @@
 
 ## v0.4.0 (in progress)
 
+### New features
+- Compilers and linkers now support semantic options, abstracting away the
+  differences between compiler flavors
+
 ### Breaking changes
 - MSVC builds now automatically set `/EHsc` to improve standards-compliance and
   mimic Visual Studio's default MSBuild configuration

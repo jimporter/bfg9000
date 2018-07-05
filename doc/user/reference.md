@@ -425,6 +425,27 @@ This rule recognizes the following environment variables:
 [`MKDIR_P`](environment-vars.md#mkdir_p),
 [`PATCHELF`](environment-vars.md#patchelf).
 
+## Semantic options
+
+Semantic options are a collection of objects that allow a build to define
+options in a tool-agnostic way. These options will automatically be converted to
+the appropriate string form for the tool when generating the build file.
+
+### opts.define(*name*, [*value*])
+
+Create a preprocessor macro named *name* and with an optional value *value*.
+Note that if you'd like the value to be a string literal, you need to escape the
+string like so:
+
+```python
+opts.define('MY_MACRO', '"This is a string, isn\'t it?"')
+```
+
+### opts.std(*value*)
+
+Specify the version of the language's standard (e.g. `"c++14"`) to use when
+building.
+
 ## Global options
 
 ### global_options(*options*, *lang*) { #global_options }

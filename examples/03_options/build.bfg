@@ -16,7 +16,9 @@ if env.platform.name == 'linux':
 
 # Targets may also have their own options. For linking steps (e.g.
 # executables), options can be set for compilation or linking, using
-# `compile_options` and `link_options`, respectively.
+# `compile_options` and `link_options`, respectively. Options can also be
+# defined as *semantic options*, which automatically translate to the
+# appropriate string for the compiler/linker being used:
 
 executable('program', compile_options=[opts.define('POST', '"world!"')],
            files=['program.cpp'])
