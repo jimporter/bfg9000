@@ -37,19 +37,19 @@ def package(env, name, version=None, lang='c', kind=PackageKind.any.name,
 def system_executable(env, name, format=None):
     return Executable(
         Path(which([[name]], env.variables, resolve=True)[0], Root.absolute),
-        format or env.platform.object_format, external=True
+        format or env.target_platform.object_format, external=True
     )
 
 
 @builtin.function('env')
 def framework(env, name, suffix=None):
-    if not env.platform.has_frameworks:
-        raise PackageResolutionError(
-            "{} platform doesn't support frameworks".format(env.platform.name)
-        )
+    if not env.target_platform.has_frameworks:
+        raise PackageResolutionError("{} platform doesn't support frameworks"
+                                     .format(env.target_platform.name))
 
     framework = Framework(name, suffix)
-    return CommonPackage(framework.full_name, env.platform.object_format,
+    return CommonPackage(framework.full_name,
+                         env.target_platform.object_format,
                          link_options=opts.option_list(opts.lib(framework)))
 
 
@@ -84,7 +84,8 @@ def boost_package(env, name=None, version=None):
     else:
         # On Windows, check the default install location, which is structured
         # differently from other install locations.
-        if env.platform.name == 'windows':
+        if ( env.host_platform.name == 'windows' and
+             env.target_platform.name == 'windows' ):
             dirs = find(r'C:\Boost\include', 'boost-*', type='d', flat=True)
             if dirs:
                 try:
@@ -102,7 +103,7 @@ def boost_package(env, name=None, version=None):
         header = pkg.header(version_hpp)
         boost_version = _boost_version(header, version)
 
-    if env.platform.name == 'windows':
+    if env.target_platform.name == 'windows':
         if not env.builder('c++').auto_link:
             # XXX: Don't require auto-link.
             raise PackageResolutionError('Boost on Windows requires auto-link')
@@ -121,7 +122,7 @@ def boost_package(env, name=None, version=None):
 
         compile_options = opts.option_list()
         link_options = opts.option_list()
-        if env.platform.flavor == 'posix' and 'thread' in iterate(name):
+        if env.target_platform.flavor == 'posix' and 'thread' in iterate(name):
             compile_options.append(opts.pthread())
             link_options.append(opts.pthread())
 

@@ -2,7 +2,8 @@ import os.path
 
 from . import *
 
-is_mingw = platform_name() == 'windows' and env.builder('c++').flavor == 'cc'
+is_mingw = (env.host_platform.name == 'windows' and
+            env.builder('c++').flavor == 'cc')
 
 
 @skip_if(is_mingw, 'xfail on mingw')

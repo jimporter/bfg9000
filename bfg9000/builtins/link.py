@@ -229,7 +229,7 @@ class StaticLink(Link):
 @builtin.type(Executable)
 def executable(builtins, build, env, name, files=None, **kwargs):
     if files is None and 'libs' not in kwargs:
-        params = [('format', env.platform.object_format), ('lang', 'c')]
+        params = [('format', env.target_platform.object_format), ('lang', 'c')]
         return local_file(build, Executable, name, params, kwargs)
     return DynamicLink(builtins, build, env, name, files,
                        **kwargs).public_output
@@ -246,7 +246,7 @@ def shared_library(builtins, build, env, name, files=None, **kwargs):
     if files is None and 'libs' not in kwargs:
         # XXX: What to do for pre-built shared libraries for Windows, which has
         # a separate DLL file?
-        params = [('format', env.platform.object_format), ('lang', 'c')]
+        params = [('format', env.target_platform.object_format), ('lang', 'c')]
         return local_file(build, SharedLibrary, name, params, kwargs)
     return SharedLink(builtins, build, env, name, files,
                       **kwargs).public_output
@@ -261,7 +261,7 @@ def static_library(builtins, build, env, name, files=None, **kwargs):
         return name.static
 
     if files is None and 'libs' not in kwargs:
-        params = [('format', env.platform.object_format), ('lang', 'c')]
+        params = [('format', env.target_platform.object_format), ('lang', 'c')]
         return local_file(build, StaticLibrary, name, params, kwargs)
     return StaticLink(builtins, build, env, name, files,
                       **kwargs).public_output
@@ -291,7 +291,7 @@ def library(builtins, build, env, name, files=None, **kwargs):
         return name if kind == 'dual' else getattr(name, kind)
 
     if files is None and 'libs' not in kwargs:
-        params = [('format', env.platform.object_format), ('lang', 'c')]
+        params = [('format', env.target_platform.object_format), ('lang', 'c')]
         file_type = StaticLibrary
 
         if explicit_kind:

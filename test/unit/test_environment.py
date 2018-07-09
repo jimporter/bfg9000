@@ -44,4 +44,5 @@ class TestEnvironment(unittest.TestCase):
             variables = {str(k): str(v) for k, v in iteritems(variables)}
         self.assertEqual(env.variables, variables)
 
-        self.assertEqual(env.platform.name, 'linux')
+        self.assertEqual(env.host_platform.name, 'linux')
+        self.assertEqual(env.target_platform.name, 'linux')

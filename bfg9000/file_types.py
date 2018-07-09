@@ -269,3 +269,10 @@ class Framework(object):
     @property
     def runtime_file(self):
         None
+
+    def __eq__(self, rhs):
+        return (type(self) == type(rhs) and self.name == rhs.name and
+                self.suffix == rhs.suffix)
+
+    def __ne__(self, rhs):
+        return not (self == rhs)

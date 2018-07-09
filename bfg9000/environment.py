@@ -22,7 +22,7 @@ class EnvVersionError(RuntimeError):
 
 
 class Environment(object):
-    version = 11
+    version = 12
     envfile = '.bfg_environ'
 
     Mode = shell.Mode
@@ -40,6 +40,9 @@ class Environment(object):
         self.backend = backend
         self.backend_version = backend_version
 
+        self.host_platform = platforms.host.platform_info()
+        self.target_platform = platforms.target.platform_info()
+
         self.srcdir = srcdir
         self.builddir = builddir
         self.install_dirs = install_dirs
@@ -48,7 +51,6 @@ class Environment(object):
         self.extra_args = extra_args
 
         self.variables = dict(os.environ)
-        self.platform = platforms.platform_info()
 
     @property
     def base_dirs(self):
@@ -129,6 +131,8 @@ class Environment(object):
                     'bfgdir': self.bfgdir.to_json(),
                     'backend': self.backend,
                     'backend_version': str(self.backend_version),
+                    'host_platform': self.host_platform.name,
+                    'target_platform': self.target_platform.name,
                     'srcdir': self.srcdir.to_json(),
                     'builddir': self.builddir.to_json(),
                     'install_dirs': {
@@ -138,7 +142,6 @@ class Environment(object):
                     'library_mode': self.library_mode,
                     'extra_args': self.extra_args,
                     'variables': self.variables,
-                    'platform': self.platform.name,
                 }
             }, out)
 
@@ -192,12 +195,17 @@ class Environment(object):
             for i in data['install_dirs']:
                 data['install_dirs'][i] += (False,)
 
+        # v12 splits platform into host_platform and target_platform.
+        if version < 12:
+            platform = data.pop('platform')
+            data['host_platform'] = data['target_platform'] = platform
+
         # Now that we've upgraded, initialize the Environment object.
         env = Environment.__new__(Environment)
 
         # With Python 2.x on Windows, the environment variables must all be
         # non-Unicode strings.
-        if platforms.platform_name() == 'windows' and sys.version_info[0] == 2:
+        if data['host_platform'] == 'windows' and sys.version_info[0] == 2:
             data['variables'] = {str(k): str(v) for k, v in
                                  iteritems(data['variables'])}
 
@@ -207,13 +215,17 @@ class Environment(object):
         for i in ('bfgdir', 'srcdir', 'builddir'):
             setattr(env, i, Path.from_json(data[i]))
 
+        env.host_platform = platforms.host.platform_info(data['host_platform'])
+        env.target_platform = platforms.target.platform_info(
+            data['target_platform']
+        )
+
         env.backend_version = Version(data['backend_version'])
         env.install_dirs = {
             InstallRoot[k]: Path.from_json(v) if v else None
             for k, v in iteritems(data['install_dirs'])
         }
         env.library_mode = LibraryMode(*data['library_mode'])
-        env.platform = platforms.platform_info(data['platform'])
 
         if save_on_upgrade and version < cls.version:
             env.save(path)

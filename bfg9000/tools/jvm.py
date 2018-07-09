@@ -181,7 +181,7 @@ class JarMaker(BuildCommand):
         # slashes on Windows, and prefix Windows drive letters with '/' to
         # disambiguate them from URLs.
         def fix_path(p):
-            if self.env.platform.name == 'windows':
+            if self.env.target_platform.name == 'windows':
                 if p[1] == ':':
                     p = '/' + p
                 p = p.replace('\\', '/')

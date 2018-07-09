@@ -7,7 +7,8 @@ from six.moves import cStringIO as StringIO
 from ... import path
 from ... import safe_str
 from ... import iterutils
-from ...platforms import platform_name, platform_info
+from ...platforms import platform_name
+from ...platforms.host import platform_info
 from ...tools.common import Command
 
 # XXX: Make currently only supports sh-style shells.

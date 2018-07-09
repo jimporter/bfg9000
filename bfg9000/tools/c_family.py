@@ -37,7 +37,8 @@ _builders = (cc.CcBuilder, msvc.MsvcBuilder)
 @builder('c', 'c++', 'objc', 'objc++')
 def c_family_builder(env, lang):
     var, flags_var = _vars[lang]
-    cmd_map = _windows_cmds if env.platform.name == 'windows' else _posix_cmds
+    cmd_map = (_windows_cmds if env.host_platform.name == 'windows'
+               else _posix_cmds)
     candidates = env.getvar(var, cmd_map[lang])
 
     flags = (

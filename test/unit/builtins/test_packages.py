@@ -11,7 +11,7 @@ from bfg9000.exceptions import PackageResolutionError
 from bfg9000.file_types import Directory, HeaderDirectory
 from bfg9000.packages import CommonPackage
 from bfg9000.path import abspath
-from bfg9000.platforms import platform_name, platform_info
+from bfg9000.platforms import platform_name
 from bfg9000.versioning import SpecifierSet, Version
 
 
@@ -50,7 +50,7 @@ class TestFramework(BaseTest):
     def test_framework(self):
         self.assertEqual(
             packages.framework(self.env, 'name'),
-            CommonPackage('name', self.env.platform.object_format,
+            CommonPackage('name', self.env.target_platform.object_format,
                           link_options=opts.option_list(opts.lib(
                               file_types.Framework('name')
                           )))
@@ -61,7 +61,8 @@ class TestFramework(BaseTest):
     def test_framework_suffix(self):
         self.assertEqual(
             packages.framework(self.env, 'name', 'suffix'),
-            CommonPackage('name,suffix', self.env.platform.object_format,
+            CommonPackage('name,suffix',
+                          self.env.target_platform.object_format,
                           link_options=opts.option_list(opts.lib(
                               file_types.Framework('name', 'suffix')
                           )))
@@ -161,7 +162,7 @@ class TestSystemExecutable(BaseTest):
             self.assertEqual(
                 packages.system_executable(self.env, 'name'),
                 file_types.Executable(abspath('/command'),
-                                      self.env.platform.object_format)
+                                      self.env.target_platform.object_format)
             )
 
     def test_format(self):

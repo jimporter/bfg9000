@@ -178,12 +178,16 @@ setup(
             'ninja=bfg9000.backends.ninja.writer',
             'msbuild=bfg9000.backends.msbuild.writer [msbuild]',
         ],
-        'bfg9000.platforms': [
-            'cygwin=bfg9000.platforms.windows:CygwinPlatform',
-            'darwin=bfg9000.platforms.posix:DarwinPlatform',
-            'linux=bfg9000.platforms.posix:LinuxPlatform',
-            'posix=bfg9000.platforms.posix:PosixPlatform',
-            'windows=bfg9000.platforms.windows:WindowsPlatform',
+        'bfg9000.platforms.host': [
+            'cygwin=bfg9000.platforms.cygwin:CygwinHostPlatform',
+            'posix=bfg9000.platforms.posix:PosixHostPlatform',
+            'windows=bfg9000.platforms.windows:WindowsHostPlatform',
+        ],
+        'bfg9000.platforms.target': [
+            'cygwin=bfg9000.platforms.cygwin:CygwinTargetPlatform',
+            'darwin=bfg9000.platforms.posix:DarwinTargetPlatform',
+            'posix=bfg9000.platforms.posix:PosixTargetPlatform',
+            'windows=bfg9000.platforms.windows:WindowsTargetPlatform',
         ],
     },
 

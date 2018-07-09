@@ -139,7 +139,7 @@ def object_file(builtins, build, env, name=None, file=None, **kwargs):
     if file is None:
         if name is None:
             raise TypeError('expected name')
-        params = [('format', env.platform.object_format), ('lang', 'c')]
+        params = [('format', env.target_platform.object_format), ('lang', 'c')]
         return local_file(build, ObjectFile, name, params, kwargs)
     return CompileSource(builtins, build, env, name, file,
                          **kwargs).public_output

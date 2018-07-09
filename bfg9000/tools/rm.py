@@ -9,7 +9,7 @@ from ..iterutils import iterate
 class Rm(SimpleCommand):
     def __init__(self, env):
         default = ['rm -f']
-        if env.platform.name == 'windows':
+        if env.host_platform.name == 'windows':
             default.append('cmd /c del')
         SimpleCommand.__init__(self, env, name='rm', env_var='RM',
                                default=default)

@@ -3,7 +3,8 @@ import os.path
 from . import *
 pjoin = os.path.join
 
-is_mingw = platform_name() == 'windows' and env.builder('c++').flavor == 'cc'
+is_mingw = (env.host_platform.name == 'windows' and
+            env.builder('c++').flavor == 'cc')
 is_msvc = env.builder('c++').flavor == 'msvc'
 
 
@@ -36,7 +37,7 @@ class TestLibrary(IntegrationTest):
         self.build()
         self.assertOutput([executable('program')], 'hello, library!\n')
         self.assertExists(shared_library('library'))
-        if platform_name() == 'windows':
+        if env.target_platform.name == 'windows':
             self.assertExists(import_library('library'))
         self.assertExists(static_library('library'))
 
@@ -50,14 +51,14 @@ class TestSharedLibrary(IntegrationTest):
     def test_build(self):
         self.build()
 
-        env = None
-        if platform_name() == 'windows':
-            env = {'PATH': os.pathsep.join([
+        env_vars = None
+        if env.target_platform.name == 'windows':
+            env_vars = {'PATH': os.pathsep.join([
                 os.path.abspath(self.target_path(output_file(i)))
                 for i in ('outer', 'middle', 'inner')
             ])}
         self.assertOutput([executable('program')], 'hello, library!\n',
-                          env=env)
+                          env=env_vars)
 
     @skip_if_backend('msbuild')
     def test_install(self):
@@ -73,15 +74,15 @@ class TestSharedLibrary(IntegrationTest):
         os.chdir(self.srcdir)
         cleandir(self.builddir)
 
-        env = None
-        if platform_name() == 'windows':
-            env = {'PATH': os.pathsep.join([
+        env_vars = None
+        if env.target_platform.name == 'windows':
+            env_vars = {'PATH': os.pathsep.join([
                 os.path.abspath(os.path.join(
                     self.libdir, self.target_path(output_file(i))
                 )) for i in ('outer', 'middle', 'inner')
             ])}
         self.assertOutput([pjoin(self.bindir, executable('program').path)],
-                          'hello, library!\n', env=env)
+                          'hello, library!\n', env=env_vars)
 
 
 class TestStaticLibrary(IntegrationTest):
@@ -95,7 +96,7 @@ class TestStaticLibrary(IntegrationTest):
             [executable('program')],
             'hello from inner\nhello from middle\nhello from outer\n'
         )
-        if env.platform.name == 'linux':
+        if env.host_platform.name == 'linux':
             output = self.assertPopen(['readelf', '-s', executable('program')])
             assertNotRegex(self, output, r"Symbol table '.symtab'")
 
@@ -125,7 +126,7 @@ class TestDualUseLibrary(IntegrationTest):
         self.assertOutput([executable('program')], 'hello, library!\n')
         for i in self.lib_names:
             self.assertExists(shared_library(i))
-            if platform_name() == 'windows':
+            if env.target_platform.name == 'windows':
                 self.assertExists(import_library(i))
             if not is_msvc:
                 self.assertNotExists(static_library(i))
@@ -146,7 +147,7 @@ class TestDualUseLibrary(IntegrationTest):
         self.assertOutput([executable('program')], 'hello, library!\n')
         for i in self.lib_names:
             self.assertExists(shared_library(i))
-            if platform_name() == 'windows':
+            if env.target_platform.name == 'windows':
                 self.assertExists(import_library(i))
             self.assertNotExists(static_library(i))
 
@@ -157,7 +158,7 @@ class TestDualUseLibrary(IntegrationTest):
         self.build(shared_library('outer'))
         for i in self.lib_names:
             self.assertExists(shared_library(i))
-            if platform_name() == 'windows':
+            if env.target_platform.name == 'windows':
                 self.assertExists(import_library(i))
             self.assertNotExists(static_library(i))
 
@@ -168,7 +169,7 @@ class TestDualUseLibrary(IntegrationTest):
         self.build(static_library('outer'))
         for i in self.lib_names:
             self.assertNotExists(shared_library(i))
-            if platform_name() == 'windows':
+            if env.target_platform.name == 'windows':
                 self.assertNotExists(import_library(i))
             self.assertExists(static_library(i))
 
@@ -195,7 +196,7 @@ class TestDualUseLibrary(IntegrationTest):
         self.build('install')
 
         import_libs = []
-        if platform_name() == 'windows':
+        if env.target_platform.name == 'windows':
             import_libs = [pjoin(self.libdir, import_library('outer').path)]
         self.assertDirectory(self.installdir, (
             [pjoin(self.libdir, shared_library(i).path)
@@ -207,7 +208,7 @@ class TestDualUseLibrary(IntegrationTest):
 
 
 # No versioned libraries on Windows.
-@skip_if(env.platform.name == 'windows', hide=True)
+@skip_if(env.target_platform.name == 'windows', hide=True)
 class TestVersionedLibrary(IntegrationTest):
     def __init__(self, *args, **kwargs):
         IntegrationTest.__init__(

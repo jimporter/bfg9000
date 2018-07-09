@@ -8,7 +8,7 @@ from . import path
 from .arguments import parser as argparse
 from .backends import list_backends
 from .environment import Environment, EnvVersionError
-from .platforms import platform_info
+from .platforms.target import platform_info
 from .app_version import version
 
 logger = log.getLogger(__name__)

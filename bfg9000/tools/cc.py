@@ -23,7 +23,7 @@ class CcBuilder(object):
     def __init__(self, env, lang, name, command, cflags_name, cflags,
                  version_output):
         self.lang = lang
-        self.object_format = env.platform.object_format
+        self.object_format = env.target_platform.object_format
 
         if 'Free Software Foundation' in version_output:
             self.brand = 'gcc'
@@ -163,7 +163,7 @@ class CcBaseCompiler(BuildCommand):
 
     def _include_dir(self, directory):
         is_default = ( directory.path.string(self.env.base_dirs) in
-                       self.env.platform.include_dirs )
+                       self.env.host_platform.include_dirs )
 
         # Don't include default directories as system dirs (e.g. /usr/include).
         # Doing so would break GCC 6 when #including stdlib.h:
@@ -269,11 +269,11 @@ class CcLinker(BuildCommand):
         # Create a regular expression to extract the library name for linking
         # with -l.
         lib_formats = [r'lib(.*)\.a']
-        if not self.env.platform.has_import_library:
-            so_ext = re.escape(self.env.platform.shared_library_ext)
+        if not self.env.target_platform.has_import_library:
+            so_ext = re.escape(self.env.target_platform.shared_library_ext)
             lib_formats.append(r'lib(.*)' + so_ext)
         # XXX: Include Cygwin here too?
-        if self.env.platform.name == 'windows':
+        if self.env.target_platform.name == 'windows':
             lib_formats.append(r'(.*)\.lib')
         self._lib_re = re.compile('(?:' + '|'.join(lib_formats) + ')$')
 
@@ -313,7 +313,7 @@ class CcLinker(BuildCommand):
         # platforms that have different import/export rules for libraries. We
         # approximate this by checking if the platform uses import libraries,
         # and only define the macros if it does.
-        return self.env.platform.has_import_library
+        return self.env.target_platform.has_import_library
 
     def sysroot(self, strict=False):
         try:
@@ -325,7 +325,7 @@ class CcLinker(BuildCommand):
         except (OSError, shell.CalledProcessError):
             if strict:
                 raise
-            return '' if self.env.platform.flavor == 'windows' else '/'
+            return '' if self.env.target_platform.flavor == 'windows' else '/'
 
     def search_dirs(self, strict=False):
         try:
@@ -451,12 +451,12 @@ class CcLinker(BuildCommand):
 
     def _link_lib(self, library, raw_static):
         if isinstance(library, WholeArchive):
-            if self.env.platform.name == 'darwin':
+            if self.env.target_platform.name == 'darwin':
                 return ['-Wl,-force_load', library.path]
             return ['-Wl,--whole-archive', library.path,
                     '-Wl,--no-whole-archive']
         elif isinstance(library, Framework):
-            if not self.env.platform.has_frameworks:
+            if not self.env.target_platform.has_frameworks:
                 raise TypeError('frameworks not supported on this platform')
             return ['-framework', library.full_name]
         elif isinstance(library, StaticLibrary) and raw_static:
@@ -484,7 +484,7 @@ class CcLinker(BuildCommand):
                 rpath_links.append(i.path)
             elif isinstance(i, opts.pthread):
                 # macOS doesn't expect -pthread when linking.
-                if self.env.platform.name != 'darwin':
+                if self.env.target_platform.name != 'darwin':
                     flags.append('-pthread')
             elif isinstance(i, opts.entry_point):
                 if self.lang != 'java':
@@ -540,7 +540,7 @@ class CcExecutableLinker(CcLinker):
                           ldflags, ldlibs)
 
     def output_file(self, name, context):
-        path = Path(name + self.env.platform.executable_ext)
+        path = Path(name + self.env.target_platform.executable_ext)
         return Executable(path, self.builder.object_format, self.lang)
 
 
@@ -551,12 +551,12 @@ class CcSharedLibraryLinker(CcLinker):
 
     @property
     def num_outputs(self):
-        return 2 if self.env.platform.has_import_library else 1
+        return 2 if self.env.target_platform.has_import_library else 1
 
     def _call(self, cmd, input, output, libs=None, flags=None):
         output = listify(output)
         result = CcLinker._call(self, cmd, input, output[0], libs, flags)
-        if self.env.platform.has_import_library:
+        if self.env.target_platform.has_import_library:
             result.append('-Wl,--out-implib=' + output[1])
         return result
 
@@ -575,19 +575,20 @@ class CcSharedLibraryLinker(CcLinker):
         fmt = self.builder.object_format
 
         def lib(head, tail, prefix='lib', suffix=''):
-            ext = self.env.platform.shared_library_ext
+            ext = self.env.target_platform.shared_library_ext
             return Path(os.path.join(
                 head, prefix + tail + ext + suffix
             ))
 
-        if self.env.platform.has_import_library:
-            dllprefix = 'cyg' if self.env.platform.name == 'cygwin' else 'lib'
+        if self.env.target_platform.has_import_library:
+            dllprefix = ('cyg' if self.env.target_platform.name == 'cygwin'
+                         else 'lib')
             dllname = lib(head, tail, dllprefix)
             impname = lib(head, tail, suffix='.a')
             dll = DllBinary(dllname, fmt, self.lang, impname)
             return [dll, dll.import_lib]
-        elif version and self.env.platform.has_versioned_library:
-            if self.env.platform.name == 'darwin':
+        elif version and self.env.target_platform.has_versioned_library:
+            if self.env.target_platform.name == 'darwin':
                 real = lib(head, '{}.{}'.format(tail, version))
                 soname = lib(head, '{}.{}'.format(tail, soversion))
             else:
@@ -600,7 +601,7 @@ class CcSharedLibraryLinker(CcLinker):
 
     @property
     def _always_flags(self):
-        shared = ('-dynamiclib' if self.env.platform.name == 'darwin'
+        shared = ('-dynamiclib' if self.env.target_platform.name == 'darwin'
                   else '-shared')
         return CcLinker._always_flags.fget(self) + [shared, '-fPIC']
 
@@ -610,7 +611,7 @@ class CcSharedLibraryLinker(CcLinker):
         else:
             soname = library
 
-        if self.env.platform.name == 'darwin':
+        if self.env.target_platform.name == 'darwin':
             return ['-install_name', darwin_install_name(soname)]
         else:
             return ['-Wl,-soname,' + soname.path.basename()]
@@ -640,7 +641,8 @@ class CcPackageResolver(object):
         self.env = env
 
         self.include_dirs = [i for i in uniques(chain(
-            self.builder.compiler.search_dirs(), self.env.platform.include_dirs
+            self.builder.compiler.search_dirs(),
+            self.env.host_platform.include_dirs
         )) if os.path.exists(i)]
 
         cc_lib_dirs = self.builder.linker('executable').search_dirs()
@@ -648,10 +650,10 @@ class CcPackageResolver(object):
             sysroot = self.builder.linker('executable').sysroot()
             ld_lib_dirs = self.builder.linker('raw').search_dirs(sysroot, True)
         except (KeyError, OSError, shell.CalledProcessError):
-            ld_lib_dirs = self.env.platform.lib_dirs
+            ld_lib_dirs = self.env.host_platform.lib_dirs
 
         self.lib_dirs = [i for i in uniques(chain(
-            cc_lib_dirs, ld_lib_dirs, self.env.platform.lib_dirs
+            cc_lib_dirs, ld_lib_dirs, self.env.host_platform.lib_dirs
         )) if os.path.exists(i)]
 
     @property
@@ -675,17 +677,17 @@ class CcPackageResolver(object):
 
         libnames = []
         if kind & PackageKind.shared:
-            libname = 'lib' + name + self.env.platform.shared_library_ext
-            if self.env.platform.has_import_library:
-                libnames.append((libname + '.a', LinkLibrary, {}))
+            base = 'lib' + name + self.env.target_platform.shared_library_ext
+            if self.env.target_platform.has_import_library:
+                libnames.append((base + '.a', LinkLibrary, {}))
             else:
-                libnames.append((libname, SharedLibrary, {}))
+                libnames.append((base, SharedLibrary, {}))
         if kind & PackageKind.static:
             libnames.append(('lib' + name + '.a', StaticLibrary,
                              {'lang': self.lang}))
 
         # XXX: Include Cygwin here too?
-        if self.env.platform.name == 'windows':
+        if self.env.target_platform.name == 'windows':
             # We don't actually know what kind of library this is. It could be
             # a static library or an import library (which we classify as a
             # kind of shared lib).
@@ -714,7 +716,7 @@ class CcPackageResolver(object):
                                    for i in iterate(headers))
 
             if lib_names is default_sentinel:
-                lib_names = self.env.platform.transform_package(name)
+                lib_names = self.env.target_platform.transform_package(name)
             for i in iterate(lib_names):
                 if isinstance(i, Framework):
                     link_options.append(opts.lib(i))

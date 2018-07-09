@@ -47,7 +47,7 @@ class TestCcBuilder(unittest.TestCase):
         self.assertEqual(cc.pch_compiler.num_outputs, 1)
         self.assertEqual(cc.linker('executable').num_outputs, 1)
         self.assertEqual(cc.linker('shared_library').num_outputs,
-                         2 if env.platform.has_import_library else 1)
+                         2 if env.target_platform.has_import_library else 1)
 
         self.assertEqual(cc.compiler.deps_flavor, 'gcc')
         self.assertEqual(cc.pch_compiler.deps_flavor, 'gcc')
@@ -140,7 +140,7 @@ class TestCcCompiler(unittest.TestCase):
             opts.include_dir(file_types.HeaderDirectory(p, system=True))
         )), ['-isystem', p])
 
-        if env.platform.name == 'linux':
+        if env.target_platform.name == 'linux':
             p = Path('/usr/include')
             self.assertEqual(self.compiler.flags(opts.option_list(
                 opts.include_dir(file_types.HeaderDirectory(p, system=True))
@@ -263,8 +263,8 @@ class TestCcLinker(unittest.TestCase):
 
     def test_flags_pthread(self):
         flags = self.linker.flags(opts.option_list(opts.pthread()))
-        self.assertEqual(flags, ([] if env.platform.name == 'darwin' else
-                                 ['-pthread']))
+        self.assertEqual(flags, ([] if env.target_platform.name == 'darwin'
+                                 else ['-pthread']))
 
     def test_flags_string(self):
         self.assertEqual(self.linker.flags(opts.option_list('-v')), ['-v'])
@@ -303,7 +303,7 @@ class TestCcLinker(unittest.TestCase):
                 file_types.StaticLibrary(lib, 'native')
             ))
         ))
-        if env.platform.name == 'darwin':
+        if env.target_platform.name == 'darwin':
             self.assertEqual(flags, ['-Wl,-force_load', lib])
         else:
             self.assertEqual(flags, ['-Wl,--whole-archive', lib,
@@ -311,7 +311,7 @@ class TestCcLinker(unittest.TestCase):
 
         # Framework
         fw = opts.lib(file_types.Framework('cocoa'))
-        if env.platform.name == 'darwin':
+        if env.target_platform.name == 'darwin':
             self.assertEqual(self.linker.lib_flags(opts.option_list(fw)),
                              ['-framework', 'cocoa'])
         else:

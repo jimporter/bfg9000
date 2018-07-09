@@ -21,7 +21,7 @@ class MsvcBuilder(object):
     def __init__(self, env, lang, name, command, cflags_name, cflags,
                  version_output):
         self.lang = lang
-        self.object_format = env.platform.object_format
+        self.object_format = env.target_platform.object_format
 
         if 'Microsoft (R)' in version_output:
             self.brand = 'msvc'
@@ -408,7 +408,7 @@ class MsvcExecutableLinker(MsvcLinker):
                             ldlibs)
 
     def output_file(self, name, context):
-        path = Path(name + self.env.platform.executable_ext)
+        path = Path(name + self.env.target_platform.executable_ext)
         return Executable(path, self.builder.object_format, self.lang)
 
 
@@ -439,7 +439,7 @@ class MsvcSharedLibraryLinker(MsvcLinker):
         return options
 
     def output_file(self, name, context):
-        dllname = Path(name + self.env.platform.shared_library_ext)
+        dllname = Path(name + self.env.target_platform.shared_library_ext)
         impname = Path(name + '.lib')
         expname = Path(name + '.exp')
         dll = DllBinary(dllname, self.builder.object_format, self.lang,
@@ -503,12 +503,13 @@ class MsvcPackageResolver(object):
         self.env = env
 
         self.include_dirs = [i for i in uniques(chain(
-            self.builder.compiler.search_dirs(), self.env.platform.include_dirs
+            self.builder.compiler.search_dirs(),
+            self.env.host_platform.include_dirs
         )) if os.path.exists(i)]
 
         self.lib_dirs = [i for i in uniques(chain(
             self.builder.linker('executable').search_dirs(),
-            self.env.platform.lib_dirs
+            self.env.host_platform.lib_dirs
         )) if os.path.exists(i)]
 
     @property
@@ -548,7 +549,7 @@ class MsvcPackageResolver(object):
             return pkg_config.resolve(self.env, name, format, version, kind)
         except (OSError, PackageResolutionError):
             if lib_names is default_sentinel:
-                lib_names = self.env.platform.transform_package(name)
+                lib_names = self.env.target_platform.transform_package(name)
 
             compile_options = opts.option_list(
                 opts.include_dir(self.header(i)) for i in iterate(headers)

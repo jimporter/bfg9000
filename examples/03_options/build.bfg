@@ -11,7 +11,7 @@ global_options(['-DPRE="hello"'], lang='c++')
 # specified as a list as above, or as a single string containing several
 # options:
 
-if env.platform.name == 'linux':
+if env.target_platform.name == 'linux':
     global_link_options('-s')
 
 # Targets may also have their own options. For linking steps (e.g.

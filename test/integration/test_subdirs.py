@@ -20,7 +20,7 @@ class TestSubdirs(IntegrationTest):
 
     def _check_installed(self):
         extra = []
-        if platform_info().has_import_library:
+        if env.target_platform.has_import_library:
             extra = [pjoin(self.libdir, import_library('sub/library').path)]
 
         self.assertDirectory(self.installdir, [

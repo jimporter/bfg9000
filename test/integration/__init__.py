@@ -11,7 +11,6 @@ from six import iteritems
 from bfg9000.backends import list_backends
 from bfg9000.environment import Environment
 from bfg9000.path import InstallRoot, makedirs, Path, Root
-from bfg9000.platforms import platform_info, platform_name
 
 this_dir = os.path.abspath(os.path.dirname(__file__))
 examples_dir = os.path.join(this_dir, '..', '..', 'examples')
@@ -111,7 +110,7 @@ def xfail_if(xfail):
 
 
 def xfail_if_platform(platform):
-    return xfail_if(platform_name() == platform)
+    return xfail_if(env.host_platform.name == platform)
 
 
 class SubprocessError(unittest.TestCase.failureException):
@@ -224,7 +223,7 @@ class BasicIntegrationTest(TestCase):
             self.installdir = os.path.join(test_stage_dir,
                                            srcname + '-install')
 
-            install_dirs = platform_info().install_dirs.copy()
+            install_dirs = env.target_platform.install_dirs.copy()
             install_dirs[InstallRoot.prefix] = Path(
                 self.installdir, Root.absolute
             )
@@ -335,7 +334,7 @@ def output_file(name):
 
 def executable(name):
     return Target(name, os.path.normpath(os.path.join(
-        '.', name + platform_info().executable_ext
+        '.', name + env.target_platform.executable_ext
     )))
 
 
@@ -347,11 +346,11 @@ else:
 
 def shared_library(name, version=None):
     head, tail = os.path.split(name)
-    ext = platform_info().shared_library_ext
+    ext = env.target_platform.shared_library_ext
     if version:
-        if not platform_info().has_versioned_library:
+        if not env.target_platform.has_versioned_library:
             raise ValueError('no versioned libraries on this platform')
-        if platform_name() == 'darwin':
+        if env.target_platform.name == 'darwin':
             tail += '.' + version
         else:
             ext += '.' + version
@@ -369,7 +368,7 @@ def static_library(name):
 
 
 def import_library(name):
-    if not platform_info().has_import_library:
+    if not env.target_platform.has_import_library:
         raise ValueError('no import libraries on this platform')
     if env.builder('c++').flavor == 'msvc':
         return static_library(name)

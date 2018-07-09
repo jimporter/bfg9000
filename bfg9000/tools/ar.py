@@ -52,7 +52,7 @@ class ArLinker(BuildCommand):
         # platforms that have different import/export rules for libraries. We
         # approximate this by checking if the platform uses import libraries,
         # and only define the macros if it does.
-        return self.env.platform.has_import_library
+        return self.env.target_platform.has_import_library
 
     def compile_options(self, context):
         return (opts.option_list(opts.pic()) +

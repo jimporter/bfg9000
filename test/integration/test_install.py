@@ -23,7 +23,7 @@ class TestInstall(IntegrationTest):
         self.build('install')
 
         extra = []
-        if platform_info().has_import_library:
+        if env.target_platform.has_import_library:
             extra = [pjoin(self.libdir, import_library('shared_a').path)]
 
         self.assertDirectory(self.installdir, [
@@ -74,7 +74,7 @@ class TestInstall(IntegrationTest):
 
 
 # No DESTDIR on Windows.
-@skip_if(env.platform.name == 'windows', hide=True)
+@skip_if(env.host_platform.name == 'windows', hide=True)
 class TestDestDir(IntegrationTest):
     def __init__(self, *args, **kwargs):
         IntegrationTest.__init__(self, 'install', install=True,

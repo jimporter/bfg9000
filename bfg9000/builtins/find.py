@@ -130,7 +130,7 @@ def find(path='.', name='*', type='*', flat=False):
 
 @builtin.function('env')
 def filter_by_platform(env, name, path, type):
-    my_plat = set([env.platform.name, env.platform.flavor])
+    my_plat = set([env.target_platform.name, env.target_platform.flavor])
     sub = '|'.join(re.escape(i) for i in known_platforms if i not in my_plat)
     ex = r'(^|/|_)(' + sub + r')(\.[^\.]$|$|/)'
     return FindResult.not_now if re.search(ex, path) else FindResult.include

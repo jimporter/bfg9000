@@ -1,17 +1,39 @@
-from . import Platform
+from .core import Platform
+from .host import HostPlatform
+from .target import TargetPlatform
 from ..path import Path, Root, InstallRoot
 
 
 class WindowsPlatform(Platform):
+    @property
+    def flavor(self):
+        return 'windows'
+
+
+class WindowsHostPlatform(HostPlatform, WindowsPlatform):
+    @property
+    def include_dirs(self):
+        # Windows doesn't have standard include dirs; for MSVC, this will get
+        # pulled in from the $INCLUDE environment variable.
+        return []
+
+    @property
+    def lib_dirs(self):
+        # Windows doesn't have standard library dirs; for MSVC, this will get
+        # pulled in from the $LIB environment variable.
+        return []
+
+    @property
+    def destdir(self):
+        return False
+
+
+class WindowsTargetPlatform(TargetPlatform, WindowsPlatform):
     _package_map = {
         'gl': 'opengl32',
         'glu': 'glu32',
         'glut': 'glut32',
     }
-
-    @property
-    def flavor(self):
-        return 'windows'
 
     @property
     def object_format(self):
@@ -38,18 +60,6 @@ class WindowsPlatform(Platform):
         return False
 
     @property
-    def include_dirs(self):
-        # Windows doesn't have standard include dirs; for MSVC, this will get
-        # pulled in from the $INCLUDE environment variable.
-        return []
-
-    @property
-    def lib_dirs(self):
-        # Windows doesn't have standard library dirs; for MSVC, this will get
-        # pulled in from the $LIB environment variable.
-        return []
-
-    @property
     def install_dirs(self):
         return {
             InstallRoot.prefix:      None,
@@ -58,17 +68,3 @@ class WindowsPlatform(Platform):
             InstallRoot.libdir:      Path('', InstallRoot.exec_prefix),
             InstallRoot.includedir:  Path('', InstallRoot.prefix),
         }
-
-    @property
-    def destdir(self):
-        return False
-
-
-class CygwinPlatform(WindowsPlatform):
-    @property
-    def flavor(self):
-        return 'posix'
-
-    @property
-    def destdir(self):
-        return True
