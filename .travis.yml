@@ -13,7 +13,7 @@ env:
     - PYTHON=python
     - PIP=pip
     - CPPFLAGS="-Wall -Werror"
-    - BFG_EXTRA_TESTS=gcj
+    - BFG_EXTRA_TESTS="gcj mingw-cross"
   matrix:
     - CC=gcc CXX=g++
     - CC=clang CXX=clang++
@@ -99,6 +99,7 @@ addons:
       - libboost-program-options-dev
       - libgl1-mesa-dev
       - libogg-dev
+      - mingw-w64
       - ninja-build
       - openjdk-7-jdk
       - scala

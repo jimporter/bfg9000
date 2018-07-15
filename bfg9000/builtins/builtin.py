@@ -2,7 +2,7 @@ import functools
 import inspect
 import sys
 from itertools import chain
-from six import iteritems, itervalues, string_types
+from six import iteritems, iterkeys, itervalues, string_types
 
 from ..iterutils import iterate
 
@@ -31,18 +31,19 @@ class Builtins(object):
 
 build = Builtins()
 options = Builtins()
+toolchain = Builtins()
 _allbuiltins = {
     'build': build,
     'options': options,
+    'toolchain': toolchain,
 }
 
 
 def _add_builtin(context, kind, name, value):
     if context == '*':
-        for i in itervalues(_allbuiltins):
-            i.add(kind, name, value)
-    else:
-        _allbuiltins[context].add(kind, name, value)
+        context = iterkeys(_allbuiltins)
+    for i in iterate(context):
+        _allbuiltins[i].add(kind, name, value)
 
 
 class _Binder(object):
@@ -98,9 +99,10 @@ class _Decorator(object):
 
     def __call__(self, *args, **kwargs):
         context = kwargs.pop('context', 'build')
+        name = kwargs.pop('name', None)
 
         def decorator(fn):
-            _add_builtin(context, self.__kind, fn.__name__,
+            _add_builtin(context, self.__kind, name or fn.__name__,
                          self.__binder(fn, *args))
             fn._builtin_bound = len(args)
             return fn

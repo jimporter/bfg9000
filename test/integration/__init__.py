@@ -207,11 +207,11 @@ class BasicIntegrationTest(TestCase):
         self.backend = kwargs.pop('backend', None)
         self.env = kwargs.pop('env', None)
 
+        self.extra_args = kwargs.pop('extra_args', [])
+
         unittest.TestCase.__init__(self, *args, **kwargs)
         if self.backend is None:
             return
-
-        self.extra_args = []
 
         srcname = os.path.basename(srcdir)
         self.srcdir = os.path.join(test_data_dir, srcdir)

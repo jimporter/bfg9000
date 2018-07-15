@@ -1,0 +1,6 @@
+# -*- python -*-
+
+target_platform('linux')
+
+environ['CC'] = 'gcc'
+environ['CXX'] = 'g++'

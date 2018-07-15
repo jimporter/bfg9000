@@ -98,7 +98,7 @@ class TestStaticLibrary(IntegrationTest):
         )
         if env.host_platform.name == 'linux':
             output = self.assertPopen(['readelf', '-s', executable('program')])
-            assertNotRegex(self, output, r"Symbol table '.symtab'")
+            assertNotRegex(self, output, r"Symbol table '\.symtab'")
 
     @skip_if_backend('msbuild')
     def test_install(self):

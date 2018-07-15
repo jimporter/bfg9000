@@ -14,9 +14,9 @@ def init():
         importlib.import_module(name, __package__)
 
 
-@builtin.getter('env', context='*')
-def env(_env):
-    return _env
+@builtin.getter('env', name='env', context=('build', 'options'))
+def getenv(env):
+    return env
 
 
 for i in dir(exceptions):

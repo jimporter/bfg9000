@@ -17,6 +17,10 @@ argument name with `-x`. For example, `--foo` may also be written as `--x-foo`.
 """
 
 
+class Toolchain(object):
+    __slots__ = ('target_platform')
+
+
 def is_srcdir(path):
     return exists(path.append(bfgfile))
 
@@ -27,6 +31,15 @@ def _execute_file(f, filename, builtin_dict):
         exec(code, builtin_dict)
     except SystemExit:
         pass
+
+
+def load_toolchain(f):
+    builtin_init()
+
+    toolchain = Toolchain()
+    builtin_dict = builtin.toolchain.bind(toolchain=toolchain)
+    _execute_file(f, f.name, builtin_dict)
+    return toolchain
 
 
 def _fill_parser(env, parent=None, filename=optsfile, usage='parse'):

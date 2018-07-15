@@ -35,13 +35,13 @@ class Environment(object):
         return env
 
     def __init__(self, bfgdir, backend, backend_version, srcdir, builddir,
-                 install_dirs, library_mode, extra_args):
+                 install_dirs, library_mode, extra_args, target_platform=None):
         self.bfgdir = bfgdir
         self.backend = backend
         self.backend_version = backend_version
 
         self.host_platform = platforms.host.platform_info()
-        self.target_platform = platforms.target.platform_info()
+        self.target_platform = platforms.target.platform_info(target_platform)
 
         self.srcdir = srcdir
         self.builddir = builddir

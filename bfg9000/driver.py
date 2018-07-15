@@ -53,7 +53,7 @@ def handle_reload_exception(e, suggest_rerun=False):
     return 1
 
 
-def environment_from_args(args, extra_args=None):
+def environment_from_args(args, toolchain=None, extra_args=None):
     # Get the bin directory holding bfg's executables.
     bfgdir = path.abspath(sys.argv[0]).parent()
 
@@ -66,6 +66,7 @@ def environment_from_args(args, extra_args=None):
         builddir=args.builddir,
         install_dirs={i: getattr(args, i.name) for i in path.InstallRoot},
         library_mode=(args.shared, args.static),
+        target_platform=toolchain.target_platform if toolchain else None,
         extra_args=extra_args,
     )
 
@@ -156,6 +157,10 @@ def add_configure_args(parser):
                        default=list(backends.keys())[0],
                        help=('build backend (one of %(choices)s; default: ' +
                              '%(default)s)'))
+    build.add_argument('--toolchain', metavar='FILE',
+                       type=argparse.FileType('r'),
+                       help=('a file defining the toolchain to use for this ' +
+                             'build'))
     build.add_argument('--shared', action='enable', default=True,
                        help='build shared libraries (default: enabled)')
     build.add_argument('--static', action='enable', default=False,
@@ -191,10 +196,14 @@ def configure(parser, subparser, args, extra):
         subparser.error('build directory must not contain a {} file'
                         .format(build.bfgfile))
 
+    toolchain = None
+    if args.toolchain:
+        toolchain = build.load_toolchain(args.toolchain)
+
     if not path.exists(args.builddir):
         os.mkdir(args.builddir.string())
 
-    env, backend = environment_from_args(args, extra)
+    env, backend = environment_from_args(args, toolchain, extra)
     env.save(args.builddir.string())
     try:
         argv = build.parse_user_args(env)

@@ -14,4 +14,4 @@ class TestOptions(IntegrationTest):
         self.assertOutput([executable('program')], 'hello, world!\n')
         if env.host_platform.name == 'linux':
             output = self.assertPopen(['readelf', '-s', executable('program')])
-            assertNotRegex(self, output, r"Symbol table '.symtab'")
+            assertNotRegex(self, output, r"Symbol table '\.symtab'")
