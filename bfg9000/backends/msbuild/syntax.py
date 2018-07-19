@@ -11,7 +11,7 @@ from six import iteritems, string_types
 
 from ... import path
 from ... import safe_str
-from ... import shell
+from ...shell import windows as wshell
 from ...file_types import File
 from ...iterutils import isiterable
 from ...tools.common import Command
@@ -200,7 +200,7 @@ def textify(thing, quoted=False, builddir=BuildDir.output):
     if isinstance(thing, safe_str.literal_types):
         return thing.string
     elif isinstance(thing, string_types):
-        return shell.quote(thing, escape_percent=True) if quoted else thing
+        return wshell.quote(thing, escape_percent=True) if quoted else thing
     elif isinstance(thing, safe_str.jbos):
         return ''.join(textify(i, quoted, builddir) for i in thing.bits)
     elif isinstance(thing, path.Path):

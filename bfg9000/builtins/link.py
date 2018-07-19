@@ -494,26 +494,27 @@ try:
         obj_creators = [i.creator for i in rule.files]
         compilers = uniques(i.compiler for i in obj_creators)
 
-        per_compiler_cflags = _parse_compiler_cflags(
+        per_compiler_options = _parse_compiler_cflags(
             compilers, build_inputs['compile_flags']
         )
-        if len(per_compiler_cflags) == 1:
-            common_cflags = per_compiler_cflags.popitem()[1]
+        if len(per_compiler_options) == 1:
+            common_compile_options = per_compiler_options.popitem()[1]
         else:
-            common_cflags = None
+            common_compile_options = None
 
         # Parse linking flags.
-        ldflags = rule.linker.parse_flags(msbuild.textify_each(
-            (rule.linker.global_flags +
-             build_inputs['link_flags'][rule.base_mode][rule.linker.family] +
-             rule.flags)
-        ))
-        ldflags['libs'] = (
-            getattr(rule.linker, 'global_libs', []) +
-            getattr(rule, 'lib_flags', [])
+        ldflags = [
+            rule.linker.global_flags +
+            build_inputs['link_flags'][rule.base_mode][rule.linker.family] +
+            rule.flags
+        ]
+        if hasattr(rule.linker, 'libs_var'):
+            ldflags.append(rule.linker.global_libs + rule.lib_flags)
+        link_options = rule.linker.parse_flags(
+            *[msbuild.textify_each(i) for i in ldflags]
         )
         if hasattr(output, 'import_lib'):
-            ldflags['import_lib'] = output.import_lib
+            link_options['import_lib'] = output.import_lib
 
         deps = chain(
             (i.creator.file for i in rule.files),
@@ -538,10 +539,10 @@ try:
             output_file=output,
             files=[{
                 'name': get_source(i),
-                'options': _parse_file_cflags(i, per_compiler_cflags),
+                'options': _parse_file_cflags(i, per_compiler_options),
             } for i in rule.files],
-            compile_options=common_cflags,
-            link_options=ldflags,
+            compile_options=common_compile_options,
+            link_options=link_options,
             dependencies=solution.dependencies(deps),
         )
         solution[output] = project

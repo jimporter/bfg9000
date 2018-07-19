@@ -144,9 +144,11 @@ class TestMsvcCompiler(unittest.TestCase):
 
 class TestMsvcLinker(unittest.TestCase):
     def setUp(self):
+        version = ('Microsoft (R) C/C++ Optimizing Compiler Version ' +
+                   '19.12.25831 for x86')
         with mock.patch('bfg9000.shell.which', mock_which):
             self.linker = MsvcBuilder(env, 'c++', 'CXX', ['cl'], 'CXXFLAGS',
-                                      [], 'version').linker('executable')
+                                      [], version).linker('executable')
 
     def test_flags_empty(self):
         self.assertEqual(self.linker.flags(opts.option_list()), [])
@@ -204,8 +206,19 @@ class TestMsvcLinker(unittest.TestCase):
             opts.lib(file_types.SharedLibrary(lib, 'native'))
         ), mode='pkg-config'), ['-lfoo'])
 
+        self.assertEqual(self.linker.lib_flags(opts.option_list(
+            opts.lib(file_types.WholeArchive(
+                file_types.SharedLibrary(lib, 'native'))
+            )
+        )), ['/WHOLEARCHIVE:' + lib.basename()])
+
+        version = ('Microsoft (R) C/C++ Optimizing Compiler Version ' +
+                   '18.00.25831 for x86')
+        with mock.patch('bfg9000.shell.which', mock_which):
+            linker = MsvcBuilder(env, 'c++', 'CXX', ['cl'], 'CXXFLAGS',
+                                 [], version).linker('executable')
         with self.assertRaises(TypeError):
-            self.linker.lib_flags(opts.option_list(
+            linker.lib_flags(opts.option_list(
                 opts.lib(file_types.WholeArchive(
                     file_types.StaticLibrary(lib, 'native')
                 ))

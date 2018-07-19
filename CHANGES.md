@@ -5,6 +5,7 @@
 ### New features
 - Compilers and linkers now support semantic options, abstracting away the
   differences between compiler flavors
+- `whole_archive()` now works with MSVC linkers
 
 ### Breaking changes
 - MSVC builds now automatically set `/EHsc` to improve standards-compliance and

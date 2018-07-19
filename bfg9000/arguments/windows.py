@@ -12,6 +12,7 @@ class ArgumentParser(object):
         self._options = []
         self._short_names = {}
         self._long_names = {}
+        self._unnamed_dest = None
 
     @classmethod
     def handler(cls, type):
@@ -36,8 +37,13 @@ class ArgumentParser(object):
         self._options.append(info)
         return info
 
+    def add_unnamed(self, dest):
+        self._unnamed_dest = dest
+
     def parse_known(self, args):
         result = {i.name: i.default() for i in self._options}
+        if self._unnamed_dest:
+            result[self._unnamed_dest] = []
         extra = []
 
         args = iter(args)
@@ -62,6 +68,9 @@ class ArgumentParser(object):
                         info = self._long_names[key]
                         if not info.takes_value and colon:
                             raise ValueError('no value expected for option')
+            elif self._unnamed_dest:
+                result[self._unnamed_dest].append(i)
+                continue
 
             if info:
                 info.fill_value(result, key, value)

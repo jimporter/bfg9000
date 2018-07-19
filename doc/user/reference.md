@@ -379,10 +379,6 @@ to turn a static library into a shared library.
 [*static_library*](#static_library). In addition, you can pass an existing
 static library to *whole_archive* to convert it into a whole archive.
 
-!!! warning
-    The MSVC linker doesn't have a way of expressing the required directives, so
-    *whole_archive* can't be used with it.
-
 ## Grouping rules
 
 ### alias(*name*, [*deps*]) { #alias }

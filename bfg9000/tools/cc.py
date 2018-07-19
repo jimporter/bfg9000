@@ -154,10 +154,10 @@ class CcBaseCompiler(BuildCommand):
         # <https://github.com/ninja-build/ninja/issues/174> for more
         # information.
         if self.env.backend == 'ninja':
-            if self.builder.brand == 'clang':
+            if self.brand == 'clang':
                 flags += ['-fcolor-diagnostics']
-            elif (self.builder.brand == 'gcc' and self.builder.version and
-                  self.builder.version in SpecifierSet('>=4.9')):
+            elif (self.brand == 'gcc' and self.version and
+                  self.version in SpecifierSet('>=4.9')):
                 flags += ['-fdiagnostics-color']
         return flags
 

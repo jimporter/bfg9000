@@ -11,9 +11,10 @@ from ..exceptions import PackageResolutionError
 from ..file_types import *
 from ..iterutils import default_sentinel, flatten, iterate, listify, uniques
 from ..languages import lang2src
+from ..objutils import memoize
 from ..packages import CommonPackage, PackageKind
 from ..path import Path, Root
-from ..versioning import detect_version
+from ..versioning import detect_version, SpecifierSet
 
 
 class MsvcBuilder(object):
@@ -163,7 +164,9 @@ class MsvcBaseCompiler(BuildCommand):
                 raise TypeError('unknown option type {!r}'.format(type(i)))
         return flags
 
-    def parse_flags(self, flags):
+    @staticmethod
+    @memoize
+    def __parser():
         parser = ArgumentParser()
         parser.add('/nologo')
         parser.add('/D', '-D', type=list, dest='defines')
@@ -178,7 +181,10 @@ class MsvcBaseCompiler(BuildCommand):
         pch.add('u', type=str, dest='use')
         pch.add('c', type=str, dest='create')
 
-        result, extra = parser.parse_known(flags)
+        return parser
+
+    def parse_flags(self, flags):
+        result, extra = self.__parser().parse_known(flags)
         result['extra'] = extra
         return result
 
@@ -329,10 +335,12 @@ class MsvcLinker(BuildCommand):
         return opts.option_list()
 
     def _link_lib(self, library, syntax):
-        if isinstance(library, WholeArchive):
-            raise TypeError('MSVC does not support whole-archives')
         if isinstance(library, Framework):
             raise TypeError('MSVC does not support frameworks')
+        elif isinstance(library, WholeArchive):
+            if not self.version or self.version in SpecifierSet('>=19'):
+                return ['/WHOLEARCHIVE:' + library.path.basename()]
+            raise TypeError('whole-archives require MSVC 2015 Update 2')
 
         # Unlike the cc linker, we only support Library objects here (strings
         # aren't allowed!)
@@ -370,12 +378,27 @@ class MsvcLinker(BuildCommand):
                 flags.append(i.value)
         return flags
 
-    def parse_flags(self, flags):
+    @staticmethod
+    @memoize
+    def __parser():
         parser = ArgumentParser()
         parser.add('/nologo')
+        return parser
 
-        result, extra = parser.parse_known(flags)
-        result['extra'] = extra
+    @staticmethod
+    @memoize
+    def __lib_parser():
+        parser = ArgumentParser()
+        parser.add('/nologo')
+        parser.add_unnamed('libs')
+        return parser
+
+    def parse_flags(self, flags, lib_flags):
+        result, extra = self.__parser().parse_known(flags)
+        libresult, libextra = self.__lib_parser().parse_known(lib_flags)
+
+        result.update(libresult)
+        result['extra'] = extra + libextra
         return result
 
 
@@ -471,7 +494,7 @@ class MsvcStaticLinker(BuildCommand):
                              self.builder.object_format, context.langs)
 
     def parse_flags(self, flags):
-        return {'other': flags}
+        return {'extra': flags}
 
 
 class MsvcPackageResolver(object):
