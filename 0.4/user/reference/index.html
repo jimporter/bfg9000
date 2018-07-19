@@ -471,11 +471,6 @@ to turn a static library into a shared library.</p>
 <p><em>whole_archive</em>'s arguments are the same as for
 <a href="#static_library"><em>static_library</em></a>. In addition, you can pass an existing
 static library to <em>whole_archive</em> to convert it into a whole archive.</p>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>The MSVC linker doesn't have a way of expressing the required directives, so
-<em>whole_archive</em> can't be used with it.</p>
-</div>
 <h2 id="grouping-rules">Grouping rules<a class="headerlink" href="#grouping-rules" title="Permanent link">§</a></h2>
 <h3 id="alias">alias(<em>name</em>, [<em>deps</em>])<a class="headerlink" href="#alias" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
