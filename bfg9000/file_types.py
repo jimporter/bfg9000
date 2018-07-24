@@ -40,6 +40,9 @@ class Node(object):
     def __eq__(self, rhs):
         return type(self) == type(rhs) and self.path == rhs.path
 
+    def __ne__(self, rhs):
+        return not (self == rhs)
+
 
 class Phony(Node):
     pass
@@ -238,6 +241,9 @@ class DualUseLibrary(object):
         return (type(self) == type(rhs) and
                 self.shared.path == rhs.shared.path and
                 self.static.path == rhs.static.path)
+
+    def __ne__(self, rhs):
+        return not (self == rhs)
 
     @property
     def package_deps(self):

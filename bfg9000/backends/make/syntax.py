@@ -14,8 +14,8 @@ from ...tools.common import Command
 # XXX: Make currently only supports sh-style shells.
 from ...shell import posix as pshell
 
-__all__ = ['Call', 'Entity', 'Function', 'Makefile', 'Pattern', 'Section',
-           'Syntax', 'Writer', 'Variable', 'var', 'qvar', 'Silent',
+__all__ = ['Call', 'Entity', 'Function', 'Makefile', 'NamedEntity', 'Pattern',
+           'Section', 'Syntax', 'Writer', 'Variable', 'var', 'qvar', 'Silent',
            'path_vars']
 
 Rule = namedtuple('Rule', ['targets', 'deps', 'order_only', 'recipe',
@@ -139,6 +139,9 @@ class NamedEntity(Entity):
     def __eq__(self, rhs):
         return type(self) == type(rhs) and self.name == rhs.name
 
+    def __ne__(self, rhs):
+        return not (self == rhs)
+
 
 class Pattern(Entity):
     def __init__(self, path):
@@ -155,6 +158,9 @@ class Pattern(Entity):
 
     def __eq__(self, rhs):
         return type(self) == type(rhs) and self.path == rhs.path
+
+    def __ne__(self, rhs):
+        return not (self == rhs)
 
 
 class Variable(NamedEntity):

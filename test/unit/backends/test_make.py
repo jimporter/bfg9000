@@ -14,7 +14,25 @@ def quoted(s):
     return "'" + s + "'"
 
 
-class TestMakeWriter(unittest.TestCase):
+class TestPattern(unittest.TestCase):
+    def test_equality(self):
+        self.assertTrue(Pattern('%.c') == Pattern('%.c'))
+        self.assertFalse(Pattern('%.c') != Pattern('%.c'))
+
+        self.assertFalse(Pattern('%.c') == Pattern('%.h'))
+        self.assertTrue(Pattern('%.c') != Pattern('%.h'))
+
+
+class TestVariable(unittest.TestCase):
+    def test_equality(self):
+        self.assertTrue(Variable('foo') == Variable('foo'))
+        self.assertFalse(Variable('foo') != Variable('foo'))
+
+        self.assertFalse(Variable('foo') == Variable('bar'))
+        self.assertTrue(Variable('foo') != Variable('bar'))
+
+
+class TestWriter(unittest.TestCase):
     # strings
     def test_write_string_target(self):
         out = Writer(StringIO())

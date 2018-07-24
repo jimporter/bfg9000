@@ -135,6 +135,9 @@ class Path(safe_str.safe_string):
         return (self.root == rhs.root and self.suffix == rhs.suffix and
                 self.destdir == rhs.destdir)
 
+    def __ne__(self, rhs):
+        return not (self == rhs)
+
     def __nonzero__(self):
         return self.__bool__()
 

@@ -33,6 +33,29 @@ class TestPkgConfigRequirement(unittest.TestCase):
         a = Requirement('foo', '>=1.0,<=2.0')
         self.assertRaises(ValueError, lambda: a.split(True))
 
+    def test_equality(self):
+        R, S = Requirement, SimpleRequirement
+        self.assertTrue(R('foo', '>=1.0') == R('foo', '>=1.0'))
+        self.assertFalse(R('foo', '>=1.0') != R('foo', '>=1.0'))
+
+        self.assertTrue(S('foo', '>=1.0') == S('foo', '>=1.0'))
+        self.assertFalse(S('foo', '>=1.0') != S('foo', '>=1.0'))
+
+        self.assertFalse(R('foo', '>=1.0') == R('bar', '>=1.0'))
+        self.assertTrue(R('foo', '>=1.0') != R('bar', '>=1.0'))
+        self.assertFalse(R('foo', '>=1.0') == R('foo', '>=2.0'))
+        self.assertTrue(R('foo', '>=1.0') != R('foo', '>=2.0'))
+
+        self.assertFalse(S('foo', '>=1.0') == S('bar', '>=1.0'))
+        self.assertTrue(S('foo', '>=1.0') != S('bar', '>=1.0'))
+        self.assertFalse(S('foo', '>=1.0') == S('foo', '>=2.0'))
+        self.assertTrue(S('foo', '>=1.0') != S('foo', '>=2.0'))
+
+        self.assertFalse(R('foo', '>=1.0') == S('foo', '>=1.0'))
+        self.assertTrue(R('foo', '>=1.0') != S('foo', '>=1.0'))
+        self.assertFalse(S('foo', '>=1.0') == R('foo', '>=1.0'))
+        self.assertTrue(S('foo', '>=1.0') != R('foo', '>=1.0'))
+
 
 class TestPkgConfigSimpleRequirement(unittest.TestCase):
     def test_stringify(self):

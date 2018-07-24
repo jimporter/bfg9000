@@ -124,6 +124,9 @@ class Variable(object):
     def __eq__(self, rhs):
         return self.name == rhs.name
 
+    def __ne__(self, rhs):
+        return not (self == rhs)
+
     def __add__(self, rhs):
         return self.use() + safe_str.safe_str(rhs)
 

@@ -36,7 +36,11 @@ class Package(object):
         return hash(self.name)
 
     def __eq__(self, rhs):
-        return type(self) == type(rhs) and self.name == rhs.name
+        return (type(self) == type(rhs) and self.name == rhs.name and
+                self.format == rhs.format)
+
+    def __ne__(self, rhs):
+        return not (self == rhs)
 
     def __repr__(self):
         return '<{type} {name}>'.format(

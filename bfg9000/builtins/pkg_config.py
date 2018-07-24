@@ -41,6 +41,9 @@ class Requirement(object):
         return (type(self) == type(rhs) and self.name == rhs.name and
                 self.version == rhs.version)
 
+    def __ne__(self, rhs):
+        return not (self == rhs)
+
     def split(self, single=False):
         specs = simplify_specifiers(self.version)
         if len(specs) == 0:
@@ -71,6 +74,9 @@ class SimpleRequirement(object):
     def __eq__(self, rhs):
         return (type(self) == type(rhs) and self.name == rhs.name and
                 self.version == rhs.version)
+
+    def __ne__(self, rhs):
+        return not (self == rhs)
 
     def _safe_str(self):
         if not self.version:

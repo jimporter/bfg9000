@@ -43,6 +43,23 @@ class TestPath(unittest.TestCase):
 
         self.assertRaises(ValueError, Path, 'foo/bar', Root.srcdir, True)
 
+    def test_equality(self):
+        self.assertTrue(Path('a', Root.srcdir) == Path('a', Root.srcdir))
+        self.assertFalse(Path('a', Root.srcdir) != Path('a', Root.srcdir))
+        self.assertTrue(Path('a', InstallRoot.bindir, True) ==
+                        Path('a', InstallRoot.bindir, True))
+        self.assertFalse(Path('a', InstallRoot.bindir, True) !=
+                         Path('a', InstallRoot.bindir, True))
+
+        self.assertFalse(Path('a', Root.srcdir) == Path('a', Root.builddir))
+        self.assertTrue(Path('a', Root.srcdir) != Path('a', Root.builddir))
+        self.assertFalse(Path('a', Root.srcdir) == Path('b', Root.srcdir))
+        self.assertTrue(Path('a', Root.srcdir) != Path('b', Root.srcdir))
+        self.assertFalse(Path('a', InstallRoot.bindir, True) ==
+                         Path('a', InstallRoot.bindir, False))
+        self.assertTrue(Path('a', InstallRoot.bindir, True) !=
+                        Path('a', InstallRoot.bindir, False))
+
     def test_parent(self):
         p = Path('foo/bar', Root.srcdir)
         self.assertEqual(p.parent(), Path('foo', Root.srcdir))

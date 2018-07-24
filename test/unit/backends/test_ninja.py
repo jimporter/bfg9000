@@ -14,7 +14,16 @@ def quoted(s):
     return quote_char + s + quote_char
 
 
-class TestNinjaWriter(unittest.TestCase):
+class TestVariable(unittest.TestCase):
+    def test_equality(self):
+        self.assertTrue(Variable('foo') == Variable('foo'))
+        self.assertFalse(Variable('foo') != Variable('foo'))
+
+        self.assertFalse(Variable('foo') == Variable('bar'))
+        self.assertTrue(Variable('foo') != Variable('bar'))
+
+
+class TestWriter(unittest.TestCase):
     # strings
     def test_write_string_output(self):
         out = Writer(StringIO())
