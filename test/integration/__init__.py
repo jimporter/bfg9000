@@ -26,6 +26,9 @@ if os.getenv('BACKENDS', '').strip():
 else:
     backends = [k for k, v in iteritems(list_backends()) if v.priority > 0]
 
+extra_tests = os.getenv('BFG_EXTRA_TESTS', '').split(' ')
+skipped_tests = os.getenv('BFG_SKIPPED_TESTS', '').split(' ')
+
 _unset = object()
 
 

@@ -13,7 +13,7 @@ env:
     - PYTHON=python
     - PIP=pip
     - CPPFLAGS="-Wall -Werror"
-    - GCJ_TEST=1
+    - BFG_EXTRA_TESTS=gcj
   matrix:
     - CC=gcc CXX=g++
     - CC=clang CXX=clang++
@@ -28,15 +28,15 @@ matrix:
       os: osx
       osx_image: xcode8.3
       env: >
-        PYTHON=python2 PIP=pip2 CC=clang CXX=clang++ NO_SCALA_TEST=1
-        GCJ_TEST=0
+        PYTHON=python2 PIP=pip2 CC=clang CXX=clang++ BFG_SKIPPED_TESTS=scala
+        BFG_EXTRA_TESTS=
     - language: generic
       python: 3.6
       os: osx
       osx_image: xcode8.3
       env: >
-        PYTHON=python3 PIP=pip3 CC=clang CXX=clang++ NO_SCALA_TEST=1
-        GCJ_TEST=0
+        PYTHON=python3 PIP=pip3 CC=clang CXX=clang++ BFG_SKIPPED_TESTS=scala
+        BFG_EXTRA_TESTS=
 
     # bdist_wheel builds
 

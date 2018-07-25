@@ -32,7 +32,7 @@ class TestJava(IntegrationTest):
         )
 
 
-@skip_if(os.getenv('GCJ_TEST') not in ['1', 'true'], 'skipping gcj tests')
+@skip_if('gcj' not in extra_tests, 'skipping gcj tests')
 class TestGcj(IntegrationTest):
     def __init__(self, *args, **kwargs):
         IntegrationTest.__init__(self, os.path.join('languages', 'java'),
