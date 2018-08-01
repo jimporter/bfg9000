@@ -6,6 +6,7 @@ from .builtins import builtin, init as builtin_init, user_arguments
 from .build_inputs import BuildInputs
 from .path import exists, Path, pushd, Root
 from .iterutils import listify
+from .tools import init as tools_init
 
 bfgfile = 'build.bfg'
 optsfile = 'options.bfg'
@@ -35,6 +36,7 @@ def _execute_file(f, filename, builtin_dict):
 
 def load_toolchain(f):
     builtin_init()
+    tools_init()
 
     toolchain = Toolchain()
     builtin_dict = builtin.toolchain.bind(toolchain=toolchain)

@@ -3,6 +3,7 @@ from six import iteritems
 
 from . import builtin
 from .. import shell
+from ..languages import lang2cmd
 
 _unsafe_builtins = ['file', '__import__', 'input', 'open', 'raw_input',
                     'reload']
@@ -27,3 +28,8 @@ def builtins():
 @builtin.function(context='toolchain')
 def which(names, resolve=False):
     return ' '.join(shell.which(names, resolve=resolve))
+
+
+@builtin.function(context='toolchain')
+def compiler(lang, names):
+    os.environ[lang2cmd[lang]] = ' '.join(shell.which(names))
