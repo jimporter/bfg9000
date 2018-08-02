@@ -26,12 +26,14 @@ matrix:
     - language: generic
       python: 2.7
       os: osx
+      osx_image: xcode8.3
       env: >
         PYTHON=python2 PIP=pip2 CC=clang CXX=clang++ NO_SCALA_TEST=1
         GCJ_TEST=0
     - language: generic
       python: 3.6
       os: osx
+      osx_image: xcode8.3
       env: >
         PYTHON=python3 PIP=pip3 CC=clang CXX=clang++ NO_SCALA_TEST=1
         GCJ_TEST=0
