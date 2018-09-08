@@ -10,7 +10,7 @@ from ..builtins.file_types import generated_file
 from ..exceptions import PackageResolutionError
 from ..file_types import *
 from ..iterutils import default_sentinel, flatten, iterate, listify, uniques
-from ..languages import lang2src
+from ..languages import lang2ext
 from ..objutils import memoize
 from ..packages import CommonPackage, PackageKind
 from ..path import Path, Root
@@ -230,7 +230,7 @@ class MsvcPchCompiler(MsvcBaseCompiler):
     def pre_build(self, build, name, context):
         if context.pch_source is None:
             header = getattr(context, 'file', None)
-            ext = lang2src[header.lang][0]
+            ext = lang2ext('source', header.lang)[0]
             context.pch_source = SourceFile(header.path.stripext(ext).reroot(),
                                             header.lang)
             context.inject_include_dir = True

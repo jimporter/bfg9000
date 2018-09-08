@@ -1,30 +1,42 @@
+from functools import partial
+from six import iteritems
+
 from .iterutils import iterate
 
-lang2cmd = {}
-lang2flags = {}
-
-lang2src = {}
-lang2hdr = {}
-
-src2lang = {}
-hdr2lang = {}
+_lang2var = {}
+_lang2ext = {}
+_ext2lang = {}
 
 
-def language(lang, cmd_var=None, flags_var=None, src_exts=[], hdr_exts=[]):
-    if cmd_var:
-        lang2cmd[lang] = cmd_var
-    if flags_var:
-        lang2flags[lang] = flags_var
+def language_vars(lang, **kwargs):
+    for kind, var in iteritems(kwargs):
+        _lang2var.setdefault(lang, {})[kind] = var
 
-    for exts, fromlang, tolang in ((src_exts, lang2src, src2lang),
-                                   (hdr_exts, lang2hdr, hdr2lang)):
-        if lang not in fromlang:
-            fromlang[lang] = []
-        fromlang[lang].extend(exts)
 
-        for i in iterate(exts):
-            if i in tolang:
-                raise ValueError('{ext} already used by {lang}'.format(
-                    ext=i, lang=lang
+def language_exts(lang, **kwargs):
+    for kind, exts in iteritems(kwargs):
+        _lang2ext.setdefault(lang, {}).setdefault(kind, []).extend(exts)
+
+        for ext in iterate(exts):
+            tolang = _ext2lang.setdefault(ext, {})
+            if kind in tolang:
+                raise ValueError('{ext!r} already used by {lang}'.format(
+                    ext=ext, lang=lang
                 ))
-            tolang[i] = lang
+            tolang[kind] = lang
+
+
+def _get(dct, desc, kind, thing, none_ok=False):
+    if none_ok:
+        return dct.get(thing, {}).get(kind)
+
+    try:
+        sub = dct[thing]
+    except KeyError:
+        raise ValueError('unrecognized {} {!r}'.format(desc, thing))
+    return sub[kind]
+
+
+lang2var = partial(_get, _lang2var, 'language')
+lang2ext = partial(_get, _lang2ext, 'language')
+ext2lang = partial(_get, _ext2lang, 'extension')

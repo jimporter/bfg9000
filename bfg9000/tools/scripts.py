@@ -3,13 +3,13 @@ import sys
 from . import tool
 from .common import SimpleCommand
 from ..file_types import SourceFile
-from ..languages import language
+from ..languages import language_exts
 from ..path import abspath
 
-language('lua', src_exts=['.lua'])
-language('perl', src_exts=['.pl'])
-language('python', src_exts=['.py'])
-language('ruby', src_exts=['.rb'])
+language_exts('lua', source=['.lua'])
+language_exts('perl', source=['.pl'])
+language_exts('python', source=['.py'])
+language_exts('ruby', source=['.rb'])
 
 
 class ScriptCommand(SimpleCommand):

@@ -3,5 +3,6 @@
 target_platform('windows')
 compiler('c++', ['x86_64-w64-mingw32-g++-win32',
                  'x86_64-w64-mingw32-g++'])
+compile_options('c++', ['-Wall'])
 
 environ['LDFLAGS'] = '-static-libstdc++ -static-libgcc'

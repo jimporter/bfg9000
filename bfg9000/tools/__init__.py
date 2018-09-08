@@ -31,9 +31,9 @@ def builder(*args):
 def get_builder(env, lang):
     try:
         fn, multi = _builders[lang]
-        return fn(env, lang) if multi else fn(env)
     except KeyError:
-        raise ValueError("unknown language '{}'".format(lang))
+        raise ValueError('unknown language {!r}'.format(lang))
+    return fn(env, lang) if multi else fn(env)
 
 
 def tool(name, lang=None):
@@ -49,11 +49,11 @@ def get_tool(env, name):
     try:
         return _tools[name](env)
     except KeyError:
-        raise ValueError("unknown tool '{}'".format(name))
+        raise ValueError('unknown tool {!r}'.format(name))
 
 
 def get_tool_runner(lang):
     try:
         return _tool_runners[lang]
     except KeyError:
-        raise ValueError("unknown tool runner '{}'".format(lang))
+        raise ValueError('unknown tool runner {!r}'.format(lang))

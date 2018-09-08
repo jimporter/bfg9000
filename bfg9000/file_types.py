@@ -1,7 +1,7 @@
 import copy as _copy
 
 from .iterutils import listify as _listify
-from .languages import src2lang as _src2lang, hdr2lang as _hdr2lang
+from .languages import ext2lang as _ext2lang
 from .path import InstallRoot as _InstallRoot, install_path as _install_path
 from .safe_str import safe_str as _safe_str
 
@@ -71,7 +71,7 @@ class Directory(File):
 class SourceFile(File):
     def __init__(self, path, lang=None, external=False):
         File.__init__(self, path, external)
-        self.lang = lang or _src2lang.get(path.ext())
+        self.lang = lang or _ext2lang('source', path.ext(), none_ok=True)
 
 
 class HeaderFile(File):
@@ -80,7 +80,7 @@ class HeaderFile(File):
 
     def __init__(self, path, lang=None, external=False):
         File.__init__(self, path, external)
-        self.lang = lang or _hdr2lang.get(path.ext())
+        self.lang = lang or _ext2lang('header', path.ext(), none_ok=True)
 
 
 class PrecompiledHeader(HeaderFile):

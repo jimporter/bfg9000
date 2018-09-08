@@ -1,11 +1,13 @@
 from . import builder, cc, jvm
 from .. import shell
 from .common import choose_builder
-from ..languages import language, lang2cmd, lang2flags
+from ..languages import language_vars, language_exts, lang2var
 
-language('java', cmd_var='JAVAC', flags_var='JAVAFLAGS', src_exts=['.java'])
-language('scala', cmd_var='SCALAC', flags_var='SCALAFLAGS',
-         src_exts=['.scala'])
+language_vars('java', compiler='JAVAC', cflags='JAVAFLAGS')
+language_exts('java', source=['.java'])
+
+language_vars('scala', compiler='SCALAC', cflags='SCALAFLAGS')
+language_exts('scala', source=['.scala'])
 
 _default_cmds = {
     'java' : ['javac', 'gcj'],
@@ -17,7 +19,7 @@ _builders = (jvm.JvmBuilder, cc.CcBuilder)
 
 @builder('java', 'scala')
 def java_builder(env, lang):
-    var, flags_var = lang2cmd[lang], lang2flags[lang]
+    var, flags_var = lang2var('compiler', lang), lang2var('cflags', lang)
     candidates = env.getvar(var, _default_cmds[lang])
 
     flags = shell.split(env.getvar(flags_var, ''))

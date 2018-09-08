@@ -3,16 +3,22 @@ import re
 from . import builder, cc, msvc
 from .common import choose_builder
 from .. import shell
-from ..languages import language, lang2cmd, lang2flags
+from ..languages import language_vars, language_exts, lang2var
 
-language('c', cmd_var='CC', flags_var='CFLAGS',
-         src_exts=['.c'], hdr_exts=['.h'])
-language('c++', cmd_var='CXX', flags_var='CXXFLAGS',
-         src_exts=['.cpp', '.cc', '.cp', '.cxx', '.CPP', '.c++', '.C'],
-         hdr_exts=['.hpp', '.hh', '.hp', '.hxx', '.HPP', '.h++', '.H'])
-language('objc', cmd_var='OBJC', flags_var='OBJCFLAGS', src_exts=['.m'])
-language('objc++', cmd_var='OBJCXX', flags_var='OBJCXXFLAGS',
-         src_exts=['.mm', '.M'])
+
+language_vars('c', compiler='CC', cflags='CFLAGS')
+language_exts('c', source=['.c'], header='.h')
+
+language_vars('c++', compiler='CXX', cflags='CXXFLAGS')
+language_exts('c++',
+              source=['.cpp', '.cc', '.cp', '.cxx', '.CPP', '.c++', '.C'],
+              header=['.hpp', '.hh', '.hp', '.hxx', '.HPP', '.h++', '.H'])
+
+language_vars('objc', compiler='OBJC', cflags='OBJCFLAGS')
+language_exts('objc', source=['.m'])
+
+language_vars('objc++', compiler='OBJCXX', cflags='OBJCXXFLAGS')
+language_exts('objc++', source=['.mm', '.M'])
 
 _posix_cmds = {
     'c'     : 'cc' ,
@@ -32,7 +38,7 @@ _builders = (cc.CcBuilder, msvc.MsvcBuilder)
 
 @builder('c', 'c++', 'objc', 'objc++')
 def c_family_builder(env, lang):
-    var, flags_var = lang2cmd[lang], lang2flags[lang]
+    var, flags_var = lang2var('compiler', lang), lang2var('cflags', lang)
     cmd_map = (_windows_cmds if env.host_platform.name == 'windows'
                else _posix_cmds)
     candidates = env.getvar(var, cmd_map[lang])
