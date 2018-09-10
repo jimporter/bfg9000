@@ -1,42 +1,78 @@
 from functools import partial
 from six import iteritems
 
-from .iterutils import iterate
-
-_lang2var = {}
-_lang2ext = {}
-_ext2lang = {}
+from .iterutils import listify, iterate
 
 
-def language_vars(lang, **kwargs):
-    for kind, var in iteritems(kwargs):
-        _lang2var.setdefault(lang, {})[kind] = var
+class _LanguageInfo(object):
+    def __init__(self, name, vars, exts):
+        self.name = name
+        self._vars = vars
+        self._exts = {k: listify(v) for k, v in iteritems(exts)}
+
+    def _get(self, attr, desc, key):
+        try:
+            return getattr(self, attr)[key]
+        except KeyError:
+            raise ValueError('language {!r} does not support {} {!r}'
+                             .format(self.name, desc, key))
+
+    def var(self, name):
+        return self._get('_vars', 'var', name)
+
+    def exts(self, name):
+        return self._get('_exts', 'file type', name)
 
 
-def language_exts(lang, **kwargs):
-    for kind, exts in iteritems(kwargs):
-        _lang2ext.setdefault(lang, {}).setdefault(kind, []).extend(exts)
+class _LanguageDefiner(object):
+    def __init__(self, langs, name):
+        self._langs = langs
+        self._name = name
+        self._vars = {}
+        self._exts = {}
 
-        for ext in iterate(exts):
-            tolang = _ext2lang.setdefault(ext, {})
-            if kind in tolang:
-                raise ValueError('{ext!r} already used by {lang}'.format(
-                    ext=ext, lang=lang
-                ))
-            tolang[kind] = lang
+    def __enter__(self):
+        return self
 
+    def __exit__(self, type, value, traceback):
+        self._langs._add(_LanguageInfo(
+            self._name, self._vars, self._exts
+        ))
 
-def _get(dct, desc, kind, thing, none_ok=False):
-    if none_ok:
-        return dct.get(thing, {}).get(kind)
+    def vars(self, **kwargs):
+        self._vars = kwargs
 
-    try:
-        sub = dct[thing]
-    except KeyError:
-        raise ValueError('unrecognized {} {!r}'.format(desc, thing))
-    return sub[kind]
+    def exts(self, **kwargs):
+        self._exts = kwargs
 
 
-lang2var = partial(_get, _lang2var, 'language')
-lang2ext = partial(_get, _lang2ext, 'language')
-ext2lang = partial(_get, _ext2lang, 'extension')
+class Languages(object):
+    def __init__(self):
+        self._langs = {}
+        self._ext2lang = {}
+
+    def __getitem__(self, name):
+        try:
+            return self._langs[name]
+        except KeyError:
+            raise ValueError('unrecognized language {!r}'.format(name))
+
+    def _add(self, info):
+        self._langs[info.name] = info
+        for kind, exts in iteritems(info._exts):
+            for ext in exts:
+                tolang = self._ext2lang.setdefault(ext, {})
+                if kind in tolang:
+                    raise ValueError('{ext!r} already used by {lang!r}'.format(
+                        ext=ext, lang=tolang[kind]
+                    ))
+                tolang[kind] = info.name
+
+    def fromext(self, ext, kind):
+        return self._ext2lang.get(ext, {}).get(kind)
+
+    def make(self, name):
+        return _LanguageDefiner(self, name)
+
+
+known_langs = Languages()

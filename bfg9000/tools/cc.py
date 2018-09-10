@@ -20,9 +20,9 @@ from ..versioning import detect_version, SpecifierSet
 
 
 class CcBuilder(object):
-    def __init__(self, env, lang, name, command, cflags_name, cflags,
-                 version_output):
-        self.lang = lang
+    def __init__(self, env, langinfo, command, version_output):
+        name = langinfo.var('compiler').lower()
+        self.lang = langinfo.name
         self.object_format = env.target_platform.object_format
 
         if 'Free Software Foundation' in version_output:
@@ -35,6 +35,11 @@ class CcBuilder(object):
             self.brand = 'unknown'
             self.version = None
 
+        cflags_name = langinfo.var('cflags').lower()
+        cflags = (
+            shell.split(env.getvar('CPPFLAGS', '')) +
+            shell.split(env.getvar(langinfo.var('cflags'), ''))
+        )
         ldflags = shell.split(env.getvar('LDFLAGS', ''))
         ldlibs = shell.split(env.getvar('LDLIBS', ''))
 

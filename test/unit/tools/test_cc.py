@@ -3,11 +3,18 @@ import unittest
 
 from bfg9000 import file_types, options as opts
 from bfg9000.environment import Environment
+from bfg9000.languages import Languages
 from bfg9000.path import Path
 from bfg9000.tools.cc import CcBuilder
 from bfg9000.versioning import Version
 
 env = Environment(None, None, None, None, None, {}, (False, False), None)
+
+known_langs = Languages()
+with known_langs.make('c++') as x:
+    x.vars(compiler='CXX', cflags='CXXFLAGS')
+with known_langs.make('java') as x:
+    x.vars(compiler='JAVAC', cflags='JAVAFLAGS')
 
 
 def mock_which(*args, **kwargs):
@@ -29,8 +36,7 @@ class TestCcBuilder(unittest.TestCase):
     def test_properties(self):
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
-            cc = CcBuilder(env, 'c++', 'CXX', ['c++'], 'CXXFLAGS', [],
-                           'version')
+            cc = CcBuilder(env, known_langs['c++'], ['c++'], 'version')
 
         self.assertEqual(cc.flavor, 'cc')
         self.assertEqual(cc.compiler.flavor, 'cc')
@@ -66,7 +72,7 @@ class TestCcBuilder(unittest.TestCase):
 
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
-            cc = CcBuilder(env, 'c++', 'CXX', ['g++'], 'CXXFLAGS', [], version)
+            cc = CcBuilder(env, known_langs['c++'], ['g++'], version)
 
         self.assertEqual(cc.brand, 'gcc')
         self.assertEqual(cc.compiler.brand, 'gcc')
@@ -85,8 +91,7 @@ class TestCcBuilder(unittest.TestCase):
 
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
-            cc = CcBuilder(env, 'c++', 'CXX', ['clang++'], 'CXXFLAGS', [],
-                           version)
+            cc = CcBuilder(env, known_langs['c++'], ['clang++'], version)
 
         self.assertEqual(cc.brand, 'clang')
         self.assertEqual(cc.compiler.brand, 'clang')
@@ -105,7 +110,7 @@ class TestCcBuilder(unittest.TestCase):
 
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
-            cc = CcBuilder(env, 'c++', 'CXX', ['c++'], 'CXXFLAGS', [], version)
+            cc = CcBuilder(env, known_langs['c++'], ['c++'], version)
 
         self.assertEqual(cc.brand, 'unknown')
         self.assertEqual(cc.compiler.brand, 'unknown')
@@ -124,8 +129,8 @@ class TestCcCompiler(unittest.TestCase):
     def setUp(self):
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
-            self.compiler = CcBuilder(env, 'c++', 'CXX', ['c++'], 'CXXFLAGS',
-                                      [], 'version').compiler
+            self.compiler = CcBuilder(env, known_langs['c++'], ['c++'],
+                                      'version').compiler
 
     def test_flags_empty(self):
         self.assertEqual(self.compiler.flags(opts.option_list()), [])
@@ -187,8 +192,8 @@ class TestCcLinker(unittest.TestCase):
     def _get_linker(self, lang):
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
-            return CcBuilder(env, lang, 'CXX', ['c++'], 'CXXFLAGS',
-                             [], 'version').linker('executable')
+            return CcBuilder(env, known_langs[lang], ['c++'],
+                             'version').linker('executable')
 
     def setUp(self):
         self.linker = self._get_linker('c++')

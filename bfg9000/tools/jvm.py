@@ -19,20 +19,23 @@ class JvmBuilder(object):
         'scala': ('SCALACMD', 'scala'),
     }
 
-    def __init__(self, env, lang, name, command, flags_name, flags,
-                 version_output):
-        self.lang = lang
+    def __init__(self, env, langinfo, command, version_output):
+        name = langinfo.var('compiler').lower()
+        self.lang = langinfo.name
         self.object_format = 'jvm'
+
+        flags_name = langinfo.var('cflags').lower()
+        flags = shell.split(env.getvar(langinfo.var('cflags'), ''))
 
         jar_command = check_which(env.getvar('JAR', 'jar'), kind='jar builder')
 
-        run_name, run_default = self._runners[lang]
+        run_name, run_default = self._runners[self.lang]
         run_command = check_which(env.getvar(run_name, run_default),
-                                  kind='{} runner'.format(lang))
+                                  kind='{} runner'.format(self.lang))
 
         self.brand = 'unknown'
         self.version = None
-        if lang == 'java':
+        if self.lang == 'java':
             try:
                 # Get the brand from the run command (rather than the compile
                 # command).
@@ -47,7 +50,7 @@ class JvmBuilder(object):
             except (OSError, shell.CalledProcessError):
                 pass
             self.version = detect_version(version_output)
-        elif lang == 'scala':
+        elif self.lang == 'scala':
             if 'EPFL' in version_output:
                 self.brand = 'epfl'
                 self.version = detect_version(version_output)

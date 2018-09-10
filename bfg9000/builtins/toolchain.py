@@ -5,7 +5,7 @@ from . import builtin
 from .. import shell
 from .. import tools
 from ..iterutils import isiterable
-from ..languages import lang2var
+from ..languages import known_langs
 from ..shell import posix as pshell
 
 _unsafe_builtins = ['file', '__import__', 'input', 'open', 'raw_input',
@@ -35,7 +35,8 @@ def which(names, resolve=False):
 
 @builtin.function(context='toolchain')
 def compiler(lang, names):
-    os.environ[lang2var('compiler', lang)] = ' '.join(shell.which(names))
+    var = known_langs[lang].var('compiler')
+    os.environ[var] = ' '.join(shell.which(names))
 
 
 @builtin.function(context='toolchain')
@@ -47,4 +48,4 @@ def compile_options(lang, options):
     # environment variable.
     if isiterable(options):
         options = pshell.join(options)
-    os.environ[lang2var('cflags', lang)] = options
+    os.environ[known_langs[lang].var('cflags')] = options

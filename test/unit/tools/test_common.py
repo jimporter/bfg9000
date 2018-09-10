@@ -3,7 +3,12 @@ import unittest
 from six import assertRaisesRegex
 
 from bfg9000.environment import Environment
+from bfg9000.languages import Languages
 from bfg9000.tools import cc, common
+
+known_langs = Languages()
+with known_langs.make('c') as x:
+    x.vars(compiler='CC', cflags='CFLAGS')
 
 
 def mock_which(*args, **kwargs):
@@ -28,13 +33,13 @@ class TestChooseBuilder(unittest.TestCase):
     def setUp(self):
         self.env = Environment(None, None, None, None, None, {},
                                (False, False), None)
+        self.env.variables = {}
 
     def test_choose(self):
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
-            builder = common.choose_builder(
-                self.env, 'c', 'cc', (cc.CcBuilder, ), 'CC', 'CFLAGS', []
-            )
+            builder = common.choose_builder(self.env, known_langs['c'], 'cc',
+                                            (cc.CcBuilder, ))
         self.assertEqual(builder.brand, 'gcc')
 
     def test_not_found(self):
@@ -47,9 +52,8 @@ class TestChooseBuilder(unittest.TestCase):
         with mock.patch('bfg9000.shell.which', bad_which), \
              mock.patch('bfg9000.shell.execute', mock_execute), \
              mock.patch('warnings.warn', lambda s: None):  # noqa
-            builder = common.choose_builder(
-                self.env, 'c', 'cc', (cc.CcBuilder, ), 'CC', 'CFLAGS', []
-            )
+            builder = common.choose_builder(self.env, known_langs['c'], 'cc',
+                                            (cc.CcBuilder, ))
         self.assertEqual(builder.brand, 'unknown')
 
     def test_nonworking(self):
@@ -60,5 +64,5 @@ class TestChooseBuilder(unittest.TestCase):
              mock.patch('bfg9000.shell.execute', bad_execute):  # noqa
             msg = "^no working c compiler found; tried 'cc'$"
             with assertRaisesRegex(self, IOError, msg):
-                common.choose_builder(self.env, 'c', 'cc', (cc.CcBuilder, ),
-                                      'CC', 'CFLAGS', [])
+                common.choose_builder(self.env, known_langs['c'], 'cc',
+                                      (cc.CcBuilder, ))

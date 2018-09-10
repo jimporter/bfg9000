@@ -4,12 +4,19 @@ import unittest
 
 from bfg9000 import file_types, options as opts
 from bfg9000.environment import Environment
+from bfg9000.languages import Languages
 from bfg9000.path import Path
 from bfg9000.safe_str import jbos
 from bfg9000.tools.jvm import JvmBuilder
 from bfg9000.versioning import Version
 
 env = Environment(None, None, None, None, None, {}, (False, False), None)
+
+known_langs = Languages()
+with known_langs.make('java') as x:
+    x.vars(compiler='JAVAC', cflags='JAVAFLAGS')
+with known_langs.make('scala') as x:
+    x.vars(compiler='SCALAC', cflags='SCALAFLAGS')
 
 
 def mock_which(*args, **kwargs):
@@ -23,8 +30,7 @@ class TestJvmBuilder(unittest.TestCase):
 
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
-            jvm = JvmBuilder(env, 'java', 'JAVAC', ['javac'], 'JAVAFLAGS', [],
-                             'version')
+            jvm = JvmBuilder(env, known_langs['java'], ['javac'], 'version')
 
         self.assertEqual(jvm.flavor, 'jvm')
         self.assertEqual(jvm.compiler.flavor, 'jvm')
@@ -50,8 +56,7 @@ class TestJvmBuilder(unittest.TestCase):
         version = 'javac 1.7.0_55'
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
-            jvm = JvmBuilder(env, 'java', 'JAVAC', ['javac'], 'JAVAFLAGS', [],
-                             version)
+            jvm = JvmBuilder(env, known_langs['java'], ['javac'], version)
 
         self.assertEqual(jvm.brand, 'oracle')
         self.assertEqual(jvm.compiler.brand, 'oracle')
@@ -73,8 +78,7 @@ class TestJvmBuilder(unittest.TestCase):
         version = 'javac 1.8.0_151'
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
-            jvm = JvmBuilder(env, 'java', 'JAVAC', ['javac'], 'JAVAFLAGS', [],
-                             version)
+            jvm = JvmBuilder(env, known_langs['java'], ['javac'], version)
 
         self.assertEqual(jvm.brand, 'openjdk')
         self.assertEqual(jvm.compiler.brand, 'openjdk')
@@ -91,8 +95,7 @@ class TestJvmBuilder(unittest.TestCase):
         version = ('Scala code runner version 2.11.6 -- ' +
                    'Copyright 2002-2013, LAMP/EPFL')
         with mock.patch('bfg9000.shell.which', mock_which):  # noqa
-            jvm = JvmBuilder(env, 'scala', 'SCALAC', ['scalac'], 'SCALAFLAGS',
-                             [], version)
+            jvm = JvmBuilder(env, known_langs['scala'], ['scalac'], version)
 
         self.assertEqual(jvm.brand, 'epfl')
         self.assertEqual(jvm.compiler.brand, 'epfl')
@@ -111,8 +114,7 @@ class TestJvmBuilder(unittest.TestCase):
 
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
-            jvm = JvmBuilder(env, 'java', 'JAVAC', ['javac'], 'JAVAFLAGS', [],
-                             'unknown')
+            jvm = JvmBuilder(env, known_langs['java'], ['javac'], 'unknown')
 
         self.assertEqual(jvm.brand, 'unknown')
         self.assertEqual(jvm.compiler.brand, 'unknown')
@@ -130,8 +132,7 @@ class TestJvmBuilder(unittest.TestCase):
 
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
-            jvm = JvmBuilder(env, 'java', 'JAVAC', ['javac'], 'JAVAFLAGS', [],
-                             'version')
+            jvm = JvmBuilder(env, known_langs['java'], ['javac'], 'version')
 
         self.assertEqual(jvm.brand, 'unknown')
         self.assertEqual(jvm.compiler.brand, 'unknown')
@@ -151,8 +152,8 @@ class TestJvmCompiler(unittest.TestCase):
 
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
-            self.compiler = JvmBuilder(env, 'java', 'JAVAC', ['javac'],
-                                       'JAVAFLAGS', [], 'version').compiler
+            self.compiler = JvmBuilder(env, known_langs['java'], ['javac'],
+                                       'version').compiler
 
     def test_flags_empty(self):
         self.assertEqual(self.compiler.flags(opts.option_list()), [])
@@ -184,9 +185,8 @@ class TestJvmLinker(unittest.TestCase):
 
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
-            self.linker = JvmBuilder(
-                env, 'java', 'JAVAC', ['javac'], 'JAVAFLAGS', [], 'version'
-            ).linker('executable')
+            self.linker = JvmBuilder(env, known_langs['java'], ['javac'],
+                                     'version').linker('executable')
 
     def test_flags_empty(self):
         self.assertEqual(self.linker.flags(opts.option_list()), [])

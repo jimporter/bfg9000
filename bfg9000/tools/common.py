@@ -109,11 +109,12 @@ def check_which(names, *args, **kwargs):
         return shell.listify(names[0])
 
 
-def choose_builder(env, lang, candidates, builders, cmd_var, *args, **kwargs):
-    candidates = listify(candidates)
+def choose_builder(env, langinfo, default_candidates, builders):
+    candidates = listify(env.getvar(langinfo.var('compiler'),
+                                    default_candidates))
     try:
         cmd = shell.which(candidates, env.variables,
-                          kind='{} compiler'.format(lang))
+                          kind='{} compiler'.format(langinfo.name))
     except IOError as e:
         warnings.warn(str(e))
         cmd = shell.listify(candidates[0])
@@ -129,10 +130,9 @@ def choose_builder(env, lang, candidates, builders, cmd_var, *args, **kwargs):
         else:
             tried = ', '.join(repr(i) for i in iterate(candidates))
             raise IOError('no working {} compiler found; tried {}'
-                          .format(lang, tried))
+                          .format(langinfo.name, tried))
 
-    return builder_type(env, lang, cmd_var, cmd, *args, version_output=output,
-                        **kwargs)
+    return builder_type(env, langinfo, cmd, output)
 
 
 def darwin_install_name(library):

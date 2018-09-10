@@ -10,7 +10,7 @@ from ..builtins.file_types import generated_file
 from ..exceptions import PackageResolutionError
 from ..file_types import *
 from ..iterutils import default_sentinel, flatten, iterate, listify, uniques
-from ..languages import lang2ext
+from ..languages import known_langs
 from ..objutils import memoize
 from ..packages import CommonPackage, PackageKind
 from ..path import Path, Root
@@ -18,9 +18,9 @@ from ..versioning import detect_version, SpecifierSet
 
 
 class MsvcBuilder(object):
-    def __init__(self, env, lang, name, command, cflags_name, cflags,
-                 version_output):
-        self.lang = lang
+    def __init__(self, env, langinfo, command, version_output):
+        name = langinfo.var('compiler').lower()
+        self.lang = langinfo.name
         self.object_format = env.target_platform.object_format
 
         if 'Microsoft (R)' in version_output:
@@ -39,13 +39,18 @@ class MsvcBuilder(object):
                 origin = os.path.dirname(i)
         link_command = check_which(
             env.getvar('VCLINK', os.path.join(origin, 'link')),
-            env.variables, kind='dynamic linker'.format(lang)
+            env.variables, kind='dynamic linker'.format(self.lang)
         )
         lib_command = check_which(
             env.getvar('VCLIB', os.path.join(origin, 'lib')),
-            env.variables, kind='static linker'.format(lang)
+            env.variables, kind='static linker'.format(self.lang)
         )
 
+        cflags_name = langinfo.var('cflags').lower()
+        cflags = (
+            shell.split(env.getvar('CPPFLAGS', '')) +
+            shell.split(env.getvar(langinfo.var('cflags'), ''))
+        )
         ldflags = shell.split(env.getvar('LDFLAGS', ''))
         ldlibs = shell.split(env.getvar('LDLIBS', ''))
 
@@ -230,7 +235,7 @@ class MsvcPchCompiler(MsvcBaseCompiler):
     def pre_build(self, build, name, context):
         if context.pch_source is None:
             header = getattr(context, 'file', None)
-            ext = lang2ext('source', header.lang)[0]
+            ext = known_langs[self.lang].exts('source')[0]
             context.pch_source = SourceFile(header.path.stripext(ext).reroot(),
                                             header.lang)
             context.inject_include_dir = True
