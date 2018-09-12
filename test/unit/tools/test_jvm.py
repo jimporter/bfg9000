@@ -14,9 +14,9 @@ env = Environment(None, None, None, None, None, {}, (False, False), None)
 
 known_langs = Languages()
 with known_langs.make('java') as x:
-    x.vars(compiler='JAVAC', cflags='JAVAFLAGS')
+    x.vars(compiler='JAVAC', runner='JAVACMD', cflags='JAVAFLAGS')
 with known_langs.make('scala') as x:
-    x.vars(compiler='SCALAC', cflags='SCALAFLAGS')
+    x.vars(compiler='SCALAC', runner='SCALACMD', cflags='SCALAFLAGS')
 
 
 def mock_which(*args, **kwargs):

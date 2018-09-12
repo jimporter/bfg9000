@@ -14,11 +14,6 @@ from ..versioning import detect_version
 
 
 class JvmBuilder(object):
-    _runners = {
-        'java' : ('JAVACMD' , 'java' ),
-        'scala': ('SCALACMD', 'scala'),
-    }
-
     def __init__(self, env, langinfo, command, version_output):
         name = langinfo.var('compiler').lower()
         self.lang = langinfo.name
@@ -29,9 +24,13 @@ class JvmBuilder(object):
 
         jar_command = check_which(env.getvar('JAR', 'jar'), kind='jar builder')
 
-        run_name, run_default = self._runners[self.lang]
-        run_command = check_which(env.getvar(run_name, run_default),
-                                  kind='{} runner'.format(self.lang))
+        # The default command name to run JVM programs is (usually) the same as
+        # the name of the language, so we'll just use that here as the default.
+        run_name = langinfo.var('runner').lower()
+        run_command = check_which(
+            env.getvar(langinfo.var('runner'), self.lang),
+            kind='{} runner'.format(self.lang)
+        )
 
         self.brand = 'unknown'
         self.version = None

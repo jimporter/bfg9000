@@ -4,11 +4,11 @@ from .common import choose_builder
 from ..languages import known_langs
 
 with known_langs.make('java') as x:
-    x.vars(compiler='JAVAC', cflags='JAVAFLAGS')
+    x.vars(compiler='JAVAC', runner='JAVACMD', cflags='JAVAFLAGS')
     x.exts(source=['.java'])
 
 with known_langs.make('scala') as x:
-    x.vars(compiler='SCALAC', cflags='SCALAFLAGS')
+    x.vars(compiler='SCALAC', runner='SCALACMD', cflags='SCALAFLAGS')
     x.exts(source=['.scala'])
 
 _default_cmds = {

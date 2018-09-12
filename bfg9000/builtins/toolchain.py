@@ -49,3 +49,9 @@ def compile_options(lang, options):
     if isiterable(options):
         options = pshell.join(options)
     os.environ[known_langs[lang].var('cflags')] = options
+
+
+@builtin.function(context='toolchain')
+def runner(lang, names):
+    var = known_langs[lang].var('runner')
+    os.environ[var] = ' '.join(shell.which(names))
