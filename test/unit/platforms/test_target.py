@@ -1,7 +1,7 @@
 import mock
 import unittest
 
-from bfg9000.file_types import Framework
+from bfg9000.frameworks import Framework
 from bfg9000.platforms import platform_name, target
 
 

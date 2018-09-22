@@ -9,6 +9,7 @@ from bfg9000.builtins import packages
 from bfg9000.environment import Environment
 from bfg9000.exceptions import PackageResolutionError
 from bfg9000.file_types import Directory, HeaderDirectory
+from bfg9000.frameworks import Framework
 from bfg9000.packages import CommonPackage
 from bfg9000.path import abspath
 from bfg9000.platforms import platform_name
@@ -52,7 +53,7 @@ class TestFramework(BaseTest):
             packages.framework(self.env, 'name'),
             CommonPackage('name', self.env.target_platform.object_format,
                           link_options=opts.option_list(opts.lib(
-                              file_types.Framework('name')
+                              Framework('name')
                           )))
         )
 
@@ -64,7 +65,7 @@ class TestFramework(BaseTest):
             CommonPackage('name,suffix',
                           self.env.target_platform.object_format,
                           link_options=opts.option_list(opts.lib(
-                              file_types.Framework('name', 'suffix')
+                              Framework('name', 'suffix')
                           )))
         )
 

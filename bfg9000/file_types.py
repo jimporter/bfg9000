@@ -6,12 +6,14 @@ from .path import InstallRoot as _InstallRoot, install_path as _install_path
 from .safe_str import safe_str as _safe_str
 
 
-def installify(file, *args, **kwargs):
+def file_install_path(file, cross=None):
+    return _install_path(file.path, file.install_root,
+                         directory=isinstance(file, Directory), cross=cross)
+
+
+def installify(file, cross=None):
     file = _copy.copy(file)
-    file.path = _install_path(
-        file.path, file.install_root, directory=isinstance(file, Directory),
-        *args, **kwargs
-    )
+    file.path = file_install_path(file, cross)
     return file
 
 
@@ -260,25 +262,3 @@ class DualUseLibrary(object):
 
 class PkgConfigPcFile(File):
     install_root = _InstallRoot.libdir
-
-
-# A reference to a macOS framework. Can be used in place of Library objects.
-class Framework(object):
-    def __init__(self, name, suffix=None):
-        self.name = name
-        self.suffix = suffix
-
-    @property
-    def full_name(self):
-        return self.name + ',' + self.suffix if self.suffix else self.name
-
-    @property
-    def runtime_file(self):
-        None
-
-    def __eq__(self, rhs):
-        return (type(self) == type(rhs) and self.name == rhs.name and
-                self.suffix == rhs.suffix)
-
-    def __ne__(self, rhs):
-        return not (self == rhs)

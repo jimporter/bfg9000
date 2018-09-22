@@ -1,13 +1,20 @@
+from .basepath import BasePath, Root, InstallRoot
 from .core import Platform
 from .host import HostPlatform
 from .target import TargetPlatform
-from ..path import Path, Root, InstallRoot
+
+
+class WindowsPath(BasePath):
+    def _localize_path(self, path):
+        return path.replace('/', '\\')
 
 
 class WindowsPlatform(Platform):
     @property
     def flavor(self):
         return 'windows'
+
+    Path = WindowsPath
 
 
 class WindowsHostPlatform(HostPlatform, WindowsPlatform):
@@ -63,8 +70,8 @@ class WindowsTargetPlatform(TargetPlatform, WindowsPlatform):
     def install_dirs(self):
         return {
             InstallRoot.prefix:      None,
-            InstallRoot.exec_prefix: Path('', InstallRoot.prefix),
-            InstallRoot.bindir:      Path('', InstallRoot.exec_prefix),
-            InstallRoot.libdir:      Path('', InstallRoot.exec_prefix),
-            InstallRoot.includedir:  Path('', InstallRoot.prefix),
+            InstallRoot.exec_prefix: WindowsPath('', InstallRoot.prefix),
+            InstallRoot.bindir:      WindowsPath('', InstallRoot.exec_prefix),
+            InstallRoot.libdir:      WindowsPath('', InstallRoot.exec_prefix),
+            InstallRoot.includedir:  WindowsPath('', InstallRoot.prefix),
         }

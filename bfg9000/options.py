@@ -4,6 +4,7 @@ from six.moves import zip
 from . import path, safe_str
 from .iterutils import isiterable, iterate
 from .file_types import *
+from .frameworks import Framework
 
 
 class option_list(object):

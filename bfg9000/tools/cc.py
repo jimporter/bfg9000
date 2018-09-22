@@ -12,10 +12,11 @@ from .ld import LdLinker
 from ..builtins.symlink import Symlink
 from ..exceptions import PackageResolutionError
 from ..file_types import *
+from ..frameworks import Framework
 from ..iterutils import (default_sentinel, first, flatten, iterate, listify,
                          uniques, recursive_walk)
 from ..packages import CommonPackage, PackageKind
-from ..path import install_path, Path, Root
+from ..path import Path, Root
 from ..versioning import detect_version, SpecifierSet
 
 
@@ -390,8 +391,7 @@ class CcLinker(BuildCommand):
             # `patchelf` during installation.
             output._rpath = uniques(chain(
                 getattr(output, '_rpath', []),
-                (install_path(i.path, i.install_root, destdir=False,
-                              absolute_ok=True).parent()
+                (file_install_path(i, cross=self.env).parent()
                  for i in runtime_libs),
                 extra_dirs
             ))
@@ -523,13 +523,13 @@ class CcLinker(BuildCommand):
         if self.builder.object_format not in ['elf', 'mach-o']:
             return None
 
-        path = install_path(output.path, output.install_root)
+        path = file_install_path(output)
         rpath = getattr(output, '_rpath', None)
         if self.builder.object_format == 'elf':
             return self.env.tool('patchelf')(path, rpath)
         else:  # mach-o
             changes = [(darwin_install_name(i),
-                        install_path(i.path, i.install_root, destdir=False))
+                        file_install_path(i, cross=self.env))
                        for i in output.runtime_deps]
             return self.env.tool('install_name_tool')(
                 path, path if is_library else None, rpath, changes

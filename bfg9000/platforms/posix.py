@@ -1,14 +1,21 @@
+from .basepath import BasePath, Root, InstallRoot
 from .core import Platform
 from .host import HostPlatform
 from .target import TargetPlatform
-from ..file_types import Framework
-from ..path import Path, Root, InstallRoot
+from ..frameworks import Framework
+
+
+class PosixPath(BasePath):
+    def _localize_path(self, path):
+        return path
 
 
 class PosixPlatform(Platform):
     @property
     def flavor(self):
         return 'posix'
+
+    Path = PosixPath
 
 
 class PosixHostPlatform(HostPlatform, PosixPlatform):
@@ -59,11 +66,11 @@ class PosixTargetPlatform(TargetPlatform, PosixPlatform):
     @property
     def install_dirs(self):
         return {
-            InstallRoot.prefix:      Path('/usr/local', Root.absolute),
-            InstallRoot.exec_prefix: Path('', InstallRoot.prefix),
-            InstallRoot.bindir:      Path('bin', InstallRoot.exec_prefix),
-            InstallRoot.libdir:      Path('lib', InstallRoot.exec_prefix),
-            InstallRoot.includedir:  Path('include', InstallRoot.prefix),
+            InstallRoot.prefix:      PosixPath('/usr/local', Root.absolute),
+            InstallRoot.exec_prefix: PosixPath('', InstallRoot.prefix),
+            InstallRoot.bindir:      PosixPath('bin', InstallRoot.exec_prefix),
+            InstallRoot.libdir:      PosixPath('lib', InstallRoot.exec_prefix),
+            InstallRoot.includedir:  PosixPath('include', InstallRoot.prefix),
         }
 
 

@@ -7,6 +7,7 @@ from .find import find
 from .. import options as opts
 from ..exceptions import PackageResolutionError, PackageVersionError
 from ..file_types import *
+from ..frameworks import Framework
 from ..iterutils import default_sentinel, iterate, listify
 from ..objutils import objectify
 from ..packages import CommonPackage, Package, PackageKind

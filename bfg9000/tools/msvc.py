@@ -9,6 +9,7 @@ from ..arguments.windows import ArgumentParser
 from ..builtins.file_types import generated_file
 from ..exceptions import PackageResolutionError
 from ..file_types import *
+from ..frameworks import Framework
 from ..iterutils import default_sentinel, flatten, iterate, listify, uniques
 from ..languages import known_langs
 from ..objutils import memoize

@@ -203,7 +203,7 @@ def textify(thing, quoted=False, builddir=BuildDir.output):
         return wshell.quote(thing, escape_percent=True) if quoted else thing
     elif isinstance(thing, safe_str.jbos):
         return ''.join(textify(i, quoted, builddir) for i in thing.bits)
-    elif isinstance(thing, path.Path):
+    elif isinstance(thing, path.BasePath):
         return ntpath.normpath(thing.realize(_path_vars[builddir]))
     else:
         raise TypeError(type(thing))

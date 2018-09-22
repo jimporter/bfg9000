@@ -8,7 +8,7 @@ from .. import shell
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..build_inputs import build_input
-from ..file_types import Directory, File
+from ..file_types import Directory, File, file_install_path
 from ..iterutils import flatten, iterate
 
 
@@ -98,8 +98,7 @@ def _install_commands(install_outputs, doppel):
         if isinstance(output, Directory):
             if output.files is not None:
                 src = [i.path.relpath(output.path) for i in output.files]
-                dst = path.install_path(output.path, output.install_root,
-                                        directory=True)
+                dst = file_install_path(output)
                 return cmd('into', src, dst, directory=output.path)
 
             warnings.warn(
@@ -108,7 +107,7 @@ def _install_commands(install_outputs, doppel):
             )
 
         src = output.path
-        dst = path.install_path(src, output.install_root)
+        dst = file_install_path(output)
         return cmd('onto', src, dst)
 
     return ([install_line(i) for i in install_outputs] +
@@ -118,11 +117,10 @@ def _install_commands(install_outputs, doppel):
 def _uninstall_command(install_outputs, rm):
     def uninstall_line(output):
         if isinstance(output, Directory):
-            dst = path.install_path(output.path, output.install_root,
-                                    directory=True)
+            dst = file_install_path(output)
             return [dst.append(i.path.relpath(output.path)) for i in
                     iterate(output.files)]
-        return [path.install_path(output.path, output.install_root)]
+        return [file_install_path(output)]
 
     return rm(flatten(uninstall_line(i) for i in install_outputs))
 

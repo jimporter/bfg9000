@@ -1,12 +1,14 @@
 import platform
 import subprocess
+from collections import namedtuple
 from pkg_resources import get_entry_info, DistributionNotFound
 
 from ..objutils import memoize
 
-__all__ = ['known_platforms', 'Platform', 'platform_name']
+__all__ = ['known_platforms', 'PathTraits', 'Platform', 'platform_name']
 
 known_platforms = ['posix', 'linux', 'darwin', 'cygwin', 'windows']
+PathTraits = namedtuple('PathTraits', ['curdir', 'pathsep'])
 
 
 @memoize

@@ -259,9 +259,6 @@ class PkgConfigInfo(object):
                           Syntax.shell)
 
     def _process_inputs(self, env):
-        def pkg_installify(f):
-            return installify(f, destdir=False, absolute_ok=True)
-
         desc_name = self.desc_name or self.name
         includes = self.includes or []
         libs = self.libs or []
@@ -302,15 +299,15 @@ class PkgConfigInfo(object):
         linker = builder.linker('executable')
 
         compile_options = opts.option_list(
-            (opts.include_dir(pkg_installify(i)) for i in includes),
+            (opts.include_dir(installify(i, cross=env)) for i in includes),
             self.options
         )
         link_options = opts.option_list(
-            (opts.lib(pkg_installify(i.all[0])) for i in libs),
+            (opts.lib(installify(i.all[0], cross=env)) for i in libs),
             self.link_options
         )
         link_options_private = opts.option_list(
-            (opts.lib(pkg_installify(i.all[0])) for i in libs_private),
+            (opts.lib(installify(i.all[0], cross=env)) for i in libs_private),
             fwd_ldflags, self.link_options_private
         )
 

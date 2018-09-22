@@ -3,6 +3,7 @@ import unittest
 
 from bfg9000 import file_types, options as opts
 from bfg9000.environment import Environment
+from bfg9000.frameworks import Framework
 from bfg9000.languages import Languages
 from bfg9000.path import Path
 from bfg9000.tools.cc import CcBuilder
@@ -225,7 +226,7 @@ class TestCcLinker(unittest.TestCase):
 
         # Framework
         self.assertEqual(self.linker.flags(opts.option_list(
-            opts.lib(file_types.Framework('cocoa'))
+            opts.lib(Framework('cocoa'))
         )), [])
 
         # Mixed
@@ -315,7 +316,7 @@ class TestCcLinker(unittest.TestCase):
                                      '-Wl,--no-whole-archive'])
 
         # Framework
-        fw = opts.lib(file_types.Framework('cocoa'))
+        fw = opts.lib(Framework('cocoa'))
         if env.target_platform.name == 'darwin':
             self.assertEqual(self.linker.lib_flags(opts.option_list(fw)),
                              ['-framework', 'cocoa'])

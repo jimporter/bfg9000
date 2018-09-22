@@ -3,6 +3,7 @@ import unittest
 
 from bfg9000 import file_types, options as opts
 from bfg9000.environment import Environment
+from bfg9000.frameworks import Framework
 from bfg9000.languages import Languages
 from bfg9000.path import Path
 from bfg9000.tools.msvc import MsvcBuilder
@@ -228,7 +229,7 @@ class TestMsvcLinker(unittest.TestCase):
 
         with self.assertRaises(TypeError):
             self.linker.lib_flags(opts.option_list(
-                opts.lib(file_types.Framework('cocoa'))
+                opts.lib(Framework('cocoa'))
             ))
 
     def test_lib_flags_lib_literal(self):
