@@ -5,11 +5,16 @@
 ### New features
 - Compilers and linkers now support semantic options, abstracting away the
   differences between compiler flavors
+- Add support for cross-compilation
+- Toolchain files can be used to simplify setting up build configuration
+  options
 - `whole_archive()` now works with MSVC linkers
 
 ### Breaking changes
 - MSVC builds now automatically set `/EHsc` to improve standards-compliance and
   mimic Visual Studio's default MSBuild configuration
+- Paths are now parsed in a platform-agnostic manner, which may cause issues for
+  certain esoteric pathnames (e.g. POSIX paths that look like Windows paths)
 
 ---
 

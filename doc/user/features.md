@@ -25,6 +25,19 @@ your build scripts. This allows you to perform complex operations in your build
 scripts without having to roll everything yourself or provide a layer of "glue"
 to some external scripts in your build process.
 
+## Project-defined arguments
+
+Projects can specify their own options, complete with help instructions, in the
+[`options.bfg`](writing.md#options), making it easy to help users get your
+project configured for their system.
+
+## Toolchains for cross-compilation
+
+When configuring a build, you can take advantage of [toolchain
+files](building.md#using-toolchain-files), which specify the necessary settings
+(e.g. environment variables) for properly building your software, especially
+useful for cross-compilation configurations.
+
 ## Intelligent rpath support
 
 bfg9000 automatically specifies rpaths on platforms that support them
@@ -45,12 +58,6 @@ permissions issues with intermediate files as well as being more secure.
 
 bfg9000 supports [`pkg-config`][pkg-config] both for looking up packages as well
 as [generating](reference.md#pkg_config) `.pc` files for your own packages.
-
-## Project-defined arguments
-
-Projects can specify their own options, complete with help instructions, in the
-[`options.bfg`](writing.md#options), making it easy to help users get your
-project configured for their system.
 
 [ninja]: https://ninja-build.org/
 [make]: https://www.gnu.org/software/make/

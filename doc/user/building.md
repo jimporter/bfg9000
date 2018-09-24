@@ -14,17 +14,17 @@ building your project:
 
 ```sh
 $ cd /path/to/src/
-$ bfg9000 configure build/
-$ cd build/
+$ bfg9000 configure builddir/
+$ cd builddir/
 $ ninja
 ```
 
 Since the configure command is easily the most common thing to run when using
 bfg9000, you can use the following shorthand instead of
-`bfg9000 configure build/`:
+`bfg9000 configure builddir/`:
 
 ```sh
-$ 9k build/
+$ 9k builddir/
 ```
 
 !!! note
@@ -54,7 +54,7 @@ neither the source nor build directories are your current working directory, you
 can run:
 
 ```sh
-bfg9000 configure-into srcdir/ builddir/
+$ bfg9000 configure-into srcdir/ builddir/
 ```
 
 ## Selecting a backend
@@ -79,6 +79,41 @@ the UNIX naming conventions, so you can use, say,
 [`CXX`](environment-vars.md#cxx) to change the C++ compiler that bfg9000 uses.
 For a full listing of the recognized environment variables, see the [Environment
 Variables](environment-vars.md) chapter.
+
+## Using toolchain files
+
+In order to simplify setting up all the myriad options required for certain
+builds (and to share those settings with others), bfg9000 allows users to use
+toolchain files that define all this. To use an existing toolchain file, just
+use the `--toolchain` option during configuration:
+
+```sh
+$ bfg9000 configure builddir/ --toolchain my_toolchain.bfg
+```
+
+### Writing a toolchain file
+
+Toolchain files, like other `.bfg` files, are just Python scripts with some
+extra built-in functions. However, *unlike* other `.bfg` files, toolchain files
+have a few restrictions: file access and `import` statements are disabled. Since
+many users will copy toolchain files from other sources to build for a specific
+target, this helps reduce the potential for unwanted things from happening while
+building your software.
+
+Generally, toolchain files will set up relevant compilers, compilation options,
+and other aspects of the environment. These settings are then forwarded on to
+the `build.bfg` script proper. Below is a simple toolchain file that
+demonstrates some common settings:
+
+```python
+target_platform('windows')
+
+compiler('x86_64-w64-mingw32-g++-win32', 'c++')
+compile_options(['-Wall'], 'c++')
+```
+
+For more information on the available builtins, see the [reference
+guide](reference.md#toolchain).
 
 ## Installing your software
 

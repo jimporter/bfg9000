@@ -41,7 +41,7 @@ def compiler(names, lang):
 
 @builtin.function(context='toolchain')
 def compile_options(options, lang):
-    # This only supports string (and lists of strings) for options, *not*
+    # This only supports strings (and lists of strings) for options, *not*
     # semantic options. It would be nice if we could support semantic options,
     # but we'd either need to know the flavor of compiler at this point (we
     # don't) or we'd have to store the options in some way other than as an

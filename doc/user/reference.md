@@ -6,6 +6,25 @@ files, since that's where most of the build configuration logic belongs, but
 some may be used in `options.bfg`. Consult each function to see its
 availability.
 
+## General
+
+### Representing paths
+
+While all platforms have paths, their representation varies from platform to
+platform. bfg9000 smooths over these differences by providing a cross-platform
+representation of paths. Both POSIX- and Windows-style paths are supported and
+will be translated to a standard internal representation before being emitted to
+build scripts in their platform-specific form. Thus, `foo/bar` and `foo\bar` are
+equivalent to bfg9000.
+
+!!! note
+    While absolute paths are rarely needed in a `build.bfg` script, it's still
+    possible to use them. However, there are some caveats: 1) POSIX-style
+    absolute paths will refer to that (absolute) path on the *current* drive,
+    2) Windows-style absolute paths will fail to work on POSIX systems, and 3)
+    Windows-style paths with a drive letter and a *relative* path (e.g. `C:foo`)
+    are unsupported by bfg9000.
+
 ## File types
 
 Files used in a `build.bfg` script are divided by their types (e.g. source
@@ -853,7 +872,7 @@ Retrieve the set of [user-defined arguments](writing.md#user-defined-arguments)
 passed to bfg9000; this is an [*argparse.Namespace*][namespace] object.
 
 ### \__bfg9000__
-Availability: `build.bfg` and `options.bfg`
+Availability: `build.bfg`, `options.bfg`, and `<toolchain>.bfg`
 {: .subtitle}
 
 A dictionary containing all the builtin functions and global variables defined
@@ -861,7 +880,7 @@ by bfg9000. This can be useful for feature detection or accessing builtins
 shadowed by a local variable.
 
 ### bfg9000_required_version([*version*], [*python_version*]) { #bfg9000_required_version }
-Availability: `build.bfg` and `options.bfg`
+Availability: `build.bfg`, `options.bfg`, and `<toolchain>.bfg`
 {: .subtitle}
 
 Set the required *version* for bfg9000 and/or the required *python_version*.
@@ -870,7 +889,7 @@ the actual versions don't match the specifiers, a
 [*VersionError*](#versionerror) is raised.
 
 ### bfg9000_version
-Availability: `build.bfg` and `options.bfg`
+Availability: `build.bfg`, `options.bfg`, and `<toolchain>.bfg`
 {: .subtitle}
 
 Return the current version of bfg9000. This can be useful if you want to
@@ -941,6 +960,58 @@ Set the name (and optionally the version) of the project. If you don't call
 this function to specify a project name, it defaults to the name of the
 project's source directory. This is primarily useful for creating [source
 distributions](writing.md#distributing-your-source).
+
+## Toolchain
+
+### compiler(*names*, *lang*) { #compiler }
+Availability: `<toolchain>.bfg`
+{: .subtitle}
+
+Set the compiler to use for the language *lang*. *names* is a string
+representing the path to the compiler (resolved as with [`which`](#which)) or a
+list of possible paths (as strings or lists or strings).
+
+### compile_options(*options*, *lang*) { #compile_options }
+Availability: `<toolchain>.bfg`
+{: .subtitle}
+
+Set compilation options to use for the language *lang*. *options* is either a
+string of all the options or a list of strings, one element per option.
+
+!!! note
+    [Semantic options](#semantic-options) aren't supported here; instead, you
+    should use the appropriate option strings for the compiler to be used.
+
+### environ
+Availability: `<toolchain>.bfg`
+{: .subtitle}
+
+A `dict` of the current environment variables, suitable for getting/setting.
+
+### runner(*names*, *lang*) { #runner }
+Availability: `<toolchain>.bfg`
+{: .subtitle}
+
+Set the runner to use for the language *lang*, if that language supports runners
+(e.g. Java, Scala, or a scripting language). *names* is a string representing
+the path to the compiler (resolved as with [`which`](#which)) or a list of
+possible paths (as strings or lists or strings).
+
+### target_platform(*platform*) { #target_platform }
+Availability: `<toolchain>.bfg`
+{: .subtitle}
+
+Set the target platform of this build to *platform*.
+
+### which(*names*, [*resolve*]) { #which }
+Availability: `<toolchain>.bfg`
+{: .subtitle}
+
+Find the best option for an executable named by *names*. *names* can be a
+stringresolved as with the `PATH` environment variable in the shell, or else a
+list of names (as strings or lists of strings). If *names* contains a
+list-of-lists, the inner list represents a series of arguments to pass to the
+executable when running it.
 
 ## Exceptions
 
