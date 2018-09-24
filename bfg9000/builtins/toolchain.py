@@ -34,13 +34,13 @@ def which(names, resolve=False):
 
 
 @builtin.function(context='toolchain')
-def compiler(lang, names):
+def compiler(names, lang):
     var = known_langs[lang].var('compiler')
     os.environ[var] = ' '.join(shell.which(names))
 
 
 @builtin.function(context='toolchain')
-def compile_options(lang, options):
+def compile_options(options, lang):
     # This only supports string (and lists of strings) for options, *not*
     # semantic options. It would be nice if we could support semantic options,
     # but we'd either need to know the flavor of compiler at this point (we
@@ -52,6 +52,6 @@ def compile_options(lang, options):
 
 
 @builtin.function(context='toolchain')
-def runner(lang, names):
+def runner(names, lang):
     var = known_langs[lang].var('runner')
     os.environ[var] = ' '.join(shell.which(names))

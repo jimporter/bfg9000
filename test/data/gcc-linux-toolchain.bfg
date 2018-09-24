@@ -1,5 +1,5 @@
 # -*- python -*-
 
 target_platform('linux')
-compiler('c', 'gcc')
-compiler('c++', 'g++')
+compiler('gcc', 'c')
+compiler('g++', 'c++')

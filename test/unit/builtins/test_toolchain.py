@@ -41,27 +41,27 @@ class TestToolchain(unittest.TestCase):
         environ = {}
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('os.environ', environ):  # noqa
-            toolchain.compiler('c++', 'foo')
+            toolchain.compiler('foo', 'c++')
             self.assertEqual(environ, {'CXX': 'command'})
 
-            toolchain.compiler('c++', ['foo', 'bar'])
+            toolchain.compiler(['foo', 'bar'], 'c++')
             self.assertEqual(environ, {'CXX': 'command'})
 
     def test_compile_options(self):
         environ = {}
         with mock.patch('os.environ', environ):
-            toolchain.compile_options('c++', 'foo')
+            toolchain.compile_options('foo', 'c++')
             self.assertEqual(environ, {'CXXFLAGS': 'foo'})
 
-            toolchain.compile_options('c++', ['foo', 'bar'])
+            toolchain.compile_options(['foo', 'bar'], 'c++')
             self.assertEqual(environ, {'CXXFLAGS': 'foo bar'})
 
     def test_runner(self):
         environ = {}
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('os.environ', environ):  # noqa
-            toolchain.runner('java', 'foo')
+            toolchain.runner('foo', 'java')
             self.assertEqual(environ, {'JAVACMD': 'command'})
 
-            toolchain.runner('java', ['foo', 'bar'])
+            toolchain.runner(['foo', 'bar'], 'java')
             self.assertEqual(environ, {'JAVACMD': 'command'})
