@@ -148,10 +148,11 @@
         <li class="main active"><a href="#features">Features</a></li>
             <li><a href="#supported-languagesplatforms">Supported languages/platforms</a></li>
             <li><a href="#rich-scripting">Rich scripting</a></li>
+            <li><a href="#project-defined-arguments">Project-defined arguments</a></li>
+            <li><a href="#toolchains-for-cross-compilation">Toolchains for cross-compilation</a></li>
             <li><a href="#intelligent-rpath-support">Intelligent rpath support</a></li>
             <li><a href="#auto-sudo-during-installation">Auto-sudo during installation</a></li>
             <li><a href="#pkg-config-lookup-and-generation">pkg-config lookup and generation</a></li>
-            <li><a href="#project-defined-arguments">Project-defined arguments</a></li>
     </ul>
 </div></div>
                 <div class="col-md-9" role="main">
@@ -178,6 +179,15 @@ extra builtins, it's possible to use the entirety of the Python ecosystem in
 your build scripts. This allows you to perform complex operations in your build
 scripts without having to roll everything yourself or provide a layer of "glue"
 to some external scripts in your build process.</p>
+<h2 id="project-defined-arguments">Project-defined arguments<a class="headerlink" href="#project-defined-arguments" title="Permanent link">§</a></h2>
+<p>Projects can specify their own options, complete with help instructions, in the
+<a href="../writing/#options"><code>options.bfg</code></a>, making it easy to help users get your
+project configured for their system.</p>
+<h2 id="toolchains-for-cross-compilation">Toolchains for cross-compilation<a class="headerlink" href="#toolchains-for-cross-compilation" title="Permanent link">§</a></h2>
+<p>When configuring a build, you can take advantage of <a href="../building/#using-toolchain-files">toolchain
+files</a>, which specify the necessary settings
+(e.g. environment variables) for properly building your software, especially
+useful for cross-compilation configurations.</p>
 <h2 id="intelligent-rpath-support">Intelligent rpath support<a class="headerlink" href="#intelligent-rpath-support" title="Permanent link">§</a></h2>
 <p>bfg9000 automatically specifies rpaths on platforms that support them
 (currently Linux and macOS), making it easier to produce correct builds. When
@@ -192,11 +202,7 @@ This allows you to run <code>ninja install</code> as a non-root user, preventing
 permissions issues with intermediate files as well as being more secure.</p>
 <h2 id="pkg-config-lookup-and-generation">pkg-config lookup and generation<a class="headerlink" href="#pkg-config-lookup-and-generation" title="Permanent link">§</a></h2>
 <p>bfg9000 supports <a href="https://www.freedesktop.org/wiki/Software/pkg-config/"><code>pkg-config</code></a> both for looking up packages as well
-as <a href="../reference/#pkg_config">generating</a> <code>.pc</code> files for your own packages.</p>
-<h2 id="project-defined-arguments">Project-defined arguments<a class="headerlink" href="#project-defined-arguments" title="Permanent link">§</a></h2>
-<p>Projects can specify their own options, complete with help instructions, in the
-<a href="../writing/#options"><code>options.bfg</code></a>, making it easy to help users get your
-project configured for their system.</p></div>
+as <a href="../reference/#pkg_config">generating</a> <code>.pc</code> files for your own packages.</p></div>
         </div>
 
         <footer class="col-md-12">

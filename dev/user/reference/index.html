@@ -146,6 +146,7 @@
                 <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
         <li class="main active"><a href="#reference">Reference</a></li>
+            <li><a href="#general">General</a></li>
             <li><a href="#file-types">File types</a></li>
             <li><a href="#build-steps">Build steps</a></li>
             <li><a href="#grouping-rules">Grouping rules</a></li>
@@ -155,6 +156,7 @@
             <li><a href="#package-resolvers">Package resolvers</a></li>
             <li><a href="#environment">Environment</a></li>
             <li><a href="#utilities">Utilities</a></li>
+            <li><a href="#toolchain">Toolchain</a></li>
             <li><a href="#exceptions">Exceptions</a></li>
     </ul>
 </div></div>
@@ -166,6 +168,23 @@ scripts (<code>build.bfg</code> and <code>options.bfg</code>). Most are only ava
 files, since that's where most of the build configuration logic belongs, but
 some may be used in <code>options.bfg</code>. Consult each function to see its
 availability.</p>
+<h2 id="general">General<a class="headerlink" href="#general" title="Permanent link">§</a></h2>
+<h3 id="representing-paths">Representing paths<a class="headerlink" href="#representing-paths" title="Permanent link">§</a></h3>
+<p>While all platforms have paths, their representation varies from platform to
+platform. bfg9000 smooths over these differences by providing a cross-platform
+representation of paths. Both POSIX- and Windows-style paths are supported and
+will be translated to a standard internal representation before being emitted to
+build scripts in their platform-specific form. Thus, <code>foo/bar</code> and <code>foo\bar</code> are
+equivalent to bfg9000.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>While absolute paths are rarely needed in a <code>build.bfg</code> script, it's still
+possible to use them. However, there are some caveats: 1) POSIX-style
+absolute paths will refer to that (absolute) path on the <em>current</em> drive,
+2) Windows-style absolute paths will fail to work on POSIX systems, and 3)
+Windows-style paths with a drive letter and a <em>relative</em> path (e.g. <code>C:foo</code>)
+are unsupported by bfg9000.</p>
+</div>
 <h2 id="file-types">File types<a class="headerlink" href="#file-types" title="Permanent link">§</a></h2>
 <p>Files used in a <code>build.bfg</code> script are divided by their types (e.g. source
 code, header files, etc). All files from the source directory which are
@@ -817,18 +836,18 @@ command-line arguments.</p>
 <p>Retrieve the set of <a href="../writing/#user-defined-arguments">user-defined arguments</a>
 passed to bfg9000; this is an <a href="https://docs.python.org/library/argparse.html#argparse.Namespace"><em>argparse.Namespace</em></a> object.</p>
 <h3 id="95_bfg9000__">__bfg9000__<a class="headerlink" href="#95_bfg9000__" title="Permanent link">§</a></h3>
-<p class="subtitle">Availability: <code>build.bfg</code> and <code>options.bfg</code></p>
+<p class="subtitle">Availability: <code>build.bfg</code>, <code>options.bfg</code>, and <code>&lt;toolchain&gt;.bfg</code></p>
 <p>A dictionary containing all the builtin functions and global variables defined
 by bfg9000. This can be useful for feature detection or accessing builtins
 shadowed by a local variable.</p>
 <h3 id="bfg9000_required_version">bfg9000_required_version([<em>version</em>], [<em>python_version</em>])<a class="headerlink" href="#bfg9000_required_version" title="Permanent link">§</a></h3>
-<p class="subtitle">Availability: <code>build.bfg</code> and <code>options.bfg</code></p>
+<p class="subtitle">Availability: <code>build.bfg</code>, <code>options.bfg</code>, and <code>&lt;toolchain&gt;.bfg</code></p>
 <p>Set the required <em>version</em> for bfg9000 and/or the required <em>python_version</em>.
 Each of these is a standard Python <a href="https://www.python.org/dev/peps/pep-0440/#version-specifiers">version specifier</a>. If
 the actual versions don't match the specifiers, a
 <a href="#versionerror"><em>VersionError</em></a> is raised.</p>
 <h3 id="bfg9000_version">bfg9000_version<a class="headerlink" href="#bfg9000_version" title="Permanent link">§</a></h3>
-<p class="subtitle">Availability: <code>build.bfg</code> and <code>options.bfg</code></p>
+<p class="subtitle">Availability: <code>build.bfg</code>, <code>options.bfg</code>, and <code>&lt;toolchain&gt;.bfg</code></p>
 <p>Return the current version of bfg9000. This can be useful if you want to
 optionally support a feature only available in certain versions of bfg.</p>
 <h3 id="filter_by_platform">filter_by_platform(<em>name</em>, <em>path</em>, <em>type</em>)<a class="headerlink" href="#filter_by_platform" title="Permanent link">§</a></h3>
@@ -885,6 +904,40 @@ source files and not have to worry about manually rerunning bfg9000.</p>
 this function to specify a project name, it defaults to the name of the
 project's source directory. This is primarily useful for creating <a href="../writing/#distributing-your-source">source
 distributions</a>.</p>
+<h2 id="toolchain">Toolchain<a class="headerlink" href="#toolchain" title="Permanent link">§</a></h2>
+<h3 id="compiler">compiler(<em>names</em>, <em>lang</em>)<a class="headerlink" href="#compiler" title="Permanent link">§</a></h3>
+<p class="subtitle">Availability: <code>&lt;toolchain&gt;.bfg</code></p>
+<p>Set the compiler to use for the language <em>lang</em>. <em>names</em> is a string
+representing the path to the compiler (resolved as with <a href="#which"><code>which</code></a>) or a
+list of possible paths (as strings or lists or strings).</p>
+<h3 id="compile_options">compile_options(<em>options</em>, <em>lang</em>)<a class="headerlink" href="#compile_options" title="Permanent link">§</a></h3>
+<p class="subtitle">Availability: <code>&lt;toolchain&gt;.bfg</code></p>
+<p>Set compilation options to use for the language <em>lang</em>. <em>options</em> is either a
+string of all the options or a list of strings, one element per option.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><a href="#semantic-options">Semantic options</a> aren't supported here; instead, you
+should use the appropriate option strings for the compiler to be used.</p>
+</div>
+<h3 id="environ">environ<a class="headerlink" href="#environ" title="Permanent link">§</a></h3>
+<p class="subtitle">Availability: <code>&lt;toolchain&gt;.bfg</code></p>
+<p>A <code>dict</code> of the current environment variables, suitable for getting/setting.</p>
+<h3 id="runner">runner(<em>names</em>, <em>lang</em>)<a class="headerlink" href="#runner" title="Permanent link">§</a></h3>
+<p class="subtitle">Availability: <code>&lt;toolchain&gt;.bfg</code></p>
+<p>Set the runner to use for the language <em>lang</em>, if that language supports runners
+(e.g. Java, Scala, or a scripting language). <em>names</em> is a string representing
+the path to the compiler (resolved as with <a href="#which"><code>which</code></a>) or a list of
+possible paths (as strings or lists or strings).</p>
+<h3 id="target_platform">target_platform(<em>platform</em>)<a class="headerlink" href="#target_platform" title="Permanent link">§</a></h3>
+<p class="subtitle">Availability: <code>&lt;toolchain&gt;.bfg</code></p>
+<p>Set the target platform of this build to <em>platform</em>.</p>
+<h3 id="which">which(<em>names</em>, [<em>resolve</em>])<a class="headerlink" href="#which" title="Permanent link">§</a></h3>
+<p class="subtitle">Availability: <code>&lt;toolchain&gt;.bfg</code></p>
+<p>Find the best option for an executable named by <em>names</em>. <em>names</em> can be a
+stringresolved as with the <code>PATH</code> environment variable in the shell, or else a
+list of names (as strings or lists of strings). If <em>names</em> contains a
+list-of-lists, the inner list represents a series of arguments to pass to the
+executable when running it.</p>
 <h2 id="exceptions">Exceptions<a class="headerlink" href="#exceptions" title="Permanent link">§</a></h2>
 <h3 id="calledprocesserror">CalledProcessError<a class="headerlink" href="#calledprocesserror" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code> and <code>options.bfg</code></p>

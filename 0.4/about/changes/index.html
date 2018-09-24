@@ -163,12 +163,17 @@
 <ul>
 <li>Compilers and linkers now support semantic options, abstracting away the
   differences between compiler flavors</li>
+<li>Add support for cross-compilation</li>
+<li>Toolchain files can be used to simplify setting up build configuration
+  options</li>
 <li><code>whole_archive()</code> now works with MSVC linkers</li>
 </ul>
 <h3 id="breaking-changes">Breaking changes<a class="headerlink" href="#breaking-changes" title="Permanent link">§</a></h3>
 <ul>
 <li>MSVC builds now automatically set <code>/EHsc</code> to improve standards-compliance and
   mimic Visual Studio's default MSBuild configuration</li>
+<li>Paths are now parsed in a platform-agnostic manner, which may cause issues for
+  certain esoteric pathnames (e.g. POSIX paths that look like Windows paths)</li>
 </ul>
 <hr />
 <h2 id="v031">v0.3.1<a class="headerlink" href="#v031" title="Permanent link">§</a></h2>
