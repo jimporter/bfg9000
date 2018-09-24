@@ -7,7 +7,7 @@ from ..languages import known_langs
 
 with known_langs.make('c') as x:
     x.vars(compiler='CC', cflags='CFLAGS')
-    x.exts(source=['.c'], header='.h')
+    x.exts(source=['.c'], header=['.h'])
 
 with known_langs.make('c++') as x:
     x.vars(compiler='CXX', cflags='CXXFLAGS')
