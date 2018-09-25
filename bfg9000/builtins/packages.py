@@ -1,6 +1,5 @@
 import os.path
 import re
-import warnings
 
 from . import builtin
 from .find import find

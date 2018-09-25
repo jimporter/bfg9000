@@ -1,4 +1,3 @@
-import warnings
 from collections import defaultdict
 from six import string_types
 

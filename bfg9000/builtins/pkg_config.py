@@ -1,4 +1,3 @@
-import warnings
 from collections import Counter, defaultdict
 from itertools import chain
 from six import iteritems, itervalues, string_types

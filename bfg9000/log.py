@@ -8,6 +8,10 @@ import warnings
 getLogger = logging.getLogger
 
 
+class UserDeprecationWarning(DeprecationWarning):
+    pass
+
+
 def _is_bfg_src(filename):
     rel = os.path.relpath(filename, os.path.dirname(__file__))
     return not rel.startswith(os.pardir + os.sep)
@@ -90,6 +94,7 @@ def init(color='auto', debug=False, warn_once=False, stream=None):
     else:  # color == 'auto'
         colorama.init()
 
+    warnings.filterwarnings('default', category=UserDeprecationWarning)
     if warn_once:
         warnings.filterwarnings('once')
 

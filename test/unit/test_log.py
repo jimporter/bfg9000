@@ -144,8 +144,13 @@ class TestInit(unittest.TestCase):
              mock.patch('colorama.init'):  # noqa
             with mock.patch('warnings.filterwarnings') as filterwarnings:
                 log.init()
-                filterwarnings.assert_not_called()
+                filterwarnings.assert_called_once_with(
+                    'default', category=log.UserDeprecationWarning
+                )
 
             with mock.patch('warnings.filterwarnings') as filterwarnings:
                 log.init(warn_once=True)
-                filterwarnings.assert_called_once_with('once')
+                self.assertEqual(filterwarnings.mock_calls, [
+                    mock.call('default', category=log.UserDeprecationWarning),
+                    mock.call('once')
+                ])
