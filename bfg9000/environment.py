@@ -1,6 +1,7 @@
 import json
 import os
 import sys
+import warnings
 from collections import namedtuple
 from six import iteritems
 
@@ -10,6 +11,7 @@ from . import shell
 from .backends import list_backends
 from .file_types import Executable, Node
 from .iterutils import first, isiterable, listify
+from .log import UserDeprecationWarning
 from .path import InstallRoot, Path, Root
 from .tools.common import Command
 from .versioning import Version
@@ -51,6 +53,13 @@ class Environment(object):
         self.extra_args = extra_args
 
         self.variables = dict(os.environ)
+
+    # XXX: Remove this after 0.4 is released.
+    @property
+    def platform(self):  # pragma: no cover
+        warnings.warn('platform is deprecated; please use host_platform or ' +
+                      'target_platform instead', UserDeprecationWarning)
+        return self.target_platform
 
     @property
     def base_dirs(self):

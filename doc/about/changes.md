@@ -17,6 +17,8 @@ in progress
   mimic Visual Studio's default MSBuild configuration
 - Paths are now parsed in a platform-agnostic manner, which may cause issues for
   certain esoteric pathnames (e.g. POSIX paths that look like Windows paths)
+- `env.platform` has been split into `env.host_platform` and
+  `env.target_platform`
 
 ---
 
