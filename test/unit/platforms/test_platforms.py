@@ -12,37 +12,33 @@ class TestPlatformName(unittest.TestCase):
         platforms.platform_name._reset()
 
     def test_linux(self):
-        with mock.patch('platform.system', lambda: 'Linux'):
+        with mock.patch('platform.system', return_value='Linux'):
             self.assertEqual(platforms.platform_name(), 'linux')
 
     def test_macos(self):
-        with mock.patch('platform.system', lambda: 'Darwin'):
+        with mock.patch('platform.system', return_value='Darwin'):
             self.assertEqual(platforms.platform_name(), 'darwin')
 
     def test_windows(self):
         def mock_execute(*args, **kwargs):
             raise OSError()
 
-        with mock.patch('platform.system', lambda: 'Windows'), \
+        with mock.patch('platform.system', return_value='Windows'), \
              mock.patch('subprocess.check_output', mock_execute):  # noqa:
             self.assertEqual(platforms.platform_name(), 'windows')
 
     def test_windows_with_uname(self):
-        def mock_execute(*args, **kwargs):
-            return 'foobar'
-
-        with mock.patch('platform.system', lambda: 'Windows'), \
-             mock.patch('subprocess.check_output', mock_execute):  # noqa:
+        with mock.patch('platform.system', return_value='Windows'), \
+             mock.patch('subprocess.check_output',
+                        return_value='foobar'):  # noqa:
             self.assertEqual(platforms.platform_name(), 'windows')
 
     def test_cygwin(self):
-        with mock.patch('platform.system', lambda: 'CYGWIN_NT-6.1-WOW64'):
+        with mock.patch('platform.system', return_value='CYGWIN_NT-6.1-WOW64'):
             self.assertEqual(platforms.platform_name(), 'cygwin')
 
     def test_cygwin_native_python(self):
-        def mock_execute(*args, **kwargs):
-            return 'CYGWIN_NT-6.1-WOW64'
-
-        with mock.patch('platform.system', lambda: 'Windows'), \
-             mock.patch('subprocess.check_output', mock_execute):  # noqa
+        with mock.patch('platform.system', return_value='Windows'), \
+             mock.patch('subprocess.check_output',
+                        return_value='CYGWIN_NT-6.1-WOW64'):  # noqa
             self.assertEqual(platforms.platform_name(), 'cygwin')

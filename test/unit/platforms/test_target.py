@@ -13,7 +13,7 @@ class TestTargetPlatform(unittest.TestCase):
         platform_name._reset()
 
     def test_default(self):
-        with mock.patch('platform.system', lambda: 'Linux'):
+        with mock.patch('platform.system', return_value='Linux'):
             platform = target.platform_info()
         self.assertEqual(platform.name, 'linux')
         self.assertEqual(platform.flavor, 'posix')

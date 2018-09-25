@@ -465,7 +465,7 @@ class TestCommonPrefix(unittest.TestCase):
 
 class TestExists(unittest.TestCase):
     def test_exists(self):
-        with mock.patch('os.path.exists', lambda x: True):
+        with mock.patch('os.path.exists', return_value=True):
             self.assertEqual(exists(Path('/foo/bar')), True)
 
 
@@ -517,7 +517,7 @@ class TestMakedirs(unittest.TestCase):
 
 class TestPushd(unittest.TestCase):
     def test_basic(self):
-        with mock.patch('os.getcwd', lambda: 'cwd'), \
+        with mock.patch('os.getcwd', return_value='cwd'), \
              mock.patch('os.chdir') as os_chdir:  # noqa
             with pushd('foo'):
                 self.assertEqual(os_chdir.mock_calls, [mock.call('foo')])
@@ -527,7 +527,7 @@ class TestPushd(unittest.TestCase):
 
     def test_makedirs(self):
         with mock.patch('os.makedirs') as os_makedirs, \
-             mock.patch('os.getcwd', lambda: 'cwd'), \
+             mock.patch('os.getcwd', return_value='cwd'), \
              mock.patch('os.chdir') as os_chdir:  # noqa
             with pushd('foo', makedirs=True):
                 self.assertEqual(os_makedirs.mock_calls, [
