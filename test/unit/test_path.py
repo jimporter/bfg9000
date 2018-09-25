@@ -89,6 +89,7 @@ class TestPath(unittest.TestCase):
         self.assertEqual(p.destdir, False)
 
         self.assertRaises(ValueError, self.Path, 'foo/bar', Root.absolute)
+        self.assertRaises(ValueError, self.Path, 'c:foo')
 
     def test_construct_destdir(self):
         p = self.Path('foo/bar', InstallRoot.bindir, True)
