@@ -114,12 +114,12 @@ getter = _Decorator('default', _GetterBinder)
 post = _Decorator('post', _PostWrapper)
 
 
-def _get_value(spec, builtin_bound, args, kwargs):
+def _get_value(argspec, builtin_bound, args, kwargs):
     # Get the value of the first argument to this function, whether it's
     # passed positionally or as a keyword argument.
     if len(args) > builtin_bound:
         return args[builtin_bound]
-    name = spec.args[builtin_bound]
+    name = argspec[builtin_bound]
     if name in kwargs:
         return kwargs[name]
     raise IndexError('unable to find user-provided argument')
@@ -127,7 +127,10 @@ def _get_value(spec, builtin_bound, args, kwargs):
 
 def type(out_type, in_type=string_types):
     def decorator(fn):
-        spec = inspect.getargspec(fn)
+        if sys.version_info >= (3, 3):
+            argspec = list(inspect.signature(fn).parameters.keys())
+        else:
+            argspec = inspect.getargspec(fn).args
 
         @functools.wraps(fn)
         def wrapper(*args, **kwargs):
@@ -135,7 +138,8 @@ def type(out_type, in_type=string_types):
             # output type, just return it immediately; otherwise, check if
             # it's a valid input type and then call the function.
             try:
-                thing = _get_value(spec, wrapper._builtin_bound, args, kwargs)
+                thing = _get_value(argspec, wrapper._builtin_bound, args,
+                                   kwargs)
                 if isinstance(thing, wrapper.type):
                     return thing
                 if not isinstance(thing, wrapper.in_type):
