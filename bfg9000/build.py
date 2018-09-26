@@ -21,6 +21,9 @@ argument name with `-x`. For example, `--foo` may also be written as `--x-foo`.
 class Toolchain(object):
     __slots__ = ('target_platform')
 
+    def __init__(self):
+        self.target_platform = None
+
 
 def is_srcdir(path):
     return exists(path.append(bfgfile))

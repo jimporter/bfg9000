@@ -7,7 +7,45 @@ from six import assertRegex
 from six.moves import cStringIO as StringIO
 
 from bfg9000 import driver, log, path
+from bfg9000.build import Toolchain
 from bfg9000.environment import EnvVersionError
+
+
+class TestEnvironmentFromArgs(unittest.TestCase):
+    def setUp(self):
+        self.args = argparse.Namespace(
+            backend='make',
+
+            srcdir=path.abspath('.'),
+            builddir=path.abspath('build'),
+
+            prefix=path.abspath('.'),
+            exec_prefix=path.abspath('.'),
+            bindir=path.abspath('bin'),
+            libdir=path.abspath('lib'),
+            includedir=path.abspath('include'),
+
+            shared=True,
+            static=False,
+        )
+
+    def test_basic(self):
+        env, backend = driver.environment_from_args(self.args)
+        self.assertEqual(env.srcdir, path.abspath('.'))
+        self.assertTrue('make' in backend.__name__)
+
+    def test_toolchain(self):
+        env, backend = driver.environment_from_args(self.args, Toolchain())
+        self.assertEqual(env.srcdir, path.abspath('.'))
+        self.assertTrue('make' in backend.__name__)
+
+    def test_extra_args(self):
+        env, backend = driver.environment_from_args(
+            self.args, extra_args=['--foo']
+        )
+        self.assertEqual(env.srcdir, path.abspath('.'))
+        self.assertEqual(env.extra_args, ['--foo'])
+        self.assertTrue('make' in backend.__name__)
 
 
 class TestDirectory(unittest.TestCase):
@@ -38,19 +76,19 @@ class TestDirectoryPair(unittest.TestCase):
         self.pair = driver.directory_pair('srcdir', 'builddir')(None, None)
 
     def test_pass_srcdir(self):
-        ns = argparse.Namespace()
+        args = argparse.Namespace()
         with mock.patch('bfg9000.build.is_srcdir', return_value=True):
-            self.pair(None, ns, path.abspath('foo'))
-        self.assertEqual(ns, argparse.Namespace(
+            self.pair(None, args, path.abspath('foo'))
+        self.assertEqual(args, argparse.Namespace(
             srcdir=path.abspath('foo'),
             builddir=path.abspath('.')
         ))
 
     def test_pass_builddir(self):
-        ns = argparse.Namespace()
+        args = argparse.Namespace()
         with mock.patch('bfg9000.build.is_srcdir', return_value=False):
-            self.pair(None, ns, path.abspath('foo'))
-        self.assertEqual(ns, argparse.Namespace(
+            self.pair(None, args, path.abspath('foo'))
+        self.assertEqual(args, argparse.Namespace(
             srcdir=path.abspath('.'),
             builddir=path.abspath('foo')
         ))
