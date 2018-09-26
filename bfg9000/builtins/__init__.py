@@ -22,4 +22,4 @@ def getenv(env):
 for i in dir(exceptions):
     i = getattr(exceptions, i)
     if isinstance(i, type):
-        builtin.function(i, context='*')
+        builtin.function(context='*')(i)
