@@ -1,9 +1,11 @@
 import importlib
 import pkgutil
 import sys
+import warnings
 
 from . import builtin
 from .. import exceptions
+from .. import log
 from ..objutils import memoize
 
 
@@ -17,6 +19,21 @@ def init():
 @builtin.getter('env', name='env', context=('build', 'options'))
 def getenv(env):
     return env
+
+
+@builtin.function(context='*')
+def warning(msg):
+    warnings.warn(msg)
+
+
+@builtin.function(context='*')
+def info(msg, show_stack=False):
+    log.log_stack(log.INFO, msg, show_stack=show_stack, stacklevel=1)
+
+
+@builtin.function(context='*')
+def debug(msg, show_stack=True):
+    log.log_stack(log.DEBUG, msg, show_stack=show_stack, stacklevel=1)
 
 
 for i in dir(exceptions):

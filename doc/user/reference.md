@@ -898,6 +898,15 @@ Availability: `build.bfg`, `options.bfg`, and `<toolchain>.bfg`
 Return the current version of bfg9000. This can be useful if you want to
 optionally support a feature only available in certain versions of bfg.
 
+### debug(*message*, [*show_stack*]) { #debug }
+
+Log a debug message with the value *message*. If *show_stack* is true (the
+default), show the stack trace where the message was logged from.
+
+!!! note
+    Debug messages are hidden by default; pass `--debug` on the command line to
+    them.
+
 ### filter_by_platform(*name*, *path*, *type*) { #filter_by_platform }
 Availability: `build.bfg`
 {: .subtitle}
@@ -955,6 +964,11 @@ following arguments may be specified:
 The *cache* argument is particularly important. It allows you to add or remove
 source files and not have to worry about manually rerunning bfg9000.
 
+### info(*message*, [*show_stack*]) { #info }
+
+Log an informational message with the value *message*. If *show_stack* is true,
+show the stack trace where the message was logged from.
+
 ### project(*name*, [*version*]) { #project }
 Availability: `build.bfg`
 {: .subtitle}
@@ -963,6 +977,11 @@ Set the name (and optionally the version) of the project. If you don't call
 this function to specify a project name, it defaults to the name of the
 project's source directory. This is primarily useful for creating [source
 distributions](writing.md#distributing-your-source).
+
+### warning(*message*) { #warning }
+
+Log a warning with the value *message* and the stack trace where the warning was
+emitted.
 
 ## Toolchain
 

@@ -21,6 +21,21 @@ backend and platform. The output file's name is automatically converted to the
 appropriate name for the target platform (`'simple'` on Linux and OS X and
 `'simple.exe'` on Windows).
 
+### Logging messages
+
+Sometimes, it can be helpful to display messages to the user when they're
+building your project. While `print`, `sys.stdout`, and the like work, these
+aren't integrated into bfg9000's logging system. Instead, you can use
+[*info()*](reference.md#info), [*warning()*](reference.md#warning), or
+[*debug()*](reference.md#debug) to log your messages:
+
+```python
+try:
+    pkg = package('optional_dependency')
+except PackageResolutionError:
+    warning('optional_dependency not found; fancy-feature disabled')
+```
+
 ## Building executables
 
 We've already seen how to build simple executables, but build tools aren't much

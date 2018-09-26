@@ -4,8 +4,7 @@ import os
 import sys
 import traceback
 import warnings
-
-getLogger = logging.getLogger
+from logging import getLogger, CRITICAL, ERROR, WARNING, INFO, DEBUG
 
 
 class UserDeprecationWarning(DeprecationWarning):
@@ -105,14 +104,12 @@ def init(color='auto', debug=False, warn_once=False, stream=None):
     logging.addLevelName(logging.INFO, '\033[1;34m' + 'info' + '\033[0m')
     logging.addLevelName(logging.DEBUG, '\033[1;35m' + 'debug' + '\033[0m')
 
-    logging.root.setLevel(logging.DEBUG if debug else logging.WARNING)
+    logging.root.setLevel(logging.DEBUG if debug else logging.INFO)
 
     stackless = logging.StreamHandler(stream)
     stackless.addFilter(StackFilter(has_stack=False))
 
     fmt = '%(levelname)s: %(message)s'
-    if debug:
-        fmt += '\033[2m%(stack)s\033[0m'
 
     stackless.setFormatter(logging.Formatter(fmt))
     logging.root.addHandler(stackless)
@@ -131,9 +128,17 @@ def init(color='auto', debug=False, warn_once=False, stream=None):
     logging.root.addHandler(stackful)
 
 
+def log_stack(level, message, *args, **kwargs):
+    stacklevel = kwargs.pop('stacklevel', 0)
+    extra = {
+        'full_stack': traceback.extract_stack()[1:-1 - stacklevel],
+        'show_stack': kwargs.pop('show_stack', True)
+    }
+    logging.log(level, message, *args, extra=extra, **kwargs)
+
+
 def _showwarning(message, category, filename, lineno, file=None, line=None):
-    stack = traceback.extract_stack()[1:]
-    logging.warning(message, extra={'full_stack': stack, 'show_stack': True})
+    log_stack(logging.WARNING, message, stacklevel=1)
 
 
 warnings.showwarning = _showwarning

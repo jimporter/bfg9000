@@ -1,9 +1,11 @@
+import inspect
 import logging
 import mock
 import re
 import sys
 import traceback
 import unittest
+import warnings
 from six import assertRegex
 
 from bfg9000 import log, iterutils
@@ -12,10 +14,15 @@ from bfg9000 import log, iterutils
 this_file = __file__.rstrip('c')
 
 
+def current_lineno():
+    return inspect.stack()[1][2]
+
+
 class TestStackfulStreamHandler(unittest.TestCase):
     def test_runtime_error(self):
         handler = log.StackfulStreamHandler()
         try:
+            lineno = current_lineno() + 1
             raise RuntimeError('runtime error')
         except RuntimeError:
             record = logging.LogRecord(
@@ -25,22 +32,23 @@ class TestStackfulStreamHandler(unittest.TestCase):
             handler.emit(record)
 
         self.assertEqual(record.full_stack, [
-            (this_file, 19, 'test_runtime_error',
+            (this_file, lineno, 'test_runtime_error',
              "raise RuntimeError('runtime error')"),
         ])
         self.assertEqual(record.stack_pre, '')
         self.assertEqual(record.stack, (
             '\n' +
-            '  File "{}", line 19, in test_runtime_error\n' +
+            '  File "{}", line {}, in test_runtime_error\n' +
             "    raise RuntimeError('runtime error')"
-        ).format(this_file))
+        ).format(this_file, lineno))
         self.assertEqual(record.stack_post, '')
         self.assertEqual(record.user_pathname, this_file)
-        self.assertEqual(record.user_lineno, 19)
+        self.assertEqual(record.user_lineno, lineno)
 
     def test_internal_error(self):
         handler = log.StackfulStreamHandler()
         try:
+            lineno = current_lineno() + 1
             iterutils.first(None)
         except LookupError:
             record = logging.LogRecord(
@@ -51,22 +59,23 @@ class TestStackfulStreamHandler(unittest.TestCase):
 
         iterutils_file = iterutils.__file__.rstrip('c')
         self.assertEqual(record.full_stack, [
-            (this_file, 44, 'test_internal_error', "iterutils.first(None)"),
+            (this_file, lineno, 'test_internal_error',
+             "iterutils.first(None)"),
             (iterutils_file, 48, 'first', 'raise LookupError()'),
         ])
         self.assertEqual(record.stack_pre, '')
         self.assertEqual(record.stack, (
             '\n' +
-            '  File "{}", line 44, in test_internal_error\n' +
+            '  File "{}", line {}, in test_internal_error\n' +
             "    iterutils.first(None)"
-        ).format(this_file))
+        ).format(this_file, lineno))
         self.assertEqual(record.stack_post, (
             '\n' +
             '  File "{}", line 48, in first\n' +
             "    raise LookupError()"
         ).format(iterutils_file))
         self.assertEqual(record.user_pathname, this_file)
-        self.assertEqual(record.user_lineno, 44)
+        self.assertEqual(record.user_lineno, lineno)
 
     def test_syntax_error(self):
         handler = log.StackfulStreamHandler()
@@ -122,10 +131,65 @@ class TestStackfulStreamHandler(unittest.TestCase):
         self.assertFalse(hasattr(record, 'user_lineno'))
 
 
+class TestLogStack(unittest.TestCase):
+    def test_default(self):
+        with mock.patch('logging.log') as mocklog:
+            lineno = current_lineno() + 1
+            log.log_stack(log.INFO, 'message')
+
+            tb = traceback.extract_stack()[1:]
+            tb[-1] = (tb[-1][0], lineno, tb[-1][2],
+                      "log.log_stack(log.INFO, 'message')")
+            mocklog.assert_called_once_with(log.INFO, 'message', extra={
+                'full_stack': tb, 'show_stack': True
+            })
+
+    def test_stacklevel(self):
+        with mock.patch('logging.log') as mocklog:
+            log.log_stack(log.INFO, 'message', stacklevel=1)
+            tb = traceback.extract_stack()[1:-1]
+            mocklog.assert_called_once_with(log.INFO, 'message', extra={
+                'full_stack': tb, 'show_stack': True
+            })
+
+    def test_hide_stack(self):
+        with mock.patch('logging.log') as mocklog:
+            lineno = current_lineno() + 1
+            log.log_stack(log.INFO, 'message', show_stack=False)
+
+            tb = traceback.extract_stack()[1:]
+            tb[-1] = (tb[-1][0], lineno, tb[-1][2],
+                      "log.log_stack(log.INFO, 'message', show_stack=False)")
+            mocklog.assert_called_once_with(log.INFO, 'message', extra={
+                'full_stack': tb, 'show_stack': False
+            })
+
+
+class TestShowWarning(unittest.TestCase):
+    def test_warn(self):
+        with mock.patch('logging.log') as mocklog:
+            class EqualWarning(UserWarning):
+                def __eq__(self, rhs):
+                    return type(self) == type(rhs)
+
+            lineno = current_lineno() + 1
+            warnings.warn('message', EqualWarning)
+
+            tb = traceback.extract_stack()[1:]
+            tb[-1] = (tb[-1][0], lineno, tb[-1][2],
+                      "warnings.warn('message', EqualWarning)")
+            mocklog.assert_called_once_with(
+                log.WARNING, EqualWarning('message'), extra={
+                    'full_stack': tb, 'show_stack': True
+                }
+            )
+
+
 class TestInit(unittest.TestCase):
     def test_colors(self):
         with mock.patch('logging.addLevelName'), \
-             mock.patch('logging.root.addHandler'):  # noqa
+             mock.patch('logging.root.addHandler'), \
+             mock.patch('logging.root.setLevel'):  # noqa
             with mock.patch('colorama.init') as colorama:
                 log.init()
                 colorama.assert_called_once_with()
@@ -141,6 +205,7 @@ class TestInit(unittest.TestCase):
     def test_warn_once(self):
         with mock.patch('logging.addLevelName'), \
              mock.patch('logging.root.addHandler'), \
+             mock.patch('logging.root.setLevel'), \
              mock.patch('colorama.init'):  # noqa
             with mock.patch('warnings.filterwarnings') as filterwarnings:
                 log.init()
@@ -154,3 +219,15 @@ class TestInit(unittest.TestCase):
                     mock.call('default', category=log.UserDeprecationWarning),
                     mock.call('once')
                 ])
+
+    def test_debug(self):
+        with mock.patch('logging.addLevelName'), \
+             mock.patch('logging.root.addHandler'), \
+             mock.patch('colorama.init'):  # noqa
+            with mock.patch('logging.root.setLevel') as setLevel:
+                log.init()
+                setLevel.assert_called_once_with(log.INFO)
+
+            with mock.patch('logging.root.setLevel') as setLevel:
+                log.init(debug=True)
+                setLevel.assert_called_once_with(log.DEBUG)

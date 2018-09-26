@@ -8,6 +8,8 @@
 - Add support for cross-compilation
 - Toolchain files can be used to simplify setting up build configuration
   options
+- Add `info`, `warn`, and `debug` builtins to let build scripts print messages
+  via bfg's logging system
 - `whole_archive()` now works with MSVC linkers
 
 ### Breaking changes
@@ -17,6 +19,11 @@
   certain esoteric pathnames (e.g. POSIX paths that look like Windows paths)
 - `env.platform` has been split into `env.host_platform` and
   `env.target_platform`
+
+### Bug fixes
+- Fix support for packaging as a Python Wheel
+- Default options for `ar` are now `cr` instead of `cru` to support versions of
+  `ar` that default to deterministic builds
 
 ---
 
