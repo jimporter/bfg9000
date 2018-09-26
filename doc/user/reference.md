@@ -990,8 +990,10 @@ Availability: `<toolchain>.bfg`
 {: .subtitle}
 
 Set the compiler to use for the language *lang*. *names* is a string
-representing the path to the compiler (resolved as with [`which`](#which)) or a
-list of possible paths (as strings or lists or strings).
+representing the path to the compiler (resolved as with [*which*](#which)) or a
+list of possible paths (as strings or lists or strings). If *strict* is true,
+*compiler* will raise an `IOError` if an executable cannot be found; if false,
+it will use the first candidate.
 
 ### compile_options(*options*, *lang*) { #compile_options }
 Availability: `<toolchain>.bfg`
@@ -1016,8 +1018,10 @@ Availability: `<toolchain>.bfg`
 
 Set the runner to use for the language *lang*, if that language supports runners
 (e.g. Java, Scala, or a scripting language). *names* is a string representing
-the path to the compiler (resolved as with [`which`](#which)) or a list of
-possible paths (as strings or lists or strings).
+the path to the compiler (resolved as with [*which*](#which)) or a list of
+possible paths (as strings or lists or strings). If *strict* is true,
+*compiler* will raise an `IOError` if an executable cannot be found; if false,
+it will use the first candidate.
 
 ### target_platform(*platform*) { #target_platform }
 Availability: `<toolchain>.bfg`
@@ -1025,15 +1029,19 @@ Availability: `<toolchain>.bfg`
 
 Set the target platform of this build to *platform*.
 
-### which(*names*, [*resolve*]) { #which }
+### which(*names*, [*resolve*], [*strict*]) { #which }
 Availability: `<toolchain>.bfg`
 {: .subtitle}
 
 Find the best option for an executable named by *names*. *names* can be a
-stringresolved as with the `PATH` environment variable in the shell, or else a
+string resolved as with the `PATH` environment variable in the shell, or else a
 list of names (as strings or lists of strings). If *names* contains a
 list-of-lists, the inner list represents a series of arguments to pass to the
 executable when running it.
+
+If *strict* is true (the default), *which* will raise an `IOError` if an
+executable cannot be found; if false, it will return the first candidate as a
+string.
 
 ## Exceptions
 

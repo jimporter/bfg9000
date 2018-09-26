@@ -4,7 +4,7 @@ from six import iteritems
 from . import builtin
 from .. import shell
 from .. import tools
-from ..iterutils import isiterable
+from ..iterutils import first, isiterable
 from ..languages import known_langs
 from ..shell import posix as pshell
 
@@ -29,14 +29,20 @@ def target_platform(toolchain, platform):
 
 
 @builtin.function(context='toolchain')
-def which(names, resolve=False):
-    return ' '.join(shell.which(names, resolve=resolve))
+def which(names, resolve=False, strict=True, kind='executable'):
+    try:
+        return ' '.join(shell.which(names, resolve=resolve, kind=kind))
+    except IOError:
+        if strict:
+            raise
+        result = first(names)
+        return pshell.join(result) if isiterable(result) else result
 
 
 @builtin.function(context='toolchain')
-def compiler(names, lang):
+def compiler(names, lang, strict=False):
     var = known_langs[lang].var('compiler')
-    os.environ[var] = ' '.join(shell.which(names))
+    os.environ[var] = which(names, strict=strict, kind='compiler')
 
 
 @builtin.function(context='toolchain')
@@ -52,6 +58,6 @@ def compile_options(options, lang):
 
 
 @builtin.function(context='toolchain')
-def runner(names, lang):
+def runner(names, lang, strict=False):
     var = known_langs[lang].var('runner')
-    os.environ[var] = ' '.join(shell.which(names))
+    os.environ[var] = which(names, strict=strict, kind='runner')

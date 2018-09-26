@@ -10,6 +10,10 @@ def mock_which(*args, **kwargs):
     return ['command']
 
 
+def mock_bad_which(*args, **kwargs):
+    raise IOError()
+
+
 class TestToolchain(unittest.TestCase):
     def setUp(self):
         self.toolchain = Toolchain()
@@ -37,15 +41,40 @@ class TestToolchain(unittest.TestCase):
             self.assertEqual(toolchain.which('foo'), 'command')
             self.assertEqual(toolchain.which(['foo', 'bar']), 'command')
 
+        with mock.patch('bfg9000.shell.which', mock_bad_which):
+            self.assertRaises(IOError, toolchain.which, 'foo')
+            self.assertRaises(IOError, toolchain.which, ['foo', 'bar'])
+
+            self.assertEqual(toolchain.which('foo', strict=False), 'foo')
+            self.assertEqual(toolchain.which(['foo', 'bar'], strict=False),
+                             'foo')
+            self.assertEqual(toolchain.which([['foo', 'bar']], strict=False),
+                             'foo bar')
+
     def test_compiler(self):
         environ = {}
-        with mock.patch('bfg9000.shell.which', mock_which), \
-             mock.patch('os.environ', environ):  # noqa
-            toolchain.compiler('foo', 'c++')
-            self.assertEqual(environ, {'CXX': 'command'})
+        with mock.patch('os.environ', environ):
+            with mock.patch('bfg9000.shell.which', mock_which):
+                toolchain.compiler('foo', 'c++')
+                self.assertEqual(environ, {'CXX': 'command'})
+                toolchain.compiler(['foo', 'bar'], 'c++')
+                self.assertEqual(environ, {'CXX': 'command'})
 
-            toolchain.compiler(['foo', 'bar'], 'c++')
-            self.assertEqual(environ, {'CXX': 'command'})
+                toolchain.compiler('foo', 'c++', strict=True)
+                self.assertEqual(environ, {'CXX': 'command'})
+                toolchain.compiler(['foo', 'bar'], 'c++', strict=True)
+                self.assertEqual(environ, {'CXX': 'command'})
+
+            with mock.patch('bfg9000.shell.which', mock_bad_which):
+                toolchain.compiler('foo', 'c++')
+                self.assertEqual(environ, {'CXX': 'foo'})
+                toolchain.compiler(['foo', 'bar'], 'c++')
+                self.assertEqual(environ, {'CXX': 'foo'})
+
+                self.assertRaises(IOError, toolchain.compiler, 'foo', 'c++',
+                                  strict=True)
+                self.assertRaises(IOError, toolchain.compiler, ['foo', 'bar'],
+                                  'c++', strict=True)
 
     def test_compile_options(self):
         environ = {}
@@ -58,10 +87,25 @@ class TestToolchain(unittest.TestCase):
 
     def test_runner(self):
         environ = {}
-        with mock.patch('bfg9000.shell.which', mock_which), \
-             mock.patch('os.environ', environ):  # noqa
-            toolchain.runner('foo', 'java')
-            self.assertEqual(environ, {'JAVACMD': 'command'})
+        with mock.patch('os.environ', environ):
+            with mock.patch('bfg9000.shell.which', mock_which):
+                toolchain.runner('foo', 'java')
+                self.assertEqual(environ, {'JAVACMD': 'command'})
+                toolchain.runner(['foo', 'bar'], 'java')
+                self.assertEqual(environ, {'JAVACMD': 'command'})
 
-            toolchain.runner(['foo', 'bar'], 'java')
-            self.assertEqual(environ, {'JAVACMD': 'command'})
+                toolchain.runner('foo', 'java', strict=True)
+                self.assertEqual(environ, {'JAVACMD': 'command'})
+                toolchain.runner(['foo', 'bar'], 'java', strict=True)
+                self.assertEqual(environ, {'JAVACMD': 'command'})
+
+            with mock.patch('bfg9000.shell.which', mock_bad_which):
+                toolchain.runner('foo', 'java')
+                self.assertEqual(environ, {'JAVACMD': 'foo'})
+                toolchain.runner(['foo', 'bar'], 'java')
+                self.assertEqual(environ, {'JAVACMD': 'foo'})
+
+                self.assertRaises(IOError, toolchain.runner, 'foo', 'java',
+                                  strict=True)
+                self.assertRaises(IOError, toolchain.runner, ['foo', 'bar'],
+                                  'java', strict=True)

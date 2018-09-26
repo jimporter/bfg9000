@@ -134,12 +134,10 @@ class TestStackfulStreamHandler(unittest.TestCase):
 class TestLogStack(unittest.TestCase):
     def test_default(self):
         with mock.patch('logging.log') as mocklog:
-            lineno = current_lineno() + 1
             log.log_stack(log.INFO, 'message')
 
             tb = traceback.extract_stack()[1:]
-            tb[-1] = (tb[-1][0], lineno, tb[-1][2],
-                      "log.log_stack(log.INFO, 'message')")
+            tb[-1] = mocklog.call_args[1]['extra']['full_stack'][-1]
             mocklog.assert_called_once_with(log.INFO, 'message', extra={
                 'full_stack': tb, 'show_stack': True
             })
@@ -154,12 +152,10 @@ class TestLogStack(unittest.TestCase):
 
     def test_hide_stack(self):
         with mock.patch('logging.log') as mocklog:
-            lineno = current_lineno() + 1
             log.log_stack(log.INFO, 'message', show_stack=False)
 
             tb = traceback.extract_stack()[1:]
-            tb[-1] = (tb[-1][0], lineno, tb[-1][2],
-                      "log.log_stack(log.INFO, 'message', show_stack=False)")
+            tb[-1] = mocklog.call_args[1]['extra']['full_stack'][-1]
             mocklog.assert_called_once_with(log.INFO, 'message', extra={
                 'full_stack': tb, 'show_stack': False
             })
@@ -172,12 +168,10 @@ class TestShowWarning(unittest.TestCase):
                 def __eq__(self, rhs):
                     return type(self) == type(rhs)
 
-            lineno = current_lineno() + 1
             warnings.warn('message', EqualWarning)
 
             tb = traceback.extract_stack()[1:]
-            tb[-1] = (tb[-1][0], lineno, tb[-1][2],
-                      "warnings.warn('message', EqualWarning)")
+            tb[-1] = mocklog.call_args[1]['extra']['full_stack'][-1]
             mocklog.assert_called_once_with(
                 log.WARNING, EqualWarning('message'), extra={
                     'full_stack': tb, 'show_stack': True
