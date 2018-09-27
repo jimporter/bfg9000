@@ -180,6 +180,18 @@ is unavoidable. By using a general-purpose language, this complexity can
 backend and platform. The output file's name is automatically converted to the
 appropriate name for the target platform (<code>'simple'</code> on Linux and OS X and
 <code>'simple.exe'</code> on Windows).</p>
+<h3 id="logging-messages">Logging messages<a class="headerlink" href="#logging-messages" title="Permanent link">§</a></h3>
+<p>Sometimes, it can be helpful to display messages to the user when they're
+building your project. While <code>print</code>, <code>sys.stdout</code>, and the like work, these
+aren't integrated into bfg9000's logging system. Instead, you can use
+<a href="../reference/#info"><em>info()</em></a>, <a href="../reference/#warning"><em>warning()</em></a>, or
+<a href="../reference/#debug"><em>debug()</em></a> to log your messages:</p>
+<pre><code class="python">try:
+    pkg = package('optional_dependency')
+except PackageResolutionError:
+    warning('optional_dependency not found; fancy-feature disabled')
+</code></pre>
+
 <h2 id="building-executables">Building executables<a class="headerlink" href="#building-executables" title="Permanent link">§</a></h2>
 <p>We've already seen how to build simple executables, but build tools aren't much
 good if that's all they can do! Naturally, it's easy to build an executable from
