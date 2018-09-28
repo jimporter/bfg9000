@@ -60,6 +60,13 @@ class option_list(object):
         return self
 
 
+# XXX: This is a separate function to make Python 2.7.8 and earlier happy. For
+# details, see <https://bugs.python.org/issue21591>.
+def _make_init(slots, attrs):
+    exec('def __init__(self, {0}):\n    self._init({0})'
+         .format(', '.join(slots)), globals(), attrs)
+
+
 class OptionMeta(type):
     def __new__(cls, name, bases, attrs):
         fields = attrs.pop('_fields', [])
@@ -68,8 +75,7 @@ class OptionMeta(type):
         attrs.update({'__slots__': slots, '_types': types})
 
         if '__init__' not in attrs:
-            exec('def __init__(self, {0}):\n    self._init({0})'
-                 .format(', '.join(slots)), globals(), attrs)
+            _make_init(slots, attrs)
 
         return type.__new__(cls, name, bases, attrs)
 
