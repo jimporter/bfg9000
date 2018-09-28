@@ -35,6 +35,8 @@ def _filter_stack(stack):
 
 
 def _format_stack(stack):
+    if len(stack) == 0:
+        return ''
     # Put the newline at the beginning, since this helps our formatting later.
     return '\n' + ''.join(traceback.format_list(stack)).rstrip()
 
@@ -50,6 +52,10 @@ class StackFilter(object):
 
 
 class StackfulStreamHandler(logging.StreamHandler):
+    def __init__(self, *args, **kwargs):
+        self.debug = kwargs.pop('debug', False)
+        logging.StreamHandler.__init__(self, *args, **kwargs)
+
     def emit(self, record):
         if record.exc_info:
             if isinstance(record.exc_info[1], SyntaxError):
@@ -69,20 +75,20 @@ class StackfulStreamHandler(logging.StreamHandler):
 
         pre, stack, post = _filter_stack(record.full_stack)
 
-        if len(stack):
-            record.stack_pre = _format_stack(pre) if len(pre) else ''
-            record.stack = _format_stack(stack)
-            record.stack_post = _format_stack(post) if len(post) else ''
+        record.stack_pre = _format_stack(pre)
+        record.stack = _format_stack(stack)
+        record.stack_post = _format_stack(post)
 
+        if len(stack):
             record.user_pathname = stack[-1][0]
             record.user_lineno = stack[-1][1]
         else:
-            record.show_stack = False
-            record.stack = _format_stack(pre)
-            logging.root.handle(record)
-            return
+            record.user_pathname = record.pathname
+            record.user_lineno = record.lineno
 
-        return logging.StreamHandler.emit(self, record)
+        if len(stack) or self.debug:
+            return logging.StreamHandler.emit(self, record)
+        logging.root.handle(record)
 
 
 def init(color='auto', debug=False, warn_once=False, stream=None):
@@ -114,7 +120,7 @@ def init(color='auto', debug=False, warn_once=False, stream=None):
     stackless.setFormatter(logging.Formatter(fmt))
     logging.root.addHandler(stackless)
 
-    stackful = StackfulStreamHandler(stream)
+    stackful = StackfulStreamHandler(stream, debug=debug)
     stackful.addFilter(StackFilter(has_stack=True))
 
     fmt = '%(levelname)s: %(user_pathname)s:%(user_lineno)d: %(message)s'

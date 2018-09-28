@@ -119,16 +119,16 @@ class TestStackfulStreamHandler(unittest.TestCase):
         self.assertEqual(record.full_stack, [
             (iterutils_file, 48, 'first', 'raise LookupError()'),
         ])
-        self.assertEqual(record.stack, (
+
+        self.assertEqual(record.stack_pre, (
             '\n' +
             '  File "{}", line 48, in first\n' +
             "    raise LookupError()"
         ).format(iterutils_file))
-
-        self.assertFalse(hasattr(record, 'stack_pre'))
-        self.assertFalse(hasattr(record, 'stack_post'))
-        self.assertFalse(hasattr(record, 'user_pathname'))
-        self.assertFalse(hasattr(record, 'user_lineno'))
+        self.assertEqual(record.stack, '')
+        self.assertEqual(record.stack_post, '')
+        self.assertEqual(record.user_pathname, record.pathname)
+        self.assertEqual(record.user_lineno, record.lineno)
 
 
 class TestLogStack(unittest.TestCase):
