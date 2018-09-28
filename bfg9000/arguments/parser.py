@@ -1,7 +1,8 @@
 import argparse
 import re
-
 from argparse import *
+
+from .. import path
 
 
 class ToggleAction(argparse.Action):
@@ -51,6 +52,37 @@ class ArgumentParser(argparse.ArgumentParser):
             return []
 
         return argparse.ArgumentParser._get_option_tuples(self, option_string)
+
+
+class BaseFile(object):
+    def __init__(self, check_type, kind, must_exist=False):
+        self._check_type = check_type
+        self._kind = kind
+        self.must_exist = must_exist
+
+    def __call__(self, string):
+        p = path.abspath(string)
+        if path.exists(p):
+            if not self._check_type(p):
+                raise argparse.ArgumentTypeError(
+                    "'{}' is not a {}".format(string, self._kind)
+                )
+        elif self.must_exist:
+            raise argparse.ArgumentTypeError(
+                "'{}' does not exist".format(string)
+            )
+
+        return p
+
+
+class Directory(BaseFile):
+    def __init__(self, *args, **kwargs):
+        BaseFile.__init__(self, path.isdir, 'directory', *args, **kwargs)
+
+
+class File(BaseFile):
+    def __init__(self, *args, **kwargs):
+        BaseFile.__init__(self, path.isfile, 'file', *args, **kwargs)
 
 
 # It'd be nice to just have a UserArgumentParser class with this method but it

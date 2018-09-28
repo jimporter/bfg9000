@@ -1,4 +1,5 @@
 import errno
+import functools
 import os
 import posixpath
 from contextlib import contextmanager
@@ -37,22 +38,32 @@ def commonprefix(paths):
 
     for i, bit in enumerate(lo):
         if bit != hi[i]:
-            return cls(Path.sep.join(lo[:i]), paths[0].root)
-    return cls(Path.sep.join(lo), paths[0].root)
+            return cls(cls.sep.join(lo[:i]), paths[0].root)
+    return cls(cls.sep.join(lo), paths[0].root)
 
 
-def exists(path):
-    return os.path.exists(path.string())
+def _wrap_ospath(fn):
+    @functools.wraps(fn)
+    def wrapper(path, variables=None):
+        return fn(path.string(variables))
+
+    return wrapper
 
 
-def samefile(path1, path2):
+exists = _wrap_ospath(os.path.exists)
+isdir = _wrap_ospath(os.path.isdir)
+isfile = _wrap_ospath(os.path.isfile)
+
+
+def samefile(path1, path2, variables=None):
     if hasattr(os.path, 'samefile'):
-        return os.path.samefile(path1.string(), path2.string())
+        return os.path.samefile(path1.string(variables),
+                                path2.string(variables))
     else:
         # This isn't entirely accurate, but it's close enough, and should only
         # be necessary for Windows with Python 2.x.
-        return (os.path.realpath(path1.string()) ==
-                os.path.realpath(path2.string()))
+        return (os.path.realpath(path1.string(variables)) ==
+                os.path.realpath(path2.string(variables)))
 
 
 def makedirs(path, mode=0o777, exist_ok=False):

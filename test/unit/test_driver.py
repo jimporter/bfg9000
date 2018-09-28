@@ -48,29 +48,6 @@ class TestEnvironmentFromArgs(unittest.TestCase):
         self.assertTrue('make' in backend.__name__)
 
 
-class TestDirectory(unittest.TestCase):
-    def test_existent(self):
-        with mock.patch('os.path.exists', return_value=True), \
-             mock.patch('os.path.isdir', return_value=True):  # noqa
-            self.assertEqual(driver.Directory()('foo'), path.abspath('foo'))
-            self.assertEqual(driver.Directory(True)('foo'),
-                             path.abspath('foo'))
-
-    def test_not_dir(self):
-        with mock.patch('os.path.exists', return_value=True), \
-             mock.patch('os.path.isdir', return_value=False):  # noqa
-            with self.assertRaises(argparse.ArgumentTypeError):
-                driver.Directory()('foo')
-            with self.assertRaises(argparse.ArgumentTypeError):
-                driver.Directory(True)('foo')
-
-    def test_nonexistent(self):
-        with mock.patch('os.path.exists', return_value=False):
-            self.assertEqual(driver.Directory()('foo'), path.abspath('foo'))
-            with self.assertRaises(argparse.ArgumentTypeError):
-                driver.Directory(True)('foo')
-
-
 class TestDirectoryPair(unittest.TestCase):
     def setUp(self):
         self.pair = driver.directory_pair('srcdir', 'builddir')(None, None)

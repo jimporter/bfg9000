@@ -73,24 +73,6 @@ def environment_from_args(args, toolchain=None, extra_args=None):
     return env, backend
 
 
-class Directory(object):
-    def __init__(self, must_exist=False):
-        self.must_exist = must_exist
-
-    def __call__(self, string):
-        if os.path.exists(string):
-            if not os.path.isdir(string):
-                raise argparse.ArgumentTypeError(
-                    "'{}' is not a directory".format(string)
-                )
-        elif self.must_exist:
-            raise argparse.ArgumentTypeError(
-                "'{}' does not exist".format(string)
-            )
-
-        return path.abspath(string)
-
-
 def directory_pair(srcname, buildname):
     class DirectoryPair(argparse.Action):
         def __call__(self, parser, namespace, values, option_string=None):
@@ -158,7 +140,7 @@ def add_configure_args(parser):
                        help=('build backend (one of %(choices)s; default: ' +
                              '%(default)s)'))
     build.add_argument('--toolchain', metavar='FILE',
-                       type=argparse.FileType('r'),
+                       type=argparse.File(must_exist=True),
                        help=('a file defining the toolchain to use for this ' +
                              'build'))
     build.add_argument('--shared', action='enable', default=True,
@@ -180,7 +162,7 @@ def add_configure_args(parser):
     install = parser.add_argument_group('installation arguments')
     for root in path.InstallRoot:
         name = '--' + root.name.replace('_', '-')
-        install.add_argument(name, type=Directory(), metavar='PATH',
+        install.add_argument(name, type=argparse.Directory(), metavar='PATH',
                              default=install_dirs[root],
                              help=path_help[root.name])
 
@@ -269,7 +251,7 @@ def main():
     conf_p.set_defaults(func=configure, parser=conf_p)
     conf_p.add_argument(argparse.SUPPRESS,
                         action=directory_pair('srcdir', 'builddir'),
-                        type=Directory(), metavar='DIRECTORY',
+                        type=argparse.Directory(), metavar='DIRECTORY',
                         help='source or build directory')
     add_configure_args(conf_p)
 
@@ -277,10 +259,10 @@ def main():
         'configure-into', description=configureinto_desc, add_help=False,
         help='create build files in a chosen directory'
     )
-    confinto_p.add_argument('srcdir', type=Directory(must_exist=True),
+    confinto_p.add_argument('srcdir', type=argparse.Directory(must_exist=True),
                             metavar='SRCDIR', help='source directory')
-    confinto_p.add_argument('builddir', type=Directory(), metavar='BUILDDIR',
-                            help='build directory')
+    confinto_p.add_argument('builddir', type=argparse.Directory(),
+                            metavar='BUILDDIR', help='build directory')
     confinto_p.set_defaults(func=configure, parser=confinto_p)
     add_configure_args(confinto_p)
 
@@ -288,7 +270,8 @@ def main():
         'refresh', description=refresh_desc, help='regenerate build files'
     )
     refresh_p.set_defaults(func=refresh, parser=refresh_p)
-    refresh_p.add_argument('builddir', type=Directory(must_exist=True),
+    refresh_p.add_argument('builddir',
+                           type=argparse.Directory(must_exist=True),
                            metavar='BUILDDIR', nargs='?', default='.',
                            help='build directory')
 
@@ -299,7 +282,7 @@ def main():
     env_p.add_argument('-u', '--unique', action='store_true',
                        help='only show variables that differ from the ' +
                        'current environment')
-    env_p.add_argument('builddir', type=Directory(must_exist=True),
+    env_p.add_argument('builddir', type=argparse.Directory(must_exist=True),
                        metavar='BUILDDIR', nargs='?', default='.',
                        help='build directory')
 
@@ -319,7 +302,7 @@ def simple_main():
                                      add_help=False)
     parser.add_argument(argparse.SUPPRESS,
                         action=directory_pair('srcdir', 'builddir'),
-                        type=Directory(), metavar='DIRECTORY',
+                        type=argparse.Directory(), metavar='DIRECTORY',
                         help='source or build directory')
     add_generic_args(parser)
     add_configure_args(parser)

@@ -28,7 +28,7 @@ class BasePath(safe_str.safe_string):
             raise ValueError('destdir only applies to install paths')
         self.destdir = destdir
 
-        drive, path = self.__normalize(path)
+        drive, path = self.__normalize(path, expand_user=True)
         self.suffix = drive + path
 
         if posixpath.isabs(path):
@@ -40,7 +40,7 @@ class BasePath(safe_str.safe_string):
 
     @classmethod
     def abspath(cls, path):
-        drive, path = cls.__normalize(path)
+        drive, path = cls.__normalize(path, expand_user=True)
         cwddrive, cwdpath = cls.__normalize(os.getcwd())
 
         if not drive:
@@ -49,7 +49,9 @@ class BasePath(safe_str.safe_string):
         return cls(drive + path, Root.absolute)
 
     @staticmethod
-    def __normalize(path):
+    def __normalize(path, expand_user=False):
+        if expand_user:
+            path = os.path.expanduser(path)
         drive, path = ntpath.splitdrive(path)
         if drive and not ntpath.isabs(path):
             raise ValueError('relative paths with drives not supported')

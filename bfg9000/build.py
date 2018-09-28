@@ -37,13 +37,14 @@ def _execute_file(f, filename, builtin_dict):
         pass
 
 
-def load_toolchain(f):
+def load_toolchain(filename):
     builtin_init()
     tools_init()
 
     toolchain = Toolchain()
     builtin_dict = builtin.toolchain.bind(toolchain=toolchain)
-    _execute_file(f, f.name, builtin_dict)
+    with open(filename.string(), 'r') as f:
+        _execute_file(f, f.name, builtin_dict)
     return toolchain
 
 

@@ -7,6 +7,7 @@ import unittest
 from collections import namedtuple
 
 from bfg9000.path import *
+from bfg9000.path import _wrap_ospath
 from bfg9000.platforms import target
 from bfg9000.platforms.posix import PosixPath
 from bfg9000.platforms.windows import WindowsPath
@@ -463,10 +464,13 @@ class TestCommonPrefix(unittest.TestCase):
         self.assertEqual(commonprefix([p, q]), Path(''))
 
 
-class TestExists(unittest.TestCase):
-    def test_exists(self):
-        with mock.patch('os.path.exists', return_value=True):
-            self.assertEqual(exists(Path('/foo/bar')), True)
+class TestWrappedOsPath(unittest.TestCase):
+    def test_wrap(self):
+        mocked = mock.MagicMock(return_value=True)
+        mocked.__name__ = 'foo'
+        f = _wrap_ospath(mocked)
+        f(Path('/foo/bar'))
+        mocked.assert_called_once_with(os.path.join(os.path.sep, 'foo', 'bar'))
 
 
 class TestSamefile(unittest.TestCase):
@@ -478,7 +482,7 @@ class TestSamefile(unittest.TestCase):
     def test_polyfill(self):
         class OsPath(object):
             def __init__(self):
-                for i in ('isabs', 'normpath', 'realpath'):
+                for i in ('isabs', 'normpath', 'realpath', 'expanduser'):
                     setattr(self, i, getattr(os.path, i))
 
         with mock.patch('os.path', OsPath()):
