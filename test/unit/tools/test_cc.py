@@ -6,6 +6,7 @@ from bfg9000.environment import Environment
 from bfg9000.frameworks import Framework
 from bfg9000.languages import Languages
 from bfg9000.path import Path
+from bfg9000.safe_str import jbos
 from bfg9000.tools.cc import CcBuilder
 from bfg9000.versioning import Version
 
@@ -205,6 +206,15 @@ class TestCcLinker(unittest.TestCase):
     def test_flags_lib_dir(self):
         libdir = Path('/path/to/lib')
         lib = Path('/path/to/lib/libfoo.a')
+        output = file_types.Executable(Path('exe'), 'native')
+
+        if env.target_platform.name == 'linux':
+            rpath = rpath_with_output = ['-Wl,-rpath,' + libdir]
+        elif env.target_platform.name == 'darwin':
+            rpath = []
+            rpath_with_output = [jbos('-Wl,-rpath,', '@loader_path')]
+        else:
+            rpath = rpath_with_output = []
 
         # Lib dir
         self.assertEqual(self.linker.flags(opts.option_list(
@@ -214,14 +224,32 @@ class TestCcLinker(unittest.TestCase):
         # Shared library
         self.assertEqual(self.linker.flags(opts.option_list(
             opts.lib(file_types.SharedLibrary(lib, 'native'))
-        )), ['-L' + libdir])
+        )), ['-L' + libdir] + rpath)
+        self.assertEqual(self.linker.flags(opts.option_list(
+            opts.lib(file_types.SharedLibrary(lib, 'native'))
+        ), output), ['-L' + libdir] + rpath_with_output)
+
+        if env.target_platform.name == 'linux':
+            libdir2 = Path('foo')
+            lib2 = Path('foo/libbar.a')
+
+            with self.assertRaises(ValueError):
+                self.linker.flags(opts.option_list(
+                    opts.lib(file_types.SharedLibrary(lib2, 'native'))
+                ))
+            self.assertEqual(
+                self.linker.flags(opts.option_list(
+                    opts.lib(file_types.SharedLibrary(lib2, 'native'))
+                ), output),
+                ['-L' + libdir2, jbos('-Wl,-rpath,', '$ORIGIN/foo')]
+            )
 
         # Static library
         self.assertEqual(self.linker.flags(opts.option_list(
             opts.lib(file_types.StaticLibrary(lib, 'native'))
         )), [])
         self.assertEqual(self.linker.flags(opts.option_list(
-            opts.lib(file_types.SharedLibrary(lib, 'native'))
+            opts.lib(file_types.StaticLibrary(lib, 'native'))
         ), mode='pkg-config'), ['-L' + libdir])
 
         # Framework
@@ -233,17 +261,24 @@ class TestCcLinker(unittest.TestCase):
         self.assertEqual(self.linker.flags(opts.option_list(
             opts.lib_dir(file_types.Directory(libdir)),
             opts.lib(file_types.SharedLibrary(lib, 'native'))
-        )), ['-L' + libdir])
+        )), ['-L' + libdir] + rpath)
+        self.assertEqual(self.linker.flags(opts.option_list(
+            opts.lib_dir(file_types.Directory(libdir)),
+            opts.lib(file_types.SharedLibrary(lib, 'native'))
+        ), output), ['-L' + libdir] + rpath_with_output)
 
     def test_flags_rpath(self):
-        self.assertEqual(self.linker.flags(opts.option_list(
-            opts.rpath_dir('path')
-        )), ['-Wl,-rpath,path'])
+        p1 = Path('path1')
+        p2 = Path('path2')
 
         self.assertEqual(self.linker.flags(opts.option_list(
-            opts.rpath_dir('path1'),
-            opts.rpath_dir('path2')
-        )), ['-Wl,-rpath,path1:path2'])
+            opts.rpath_dir(p1)
+        )), ['-Wl,-rpath,' + p1])
+
+        self.assertEqual(self.linker.flags(opts.option_list(
+            opts.rpath_dir(p1),
+            opts.rpath_dir(p2)
+        )), ['-Wl,-rpath,' + p1 + ':' + p2])
 
     def test_flags_rpath_link(self):
         p1 = Path('/path/to/lib')

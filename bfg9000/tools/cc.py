@@ -1,4 +1,5 @@
-import os.path
+import os
+import posixpath
 import re
 import subprocess
 from itertools import chain
@@ -16,7 +17,7 @@ from ..frameworks import Framework
 from ..iterutils import (default_sentinel, first, flatten, iterate, listify,
                          uniques, recursive_walk)
 from ..packages import CommonPackage, PackageKind
-from ..path import Path, Root
+from ..path import InstallRoot, Path, Root
 from ..versioning import detect_version, SpecifierSet
 
 
@@ -179,7 +180,7 @@ class CcBaseCompiler(BuildCommand):
         else:
             return ['-I' + directory.path]
 
-    def flags(self, options, mode='normal'):
+    def flags(self, options, output=None, mode='normal'):
         flags = []
         for i in options:
             if isinstance(i, opts.include_dir):
@@ -363,38 +364,26 @@ class CcLinker(BuildCommand):
             iterate(libs), ['-o', output]
         ))
 
+    def pre_build(self, build, name, context):
+        entry_point = getattr(context, 'entry_point', None)
+        return opts.option_list(opts.entry_point(entry_point) if entry_point
+                                else None)
+
     @property
     def _always_flags(self):
         if self.builder.object_format == 'mach-o':
             return ['-Wl,-headerpad_max_install_names']
         return []
 
-    def _rpath(self, libraries, extra_dirs, output):
-        if not output:
-            return []
-
-        runtime_libs = [i.runtime_file for i in libraries if i.runtime_file]
-        if not runtime_libs and not extra_dirs:
-            return []
-
-        if self.builder.object_format == 'elf':
-            start = output.path.parent()
-            base = '$ORIGIN'
-            paths = uniques(chain((i.path.parent() for i in runtime_libs),
-                                  extra_dirs))
-
-            relpaths = (i.relpath(start) for i in paths)
-            result = [opts.rpath_dir(base if i == '.' else
-                                     os.path.join(base, i)) for i in relpaths]
-
-            # Store the final (installed) rpaths so we can apply them with
-            # `patchelf` during installation.
-            output._rpath = uniques(chain(
-                getattr(output, '_rpath', []),
-                (file_install_path(i, cross=self.env).parent()
-                 for i in runtime_libs),
-                extra_dirs
-            ))
+    def _local_rpath(self, library, output):
+        runtime_lib = library.runtime_file
+        if runtime_lib and self.builder.object_format == 'elf':
+            path = runtime_lib.path.parent().cross(self.env)
+            if path.root != Root.absolute and path.root not in InstallRoot:
+                if not output:
+                    raise ValueError('unable to construct rpath')
+                path = path.relpath(output.path.parent(), prefix='$ORIGIN')
+            rpath = [path]
 
             # GNU's BFD-based ld doesn't correctly respect $ORIGIN in a shared
             # library's DT_RPATH/DT_RUNPATH field. This results in ld being
@@ -408,27 +397,48 @@ class CcLinker(BuildCommand):
                 # hurt anything.
                 brand = 'bfd'
 
-            if brand == 'bfd':
-                deps = chain.from_iterable(recursive_walk(i, 'runtime_deps')
-                                           for i in runtime_libs)
-                result.extend(opts.rpath_link_dir(i.path.parent())
-                              for i in deps)
+            rpath_link = []
+            if output and brand == 'bfd':
+                rpath_link = [i.path.parent() for i in
+                              recursive_walk(runtime_lib, 'runtime_deps')]
 
-            return result
-        elif self.builder.object_format == 'mach-o':
+            return rpath, rpath_link
+
+        # Either we don't need rpaths or the object format must not support
+        # them, so just return nothing.
+        return [], []
+
+    def _installed_rpaths(self, options):
+        def gen(options):
+            for i in options:
+                if isinstance(i, opts.lib):
+                    lib = i.library
+                    if isinstance(lib, Library):
+                        yield file_install_path(lib, cross=self.env).parent()
+                    else:
+                        yield lib
+                elif isinstance(i, opts.rpath_dir):
+                    yield i.path
+
+        return uniques(gen(options))
+
+    def _darwin_rpath(self, options, output):
+        if output and self.builder.object_format == 'mach-o':
             # Currently, we set the rpath on macOS to make it easy to load
             # locally-built shared libraries. Once we install the build, we'll
             # convert all the rpath-based paths to absolute paths and remove
             # the rpath from the binary.
-            base = '@loader_path'
-            path = Path('.').relpath(output.path.parent())
-            # Store the temporary rpath so we can remove it during installation
-            # with `install_name_tool`.
-            output._rpath = base if path == '.' else os.path.join(base, path)
-            return ['-Wl,-rpath,' + output._rpath]
-        else:
-            # This object format must not support rpaths, so just return.
-            return []
+            for i in options:
+                if ( isinstance(i, opts.lib) and
+                     isinstance(i.library, Library) and not
+                     isinstance(i.library, StaticLibrary) ):
+                    return Path('.').cross(self.env).relpath(
+                        output.path.parent(), prefix='@loader_path'
+                    )
+
+        # We didn't find a shared library, or we're just not be building for
+        # macOS, so return nothing.
+        return None
 
     def always_libs(self, primary):
         # XXX: Don't just asssume that these are the right libraries to use.
@@ -443,16 +453,6 @@ class CcLinker(BuildCommand):
         if self.lang == 'java' and not primary:
             libs.append(opts.lib('gcj'))
         return libs
-
-    def options(self, output, context):
-        libraries = getattr(context, 'libs', [])
-        rpath_dirs = getattr(context, 'rpath_dirs', [])
-        entry_point = getattr(context, 'entry_point', None)
-
-        return opts.option_list(
-            self._rpath(libraries, rpath_dirs, output),
-            opts.entry_point(entry_point) if entry_point else None
-        )
 
     def _link_lib(self, library, raw_static):
         if isinstance(library, WholeArchive):
@@ -473,16 +473,22 @@ class CcLinker(BuildCommand):
                    self._extract_lib_name(library))
         return ['-l' + libname]
 
-    def flags(self, options, mode='normal'):
+    def flags(self, options, output=None, mode='normal'):
         raw_static = mode != 'pkg-config'
         flags, rpaths, rpath_links, lib_dirs = [], [], [], []
+        rpaths.extend(iterate(self._darwin_rpath(options, output)))
+
         for i in options:
             if isinstance(i, opts.lib_dir):
                 lib_dirs.append(i.directory.path)
             elif isinstance(i, opts.lib):
-                if ( isinstance(i.library, Library) and not
-                     (raw_static and isinstance(i.library, StaticLibrary)) ):
-                    lib_dirs.append(i.library.path.parent())
+                lib = i.library
+                if isinstance(lib, Library):
+                    if not raw_static or not isinstance(lib, StaticLibrary):
+                        lib_dirs.append(lib.path.parent())
+                    rp, rplink = self._local_rpath(lib, output)
+                    rpaths.extend(rp)
+                    rpath_links.extend(rplink)
             elif isinstance(i, opts.rpath_dir):
                 rpaths.append(i.path)
             elif isinstance(i, opts.rpath_link_dir):
@@ -504,7 +510,7 @@ class CcLinker(BuildCommand):
 
         flags.extend('-L' + i for i in uniques(lib_dirs))
         if rpaths:
-            flags.append('-Wl,-rpath,' + ':'.join(rpaths))
+            flags.append('-Wl,-rpath,' + safe_str.join(rpaths, ':'))
         if rpath_links:
             flags.append('-Wl,-rpath-link,' + safe_str.join(rpath_links, ':'))
         return flags
@@ -519,27 +525,28 @@ class CcLinker(BuildCommand):
                 flags.append(i.value)
         return flags
 
-    def _post_install(self, output, is_library, context):
+    def post_install(self, options, output, context):
         if self.builder.object_format not in ['elf', 'mach-o']:
             return None
 
         path = file_install_path(output)
-        rpath = getattr(output, '_rpath', None)
+
         if self.builder.object_format == 'elf':
+            rpath = self._installed_rpaths(options)
             return self.env.tool('patchelf')(path, rpath)
         else:  # mach-o
+            rpath = self._darwin_rpath(options, output)
             changes = [(darwin_install_name(i),
                         file_install_path(i, cross=self.env))
                        for i in output.runtime_deps]
             return self.env.tool('install_name_tool')(
-                path, path if is_library else None, rpath, changes
+                path, path if self._is_library else None, rpath, changes
             )
-
-    def post_install(self, output, context):
-        return self._post_install(output, False, context)
 
 
 class CcExecutableLinker(CcLinker):
+    _is_library = False
+
     def __init__(self, builder, env, name, command, ldflags, ldlibs):
         CcLinker.__init__(self, builder, env, name + '_link', name, command,
                           ldflags, ldlibs)
@@ -550,6 +557,8 @@ class CcExecutableLinker(CcLinker):
 
 
 class CcSharedLibraryLinker(CcLinker):
+    _is_library = True
+
     def __init__(self, builder, env, name, command, ldflags, ldlibs):
         CcLinker.__init__(self, builder, env, name + '_linklib', name, command,
                           ldflags, ldlibs)
@@ -565,7 +574,12 @@ class CcSharedLibraryLinker(CcLinker):
             result.append('-Wl,--out-implib=' + output[1])
         return result
 
-    def post_build(self, build, output, context):
+    def _lib_name(self, name, prefix='lib', suffix=''):
+        head, tail = Path(name).splitleaf()
+        ext = self.env.target_platform.shared_library_ext
+        return head.append(prefix + tail + ext + suffix)
+
+    def post_build(self, build, options, output, context):
         if isinstance(output, VersionedSharedLibrary):
             # Make symlinks for the various versions of the shared lib.
             Symlink(build, output.soname, output)
@@ -575,34 +589,26 @@ class CcSharedLibraryLinker(CcLinker):
     def output_file(self, name, context):
         version = getattr(context, 'version', None)
         soversion = getattr(context, 'soversion', None)
-
-        head, tail = os.path.split(name)
         fmt = self.builder.object_format
 
-        def lib(head, tail, prefix='lib', suffix=''):
-            ext = self.env.target_platform.shared_library_ext
-            return Path(os.path.join(
-                head, prefix + tail + ext + suffix
-            ))
-
-        if self.env.target_platform.has_import_library:
+        if version and self.env.target_platform.has_versioned_library:
+            if self.env.target_platform.name == 'darwin':
+                real = self._lib_name(name + '.{}'.format(version))
+                soname = self._lib_name(name + '.{}'.format(soversion))
+            else:
+                real = self._lib_name(name, suffix='.{}'.format(version))
+                soname = self._lib_name(name, suffix='.{}'.format(soversion))
+            link = self._lib_name(name)
+            return VersionedSharedLibrary(real, fmt, self.lang, soname, link)
+        elif self.env.target_platform.has_import_library:
             dllprefix = ('cyg' if self.env.target_platform.name == 'cygwin'
                          else 'lib')
-            dllname = lib(head, tail, dllprefix)
-            impname = lib(head, tail, suffix='.a')
+            dllname = self._lib_name(name, dllprefix)
+            impname = self._lib_name(name, suffix='.a')
             dll = DllBinary(dllname, fmt, self.lang, impname)
             return [dll, dll.import_lib]
-        elif version and self.env.target_platform.has_versioned_library:
-            if self.env.target_platform.name == 'darwin':
-                real = lib(head, '{}.{}'.format(tail, version))
-                soname = lib(head, '{}.{}'.format(tail, soversion))
-            else:
-                real = lib(head, tail, suffix='.{}'.format(version))
-                soname = lib(head, tail, suffix='.{}'.format(soversion))
-            link = lib(head, tail)
-            return VersionedSharedLibrary(real, fmt, self.lang, soname, link)
         else:
-            return SharedLibrary(lib(head, tail), fmt, self.lang)
+            return SharedLibrary(self._lib_name(name), fmt, self.lang)
 
     @property
     def _always_flags(self):
@@ -629,15 +635,11 @@ class CcSharedLibraryLinker(CcLinker):
             )))
         return options
 
-    def options(self, output, context):
-        is_package = getattr(context, 'is_package', False)
-        flags = CcLinker.options(self, output, context)
-        if not is_package:
+    def flags(self, options, output=None, mode='normal'):
+        flags = CcLinker.flags(self, options, output, mode)
+        if output:
             flags.extend(self._soname(first(output)))
         return flags
-
-    def post_install(self, output, context):
-        return self._post_install(output, True, context)
 
 
 class CcPackageResolver(object):

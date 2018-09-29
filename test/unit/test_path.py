@@ -123,6 +123,16 @@ class TestPath(unittest.TestCase):
         self.assertTrue(self.Path('a', InstallRoot.bindir, True) !=
                         self.Path('a', InstallRoot.bindir, False))
 
+    def test_cross(self):
+        for name in ('windows', 'linux'):
+            platform = target.platform_info(name)
+            env = MockEnv(platform)
+
+            p = self.Path('foo/bar', Root.srcdir)
+            self.assertEqual(
+                p.cross(env), platform.Path('foo/bar', Root.srcdir)
+            )
+
     def test_parent(self):
         p = self.Path('foo/bar', Root.srcdir)
         self.assertEqual(p.parent(), self.Path('foo', Root.srcdir))
@@ -189,6 +199,11 @@ class TestPath(unittest.TestCase):
         self.assertEqual(p.stripext(),
                          self.Path('foo', InstallRoot.bindir, True))
 
+    def test_splitleaf(self):
+        p = self.Path('foo/bar/baz', Root.srcdir)
+        self.assertEqual(p.splitleaf(), (self.Path('foo/bar', Root.srcdir),
+                                         'baz'))
+
     def test_split(self):
         p = self.Path('foo/bar/baz', Root.srcdir)
         self.assertEqual(p.split(), ['foo', 'bar', 'baz'])
@@ -199,18 +214,27 @@ class TestPath(unittest.TestCase):
 
     def test_relpath_relative(self):
         p = self.Path('foo/bar', Root.srcdir)
-        self.assertEqual(p.relpath(self.Path('foo', Root.srcdir)), 'bar')
+        self.assertEqual(p.relpath(p), '.')
+        self.assertEqual(p.relpath(p, 'pre'), 'pre')
 
-        p = self.Path('foo/bar', Root.srcdir)
+        self.assertEqual(p.relpath(self.Path('foo', Root.srcdir)), 'bar')
+        self.assertEqual(p.relpath(self.Path('foo', Root.srcdir), 'pre'),
+                         self.ospath.join('pre', 'bar'))
+
         self.assertEqual(p.relpath(self.Path('baz', Root.srcdir)),
                          self.ospath.join('..', 'foo', 'bar'))
+        self.assertEqual(p.relpath(self.Path('baz', Root.srcdir), 'pre'),
+                         self.ospath.join('pre', '..', 'foo', 'bar'))
 
-        p = self.Path('foo/bar', Root.srcdir)
         self.assertEqual(p.relpath(self.Path('.', Root.srcdir)),
                          self.ospath.join('foo', 'bar'))
+        self.assertEqual(p.relpath(self.Path('.', Root.srcdir), 'pre'),
+                         self.ospath.join('pre', 'foo', 'bar'))
 
         p = self.Path('.', Root.srcdir)
         self.assertEqual(p.relpath(Path('foo', Root.srcdir)), '..')
+        self.assertEqual(p.relpath(Path('foo', Root.srcdir), 'pre'),
+                         self.ospath.join('pre', '..'))
 
         p = self.Path('foo/bar', Root.srcdir)
         self.assertRaises(
@@ -220,13 +244,30 @@ class TestPath(unittest.TestCase):
     def test_relpath_absolute(self):
         p = self.Path('/foo/bar', Root.srcdir)
         self.assertEqual(
+            p.relpath(self.Path('start', Root.srcdir)),
+            self.ospath.join(self.ospath.sep, 'foo', 'bar')
+        )
+        self.assertEqual(
+            p.relpath(self.Path('start', Root.srcdir), 'pre'),
+            self.ospath.join(self.ospath.sep, 'foo', 'bar')
+        )
+
+        self.assertEqual(
             p.relpath(self.Path('/start', Root.srcdir)),
+            self.ospath.join(self.ospath.sep, 'foo', 'bar')
+        )
+        self.assertEqual(
+            p.relpath(self.Path('/start', Root.srcdir), 'pre'),
             self.ospath.join(self.ospath.sep, 'foo', 'bar')
         )
 
         p = self.Path(r'C:\foo\bar', Root.srcdir)
         self.assertEqual(
             p.relpath(self.Path(r'C:\start', Root.srcdir)),
+            'C:' + self.ospath.sep + self.ospath.join('foo', 'bar')
+        )
+        self.assertEqual(
+            p.relpath(self.Path(r'C:\start', Root.srcdir), 'pre'),
             'C:' + self.ospath.sep + self.ospath.join('foo', 'bar')
         )
 

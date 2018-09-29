@@ -127,7 +127,7 @@ class JvmCompiler(BuildCommand):
     def _always_flags(self):
         return ['-verbose', '-d', '.']
 
-    def flags(self, options):
+    def flags(self, options, output=None, mode='normal'):
         flags, class_path = [], []
         for i in options:
             if isinstance(i, opts.lib):
@@ -204,6 +204,8 @@ class JarMaker(BuildCommand):
             if getattr(context, 'entry_point', None):
                 out.write('Main-Class: {}\n'.format(context.entry_point))
 
+        return opts.option_list()
+
     def _call(self, cmd, input, output, manifest, libs=None, flags=None):
         return list(chain(
             cmd, iterate(flags), [output, manifest], iterate(input)
@@ -213,7 +215,7 @@ class JarMaker(BuildCommand):
         return ['@' + safe_str.safe_str(i) if isinstance(i, ObjectFileList)
                 else i for i in input]
 
-    def flags(self, options):
+    def flags(self, options, output=None, mode='normal'):
         flags = []
         for i in options:
             if isinstance(i, safe_str.stringy_types):

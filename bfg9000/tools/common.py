@@ -5,6 +5,7 @@ import warnings
 from six import iteritems
 from six.moves import zip
 
+from .. import options as opts
 from .. import shell
 from ..iterutils import first, isiterable, iterate, listify, slice_dict
 from ..path import Path
@@ -90,12 +91,12 @@ class BuildCommand(Command):
         return self.builder.family
 
     def pre_build(self, build, name, context):
-        pass
+        return opts.option_list()
 
-    def post_build(self, build, output, context):
+    def post_build(self, build, options, output, context):
         return None
 
-    def post_install(self, output, context):
+    def post_install(self, options, output, context):
         return None
 
 

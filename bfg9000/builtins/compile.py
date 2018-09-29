@@ -63,27 +63,26 @@ class Compile(Edge):
             options=self.user_options, lang=lang
         ) if pch else None
 
-        self.compiler.pre_build(build, name, self)
-
+        extra_options = self.compiler.pre_build(build, name, self)
         output = self.compiler.output_file(name, self)
         primary = first(output)
-        public_output = None
 
-        public_output = self.compiler.post_build(build, output, self)
-
+        lib_options = None
+        if self.compiler.needs_libs:
+            lib_options = (opts.lib(i) for i in self.libs)
         self._internal_options = opts.option_list(
             (i.compile_options(self.compiler, output) for i in self.packages),
             (opts.include_dir(i) for i in self.includes),
-            opts.pch(self.pch) if self.pch else None
+            opts.pch(self.pch) if self.pch else None,
+            lib_options, extra_options
         )
-        if self.compiler.needs_libs:
-            self._internal_options.extend(opts.lib(i) for i in self.libs)
-        if hasattr(self.compiler, 'options'):
-            self._internal_options.extend(self.compiler.options(output, self))
+
+        options = self.options
+        public_output = self.compiler.post_build(build, options, output, self)
+        primary.post_install = self.compiler.post_install(options, output,
+                                                          self)
 
         Edge.__init__(self, build, output, public_output, extra_deps)
-
-        primary.post_install = self.compiler.post_install(output, self)
 
     def add_extra_options(self, options):
         self._internal_options.extend(options)
@@ -98,7 +97,7 @@ class Compile(Edge):
 
     @property
     def flags(self):
-        return self.compiler.flags(self.options)
+        return self.compiler.flags(self.options, self.raw_output)
 
 
 class CompileSource(Compile):

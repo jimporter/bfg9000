@@ -85,21 +85,21 @@ class Link(Edge):
             if hasattr(i.creator, 'add_extra_options'):
                 i.creator.add_extra_options(compile_opts)
 
-        self.linker.pre_build(build, name, self)
+        extra_options = self.linker.pre_build(build, name, self)
 
         output = self.linker.output_file(name, self)
         primary = first(output)
-        public_output = None
 
         primary.package_deps.extend(self.packages)
 
-        public_output = self.linker.post_build(build, output, self)
+        self._fill_options(env, extra_options, forward_opts, output)
 
-        self._fill_options(env, forward_opts, output)
+        options = self.options
+        public_output = self.linker.post_build(build, options, output, self)
+        primary.post_install = self.linker.post_install(options, output, self)
 
         Edge.__init__(self, build, output, public_output, extra_deps)
 
-        primary.post_install = self.linker.post_install(output, self)
         build['defaults'].add(primary)
 
     @classmethod
@@ -141,20 +141,17 @@ class DynamicLink(Link):
 
     @property
     def flags(self):
-        return self.linker.flags(self.options)
+        return self.linker.flags(self.options, self.raw_output)
 
     @property
     def lib_flags(self):
         return self.linker.lib_flags(self.options)
 
-    def _fill_options(self, env, forward_opts, output):
+    def _fill_options(self, env, extra_options, forward_opts, output):
         linkers = (env.builder(i).linker(self.mode) for i in self.langs)
         self._internal_options = opts.option_list(
             i.link_options(self.linker, output) for i in self.packages
         )
-
-        if hasattr(self.linker, 'options'):
-            self._internal_options.extend(self.linker.options(output, self))
 
         if self.linker.needs_libs:
             self._internal_options.collect(
@@ -162,6 +159,7 @@ class DynamicLink(Link):
                 (opts.lib(i) for i in self.libs)
             )
 
+        self._internal_options.extend(extra_options)
         self._internal_options.extend(forward_opts.get('link_options', []))
 
         first(output).runtime_deps.extend(
@@ -194,20 +192,26 @@ class StaticLink(Link):
     extra_kwargs = ('static_link_options',)
 
     def __init__(self, *args, **kwargs):
-        self.static_options = pshell.listify(
+        self.user_static_options = pshell.listify(
             kwargs.pop('static_link_options', None),
             type=opts.option_list
         )
         Link.__init__(self, *args, **kwargs)
 
     @property
+    def options(self):
+        return self._internal_options + self.user_static_options
+
+    @property
     def flags(self):
         # Only pass the static-link options to the static linker. The other
         # options are forwarded on to the dynamic linker when this library is
         # used.
-        return self.linker.flags(self.static_options)
+        return self.linker.flags(self.options, self.raw_output)
 
-    def _fill_options(self, env, forward_opts, output):
+    def _fill_options(self, env, extra_options, forward_opts, output):
+        self._internal_options = extra_options
+
         primary = first(output)
         primary.forward_opts = {
             'compile_options': opts.option_list(),

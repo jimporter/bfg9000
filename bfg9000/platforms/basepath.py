@@ -67,6 +67,10 @@ class BasePath(safe_str.safe_string):
             return self._localize_path(thing)
         return thing
 
+    def cross(self, env):
+        cls = env.target_platform.Path
+        return cls(self.suffix, self.root)
+
     def parent(self):
         if not self.suffix:
             raise ValueError('already at root')
@@ -91,6 +95,9 @@ class BasePath(safe_str.safe_string):
             name += replace
         return type(self)(name, self.root, self.destdir)
 
+    def splitleaf(self):
+        return self.parent(), self.basename()
+
     def split(self):
         # This is guaranteed to work since `suffix` is normalized.
         return self.suffix.split(posixpath.sep)
@@ -98,14 +105,17 @@ class BasePath(safe_str.safe_string):
     def basename(self):
         return posixpath.basename(self.suffix)
 
-    def relpath(self, start):
+    def relpath(self, start, prefix=''):
         if self.root == Root.absolute:
             return self.__localize(self.suffix)
         if self.root != start.root:
             raise ValueError('source mismatch')
+
         rel = posixpath.relpath(self.suffix or posixpath.curdir,
                                 start.suffix or posixpath.curdir)
-        return self.__localize(rel)
+        if prefix and rel == self.curdir:
+            return prefix
+        return self.__localize(posixpath.join(prefix, rel))
 
     def reroot(self, root=Root.builddir):
         return type(self)(self.suffix, root, self.destdir)

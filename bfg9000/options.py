@@ -139,8 +139,8 @@ class define(Option):
 # Link options
 lib_dir = option('lib_dir', [('directory', Directory)])
 lib = option('lib', [('library', (Library, Framework, str))])
-rpath_dir = option('rpath_dir', [('path', str)])
-rpath_link_dir = option('rpath_link_dir', [('path', path.Path)])
+rpath_dir = option('rpath_dir', [('path', path.BasePath)])
+rpath_link_dir = option('rpath_link_dir', [('path', path.BasePath)])
 lib_literal = option('lib_literal', [('value', safe_str.stringy_types)])
 entry_point = option('entry_point', [('value', str)])
 

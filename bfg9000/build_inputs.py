@@ -20,6 +20,7 @@ def build_input(name):
 
 class Edge(object):
     def __init__(self, build, output, final_output=None, extra_deps=None):
+        self.raw_output = output
         self.output = listify(output)
         for i in self.output:
             i.creator = self

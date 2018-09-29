@@ -147,7 +147,7 @@ class MsvcBaseCompiler(BuildCommand):
     def _always_flags(self):
         return ['/nologo', '/EHsc']
 
-    def flags(self, options, mode='normal'):
+    def flags(self, options, output=None, mode='normal'):
         syntax = 'cc' if mode == 'pkg-config' else 'msvc'
         flags = []
         for i in options:
@@ -234,29 +234,23 @@ class MsvcPchCompiler(MsvcBaseCompiler):
         return result
 
     def pre_build(self, build, name, context):
+        header = getattr(context, 'file')
+        options = opts.option_list()
+
         if context.pch_source is None:
-            header = getattr(context, 'file', None)
             ext = known_langs[self.lang].exts('source')[0]
             context.pch_source = SourceFile(header.path.stripext(ext).reroot(),
                                             header.lang)
-            context.inject_include_dir = True
-
             with generated_file(build, self.env, context.pch_source) as out:
                 out.write('#include "{}"\n'.format(header.path.basename()))
 
-    def options(self, output, context):
-        header = getattr(context, 'file', None)
-
-        options = opts.option_list()
-        if getattr(context, 'inject_include_dir', False):
-            # Add the include path for the generated header; see pre_build()
-            # above for more details.
+            # Add the include path for the header to ensure the PCH source
+            # finds it.
             d = HeaderDirectory(header.path.parent())
             options.append(opts.include_dir(d))
 
-        if header:
-            # Add flag to create PCH file.
-            options.append('/Yc' + header.path.suffix)
+        # Add flag to create PCH file.
+        options.append('/Yc' + header.path.suffix)
         return options
 
     def output_file(self, name, context):
@@ -355,7 +349,7 @@ class MsvcLinker(BuildCommand):
         else:
             return [library.path.basename()]
 
-    def flags(self, options, mode='normal'):
+    def flags(self, options, output=None, mode='normal'):
         syntax = 'cc' if mode == 'pkg-config' else 'msvc'
         flags, lib_dirs = [], []
         for i in options:
@@ -486,7 +480,7 @@ class MsvcStaticLinker(BuildCommand):
             )))
         return options
 
-    def flags(self, options, mode='normal'):
+    def flags(self, options, output=None, mode='normal'):
         flags = []
         for i in options:
             if isinstance(i, safe_str.stringy_types):

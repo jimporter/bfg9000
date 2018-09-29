@@ -82,9 +82,10 @@ class PkgConfigPackage(Package):
         parser = argparse.ArgumentParser()
         parser.add_argument('-L', action='append', dest='lib_dirs')
         lib_dirs = parser.parse_known_args(dir_args)[0].lib_dirs or []
-        self.rpath_dirs = [Path(i, Root.absolute) for i in lib_dirs]
+        rpaths = opts.option_list(opts.rpath_dir(Path(i, Root.absolute))
+                                  for i in lib_dirs)
 
-        return flags + libs + linker.options(output, self)
+        return flags + libs + rpaths
 
     def __repr__(self):
         return '<PkgConfigPackage({!r}, {!r})>'.format(
