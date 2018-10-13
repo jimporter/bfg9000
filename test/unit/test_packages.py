@@ -1,6 +1,5 @@
 import unittest
 
-from bfg9000.frameworks import Framework
 from bfg9000.packages import *
 from bfg9000.path import Path
 

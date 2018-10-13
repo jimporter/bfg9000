@@ -6,6 +6,7 @@ except ImportError:
     from enum import EnumMeta as _EnumMeta, IntEnum as _Flag
 
 from .options import option_list as _option_list
+from .platforms.framework import Framework
 
 
 class _PackageKindMeta(_EnumMeta):

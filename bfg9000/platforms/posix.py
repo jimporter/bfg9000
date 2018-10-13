@@ -1,8 +1,8 @@
 from .basepath import BasePath, Root, InstallRoot
 from .core import Platform
+from .framework import Framework
 from .host import HostPlatform
 from .target import TargetPlatform
-from ..frameworks import Framework
 
 
 class PosixPath(BasePath):

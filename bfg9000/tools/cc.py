@@ -13,10 +13,9 @@ from .ld import LdLinker
 from ..builtins.symlink import Symlink
 from ..exceptions import PackageResolutionError
 from ..file_types import *
-from ..frameworks import Framework
 from ..iterutils import (default_sentinel, first, flatten, iterate, listify,
                          uniques, recursive_walk)
-from ..packages import CommonPackage, PackageKind
+from ..packages import CommonPackage, Framework, PackageKind
 from ..path import InstallRoot, Path, Root
 from ..versioning import detect_version, SpecifierSet
 

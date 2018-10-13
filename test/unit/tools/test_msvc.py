@@ -3,8 +3,8 @@ import unittest
 
 from bfg9000 import file_types, options as opts
 from bfg9000.environment import Environment
-from bfg9000.frameworks import Framework
 from bfg9000.languages import Languages
+from bfg9000.packages import Framework
 from bfg9000.path import Path
 from bfg9000.tools.msvc import MsvcBuilder
 from bfg9000.versioning import Version

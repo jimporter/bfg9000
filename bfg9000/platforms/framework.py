@@ -11,10 +11,6 @@ class Framework(object):
     def full_name(self):
         return self.name + ',' + self.suffix if self.suffix else self.name
 
-    @property
-    def runtime_file(self):
-        None
-
     def __eq__(self, rhs):
         return (type(self) == type(rhs) and self.name == rhs.name and
                 self.suffix == rhs.suffix)

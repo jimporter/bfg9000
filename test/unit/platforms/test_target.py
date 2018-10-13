@@ -1,8 +1,8 @@
 import mock
 import unittest
 
-from bfg9000.frameworks import Framework
 from bfg9000.platforms import platform_name, target
+from bfg9000.platforms.framework import Framework
 
 
 class TestTargetPlatform(unittest.TestCase):
