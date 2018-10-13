@@ -52,7 +52,7 @@ def framework(env, name, suffix=None):
                          link_options=opts.option_list(opts.lib(framework)))
 
 
-def _boost_version(header, required_version=None):
+def _boost_version(header, required_version):
     version_hpp = header.path.append('boost').append('version.hpp')
     with open(version_hpp.string()) as f:
         for line in f:

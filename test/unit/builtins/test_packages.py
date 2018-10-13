@@ -1,18 +1,33 @@
 import mock
 import os
 import re
+import sys
 import unittest
 from collections import namedtuple
 
 from bfg9000 import file_types, options as opts
 from bfg9000.builtins import packages
 from bfg9000.environment import Environment
-from bfg9000.exceptions import PackageResolutionError
+from bfg9000.exceptions import PackageResolutionError, PackageVersionError
 from bfg9000.file_types import Directory, HeaderDirectory
 from bfg9000.packages import CommonPackage, Framework
 from bfg9000.path import abspath
 from bfg9000.platforms import platform_name
 from bfg9000.versioning import SpecifierSet, Version
+
+if sys.version >= (3,):
+    open_name = 'builtins.open'
+else:
+    open_name = '__builtin__.open'
+
+
+# Fix the mock package's mock_open function to work with iter(); note: this is
+# already fixed in Python 3.7.1's unittest.mock.
+def mock_open(*args, **kwargs):
+    mo = mock.mock_open(*args, **kwargs)
+    handle = mo.return_value
+    handle.__iter__.side_effect = lambda: iter(handle.readlines.side_effect())
+    return mo
 
 
 def mock_which(*args, **kwargs):
@@ -121,6 +136,27 @@ class TestPackage(BaseTest):
 
 
 class TestBoostPackage(BaseTest):
+    def test_boost_version(self):
+        data = '#define BOOST_LIB_VERSION "1_23_4"\n'
+        with mock.patch(open_name, mock_open(read_data=data)):
+            hdr = HeaderDirectory(abspath('path'))
+            self.assertEqual(packages._boost_version(hdr, SpecifierSet('')),
+                             Version('1.23.4'))
+
+    def test_boost_version_too_old(self):
+        data = '#define BOOST_LIB_VERSION "1_23_4"\n'
+        with mock.patch(open_name, mock_open(read_data=data)):
+            hdr = HeaderDirectory(abspath('path'))
+            with self.assertRaises(PackageVersionError):
+                packages._boost_version(hdr, SpecifierSet('>=1.30'))
+
+    def test_boost_version_cant_parse(self):
+        data = 'foobar\n'
+        with mock.patch(open_name, mock_open(read_data=data)):
+            hdr = HeaderDirectory(abspath('path'))
+            with self.assertRaises(PackageVersionError):
+                packages._boost_version(hdr, SpecifierSet(''))
+
     @unittest.skipIf(platform_name() != 'windows',
                      'special default location only applies to windows')
     def test_windows_default_location(self):
