@@ -11,6 +11,9 @@ class BuiltinTest(unittest.TestCase):
     def setUp(self):
         self.env = make_env()
         self.build = BuildInputs(self.env, Path('build.bfg', Root.srcdir))
-        self.builtin_dict = builtin.build.bind(
+        self.builtin_dict = self.bind()
+
+    def bind(self):
+        return builtin.build.bind(
             build_inputs=self.build, env=self.env, argv=None
         )

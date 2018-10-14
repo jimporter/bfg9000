@@ -7,6 +7,12 @@ from bfg9000 import exceptions
 
 
 class TestBuiltin(BuiltinTest):
+    def test_init(self):
+        builtins.init()
+        builtin_dict = self.bind()
+        self.assertTrue('project' in builtin_dict)
+        self.assertTrue('executable' in builtin_dict)
+
     def test_warning(self):
         with mock.patch('warnings.warn') as warn:
             builtins.warning('message')
