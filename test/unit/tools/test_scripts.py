@@ -2,6 +2,8 @@ import mock
 import unittest
 import sys
 
+from ... import make_env
+
 from bfg9000.tools import scripts
 from bfg9000.environment import Environment
 from bfg9000.file_types import SourceFile, HeaderFile
@@ -22,8 +24,7 @@ class TestPython(unittest.TestCase):
     default_cmd = sys.executable
 
     def setUp(self):
-        self.env = Environment(None, None, None, None, None, {},
-                               (False, False), None)
+        self.env = make_env()
         with mock.patch.object(Environment, 'getvar', mock_getvar), \
              mock.patch('bfg9000.shell.which', mock_which):  # noqa
             self.tool = self.ToolType(self.env)

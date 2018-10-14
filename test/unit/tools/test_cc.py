@@ -1,16 +1,15 @@
 import mock
 import unittest
 
+from ... import make_env
+
 from bfg9000 import file_types, options as opts
-from bfg9000.environment import Environment
 from bfg9000.languages import Languages
 from bfg9000.packages import Framework
 from bfg9000.path import Path
 from bfg9000.safe_str import jbos
 from bfg9000.tools.cc import CcBuilder
 from bfg9000.versioning import Version
-
-env = Environment(None, None, None, None, None, {}, (False, False), None)
 
 known_langs = Languages()
 with known_langs.make('c++') as x:
@@ -35,10 +34,13 @@ def mock_execute(args, **kwargs):
 
 
 class TestCcBuilder(unittest.TestCase):
+    def setUp(self):
+        self.env = make_env()
+
     def test_properties(self):
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
-            cc = CcBuilder(env, known_langs['c++'], ['c++'], 'version')
+            cc = CcBuilder(self.env, known_langs['c++'], ['c++'], 'version')
 
         self.assertEqual(cc.flavor, 'cc')
         self.assertEqual(cc.compiler.flavor, 'cc')
@@ -54,8 +56,9 @@ class TestCcBuilder(unittest.TestCase):
         self.assertEqual(cc.compiler.num_outputs, 1)
         self.assertEqual(cc.pch_compiler.num_outputs, 1)
         self.assertEqual(cc.linker('executable').num_outputs, 1)
-        self.assertEqual(cc.linker('shared_library').num_outputs,
-                         2 if env.target_platform.has_import_library else 1)
+
+        num_outputs = 2 if self.env.target_platform.has_import_library else 1
+        self.assertEqual(cc.linker('shared_library').num_outputs, num_outputs)
 
         self.assertEqual(cc.compiler.deps_flavor, 'gcc')
         self.assertEqual(cc.pch_compiler.deps_flavor, 'gcc')
@@ -74,7 +77,7 @@ class TestCcBuilder(unittest.TestCase):
 
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
-            cc = CcBuilder(env, known_langs['c++'], ['g++'], version)
+            cc = CcBuilder(self.env, known_langs['c++'], ['g++'], version)
 
         self.assertEqual(cc.brand, 'gcc')
         self.assertEqual(cc.compiler.brand, 'gcc')
@@ -93,7 +96,7 @@ class TestCcBuilder(unittest.TestCase):
 
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
-            cc = CcBuilder(env, known_langs['c++'], ['clang++'], version)
+            cc = CcBuilder(self.env, known_langs['c++'], ['clang++'], version)
 
         self.assertEqual(cc.brand, 'clang')
         self.assertEqual(cc.compiler.brand, 'clang')
@@ -112,7 +115,7 @@ class TestCcBuilder(unittest.TestCase):
 
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
-            cc = CcBuilder(env, known_langs['c++'], ['c++'], version)
+            cc = CcBuilder(self.env, known_langs['c++'], ['c++'], version)
 
         self.assertEqual(cc.brand, 'unknown')
         self.assertEqual(cc.compiler.brand, 'unknown')
@@ -129,9 +132,10 @@ class TestCcBuilder(unittest.TestCase):
 
 class TestCcCompiler(unittest.TestCase):
     def setUp(self):
+        self.env = make_env()
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
-            self.compiler = CcBuilder(env, known_langs['c++'], ['c++'],
+            self.compiler = CcBuilder(self.env, known_langs['c++'], ['c++'],
                                       'version').compiler
 
     def test_flags_empty(self):
@@ -147,7 +151,7 @@ class TestCcCompiler(unittest.TestCase):
             opts.include_dir(file_types.HeaderDirectory(p, system=True))
         )), ['-isystem', p])
 
-        if env.target_platform.name == 'linux':
+        if self.env.target_platform.name == 'linux':
             p = Path('/usr/include')
             self.assertEqual(self.compiler.flags(opts.option_list(
                 opts.include_dir(file_types.HeaderDirectory(p, system=True))
@@ -194,10 +198,11 @@ class TestCcLinker(unittest.TestCase):
     def _get_linker(self, lang):
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
-            return CcBuilder(env, known_langs[lang], ['c++'],
+            return CcBuilder(self.env, known_langs[lang], ['c++'],
                              'version').linker('executable')
 
     def setUp(self):
+        self.env = make_env()
         self.linker = self._get_linker('c++')
 
     def test_flags_empty(self):
@@ -208,9 +213,9 @@ class TestCcLinker(unittest.TestCase):
         lib = Path('/path/to/lib/libfoo.a')
         output = file_types.Executable(Path('exe'), 'native')
 
-        if env.target_platform.name == 'linux':
+        if self.env.target_platform.name == 'linux':
             rpath = rpath_with_output = ['-Wl,-rpath,' + libdir]
-        elif env.target_platform.name == 'darwin':
+        elif self.env.target_platform.name == 'darwin':
             rpath = []
             rpath_with_output = [jbos('-Wl,-rpath,', '@loader_path')]
         else:
@@ -229,7 +234,7 @@ class TestCcLinker(unittest.TestCase):
             opts.lib(file_types.SharedLibrary(lib, 'native'))
         ), output), ['-L' + libdir] + rpath_with_output)
 
-        if env.target_platform.name == 'linux':
+        if self.env.target_platform.name == 'linux':
             libdir2 = Path('foo')
             lib2 = Path('foo/libbar.a')
 
@@ -303,9 +308,10 @@ class TestCcLinker(unittest.TestCase):
             self.linker.flags(opts.option_list(opts.entry_point('Main')))
 
     def test_flags_pthread(self):
-        flags = self.linker.flags(opts.option_list(opts.pthread()))
-        self.assertEqual(flags, ([] if env.target_platform.name == 'darwin'
-                                 else ['-pthread']))
+        self.assertEqual(
+            self.linker.flags(opts.option_list(opts.pthread())),
+            [] if self.env.target_platform.name == 'darwin' else ['-pthread']
+        )
 
     def test_flags_string(self):
         self.assertEqual(self.linker.flags(opts.option_list('-v')), ['-v'])
@@ -344,7 +350,7 @@ class TestCcLinker(unittest.TestCase):
                 file_types.StaticLibrary(lib, 'native')
             ))
         ))
-        if env.target_platform.name == 'darwin':
+        if self.env.target_platform.name == 'darwin':
             self.assertEqual(flags, ['-Wl,-force_load', lib])
         else:
             self.assertEqual(flags, ['-Wl,--whole-archive', lib,
@@ -352,7 +358,7 @@ class TestCcLinker(unittest.TestCase):
 
         # Framework
         fw = opts.lib(Framework('cocoa'))
-        if env.target_platform.name == 'darwin':
+        if self.env.target_platform.name == 'darwin':
             self.assertEqual(self.linker.lib_flags(opts.option_list(fw)),
                              ['-framework', 'cocoa'])
         else:

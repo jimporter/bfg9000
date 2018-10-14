@@ -1,15 +1,14 @@
 import mock
 import unittest
 
+from ... import make_env
+
 from bfg9000 import file_types, options as opts
-from bfg9000.environment import Environment
 from bfg9000.languages import Languages
 from bfg9000.packages import Framework
 from bfg9000.path import Path
 from bfg9000.tools.msvc import MsvcBuilder
 from bfg9000.versioning import Version
-
-env = Environment(None, None, None, None, None, {}, (False, False), None)
 
 known_langs = Languages()
 with known_langs.make('c++') as x:
@@ -21,9 +20,12 @@ def mock_which(*args, **kwargs):
 
 
 class TestMsvcBuilder(unittest.TestCase):
+    def setUp(self):
+        self.env = make_env()
+
     def test_properties(self):
         with mock.patch('bfg9000.shell.which', mock_which):
-            cc = MsvcBuilder(env, known_langs['c++'], ['cl'], 'version')
+            cc = MsvcBuilder(self.env, known_langs['c++'], ['cl'], 'version')
 
         self.assertEqual(cc.flavor, 'msvc')
         self.assertEqual(cc.compiler.flavor, 'msvc')
@@ -57,7 +59,7 @@ class TestMsvcBuilder(unittest.TestCase):
                    '19.12.25831 for x86')
 
         with mock.patch('bfg9000.shell.which', mock_which):
-            cc = MsvcBuilder(env, known_langs['c++'], ['cl'], version)
+            cc = MsvcBuilder(self.env, known_langs['c++'], ['cl'], version)
 
         self.assertEqual(cc.brand, 'msvc')
         self.assertEqual(cc.compiler.brand, 'msvc')
@@ -77,7 +79,7 @@ class TestMsvcBuilder(unittest.TestCase):
         version = 'unknown'
 
         with mock.patch('bfg9000.shell.which', mock_which):
-            cc = MsvcBuilder(env, known_langs['c++'], ['c++'], version)
+            cc = MsvcBuilder(self.env, known_langs['c++'], ['c++'], version)
 
         self.assertEqual(cc.brand, 'unknown')
         self.assertEqual(cc.compiler.brand, 'unknown')
@@ -94,8 +96,9 @@ class TestMsvcBuilder(unittest.TestCase):
 
 class TestMsvcCompiler(unittest.TestCase):
     def setUp(self):
+        self.env = make_env()
         with mock.patch('bfg9000.shell.which', mock_which):
-            self.compiler = MsvcBuilder(env, known_langs['c++'], ['cl'],
+            self.compiler = MsvcBuilder(self.env, known_langs['c++'], ['cl'],
                                         'version').compiler
 
     def test_flags_empty(self):
@@ -147,10 +150,12 @@ class TestMsvcCompiler(unittest.TestCase):
 
 class TestMsvcLinker(unittest.TestCase):
     def setUp(self):
+        self.env = make_env()
+
         version = ('Microsoft (R) C/C++ Optimizing Compiler Version ' +
                    '19.12.25831 for x86')
         with mock.patch('bfg9000.shell.which', mock_which):
-            self.linker = MsvcBuilder(env, known_langs['c++'], ['cl'],
+            self.linker = MsvcBuilder(self.env, known_langs['c++'], ['cl'],
                                       version).linker('executable')
 
     def test_flags_empty(self):
@@ -218,7 +223,7 @@ class TestMsvcLinker(unittest.TestCase):
         version = ('Microsoft (R) C/C++ Optimizing Compiler Version ' +
                    '18.00.25831 for x86')
         with mock.patch('bfg9000.shell.which', mock_which):
-            linker = MsvcBuilder(env, known_langs['c++'], ['cl'],
+            linker = MsvcBuilder(self.env, known_langs['c++'], ['cl'],
                                  version).linker('executable')
         with self.assertRaises(TypeError):
             linker.lib_flags(opts.option_list(
@@ -243,8 +248,9 @@ class TestMsvcLinker(unittest.TestCase):
 
 class TestMsvcStaticLinker(unittest.TestCase):
     def setUp(self):
+        self.env = make_env()
         with mock.patch('bfg9000.shell.which', mock_which):
-            self.linker = MsvcBuilder(env, known_langs['c++'], ['cl'],
+            self.linker = MsvcBuilder(self.env, known_langs['c++'], ['cl'],
                                       'version').linker('static_library')
 
     def test_flags_empty(self):

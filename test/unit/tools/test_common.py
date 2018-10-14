@@ -2,7 +2,8 @@ import mock
 import unittest
 from six import assertRaisesRegex
 
-from bfg9000.environment import Environment
+from ... import make_env
+
 from bfg9000.languages import Languages
 from bfg9000.tools import cc, common
 
@@ -31,9 +32,7 @@ def mock_execute(args, **kwargs):
 
 class TestChooseBuilder(unittest.TestCase):
     def setUp(self):
-        self.env = Environment(None, None, None, None, None, {},
-                               (False, False), None)
-        self.env.variables = {}
+        self.env = make_env(clear_variables=True)
 
     def test_choose(self):
         with mock.patch('bfg9000.shell.which', mock_which), \

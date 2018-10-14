@@ -1,12 +1,11 @@
 import mock
 import unittest
 
+from ... import make_env
+
 from bfg9000 import options as opts
-from bfg9000.environment import Environment
 from bfg9000.tools.ar import ArLinker
 from bfg9000.versioning import Version
-
-env = Environment(None, None, None, None, None, {}, (False, False), None)
 
 
 def mock_which(*args, **kwargs):
@@ -15,8 +14,9 @@ def mock_which(*args, **kwargs):
 
 class TestArLinker(unittest.TestCase):
     def setUp(self):
+        self.env = make_env()
         with mock.patch('bfg9000.shell.which', mock_which):
-            self.ar = ArLinker(None, env)
+            self.ar = ArLinker(None, self.env)
 
     def test_flavor(self):
         self.assertEqual(self.ar.flavor, 'ar')

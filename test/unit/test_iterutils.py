@@ -54,6 +54,9 @@ class TestListify(unittest.TestCase):
         self.assertTrue(x is not res)
 
     def test_no_scalar(self):
+        self.assertEqual(listify(['foo'], scalar_ok=False), ['foo'])
+        self.assertEqual(listify(['foo'], always_copy=True, scalar_ok=False),
+                         ['foo'])
         self.assertRaises(TypeError, listify, 1, scalar_ok=False)
         self.assertRaises(TypeError, listify, 'foo', scalar_ok=False)
 

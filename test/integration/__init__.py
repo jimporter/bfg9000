@@ -5,8 +5,9 @@ import subprocess
 import time
 import unittest
 from collections import namedtuple
-
 from six import iteritems
+
+from .. import make_env
 
 from bfg9000.backends import list_backends
 from bfg9000.environment import Environment
@@ -17,7 +18,7 @@ examples_dir = os.path.join(this_dir, '..', '..', 'examples')
 test_data_dir = os.path.join(this_dir, '..', 'data')
 test_stage_dir = os.path.join(this_dir, '..', 'stage')
 
-env = Environment(None, None, None, None, None, {}, (False, False), None)
+env = make_env()
 
 Target = namedtuple('Target', ['name', 'path'])
 

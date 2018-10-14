@@ -76,45 +76,34 @@ def boost_package(env, name=None, version=None):
                         if root else None)
     libdir = env.getvar('BOOST_LIBRARYDIR', os.path.join(root, 'lib')
                         if root else None)
+    header = None
 
-    if incdir:
-        header = pkg.header(version_hpp, [incdir])
-        boost_version = _boost_version(header, version)
-    else:
+    if env.target_platform.name == 'windows':
+        if not env.builder('c++').auto_link:  # pragma: no cover
+            # XXX: Don't require auto-link.
+            raise PackageResolutionError('Boost on Windows requires auto-link')
+
         # On Windows, check the default install location, which is structured
         # differently from other install locations.
-        if ( env.host_platform.name == 'windows' and
-             env.target_platform.name == 'windows' ):
+        if not incdir and env.host_platform.name == 'windows':
             dirs = find(r'C:\Boost\include', 'boost-*', type='d', flat=True)
             if dirs:
                 try:
                     header = pkg.header(version_hpp, [max(dirs)])
-                    lib_dir = Directory(Path(r'C:\Boost\lib'))
-                    boost_version = _boost_version(header, version)
-                    return BoostPackage(
-                        name, env.builder('c++').object_format, boost_version,
-                        opts.option_list(opts.include_dir(header)),
-                        opts.option_list(opts.lib_dir(lib_dir))
-                    )
+                    libdir = r'C:\Boost\lib'
                 except PackageResolutionError:
                     pass
 
-        header = pkg.header(version_hpp)
-        boost_version = _boost_version(header, version)
+        if header is None:
+            header = pkg.header(version_hpp, [incdir] if incdir else None)
 
-    if env.target_platform.name == 'windows':
-        if not env.builder('c++').auto_link:
-            # XXX: Don't require auto-link.
-            raise PackageResolutionError('Boost on Windows requires auto-link')
-
+        compile_options = opts.option_list(opts.include_dir(header))
         link_options = opts.option_list()
         if libdir:
             link_options.append(opts.lib_dir(Directory(Path(libdir))))
-        return BoostPackage(
-            name, env.builder('c++').object_format, boost_version,
-            opts.option_list(opts.include_dir(header)), link_options
-        )
     else:
+        header = pkg.header(version_hpp, [incdir] if incdir else None)
+
         dirs = [libdir] if libdir else None
         libs = (pkg.library('boost_' + i, search_dirs=dirs)
                 for i in iterate(name))
@@ -128,7 +117,8 @@ def boost_package(env, name=None, version=None):
         compile_options.append(opts.include_dir(header))
         link_options.extend(opts.lib(i) for i in libs)
 
-        return BoostPackage(
-            name, env.builder('c++').object_format, boost_version,
-            compile_options, link_options
-        )
+    return BoostPackage(
+        name, env.builder('c++').object_format,
+        _boost_version(header, version),
+        compile_options, link_options
+    )

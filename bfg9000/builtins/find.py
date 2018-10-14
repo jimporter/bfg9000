@@ -124,8 +124,10 @@ def _find_files(paths, filter, flat, as_object):
     return results, dist_results, seen_dirs
 
 
-def find(path='.', name='*', type='*', flat=False):
-    return _find_files(listify(path), _filter_from_glob(name, type), flat)[0]
+def find(path='.', name='*', type='*', extra=None, exclude=exclude_globs,
+         flat=False):
+    glob_filter = _filter_from_glob(type, name, extra, exclude)
+    return _find_files(listify(path), glob_filter, flat, False)[0]
 
 
 @builtin.function('env')

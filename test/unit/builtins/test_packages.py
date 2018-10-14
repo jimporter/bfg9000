@@ -1,13 +1,16 @@
 import mock
+import ntpath
 import os
 import re
 import sys
 import unittest
 from collections import namedtuple
 
+from .common import BuiltinTest
+from ... import make_env
+
 from bfg9000 import file_types, options as opts
 from bfg9000.builtins import packages
-from bfg9000.environment import Environment
 from bfg9000.exceptions import PackageResolutionError, PackageVersionError
 from bfg9000.file_types import Directory, HeaderDirectory
 from bfg9000.packages import CommonPackage, Framework
@@ -15,7 +18,7 @@ from bfg9000.path import abspath
 from bfg9000.platforms import platform_name
 from bfg9000.versioning import SpecifierSet, Version
 
-if sys.version >= (3,):
+if sys.version_info >= (3,):
     open_name = 'builtins.open'
 else:
     open_name = '__builtin__.open'
@@ -53,47 +56,38 @@ def mock_execute(args, **kwargs):
         return '1.2.3\n'
 
 
-class BaseTest(unittest.TestCase):
-    def setUp(self):
-        self.env = Environment(None, None, None, None, None, {},
-                               (False, False), None)
-
-
-class TestFramework(BaseTest):
-    @unittest.skipIf(platform_name() != 'darwin',
-                     'frameworks only exist on macOS')
+class TestFramework(unittest.TestCase):
     def test_framework(self):
+        env = make_env('darwin')
         self.assertEqual(
-            packages.framework(self.env, 'name'),
-            CommonPackage('name', self.env.target_platform.object_format,
+            packages.framework(env, 'name'),
+            CommonPackage('name', env.target_platform.object_format,
                           link_options=opts.option_list(opts.lib(
                               Framework('name')
                           )))
         )
 
-    @unittest.skipIf(platform_name() != 'darwin',
-                     'frameworks only exist on macOS')
     def test_framework_suffix(self):
+        env = make_env('darwin')
         self.assertEqual(
-            packages.framework(self.env, 'name', 'suffix'),
+            packages.framework(env, 'name', 'suffix'),
             CommonPackage('name,suffix',
-                          self.env.target_platform.object_format,
+                          env.target_platform.object_format,
                           link_options=opts.option_list(opts.lib(
                               Framework('name', 'suffix')
                           )))
         )
 
-    @unittest.skipIf(platform_name() == 'darwin',
-                     'frameworks only exist on macOS')
     def test_frameworks_unsupported(self):
+        env = make_env('linux')
         with self.assertRaises(PackageResolutionError):
-            packages.framework(self.env, 'name')
+            packages.framework(env, 'name')
 
         with self.assertRaises(PackageResolutionError):
-            packages.framework(self.env, 'name', 'suffix')
+            packages.framework(env, 'name', 'suffix')
 
 
-class TestPackage(BaseTest):
+class TestPackage(BuiltinTest):
     def test_name(self):
         with mock.patch('bfg9000.shell.execute', mock_execute), \
              mock.patch('bfg9000.shell.which', mock_which):  # noqa
@@ -135,7 +129,7 @@ class TestPackage(BaseTest):
             packages.package(self.env, 'name', kind='bad')
 
 
-class TestBoostPackage(BaseTest):
+class TestBoostPackage(unittest.TestCase):
     def test_boost_version(self):
         data = '#define BOOST_LIB_VERSION "1_23_4"\n'
         with mock.patch(open_name, mock_open(read_data=data)):
@@ -157,42 +151,63 @@ class TestBoostPackage(BaseTest):
             with self.assertRaises(PackageVersionError):
                 packages._boost_version(hdr, SpecifierSet(''))
 
-    @unittest.skipIf(platform_name() != 'windows',
-                     'special default location only applies to windows')
+    def test_posix(self):
+        env = make_env('linux', clear_variables=True)
+
+        def mock_exists(x):
+            if ( re.search(r'[/\\]boost[/\\]version.hpp$', x) or
+                 re.search(r'[/\\]libboost_thread', x) or
+                 x in ['/usr/include', '/usr/lib']):
+                return True
+            return False
+
+        with mock.patch('bfg9000.builtins.packages._boost_version',
+                        return_value=Version('1.23')), \
+             mock.patch('bfg9000.shell.which', return_value=['command']), \
+             mock.patch('bfg9000.shell.execute', mock_execute), \
+             mock.patch('os.path.exists', mock_exists):  # noqa
+            pkg = packages.boost_package(env, 'thread')
+            self.assertEqual(pkg.name, 'boost(thread)')
+            self.assertEqual(pkg.version, Version('1.23'))
+
     def test_windows_default_location(self):
-        exists = os.path.exists
-        boost_dir = os.path.abspath('boost-1.23')
+        env = make_env('windows', clear_variables=True)
+        boost_incdir = r'C:\Boost\include\boost-1.23'
 
-        def mock_find(*args, **kwargs):
-            return [boost_dir]
+        def mock_walk(top):
+            yield (top,) + (
+                [('boost-1.23', ntpath.join(top, 'boost-1.23'))],
+                []
+            )
 
-        def mock_boost_version(*args, **kwargs):
-            return Version('1.23')
+        def mock_execute(*args, **kwargs):
+            if args[0][1] == '/?':
+                return 'cl.exe'
+            raise ValueError()
 
         def mock_exists(x):
             if re.search(r'[/\\]boost[/\\]version.hpp$', x):
                 return True
-            return exists(x)
+            return False
 
-        # Clear the environment variables to force this to use the default
-        # location.
-        self.env.variables = {}
-
-        with mock.patch('bfg9000.builtins.packages.find', mock_find), \
+        with mock.patch('bfg9000.builtins.find._walk_flat', mock_walk), \
              mock.patch('bfg9000.builtins.packages._boost_version',
-                        mock_boost_version), \
+                        return_value=Version('1.23')), \
+             mock.patch('bfg9000.shell.which', return_value=['command']), \
+             mock.patch('bfg9000.shell.execute', mock_execute), \
              mock.patch('os.path.exists', mock_exists):  # noqa
-            pkg = packages.boost_package(self.env, 'thread')
+            pkg = packages.boost_package(env, 'thread')
             self.assertEqual(pkg.name, 'boost(thread)')
+            self.assertEqual(pkg.version, Version('1.23'))
             self.assertEqual(pkg._compile_options, opts.option_list(
-                opts.include_dir(HeaderDirectory(abspath(boost_dir)))
+                opts.include_dir(HeaderDirectory(abspath(boost_incdir)))
             ))
             self.assertEqual(pkg._link_options, opts.option_list(
                 opts.lib_dir(Directory(abspath(r'C:\Boost\lib')))
             ))
 
 
-class TestSystemExecutable(BaseTest):
+class TestSystemExecutable(BuiltinTest):
     def test_name(self):
         with mock.patch('bfg9000.builtins.packages.which', mock_which):
             self.assertEqual(

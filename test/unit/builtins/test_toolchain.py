@@ -2,8 +2,11 @@ import mock
 import os
 import unittest
 
+from bfg9000 import tools
 from bfg9000.build import Toolchain
 from bfg9000.builtins import toolchain
+
+tools.init()
 
 
 def mock_which(*args, **kwargs):
