@@ -26,6 +26,9 @@ if os.getenv('BACKENDS', '').strip():
     backends = os.getenv('BACKENDS').split(' ')
 else:
     backends = [k for k, v in iteritems(list_backends()) if v.priority > 0]
+    # Only test with MSBuild by default on Windows.
+    if env.host_platform.name != 'windows' and 'msbuild' in backends:
+        backends.remove('msbuild')
 
 extra_tests = os.getenv('BFG_EXTRA_TESTS', '').split(' ')
 skipped_tests = os.getenv('BFG_SKIPPED_TESTS', '').split(' ')
