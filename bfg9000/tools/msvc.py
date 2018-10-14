@@ -204,10 +204,11 @@ class MsvcCompiler(MsvcBaseCompiler):
         return True
 
     def output_file(self, name, context):
+        pch = getattr(context, 'pch', None)
         output = ObjectFile(Path(name + '.obj'),
                             self.builder.object_format, self.lang)
-        if context.pch:
-            output.extra_objects = [context.pch.object_file]
+        if pch:
+            output.extra_objects = [pch.object_file]
         return output
 
 

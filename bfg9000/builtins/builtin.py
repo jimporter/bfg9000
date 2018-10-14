@@ -127,6 +127,11 @@ def _get_value(argspec, builtin_bound, args, kwargs):
     raise IndexError('unable to find user-provided argument')
 
 
+# We need to use the `type()` built-in inside our function that's *also* called
+# `type`!
+_type = type
+
+
 def type(out_type, in_type=string_types):
     def decorator(fn):
         if sys.version_info >= (3, 3):
@@ -149,7 +154,7 @@ def type(out_type, in_type=string_types):
                         [wrapper.type], iterate(wrapper.in_type))
                     )
                     raise TypeError('expected {}; but got {}'.format(
-                        ', '.join(gen), type(thing).__name__
+                        ', '.join(gen), _type(thing).__name__
                     ))
             except IndexError:
                 pass
