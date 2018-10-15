@@ -256,8 +256,7 @@ class Makefile(object):
 
     def define(self, name, value, exist_ok=False):
         name, exists = self._unique_var(name, exist_ok)
-        if iterutils.isiterable(value):
-            value = [self._convert_args(i) for i in value]
+        value = [self._convert_args(i) for i in iterutils.iterate(value)]
 
         if not exists:
             self._defines.append((name, value))
@@ -274,7 +273,7 @@ class Makefile(object):
         name = var(name)
         exists = self.has_variable(name)
         if exists and not exist_ok:
-            raise ValueError("variable {!r} already exists".format(name))
+            raise ValueError('variable {!r} already exists'.format(name))
         self._var_table.add(name)
         return name, exists
 

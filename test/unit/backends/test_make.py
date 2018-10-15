@@ -199,3 +199,63 @@ class TestWritePosixPath(TestWritePath):
 class TestWriteWindowsPath(TestWritePath):
     Path = WindowsPath
     ospath = ntpath
+
+
+class TestMakefile(unittest.TestCase):
+    def setUp(self):
+        self.makefile = Makefile('build.bfg')
+
+    def test_variable(self):
+        var = self.makefile.variable('name', 'value')
+        self.assertEqual(var, Variable('name'))
+        out = Writer(StringIO())
+        self.makefile._write_variable(out, var, 'value')
+        self.assertEqual(out.stream.getvalue(), 'name := value\n')
+
+        var = self.makefile.variable('name', 'value2', exist_ok=True)
+        self.assertEqual(var, Variable('name'))
+
+        self.assertRaises(ValueError, self.makefile.variable, 'name', 'value')
+
+    def test_target_variable(self):
+        var = self.makefile.target_variable('name', 'value')
+        self.assertEqual(var, Variable('name'))
+        out = Writer(StringIO())
+        self.makefile._write_variable(out, var, 'value', target=Pattern('%'))
+        self.assertEqual(out.stream.getvalue(), '%: name := value\n')
+
+        var = self.makefile.target_variable('name', 'value2', exist_ok=True)
+        self.assertEqual(var, Variable('name'))
+
+        self.assertRaises(ValueError, self.makefile.target_variable, 'name',
+                          'value')
+
+    def test_define(self):
+        var = self.makefile.define('name', 'value')
+        self.assertEqual(var, Variable('name'))
+        out = Writer(StringIO())
+        self.makefile._write_define(out, *self.makefile._defines[0])
+        self.assertEqual(out.stream.getvalue(),
+                         'define name\nvalue\nendef\n\n')
+
+        var = self.makefile.define('name', 'value', exist_ok=True)
+        self.assertEqual(var, Variable('name'))
+
+        var = self.makefile.define('multi', ['value1', 'value2'])
+        self.assertEqual(var, Variable('multi'))
+        out = Writer(StringIO())
+        self.makefile._write_define(out, *self.makefile._defines[1])
+        self.assertEqual(out.stream.getvalue(),
+                         'define multi\nvalue1\nvalue2\nendef\n\n')
+
+        self.assertRaises(ValueError, self.makefile.define, 'name', 'value')
+
+    def test_rule(self):
+        self.makefile.rule('target', variables={'name': 'value'},
+                           recipe=['cmd'])
+        out = Writer(StringIO())
+        self.makefile._write_rule(out, self.makefile._rules[0])
+        self.assertEqual(out.stream.getvalue(),
+                         'target: name := value\n'
+                         'target:\n'
+                         '\tcmd\n\n')
