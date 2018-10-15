@@ -278,9 +278,6 @@ class CcLinker(BuildCommand):
         if not self.env.target_platform.has_import_library:
             so_ext = re.escape(self.env.target_platform.shared_library_ext)
             lib_formats.append(r'lib(.*)' + so_ext)
-        # XXX: Include Cygwin here too?
-        if self.env.target_platform.name == 'windows':
-            lib_formats.append(r'(.*)\.lib')
         self._lib_re = re.compile('(?:' + '|'.join(lib_formats) + ')$')
 
     def _extract_lib_name(self, library):
@@ -375,6 +372,9 @@ class CcLinker(BuildCommand):
         return []
 
     def _local_rpath(self, library, output):
+        if not isinstance(library, Library):
+            return [], []
+
         runtime_lib = library.runtime_file
         if runtime_lib and self.builder.object_format == 'elf':
             path = runtime_lib.path.parent().cross(self.env)
@@ -454,6 +454,9 @@ class CcLinker(BuildCommand):
         return libs
 
     def _link_lib(self, library, raw_static):
+        def common_link(library):
+            return ['-l' + self._extract_lib_name(library)]
+
         if isinstance(library, WholeArchive):
             if self.env.target_platform.name == 'darwin':
                 return ['-Wl,-force_load', library.path]
@@ -463,14 +466,48 @@ class CcLinker(BuildCommand):
             if not self.env.target_platform.has_frameworks:
                 raise TypeError('frameworks not supported on this platform')
             return ['-framework', library.full_name]
-        elif isinstance(library, StaticLibrary) and raw_static:
-            return [library.path]
+        elif isinstance(library, string_types):
+            return ['-l' + library]
+        elif isinstance(library, SharedLibrary):
+            return common_link(library)
+        elif isinstance(library, StaticLibrary):
+            # We pass static libraries in raw form when possible as a way of
+            # avoiding getting the shared version when we don't want it. There
+            # are linker options that do this too, but this way is more
+            # compatible.
+            if raw_static:
+                return [library.path]
+            return common_link(library)
 
-        # If we're here, we have a SharedLibrary (or possibly just a Library
-        # in the case of MinGW) or a string (from `._always_libs`).
-        libname = (library if isinstance(library, string_types) else
-                   self._extract_lib_name(library))
-        return ['-l' + libname]
+        # If we get here, we should have a generic `Library` object (probably
+        # from MinGW). The naming for these doesn't work with `-l`, but we'll
+        # try just in case and back to emitting the path in raw form.
+        try:
+            return common_link(library)
+        except ValueError:
+            if raw_static:
+                return [library.path]
+            raise
+
+    def _lib_dir(self, library, raw_static):
+        if not isinstance(library, Library):
+            return []
+        elif isinstance(library, StaticLibrary):
+            return [] if raw_static else [library.path.parent()]
+        elif isinstance(library, SharedLibrary):
+            return [library.path.parent()]
+
+        # As above, if we get here, we should have a generic `Library` object
+        # (probably from MinGW). Use `-L` if the library name works with `-l`;
+        # otherwise, return nothing, since the library itself will be passed
+        # "raw" (like static libraries).
+        try:
+            self._extract_lib_name(library)
+            return [library.path.parent()]
+        except ValueError:
+            if raw_static:
+                return []
+            raise
 
     def flags(self, options, output=None, mode='normal'):
         raw_static = mode != 'pkg-config'
@@ -481,13 +518,10 @@ class CcLinker(BuildCommand):
             if isinstance(i, opts.lib_dir):
                 lib_dirs.append(i.directory.path)
             elif isinstance(i, opts.lib):
-                lib = i.library
-                if isinstance(lib, Library):
-                    if not raw_static or not isinstance(lib, StaticLibrary):
-                        lib_dirs.append(lib.path.parent())
-                    rp, rplink = self._local_rpath(lib, output)
-                    rpaths.extend(rp)
-                    rpath_links.extend(rplink)
+                lib_dirs.extend(self._lib_dir(i.library, raw_static))
+                rp, rplink = self._local_rpath(i.library, output)
+                rpaths.extend(rp)
+                rpath_links.extend(rplink)
             elif isinstance(i, opts.rpath_dir):
                 rpaths.append(i.path)
             elif isinstance(i, opts.rpath_link_dir):

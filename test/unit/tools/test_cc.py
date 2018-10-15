@@ -257,6 +257,20 @@ class TestCcLinker(unittest.TestCase):
             opts.lib(file_types.StaticLibrary(lib, 'native'))
         ), mode='pkg-config'), ['-L' + libdir])
 
+        # Generic library
+        self.assertEqual(self.linker.flags(opts.option_list(
+            opts.lib(file_types.Library(lib, 'native'))
+        )), ['-L' + libdir])
+
+        mingw_lib = Path('/path/to/lib/foo.lib')
+        self.assertEqual(self.linker.flags(opts.option_list(
+            opts.lib(file_types.Library(mingw_lib, 'native'))
+        )), [])
+        with self.assertRaises(ValueError):
+            self.linker.flags(opts.option_list(
+                opts.lib(file_types.Library(mingw_lib, 'native'))
+            ), mode='pkg-config')
+
         # Framework
         self.assertEqual(self.linker.flags(opts.option_list(
             opts.lib(Framework('cocoa'))
@@ -335,13 +349,16 @@ class TestCcLinker(unittest.TestCase):
         self.assertEqual(self.linker.lib_flags(opts.option_list(
             opts.lib(file_types.SharedLibrary(lib, 'native'))
         )), ['-lfoo'])
+        self.assertEqual(self.linker.lib_flags(opts.option_list(
+            opts.lib(file_types.SharedLibrary(lib, 'native'))
+        ), mode='pkg-config'), ['-lfoo'])
 
         # Static library
         self.assertEqual(self.linker.lib_flags(opts.option_list(
             opts.lib(file_types.StaticLibrary(lib, 'native'))
         )), [lib])
         self.assertEqual(self.linker.lib_flags(opts.option_list(
-            opts.lib(file_types.SharedLibrary(lib, 'native'))
+            opts.lib(file_types.StaticLibrary(lib, 'native'))
         ), mode='pkg-config'), ['-lfoo'])
 
         # Whole archive
@@ -356,6 +373,20 @@ class TestCcLinker(unittest.TestCase):
             self.assertEqual(flags, ['-Wl,--whole-archive', lib,
                                      '-Wl,--no-whole-archive'])
 
+        # Generic library
+        self.assertEqual(self.linker.lib_flags(opts.option_list(
+            opts.lib(file_types.Library(lib, 'native'))
+        )), ['-lfoo'])
+
+        mingw_lib = Path('/path/to/lib/foo.lib')
+        self.assertEqual(self.linker.lib_flags(opts.option_list(
+            opts.lib(file_types.Library(mingw_lib, 'native'))
+        )), [mingw_lib])
+        with self.assertRaises(ValueError):
+            self.linker.lib_flags(opts.option_list(
+                opts.lib(file_types.Library(mingw_lib, 'native'))
+            ), mode='pkg-config')
+
         # Framework
         fw = opts.lib(Framework('cocoa'))
         if self.env.target_platform.name == 'darwin':
@@ -364,6 +395,11 @@ class TestCcLinker(unittest.TestCase):
         else:
             with self.assertRaises(TypeError):
                 self.linker.lib_flags(opts.option_list(fw))
+
+        # String
+        self.assertEqual(self.linker.lib_flags(
+            opts.option_list(opts.lib('foo'))
+        ), ['-lfoo'])
 
     def test_lib_flags_lib_literal(self):
         self.assertEqual(self.linker.lib_flags(opts.option_list(

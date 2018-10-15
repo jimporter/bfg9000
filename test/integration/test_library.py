@@ -3,8 +3,6 @@ import os.path
 from . import *
 pjoin = os.path.join
 
-is_mingw = (env.host_platform.name == 'windows' and
-            env.builder('c++').flavor == 'cc')
 is_msvc = env.builder('c++').flavor == 'msvc'
 
 
@@ -42,7 +40,6 @@ class TestLibrary(IntegrationTest):
         self.assertExists(static_library('library'))
 
 
-@skip_if(is_mingw, 'xfail on mingw (not sure why)')
 class TestSharedLibrary(IntegrationTest):
     def __init__(self, *args, **kwargs):
         IntegrationTest.__init__(self, 'shared_library', install=True, *args,
@@ -56,7 +53,7 @@ class TestSharedLibrary(IntegrationTest):
             env_vars = {'PATH': os.pathsep.join([
                 os.path.abspath(self.target_path(output_file(i)))
                 for i in ('outer', 'middle', 'inner')
-            ])}
+            ]) + os.pathsep + os.environ['PATH']}
         self.assertOutput([executable('program')], 'hello, library!\n',
                           env=env_vars)
 
@@ -80,7 +77,7 @@ class TestSharedLibrary(IntegrationTest):
                 os.path.abspath(os.path.join(
                     self.libdir, self.target_path(output_file(i))
                 )) for i in ('outer', 'middle', 'inner')
-            ])}
+            ]) + os.pathsep + os.environ['PATH']}
         self.assertOutput([pjoin(self.bindir, executable('program').path)],
                           'hello, library!\n', env=env_vars)
 

@@ -95,7 +95,8 @@ class TestPkgConfig(IntegrationTest):
 
         env_vars = None
         if env.target_platform.name == 'windows':
-            env_vars = {'PATH': os.path.abspath(self.libdir)}
+            env_vars = {'PATH': (os.path.abspath(self.libdir) +
+                                 os.pathsep + os.environ['PATH'])}
         self.assertOutput([executable('program')], 'hello, library!\n',
                           env=env_vars)
 
@@ -155,6 +156,7 @@ class TestPkgConfigAuto(IntegrationTest):
 
         env_vars = None
         if env.target_platform.name == 'windows':
-            env_vars = {'PATH': os.path.abspath(self.libdir)}
+            env_vars = {'PATH': (os.path.abspath(self.libdir) +
+                                 os.pathsep + os.environ['PATH'])}
         self.assertOutput([executable('program')], 'hello, library!\n',
                           env=env_vars)
