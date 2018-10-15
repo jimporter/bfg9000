@@ -121,9 +121,13 @@ def xfail_if_platform(platform):
 
 
 class SubprocessError(unittest.TestCase.failureException):
-    def __init__(self, message):
+    def __init__(self, returncode, env, message):
+        envstr = ''.join('  {} = {}\n'.format(k, v)
+                         for k, v in iteritems(env or {}))
         unittest.TestCase.failureException.__init__(
-            self, '\n{line}\n{msg}\n{line}'.format(line='-' * 60, msg=message)
+            self, 'returned {returncode}\n{env}{line}\n{msg}\n{line}'.format(
+                returncode=returncode, env=envstr, line='-' * 60, msg=message
+            )
         )
 
 
@@ -167,19 +171,19 @@ class TestCase(unittest.TestCase):
         return target
 
     def assertPopen(self, command, env=None, env_update=True, returncode=0):
+        final_env = env
         if env is not None and env_update:
-            overrides = env
-            env = dict(os.environ)
-            env.update(overrides)
+            final_env = dict(os.environ)
+            final_env.update(env)
 
         command = [self.target_path(i) for i in command]
         proc = subprocess.Popen(
             command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-            env=env, universal_newlines=True
+            env=final_env, universal_newlines=True
         )
         output = proc.communicate()[0]
         if proc.returncode != returncode:
-            raise SubprocessError(output)
+            raise SubprocessError(proc.returncode, env, output)
         return output
 
     def assertOutput(self, command, output, *args, **kwargs):
