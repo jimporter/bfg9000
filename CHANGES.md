@@ -25,6 +25,7 @@
 - Default options for `ar` are now `cr` instead of `cru` to support versions of
   `ar` that default to deterministic builds
 - Fix building Java projects with OpenJDK 8+
+- Fix loading Boost packages from `C:\Boost` on Windows
 
 ---
 
