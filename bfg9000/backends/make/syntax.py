@@ -58,8 +58,10 @@ class Writer(object):
             return result.replace(',', '$,')
         elif syntax in [Syntax.shell, Syntax.clean]:
             return result
-        else:
-            raise ValueError("unknown syntax '{}'".format(syntax))
+
+        raise ValueError(
+            "unknown syntax '{}'".format(syntax)
+        )  # pragma: no cover
 
     def write_literal(self, string):
         self.stream.write(string)

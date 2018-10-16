@@ -48,8 +48,10 @@ class Writer(object):
             return re.sub(r'([$ ])', r'$\1', string)
         elif syntax in [Syntax.shell, Syntax.clean]:
             return string.replace('$', '$$')
-        else:
-            raise ValueError("unknown syntax '{}'".format(syntax))
+
+        raise ValueError(
+            "unknown syntax '{}'".format(syntax)
+        )  # pragma: no cover
 
     def write_literal(self, string):
         self.stream.write(string)
