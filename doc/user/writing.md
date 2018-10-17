@@ -53,7 +53,7 @@ will automatically convert a string argument to an object of the appropriate
 type. In the previous example, `'simple.cpp'` is automatically converted to a
 [*source_file*](reference.md#source_file).
 
-### Sudirectories
+### Subdirectories
 
 Many projects organize their headers and source files into different
 directories. For source files, this is easy to handle: just write out the
