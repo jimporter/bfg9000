@@ -12,6 +12,19 @@ from ..packages import Package
 from ..path import Path, Root
 from ..versioning import detect_version
 
+_warning_flags = {
+    'java': {
+        opts.WarningValue.disable: '-nowarn',
+        opts.WarningValue.error: '-Werror',
+        opts.WarningValue.all: '-Xlint:all',
+    },
+    'scala': {
+        opts.WarningValue.disable: '-nowarn',
+        opts.WarningValue.error: '-Xfatal-errors',
+        opts.WarningValue.all: '-Xlint:_',
+    },
+}
+
 
 class JvmBuilder(object):
     def __init__(self, env, langinfo, command, version_output):
@@ -132,6 +145,13 @@ class JvmCompiler(BuildCommand):
         for i in options:
             if isinstance(i, opts.lib):
                 class_path.append(i.library.path)
+            elif isinstance(i, opts.warning):
+                for j in i.value:
+                    try:
+                        flags.append(_warning_flags[self.lang][j])
+                    except KeyError:
+                        raise ValueError('unsupported warning level {!r}'
+                                         .format(j))
             elif isinstance(i, safe_str.stringy_types):
                 flags.append(i)
             else:

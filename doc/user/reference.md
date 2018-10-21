@@ -446,7 +446,7 @@ Semantic options are a collection of objects that allow a build to define
 options in a tool-agnostic way. These options will automatically be converted to
 the appropriate string form for the tool when generating the build file.
 
-### opts.define(*name*, [*value*])
+### opts.define(*name*, [*value*]) { #opts-define }
 
 Create a preprocessor macro named *name* and with an optional value *value*.
 Note that if you'd like the value to be a string literal, you need to escape the
@@ -456,10 +456,23 @@ string like so:
 opts.define('MY_MACRO', '"This is a string, isn\'t it?"')
 ```
 
-### opts.std(*value*)
+### opts.std(*value*) { #opts-std }
 
 Specify the version of the language's standard (e.g. `"c++14"`) to use when
 building.
+
+### opts.warning(*...*) { #opts-warning }
+
+Set the level of warnings for the compiler to emit when compiling; multiple
+values can be specified at once, e.g. `opts.warning('all', 'error')`. The
+possible warning values are:
+
+* `'disable'`: Disable all warning messages
+* `'all'`: Enable all "recommended" warnings (as GCC puts it, "the warnings
+  about constructions that some users consider questionable, and that are easy
+  to avoid")
+* `'extra'`: Enable extra warnings in addition to what's specified in `'all'`
+* `'error'`: Treat any warning as an error
 
 ## Global options
 

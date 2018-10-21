@@ -179,6 +179,49 @@ class TestJvmCompiler(unittest.TestCase):
             opts.lib(file_types.StaticLibrary(lib2, 'jvm'))
         )), ['-cp', lib1 + os.pathsep + lib2])
 
+    def test_flags_warning(self):
+        self.assertEqual(self.compiler.flags(opts.option_list(
+            opts.warning('disable')
+        )), ['-nowarn'])
+        self.assertEqual(self.compiler.flags(opts.option_list(
+            opts.warning('all')
+        )), ['-Xlint:all'])
+        self.assertEqual(self.compiler.flags(opts.option_list(
+            opts.warning('error')
+        )), ['-Werror'])
+        with self.assertRaises(ValueError):
+            self.compiler.flags(opts.option_list(opts.warning('extra')))
+
+        self.assertEqual(self.compiler.flags(opts.option_list(
+            opts.warning('all', 'error')
+        )), ['-Xlint:all', '-Werror'])
+
+    def test_flags_warning_scala(self):
+        version = ('Scala code runner version 2.11.6 -- ' +
+                   'Copyright 2002-2013, LAMP/EPFL')
+        with mock.patch('bfg9000.shell.which', mock_which):  # noqa
+            self.compiler = JvmBuilder(self.env, known_langs['scala'],
+                                       ['scalac'], version).compiler
+
+        self.assertEqual(self.compiler.flags(opts.option_list(
+            opts.warning('disable')
+        )), ['-nowarn'])
+        self.assertEqual(self.compiler.flags(opts.option_list(
+            opts.warning('all')
+        )), ['-Xlint:_'])
+        self.assertEqual(self.compiler.flags(opts.option_list(
+            opts.warning('error')
+        )), ['-Xfatal-errors'])
+        with self.assertRaises(ValueError):
+            self.compiler.flags(opts.option_list(opts.warning('extra')))
+
+        self.assertEqual(self.compiler.flags(opts.option_list(
+            opts.warning('all', 'error')
+        )), ['-Xlint:_', '-Xfatal-errors'])
+
+        with self.assertRaises(ValueError):
+            self.compiler.flags(opts.option_list(opts.warning('unknown')))
+
     def test_flags_string(self):
         self.assertEqual(self.compiler.flags(opts.option_list('-v')), ['-v'])
 

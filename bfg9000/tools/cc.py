@@ -191,6 +191,12 @@ class CcBaseCompiler(BuildCommand):
                     flags.append('-D' + i.name)
             elif isinstance(i, opts.std):
                 flags.append('-std=' + i.value)
+            elif isinstance(i, opts.warning):
+                for j in i.value:
+                    if j == opts.WarningValue.disable:
+                        flags.append('-w')
+                    else:
+                        flags.append('-W' + j.name)
             elif isinstance(i, opts.pthread):
                 flags.append('-pthread')
             elif isinstance(i, opts.pic):

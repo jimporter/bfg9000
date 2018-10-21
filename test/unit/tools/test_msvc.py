@@ -133,6 +133,27 @@ class TestMsvcCompiler(unittest.TestCase):
             opts.std('c++14')
         )), ['/std:c++14'])
 
+    def test_flags_warning(self):
+        self.assertEqual(self.compiler.flags(opts.option_list(
+            opts.warning('disable')
+        )), ['/w'])
+        self.assertEqual(self.compiler.flags(opts.option_list(
+            opts.warning('all')
+        )), ['/W3'])
+        self.assertEqual(self.compiler.flags(opts.option_list(
+            opts.warning('extra')
+        )), ['/W4'])
+        self.assertEqual(self.compiler.flags(opts.option_list(
+            opts.warning('error')
+        )), ['/WX'])
+
+        self.assertEqual(self.compiler.flags(opts.option_list(
+            opts.warning('all', 'extra', 'error')
+        )), ['/W3', '/W4', '/WX'])
+
+        with self.assertRaises(ValueError):
+            self.compiler.flags(opts.option_list(opts.warning('unknown')))
+
     def test_flags_include_pch(self):
         p = Path('/path/to/header.hpp')
         self.assertEqual(self.compiler.flags(opts.option_list(

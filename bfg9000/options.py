@@ -1,4 +1,6 @@
-from six import add_metaclass
+import enum
+from collections import namedtuple
+from six import add_metaclass, string_types
 from six.moves import zip
 
 from . import path, safe_str
@@ -60,6 +62,9 @@ class option_list(object):
         return self
 
 
+variadic = namedtuple('variadic', ['type'])
+
+
 # XXX: This is a separate function to make Python 2.7.8 and earlier happy. For
 # details, see <https://bugs.python.org/issue21591>.
 def _make_init(slots, attrs):
@@ -68,14 +73,26 @@ def _make_init(slots, attrs):
 
 
 class OptionMeta(type):
+    @staticmethod
+    def _make_args(slots, types):
+        has_variadic = False
+        for s, t in zip(slots, types):
+            assert not has_variadic
+            if isinstance(t, variadic):
+                has_variadic = True
+                yield '*' + s
+            else:
+                yield s
+
     def __new__(cls, name, bases, attrs):
         fields = attrs.pop('_fields', [])
         slots = tuple(i[0] if isiterable(i) else i for i in fields)
         types = tuple(i[1] if isiterable(i) else None for i in fields)
-        attrs.update({'__slots__': slots, '_types': types})
+        attrs.update({'__slots__': [i.replace('*', '') for i in slots],
+                      '_types': types})
 
         if '__init__' not in attrs:
-            _make_init(slots, attrs)
+            _make_init(cls._make_args(slots, types), attrs)
 
         return type.__new__(cls, name, bases, attrs)
 
@@ -92,12 +109,28 @@ class OptionMeta(type):
 @add_metaclass(OptionMeta)
 class Option(object):
     def _init(self, *args):
-        assert len(args) == len(self.__slots__)
-        for k, t, v in zip(self.__slots__, self._types, args):
-            if t and not isinstance(v, t):
+        def check_type(v, t):
+            if not t or isinstance(v, t):
+                return v
+            elif isinstance(v, string_types) and issubclass(t, enum.Enum):
+                try:
+                    return t[v]
+                except Exception:
+                    raise ValueError('invalid {} {!r}'.format(t.__name__, v))
+            else:
                 raise TypeError('expected {}; but got {}'.format(
                     ', '.join(i.__name__ for i in iterate(t)), type(v).__name__
                 ))
+
+        i = 0
+        for k, t in zip(self.__slots__, self._types):
+            assert i < len(args)
+            if isinstance(t, variadic):
+                v = [check_type(x, t.type) for x in args[i:]]
+                i = len(args)
+            else:
+                v = check_type(args[i], t)
+                i += 1
             setattr(self, k, v)
 
     def matches(self, rhs):
@@ -117,8 +150,17 @@ class Option(object):
         ))
 
 
-def option(name, fields=()):
+class OptionEnum(enum.Enum):
+    def __repr__(self):
+        return repr(self.name)
+
+
+def option(name, fields=[]):
     return type(name, (Option,), {'_fields': fields})
+
+
+def variadic_option(name, type=None):
+    return option(name, [('value', variadic(type))])
 
 
 # Compilation options
@@ -126,6 +168,9 @@ include_dir = option('include_dir', [('directory', HeaderDirectory)])
 std = option('std', [('value', str)])
 pic = option('pic')
 pch = option('pch', [('header', PrecompiledHeader)])
+
+WarningValue = OptionEnum('WarningValue', ['disable', 'all', 'extra', 'error'])
+warning = variadic_option('warning', WarningValue)
 
 
 class define(Option):

@@ -16,6 +16,13 @@ from ..packages import CommonPackage, Framework, PackageKind
 from ..path import Path, Root
 from ..versioning import detect_version, SpecifierSet
 
+_warning_flags = {
+    opts.WarningValue.disable: '/w',
+    opts.WarningValue.all: '/W3',
+    opts.WarningValue.extra: '/W4',
+    opts.WarningValue.error: '/WX',
+}
+
 
 class MsvcBuilder(object):
     def __init__(self, env, langinfo, command, version_output):
@@ -161,6 +168,9 @@ class MsvcBaseCompiler(BuildCommand):
                     flags.append(prefix + i.name)
             elif isinstance(i, opts.std):
                 flags.append('/std:' + i.value)
+            elif isinstance(i, opts.warning):
+                for j in i.value:
+                    flags.append(_warning_flags[j])
             elif isinstance(i, opts.pch):
                 flags.append('/Yu' + i.header.header_name)
             elif isinstance(i, safe_str.stringy_types):

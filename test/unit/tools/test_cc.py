@@ -170,6 +170,27 @@ class TestCcCompiler(unittest.TestCase):
             opts.std('c++14')
         )), ['-std=c++14'])
 
+    def test_flags_warning(self):
+        self.assertEqual(self.compiler.flags(opts.option_list(
+            opts.warning('disable')
+        )), ['-w'])
+        self.assertEqual(self.compiler.flags(opts.option_list(
+            opts.warning('all')
+        )), ['-Wall'])
+        self.assertEqual(self.compiler.flags(opts.option_list(
+            opts.warning('extra')
+        )), ['-Wextra'])
+        self.assertEqual(self.compiler.flags(opts.option_list(
+            opts.warning('error')
+        )), ['-Werror'])
+
+        self.assertEqual(self.compiler.flags(opts.option_list(
+            opts.warning('all', 'extra', 'error')
+        )), ['-Wall', '-Wextra', '-Werror'])
+
+        with self.assertRaises(ValueError):
+            self.compiler.flags(opts.option_list(opts.warning('unknown')))
+
     def test_flags_pthread(self):
         self.assertEqual(self.compiler.flags(opts.option_list(
             opts.pthread()
