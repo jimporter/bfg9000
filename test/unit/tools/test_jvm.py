@@ -179,6 +179,20 @@ class TestJvmCompiler(unittest.TestCase):
             opts.lib(file_types.StaticLibrary(lib2, 'jvm'))
         )), ['-cp', lib1 + os.pathsep + lib2])
 
+    def test_flags_debug(self):
+        self.assertEqual(self.compiler.flags(opts.option_list(
+            opts.debug()
+        )), ['-g'])
+
+        version = ('Scala code runner version 2.11.6 -- ' +
+                   'Copyright 2002-2013, LAMP/EPFL')
+        with mock.patch('bfg9000.shell.which', mock_which):  # noqa
+            scala_compiler = JvmBuilder(self.env, known_langs['scala'],
+                                        ['scalac'], version).compiler
+        self.assertEqual(scala_compiler.flags(opts.option_list(
+            opts.debug()
+        )), ['-g:vars'])
+
     def test_flags_warning(self):
         self.assertEqual(self.compiler.flags(opts.option_list(
             opts.warning('disable')
@@ -247,6 +261,11 @@ class TestJvmLinker(unittest.TestCase):
 
     def test_flags_string(self):
         self.assertEqual(self.linker.flags(opts.option_list('-v')), ['-v'])
+
+    def test_flags_debug(self):
+        self.assertEqual(self.linker.flags(opts.option_list(
+            opts.debug()
+        )), [])
 
     def test_flags_invalid(self):
         with self.assertRaises(TypeError):

@@ -168,6 +168,8 @@ class MsvcBaseCompiler(BuildCommand):
                     flags.append(prefix + i.name)
             elif isinstance(i, opts.std):
                 flags.append('/std:' + i.value)
+            elif isinstance(i, opts.debug):
+                flags.append('/Zi')
             elif isinstance(i, opts.warning):
                 for j in i.value:
                     flags.append(_warning_flags[j])
@@ -367,6 +369,8 @@ class MsvcLinker(BuildCommand):
                 lib_dirs.append(i.directory.path)
             elif isinstance(i, opts.lib):
                 lib_dirs.append(i.library.path.parent())
+            elif isinstance(i, opts.debug):
+                flags.append('/DEBUG')
             elif isinstance(i, safe_str.stringy_types):
                 flags.append(i)
             elif isinstance(i, opts.lib_literal):

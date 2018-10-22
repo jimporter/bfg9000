@@ -190,4 +190,5 @@ lib_literal = option('lib_literal', [('value', safe_str.stringy_types)])
 entry_point = option('entry_point', [('value', str)])
 
 # General options
+debug = option('debug')
 pthread = option('pthread')

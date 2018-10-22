@@ -170,6 +170,11 @@ class TestCcCompiler(unittest.TestCase):
             opts.std('c++14')
         )), ['-std=c++14'])
 
+    def test_flags_debug(self):
+        self.assertEqual(self.compiler.flags(opts.option_list(
+            opts.debug()
+        )), ['-g'])
+
     def test_flags_warning(self):
         self.assertEqual(self.compiler.flags(opts.option_list(
             opts.warning('disable')
@@ -341,6 +346,11 @@ class TestCcLinker(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             self.linker.flags(opts.option_list(opts.entry_point('Main')))
+
+    def test_flags_debug(self):
+        self.assertEqual(self.linker.flags(opts.option_list(
+            opts.debug()
+        )), ['-g'])
 
     def test_flags_pthread(self):
         self.assertEqual(

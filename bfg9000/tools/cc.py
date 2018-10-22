@@ -191,6 +191,8 @@ class CcBaseCompiler(BuildCommand):
                     flags.append('-D' + i.name)
             elif isinstance(i, opts.std):
                 flags.append('-std=' + i.value)
+            elif isinstance(i, opts.debug):
+                flags.append('-g')
             elif isinstance(i, opts.warning):
                 for j in i.value:
                     if j == opts.WarningValue.disable:
@@ -532,6 +534,8 @@ class CcLinker(BuildCommand):
                 rpaths.append(i.path)
             elif isinstance(i, opts.rpath_link_dir):
                 rpath_links.append(i.path)
+            elif isinstance(i, opts.debug):
+                flags.append('-g')
             elif isinstance(i, opts.pthread):
                 # macOS doesn't expect -pthread when linking.
                 if self.env.target_platform.name != 'darwin':

@@ -145,6 +145,8 @@ class JvmCompiler(BuildCommand):
         for i in options:
             if isinstance(i, opts.lib):
                 class_path.append(i.library.path)
+            elif isinstance(i, opts.debug):
+                flags.append('-g' if self.lang == 'java' else '-g:vars')
             elif isinstance(i, opts.warning):
                 for j in i.value:
                     try:
@@ -240,6 +242,8 @@ class JarMaker(BuildCommand):
         for i in options:
             if isinstance(i, safe_str.stringy_types):
                 flags.append(i)
+            elif isinstance(i, opts.debug):
+                pass
             else:
                 raise TypeError('unknown option type {!r}'.format(type(i)))
         return flags

@@ -446,6 +446,11 @@ Semantic options are a collection of objects that allow a build to define
 options in a tool-agnostic way. These options will automatically be converted to
 the appropriate string form for the tool when generating the build file.
 
+### opts.debug() { #opts-debug }
+
+Produce debugging information for the built object in the default debugging
+format.
+
 ### opts.define(*name*, [*value*]) { #opts-define }
 
 Create a preprocessor macro named *name* and with an optional value *value*.

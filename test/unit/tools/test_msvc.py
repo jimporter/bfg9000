@@ -133,6 +133,11 @@ class TestMsvcCompiler(unittest.TestCase):
             opts.std('c++14')
         )), ['/std:c++14'])
 
+    def test_flags_debug(self):
+        self.assertEqual(self.compiler.flags(opts.option_list(
+            opts.debug()
+        )), ['/Zi'])
+
     def test_flags_warning(self):
         self.assertEqual(self.compiler.flags(opts.option_list(
             opts.warning('disable')
@@ -257,6 +262,11 @@ class TestMsvcLinker(unittest.TestCase):
             self.linker.lib_flags(opts.option_list(
                 opts.lib(Framework('cocoa'))
             ))
+
+    def test_flags_debug(self):
+        self.assertEqual(self.linker.flags(opts.option_list(
+            opts.debug()
+        )), ['/DEBUG'])
 
     def test_lib_flags_lib_literal(self):
         self.assertEqual(self.linker.lib_flags(opts.option_list(
