@@ -526,16 +526,41 @@ library will install the DLL <em>and</em> the import library.</p>
 <p>Semantic options are a collection of objects that allow a build to define
 options in a tool-agnostic way. These options will automatically be converted to
 the appropriate string form for the tool when generating the build file.</p>
-<h3 id="optsdefinename-value">opts.define(<em>name</em>, [<em>value</em>])<a class="headerlink" href="#optsdefinename-value" title="Permanent link">§</a></h3>
+<h3 id="opts-debug">opts.debug()<a class="headerlink" href="#opts-debug" title="Permanent link">§</a></h3>
+<p>Produce debugging information for the built object in the default debugging
+format.</p>
+<h3 id="opts-define">opts.define(<em>name</em>, [<em>value</em>])<a class="headerlink" href="#opts-define" title="Permanent link">§</a></h3>
 <p>Create a preprocessor macro named <em>name</em> and with an optional value <em>value</em>.
 Note that if you'd like the value to be a string literal, you need to escape the
 string like so:</p>
 <pre><code class="python">opts.define('MY_MACRO', '&quot;This is a string, isn\'t it?&quot;')
 </code></pre>
 
-<h3 id="optsstdvalue">opts.std(<em>value</em>)<a class="headerlink" href="#optsstdvalue" title="Permanent link">§</a></h3>
+<h3 id="opts-optimize">opts.optimize(<em>...</em>)<a class="headerlink" href="#opts-optimize" title="Permanent link">§</a></h3>
+<p>Set the level of optimization for the compiler employ; multiple values can be
+specified at once, e.g. <code>opts.optimize('speed, 'linktime)</code>. The possible warning
+values are:</p>
+<ul>
+<li><code>'disable'</code>: Disable all optimization</li>
+<li><code>'size'</code>: Enable optimization to minimize the size of the resulting binary</li>
+<li><code>'speed'</code>: Enable optimization to maximize the speed of the resulting binary</li>
+<li><code>'linktime'</code>: Perform link-time optimizations</li>
+</ul>
+<h3 id="opts-std">opts.std(<em>value</em>)<a class="headerlink" href="#opts-std" title="Permanent link">§</a></h3>
 <p>Specify the version of the language's standard (e.g. <code>"c++14"</code>) to use when
 building.</p>
+<h3 id="opts-warning">opts.warning(<em>...</em>)<a class="headerlink" href="#opts-warning" title="Permanent link">§</a></h3>
+<p>Set the level of warnings for the compiler to emit when compiling; multiple
+values can be specified at once, e.g. <code>opts.warning('all', 'error')</code>. The
+possible warning values are:</p>
+<ul>
+<li><code>'disable'</code>: Disable all warning messages</li>
+<li><code>'all'</code>: Enable all "recommended" warnings (as GCC puts it, "the warnings
+  about constructions that some users consider questionable, and that are easy
+  to avoid")</li>
+<li><code>'extra'</code>: Enable extra warnings in addition to what's specified in <code>'all'</code></li>
+<li><code>'error'</code>: Treat any warning as an error</li>
+</ul>
 <h2 id="global-options">Global options<a class="headerlink" href="#global-options" title="Permanent link">§</a></h2>
 <h3 id="global_options">global_options(<em>options</em>, <em>lang</em>)<a class="headerlink" href="#global_options" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
