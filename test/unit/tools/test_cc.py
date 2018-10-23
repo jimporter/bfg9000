@@ -165,16 +165,6 @@ class TestCcCompiler(unittest.TestCase):
             opts.define('NAME', 'value')
         )), ['-DNAME=value'])
 
-    def test_flags_std(self):
-        self.assertEqual(self.compiler.flags(opts.option_list(
-            opts.std('c++14')
-        )), ['-std=c++14'])
-
-    def test_flags_debug(self):
-        self.assertEqual(self.compiler.flags(opts.option_list(
-            opts.debug()
-        )), ['-g'])
-
     def test_flags_warning(self):
         self.assertEqual(self.compiler.flags(opts.option_list(
             opts.warning('disable')
@@ -195,6 +185,34 @@ class TestCcCompiler(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             self.compiler.flags(opts.option_list(opts.warning('unknown')))
+
+    def test_flags_std(self):
+        self.assertEqual(self.compiler.flags(opts.option_list(
+            opts.std('c++14')
+        )), ['-std=c++14'])
+
+    def test_flags_debug(self):
+        self.assertEqual(self.compiler.flags(opts.option_list(
+            opts.debug()
+        )), ['-g'])
+
+    def test_flags_optimize(self):
+        self.assertEqual(self.compiler.flags(opts.option_list(
+            opts.optimize('disable')
+        )), ['-O0'])
+        self.assertEqual(self.compiler.flags(opts.option_list(
+            opts.optimize('size')
+        )), ['-Osize'])
+        self.assertEqual(self.compiler.flags(opts.option_list(
+            opts.optimize('speed')
+        )), ['-O3'])
+        self.assertEqual(self.compiler.flags(opts.option_list(
+            opts.optimize('linktime')
+        )), ['-flto'])
+
+        self.assertEqual(self.compiler.flags(opts.option_list(
+            opts.optimize('speed', 'linktime')
+        )), ['-O3', '-flto'])
 
     def test_flags_pthread(self):
         self.assertEqual(self.compiler.flags(opts.option_list(
@@ -346,6 +364,24 @@ class TestCcLinker(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             self.linker.flags(opts.option_list(opts.entry_point('Main')))
+
+    def test_flags_optimize(self):
+        self.assertEqual(self.linker.flags(opts.option_list(
+            opts.optimize('disable')
+        )), ['-O0'])
+        self.assertEqual(self.linker.flags(opts.option_list(
+            opts.optimize('size')
+        )), ['-Osize'])
+        self.assertEqual(self.linker.flags(opts.option_list(
+            opts.optimize('speed')
+        )), ['-O3'])
+        self.assertEqual(self.linker.flags(opts.option_list(
+            opts.optimize('linktime')
+        )), ['-flto'])
+
+        self.assertEqual(self.linker.flags(opts.option_list(
+            opts.optimize('speed', 'linktime')
+        )), ['-O3', '-flto'])
 
     def test_flags_debug(self):
         self.assertEqual(self.linker.flags(opts.option_list(

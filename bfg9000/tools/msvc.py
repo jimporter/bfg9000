@@ -23,6 +23,13 @@ _warning_flags = {
     opts.WarningValue.error: '/WX',
 }
 
+_optimize_flags = {
+    opts.OptimizeValue.disable:  '/Od',
+    opts.OptimizeValue.size:     '/O1',
+    opts.OptimizeValue.speed:    '/O2',
+    opts.OptimizeValue.linktime: '/GL',
+}
+
 
 class MsvcBuilder(object):
     def __init__(self, env, langinfo, command, version_output):
@@ -168,11 +175,14 @@ class MsvcBaseCompiler(BuildCommand):
                     flags.append(prefix + i.name)
             elif isinstance(i, opts.std):
                 flags.append('/std:' + i.value)
-            elif isinstance(i, opts.debug):
-                flags.append('/Zi')
             elif isinstance(i, opts.warning):
                 for j in i.value:
                     flags.append(_warning_flags[j])
+            elif isinstance(i, opts.debug):
+                flags.append('/Zi')
+            elif isinstance(i, opts.optimize):
+                for j in i.value:
+                    flags.append(_optimize_flags[j])
             elif isinstance(i, opts.pch):
                 flags.append('/Yu' + i.header.header_name)
             elif isinstance(i, safe_str.stringy_types):
@@ -371,6 +381,9 @@ class MsvcLinker(BuildCommand):
                 lib_dirs.append(i.library.path.parent())
             elif isinstance(i, opts.debug):
                 flags.append('/DEBUG')
+            elif isinstance(i, opts.optimize):
+                if opts.OptimizeValue.linktime in i.value:
+                    flags.append('/LTCG')
             elif isinstance(i, safe_str.stringy_types):
                 flags.append(i)
             elif isinstance(i, opts.lib_literal):

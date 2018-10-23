@@ -159,6 +159,24 @@ class TestMsvcCompiler(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.compiler.flags(opts.option_list(opts.warning('unknown')))
 
+    def test_flags_optimize(self):
+        self.assertEqual(self.compiler.flags(opts.option_list(
+            opts.optimize('disable')
+        )), ['/Od'])
+        self.assertEqual(self.compiler.flags(opts.option_list(
+            opts.optimize('size')
+        )), ['/O1'])
+        self.assertEqual(self.compiler.flags(opts.option_list(
+            opts.optimize('speed')
+        )), ['/O2'])
+        self.assertEqual(self.compiler.flags(opts.option_list(
+            opts.optimize('linktime')
+        )), ['/GL'])
+
+        self.assertEqual(self.compiler.flags(opts.option_list(
+            opts.optimize('speed', 'linktime')
+        )), ['/O2', '/GL'])
+
     def test_flags_include_pch(self):
         p = Path('/path/to/header.hpp')
         self.assertEqual(self.compiler.flags(opts.option_list(
@@ -267,6 +285,24 @@ class TestMsvcLinker(unittest.TestCase):
         self.assertEqual(self.linker.flags(opts.option_list(
             opts.debug()
         )), ['/DEBUG'])
+
+    def test_flags_optimize(self):
+        self.assertEqual(self.linker.flags(opts.option_list(
+            opts.optimize('disable')
+        )), [])
+        self.assertEqual(self.linker.flags(opts.option_list(
+            opts.optimize('size')
+        )), [])
+        self.assertEqual(self.linker.flags(opts.option_list(
+            opts.optimize('speed')
+        )), [])
+        self.assertEqual(self.linker.flags(opts.option_list(
+            opts.optimize('linktime')
+        )), ['/LTCG'])
+
+        self.assertEqual(self.linker.flags(opts.option_list(
+            opts.optimize('speed', 'linktime')
+        )), ['/LTCG'])
 
     def test_lib_flags_lib_literal(self):
         self.assertEqual(self.linker.lib_flags(opts.option_list(

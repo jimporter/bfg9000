@@ -236,6 +236,30 @@ class TestJvmCompiler(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.compiler.flags(opts.option_list(opts.warning('unknown')))
 
+    def test_flags_optimize(self):
+        version = ('Scala code runner version 2.11.6 -- ' +
+                   'Copyright 2002-2013, LAMP/EPFL')
+        with mock.patch('bfg9000.shell.which', mock_which):  # noqa
+            self.compiler = JvmBuilder(self.env, known_langs['scala'],
+                                       ['scalac'], version).compiler
+
+        self.assertEqual(self.compiler.flags(opts.option_list(
+            opts.optimize('disable')
+        )), [])
+        self.assertEqual(self.compiler.flags(opts.option_list(
+            opts.optimize('size')
+        )), ['-optimize'])
+        self.assertEqual(self.compiler.flags(opts.option_list(
+            opts.optimize('speed')
+        )), ['-optimize'])
+        self.assertEqual(self.compiler.flags(opts.option_list(
+            opts.optimize('linktime')
+        )), [])
+
+        self.assertEqual(self.compiler.flags(opts.option_list(
+            opts.optimize('speed', 'linktime')
+        )), ['-optimize'])
+
     def test_flags_string(self):
         self.assertEqual(self.compiler.flags(opts.option_list('-v')), ['-v'])
 
@@ -265,6 +289,11 @@ class TestJvmLinker(unittest.TestCase):
     def test_flags_debug(self):
         self.assertEqual(self.linker.flags(opts.option_list(
             opts.debug()
+        )), [])
+
+    def test_flags_optimize(self):
+        self.assertEqual(self.linker.flags(opts.option_list(
+            opts.optimize('size')
         )), [])
 
     def test_flags_invalid(self):

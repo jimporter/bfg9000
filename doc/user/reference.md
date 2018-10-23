@@ -461,6 +461,17 @@ string like so:
 opts.define('MY_MACRO', '"This is a string, isn\'t it?"')
 ```
 
+### opts.optimize(*...*) { #opts-optimize }
+
+Set the level of optimization for the compiler employ; multiple values can be
+specified at once, e.g. `opts.optimize('speed, 'linktime)`. The possible warning
+values are:
+
+* `'disable'`: Disable all optimization
+* `'size'`: Enable optimization to minimize the size of the resulting binary
+* `'speed'`: Enable optimization to maximize the speed of the resulting binary
+* `'linktime'`: Perform link-time optimizations
+
 ### opts.std(*value*) { #opts-std }
 
 Specify the version of the language's standard (e.g. `"c++14"`) to use when

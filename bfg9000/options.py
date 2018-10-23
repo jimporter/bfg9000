@@ -192,3 +192,7 @@ entry_point = option('entry_point', [('value', str)])
 # General options
 debug = option('debug')
 pthread = option('pthread')
+
+OptimizeValue = OptionEnum('OptimizeValue', ['disable', 'size', 'speed',
+                                             'linktime'])
+optimize = variadic_option('optimize', OptimizeValue)

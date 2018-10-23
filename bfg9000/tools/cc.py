@@ -19,6 +19,13 @@ from ..packages import CommonPackage, Framework, PackageKind
 from ..path import InstallRoot, Path, Root
 from ..versioning import detect_version, SpecifierSet
 
+_optimize_flags = {
+    opts.OptimizeValue.disable:  '-O0',
+    opts.OptimizeValue.size:     '-Osize',
+    opts.OptimizeValue.speed:    '-O3',
+    opts.OptimizeValue.linktime: '-flto',
+}
+
 
 class CcBuilder(object):
     def __init__(self, env, langinfo, command, version_output):
@@ -191,14 +198,17 @@ class CcBaseCompiler(BuildCommand):
                     flags.append('-D' + i.name)
             elif isinstance(i, opts.std):
                 flags.append('-std=' + i.value)
-            elif isinstance(i, opts.debug):
-                flags.append('-g')
             elif isinstance(i, opts.warning):
                 for j in i.value:
                     if j == opts.WarningValue.disable:
                         flags.append('-w')
                     else:
                         flags.append('-W' + j.name)
+            elif isinstance(i, opts.debug):
+                flags.append('-g')
+            elif isinstance(i, opts.optimize):
+                for j in i.value:
+                    flags.append(_optimize_flags[j])
             elif isinstance(i, opts.pthread):
                 flags.append('-pthread')
             elif isinstance(i, opts.pic):
@@ -536,6 +546,9 @@ class CcLinker(BuildCommand):
                 rpath_links.append(i.path)
             elif isinstance(i, opts.debug):
                 flags.append('-g')
+            elif isinstance(i, opts.optimize):
+                for j in i.value:
+                    flags.append(_optimize_flags[j])
             elif isinstance(i, opts.pthread):
                 # macOS doesn't expect -pthread when linking.
                 if self.env.target_platform.name != 'darwin':

@@ -145,8 +145,6 @@ class JvmCompiler(BuildCommand):
         for i in options:
             if isinstance(i, opts.lib):
                 class_path.append(i.library.path)
-            elif isinstance(i, opts.debug):
-                flags.append('-g' if self.lang == 'java' else '-g:vars')
             elif isinstance(i, opts.warning):
                 for j in i.value:
                     try:
@@ -154,6 +152,13 @@ class JvmCompiler(BuildCommand):
                     except KeyError:
                         raise ValueError('unsupported warning level {!r}'
                                          .format(j))
+            elif isinstance(i, opts.debug):
+                flags.append('-g' if self.lang == 'java' else '-g:vars')
+            elif isinstance(i, opts.optimize):
+                if ( self.lang == 'scala' and
+                     (opts.OptimizeValue.size in i.value or
+                      opts.OptimizeValue.speed in i.value) ):
+                    flags.append('-optimize')
             elif isinstance(i, safe_str.stringy_types):
                 flags.append(i)
             else:
@@ -243,6 +248,8 @@ class JarMaker(BuildCommand):
             if isinstance(i, safe_str.stringy_types):
                 flags.append(i)
             elif isinstance(i, opts.debug):
+                pass
+            elif isinstance(i, opts.optimize):
                 pass
             else:
                 raise TypeError('unknown option type {!r}'.format(type(i)))
