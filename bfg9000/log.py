@@ -143,6 +143,14 @@ def log_stack(level, message, *args, **kwargs):
     logging.log(level, message, *args, extra=extra, **kwargs)
 
 
+def info(msg, show_stack=False):
+    log_stack(INFO, msg, show_stack=show_stack, stacklevel=1)
+
+
+def debug(msg, show_stack=True):
+    log_stack(DEBUG, msg, show_stack=show_stack, stacklevel=1)
+
+
 def _showwarning(message, category, filename, lineno, file=None, line=None):
     # Python 3.6 changes how stacklevel is counted.
     stacklevel = 2 if sys.version_info >= (3, 6) else 1

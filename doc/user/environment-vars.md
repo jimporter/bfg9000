@@ -141,18 +141,18 @@ file.
 ---
 
 #### *AR*
-Default: `ar`
+Default: `ar` (POSIX), `lib` (Windows)
 {: .subtitle}
 
-*POSIX-only*. The command to use when creating static libraries from object
-files.
+The command to use when creating (native) static libraries from object files
+(typically `ar` on POSIX and `lib` on Windows).
 
 #### *ARFLAGS*
-Default: `cru`
+Default: `cru` (POSIX)
 {: .subtitle}
 
-*POSIX-only*. The arguments to pass to the static library builder (typically
-`ar`).
+The arguments to pass to the static library builder (specified in `AR`) for
+native libraries.
 
 #### *JAR*
 Default: `jar`
@@ -160,21 +160,21 @@ Default: `jar`
 
 The command to use when creating `.jar` files for JVM-based binaries.
 
-#### *LIBFLAGS*
-Default: *none*
+#### *JARFLAGS*
+Default: `cfm`
 {: .subtitle}
 
-*Windows-only*. Command line arguments to pass to the static library builder
-(typically `lib`).
-
-#### *VCLIB*
-Default: `lib`
-{: .subtitle}
-
-*MSVC-only*. The command to use when creating static libraries.
+The arugments to pass to the JAR builders when creating `.jar` files.
 
 ### Dynamic linking
 ---
+
+#### *LD*
+Default: *none* (POSIX), `link` (Windows)
+{: .subtitle}
+
+The command to use when linking shared libraries; when using a cc-like builder,
+this will be processed to infer the appropriate `-fuse-ld` flag for the linker.
 
 #### *LDFLAGS*
 Default: *none*
@@ -190,12 +190,6 @@ Default: *none*
 Additional libraries to link into an executable or shared library. This is
 mainly useful for cases where a system library (e.g. the C++ Standard Library
 implementation) requires another library to be explicitly linked with it.
-
-#### *VCLINK*
-Default: `link`
-{: .subtitle}
-
-*MSVC-only*. The command to use when linking shared libraries.
 
 ## Execution variables
 ---

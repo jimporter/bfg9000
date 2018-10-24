@@ -6,7 +6,7 @@ from itertools import chain
 from six import string_types
 
 from . import pkg_config
-from .. import options as opts, safe_str, shell
+from .. import log, options as opts, safe_str, shell
 from .ar import ArLinker
 from .common import (BuildCommand, check_which, darwin_install_name,
                      library_macro)
@@ -34,6 +34,17 @@ class CcBuilder(object):
         name = langinfo.var('compiler').lower()
         ldinfo = known_formats['native', 'dynamic']
         arinfo = known_formats['native', 'static']
+
+        # Try to infer the appropriate -fuse-ld option from the LD environment
+        # variable.
+        link_command = command[:]
+        ld_command = env.getvar(ldinfo.var('linker'))
+        if ld_command:
+            tail = os.path.splitext(ld_command)[1][1:]
+            if tail in ['bfd', 'gold']:
+                log.info('setting `-fuse-ld={}` for `{}`'
+                         .format(tail, shell.join(command)))
+                link_command.append('-fuse-ld={}'.format(tail))
 
         self.lang = langinfo.name
         self.object_format = env.target_platform.object_format
@@ -93,12 +104,12 @@ class CcBuilder(object):
 
         self._linkers = {
             'executable': CcExecutableLinker(
-                self, env, name, command, ldflags_name, ldflags, ldlibs_name,
-                ldlibs
+                self, env, name, link_command, ldflags_name, ldflags,
+                ldlibs_name, ldlibs
             ),
             'shared_library': CcSharedLibraryLinker(
-                self, env, name, command, ldflags_name, ldflags, ldlibs_name,
-                ldlibs
+                self, env, name, link_command, ldflags_name, ldflags,
+                ldlibs_name, ldlibs
             ),
             'static_library': ArLinker(self, env, ar_name, ar_command,
                                        arflags_name, arflags),

@@ -129,6 +129,16 @@ class TestCcBuilder(unittest.TestCase):
         self.assertEqual(cc.linker('executable').version, None)
         self.assertEqual(cc.linker('shared_library').version, None)
 
+    def test_set_ld(self):
+        version = ('g++ (Ubuntu 5.4.0-6ubuntu1~16.04.6) 5.4.0 20160609\n' +
+                   'Copyright (C) 2015 Free Software Foundation, Inc.')
+
+        self.env.variables['LD'] = '/usr/bin/ld.gold'
+        with mock.patch('bfg9000.shell.which', mock_which), \
+             mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
+            cc = CcBuilder(self.env, known_langs['c++'], ['g++'], version)
+        self.assertEqual(cc.linker('executable').command[-1], '-fuse-ld=gold')
+
 
 class TestCcCompiler(unittest.TestCase):
     def setUp(self):
