@@ -326,18 +326,18 @@ class VcxProject(Project):
         self._write_link_options(link_opts, self.link_options)
 
         self._write(out, [
-            E.Import(Project='$(VCTargetsPath)\Microsoft.Cpp.default.props'),
+            E.Import(Project=r'$(VCTargetsPath)\Microsoft.Cpp.default.props'),
             E.PropertyGroup({'Label': 'Configuration'},
                 E.ConfigurationType(self.mode),
                 E.UseDebugLibraries('true'),
                 E.PlatformToolset(self.toolset),
                 E.CharacterSet('Multibyte')
             ),
-            E.Import(Project='$(VCTargetsPath)\Microsoft.Cpp.props'),
+            E.Import(Project=r'$(VCTargetsPath)\Microsoft.Cpp.props'),
             override_props,
             E.ItemDefinitionGroup(compile_opts, link_opts),
             self._compiles(self.files),
-            E.Import(Project='$(VCTargetsPath)\Microsoft.Cpp.Targets')
+            E.Import(Project=r'$(VCTargetsPath)\Microsoft.Cpp.Targets')
         ])
 
     def _compiles(self, files):
@@ -456,8 +456,8 @@ class ExecProject(Project):
         self._write(out, [
             # Import the C++ properties to get $(OutDir). There might be a
             # better way to handle this.
-            E.Import(Project='$(VCTargetsPath)\Microsoft.Cpp.default.props'),
-            E.Import(Project='$(VCTargetsPath)\Microsoft.Cpp.props'),
+            E.Import(Project=r'$(VCTargetsPath)\Microsoft.Cpp.default.props'),
+            E.Import(Project=r'$(VCTargetsPath)\Microsoft.Cpp.props'),
             target
         ])
 

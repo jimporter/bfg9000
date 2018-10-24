@@ -106,7 +106,7 @@ class Writer(object):
 
 class Variable(object):
     def __init__(self, name):
-        self.name = re.sub('\W', '_', name)
+        self.name = re.sub(r'\W', '_', name)
 
     def use(self):
         return safe_str.literal('${{{}}}'.format(self.name))
@@ -200,7 +200,7 @@ class NinjaFile(object):
             else:
                 raise ValueError("unknown pool '{}'".format(pool))
 
-        if re.search('\W', name):
+        if re.search(r'\W', name):
             raise ValueError('rule name contains invalid characters')
 
         if self.has_rule(name):
