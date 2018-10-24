@@ -12,7 +12,7 @@ from bfg9000.versioning import Version
 
 known_langs = Languages()
 with known_langs.make('c++') as x:
-    x.vars(compiler='CXX', cflags='CXXFLAGS')
+    x.vars(compiler='CXX', flags='CXXFLAGS')
 
 
 def mock_which(*args, **kwargs):

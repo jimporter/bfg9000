@@ -8,6 +8,7 @@ from ..builtins.file_types import generated_file
 from ..exceptions import PackageResolutionError
 from ..file_types import *
 from ..iterutils import flatten, iterate, uniques
+from ..languages import known_formats
 from ..packages import Package
 from ..path import Path, Root
 from ..versioning import detect_version
@@ -29,13 +30,20 @@ _warning_flags = {
 class JvmBuilder(object):
     def __init__(self, env, langinfo, command, version_output):
         name = langinfo.var('compiler').lower()
+        ldinfo = known_formats['jvm', 'dynamic']
+
         self.lang = langinfo.name
         self.object_format = 'jvm'
 
-        flags_name = langinfo.var('cflags').lower()
-        flags = shell.split(env.getvar(langinfo.var('cflags'), ''))
+        flags_name = langinfo.var('flags').lower()
+        flags = shell.split(env.getvar(langinfo.var('flags'), ''))
 
-        jar_command = check_which(env.getvar('JAR', 'jar'), kind='jar builder')
+        jar_name = ldinfo.var('linker').lower()
+        jar_command = check_which(env.getvar(ldinfo.var('linker'), 'jar'),
+                                  kind='jar builder')
+
+        jarflags_name = ldinfo.var('flags').lower()
+        jarflags = shell.split(env.getvar(ldinfo.var('flags'), 'cfm'))
 
         # The default command name to run JVM programs is (usually) the same as
         # the name of the language, so we'll just use that here as the default.
@@ -69,7 +77,8 @@ class JvmBuilder(object):
 
         self.compiler = JvmCompiler(self, env, name, command, flags_name,
                                     flags)
-        self._linker = JarMaker(self, env, jar_command)
+        self._linker = JarMaker(self, env, jar_name, jar_command,
+                                jarflags_name, jarflags)
         self.packages = JvmPackageResolver(self, env, run_command)
         self.runner = JvmRunner(self, env, run_name, run_command)
 
@@ -175,12 +184,9 @@ class JvmCompiler(BuildCommand):
 
 
 class JarMaker(BuildCommand):
-    flags_var = 'jarflags'
-
-    def __init__(self, builder, env, command):
-        global_flags = shell.split(env.getvar('JARFLAGS', 'cfm'))
+    def __init__(self, builder, env, name, command, jarflags_name, jarflags):
         BuildCommand.__init__(self, builder, env, 'jar', 'jar', command,
-                              flags=('jarflags', global_flags))
+                              flags=(jarflags_name, jarflags))
 
     @property
     def brand(self):

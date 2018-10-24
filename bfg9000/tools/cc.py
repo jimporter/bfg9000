@@ -8,13 +8,15 @@ from six import string_types
 from . import pkg_config
 from .. import options as opts, safe_str, shell
 from .ar import ArLinker
-from .common import BuildCommand, darwin_install_name, library_macro
+from .common import (BuildCommand, check_which, darwin_install_name,
+                     library_macro)
 from .ld import LdLinker
 from ..builtins.symlink import Symlink
 from ..exceptions import PackageResolutionError
 from ..file_types import *
 from ..iterutils import (default_sentinel, first, flatten, iterate, listify,
                          uniques, recursive_walk)
+from ..languages import known_formats
 from ..packages import CommonPackage, Framework, PackageKind
 from ..path import InstallRoot, Path, Root
 from ..versioning import detect_version, SpecifierSet
@@ -30,6 +32,9 @@ _optimize_flags = {
 class CcBuilder(object):
     def __init__(self, env, langinfo, command, version_output):
         name = langinfo.var('compiler').lower()
+        ldinfo = known_formats['native', 'dynamic']
+        arinfo = known_formats['native', 'static']
+
         self.lang = langinfo.name
         self.object_format = env.target_platform.object_format
 
@@ -43,13 +48,22 @@ class CcBuilder(object):
             self.brand = 'unknown'
             self.version = None
 
-        cflags_name = langinfo.var('cflags').lower()
+        cflags_name = langinfo.var('flags').lower()
         cflags = (
             shell.split(env.getvar('CPPFLAGS', '')) +
-            shell.split(env.getvar(langinfo.var('cflags'), ''))
+            shell.split(env.getvar(langinfo.var('flags'), ''))
         )
-        ldflags = shell.split(env.getvar('LDFLAGS', ''))
-        ldlibs = shell.split(env.getvar('LDLIBS', ''))
+
+        ldflags_name = ldinfo.var('flags').lower()
+        ldflags = shell.split(env.getvar(ldinfo.var('flags'), ''))
+        ldlibs_name = ldinfo.var('libs').lower()
+        ldlibs = shell.split(env.getvar(ldinfo.var('libs'), ''))
+
+        ar_name = arinfo.var('linker').lower()
+        ar_command = check_which(env.getvar(arinfo.var('linker'), 'ar'),
+                                 env.variables, kind='static linker')
+        arflags_name = arinfo.var('flags').lower()
+        arflags = shell.split(env.getvar(arinfo.var('flags'), 'cr'))
 
         # macOS's ld doesn't support --version, but we can still try it out and
         # grab the command line.
@@ -79,12 +93,15 @@ class CcBuilder(object):
 
         self._linkers = {
             'executable': CcExecutableLinker(
-                self, env, name, command, ldflags, ldlibs
+                self, env, name, command, ldflags_name, ldflags, ldlibs_name,
+                ldlibs
             ),
             'shared_library': CcSharedLibraryLinker(
-                self, env, name, command, ldflags, ldlibs
+                self, env, name, command, ldflags_name, ldflags, ldlibs_name,
+                ldlibs
             ),
-            'static_library': ArLinker(self, env),
+            'static_library': ArLinker(self, env, ar_name, ar_command,
+                                       arflags_name, arflags),
         }
         if ld_command:
             self._linkers['raw'] = LdLinker(self, env, ld_command, stdout)
@@ -283,11 +300,11 @@ class CcLinker(BuildCommand):
         'java'  : {'java', 'c', 'c++', 'objc', 'objc++', 'f77', 'f95'},
     }
 
-    def __init__(self, builder, env, rule_name, command_var, command, ldflags,
-                 ldlibs):
+    def __init__(self, builder, env, rule_name, command_var, command,
+                 ldflags_name, ldflags, ldlibs_name, ldlibs):
         BuildCommand.__init__(
             self, builder, env, rule_name, command_var, command,
-            flags=('ldflags', ldflags), libs=('ldlibs', ldlibs)
+            flags=(ldflags_name, ldflags), libs=(ldlibs_name, ldlibs)
         )
 
         # Create a regular expression to extract the library name for linking
@@ -603,9 +620,10 @@ class CcLinker(BuildCommand):
 class CcExecutableLinker(CcLinker):
     _is_library = False
 
-    def __init__(self, builder, env, name, command, ldflags, ldlibs):
+    def __init__(self, builder, env, name, command, ldflags_name, ldflags,
+                 ldlibs_name, ldlibs):
         CcLinker.__init__(self, builder, env, name + '_link', name, command,
-                          ldflags, ldlibs)
+                          ldflags_name, ldflags, ldlibs_name, ldlibs)
 
     def output_file(self, name, context):
         path = Path(name + self.env.target_platform.executable_ext)
@@ -615,9 +633,10 @@ class CcExecutableLinker(CcLinker):
 class CcSharedLibraryLinker(CcLinker):
     _is_library = True
 
-    def __init__(self, builder, env, name, command, ldflags, ldlibs):
+    def __init__(self, builder, env, name, command, ldflags_name, ldflags,
+                 ldlibs_name, ldlibs):
         CcLinker.__init__(self, builder, env, name + '_linklib', name, command,
-                          ldflags, ldlibs)
+                          ldflags_name, ldflags, ldlibs_name, ldlibs)
 
     @property
     def num_outputs(self):

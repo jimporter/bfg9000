@@ -54,7 +54,7 @@ def compile_options(options, lang):
     # environment variable.
     if isiterable(options):
         options = pshell.join(options)
-    os.environ[known_langs[lang].var('cflags')] = options
+    os.environ[known_langs[lang].var('flags')] = options
 
 
 @builtin.function(context='toolchain')

@@ -5,11 +5,11 @@ from ..iterutils import first
 from ..languages import known_langs
 
 with known_langs.make('f77') as x:
-    x.vars(compiler='FC', cflags='FFLAGS')
+    x.vars(compiler='FC', flags='FFLAGS')
     x.exts(source=['.f', '.for', '.ftn'])
 
 with known_langs.make('f95') as x:
-    x.vars(compiler='FC', cflags='FFLAGS')
+    x.vars(compiler='FC', flags='FFLAGS')
     x.exts(source=['.f90', '.f95', '.f03', '.f08'])
 
 _default_cmds = ['gfortran']

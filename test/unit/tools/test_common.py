@@ -9,7 +9,7 @@ from bfg9000.tools import cc, common
 
 known_langs = Languages()
 with known_langs.make('c') as x:
-    x.vars(compiler='CC', cflags='CFLAGS')
+    x.vars(compiler='CC', flags='CFLAGS')
 
 
 def mock_which(*args, **kwargs):

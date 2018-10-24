@@ -13,9 +13,9 @@ from bfg9000.versioning import Version
 
 known_langs = Languages()
 with known_langs.make('c++') as x:
-    x.vars(compiler='CXX', cflags='CXXFLAGS')
+    x.vars(compiler='CXX', flags='CXXFLAGS')
 with known_langs.make('java') as x:
-    x.vars(compiler='JAVAC', cflags='JAVAFLAGS')
+    x.vars(compiler='JAVAC', flags='JAVAFLAGS')
 
 
 def mock_which(*args, **kwargs):

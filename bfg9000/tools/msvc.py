@@ -10,7 +10,7 @@ from ..builtins.file_types import generated_file
 from ..exceptions import PackageResolutionError
 from ..file_types import *
 from ..iterutils import default_sentinel, flatten, iterate, listify, uniques
-from ..languages import known_langs
+from ..languages import known_langs, known_formats
 from ..objutils import memoize
 from ..packages import CommonPackage, Framework, PackageKind
 from ..path import Path, Root
@@ -34,6 +34,9 @@ _optimize_flags = {
 class MsvcBuilder(object):
     def __init__(self, env, langinfo, command, version_output):
         name = langinfo.var('compiler').lower()
+        ldinfo = known_formats['native', 'dynamic']
+        arinfo = known_formats['native', 'static']
+
         self.lang = langinfo.name
         self.object_format = env.target_platform.object_format
 
@@ -52,21 +55,29 @@ class MsvcBuilder(object):
             if os.path.basename(i) in ('cl', 'cl.exe'):
                 origin = os.path.dirname(i)
         link_command = check_which(
-            env.getvar('VCLINK', os.path.join(origin, 'link')),
+            env.getvar(ldinfo.var('linker'), os.path.join(origin, 'link')),
             env.variables, kind='dynamic linker'.format(self.lang)
         )
         lib_command = check_which(
-            env.getvar('VCLIB', os.path.join(origin, 'lib')),
+            env.getvar(arinfo.var('linker'), os.path.join(origin, 'lib')),
             env.variables, kind='static linker'.format(self.lang)
         )
 
-        cflags_name = langinfo.var('cflags').lower()
+        cflags_name = langinfo.var('flags').lower()
         cflags = (
             shell.split(env.getvar('CPPFLAGS', '')) +
-            shell.split(env.getvar(langinfo.var('cflags'), ''))
+            shell.split(env.getvar(langinfo.var('flags'), ''))
         )
-        ldflags = shell.split(env.getvar('LDFLAGS', ''))
-        ldlibs = shell.split(env.getvar('LDLIBS', ''))
+
+        ld_name = ldinfo.var('linker').lower()
+        ldflags_name = ldinfo.var('flags').lower()
+        ldflags = shell.split(env.getvar(ldinfo.var('flags'), ''))
+        ldlibs_name = ldinfo.var('libs').lower()
+        ldlibs = shell.split(env.getvar(ldinfo.var('libs'), ''))
+
+        ar_name = arinfo.var('linker').lower()
+        arflags_name = arinfo.var('flags').lower()
+        arflags = shell.split(env.getvar(arinfo.var('flags'), ''))
 
         self.compiler = MsvcCompiler(self, env, name, command, cflags_name,
                                      cflags)
@@ -74,13 +85,15 @@ class MsvcBuilder(object):
                                             cflags_name, cflags)
         self._linkers = {
             'executable': MsvcExecutableLinker(
-                self, env, link_command, ldflags, ldlibs
+                self, env, name, ld_name, link_command, ldflags_name, ldflags,
+                ldlibs_name, ldlibs
             ),
             'shared_library': MsvcSharedLibraryLinker(
-                self, env, link_command, ldflags, ldlibs
+                self, env, name, ld_name, link_command, ldflags_name, ldflags,
+                ldlibs_name, ldlibs
             ),
             'static_library': MsvcStaticLinker(
-                self, env, lib_command
+                self, env, ar_name, lib_command, arflags_name, arflags
             ),
         }
         self.packages = MsvcPackageResolver(self, env)
@@ -285,19 +298,17 @@ class MsvcPchCompiler(MsvcBaseCompiler):
 
 
 class MsvcLinker(BuildCommand):
-    flags_var = 'ldflags'
-    libs_var = 'ldlibs'
-
     __lib_re = re.compile(r'(.*)\.lib$')
     __allowed_langs = {
         'c'     : {'c'},
         'c++'   : {'c', 'c++'},
     }
 
-    def __init__(self, builder, env, rule_name, command, ldflags, ldlibs):
+    def __init__(self, builder, env, rule_name, name, command, ldflags_name,
+                 ldflags, ldlibs_name, ldlibs):
         BuildCommand.__init__(
-            self, builder, env, rule_name, 'vclink', command,
-            flags=('ldflags', ldflags), libs=('ldlibs', ldlibs)
+            self, builder, env, rule_name, name, command,
+            flags=(ldflags_name, ldflags), libs=(ldlibs_name, ldlibs)
         )
 
     def _extract_lib_name(self, library):
@@ -430,8 +441,10 @@ class MsvcLinker(BuildCommand):
 
 
 class MsvcExecutableLinker(MsvcLinker):
-    def __init__(self, builder, env, command, ldflags, ldlibs):
-        MsvcLinker.__init__(self, builder, env, 'vclink', command, ldflags,
+    def __init__(self, builder, env, name, command_var, command, ldflags_name,
+                 ldflags, ldlibs_name, ldlibs):
+        MsvcLinker.__init__(self, builder, env, name + '_link', command_var,
+                            command, ldflags_name, ldflags, ldlibs_name,
                             ldlibs)
 
     def output_file(self, name, context):
@@ -440,8 +453,10 @@ class MsvcExecutableLinker(MsvcLinker):
 
 
 class MsvcSharedLibraryLinker(MsvcLinker):
-    def __init__(self, builder, env, command, ldflags, ldlibs):
-        MsvcLinker.__init__(self, builder, env, 'vclinklib', command, ldflags,
+    def __init__(self, builder, env, name, command_var, command, ldflags_name,
+                 ldflags, ldlibs_name, ldlibs):
+        MsvcLinker.__init__(self, builder, env, name + '_linklib', command_var,
+                            command, ldflags_name, ldflags, ldlibs_name,
                             ldlibs)
 
     @property
@@ -475,10 +490,9 @@ class MsvcSharedLibraryLinker(MsvcLinker):
 
 
 class MsvcStaticLinker(BuildCommand):
-    def __init__(self, builder, env, command):
-        global_flags = shell.split(env.getvar('LIBFLAGS', ''))
-        BuildCommand.__init__(self, builder, env, 'vclib', 'vclib', command,
-                              flags=('libflags', global_flags))
+    def __init__(self, builder, env, name, command, arflags_name, arflags):
+        BuildCommand.__init__(self, builder, env, name, name,
+                              command, flags=(arflags_name, arflags))
 
     @property
     def flavor(self):

@@ -16,7 +16,7 @@ class TestArLinker(unittest.TestCase):
     def setUp(self):
         self.env = make_env()
         with mock.patch('bfg9000.shell.which', mock_which):
-            self.ar = ArLinker(None, self.env)
+            self.ar = ArLinker(None, self.env, 'ar', ['ar'], 'arflags', [])
 
     def test_flavor(self):
         self.assertEqual(self.ar.flavor, 'ar')

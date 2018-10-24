@@ -14,9 +14,9 @@ from bfg9000.versioning import Version
 
 known_langs = Languages()
 with known_langs.make('java') as x:
-    x.vars(compiler='JAVAC', runner='JAVACMD', cflags='JAVAFLAGS')
+    x.vars(compiler='JAVAC', runner='JAVACMD', flags='JAVAFLAGS')
 with known_langs.make('scala') as x:
-    x.vars(compiler='SCALAC', runner='SCALACMD', cflags='SCALAFLAGS')
+    x.vars(compiler='SCALAC', runner='SCALACMD', flags='SCALAFLAGS')
 
 
 def mock_which(*args, **kwargs):
