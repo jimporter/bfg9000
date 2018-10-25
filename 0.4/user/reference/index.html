@@ -964,6 +964,26 @@ should use the appropriate option strings for the compiler to be used.</p>
 <h3 id="environ">environ<a class="headerlink" href="#environ" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>&lt;toolchain&gt;.bfg</code></p>
 <p>A <code>dict</code> of the current environment variables, suitable for getting/setting.</p>
+<h3 id="lib_options">lib_options(<em>options</em>, [<em>format</em>], [<em>mode</em>])<a class="headerlink" href="#lib_options" title="Permanent link">§</a></h3>
+<p class="subtitle">Availability: <code>&lt;toolchain&gt;.bfg</code></p>
+<p>Set lib options to use for the format <em>format</em> (defaults to <code>'native'</code>) and
+mode <em>mode</em> (defaults to <code>'dynamic'</code>). <em>options</em> is either a string of all the
+options or a list of strings, one element per option. Unlike
+<a href="#link_options"><em>link_options</em></a>, this is used to specify options which appear at
+the <em>end</em> of a linker command (like <code>$LDLIBS</code>).</p>
+<h3 id="linker">linker(<em>names</em>, [<em>format</em>], [<em>mode</em>])<a class="headerlink" href="#linker" title="Permanent link">§</a></h3>
+<p class="subtitle">Availability: <code>&lt;toolchain&gt;.bfg</code></p>
+<p>Set the link to use for the format <em>format</em> (defaults to <code>'native'</code>) and mode
+<em>mode</em> (defaults to <code>'dynamic'</code>). <em>names</em> is a string representing the path to
+the linker (resolved as with <a href="#which"><em>which</em></a>) or a list of possible paths (as
+strings or lists or strings). If <em>strict</em> is true, <em>linker</em> will raise an
+<code>IOError</code> if an executable cannot be found; if false, it will use the first
+candidate.</p>
+<h3 id="link_options">link_options(<em>options</em>, [<em>format</em>], [<em>mode</em>])<a class="headerlink" href="#link_options" title="Permanent link">§</a></h3>
+<p class="subtitle">Availability: <code>&lt;toolchain&gt;.bfg</code></p>
+<p>Set link options to use for the format <em>format</em> (defaults to <code>'native'</code>) and
+mode <em>mode</em> (defaults to <code>'dynamic'</code>). <em>options</em> is either a string of all the
+options or a list of strings, one element per option.</p>
 <h3 id="runner">runner(<em>names</em>, <em>lang</em>)<a class="headerlink" href="#runner" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>&lt;toolchain&gt;.bfg</code></p>
 <p>Set the runner to use for the language <em>lang</em>, if that language supports runners
