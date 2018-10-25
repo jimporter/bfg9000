@@ -714,7 +714,9 @@ class CcSharedLibraryLinker(CcLinker):
             return ['-Wl,-soname,' + soname.path.basename()]
 
     def compile_options(self, context):
-        options = opts.option_list(opts.pic())
+        options = opts.option_list()
+        if self.builder.object_format != 'coff':
+            options.append(opts.pic())
         if self.has_link_macros:
             options.append(opts.define(library_macro(
                 context.name, 'shared_library'

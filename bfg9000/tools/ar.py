@@ -52,8 +52,11 @@ class ArLinker(BuildCommand):
         return self.env.target_platform.has_import_library
 
     def compile_options(self, context):
-        return (opts.option_list(opts.pic()) +
-                self.forwarded_compile_options(context))
+        options = opts.option_list()
+        if self.builder.object_format != 'coff':
+            options.append(opts.pic())
+        options.extend(self.forwarded_compile_options(context))
+        return options
 
     def forwarded_compile_options(self, context):
         options = opts.option_list()
