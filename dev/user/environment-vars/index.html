@@ -241,25 +241,25 @@ file.</p>
 <h3 id="static-linking">Static linking<a class="headerlink" href="#static-linking" title="Permanent link">§</a></h3>
 <hr />
 <h4 id="ar"><em>AR</em><a class="headerlink" href="#ar" title="Permanent link">§</a></h4>
-<p class="subtitle">Default: <code>ar</code></p>
-<p><em>POSIX-only</em>. The command to use when creating static libraries from object
-files.</p>
+<p class="subtitle">Default: <code>ar</code> (POSIX), <code>lib</code> (Windows)</p>
+<p>The command to use when creating (native) static libraries from object files
+(typically <code>ar</code> on POSIX and <code>lib</code> on Windows).</p>
 <h4 id="arflags"><em>ARFLAGS</em><a class="headerlink" href="#arflags" title="Permanent link">§</a></h4>
-<p class="subtitle">Default: <code>cru</code></p>
-<p><em>POSIX-only</em>. The arguments to pass to the static library builder (typically
-<code>ar</code>).</p>
+<p class="subtitle">Default: <code>cru</code> (POSIX)</p>
+<p>The arguments to pass to the static library builder (specified in <code>AR</code>) for
+native libraries.</p>
 <h4 id="jar"><em>JAR</em><a class="headerlink" href="#jar" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <code>jar</code></p>
 <p>The command to use when creating <code>.jar</code> files for JVM-based binaries.</p>
-<h4 id="libflags"><em>LIBFLAGS</em><a class="headerlink" href="#libflags" title="Permanent link">§</a></h4>
-<p class="subtitle">Default: <em>none</em></p>
-<p><em>Windows-only</em>. Command line arguments to pass to the static library builder
-(typically <code>lib</code>).</p>
-<h4 id="vclib"><em>VCLIB</em><a class="headerlink" href="#vclib" title="Permanent link">§</a></h4>
-<p class="subtitle">Default: <code>lib</code></p>
-<p><em>MSVC-only</em>. The command to use when creating static libraries.</p>
+<h4 id="jarflags"><em>JARFLAGS</em><a class="headerlink" href="#jarflags" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <code>cfm</code></p>
+<p>The arugments to pass to the JAR builders when creating <code>.jar</code> files.</p>
 <h3 id="dynamic-linking">Dynamic linking<a class="headerlink" href="#dynamic-linking" title="Permanent link">§</a></h3>
 <hr />
+<h4 id="ld"><em>LD</em><a class="headerlink" href="#ld" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <em>none</em> (POSIX), <code>link</code> (Windows)</p>
+<p>The command to use when linking shared libraries; when using a cc-like builder,
+this will be processed to infer the appropriate <code>-fuse-ld</code> flag for the linker.</p>
 <h4 id="ldflags"><em>LDFLAGS</em><a class="headerlink" href="#ldflags" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <em>none</em></p>
 <p>Command line arguments to pass to the linker when linking an executable or
@@ -269,9 +269,6 @@ shared library.</p>
 <p>Additional libraries to link into an executable or shared library. This is
 mainly useful for cases where a system library (e.g. the C++ Standard Library
 implementation) requires another library to be explicitly linked with it.</p>
-<h4 id="vclink"><em>VCLINK</em><a class="headerlink" href="#vclink" title="Permanent link">§</a></h4>
-<p class="subtitle">Default: <code>link</code></p>
-<p><em>MSVC-only</em>. The command to use when linking shared libraries.</p>
 <h2 id="execution-variables">Execution variables<a class="headerlink" href="#execution-variables" title="Permanent link">§</a></h2>
 <hr />
 <h4 id="javacmd"><em>JAVACMD</em><a class="headerlink" href="#javacmd" title="Permanent link">§</a></h4>
