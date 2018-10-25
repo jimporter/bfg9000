@@ -5,7 +5,7 @@ from . import builtin
 from .. import shell
 from .. import tools
 from ..iterutils import first, isiterable
-from ..languages import known_langs
+from ..languages import known_formats, known_langs
 from ..shell import posix as pshell
 
 _unsafe_builtins = ['file', '__import__', 'input', 'open', 'raw_input',
@@ -61,3 +61,27 @@ def compile_options(options, lang):
 def runner(names, lang, strict=False):
     var = known_langs[lang].var('runner')
     os.environ[var] = which(names, strict=strict, kind='runner')
+
+
+@builtin.function(context='toolchain')
+def linker(names, format='native', mode='dynamic', strict=False):
+    var = known_formats[format, mode].var('linker')
+    os.environ[var] = which(names, strict=strict, kind='linker')
+
+
+@builtin.function(context='toolchain')
+def link_options(options, format='native', mode='dynamic'):
+    # As above, this only supports strings (and lists of strings) for options,
+    # *not* semantic options.
+    if isiterable(options):
+        options = pshell.join(options)
+    os.environ[known_formats[format, mode].var('flags')] = options
+
+
+@builtin.function(context='toolchain')
+def lib_options(options, format='native', mode='dynamic'):
+    # As above, this only supports strings (and lists of strings) for options,
+    # *not* semantic options.
+    if isiterable(options):
+        options = pshell.join(options)
+    os.environ[known_formats[format, mode].var('libs')] = options

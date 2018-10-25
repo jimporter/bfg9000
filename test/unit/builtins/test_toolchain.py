@@ -112,3 +112,94 @@ class TestToolchain(unittest.TestCase):
                                   strict=True)
                 self.assertRaises(IOError, toolchain.runner, ['foo', 'bar'],
                                   'java', strict=True)
+
+    def test_dynamic_linker(self):
+        environ = {}
+        with mock.patch('os.environ', environ):
+            with mock.patch('bfg9000.shell.which', mock_which):
+                toolchain.linker('foo')
+                self.assertEqual(environ, {'LD': 'command'})
+                toolchain.linker(['foo', 'bar'])
+                self.assertEqual(environ, {'LD': 'command'})
+
+                toolchain.linker('foo', 'native')
+                self.assertEqual(environ, {'LD': 'command'})
+                toolchain.linker(['foo', 'bar'], 'native')
+                self.assertEqual(environ, {'LD': 'command'})
+
+                toolchain.linker('foo', 'native', strict=True)
+                self.assertEqual(environ, {'LD': 'command'})
+                toolchain.linker(['foo', 'bar'], 'native', strict=True)
+                self.assertEqual(environ, {'LD': 'command'})
+
+            with mock.patch('bfg9000.shell.which', mock_bad_which):
+                toolchain.linker('foo', 'native')
+                self.assertEqual(environ, {'LD': 'foo'})
+                toolchain.linker(['foo', 'bar'], 'native')
+                self.assertEqual(environ, {'LD': 'foo'})
+
+                self.assertRaises(IOError, toolchain.linker, 'foo', 'native',
+                                  strict=True)
+                self.assertRaises(IOError, toolchain.linker, ['foo', 'bar'],
+                                  'native', strict=True)
+
+    def test_static_linker(self):
+        environ = {}
+        with mock.patch('os.environ', environ):
+            with mock.patch('bfg9000.shell.which', mock_which):
+                toolchain.linker('foo', mode='static')
+                self.assertEqual(environ, {'AR': 'command'})
+                toolchain.linker(['foo', 'bar'], mode='static')
+                self.assertEqual(environ, {'AR': 'command'})
+
+                toolchain.linker('foo', 'native', 'static')
+                self.assertEqual(environ, {'AR': 'command'})
+                toolchain.linker(['foo', 'bar'], 'native', 'static')
+                self.assertEqual(environ, {'AR': 'command'})
+
+                toolchain.linker('foo', 'native', 'static', strict=True)
+                self.assertEqual(environ, {'AR': 'command'})
+                toolchain.linker(['foo', 'bar'], 'native', 'static',
+                                 strict=True)
+                self.assertEqual(environ, {'AR': 'command'})
+
+            with mock.patch('bfg9000.shell.which', mock_bad_which):
+                toolchain.linker('foo', 'native', 'static')
+                self.assertEqual(environ, {'AR': 'foo'})
+                toolchain.linker(['foo', 'bar'], 'native', 'static')
+                self.assertEqual(environ, {'AR': 'foo'})
+
+                self.assertRaises(IOError, toolchain.linker, 'foo', 'native',
+                                  'static', strict=True)
+                self.assertRaises(IOError, toolchain.linker, ['foo', 'bar'],
+                                  'native', 'static', strict=True)
+
+    def test_link_options(self):
+        environ = {}
+        with mock.patch('os.environ', environ):
+            toolchain.link_options('foo')
+            self.assertEqual(environ, {'LDFLAGS': 'foo'})
+
+            toolchain.link_options('foo', 'native')
+            self.assertEqual(environ, {'LDFLAGS': 'foo'})
+
+            toolchain.link_options(['foo', 'bar'])
+            self.assertEqual(environ, {'LDFLAGS': 'foo bar'})
+
+            toolchain.link_options(['foo', 'bar'], 'native')
+            self.assertEqual(environ, {'LDFLAGS': 'foo bar'})
+
+    def test_lib_options(self):
+        environ = {}
+        with mock.patch('os.environ', environ):
+            toolchain.lib_options('foo')
+            self.assertEqual(environ, {'LDLIBS': 'foo'})
+
+            toolchain.lib_options('foo', 'native')
+            self.assertEqual(environ, {'LDLIBS': 'foo'})
+
+            toolchain.lib_options(['foo', 'bar'])
+            self.assertEqual(environ, {'LDLIBS': 'foo bar'})
+
+            toolchain.lib_options(['foo', 'bar'], 'native')
+            self.assertEqual(environ, {'LDLIBS': 'foo bar'})

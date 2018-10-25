@@ -1041,6 +1041,35 @@ Availability: `<toolchain>.bfg`
 
 A `dict` of the current environment variables, suitable for getting/setting.
 
+### lib_options(*options*, [*format*], [*mode*]) { #lib_options }
+Availability: `<toolchain>.bfg`
+{: .subtitle}
+
+Set lib options to use for the format *format* (defaults to `'native'`) and
+mode *mode* (defaults to `'dynamic'`). *options* is either a string of all the
+options or a list of strings, one element per option. Unlike
+[*link_options*](#link_options), this is used to specify options which appear at
+the *end* of a linker command (like `$LDLIBS`).
+
+### linker(*names*, [*format*], [*mode*]) { #linker }
+Availability: `<toolchain>.bfg`
+{: .subtitle}
+
+Set the link to use for the format *format* (defaults to `'native'`) and mode
+*mode* (defaults to `'dynamic'`). *names* is a string representing the path to
+the linker (resolved as with [*which*](#which)) or a list of possible paths (as
+strings or lists or strings). If *strict* is true, *linker* will raise an
+`IOError` if an executable cannot be found; if false, it will use the first
+candidate.
+
+### link_options(*options*, [*format*], [*mode*]) { #link_options }
+Availability: `<toolchain>.bfg`
+{: .subtitle}
+
+Set link options to use for the format *format* (defaults to `'native'`) and
+mode *mode* (defaults to `'dynamic'`). *options* is either a string of all the
+options or a list of strings, one element per option.
+
 ### runner(*names*, *lang*) { #runner }
 Availability: `<toolchain>.bfg`
 {: .subtitle}
