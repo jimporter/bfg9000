@@ -135,7 +135,8 @@ class TestCcBuilder(unittest.TestCase):
 
         self.env.variables['LD'] = '/usr/bin/ld.gold'
         with mock.patch('bfg9000.shell.which', mock_which), \
-             mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
+             mock.patch('bfg9000.shell.execute', mock_execute), \
+             mock.patch('logging.log'):  # noqa
             cc = CcBuilder(self.env, known_langs['c++'], ['g++'], version)
         self.assertEqual(cc.linker('executable').command[-1], '-fuse-ld=gold')
 
