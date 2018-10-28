@@ -499,7 +499,7 @@ class CcLinker(BuildCommand):
             libs.append(opts.lib('gcj'))
         return libs
 
-    def _link_lib(self, library, raw_static):
+    def _link_lib(self, library, raw_link):
         def common_link(library):
             return ['-l' + self._extract_lib_name(library)]
 
@@ -515,13 +515,24 @@ class CcLinker(BuildCommand):
         elif isinstance(library, string_types):
             return ['-l' + library]
         elif isinstance(library, SharedLibrary):
+            # If we created this library, we know its soname is set, so passing
+            # the raw path to the library works (without soname, the linker
+            # would create a reference to the absolute path of the library,
+            # which we don't want). We do this to avoid adding more `-L`
+            # options than we really need, which makes it easier to find the
+            # right library when there are name collisions (e.g. linking to a
+            # system `libfoo` when also building a local `libfoo` to use
+            # elsewhere).
+            if raw_link and library.creator:
+                return [library.path]
             return common_link(library)
         elif isinstance(library, StaticLibrary):
-            # We pass static libraries in raw form when possible as a way of
-            # avoiding getting the shared version when we don't want it. There
-            # are linker options that do this too, but this way is more
-            # compatible.
-            if raw_static:
+            # In addition to the reasons above for shared libraries, we pass
+            # static libraries in raw form as a way of avoiding getting the
+            # shared version when we don't want it. (There are linker options
+            # that do this too, but this way is more compatible and fits with
+            # what we already do.)
+            if raw_link:
                 return [library.path]
             return common_link(library)
 
@@ -531,17 +542,18 @@ class CcLinker(BuildCommand):
         try:
             return common_link(library)
         except ValueError:
-            if raw_static:
+            if raw_link:
                 return [library.path]
             raise
 
-    def _lib_dir(self, library, raw_static):
+    def _lib_dir(self, library, raw_link):
         if not isinstance(library, Library):
             return []
         elif isinstance(library, StaticLibrary):
-            return [] if raw_static else [library.path.parent()]
+            return [] if raw_link else [library.path.parent()]
         elif isinstance(library, SharedLibrary):
-            return [library.path.parent()]
+            return ([] if raw_link and library.creator else
+                    [library.path.parent()])
 
         # As above, if we get here, we should have a generic `Library` object
         # (probably from MinGW). Use `-L` if the library name works with `-l`;
@@ -551,12 +563,12 @@ class CcLinker(BuildCommand):
             self._extract_lib_name(library)
             return [library.path.parent()]
         except ValueError:
-            if raw_static:
+            if raw_link:
                 return []
             raise
 
     def flags(self, options, output=None, mode='normal'):
-        raw_static = mode != 'pkg-config'
+        raw_link = mode != 'pkg-config'
         flags, rpaths, rpath_links, lib_dirs = [], [], [], []
         rpaths.extend(iterate(self._darwin_rpath(options, output)))
 
@@ -564,7 +576,7 @@ class CcLinker(BuildCommand):
             if isinstance(i, opts.lib_dir):
                 lib_dirs.append(i.directory.path)
             elif isinstance(i, opts.lib):
-                lib_dirs.extend(self._lib_dir(i.library, raw_static))
+                lib_dirs.extend(self._lib_dir(i.library, raw_link))
                 rp, rplink = self._local_rpath(i.library, output)
                 rpaths.extend(rp)
                 rpath_links.extend(rplink)
@@ -600,11 +612,11 @@ class CcLinker(BuildCommand):
         return flags
 
     def lib_flags(self, options, mode='normal'):
-        raw_static = mode != 'pkg-config'
+        raw_link = mode != 'pkg-config'
         flags = []
         for i in options:
             if isinstance(i, opts.lib):
-                flags.extend(self._link_lib(i.library, raw_static))
+                flags.extend(self._link_lib(i.library, raw_link))
             elif isinstance(i, opts.lib_literal):
                 flags.append(i.value)
         return flags

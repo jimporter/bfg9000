@@ -28,6 +28,8 @@ in progress
   `ar` that default to deterministic builds
 - Fix building Java projects with OpenJDK 8+
 - Fix loading Boost packages from `C:\Boost` on Windows
+- Libraries are linked via their absolute paths where possible to help
+  disambiguate libraries with the same name
 
 ---
 

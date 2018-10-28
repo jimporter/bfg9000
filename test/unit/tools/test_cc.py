@@ -431,6 +431,15 @@ class TestCcLinker(unittest.TestCase):
             opts.lib(file_types.SharedLibrary(lib, 'native'))
         ), mode='pkg-config'), ['-lfoo'])
 
+        # Shared library with creator
+        x = file_types.SharedLibrary(lib, 'native')
+        x.creator = 'test'
+        self.assertEqual(self.linker.lib_flags(opts.option_list(opts.lib(x))),
+                         [lib])
+        self.assertEqual(self.linker.lib_flags(opts.option_list(opts.lib(x)),
+                                               mode='pkg-config'),
+                         ['-lfoo'])
+
         # Static library
         self.assertEqual(self.linker.lib_flags(opts.option_list(
             opts.lib(file_types.StaticLibrary(lib, 'native'))

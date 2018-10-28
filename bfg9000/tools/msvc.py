@@ -372,7 +372,7 @@ class MsvcLinker(BuildCommand):
             raise TypeError('MSVC does not support frameworks')
         elif isinstance(library, WholeArchive):
             if not self.version or self.version in SpecifierSet('>=19'):
-                return ['/WHOLEARCHIVE:' + library.path.basename()]
+                return ['/WHOLEARCHIVE:' + library.path]
             raise TypeError('whole-archives require MSVC 2015 Update 2')
 
         # Unlike the cc linker, we only support Library objects here (strings
@@ -380,7 +380,17 @@ class MsvcLinker(BuildCommand):
         if syntax == 'cc':
             return ['-l' + self._extract_lib_name(library)]
         else:
-            return [library.path.basename()]
+            # Pass the raw path to the library. We do this to avoid adding more
+            # `/LIBPATH` options than we really need, which makes it easier to
+            # find the right library when there are name collisions (e.g.
+            # linking to a system `libfoo` when also building a local `libfoo`
+            # to use elsewhere).
+            return [library.path]
+
+    def _lib_dir(self, library, syntax):
+        if syntax == 'cc' and not isinstance(library, WholeArchive):
+            return [library.path.parent()]
+        return []
 
     def flags(self, options, output=None, mode='normal'):
         syntax = 'cc' if mode == 'pkg-config' else 'msvc'
@@ -389,7 +399,7 @@ class MsvcLinker(BuildCommand):
             if isinstance(i, opts.lib_dir):
                 lib_dirs.append(i.directory.path)
             elif isinstance(i, opts.lib):
-                lib_dirs.append(i.library.path.parent())
+                lib_dirs.extend(self._lib_dir(i.library, syntax))
             elif isinstance(i, opts.debug):
                 flags.append('/DEBUG')
             elif isinstance(i, opts.optimize):

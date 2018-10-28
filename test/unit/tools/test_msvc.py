@@ -220,12 +220,12 @@ class TestMsvcLinker(unittest.TestCase):
         # Shared library
         self.assertEqual(self.linker.flags(opts.option_list(
             opts.lib(file_types.SharedLibrary(lib, 'native'))
-        )), ['/LIBPATH:' + libdir])
+        )), [])
 
         # Static library
         self.assertEqual(self.linker.flags(opts.option_list(
             opts.lib(file_types.StaticLibrary(lib, 'native'))
-        )), ['/LIBPATH:' + libdir])
+        )), [])
 
         # Mixed
         self.assertEqual(self.linker.flags(opts.option_list(
@@ -253,7 +253,7 @@ class TestMsvcLinker(unittest.TestCase):
 
         self.assertEqual(self.linker.lib_flags(opts.option_list(
             opts.lib(file_types.SharedLibrary(lib, 'native'))
-        )), [lib.basename()])
+        )), [lib])
         self.assertEqual(self.linker.lib_flags(opts.option_list(
             opts.lib(file_types.SharedLibrary(lib, 'native'))
         ), mode='pkg-config'), ['-lfoo'])
@@ -262,7 +262,7 @@ class TestMsvcLinker(unittest.TestCase):
             opts.lib(file_types.WholeArchive(
                 file_types.SharedLibrary(lib, 'native'))
             )
-        )), ['/WHOLEARCHIVE:' + lib.basename()])
+        )), ['/WHOLEARCHIVE:' + lib])
 
         version = ('Microsoft (R) C/C++ Optimizing Compiler Version ' +
                    '18.00.25831 for x86')
