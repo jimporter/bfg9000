@@ -3,7 +3,7 @@ from six import iteritems
 
 from . import builtin
 from .. import shell
-from .. import tools
+from .. import platforms, tools
 from ..iterutils import first, isiterable
 from ..languages import known_formats, known_langs
 from ..shell import posix as pshell
@@ -18,14 +18,14 @@ def builtins():
             if k not in _unsafe_builtins}
 
 
-@builtin.getter(context='toolchain')
-def environ():
-    return os.environ
+@builtin.getter('env', context='toolchain')
+def environ(env):
+    return env.variables
 
 
-@builtin.function('toolchain', context='toolchain')
-def target_platform(toolchain, platform):
-    toolchain.target_platform = platform
+@builtin.function('env', context='toolchain')
+def target_platform(env, platform):
+    env.target_platform = platforms.target.platform_info(platform)
 
 
 @builtin.function(context='toolchain')
@@ -39,14 +39,14 @@ def which(names, resolve=False, strict=True, kind='executable'):
         return pshell.join(result) if isiterable(result) else result
 
 
-@builtin.function(context='toolchain')
-def compiler(names, lang, strict=False):
+@builtin.function('env', context='toolchain')
+def compiler(env, names, lang, strict=False):
     var = known_langs[lang].var('compiler')
-    os.environ[var] = which(names, strict=strict, kind='compiler')
+    env.variables[var] = which(names, strict=strict, kind='compiler')
 
 
-@builtin.function(context='toolchain')
-def compile_options(options, lang):
+@builtin.function('env', context='toolchain')
+def compile_options(env, options, lang):
     # This only supports strings (and lists of strings) for options, *not*
     # semantic options. It would be nice if we could support semantic options,
     # but we'd either need to know the flavor of compiler at this point (we
@@ -54,34 +54,34 @@ def compile_options(options, lang):
     # environment variable.
     if isiterable(options):
         options = pshell.join(options)
-    os.environ[known_langs[lang].var('flags')] = options
+    env.variables[known_langs[lang].var('flags')] = options
 
 
-@builtin.function(context='toolchain')
-def runner(names, lang, strict=False):
+@builtin.function('env', context='toolchain')
+def runner(env, names, lang, strict=False):
     var = known_langs[lang].var('runner')
-    os.environ[var] = which(names, strict=strict, kind='runner')
+    env.variables[var] = which(names, strict=strict, kind='runner')
 
 
-@builtin.function(context='toolchain')
-def linker(names, format='native', mode='dynamic', strict=False):
+@builtin.function('env', context='toolchain')
+def linker(env, names, format='native', mode='dynamic', strict=False):
     var = known_formats[format, mode].var('linker')
-    os.environ[var] = which(names, strict=strict, kind='linker')
+    env.variables[var] = which(names, strict=strict, kind='linker')
 
 
-@builtin.function(context='toolchain')
-def link_options(options, format='native', mode='dynamic'):
+@builtin.function('env', context='toolchain')
+def link_options(env, options, format='native', mode='dynamic'):
     # As above, this only supports strings (and lists of strings) for options,
     # *not* semantic options.
     if isiterable(options):
         options = pshell.join(options)
-    os.environ[known_formats[format, mode].var('flags')] = options
+    env.variables[known_formats[format, mode].var('flags')] = options
 
 
-@builtin.function(context='toolchain')
-def lib_options(options, format='native', mode='dynamic'):
+@builtin.function('env', context='toolchain')
+def lib_options(env, options, format='native', mode='dynamic'):
     # As above, this only supports strings (and lists of strings) for options,
     # *not* semantic options.
     if isiterable(options):
         options = pshell.join(options)
-    os.environ[known_formats[format, mode].var('libs')] = options
+    env.variables[known_formats[format, mode].var('libs')] = options

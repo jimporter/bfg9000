@@ -53,7 +53,7 @@ def handle_reload_exception(e, suggest_rerun=False):
     return 1
 
 
-def environment_from_args(args, toolchain=None, extra_args=None):
+def environment_from_args(args, extra_args=None):
     # Get the bin directory holding bfg's executables.
     bfgdir = path.abspath(sys.argv[0]).parent()
 
@@ -66,7 +66,6 @@ def environment_from_args(args, toolchain=None, extra_args=None):
         builddir=args.builddir,
         install_dirs={i: getattr(args, i.name) for i in path.InstallRoot},
         library_mode=(args.shared, args.static),
-        target_platform=toolchain.target_platform if toolchain else None,
         extra_args=extra_args,
     )
 
@@ -178,16 +177,15 @@ def configure(parser, subparser, args, extra):
         subparser.error('build directory must not contain a {} file'
                         .format(build.bfgfile))
 
-    toolchain = None
-    if args.toolchain:
-        toolchain = build.load_toolchain(args.toolchain)
-
     if not path.exists(args.builddir):
         os.mkdir(args.builddir.string())
 
-    env, backend = environment_from_args(args, toolchain, extra)
-    env.save(args.builddir.string())
     try:
+        env, backend = environment_from_args(args, extra)
+        if args.toolchain:
+            build.load_toolchain(env, args.toolchain)
+        env.save(args.builddir.string())
+
         argv = build.parse_user_args(env)
         build_inputs = build.execute_script(env, argv)
         backend.write(env, build_inputs)
@@ -206,6 +204,9 @@ def refresh(parser, subparser, args, extra):
 
     try:
         env = Environment.load(args.builddir.string())
+        if env.toolchain.path:
+            build.load_toolchain(env, env.toolchain.path, reload=True)
+        env.save(args.builddir.string())
 
         backend = list_backends()[env.backend]
         argv = build.parse_user_args(env)

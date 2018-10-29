@@ -3,7 +3,7 @@ import os
 import sys
 import warnings
 from collections import namedtuple
-from six import iteritems
+from six import string_types, iteritems
 
 from . import platforms
 from . import tools
@@ -19,12 +19,44 @@ from .versioning import Version
 LibraryMode = namedtuple('LibraryMode', ['shared', 'static'])
 
 
+def try_to_json(value):
+    return value.to_json() if value is not None else None
+
+
+def try_from_json(type, value):
+    return type.from_json(value) if value is not None else None
+
+
 class EnvVersionError(RuntimeError):
     pass
 
 
+class EnvVarDict(dict):
+    def __setitem__(self, key, value):
+        if ( not isinstance(key, string_types) or
+             not isinstance(value, string_types) ):  # pragma: no cover
+            raise TypeError('expected a string')
+        dict.__setitem__(self, key, value)
+
+
+class Toolchain(object):
+    def __init__(self, path=None):
+        self.path = path
+
+    def to_json(self):
+        return {
+            'path': try_to_json(self.path),
+        }
+
+    @classmethod
+    def from_json(cls, data):
+        return cls(
+            path=try_from_json(Path, data['path']),
+        )
+
+
 class Environment(object):
-    version = 12
+    version = 13
     envfile = '.bfg_environ'
 
     Mode = shell.Mode
@@ -37,22 +69,27 @@ class Environment(object):
         return env
 
     def __init__(self, bfgdir, backend, backend_version, srcdir, builddir,
-                 install_dirs, library_mode, extra_args, target_platform=None):
+                 install_dirs, library_mode, extra_args=None):
         self.bfgdir = bfgdir
         self.backend = backend
         self.backend_version = backend_version
 
         self.host_platform = platforms.host.platform_info()
-        self.target_platform = platforms.target.platform_info(target_platform)
+        self.target_platform = platforms.target.platform_info()
 
         self.srcdir = srcdir
         self.builddir = builddir
         self.install_dirs = install_dirs
-        self.library_mode = LibraryMode(*library_mode)
+        self.toolchain = Toolchain()
 
+        self.library_mode = LibraryMode(*library_mode)
         self.extra_args = extra_args
 
-        self.variables = dict(os.environ)
+        self.initial_variables = dict(os.environ)
+        self.init_variables()
+
+    def init_variables(self):
+        self.variables = EnvVarDict(self.initial_variables)
 
     # XXX: Remove this after 0.4 is released.
     @property
@@ -140,22 +177,28 @@ class Environment(object):
                     'bfgdir': self.bfgdir.to_json(),
                     'backend': self.backend,
                     'backend_version': str(self.backend_version),
+
                     'host_platform': self.host_platform.name,
                     'target_platform': self.target_platform.name,
+
                     'srcdir': self.srcdir.to_json(),
                     'builddir': self.builddir.to_json(),
                     'install_dirs': {
-                        k.name: v.to_json() if v else None
+                        k.name: try_to_json(v)
                         for k, v in iteritems(self.install_dirs)
                     },
+                    'toolchain': self.toolchain.to_json(),
+
                     'library_mode': self.library_mode,
                     'extra_args': self.extra_args,
+
+                    'initial_variables': self.initial_variables,
                     'variables': self.variables,
                 }
             }, out)
 
     @classmethod
-    def load(cls, path, save_on_upgrade=True):
+    def load(cls, path):
         with open(os.path.join(path, cls.envfile)) as inp:
             state = json.load(inp)
             version, data = state['version'], state['data']
@@ -209,16 +252,21 @@ class Environment(object):
             platform = data.pop('platform')
             data['host_platform'] = data['target_platform'] = platform
 
-        # Now that we've upgraded, initialize the Environment object.
-        env = Environment.__new__(Environment)
+        # v13 adds initial_variables and toolchain.
+        if version < 13:
+            data['initial_variables'] = data['variables']
+            data['toolchain'] = {'path': None}
 
         # With Python 2.x on Windows, the environment variables must all be
         # non-Unicode strings.
         if data['host_platform'] == 'windows' and sys.version_info[0] == 2:
-            data['variables'] = {str(k): str(v) for k, v in
-                                 iteritems(data['variables'])}
+            for key in ('initial_variables', 'variables'):
+                data[key] = {str(k): str(v) for k, v in iteritems(data[key])}
 
-        for i in ('backend', 'extra_args', 'variables'):
+        # Now that we've upgraded, initialize the Environment object.
+        env = Environment.__new__(Environment)
+
+        for i in ('backend', 'extra_args', 'initial_variables', 'variables'):
             setattr(env, i, data[i])
 
         for i in ('bfgdir', 'srcdir', 'builddir'):
@@ -234,9 +282,7 @@ class Environment(object):
             InstallRoot[k]: Path.from_json(v) if v else None
             for k, v in iteritems(data['install_dirs'])
         }
+        env.toolchain = Toolchain.from_json(data['toolchain'])
         env.library_mode = LibraryMode(*data['library_mode'])
-
-        if save_on_upgrade and version < cls.version:
-            env.save(path)
 
         return env

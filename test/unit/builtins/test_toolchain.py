@@ -2,9 +2,10 @@ import mock
 import os
 import unittest
 
+from ... import make_env
+
 from bfg9000 import tools
-from bfg9000.build import Toolchain
-from bfg9000.builtins import toolchain
+from bfg9000.builtins import builtin, toolchain
 
 tools.init()
 
@@ -19,7 +20,10 @@ def mock_bad_which(*args, **kwargs):
 
 class TestToolchain(unittest.TestCase):
     def setUp(self):
-        self.toolchain = Toolchain()
+        self.env = make_env(clear_variables=True)
+        self.builtin_dict = builtin.toolchain.bind(
+            env=self.env
+        )
 
     def test_builtins(self):
         builtins = toolchain.builtins()
@@ -33,173 +37,164 @@ class TestToolchain(unittest.TestCase):
             self.assertFalse(i in builtins)
 
     def test_environ(self):
-        self.assertEqual(toolchain.environ(), os.environ)
+        self.builtin_dict['environ']['NAME'] = 'value'
+        self.assertEqual(self.builtin_dict['environ'], {'NAME': 'value'})
 
     def test_target_platform(self):
-        toolchain.target_platform(self.toolchain, 'windows')
-        self.assertEqual(self.toolchain.target_platform, 'windows')
+        self.builtin_dict['target_platform']('windows')
+        self.assertEqual(self.env.target_platform.name, 'windows')
 
     def test_which(self):
+        which = self.builtin_dict['which']
         with mock.patch('bfg9000.shell.which', mock_which):
-            self.assertEqual(toolchain.which('foo'), 'command')
-            self.assertEqual(toolchain.which(['foo', 'bar']), 'command')
+            self.assertEqual(which('foo'), 'command')
+            self.assertEqual(which(['foo', 'bar']), 'command')
 
         with mock.patch('bfg9000.shell.which', mock_bad_which):
-            self.assertRaises(IOError, toolchain.which, 'foo')
-            self.assertRaises(IOError, toolchain.which, ['foo', 'bar'])
+            self.assertRaises(IOError, which, 'foo')
+            self.assertRaises(IOError, which, ['foo', 'bar'])
 
-            self.assertEqual(toolchain.which('foo', strict=False), 'foo')
-            self.assertEqual(toolchain.which(['foo', 'bar'], strict=False),
-                             'foo')
-            self.assertEqual(toolchain.which([['foo', 'bar']], strict=False),
-                             'foo bar')
+            self.assertEqual(which('foo', strict=False), 'foo')
+            self.assertEqual(which(['foo', 'bar'], strict=False), 'foo')
+            self.assertEqual(which([['foo', 'bar']], strict=False), 'foo bar')
 
     def test_compiler(self):
-        environ = {}
-        with mock.patch('os.environ', environ):
-            with mock.patch('bfg9000.shell.which', mock_which):
-                toolchain.compiler('foo', 'c++')
-                self.assertEqual(environ, {'CXX': 'command'})
-                toolchain.compiler(['foo', 'bar'], 'c++')
-                self.assertEqual(environ, {'CXX': 'command'})
+        compiler = self.builtin_dict['compiler']
+        with mock.patch('bfg9000.shell.which', mock_which):
+            compiler('foo', 'c++')
+            self.assertEqual(self.env.variables, {'CXX': 'command'})
+            compiler(['foo', 'bar'], 'c++')
+            self.assertEqual(self.env.variables, {'CXX': 'command'})
 
-                toolchain.compiler('foo', 'c++', strict=True)
-                self.assertEqual(environ, {'CXX': 'command'})
-                toolchain.compiler(['foo', 'bar'], 'c++', strict=True)
-                self.assertEqual(environ, {'CXX': 'command'})
+            compiler('foo', 'c++', strict=True)
+            self.assertEqual(self.env.variables, {'CXX': 'command'})
+            compiler(['foo', 'bar'], 'c++', strict=True)
+            self.assertEqual(self.env.variables, {'CXX': 'command'})
 
-            with mock.patch('bfg9000.shell.which', mock_bad_which):
-                toolchain.compiler('foo', 'c++')
-                self.assertEqual(environ, {'CXX': 'foo'})
-                toolchain.compiler(['foo', 'bar'], 'c++')
-                self.assertEqual(environ, {'CXX': 'foo'})
+        with mock.patch('bfg9000.shell.which', mock_bad_which):
+            compiler('foo', 'c++')
+            self.assertEqual(self.env.variables, {'CXX': 'foo'})
+            compiler(['foo', 'bar'], 'c++')
+            self.assertEqual(self.env.variables, {'CXX': 'foo'})
 
-                self.assertRaises(IOError, toolchain.compiler, 'foo', 'c++',
-                                  strict=True)
-                self.assertRaises(IOError, toolchain.compiler, ['foo', 'bar'],
-                                  'c++', strict=True)
+            self.assertRaises(IOError, compiler, 'foo', 'c++', strict=True)
+            self.assertRaises(IOError, compiler, ['foo', 'bar'], 'c++',
+                              strict=True)
 
     def test_compile_options(self):
-        environ = {}
-        with mock.patch('os.environ', environ):
-            toolchain.compile_options('foo', 'c++')
-            self.assertEqual(environ, {'CXXFLAGS': 'foo'})
+        compile_options = self.builtin_dict['compile_options']
+        compile_options('foo', 'c++')
+        self.assertEqual(self.env.variables, {'CXXFLAGS': 'foo'})
 
-            toolchain.compile_options(['foo', 'bar'], 'c++')
-            self.assertEqual(environ, {'CXXFLAGS': 'foo bar'})
+        compile_options(['foo', 'bar'], 'c++')
+        self.assertEqual(self.env.variables, {'CXXFLAGS': 'foo bar'})
 
     def test_runner(self):
-        environ = {}
-        with mock.patch('os.environ', environ):
-            with mock.patch('bfg9000.shell.which', mock_which):
-                toolchain.runner('foo', 'java')
-                self.assertEqual(environ, {'JAVACMD': 'command'})
-                toolchain.runner(['foo', 'bar'], 'java')
-                self.assertEqual(environ, {'JAVACMD': 'command'})
+        runner = self.builtin_dict['runner']
+        with mock.patch('bfg9000.shell.which', mock_which):
+            runner('foo', 'java')
+            self.assertEqual(self.env.variables, {'JAVACMD': 'command'})
+            runner(['foo', 'bar'], 'java')
+            self.assertEqual(self.env.variables, {'JAVACMD': 'command'})
 
-                toolchain.runner('foo', 'java', strict=True)
-                self.assertEqual(environ, {'JAVACMD': 'command'})
-                toolchain.runner(['foo', 'bar'], 'java', strict=True)
-                self.assertEqual(environ, {'JAVACMD': 'command'})
+            runner('foo', 'java', strict=True)
+            self.assertEqual(self.env.variables, {'JAVACMD': 'command'})
+            runner(['foo', 'bar'], 'java', strict=True)
+            self.assertEqual(self.env.variables, {'JAVACMD': 'command'})
 
-            with mock.patch('bfg9000.shell.which', mock_bad_which):
-                toolchain.runner('foo', 'java')
-                self.assertEqual(environ, {'JAVACMD': 'foo'})
-                toolchain.runner(['foo', 'bar'], 'java')
-                self.assertEqual(environ, {'JAVACMD': 'foo'})
+        with mock.patch('bfg9000.shell.which', mock_bad_which):
+            runner('foo', 'java')
+            self.assertEqual(self.env.variables, {'JAVACMD': 'foo'})
+            runner(['foo', 'bar'], 'java')
+            self.assertEqual(self.env.variables, {'JAVACMD': 'foo'})
 
-                self.assertRaises(IOError, toolchain.runner, 'foo', 'java',
-                                  strict=True)
-                self.assertRaises(IOError, toolchain.runner, ['foo', 'bar'],
-                                  'java', strict=True)
+            self.assertRaises(IOError, runner, 'foo', 'java', strict=True)
+            self.assertRaises(IOError, runner, ['foo', 'bar'], 'java',
+                              strict=True)
 
     def test_dynamic_linker(self):
-        environ = {}
-        with mock.patch('os.environ', environ):
-            with mock.patch('bfg9000.shell.which', mock_which):
-                toolchain.linker('foo')
-                self.assertEqual(environ, {'LD': 'command'})
-                toolchain.linker(['foo', 'bar'])
-                self.assertEqual(environ, {'LD': 'command'})
+        linker = self.builtin_dict['linker']
+        with mock.patch('bfg9000.shell.which', mock_which):
+            linker('foo')
+            self.assertEqual(self.env.variables, {'LD': 'command'})
+            linker(['foo', 'bar'])
+            self.assertEqual(self.env.variables, {'LD': 'command'})
 
-                toolchain.linker('foo', 'native')
-                self.assertEqual(environ, {'LD': 'command'})
-                toolchain.linker(['foo', 'bar'], 'native')
-                self.assertEqual(environ, {'LD': 'command'})
+            linker('foo', 'native')
+            self.assertEqual(self.env.variables, {'LD': 'command'})
+            linker(['foo', 'bar'], 'native')
+            self.assertEqual(self.env.variables, {'LD': 'command'})
 
-                toolchain.linker('foo', 'native', strict=True)
-                self.assertEqual(environ, {'LD': 'command'})
-                toolchain.linker(['foo', 'bar'], 'native', strict=True)
-                self.assertEqual(environ, {'LD': 'command'})
+            linker('foo', 'native', strict=True)
+            self.assertEqual(self.env.variables, {'LD': 'command'})
+            linker(['foo', 'bar'], 'native', strict=True)
+            self.assertEqual(self.env.variables, {'LD': 'command'})
 
-            with mock.patch('bfg9000.shell.which', mock_bad_which):
-                toolchain.linker('foo', 'native')
-                self.assertEqual(environ, {'LD': 'foo'})
-                toolchain.linker(['foo', 'bar'], 'native')
-                self.assertEqual(environ, {'LD': 'foo'})
+        with mock.patch('bfg9000.shell.which', mock_bad_which):
+            linker('foo', 'native')
+            self.assertEqual(self.env.variables, {'LD': 'foo'})
+            linker(['foo', 'bar'], 'native')
+            self.assertEqual(self.env.variables, {'LD': 'foo'})
 
-                self.assertRaises(IOError, toolchain.linker, 'foo', 'native',
-                                  strict=True)
-                self.assertRaises(IOError, toolchain.linker, ['foo', 'bar'],
-                                  'native', strict=True)
+            self.assertRaises(IOError, linker, 'foo', 'native', strict=True)
+            self.assertRaises(IOError, linker, ['foo', 'bar'], 'native',
+                              strict=True)
 
     def test_static_linker(self):
-        environ = {}
-        with mock.patch('os.environ', environ):
-            with mock.patch('bfg9000.shell.which', mock_which):
-                toolchain.linker('foo', mode='static')
-                self.assertEqual(environ, {'AR': 'command'})
-                toolchain.linker(['foo', 'bar'], mode='static')
-                self.assertEqual(environ, {'AR': 'command'})
+        linker = self.builtin_dict['linker']
+        with mock.patch('bfg9000.shell.which', mock_which):
+            linker('foo', mode='static')
+            self.assertEqual(self.env.variables, {'AR': 'command'})
+            linker(['foo', 'bar'], mode='static')
+            self.assertEqual(self.env.variables, {'AR': 'command'})
 
-                toolchain.linker('foo', 'native', 'static')
-                self.assertEqual(environ, {'AR': 'command'})
-                toolchain.linker(['foo', 'bar'], 'native', 'static')
-                self.assertEqual(environ, {'AR': 'command'})
+            linker('foo', 'native', 'static')
+            self.assertEqual(self.env.variables, {'AR': 'command'})
+            linker(['foo', 'bar'], 'native', 'static')
+            self.assertEqual(self.env.variables, {'AR': 'command'})
 
-                toolchain.linker('foo', 'native', 'static', strict=True)
-                self.assertEqual(environ, {'AR': 'command'})
-                toolchain.linker(['foo', 'bar'], 'native', 'static',
-                                 strict=True)
-                self.assertEqual(environ, {'AR': 'command'})
+            linker('foo', 'native', 'static', strict=True)
+            self.assertEqual(self.env.variables, {'AR': 'command'})
+            linker(['foo', 'bar'], 'native', 'static', strict=True)
+            self.assertEqual(self.env.variables, {'AR': 'command'})
 
-            with mock.patch('bfg9000.shell.which', mock_bad_which):
-                toolchain.linker('foo', 'native', 'static')
-                self.assertEqual(environ, {'AR': 'foo'})
-                toolchain.linker(['foo', 'bar'], 'native', 'static')
-                self.assertEqual(environ, {'AR': 'foo'})
+        with mock.patch('bfg9000.shell.which', mock_bad_which):
+            linker('foo', 'native', 'static')
+            self.assertEqual(self.env.variables, {'AR': 'foo'})
+            linker(['foo', 'bar'], 'native', 'static')
+            self.assertEqual(self.env.variables, {'AR': 'foo'})
 
-                self.assertRaises(IOError, toolchain.linker, 'foo', 'native',
-                                  'static', strict=True)
-                self.assertRaises(IOError, toolchain.linker, ['foo', 'bar'],
-                                  'native', 'static', strict=True)
+            self.assertRaises(IOError, linker, 'foo', 'native', 'static',
+                              strict=True)
+            self.assertRaises(IOError, linker, ['foo', 'bar'], 'native',
+                              'static', strict=True)
 
     def test_link_options(self):
-        environ = {}
-        with mock.patch('os.environ', environ):
-            toolchain.link_options('foo')
-            self.assertEqual(environ, {'LDFLAGS': 'foo'})
+        link_options = self.builtin_dict['link_options']
 
-            toolchain.link_options('foo', 'native')
-            self.assertEqual(environ, {'LDFLAGS': 'foo'})
+        link_options('foo')
+        self.assertEqual(self.env.variables, {'LDFLAGS': 'foo'})
 
-            toolchain.link_options(['foo', 'bar'])
-            self.assertEqual(environ, {'LDFLAGS': 'foo bar'})
+        link_options('foo', 'native')
+        self.assertEqual(self.env.variables, {'LDFLAGS': 'foo'})
 
-            toolchain.link_options(['foo', 'bar'], 'native')
-            self.assertEqual(environ, {'LDFLAGS': 'foo bar'})
+        link_options(['foo', 'bar'])
+        self.assertEqual(self.env.variables, {'LDFLAGS': 'foo bar'})
+
+        link_options(['foo', 'bar'], 'native')
+        self.assertEqual(self.env.variables, {'LDFLAGS': 'foo bar'})
 
     def test_lib_options(self):
-        environ = {}
-        with mock.patch('os.environ', environ):
-            toolchain.lib_options('foo')
-            self.assertEqual(environ, {'LDLIBS': 'foo'})
+        lib_options = self.builtin_dict['lib_options']
 
-            toolchain.lib_options('foo', 'native')
-            self.assertEqual(environ, {'LDLIBS': 'foo'})
+        lib_options('foo')
+        self.assertEqual(self.env.variables, {'LDLIBS': 'foo'})
 
-            toolchain.lib_options(['foo', 'bar'])
-            self.assertEqual(environ, {'LDLIBS': 'foo bar'})
+        lib_options('foo', 'native')
+        self.assertEqual(self.env.variables, {'LDLIBS': 'foo'})
 
-            toolchain.lib_options(['foo', 'bar'], 'native')
-            self.assertEqual(environ, {'LDLIBS': 'foo bar'})
+        lib_options(['foo', 'bar'])
+        self.assertEqual(self.env.variables, {'LDLIBS': 'foo bar'})
+
+        lib_options(['foo', 'bar'], 'native')
+        self.assertEqual(self.env.variables, {'LDLIBS': 'foo bar'})

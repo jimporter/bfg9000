@@ -1,4 +1,5 @@
 import tarfile
+import time
 from six import assertRegex
 
 from . import *
@@ -17,6 +18,14 @@ class TestCrossCompile(IntegrationTest):
         self.configure(extra_args=['--toolchain', os.path.join(
             test_data_dir, 'gcc-linux-toolchain.bfg'
         )])
+        self.build('simple')
+        self.assertOutput([executable('simple')], 'hello, world!\n')
+
+    def test_gcc_linux_refresh(self):
+        toolchain = os.path.join(test_data_dir, 'gcc-linux-toolchain.bfg')
+        self.configure(extra_args=['--toolchain', toolchain])
+        time.sleep(1)
+        self.assertPopen(['touch', toolchain])
         self.build('simple')
         self.assertOutput([executable('simple')], 'hello, world!\n')
 

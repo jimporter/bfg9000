@@ -14,6 +14,8 @@ DestDir = Enum('DestDir', ['destdir'])
 
 
 class BasePath(safe_str.safe_string):
+    __slots__ = ['destdir', 'root', 'suffix']
+
     curdir = posixpath.curdir
     pardir = posixpath.pardir
     sep = posixpath.sep

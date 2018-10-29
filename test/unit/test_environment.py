@@ -19,8 +19,7 @@ class TestEnvironment(unittest.TestCase):
 
     def test_upgrade_from_v4(self):
         env = Environment.load(
-            os.path.join(test_data_dir, 'environment', 'v4'),
-            save_on_upgrade=False
+            os.path.join(test_data_dir, 'environment', 'v4')
         )
 
         self.assertEqual(env.bfgdir, Path('/path/to', Root.absolute))

@@ -7,7 +7,6 @@ from six import assertRegex
 from six.moves import cStringIO as StringIO
 
 from bfg9000 import driver, log, path
-from bfg9000.build import Toolchain
 from bfg9000.environment import EnvVersionError
 
 
@@ -31,11 +30,6 @@ class TestEnvironmentFromArgs(unittest.TestCase):
 
     def test_basic(self):
         env, backend = driver.environment_from_args(self.args)
-        self.assertEqual(env.srcdir, path.abspath('.'))
-        self.assertTrue('make' in backend.__name__)
-
-    def test_toolchain(self):
-        env, backend = driver.environment_from_args(self.args, Toolchain())
         self.assertEqual(env.srcdir, path.abspath('.'))
         self.assertTrue('make' in backend.__name__)
 
