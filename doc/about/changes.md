@@ -13,6 +13,7 @@ in progress
 - Add `info`, `warn`, and `debug` builtins to let build scripts print messages
   via bfg's logging system
 - `whole_archive()` now works with MSVC linkers
+- Add support for module-definition files when linking `.exe` or `.dll` files
 
 ### Breaking changes
 - MSVC builds now automatically set `/EHsc` to improve standards-compliance and

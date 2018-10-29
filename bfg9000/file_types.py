@@ -109,6 +109,10 @@ class HeaderDirectory(Directory):
         self.langs = _listify(langs)
 
 
+class ModuleDefFile(File):
+    pass
+
+
 class Binary(File):
     install_kind = 'program'
     install_root = _InstallRoot.libdir

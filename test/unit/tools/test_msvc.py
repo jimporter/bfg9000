@@ -233,6 +233,37 @@ class TestMsvcLinker(unittest.TestCase):
             opts.lib(file_types.SharedLibrary(lib, 'native'))
         )), ['/LIBPATH:' + libdir])
 
+    def test_flags_module_def(self):
+        path = Path('/path/to/module.def')
+        self.assertEqual(
+            self.linker.flags(opts.option_list(
+                opts.module_def(file_types.ModuleDefFile(path))
+            )), ['/DEF:' + path]
+        )
+
+    def test_flags_debug(self):
+        self.assertEqual(self.linker.flags(opts.option_list(
+            opts.debug()
+        )), ['/DEBUG'])
+
+    def test_flags_optimize(self):
+        self.assertEqual(self.linker.flags(opts.option_list(
+            opts.optimize('disable')
+        )), [])
+        self.assertEqual(self.linker.flags(opts.option_list(
+            opts.optimize('size')
+        )), [])
+        self.assertEqual(self.linker.flags(opts.option_list(
+            opts.optimize('speed')
+        )), [])
+        self.assertEqual(self.linker.flags(opts.option_list(
+            opts.optimize('linktime')
+        )), ['/LTCG'])
+
+        self.assertEqual(self.linker.flags(opts.option_list(
+            opts.optimize('speed', 'linktime')
+        )), ['/LTCG'])
+
     def test_flags_string(self):
         self.assertEqual(self.linker.flags(opts.option_list('-v')), ['-v'])
 
@@ -280,29 +311,6 @@ class TestMsvcLinker(unittest.TestCase):
             self.linker.lib_flags(opts.option_list(
                 opts.lib(Framework('cocoa'))
             ))
-
-    def test_flags_debug(self):
-        self.assertEqual(self.linker.flags(opts.option_list(
-            opts.debug()
-        )), ['/DEBUG'])
-
-    def test_flags_optimize(self):
-        self.assertEqual(self.linker.flags(opts.option_list(
-            opts.optimize('disable')
-        )), [])
-        self.assertEqual(self.linker.flags(opts.option_list(
-            opts.optimize('size')
-        )), [])
-        self.assertEqual(self.linker.flags(opts.option_list(
-            opts.optimize('speed')
-        )), [])
-        self.assertEqual(self.linker.flags(opts.option_list(
-            opts.optimize('linktime')
-        )), ['/LTCG'])
-
-        self.assertEqual(self.linker.flags(opts.option_list(
-            opts.optimize('speed', 'linktime')
-        )), ['/LTCG'])
 
     def test_lib_flags_lib_literal(self):
         self.assertEqual(self.linker.lib_flags(opts.option_list(

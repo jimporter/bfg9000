@@ -584,6 +584,9 @@ class CcLinker(BuildCommand):
                 rpaths.append(i.path)
             elif isinstance(i, opts.rpath_link_dir):
                 rpath_links.append(i.path)
+            elif isinstance(i, opts.module_def):
+                if self.env.target_platform.has_import_library:
+                    flags.append(i.value.path)
             elif isinstance(i, opts.debug):
                 flags.append('-g')
             elif isinstance(i, opts.optimize):

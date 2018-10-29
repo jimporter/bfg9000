@@ -26,6 +26,7 @@ build_input('link_flags')(lambda build_inputs, env: {
 
 class Link(Edge):
     msbuild_output = True
+    extra_kwargs = ()
 
     def __init__(self, builtins, build, env, name, files=None, includes=None,
                  pch=None, libs=None, packages=None, compile_options=None,
@@ -135,6 +136,14 @@ class DynamicLink(Link):
     _preferred_lib = 'shared'
     _prefix = ''
 
+    extra_kwargs = ('module_defs',)
+
+    def __init__(self, *args, **kwargs):
+        module_defs = kwargs.pop('module_defs', None)
+        self.module_defs = (builtins['module_def_file'](module_defs)
+                            if module_defs else None)
+        Link.__init__(self, *args, **kwargs)
+
     @property
     def options(self):
         return self._internal_options + self.user_options
@@ -150,7 +159,8 @@ class DynamicLink(Link):
     def _fill_options(self, env, extra_options, forward_opts, output):
         linkers = (env.builder(i).linker(self.mode) for i in self.langs)
         self._internal_options = opts.option_list(
-            i.link_options(self.linker, output) for i in self.packages
+            opts.module_def(self.module_defs) if self.module_defs else None,
+            (i.link_options(self.linker, output) for i in self.packages)
         )
 
         if self.linker.needs_libs:
@@ -172,7 +182,7 @@ class SharedLink(DynamicLink):
     msbuild_mode = 'DynamicLibrary'
     _prefix = 'lib'
 
-    extra_kwargs = ('version', 'soversion')
+    extra_kwargs = DynamicLink.extra_kwargs + ('version', 'soversion')
 
     def __init__(self, *args, **kwargs):
         self.version = kwargs.pop('version', None)
@@ -410,11 +420,12 @@ def make_link(rule, build_inputs, buildfile, env):
         files = rule.linker.transform_input(files)
 
     manifest = listify(getattr(rule, 'manifest', None))
+    module_defs = listify(getattr(rule, 'module_defs', None))
     dirs = uniques(i.path.parent() for i in rule.output)
     make.multitarget_rule(
         buildfile,
         targets=rule.output,
-        deps=rule.files + rule.libs + manifest + rule.extra_deps,
+        deps=rule.files + rule.libs + module_defs + manifest + rule.extra_deps,
         order_only=[i.append(make.dir_sentinel) for i in dirs if i],
         recipe=make.Call(recipename, files, *output_params),
         variables=variables
@@ -450,11 +461,12 @@ def ninja_link(rule, build_inputs, buildfile, env):
         ))
 
     manifest = listify(getattr(rule, 'manifest', None))
+    module_defs = listify(getattr(rule, 'module_defs', None))
     buildfile.build(
         output=rule.output,
         rule=linker.rule_name,
         inputs=rule.files,
-        implicit=rule.libs + manifest + rule.extra_deps,
+        implicit=rule.libs + module_defs + manifest + rule.extra_deps,
         variables=variables
     )
 

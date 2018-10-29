@@ -90,6 +90,14 @@ Availability: `build.bfg`
 Create a reference to an existing header named *name*. This is useful if you'd
 like to [install](#install) a single header file for your project.
 
+### module_def_file(*name*) { #module_def_file }
+Availability: `build.bfg`
+{: .subtitle}
+
+Create a reference to an existing module-definition file named *name*.
+[Module-definition files][def-file] are sometimes used when building libraries
+on Windows.
+
 ### source_file(*name*, [*lang*]) { #source_file }
 Availability: `build.bfg`
 {: .subtitle}
@@ -170,6 +178,8 @@ The following arguments may also be specified:
   to *object_file*
 * *compile_options*: Forwarded on to [*object_file*](#object_file) as *options*
 * *link_options*: Command-line options to pass to the linker
+* *module_defs*: A [*module_def_file*](#module_def_file) specifying information
+  about exports and other program info, sometimes used on Windows
 * *lang*: Forwarded on to [*object_file*](#object_file)
 
 If neither *files* nor *libs* is specified, this function merely references an
@@ -1136,6 +1146,7 @@ An exception raised when a version fails to match the supplied version
 specifier.
 
 [system-directory]: https://gcc.gnu.org/onlinedocs/cpp/System-Headers.html
+[def-file]: https://docs.microsoft.com/en-us/cpp/build/reference/module-definition-dot-def-files
 [gcc-pch]: https://gcc.gnu.org/onlinedocs/gcc/Precompiled-Headers.html
 [clang-pch]: http://clang.llvm.org/docs/UsersManual.html#usersmanual-precompiled-headers
 [msvc-pch]: https://msdn.microsoft.com/en-us/library/szfdksca.aspx

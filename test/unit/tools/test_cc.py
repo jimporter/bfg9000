@@ -367,6 +367,15 @@ class TestCcLinker(unittest.TestCase):
             opts.rpath_link_dir(p2)
         )), ['-Wl,-rpath-link,' + p1 + ':' + p2])
 
+    def test_flags_module_def(self):
+        path = Path('/path/to/module.def')
+        self.assertEqual(
+            self.linker.flags(opts.option_list(
+                opts.module_def(file_types.ModuleDefFile(path))
+            )),
+            [path] if self.env.target_platform.name == 'windows' else []
+        )
+
     def test_flags_entry_point(self):
         java_linker = self._get_linker('java')
         self.assertEqual(java_linker.flags(opts.option_list(

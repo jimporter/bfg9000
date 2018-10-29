@@ -400,6 +400,8 @@ class MsvcLinker(BuildCommand):
                 lib_dirs.append(i.directory.path)
             elif isinstance(i, opts.lib):
                 lib_dirs.extend(self._lib_dir(i.library, syntax))
+            elif isinstance(i, opts.module_def):
+                flags.append('/DEF:' + i.value.path)
             elif isinstance(i, opts.debug):
                 flags.append('/DEBUG')
             elif isinstance(i, opts.optimize):

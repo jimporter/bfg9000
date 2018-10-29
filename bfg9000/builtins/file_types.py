@@ -46,6 +46,12 @@ def header_file(build, name, lang=None):
     return build.add_source(HeaderFile(Path(name, Root.srcdir), lang))
 
 
+@builtin.function('build_inputs')
+@builtin.type(ModuleDefFile)
+def module_def_file(build, name):
+    return build.add_source(ModuleDefFile(Path(name, Root.srcdir)))
+
+
 # These builtins will find all the files in a directory so that they can be
 # added to the distribution. XXX: Perhaps these could be reworked so that
 # adding/removing files in directories doesn't force bfg to regenerate build

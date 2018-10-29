@@ -187,6 +187,7 @@ lib = option('lib', [('library', (Library, Framework, str))])
 rpath_dir = option('rpath_dir', [('path', path.BasePath)])
 rpath_link_dir = option('rpath_link_dir', [('path', path.BasePath)])
 lib_literal = option('lib_literal', [('value', safe_str.stringy_types)])
+module_def = option('module_def', [('value', ModuleDefFile)])
 entry_point = option('entry_point', [('value', str)])
 
 # General options

@@ -204,6 +204,15 @@ class TestDualUseLibrary(IntegrationTest):
         ))
 
 
+class TestLibraryDefs(IntegrationTest):
+    def __init__(self, *args, **kwargs):
+        IntegrationTest.__init__(self, 'library_defs', *args, **kwargs)
+
+    def test_build(self):
+        self.build()
+        self.assertOutput([executable('program')], 'hello, library!\n')
+
+
 # No versioned libraries on Windows.
 @skip_if(env.target_platform.name == 'windows', hide=True)
 class TestVersionedLibrary(IntegrationTest):

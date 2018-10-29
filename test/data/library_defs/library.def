@@ -1,0 +1,4 @@
+LIBRARY	"library.dll"
+
+EXPORTS
+	hello @1
