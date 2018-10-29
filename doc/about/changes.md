@@ -21,6 +21,7 @@ in progress
   certain esoteric pathnames (e.g. POSIX paths that look like Windows paths)
 - `env.platform` has been split into `env.host_platform` and
   `env.target_platform`
+- MinGW now makes DLLs named `<name>.dll` instead of `lib<name>.dll`
 
 ### Bug fixes
 - Fix support for packaging as a Python Wheel

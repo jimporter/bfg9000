@@ -700,8 +700,8 @@ class CcSharedLibraryLinker(CcLinker):
             return VersionedSharedLibrary(real, fmt, self.lang, soname, link)
         elif self.env.target_platform.has_import_library:
             dllprefix = ('cyg' if self.env.target_platform.name == 'cygwin'
-                         else 'lib')
-            dllname = self._lib_name(name, dllprefix)
+                         else '')
+            dllname = self._lib_name(name, prefix=dllprefix)
             impname = self._lib_name(name, suffix='.a')
             dll = DllBinary(dllname, fmt, self.lang, impname)
             return [dll, dll.import_lib]

@@ -350,9 +350,14 @@ def executable(name):
 
 
 if env.builder('c++').flavor == 'msvc':
-    _library_prefix = ''
+    _shared_library_prefix = ''
+    _static_library_prefix = ''
+elif env.target_platform.name == 'windows':
+    _shared_library_prefix = ''
+    _static_library_prefix = 'lib'
 else:
-    _library_prefix = 'lib'
+    _shared_library_prefix = 'lib'
+    _static_library_prefix = 'lib'
 
 
 def shared_library(name, version=None):
@@ -366,7 +371,7 @@ def shared_library(name, version=None):
         else:
             ext += '.' + version
     return Target(name, os.path.normpath(os.path.join(
-        '.', head, _library_prefix + tail + ext
+        '.', head, _shared_library_prefix + tail + ext
     )))
 
 
@@ -374,7 +379,7 @@ def static_library(name):
     suffix = '.lib' if env.builder('c++').flavor == 'msvc' else '.a'
     head, tail = os.path.split(name)
     return Target(name, os.path.normpath(os.path.join(
-        '.', head, _library_prefix + tail + suffix
+        '.', head, _static_library_prefix + tail + suffix
     )))
 
 
@@ -384,7 +389,9 @@ def import_library(name):
     if env.builder('c++').flavor == 'msvc':
         return static_library(name)
     else:
-        return Target(name, shared_library(name).path + '.a')
+        head, tail = os.path.split(shared_library(name).path)
+        path = os.path.join(head, _static_library_prefix + tail + '.a')
+        return Target(name, path)
 
 
 def load_tests(loader, standard_tests, pattern):
