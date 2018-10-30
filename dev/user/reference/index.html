@@ -229,6 +229,11 @@ directory</a> for compilers that support this.</p>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Create a reference to an existing header named <em>name</em>. This is useful if you'd
 like to <a href="#install">install</a> a single header file for your project.</p>
+<h3 id="module_def_file">module_def_file(<em>name</em>)<a class="headerlink" href="#module_def_file" title="Permanent link">§</a></h3>
+<p class="subtitle">Availability: <code>build.bfg</code></p>
+<p>Create a reference to an existing module-definition file named <em>name</em>.
+<a href="https://docs.microsoft.com/en-us/cpp/build/reference/module-definition-dot-def-files">Module-definition files</a> are sometimes used when building libraries
+on Windows.</p>
 <h3 id="source_file">source_file(<em>name</em>, [<em>lang</em>])<a class="headerlink" href="#source_file" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Create a reference to an existing source file named <em>name</em>. If <em>lang</em> is not
@@ -291,6 +296,8 @@ file (or a plain string), this function will implicitly call
   to <em>object_file</em></li>
 <li><em>compile_options</em>: Forwarded on to <a href="#object_file"><em>object_file</em></a> as <em>options</em></li>
 <li><em>link_options</em>: Command-line options to pass to the linker</li>
+<li><em>module_defs</em>: A <a href="#module_def_file"><em>module_def_file</em></a> specifying information
+  about exports and other program info, sometimes used on Windows</li>
 <li><em>lang</em>: Forwarded on to <a href="#object_file"><em>object_file</em></a></li>
 </ul>
 <p>If neither <em>files</em> nor <em>libs</em> is specified, this function merely references an
