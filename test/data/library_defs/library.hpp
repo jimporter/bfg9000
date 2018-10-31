@@ -11,6 +11,6 @@
 #  define LIB_PUBLIC
 #endif
 
-void LIB_PUBLIC hello();
+extern "C" void LIB_PUBLIC hello();
 
 #endif

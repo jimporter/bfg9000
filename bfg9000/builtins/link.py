@@ -138,11 +138,11 @@ class DynamicLink(Link):
 
     extra_kwargs = ('module_defs',)
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, builtins, *args, **kwargs):
         module_defs = kwargs.pop('module_defs', None)
         self.module_defs = (builtins['module_def_file'](module_defs)
                             if module_defs else None)
-        Link.__init__(self, *args, **kwargs)
+        Link.__init__(self, builtins, *args, **kwargs)
 
     @property
     def options(self):
