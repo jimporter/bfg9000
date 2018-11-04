@@ -14,6 +14,8 @@ in progress
   via bfg's logging system
 - `whole_archive()` now works with MSVC linkers
 - Add support for module-definition files when linking `.exe` or `.dll` files
+- Build steps now have a (customizable) friendly description when using the
+  Ninja backend
 
 ### Breaking changes
 - MSVC builds now automatically set `/EHsc` to improve standards-compliance and

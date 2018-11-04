@@ -42,6 +42,12 @@ class TestExecutable(LinkTest):
         self.assertRaises(ValueError, self.builtin_dict['executable'],
                           'executable', [])
 
+    def test_description(self):
+        result = self.builtin_dict['executable'](
+            'executable', ['main.cpp'], description='my description'
+        )
+        self.assertEqual(result.creator.description, 'my description')
+
 
 class TestSharedLibrary(LinkTest):
     def test_identity(self):
@@ -102,6 +108,12 @@ class TestSharedLibrary(LinkTest):
         self.assertRaises(ValueError, self.builtin_dict['shared_library'],
                           'shared', [])
 
+    def test_description(self):
+        result = self.builtin_dict['shared_library'](
+            'executable', ['main.cpp'], description='my description'
+        )
+        self.assertEqual(result.creator.description, 'my description')
+
 
 class TestStaticLibrary(LinkTest):
     def test_identity(self):
@@ -147,6 +159,12 @@ class TestStaticLibrary(LinkTest):
     def test_make_no_files(self):
         self.assertRaises(ValueError, self.builtin_dict['static_library'],
                           'static', [])
+
+    def test_description(self):
+        result = self.builtin_dict['static_library'](
+            'executable', ['main.cpp'], description='my description'
+        )
+        self.assertEqual(result.creator.description, 'my description')
 
 
 class TestLibrary(LinkTest):

@@ -60,6 +60,12 @@ class TestObjectFile(CompileTest):
     def test_make_no_name_or_file(self):
         self.assertRaises(TypeError, self.builtin_dict['object_file'])
 
+    def test_description(self):
+        result = self.builtin_dict['object_file'](
+            file='main.cpp', description='my description'
+        )
+        self.assertEqual(result.creator.description, 'my description')
+
 
 class TestPrecompiledHeader(CompileTest):
     class MockFile(object):
@@ -115,6 +121,12 @@ class TestPrecompiledHeader(CompileTest):
 
     def test_make_no_name_or_file(self):
         self.assertRaises(TypeError, self.builtin_dict['precompiled_header'])
+
+    def test_description(self):
+        result = self.builtin_dict['precompiled_header'](
+            file='main.hpp', description='my description'
+        )
+        self.assertEqual(result.creator.description, 'my description')
 
 
 class TestObjectFiles(BuiltinTest):

@@ -10,9 +10,9 @@ generator = source_file('generator.py')
 
 hello = build_step('hello.cpp', cmd=[
     generator, 'hello', 'hello.cpp'
-])
+], description='generator => hello.cpp')
 
-executable('hello', files=[hello])
+executable('hello', files=[hello], description='link => hello :)')
 
 # Some build steps produce *multiple* files; you can specify this by passing a
 # list of names of the files to produce. In such cases, you'll probably also

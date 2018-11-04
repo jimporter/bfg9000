@@ -120,6 +120,9 @@ In addition, all build steps have the ability to define extra dependencies via
 the *extra_deps* argument. These can be files or other build steps, and changes
 to them will trigger a rebuild as with the build's inputs.
 
+Build steps also allow setting a custom description. This can be used to provide
+a friendlier message for the Ninja backend to show when building that step.
+
 Finally, build steps which produce a file can also be used like the
 [file types](#file-types) described above to refer to prebuilt files already in
 the source tree (e.g. static libraries provided in binary form by a
@@ -131,7 +134,7 @@ vendor). This is described in more detail for each step below.
     executable file named "foo" on Windows, the resulting file will be
     `foo.exe`.
 
-### build_step(*name*, *cmd*|*cmds*, [*environment*], [*type*], [*args*], [*kwargs*], [*extra_deps*]) { #build_step }
+### build_step(*name*, *cmd*|*cmds*, [*environment*], [*type*], [*args*], [*kwargs*], [*extra_deps*], [*description*]) { #build_step }
 Availability: `build.bfg`
 {: .subtitle}
 
@@ -146,7 +149,7 @@ file object, or 2) an object with a `.type` attribute that meets the criteria of
 (1). You can also pass *args* and *kwargs* to forward arguments along to this
 function.
 
-### command(*name*, *cmd*|*cmds*, [*environment*], [*extra_deps*]) { #command }
+### command(*name*, *cmd*|*cmds*, [*environment*], [*extra_deps*], [*description*]) { #command }
 Availability: `build.bfg`
 {: .subtitle}
 
@@ -160,7 +163,7 @@ the process.
 You may also pass a dict to *environment* to set environment variables for the
 commands. These override any environment variables set on the command line.
 
-### executable(*name*, [*files*, ..., [*extra_deps*]]) { #executable }
+### executable(*name*, [*files*, ..., [*extra_deps*], [*description*]]) { #executable }
 Availability: `build.bfg`
 {: .subtitle}
 
@@ -196,7 +199,7 @@ variables](environment-vars.md#dynamic-linking) and the [compiler environment
 variable](environment-vars.md#compilation-variables) (e.g. `CC`) for the
 relevant language.
 
-### library(*name*, [*files*, ..., [*extra_deps*]]) { #library }
+### library(*name*, [*files*, ..., [*extra_deps*], [*description*]]) { #library }
 Availability: `build.bfg`
 {: .subtitle}
 
@@ -234,7 +237,7 @@ relevant language.
     library builds are enabled with MSVC, bfg9000 will fall back to building
     only the shared library.
 
-### object_file([*name*], [*file*, ..., [*extra_deps*]]) { #object_file }
+### object_file([*name*], [*file*, ..., [*extra_deps*], [*description*]]) { #object_file }
 Availability: `build.bfg`
 {: .subtitle}
 
@@ -269,7 +272,7 @@ addition, the following arguments may be specified:
 This build step recognizes the [compilation environment
 variables](environment-vars.md#compilation-variables) for the relevant language.
 
-### object_files(*files*, ..., [*extra_deps*]) { #object_files }
+### object_files(*files*, ..., [*extra_deps*], [*description*]) { #object_files }
 Availability: `build.bfg`
 {: .subtitle}
 
@@ -289,7 +292,7 @@ foo_obj = objs['foo.cpp']
 test_exe = executable('test', ['test.cpp', foo_obj])
 ```
 
-### precompiled_header([*name*], [*file*, ..., [*extra_deps*]]) { #precompiled_header }
+### precompiled_header([*name*], [*file*, ..., [*extra_deps*], [*description*]]) { #precompiled_header }
 Availability: `build.bfg`
 {: .subtitle}
 
@@ -324,7 +327,7 @@ In addition, the following argument may be specified:
     within the context of a particular source file and will contain all the
     code *up to and including* the header in question.
 
-### shared_library(*name*, [*files*, ..., [*extra_deps*]]) { #shared_library }
+### shared_library(*name*, [*files*, ..., [*extra_deps*], [*description*]]) { #shared_library }
 Availability: `build.bfg`
 {: .subtitle}
 
@@ -360,7 +363,7 @@ relevant language.
     Windows](writing.md#building-libraries-on-windows) for an example of how to
     use this macro in your code.
 
-### static_library(*name*, [*files*, ..., [*extra_deps*]]) { #static_library }
+### static_library(*name*, [*files*, ..., [*extra_deps*], [*description*]]) { #static_library }
 Availability: `build.bfg`
 {: .subtitle}
 

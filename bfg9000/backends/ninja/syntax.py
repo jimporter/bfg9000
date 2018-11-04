@@ -18,8 +18,8 @@ from ...versioning import Version
 __all__ = ['NinjaFile', 'Section', 'Syntax', 'Writer', 'Variable', 'var',
            'path_vars']
 
-Rule = namedtuple('Rule', ['command', 'depfile', 'deps', 'generator', 'pool',
-                           'restat'])
+Rule = namedtuple('Rule', ['command', 'depfile', 'deps', 'description',
+                           'generator', 'pool', 'restat'])
 Build = namedtuple('Build', ['outputs', 'rule', 'inputs', 'implicit',
                              'order_only', 'variables'])
 
@@ -50,7 +50,7 @@ class Writer(object):
             return string.replace('$', '$$')
 
         raise ValueError(
-            "unknown syntax '{}'".format(syntax)
+            'unknown syntax {!r}'.format(syntax)
         )  # pragma: no cover
 
     def write_literal(self, string):
@@ -190,8 +190,8 @@ class NinjaFile(object):
     def has_variable(self, name):
         return var(name) in self._var_table
 
-    def rule(self, name, command, depfile=None, deps=None, generator=False,
-             pool=None, restat=False):
+    def rule(self, name, command, depfile=None, deps=None, description=None,
+             generator=False, pool=None, restat=False):
         command = self._convert_args(command)
 
         if pool is not None:
@@ -206,8 +206,8 @@ class NinjaFile(object):
         if self.has_rule(name):
             raise ValueError("rule '{}' already exists".format(name))
 
-        self._rules[name] = Rule(command, depfile, deps, generator, pool,
-                                 restat)
+        self._rules[name] = Rule(command, depfile, deps, description,
+                                 generator, pool, restat)
 
     def has_rule(self, name):
         return name in self._rules
@@ -257,6 +257,9 @@ class NinjaFile(object):
             self._write_variable(out, var('depfile'), rule.depfile, indent=1)
         if rule.deps:
             self._write_variable(out, var('deps'), rule.deps, indent=1)
+        if rule.description:
+            self._write_variable(out, var('description'), rule.description,
+                                 indent=1, syntax=Syntax.clean)
         if rule.generator:
             self._write_variable(out, var('generator'), '1', indent=1)
         if rule.pool:
@@ -276,8 +279,10 @@ class NinjaFile(object):
         out.write_literal('\n')
 
         if build.variables:
+            desc_var = var('description')
             for k, v in iteritems(build.variables):
-                self._write_variable(out, k, v, indent=1)
+                syntax = Syntax.clean if k == desc_var else Syntax.shell
+                self._write_variable(out, k, v, indent=1, syntax=syntax)
 
     def write(self, out):
         out = Writer(out)

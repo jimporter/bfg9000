@@ -36,9 +36,11 @@ class ObjectFiles(list):
 
 
 class Compile(Edge):
+    desc_verb = 'compile'
+
     def __init__(self, builtins, build, env, name, includes=None, pch=None,
                  libs=None, packages=None, options=None, lang=None,
-                 extra_deps=None):
+                 extra_deps=None, description=None):
         self.header_files = []
         self.includes = []
         for i in iterate(includes):
@@ -82,7 +84,8 @@ class Compile(Edge):
         primary.post_install = self.compiler.post_install(options, output,
                                                           self)
 
-        Edge.__init__(self, build, output, public_output, extra_deps)
+        Edge.__init__(self, build, output, public_output, extra_deps,
+                      description)
 
     def add_extra_options(self, options):
         self._internal_options.extend(options)
@@ -114,6 +117,8 @@ class CompileSource(Compile):
 
 
 class CompileHeader(Compile):
+    desc_verb = 'compile-header'
+
     def __init__(self, builtins, build, env, name, file, **kwargs):
         self.file = builtins['header_file'](file, lang=kwargs.get('lang'))
         if name is None:
@@ -249,6 +254,8 @@ def make_compile(rule, build_inputs, buildfile, env):
 def ninja_compile(rule, build_inputs, buildfile, env):
     compiler = rule.compiler
     variables, cmd_kwargs = _get_flags(ninja, rule, build_inputs, buildfile)
+    if rule.description:
+        variables['description'] = rule.description
 
     if len(rule.output) == 1:
         output_vars = ninja.var('out')
@@ -273,9 +280,10 @@ def ninja_compile(rule, build_inputs, buildfile, env):
             deps = 'msvc'
             cmd_kwargs['deps'] = True
 
+        desc = rule.desc_verb + ' => ' + first(output_vars)
         buildfile.rule(name=compiler.rule_name, command=compiler(
             ninja.var('in'), output_vars, **cmd_kwargs
-        ), depfile=depfile, deps=deps)
+        ), depfile=depfile, deps=deps, description=desc)
 
     inputs = [rule.file]
     implicit_deps = []

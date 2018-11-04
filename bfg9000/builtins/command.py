@@ -17,7 +17,7 @@ from ..tools import common as tools
 
 class BaseCommand(Edge):
     def __init__(self, build, env, name, outputs, cmd=None, cmds=None,
-                 environment=None, extra_deps=None):
+                 environment=None, extra_deps=None, description=None):
         if (cmd is None) == (cmds is None):
             raise ValueError('exactly one of "cmd" or "cmds" must be ' +
                              'specified')
@@ -32,7 +32,8 @@ class BaseCommand(Edge):
         self.cmds = cmds
         self.inputs = inputs
         self.env = environment or {}
-        Edge.__init__(self, build, outputs, extra_deps=extra_deps)
+        Edge.__init__(self, build, outputs, extra_deps=extra_deps,
+                      description=description)
 
 
 class Command(BaseCommand):
@@ -67,7 +68,9 @@ class BuildStep(BaseCommand):
         outputs = [self._make_outputs(*i) for i in
                    zip(name, type, type_args, type_kwargs)]
 
-        BaseCommand.__init__(self, build, env, project_name, outputs, **kwargs)
+        desc = kwargs.pop('description', 'build => ' + ' '.join(name))
+        BaseCommand.__init__(self, build, env, project_name, outputs,
+                             description=desc, **kwargs)
 
     @staticmethod
     def _make_outputs(name, type, args, kwargs):
@@ -101,7 +104,8 @@ def ninja_command(rule, build_inputs, buildfile, env):
         output=rule.output,
         inputs=rule.inputs + rule.extra_deps,
         command=shell.global_env(rule.env, rule.cmds),
-        console=isinstance(rule, Command)
+        console=isinstance(rule, Command),
+        description=rule.description
     )
 
 

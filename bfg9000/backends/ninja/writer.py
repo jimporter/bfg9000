@@ -67,7 +67,7 @@ def flags_vars(name, value, buildfile):
 
 
 def command_build(buildfile, env, output, inputs=None, implicit=None,
-                  order_only=None, command=[], console=True):
+                  order_only=None, command=[], console=True, description=None):
     if console:
         rule_name = 'console_command'
         extra_implicit = ['PHONY']
@@ -91,11 +91,14 @@ def command_build(buildfile, env, output, inputs=None, implicit=None,
             buildfile.rule(name='command',
                            command=shell.shell_list([var('cmd')]))
 
+    variables = {'cmd': command}
+    if description:
+        variables['description'] = description
     buildfile.build(
         output=output,
         rule=rule_name,
         inputs=inputs,
         implicit=iterutils.listify(implicit) + extra_implicit,
         order_only=order_only,
-        variables={'cmd': command}
+        variables=variables
     )

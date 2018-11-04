@@ -31,7 +31,7 @@ class Link(Edge):
     def __init__(self, builtins, build, env, name, files=None, includes=None,
                  pch=None, libs=None, packages=None, compile_options=None,
                  link_options=None, entry_point=None, lang=None,
-                 extra_deps=None):
+                 extra_deps=None, description=None):
         self.name = self.__name(name)
 
         self.user_libs = [
@@ -99,7 +99,8 @@ class Link(Edge):
         public_output = self.linker.post_build(build, options, output, self)
         primary.post_install = self.linker.post_install(options, output, self)
 
-        Edge.__init__(self, build, output, public_output, extra_deps)
+        Edge.__init__(self, build, output, public_output, extra_deps,
+                      description)
 
         build['defaults'].add(primary)
 
@@ -130,6 +131,7 @@ class Link(Edge):
 
 
 class DynamicLink(Link):
+    desc_verb = 'link'
     base_mode = 'dynamic'
     mode = 'executable'
     msbuild_mode = 'Application'
@@ -178,6 +180,7 @@ class DynamicLink(Link):
 
 
 class SharedLink(DynamicLink):
+    desc_verb = 'shared-link'
     mode = 'shared_library'
     msbuild_mode = 'DynamicLibrary'
     _prefix = 'lib'
@@ -193,6 +196,7 @@ class SharedLink(DynamicLink):
 
 
 class StaticLink(Link):
+    desc_verb = 'static-link'
     base_mode = 'static'
     mode = 'static_library'
     msbuild_mode = 'StaticLibrary'
@@ -436,6 +440,8 @@ def make_link(rule, build_inputs, buildfile, env):
 def ninja_link(rule, build_inputs, buildfile, env):
     linker = rule.linker
     variables, cmd_kwargs = _get_flags(ninja, rule, build_inputs, buildfile)
+    if rule.description:
+        variables['description'] = rule.description
 
     if len(rule.output) == 1:
         output_vars = ninja.var('out')
@@ -458,7 +464,7 @@ def ninja_link(rule, build_inputs, buildfile, env):
     if not buildfile.has_rule(linker.rule_name):
         buildfile.rule(name=linker.rule_name, command=linker(
             input_var, output_vars, **cmd_kwargs
-        ))
+        ), description=rule.desc_verb + ' => ' + first(output_vars))
 
     manifest = listify(getattr(rule, 'manifest', None))
     module_defs = listify(getattr(rule, 'module_defs', None))
