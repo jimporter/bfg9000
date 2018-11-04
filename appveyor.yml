@@ -44,7 +44,7 @@ for:
       BOOST_LIBRARYDIR: C:\Libraries\boost_1_58_0\lib32-msvc-12.0
       LIBOGG: libogg-1.3.2
       LIBOGG_VS: VS2010
-      CHOCO_EXTRAS: gnuwin32-make.portable
+      CHOCO_EXTRAS: make
   - matrix:
       only:
         - image: Visual Studio 2015
@@ -52,7 +52,7 @@ for:
       VS: C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat
       BOOST_INCLUDEDIR: C:\Libraries\boost_1_63_0
       BOOST_LIBRARYDIR: C:\Libraries\boost_1_63_0\lib32-msvc-14.0
-      CHOCO_EXTRAS: gnuwin32-make.portable
+      CHOCO_EXTRAS: make
   - matrix:
       only:
         - image: Visual Studio 2017
@@ -61,7 +61,7 @@ for:
       VS: C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat
       BOOST_INCLUDEDIR: C:\Libraries\boost_1_67_0
       BOOST_LIBRARYDIR: C:\Libraries\boost_1_67_0\lib32-msvc-14.1
-      CHOCO_EXTRAS: gnuwin32-make.portable
+      CHOCO_EXTRAS: make
   - matrix:
       only:
         - image: Visual Studio 2017
