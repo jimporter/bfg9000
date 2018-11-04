@@ -249,6 +249,8 @@ by any of the source files, but does <em>not</em> include files external to the 
 <p>In addition, all build steps have the ability to define extra dependencies via
 the <em>extra_deps</em> argument. These can be files or other build steps, and changes
 to them will trigger a rebuild as with the build's inputs.</p>
+<p>Build steps also allow setting a custom description. This can be used to provide
+a friendlier message for the Ninja backend to show when building that step.</p>
 <p>Finally, build steps which produce a file can also be used like the
 <a href="#file-types">file types</a> described above to refer to prebuilt files already in
 the source tree (e.g. static libraries provided in binary form by a
@@ -260,7 +262,7 @@ determined by the platform you're running on. For instance, when building an
 executable file named "foo" on Windows, the resulting file will be
 <code>foo.exe</code>.</p>
 </div>
-<h3 id="build_step">build_step(<em>name</em>, <em>cmd</em>|<em>cmds</em>, [<em>environment</em>], [<em>type</em>], [<em>args</em>], [<em>kwargs</em>], [<em>extra_deps</em>])<a class="headerlink" href="#build_step" title="Permanent link">§</a></h3>
+<h3 id="build_step">build_step(<em>name</em>, <em>cmd</em>|<em>cmds</em>, [<em>environment</em>], [<em>type</em>], [<em>args</em>], [<em>kwargs</em>], [<em>extra_deps</em>], [<em>description</em>])<a class="headerlink" href="#build_step" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Create a custom build step that produces a file named <em>name</em> by running an
 arbitrary command (<em>cmd</em> or <em>cmds</em>). <em>name</em> may either be a single file name or
@@ -271,7 +273,7 @@ this with the <em>type</em> argument. This should be either 1) a function return
 file object, or 2) an object with a <code>.type</code> attribute that meets the criteria of
 (1). You can also pass <em>args</em> and <em>kwargs</em> to forward arguments along to this
 function.</p>
-<h3 id="command">command(<em>name</em>, <em>cmd</em>|<em>cmds</em>, [<em>environment</em>], [<em>extra_deps</em>])<a class="headerlink" href="#command" title="Permanent link">§</a></h3>
+<h3 id="command">command(<em>name</em>, <em>cmd</em>|<em>cmds</em>, [<em>environment</em>], [<em>extra_deps</em>], [<em>description</em>])<a class="headerlink" href="#command" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Create a build step named <em>name</em> that runs a list of arbitrary commands,
 specified in either <em>cmd</em> or <em>cmds</em>; <em>cmd</em> takes a single command, whereas
@@ -281,7 +283,7 @@ parsed according to shell rules, a file object (such as an
 the process.</p>
 <p>You may also pass a dict to <em>environment</em> to set environment variables for the
 commands. These override any environment variables set on the command line.</p>
-<h3 id="executable">executable(<em>name</em>, [<em>files</em>, ..., [<em>extra_deps</em>]])<a class="headerlink" href="#executable" title="Permanent link">§</a></h3>
+<h3 id="executable">executable(<em>name</em>, [<em>files</em>, ..., [<em>extra_deps</em>], [<em>description</em>]])<a class="headerlink" href="#executable" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Create a build step that builds an executable file named <em>name</em>. <em>files</em> is the
 list of source (or object) files to link. If an element of <em>files</em> is a source
@@ -313,7 +315,7 @@ other functions. In addition, the following arguments may be specified:</p>
 variables</a> and the <a href="../environment-vars/#compilation-variables">compiler environment
 variable</a> (e.g. <code>CC</code>) for the
 relevant language.</p>
-<h3 id="library">library(<em>name</em>, [<em>files</em>, ..., [<em>extra_deps</em>]])<a class="headerlink" href="#library" title="Permanent link">§</a></h3>
+<h3 id="library">library(<em>name</em>, [<em>files</em>, ..., [<em>extra_deps</em>], [<em>description</em>]])<a class="headerlink" href="#library" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Create a build step that builds a shared library named <em>name</em>. Its arguments are
 the same as the superset of <a href="#shared_library"><em>shared_library</em></a> and
@@ -347,7 +349,7 @@ import libs for shared libraries. As a result, if both shared and static
 library builds are enabled with MSVC, bfg9000 will fall back to building
 only the shared library.</p>
 </div>
-<h3 id="object_file">object_file([<em>name</em>], [<em>file</em>, ..., [<em>extra_deps</em>]])<a class="headerlink" href="#object_file" title="Permanent link">§</a></h3>
+<h3 id="object_file">object_file([<em>name</em>], [<em>file</em>, ..., [<em>extra_deps</em>], [<em>description</em>]])<a class="headerlink" href="#object_file" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Create a build step that compiles a source file named <em>file</em> to an object file
 named <em>name</em>; if <em>name</em> is not specified, it takes the file name in <em>file</em>
@@ -378,7 +380,7 @@ addition, the following arguments may be specified:</p>
 </ul>
 <p>This build step recognizes the <a href="../environment-vars/#compilation-variables">compilation environment
 variables</a> for the relevant language.</p>
-<h3 id="object_files">object_files(<em>files</em>, ..., [<em>extra_deps</em>])<a class="headerlink" href="#object_files" title="Permanent link">§</a></h3>
+<h3 id="object_files">object_files(<em>files</em>, ..., [<em>extra_deps</em>], [<em>description</em>])<a class="headerlink" href="#object_files" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Create a compilation build step for each of the files in <em>files</em>; this is
 equivalent to calling <a href="#object_file"><em>object_file</em></a> for each element in <em>files</em>.</p>
@@ -393,7 +395,7 @@ foo_obj = objs['foo.cpp']
 test_exe = executable('test', ['test.cpp', foo_obj])
 </code></pre>
 
-<h3 id="precompiled_header">precompiled_header([<em>name</em>], [<em>file</em>, ..., [<em>extra_deps</em>]])<a class="headerlink" href="#precompiled_header" title="Permanent link">§</a></h3>
+<h3 id="precompiled_header">precompiled_header([<em>name</em>], [<em>file</em>, ..., [<em>extra_deps</em>], [<em>description</em>]])<a class="headerlink" href="#precompiled_header" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Create a build step that generates a precompiled header, which can be used to
 speed up the compilation of <a href="#object_file">object files</a>. If <em>name</em> is not
@@ -426,7 +428,7 @@ precompiled must be the <em>first</em> file <code>#include</code>d in each sourc
 within the context of a particular source file and will contain all the
 code <em>up to and including</em> the header in question.</p>
 </div>
-<h3 id="shared_library">shared_library(<em>name</em>, [<em>files</em>, ..., [<em>extra_deps</em>]])<a class="headerlink" href="#shared_library" title="Permanent link">§</a></h3>
+<h3 id="shared_library">shared_library(<em>name</em>, [<em>files</em>, ..., [<em>extra_deps</em>], [<em>description</em>]])<a class="headerlink" href="#shared_library" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Create a build step that builds a shared library named <em>name</em>. Its arguments are
 the same as <a href="#executable"><em>executable</em></a>, with the following additional
@@ -457,7 +459,7 @@ public symbols. See <a href="../writing/#building-libraries-on-windows">Building
 Windows</a> for an example of how to
 use this macro in your code.</p>
 </div>
-<h3 id="static_library">static_library(<em>name</em>, [<em>files</em>, ..., [<em>extra_deps</em>]])<a class="headerlink" href="#static_library" title="Permanent link">§</a></h3>
+<h3 id="static_library">static_library(<em>name</em>, [<em>files</em>, ..., [<em>extra_deps</em>], [<em>description</em>]])<a class="headerlink" href="#static_library" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Create a build step that builds a static library named <em>name</em>. Its arguments are
 the same as <a href="#executable"><em>executable</em></a>, with the following additional argument:</p>
