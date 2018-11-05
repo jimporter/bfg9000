@@ -27,7 +27,7 @@ if os.getenv('BACKENDS', '').strip():
 else:
     backends = [k for k, v in iteritems(list_backends()) if v.priority > 0]
     # Only test with MSBuild by default on Windows.
-    if env.host_platform.name != 'windows' and 'msbuild' in backends:
+    if env.host_platform.family != 'windows' and 'msbuild' in backends:
         backends.remove('msbuild')
 
 extra_tests = os.getenv('BFG_EXTRA_TESTS', '').split(' ')
@@ -114,10 +114,6 @@ def xfail_if(xfail):
         else:
             return fn
     return wrap
-
-
-def xfail_if_platform(platform):
-    return xfail_if(env.host_platform.name == platform)
 
 
 class SubprocessError(unittest.TestCase.failureException):
@@ -352,7 +348,7 @@ def executable(name):
 if env.builder('c++').flavor == 'msvc':
     _shared_library_prefix = ''
     _static_library_prefix = ''
-elif env.target_platform.name == 'windows':
+elif env.target_platform.family == 'windows':
     _shared_library_prefix = ''
     _static_library_prefix = 'lib'
 else:
@@ -366,7 +362,7 @@ def shared_library(name, version=None):
     if version:
         if not env.target_platform.has_versioned_library:
             raise ValueError('no versioned libraries on this platform')
-        if env.target_platform.name == 'darwin':
+        if env.target_platform.genus == 'darwin':
             tail += '.' + version
         else:
             ext += '.' + version

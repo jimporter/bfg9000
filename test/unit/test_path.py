@@ -124,7 +124,7 @@ class TestPath(unittest.TestCase):
                         self.Path('a', InstallRoot.bindir, False))
 
     def test_cross(self):
-        for name in ('windows', 'linux'):
+        for name in ('winnt', 'linux'):
             platform = target.platform_info(name)
             env = MockEnv(platform)
 
@@ -440,7 +440,7 @@ class TestInstallPath(unittest.TestCase):
             install_path(p, InstallRoot.bindir, True)
 
     def test_install_path_cross(self):
-        for name in ('windows', 'linux'):
+        for name in ('winnt', 'linux'):
             platform = target.platform_info(name)
             env = MockEnv(platform)
 
@@ -457,7 +457,7 @@ class TestInstallPath(unittest.TestCase):
                              platform.Path('/foo/bar', Root.absolute))
 
     def test_install_path_cross_directory(self):
-        for name in ('windows', 'linux'):
+        for name in ('winnt', 'linux'):
             platform = target.platform_info(name)
             env = MockEnv(platform)
 

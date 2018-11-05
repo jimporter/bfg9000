@@ -3,7 +3,7 @@ import os.path
 from .. import *
 
 
-@skip_if(env.host_platform.name == 'windows', 'no objective c on windows')
+@skip_if(env.host_platform.family == 'windows', 'no objective c on windows')
 class TestObjCxx(IntegrationTest):
     def __init__(self, *args, **kwargs):
         IntegrationTest.__init__(

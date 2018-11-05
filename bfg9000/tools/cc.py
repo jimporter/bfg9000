@@ -374,7 +374,7 @@ class CcLinker(BuildCommand):
         except (OSError, shell.CalledProcessError):
             if strict:
                 raise
-            return '' if self.env.target_platform.flavor == 'windows' else '/'
+            return '' if self.env.target_platform.family == 'windows' else '/'
 
     def search_dirs(self, strict=False):
         try:
@@ -504,7 +504,7 @@ class CcLinker(BuildCommand):
             return ['-l' + self._extract_lib_name(library)]
 
         if isinstance(library, WholeArchive):
-            if self.env.target_platform.name == 'darwin':
+            if self.env.target_platform.genus == 'darwin':
                 return ['-Wl,-force_load', library.path]
             return ['-Wl,--whole-archive', library.path,
                     '-Wl,--no-whole-archive']
@@ -594,7 +594,7 @@ class CcLinker(BuildCommand):
                     flags.append(_optimize_flags[j])
             elif isinstance(i, opts.pthread):
                 # macOS doesn't expect -pthread when linking.
-                if self.env.target_platform.name != 'darwin':
+                if self.env.target_platform.genus != 'darwin':
                     flags.append('-pthread')
             elif isinstance(i, opts.entry_point):
                 if self.lang != 'java':
@@ -693,7 +693,7 @@ class CcSharedLibraryLinker(CcLinker):
         fmt = self.builder.object_format
 
         if version and self.env.target_platform.has_versioned_library:
-            if self.env.target_platform.name == 'darwin':
+            if self.env.target_platform.genus == 'darwin':
                 real = self._lib_name(name + '.{}'.format(version))
                 soname = self._lib_name(name + '.{}'.format(soversion))
             else:
@@ -702,7 +702,7 @@ class CcSharedLibraryLinker(CcLinker):
             link = self._lib_name(name)
             return VersionedSharedLibrary(real, fmt, self.lang, soname, link)
         elif self.env.target_platform.has_import_library:
-            dllprefix = ('cyg' if self.env.target_platform.name == 'cygwin'
+            dllprefix = ('cyg' if self.env.target_platform.genus == 'cygwin'
                          else '')
             dllname = self._lib_name(name, prefix=dllprefix)
             impname = self._lib_name(name, suffix='.a')
@@ -713,7 +713,7 @@ class CcSharedLibraryLinker(CcLinker):
 
     @property
     def _always_flags(self):
-        shared = ('-dynamiclib' if self.env.target_platform.name == 'darwin'
+        shared = ('-dynamiclib' if self.env.target_platform.genus == 'darwin'
                   else '-shared')
         return CcLinker._always_flags.fget(self) + [shared, '-fPIC']
 
@@ -723,7 +723,7 @@ class CcSharedLibraryLinker(CcLinker):
         else:
             soname = library
 
-        if self.env.target_platform.name == 'darwin':
+        if self.env.target_platform.genus == 'darwin':
             return ['-install_name', darwin_install_name(soname)]
         else:
             return ['-Wl,-soname,' + soname.path.basename()]
@@ -797,7 +797,7 @@ class CcPackageResolver(object):
                              {'lang': self.lang}))
 
         # XXX: Include Cygwin here too?
-        if self.env.target_platform.name == 'windows':
+        if self.env.target_platform.family == 'windows':
             # We don't actually know what kind of library this is. It could be
             # a static library or an import library (which we classify as a
             # kind of shared lib).

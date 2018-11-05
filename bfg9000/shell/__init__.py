@@ -8,7 +8,9 @@ from ..path import Path
 from ..platforms import platform_name
 from ..safe_str import safe_str
 
-if platform_name() == 'windows':
+windows_names = ('winnt', 'win9x', 'msdos')
+
+if platform_name() in windows_names:
     from .windows import *
 else:
     from .posix import *
@@ -21,7 +23,7 @@ def which(names, env=os.environ, base_dirs=None, resolve=False,
           kind='executable'):
     paths = env.get('PATH', os.defpath).split(os.pathsep)
     exts = ['']
-    if platform_name() in ['windows', 'cygwin']:
+    if platform_name() in windows_names + ('cygwin',):
         exts.extend(env.get('PATHEXT', '').split(os.pathsep))
 
     names = listify(names)

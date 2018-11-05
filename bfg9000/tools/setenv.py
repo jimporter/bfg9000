@@ -1,11 +1,11 @@
 from . import tool
 from .common import SimpleCommand
-from ..platforms import platform_name
+from ..platforms.host import platform_info
 from ..safe_str import jbos, safe_str, shell_literal
 from ..shell import escape_line
 
 
-if platform_name() == 'windows':
+if platform_info().family == 'windows':
     @tool('setenv')
     class SetEnv(SimpleCommand):
         def __init__(self, env):

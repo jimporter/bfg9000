@@ -11,7 +11,7 @@ class WindowsPath(BasePath):
 
 class WindowsPlatform(Platform):
     @property
-    def flavor(self):
+    def family(self):
         return 'windows'
 
     Path = WindowsPath

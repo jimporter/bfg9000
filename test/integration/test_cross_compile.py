@@ -5,7 +5,7 @@ from six import assertRegex
 from . import *
 
 
-@skip_if(env.host_platform.name != 'linux',
+@skip_if(env.host_platform.genus != 'linux',
          'cross-compilation tests only run on linux')
 class TestCrossCompile(IntegrationTest):
     def __init__(self, *args, **kwargs):

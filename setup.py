@@ -180,14 +180,21 @@ setup(
         ],
         'bfg9000.platforms.host': [
             'cygwin=bfg9000.platforms.cygwin:CygwinHostPlatform',
+            'darwin=bfg9000.platforms.posix:PosixHostPlatform',
+            'linux=bfg9000.platforms.posix:PosixHostPlatform',
+            'msdos=bfg9000.platforms.windows:WindowsTargetPlatform',
             'posix=bfg9000.platforms.posix:PosixHostPlatform',
-            'windows=bfg9000.platforms.windows:WindowsHostPlatform',
+            'win9x=bfg9000.platforms.windows:WindowsHostPlatform',
+            'winnt=bfg9000.platforms.windows:WindowsHostPlatform',
         ],
         'bfg9000.platforms.target': [
             'cygwin=bfg9000.platforms.cygwin:CygwinTargetPlatform',
             'darwin=bfg9000.platforms.posix:DarwinTargetPlatform',
+            'linux=bfg9000.platforms.posix:PosixTargetPlatform',
+            'msdos=bfg9000.platforms.windows:WindowsTargetPlatform',
             'posix=bfg9000.platforms.posix:PosixTargetPlatform',
-            'windows=bfg9000.platforms.windows:WindowsTargetPlatform',
+            'win9x=bfg9000.platforms.windows:WindowsTargetPlatform',
+            'winnt=bfg9000.platforms.windows:WindowsTargetPlatform',
         ],
     },
 

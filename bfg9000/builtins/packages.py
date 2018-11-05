@@ -78,14 +78,14 @@ def boost_package(env, name=None, version=None):
                         if root else None)
     header = None
 
-    if env.target_platform.name == 'windows':
+    if env.target_platform.family == 'windows':
         if not env.builder('c++').auto_link:  # pragma: no cover
             # XXX: Don't require auto-link.
             raise PackageResolutionError('Boost on Windows requires auto-link')
 
         # On Windows, check the default install location, which is structured
         # differently from other install locations.
-        if not incdir and env.host_platform.name == 'windows':
+        if not incdir and env.host_platform.family == 'windows':
             dirs = find(r'C:\Boost\include', 'boost-*', type='d', flat=True)
             if dirs:
                 try:
@@ -110,7 +110,7 @@ def boost_package(env, name=None, version=None):
 
         compile_options = opts.option_list()
         link_options = opts.option_list()
-        if env.target_platform.flavor == 'posix' and 'thread' in iterate(name):
+        if env.target_platform.family == 'posix' and 'thread' in iterate(name):
             compile_options.append(opts.pthread())
             link_options.append(opts.pthread())
 

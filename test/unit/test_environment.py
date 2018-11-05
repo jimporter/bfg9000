@@ -5,7 +5,7 @@ from six import iteritems
 
 from bfg9000.environment import Environment, LibraryMode
 from bfg9000.path import Path, Root, InstallRoot
-from bfg9000.platforms import platform_name
+from bfg9000.platforms.host import platform_info
 
 this_dir = os.path.abspath(os.path.dirname(__file__))
 test_data_dir = os.path.join(this_dir, '..', 'data')
@@ -39,7 +39,7 @@ class TestEnvironment(unittest.TestCase):
         self.assertEqual(env.extra_args, [])
 
         variables = {u'HOME': u'/home/user'}
-        if platform_name() == 'windows' and sys.version_info[0] == 2:
+        if platform_info().family == 'windows' and sys.version_info[0] == 2:
             variables = {str(k): str(v) for k, v in iteritems(variables)}
         self.assertEqual(env.variables, variables)
 

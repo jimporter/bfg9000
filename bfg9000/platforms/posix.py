@@ -1,3 +1,5 @@
+import warnings
+
 from .basepath import BasePath, Root, InstallRoot
 from .core import Platform
 from .framework import Framework
@@ -12,7 +14,7 @@ class PosixPath(BasePath):
 
 class PosixPlatform(Platform):
     @property
-    def flavor(self):
+    def family(self):
         return 'posix'
 
     Path = PosixPath

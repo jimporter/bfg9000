@@ -67,7 +67,7 @@ def escape_line(line, listify=False):
         # already "escaped" command line. Otherwise, Windows users would be
         # pretty surprised to find that all the paths they specified like
         # C:\foo\bar are broken!
-        if platform_name() == 'windows':
+        if platform_name() in ('winnt', 'win9x', 'msdos'):
             line = line.replace('\\', '\\\\')
         line = shell_literal(line)
     return shell_list([line])

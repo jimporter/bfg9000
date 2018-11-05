@@ -3,7 +3,7 @@ from . import *
 
 from bfg9000 import shell
 
-is_mingw = (env.host_platform.name == 'windows' and
+is_mingw = (env.host_platform.family == 'windows' and
             env.builder('c++').flavor == 'cc')
 is_msvc = env.builder('c++').flavor == 'msvc'
 pkg_config_cmd = os.getenv('PKG_CONFIG', 'pkg-config')
@@ -29,7 +29,7 @@ class TestPkgConfig(IntegrationTest):
         self.configure()
         self.assertExists(os.path.join('pkgconfig', 'hello.pc'))
 
-        if env.host_platform.name == 'linux':
+        if env.host_platform.genus == 'linux':
             self.assertEqual(pkg_config(['hello', '--print-requires']), '')
             self.assertEqual(pkg_config(['hello', '--print-requires-private']),
                              'ogg')
@@ -43,7 +43,7 @@ class TestPkgConfig(IntegrationTest):
         self.configure(extra_args=['--enable-shared', '--enable-static'])
         self.assertExists(os.path.join('pkgconfig', 'hello.pc'))
 
-        if env.host_platform.name == 'linux':
+        if env.host_platform.genus == 'linux':
             self.assertEqual(pkg_config(['hello', '--print-requires']), '')
             self.assertEqual(pkg_config(['hello', '--print-requires-private']),
                              'ogg')
@@ -55,7 +55,7 @@ class TestPkgConfig(IntegrationTest):
         self.configure(extra_args=['--disable-shared', '--enable-static'])
         self.assertExists(os.path.join('pkgconfig', 'hello.pc'))
 
-        if env.host_platform.name == 'linux':
+        if env.host_platform.genus == 'linux':
             self.assertEqual(pkg_config(['hello', '--print-requires']), '')
             self.assertEqual(pkg_config(['hello', '--print-requires-private']),
                              'ogg')
@@ -94,7 +94,7 @@ class TestPkgConfig(IntegrationTest):
         self.build()
 
         env_vars = None
-        if env.target_platform.name == 'windows':
+        if env.target_platform.family == 'windows':
             env_vars = {'PATH': (os.path.abspath(self.libdir) +
                                  os.pathsep + os.environ['PATH'])}
         self.assertOutput([executable('program')], 'hello, library!\n',
@@ -155,7 +155,7 @@ class TestPkgConfigAuto(IntegrationTest):
         self.build()
 
         env_vars = None
-        if env.target_platform.name == 'windows':
+        if env.target_platform.family == 'windows':
             env_vars = {'PATH': (os.path.abspath(self.libdir) +
                                  os.pathsep + os.environ['PATH'])}
         self.assertOutput([executable('program')], 'hello, library!\n',

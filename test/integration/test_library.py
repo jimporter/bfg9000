@@ -35,7 +35,7 @@ class TestLibrary(IntegrationTest):
         self.build()
         self.assertOutput([executable('program')], 'hello, library!\n')
         self.assertExists(shared_library('library'))
-        if env.target_platform.name == 'windows':
+        if env.target_platform.family == 'windows':
             self.assertExists(import_library('library'))
         self.assertExists(static_library('library'))
 
@@ -49,7 +49,7 @@ class TestSharedLibrary(IntegrationTest):
         self.build()
 
         env_vars = None
-        if env.target_platform.name == 'windows':
+        if env.target_platform.family == 'windows':
             env_vars = {'PATH': os.pathsep.join([
                 os.path.abspath(self.target_path(output_file(i)))
                 for i in ('outer', 'middle', 'inner')
@@ -72,7 +72,7 @@ class TestSharedLibrary(IntegrationTest):
         cleandir(self.builddir)
 
         env_vars = None
-        if env.target_platform.name == 'windows':
+        if env.target_platform.family == 'windows':
             env_vars = {'PATH': os.pathsep.join([
                 os.path.abspath(os.path.join(
                     self.libdir, self.target_path(output_file(i))
@@ -93,7 +93,7 @@ class TestStaticLibrary(IntegrationTest):
             [executable('program')],
             'hello from inner\nhello from middle\nhello from outer\n'
         )
-        if env.host_platform.name == 'linux':
+        if env.host_platform.genus == 'linux':
             output = self.assertPopen(['readelf', '-s', executable('program')])
             assertNotRegex(self, output, r"Symbol table '\.symtab'")
 
@@ -123,7 +123,7 @@ class TestDualUseLibrary(IntegrationTest):
         self.assertOutput([executable('program')], 'hello, library!\n')
         for i in self.lib_names:
             self.assertExists(shared_library(i))
-            if env.target_platform.name == 'windows':
+            if env.target_platform.family == 'windows':
                 self.assertExists(import_library(i))
             if not is_msvc:
                 self.assertNotExists(static_library(i))
@@ -144,7 +144,7 @@ class TestDualUseLibrary(IntegrationTest):
         self.assertOutput([executable('program')], 'hello, library!\n')
         for i in self.lib_names:
             self.assertExists(shared_library(i))
-            if env.target_platform.name == 'windows':
+            if env.target_platform.family == 'windows':
                 self.assertExists(import_library(i))
             self.assertNotExists(static_library(i))
 
@@ -155,7 +155,7 @@ class TestDualUseLibrary(IntegrationTest):
         self.build(shared_library('outer'))
         for i in self.lib_names:
             self.assertExists(shared_library(i))
-            if env.target_platform.name == 'windows':
+            if env.target_platform.family == 'windows':
                 self.assertExists(import_library(i))
             self.assertNotExists(static_library(i))
 
@@ -166,7 +166,7 @@ class TestDualUseLibrary(IntegrationTest):
         self.build(static_library('outer'))
         for i in self.lib_names:
             self.assertNotExists(shared_library(i))
-            if env.target_platform.name == 'windows':
+            if env.target_platform.family == 'windows':
                 self.assertNotExists(import_library(i))
             self.assertExists(static_library(i))
 
@@ -193,7 +193,7 @@ class TestDualUseLibrary(IntegrationTest):
         self.build('install')
 
         import_libs = []
-        if env.target_platform.name == 'windows':
+        if env.target_platform.family == 'windows':
             import_libs = [pjoin(self.libdir, import_library('outer').path)]
         self.assertDirectory(self.installdir, (
             [pjoin(self.libdir, shared_library(i).path)
@@ -214,7 +214,7 @@ class TestLibraryDefs(IntegrationTest):
 
 
 # No versioned libraries on Windows.
-@skip_if(env.target_platform.name == 'windows', hide=True)
+@skip_if(env.target_platform.family == 'windows', hide=True)
 class TestVersionedLibrary(IntegrationTest):
     def __init__(self, *args, **kwargs):
         IntegrationTest.__init__(

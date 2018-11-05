@@ -42,8 +42,8 @@ class TestToolchain(unittest.TestCase):
         self.assertEqual(self.builtin_dict['environ'], {'NAME': 'value'})
 
     def test_target_platform(self):
-        self.builtin_dict['target_platform']('windows')
-        self.assertEqual(self.env.target_platform.name, 'windows')
+        self.builtin_dict['target_platform']('winnt')
+        self.assertEqual(self.env.target_platform.name, 'winnt')
 
     def test_which(self):
         which = self.builtin_dict['which']

@@ -7,11 +7,11 @@ from six.moves import cStringIO as StringIO
 from bfg9000 import path
 from bfg9000 import safe_str
 from bfg9000.backends.ninja.syntax import *
-from bfg9000.platforms import platform_name
+from bfg9000.platforms.host import platform_info
 from bfg9000.platforms.posix import PosixPath
 from bfg9000.platforms.windows import WindowsPath
 
-quote_char = '"' if platform_name() == 'windows' else "'"
+quote_char = '"' if platform_info().family == 'windows' else "'"
 
 
 def quoted(s):
@@ -110,7 +110,7 @@ class TestWriteJbos(unittest.TestCase):
         out = Writer(StringIO())
         s = safe_str.jbos('$foo', safe_str.literal('$bar'))
         out.write(s, Syntax.shell)
-        if platform_name() == 'windows':
+        if platform_info().family == 'windows':
             expected = '$$foo$bar'
         else:
             expected = quoted('$$foo') + '$bar'

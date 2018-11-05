@@ -162,7 +162,7 @@ class TestCcCompiler(unittest.TestCase):
             opts.include_dir(file_types.HeaderDirectory(p, system=True))
         )), ['-isystem', p])
 
-        if self.env.target_platform.name == 'linux':
+        if self.env.target_platform.genus == 'linux':
             p = Path('/usr/include')
             self.assertEqual(self.compiler.flags(opts.option_list(
                 opts.include_dir(file_types.HeaderDirectory(p, system=True))
@@ -268,9 +268,9 @@ class TestCcLinker(unittest.TestCase):
         lib = Path('/path/to/lib/libfoo.a')
         output = file_types.Executable(Path('exe'), 'native')
 
-        if self.env.target_platform.name == 'linux':
+        if self.env.target_platform.genus == 'linux':
             rpath = rpath_with_output = ['-Wl,-rpath,' + libdir]
-        elif self.env.target_platform.name == 'darwin':
+        elif self.env.target_platform.genus == 'darwin':
             rpath = []
             rpath_with_output = [jbos('-Wl,-rpath,', '@loader_path')]
         else:
@@ -289,7 +289,7 @@ class TestCcLinker(unittest.TestCase):
             opts.lib(file_types.SharedLibrary(lib, 'native'))
         ), output), ['-L' + libdir] + rpath_with_output)
 
-        if self.env.target_platform.name == 'linux':
+        if self.env.target_platform.genus == 'linux':
             libdir2 = Path('foo')
             lib2 = Path('foo/libbar.a')
 
@@ -373,7 +373,7 @@ class TestCcLinker(unittest.TestCase):
             self.linker.flags(opts.option_list(
                 opts.module_def(file_types.ModuleDefFile(path))
             )),
-            [path] if self.env.target_platform.name == 'windows' else []
+            [path] if self.env.target_platform.family == 'windows' else []
         )
 
     def test_flags_entry_point(self):
@@ -411,7 +411,7 @@ class TestCcLinker(unittest.TestCase):
     def test_flags_pthread(self):
         self.assertEqual(
             self.linker.flags(opts.option_list(opts.pthread())),
-            [] if self.env.target_platform.name == 'darwin' else ['-pthread']
+            [] if self.env.target_platform.genus == 'darwin' else ['-pthread']
         )
 
     def test_flags_string(self):
@@ -463,7 +463,7 @@ class TestCcLinker(unittest.TestCase):
                 file_types.StaticLibrary(lib, 'native')
             ))
         ))
-        if self.env.target_platform.name == 'darwin':
+        if self.env.target_platform.genus == 'darwin':
             self.assertEqual(flags, ['-Wl,-force_load', lib])
         else:
             self.assertEqual(flags, ['-Wl,--whole-archive', lib,
@@ -485,7 +485,7 @@ class TestCcLinker(unittest.TestCase):
 
         # Framework
         fw = opts.lib(Framework('cocoa'))
-        if self.env.target_platform.name == 'darwin':
+        if self.env.target_platform.genus == 'darwin':
             self.assertEqual(self.linker.lib_flags(opts.option_list(fw)),
                              ['-framework', 'cocoa'])
         else:

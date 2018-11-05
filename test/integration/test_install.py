@@ -74,7 +74,7 @@ class TestInstall(IntegrationTest):
 
 
 # No DESTDIR on Windows.
-@skip_if(env.host_platform.name == 'windows', hide=True)
+@skip_if(env.host_platform.family == 'windows', hide=True)
 class TestDestDir(IntegrationTest):
     def __init__(self, *args, **kwargs):
         IntegrationTest.__init__(self, 'install', install=True,

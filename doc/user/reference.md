@@ -880,13 +880,21 @@ The command to run when invoking this compiler, e.g. `g++-4.9`.
 
 Platform objects represent the platform that the project is being compiled for.
 
-#### *platform*.flavor { #platform-flavor }
+#### *platform*.family { #platform-flavor }
 
-The "flavor" of the platform. Either `'posix'` or `'windows'`.
+The family of the platform. Either `'posix'` or `'windows'`.
+
+#### *platform*.genus { #platform-genus }
+
+The sub-type of the platform, e.g. `'linux'`, `darwin'`, or `'winnt'`.
 
 #### *platform*.name { #platform-name }
 
-The name of the platform, e.g. `'linux'`, `'darwin'` (macOS), or `'windows'`.
+An alias for [*platform.species*](#platform-species).
+
+#### *platform*.species { #platform-species }
+
+The specific name of the platform, e.g. `'linux'`, `'macos'`, or `'winnt'`.
 
 ## Utilities
 
@@ -957,7 +965,8 @@ Return *FindResult.include* if *path* is a filename that should be included for
 the target platform, and *FindResult.not_now* otherwise. File (or directory)
 names like `PLATFORM` or `foo_PLATFORM.cpp` are excluded if `PLATFORM` is a
 known platform name that *doesn't* match the target platform. Known platform
-names are: `'posix'`,`'linux'`, `'darwin'`, `'cygwin'`, `'windows'`.
+names are: `'posix'`,`'linux'`, `'darwin'`, `'cygwin'`, `'windows'`, `'winnt'`,
+`'win9x'`, `'msdos'`.
 
 This is the default *filter* for [*find_files*](#find_files).
 

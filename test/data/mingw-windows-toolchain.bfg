@@ -1,6 +1,6 @@
 # -*- python -*-
 
-target_platform('windows')
+target_platform('winnt')
 compiler(['x86_64-w64-mingw32-g++-win32',
           'x86_64-w64-mingw32-g++'], 'c++')
 compile_options(['-Wall'], 'c++')

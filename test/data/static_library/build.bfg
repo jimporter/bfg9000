@@ -1,6 +1,6 @@
 # -*- python -*-
 
-opts = ['-s'] if env.target_platform.name == 'linux' else []
+opts = ['-s'] if env.target_platform.genus == 'linux' else []
 
 inner = static_library('inner', files=['inner.cpp'], link_options=opts)
 middle = static_library('middle', files=['middle.cpp'], libs=[inner])

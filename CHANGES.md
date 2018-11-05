@@ -23,6 +23,8 @@
 - `env.platform` has been split into `env.host_platform` and
   `env.target_platform`
 - MinGW now makes DLLs named `<name>.dll` instead of `lib<name>.dll`
+- Platform names are reworked; `'windows'` is now `'winnt'` and `'darwin'` is
+  `'macos'`
 
 ### Bug fixes
 - Fix support for packaging as a Python Wheel

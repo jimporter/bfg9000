@@ -7,7 +7,6 @@ from six.moves import cStringIO as StringIO
 from ... import path
 from ... import safe_str
 from ... import iterutils
-from ...platforms import platform_name
 from ...platforms.host import platform_info
 from ...tools.common import Command
 
@@ -34,7 +33,7 @@ _comment_tmpl = """
 
 class Writer(object):
     # Don't escape ":" if we're using Windows paths.
-    __extra_escapes = '' if platform_name() == 'windows' else ':'
+    __extra_escapes = '' if platform_info().family == 'windows' else ':'
     __target_ex = re.compile(r'(\\*)([#?*\[\]~\s%{}])'.format(__extra_escapes))
     __dep_ex = re.compile(r'(\\*)([#?*\[\]~\s|%{}])'.format(__extra_escapes))
 

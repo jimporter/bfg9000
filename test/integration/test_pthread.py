@@ -3,7 +3,7 @@ import tarfile
 from . import *
 
 
-@skip_if(env.target_platform.name == 'windows', hide=True)
+@skip_if(env.target_platform.family == 'windows', hide=True)
 class TestPthread(IntegrationTest):
     def __init__(self, *args, **kwargs):
         IntegrationTest.__init__(self, 'pthread', *args, **kwargs)

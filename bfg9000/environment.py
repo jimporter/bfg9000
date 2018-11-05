@@ -257,25 +257,25 @@ class Environment(object):
             data['initial_variables'] = data['variables']
             data['toolchain'] = {'path': None}
 
-        # With Python 2.x on Windows, the environment variables must all be
-        # non-Unicode strings.
-        if data['host_platform'] == 'windows' and sys.version_info[0] == 2:
-            for key in ('initial_variables', 'variables'):
-                data[key] = {str(k): str(v) for k, v in iteritems(data[key])}
-
         # Now that we've upgraded, initialize the Environment object.
         env = Environment.__new__(Environment)
+
+        env.host_platform = platforms.host.platform_info(data['host_platform'])
+        env.target_platform = platforms.target.platform_info(
+            data['target_platform']
+        )
+
+        # With Python 2.x on Windows, the environment variables must all be
+        # non-Unicode strings.
+        if env.host_platform.family == 'windows' and sys.version_info[0] == 2:
+            for key in ('initial_variables', 'variables'):
+                data[key] = {str(k): str(v) for k, v in iteritems(data[key])}
 
         for i in ('backend', 'extra_args', 'initial_variables', 'variables'):
             setattr(env, i, data[i])
 
         for i in ('bfgdir', 'srcdir', 'builddir'):
             setattr(env, i, Path.from_json(data[i]))
-
-        env.host_platform = platforms.host.platform_info(data['host_platform'])
-        env.target_platform = platforms.target.platform_info(
-            data['target_platform']
-        )
 
         env.backend_version = Version(data['backend_version'])
         env.install_dirs = {

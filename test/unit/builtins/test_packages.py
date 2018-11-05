@@ -58,7 +58,7 @@ def mock_execute(args, **kwargs):
 
 class TestFramework(unittest.TestCase):
     def test_framework(self):
-        env = make_env('darwin')
+        env = make_env('macos')
         self.assertEqual(
             packages.framework(env, 'name'),
             CommonPackage('name', env.target_platform.object_format,
@@ -68,7 +68,7 @@ class TestFramework(unittest.TestCase):
         )
 
     def test_framework_suffix(self):
-        env = make_env('darwin')
+        env = make_env('macos')
         self.assertEqual(
             packages.framework(env, 'name', 'suffix'),
             CommonPackage('name,suffix',
@@ -171,7 +171,7 @@ class TestBoostPackage(unittest.TestCase):
             self.assertEqual(pkg.version, Version('1.23'))
 
     def test_windows_default_location(self):
-        env = make_env('windows', clear_variables=True)
+        env = make_env('winnt', clear_variables=True)
         boost_incdir = r'C:\Boost\include\boost-1.23'
 
         def mock_walk(top):

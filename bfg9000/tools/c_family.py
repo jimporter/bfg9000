@@ -45,6 +45,6 @@ _builders = (cc.CcBuilder, msvc.MsvcBuilder)
 
 @builder('c', 'c++', 'objc', 'objc++')
 def c_family_builder(env, lang):
-    cmd_map = (_windows_cmds if env.host_platform.name == 'windows'
+    cmd_map = (_windows_cmds if env.host_platform.family == 'windows'
                else _posix_cmds)
     return choose_builder(env, known_langs[lang], cmd_map[lang], _builders)

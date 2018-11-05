@@ -1,6 +1,6 @@
 # -*- python -*-
 
-opts = ['-s'] if env.target_platform.name == 'linux' else []
+opts = ['-s'] if env.target_platform.genus == 'linux' else []
 ogg = package('ogg')
 
 hdr = header_file('hello.hpp')

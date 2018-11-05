@@ -2,7 +2,7 @@ import os.path
 
 from . import *
 
-is_mingw = (env.host_platform.name == 'windows' and
+is_mingw = (env.host_platform.family == 'windows' and
             env.builder('c++').flavor == 'cc')
 
 
