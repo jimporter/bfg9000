@@ -2,8 +2,7 @@ import os
 from six import iteritems
 
 from . import builtin
-from .. import shell
-from .. import platforms, tools
+from .. import path, platforms, shell, tools
 from ..iterutils import first, isiterable
 from ..languages import known_formats, known_langs
 from ..shell import posix as pshell
@@ -85,3 +84,9 @@ def lib_options(env, options, format='native', mode='dynamic'):
     if isiterable(options):
         options = pshell.join(options)
     env.variables[known_formats[format, mode].var('libs')] = options
+
+
+@builtin.function('env', context='toolchain')
+def install_dirs(env, **kwargs):
+    for k, v in iteritems(kwargs):
+        env.install_dirs[path.InstallRoot[k]] = path.abspath(v)

@@ -6,6 +6,7 @@ from ... import make_env
 
 from bfg9000 import tools
 from bfg9000.builtins import builtin, toolchain
+from bfg9000.path import abspath, InstallRoot
 
 tools.init()
 
@@ -198,3 +199,11 @@ class TestToolchain(unittest.TestCase):
 
         lib_options(['foo', 'bar'], 'native')
         self.assertEqual(self.env.variables, {'LDLIBS': 'foo bar'})
+
+    def test_install_dirs(self):
+        self.builtin_dict['install_dirs'](prefix='/prefix', bindir='/bin/dir')
+
+        self.assertEqual(self.env.install_dirs[InstallRoot.prefix],
+                         abspath('/prefix'))
+        self.assertEqual(self.env.install_dirs[InstallRoot.bindir],
+                         abspath('/bin/dir'))

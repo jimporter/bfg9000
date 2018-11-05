@@ -1054,6 +1054,18 @@ Availability: `<toolchain>.bfg`
 
 A `dict` of the current environment variables, suitable for getting/setting.
 
+### install_dirs([...]) { #install_dirs }
+Availability: `<toolchain>.bfg`
+{: .subtitle}
+
+Set the installation directories for this toolchain. Arguments to this function
+should be keyword args with one of the following names: `prefix`, `exec_prefix`,
+`bindir`, `libdir`, or `includedir`.
+
+!!! note
+    Any installation directory set here *overrides* directories set on the
+    command line.
+
 ### lib_options(*options*, [*format*], [*mode*]) { #lib_options }
 Availability: `<toolchain>.bfg`
 {: .subtitle}
