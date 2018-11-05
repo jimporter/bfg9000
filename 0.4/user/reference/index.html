@@ -845,10 +845,14 @@ e.g. <code>'cc'</code>, <code>'msvc'</code>.</p>
 <hr />
 <h3 id="platforms">Platforms<a class="headerlink" href="#platforms" title="Permanent link">§</a></h3>
 <p>Platform objects represent the platform that the project is being compiled for.</p>
-<h4 id="platform-flavor"><em>platform</em>.flavor<a class="headerlink" href="#platform-flavor" title="Permanent link">§</a></h4>
-<p>The "flavor" of the platform. Either <code>'posix'</code> or <code>'windows'</code>.</p>
+<h4 id="platform-flavor"><em>platform</em>.family<a class="headerlink" href="#platform-flavor" title="Permanent link">§</a></h4>
+<p>The family of the platform. Either <code>'posix'</code> or <code>'windows'</code>.</p>
+<h4 id="platform-genus"><em>platform</em>.genus<a class="headerlink" href="#platform-genus" title="Permanent link">§</a></h4>
+<p>The sub-type of the platform, e.g. <code>'linux'</code>, <code>darwin'</code>, or <code>'winnt'</code>.</p>
 <h4 id="platform-name"><em>platform</em>.name<a class="headerlink" href="#platform-name" title="Permanent link">§</a></h4>
-<p>The name of the platform, e.g. <code>'linux'</code>, <code>'darwin'</code> (macOS), or <code>'windows'</code>.</p>
+<p>An alias for <a href="#platform-species"><em>platform.species</em></a>.</p>
+<h4 id="platform-species"><em>platform</em>.species<a class="headerlink" href="#platform-species" title="Permanent link">§</a></h4>
+<p>The specific name of the platform, e.g. <code>'linux'</code>, <code>'macos'</code>, or <code>'winnt'</code>.</p>
 <h2 id="utilities">Utilities<a class="headerlink" href="#utilities" title="Permanent link">§</a></h2>
 <h3 id="argument">argument(<em>names</em>..., [<em>action</em>], [<em>nargs</em>], [<em>const</em>], [<em>default</em>], [<em>type</em>], [<em>choices</em>], [<em>required</em>], [<em>help</em>], [<em>metavar</em>], [<em>dest</em>])<a class="headerlink" href="#argument" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>options.bfg</code></p>
@@ -899,7 +903,8 @@ them.</p>
 the target platform, and <em>FindResult.not_now</em> otherwise. File (or directory)
 names like <code>PLATFORM</code> or <code>foo_PLATFORM.cpp</code> are excluded if <code>PLATFORM</code> is a
 known platform name that <em>doesn't</em> match the target platform. Known platform
-names are: <code>'posix'</code>,<code>'linux'</code>, <code>'darwin'</code>, <code>'cygwin'</code>, <code>'windows'</code>.</p>
+names are: <code>'posix'</code>,<code>'linux'</code>, <code>'darwin'</code>, <code>'cygwin'</code>, <code>'windows'</code>, <code>'winnt'</code>,
+<code>'win9x'</code>, <code>'msdos'</code>.</p>
 <p>This is the default <em>filter</em> for <a href="#find_files"><em>find_files</em></a>.</p>
 <h3 id="findresult">FindResult<a class="headerlink" href="#findresult" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
