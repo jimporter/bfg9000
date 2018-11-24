@@ -199,6 +199,13 @@ variables](environment-vars.md#dynamic-linking) and the [compiler environment
 variable](environment-vars.md#compilation-variables) (e.g. `CC`) for the
 relevant language.
 
+!!! note
+    When passing options to the linker via `link_options`, these options will be
+    passed to whatever executable is typically used to link object files for the
+    source language; in particular, this means that when using a tool like GCC
+    to build your project, any linker options that need to be forwarded on to
+    `ld` should be prepended with `'-Wl,'`.
+
 ### library(*name*, [*files*, ..., [*extra_deps*], [*description*]]) { #library }
 Availability: `build.bfg`
 {: .subtitle}
@@ -524,6 +531,14 @@ the same linking process. You can also specify `'jvm'` for JVM-based languages
 (Java, Scala). *mode* may be either `'dynamic'` (the default) to modify
 [executables](#executable) and [shared libraries](#shared_library) or `'static'`
 to modify [static libraries](#static_library).
+
+!!! note
+    As with the `link_options` argument for [*executable()*](#executable) and
+    [*shared_library()*](#shared_library), dynamic link options will be passed
+    to whatever executable is typically used to link object files for the source
+    language; in particular, this means that when using a tool like GCC to build
+    your project, any linker options that need to be forwarded on to `ld` should
+    be prepended with `'-Wl,'`.
 
 ## Test rules
 
