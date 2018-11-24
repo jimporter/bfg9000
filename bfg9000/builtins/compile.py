@@ -223,7 +223,9 @@ def make_compile(rule, build_inputs, buildfile, env):
             cmd_kwargs['deps'] = deps = first(output_vars) + '.d'
             recipe_extra = [make.Silent(depfixer(deps))]
 
-            buildfile.include(rule.output[0].path.addext('.d'), optional=True)
+            depfile = rule.output[0].path.addext('.d')
+            build_inputs.add_target(File(depfile))
+            buildfile.include(depfile, optional=True)
 
         buildfile.define(recipename, [compiler(
             make.qvar('<'), output_vars, **cmd_kwargs

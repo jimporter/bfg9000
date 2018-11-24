@@ -1,4 +1,5 @@
 import tarfile
+from os.path import join as pjoin
 
 from . import *
 
@@ -32,3 +33,17 @@ class TestExecutable(IntegrationTest):
                 'simple-1.0/build.bfg',
                 'simple-1.0/simple.cpp',
             })
+
+    def test_clean(self):
+        self.build()
+        self.clean()
+
+        files = {
+            'ninja': {'.bfg_environ', '.ninja_deps', '.ninja_log',
+                      'build.ninja'},
+            'make': {'.bfg_environ', 'Makefile'},
+            'msbuild': {'.bfg_environ', '.bfg_uuid', 'simple.sln',
+                        pjoin('simple', 'simple.vcxproj'),
+                        pjoin('simple', 'Debug', 'simple.Build.CppClean.log')},
+        }
+        self.assertDirectory('.', files[self.backend])

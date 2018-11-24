@@ -304,6 +304,14 @@ class BasicIntegrationTest(TestCase):
             args.append(self.target_name(target))
         return self.assertPopen(args)
 
+    def clean(self):
+        if self.backend == 'ninja':
+            return self.build(extra_args=['-t', 'clean'])
+        elif self.backend == 'make':
+            return self.build('clean')
+        else:  # self.backend == 'msbuild'
+            return self.build(extra_args=['/t:Clean'])
+
     def wait(self, t=1):
         time.sleep(t)
 

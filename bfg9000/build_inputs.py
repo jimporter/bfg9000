@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from itertools import chain
 from six import iteritems, itervalues
 
 from .path import Path, Root
@@ -43,6 +44,7 @@ class BuildInputs(object):
         self.bfgpath = bfgpath
         self._sources = OrderedDict([ (bfgpath, File(bfgpath)) ])
         self._edges = []
+        self._extra_targets = []
         self._extra_inputs = {}
 
         for name, fn in iteritems(_build_inputs):
@@ -56,8 +58,18 @@ class BuildInputs(object):
         self._edges.append(edge)
         return edge
 
+    def add_target(self, target):
+        self._extra_targets.append(target)
+        return target
+
     def sources(self):
         return itervalues(self._sources)
+
+    def targets(self):
+        return chain(
+            chain.from_iterable(i.output for i in self._edges),
+            self._extra_targets
+        )
 
     def edges(self):
         return iter(self._edges)
