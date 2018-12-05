@@ -184,6 +184,11 @@ class TestMsvcCompiler(unittest.TestCase):
                                                       'native'))
         )), ['/Yuheader'])
 
+    def test_flags_sanitize(self):
+        self.assertEqual(self.compiler.flags(opts.option_list(
+            opts.sanitize()
+        )), ['/RTC1'])
+
     def test_flags_string(self):
         self.assertEqual(self.compiler.flags(opts.option_list('-v')), ['-v'])
 

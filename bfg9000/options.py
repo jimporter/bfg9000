@@ -168,6 +168,7 @@ include_dir = option('include_dir', [('directory', HeaderDirectory)])
 std = option('std', [('value', str)])
 pic = option('pic')
 pch = option('pch', [('header', PrecompiledHeader)])
+sanitize = option('sanitize')
 
 WarningValue = OptionEnum('WarningValue', ['disable', 'all', 'extra', 'error'])
 warning = variadic_option('warning', WarningValue)

@@ -241,6 +241,11 @@ class TestCcCompiler(unittest.TestCase):
             opts.pch(file_types.PrecompiledHeader(p))
         )), ['-include', p.stripext()])
 
+    def test_flags_sanitize(self):
+        self.assertEqual(self.compiler.flags(opts.option_list(
+            opts.sanitize()
+        )), ['-fsanitize=address'])
+
     def test_flags_string(self):
         self.assertEqual(self.compiler.flags(opts.option_list('-v')), ['-v'])
 

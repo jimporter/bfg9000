@@ -243,6 +243,8 @@ class CcBaseCompiler(BuildCommand):
                 flags.append('-fPIC')
             elif isinstance(i, opts.pch):
                 flags.extend(['-include', i.header.path.stripext()])
+            elif isinstance(i, opts.sanitize):
+                flags.append('-fsanitize=address')
             elif isinstance(i, safe_str.stringy_types):
                 flags.append(i)
             else:

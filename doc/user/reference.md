@@ -492,6 +492,12 @@ values are:
 * `'speed'`: Enable optimization to maximize the speed of the resulting binary
 * `'linktime'`: Perform link-time optimizations
 
+### opts.sanitize() { #opts-sanitize }
+
+Enable run-time sanitization checks when compiling a particular source file;
+this is equivalent to `-fsanitize=address` on GCC-like compilers and `/RTC1` on
+MSVC.
+
 ### opts.std(*value*) { #opts-std }
 
 Specify the version of the language's standard (e.g. `"c++14"`) to use when

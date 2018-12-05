@@ -198,6 +198,8 @@ class MsvcBaseCompiler(BuildCommand):
                     flags.append(_optimize_flags[j])
             elif isinstance(i, opts.pch):
                 flags.append('/Yu' + i.header.header_name)
+            elif isinstance(i, opts.sanitize):
+                flags.append('/RTC1')
             elif isinstance(i, safe_str.stringy_types):
                 flags.append(i)
             else:
