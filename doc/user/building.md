@@ -106,7 +106,7 @@ the `build.bfg` script proper. Below is a simple toolchain file that
 demonstrates some common settings:
 
 ```python
-target_platform('windows')
+target_platform('windows', 'x86_64')
 
 compiler('x86_64-w64-mingw32-g++-win32', 'c++')
 compile_options(['-Wall'], 'c++')

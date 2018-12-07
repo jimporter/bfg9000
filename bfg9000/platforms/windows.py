@@ -11,6 +11,10 @@ class WindowsPath(BasePath):
 
 class WindowsPlatform(Platform):
     @property
+    def _triplet_sys_abi(self):
+        return 'win32'
+
+    @property
     def family(self):
         return 'windows'
 

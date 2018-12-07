@@ -1136,11 +1136,17 @@ possible paths (as strings or lists or strings). If *strict* is true,
 *compiler* will raise an `IOError` if an executable cannot be found; if false,
 it will use the first candidate.
 
-### target_platform(*platform*) { #target_platform }
+### target_platform([*platform*], [*arch*]) { #target_platform }
 Availability: `<toolchain>.bfg`
 {: .subtitle}
 
-Set the target platform of this build to *platform*.
+Set the target platform of this build to *platform* and the architecture to
+*arch*. If either is not specified, the host system's platform/arch will be
+used.
+
+The following platforms are recognized: `'android'`, `'cygwin'`, `'ios'`,
+`'linux'`, `'macos'`, `'win9x'`, and `'winnt'`. Other platforms (e.g.
+`'freebsd'`) can be specified, and will be treated as generic POSIX platforms.
 
 ### which(*names*, [*resolve*], [*strict*]) { #which }
 Availability: `<toolchain>.bfg`

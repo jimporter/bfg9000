@@ -1,5 +1,6 @@
 import json
 import os
+import platform
 import sys
 import warnings
 from collections import namedtuple
@@ -56,7 +57,7 @@ class Toolchain(object):
 
 
 class Environment(object):
-    version = 13
+    version = 14
     envfile = '.bfg_environ'
 
     Mode = shell.Mode
@@ -97,6 +98,10 @@ class Environment(object):
         warnings.warn('platform is deprecated; please use host_platform or ' +
                       'target_platform instead', UserDeprecationWarning)
         return self.target_platform
+
+    @property
+    def is_cross(self):
+        return self.host_platform != self.target_platform
 
     @property
     def base_dirs(self):
@@ -178,8 +183,8 @@ class Environment(object):
                     'backend': self.backend,
                     'backend_version': str(self.backend_version),
 
-                    'host_platform': self.host_platform.name,
-                    'target_platform': self.target_platform.name,
+                    'host_platform': self.host_platform.to_json(),
+                    'target_platform': self.target_platform.to_json(),
 
                     'srcdir': self.srcdir.to_json(),
                     'builddir': self.builddir.to_json(),
@@ -249,19 +254,26 @@ class Environment(object):
 
         # v12 splits platform into host_platform and target_platform.
         if version < 12:
-            platform = data.pop('platform')
-            data['host_platform'] = data['target_platform'] = platform
+            platform_name = data.pop('platform')
+            data['host_platform'] = data['target_platform'] = platform_name
 
         # v13 adds initial_variables and toolchain.
         if version < 13:
             data['initial_variables'] = data['variables']
             data['toolchain'] = {'path': None}
 
+        # v14 adds architecture to platform objects.
+        if version < 14:
+            for i in ('host_platform', 'target_platform'):
+                genus, species = platforms.platform_tuple(data[i])
+                data[i] = {'genus': genus, 'species': species,
+                           'arch': platform.machine()}
+
         # Now that we've upgraded, initialize the Environment object.
         env = Environment.__new__(Environment)
 
-        env.host_platform = platforms.host.platform_info(data['host_platform'])
-        env.target_platform = platforms.target.platform_info(
+        env.host_platform = platforms.host.from_json(data['host_platform'])
+        env.target_platform = platforms.target.from_json(
             data['target_platform']
         )
 

@@ -1,0 +1,3 @@
+# -*- python -*-
+
+target_platform(arch='i686')

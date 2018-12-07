@@ -14,6 +14,23 @@ class PosixPath(BasePath):
 
 class PosixPlatform(Platform):
     @property
+    def _triplet_vendor(self):
+        if self.genus == 'darwin':
+            return 'apple'
+        return Platform._triplet_vendor.fget(self)
+
+    @property
+    def _triplet_sys_abi(self):
+        if self.genus == 'darwin':
+            return 'darwin'
+        elif self.genus == 'linux':
+            abi = 'android' if self.species == 'android' else 'gnu'
+            return 'linux-' + abi
+        elif self.genus == 'cygwin':
+            return 'windows-cygnus'
+        return self.species
+
+    @property
     def family(self):
         return 'posix'
 

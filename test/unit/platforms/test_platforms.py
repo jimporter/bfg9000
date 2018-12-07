@@ -106,3 +106,26 @@ class TestPlatformTuple(unittest.TestCase):
     def test_info(self):
         self.assertEqual(platforms.platform_tuple()[1],
                          platforms.platform_name())
+
+
+class TestParseTriplet(unittest.TestCase):
+    def test_with_vendor(self):
+        Triplet = platforms.PlatformTriplet
+        self.assertEqual(platforms.parse_triplet('i686-pc-linux-gnu'),
+                         Triplet('i686', 'pc', 'linux', 'gnu'))
+        self.assertEqual(platforms.parse_triplet('i686-pc-win32'),
+                         Triplet('i686', 'pc', 'win32', None))
+
+    def test_without_vendor(self):
+        Triplet = platforms.PlatformTriplet
+        self.assertEqual(platforms.parse_triplet('x86_64-linux-gnu'),
+                         Triplet('x86_64', 'unknown', 'linux', 'gnu'))
+        self.assertEqual(platforms.parse_triplet('x86_64-win32'),
+                         Triplet('x86_64', 'unknown', 'win32', None))
+
+    def test_invalid(self):
+        parse_triplet = platforms.parse_triplet
+        self.assertRaises(ValueError, parse_triplet, 'x86_64')
+        self.assertRaises(ValueError, parse_triplet, 'x86_64-gnu')
+        self.assertRaises(ValueError, parse_triplet, 'x86_64-linux-gnu-extra')
+        self.assertRaises(ValueError, parse_triplet, 'i686-pc-linux-gnu-extra')

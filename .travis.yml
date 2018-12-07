@@ -91,10 +91,11 @@ addons:
   apt:
     packages:
       - freeglut3-dev
+      - gcc-multilib
+      - gcj-jdk
       - gfortran
       - gobjc
       - gobjc++
-      - gcj-jdk
       - libboost-dev
       - libboost-program-options-dev
       - libgl1-mesa-dev

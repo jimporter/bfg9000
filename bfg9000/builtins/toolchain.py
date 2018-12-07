@@ -23,8 +23,8 @@ def environ(env):
 
 
 @builtin.function('env', context='toolchain')
-def target_platform(env, platform):
-    env.target_platform = platforms.target.platform_info(platform)
+def target_platform(env, platform=None, arch=None):
+    env.target_platform = platforms.target.platform_info(platform, arch)
 
 
 @builtin.function(context='toolchain')

@@ -19,6 +19,7 @@ from ..iterutils import (default_sentinel, first, flatten, iterate, listify,
 from ..languages import known_formats
 from ..packages import CommonPackage, Framework, PackageKind
 from ..path import InstallRoot, Path, Root
+from ..platforms import parse_triplet
 from ..versioning import detect_version, SpecifierSet
 
 _optimize_flags = {
@@ -49,24 +50,35 @@ class CcBuilder(object):
         self.lang = langinfo.name
         self.object_format = env.target_platform.object_format
 
+        target_flags = []
         if 'Free Software Foundation' in version_output:
             self.brand = 'gcc'
             self.version = detect_version(version_output)
+            if env.is_cross:
+                triplet = parse_triplet(env.execute(
+                    command + ['-dumpmachine'],
+                    stdout=shell.Mode.pipe, stderr=shell.Mode.devnull
+                ).rstrip())
+                target_flags = self._gcc_arch_flags(
+                    env.target_platform.arch, triplet.arch
+                )
         elif 'clang' in version_output:
             self.brand = 'clang'
             self.version = detect_version(version_output)
+            if env.is_cross:
+                target_flags = ['-target', env.target_platform.triplet]
         else:
             self.brand = 'unknown'
             self.version = None
 
         cflags_name = langinfo.var('flags').lower()
-        cflags = (
-            shell.split(env.getvar('CPPFLAGS', '')) +
-            shell.split(env.getvar(langinfo.var('flags'), ''))
-        )
+        cflags = (target_flags +
+                  shell.split(env.getvar('CPPFLAGS', '')) +
+                  shell.split(env.getvar(langinfo.var('flags'), '')))
 
         ldflags_name = ldinfo.var('flags').lower()
-        ldflags = shell.split(env.getvar(ldinfo.var('flags'), ''))
+        ldflags = (target_flags +
+                   shell.split(env.getvar(ldinfo.var('flags'), '')))
         ldlibs_name = ldinfo.var('libs').lower()
         ldlibs = shell.split(env.getvar(ldinfo.var('libs'), ''))
 
@@ -119,6 +131,16 @@ class CcBuilder(object):
 
         self.packages = CcPackageResolver(self, env, command, ldflags)
         self.runner = None
+
+    @staticmethod
+    def _gcc_arch_flags(arch, native_arch):
+        if arch == native_arch:
+            return []
+        elif arch == 'x86_64':
+            return ['-m64']
+        elif re.match(r'i.86$', arch):
+            return ['-m32'] if not re.match(r'i.86$', native_arch) else []
+        return []
 
     @staticmethod
     def check_command(env, command):
@@ -196,10 +218,10 @@ class CcBaseCompiler(BuildCommand):
         # information.
         if self.env.backend == 'ninja':
             if self.brand == 'clang':
-                flags += ['-fcolor-diagnostics']
+                flags.append('-fcolor-diagnostics')
             elif (self.brand == 'gcc' and self.version and
                   self.version in SpecifierSet('>=4.9')):
-                flags += ['-fdiagnostics-color']
+                flags.append('-fdiagnostics-color')
         return flags
 
     def _include_dir(self, directory):

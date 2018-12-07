@@ -1,8 +1,8 @@
 # -*- python -*-
 
-target_platform('winnt')
-compiler(['x86_64-w64-mingw32-g++-win32',
-          'x86_64-w64-mingw32-g++'], 'c++')
+target_platform('winnt', 'i686')
+compiler(['i686-w64-mingw32-g++-win32',
+          'i686-w64-mingw32-g++'], 'c++')
 compile_options(['-Wall'], 'c++')
 
 environ['LDFLAGS'] = '-static-libstdc++ -static-libgcc'
