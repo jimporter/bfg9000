@@ -8,7 +8,7 @@ from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..build_inputs import build_input, Edge
 from ..file_types import *
-from ..iterutils import first, flatten, iterate, listify, uniques
+from ..iterutils import first, iterate, uniques
 from ..path import Path, Root
 from ..shell import posix as pshell
 

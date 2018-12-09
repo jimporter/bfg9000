@@ -1,11 +1,12 @@
-import argparse
-import re
+import re as _re
 from argparse import *
 
-from .. import path
+from .. import path as _path
+
+_ArgumentParser = ArgumentParser
 
 
-class ToggleAction(argparse.Action):
+class ToggleAction(Action):
     def __init__(self, option_strings, dest, default=False, required=False,
                  help=None):
         self.true_strings = [self._prefix(i, self._true_prefix)
@@ -14,8 +15,8 @@ class ToggleAction(argparse.Action):
                               for i in option_strings]
 
         option_strings = self.true_strings + self.false_strings
-        argparse.Action.__init__(self, option_strings, dest=dest, nargs=0,
-                                 default=default, required=required, help=help)
+        Action.__init__(self, option_strings, dest=dest, nargs=0,
+                        default=default, required=required, help=help)
 
     def __call__(self, parser, namespace, values, option_string=None):
         value = option_string in self.true_strings
@@ -25,7 +26,7 @@ class ToggleAction(argparse.Action):
     def _prefix(s, prefix):
         if not s.startswith('--'):
             raise ValueError('option string must begin with "--"')
-        return re.sub('(^--(x-)?)', r'\1' + prefix, s)
+        return _re.sub('(^--(x-)?)', r'\1' + prefix, s)
 
 
 class EnableAction(ToggleAction):
@@ -38,9 +39,9 @@ class WithAction(ToggleAction):
     _false_prefix = 'without-'
 
 
-class ArgumentParser(argparse.ArgumentParser):
+class ArgumentParser(_ArgumentParser):
     def __init__(self, *args, **kwargs):
-        argparse.ArgumentParser.__init__(self, *args, **kwargs)
+        _ArgumentParser.__init__(self, *args, **kwargs)
         self.register('action', 'enable', EnableAction)
         self.register('action', 'with', WithAction)
 
@@ -51,7 +52,7 @@ class ArgumentParser(argparse.ArgumentParser):
         if option_string[:2] == self.prefix_chars * 2:
             return []
 
-        return argparse.ArgumentParser._get_option_tuples(self, option_string)
+        return _ArgumentParser._get_option_tuples(self, option_string)
 
 
 class BaseFile(object):
@@ -61,28 +62,25 @@ class BaseFile(object):
         self.must_exist = must_exist
 
     def __call__(self, string):
-        p = path.abspath(string)
-        if path.exists(p):
+        p = _path.abspath(string)
+        if _path.exists(p):
             if not self._check_type(p):
-                raise argparse.ArgumentTypeError(
-                    "'{}' is not a {}".format(string, self._kind)
-                )
+                raise ArgumentTypeError("'{}' is not a {}"
+                                        .format(string, self._kind))
         elif self.must_exist:
-            raise argparse.ArgumentTypeError(
-                "'{}' does not exist".format(string)
-            )
+            raise ArgumentTypeError("'{}' does not exist".format(string))
 
         return p
 
 
 class Directory(BaseFile):
     def __init__(self, *args, **kwargs):
-        BaseFile.__init__(self, path.isdir, 'directory', *args, **kwargs)
+        BaseFile.__init__(self, _path.isdir, 'directory', *args, **kwargs)
 
 
 class File(BaseFile):
     def __init__(self, *args, **kwargs):
-        BaseFile.__init__(self, path.isfile, 'file', *args, **kwargs)
+        BaseFile.__init__(self, _path.isfile, 'file', *args, **kwargs)
 
 
 # It'd be nice to just have a UserArgumentParser class with this method but it

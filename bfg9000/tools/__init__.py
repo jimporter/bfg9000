@@ -1,7 +1,6 @@
 import importlib
 import pkgutil
 
-from ..file_types import Executable
 from ..objutils import memoize
 
 _builders = {}

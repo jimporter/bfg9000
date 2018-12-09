@@ -216,7 +216,7 @@ class Silent(object):
 
 
 path_vars = {
-    path.Root.srcdir:   Variable('srcdir'),
+    path.Root.srcdir  : Variable('srcdir'),
     path.Root.builddir: None,
 }
 path_vars.update({i: Variable(i.name) for i in path.InstallRoot})

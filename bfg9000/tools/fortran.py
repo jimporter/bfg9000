@@ -1,7 +1,5 @@
 from . import builder, cc
 from .common import choose_builder
-from .. import shell
-from ..iterutils import first
 from ..languages import known_langs
 
 with known_langs.make('f77') as x:

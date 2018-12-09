@@ -1,5 +1,4 @@
 import os
-import platform
 import re
 import subprocess
 from setuptools import setup, find_packages, Command

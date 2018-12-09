@@ -1,10 +1,9 @@
 import errno
 import functools
 import os
-import posixpath
 from contextlib import contextmanager
 
-from .platforms.basepath import BasePath, Root, InstallRoot, DestDir
+from .platforms.basepath import BasePath, Root, InstallRoot, DestDir  # noqa
 from .platforms.host import platform_info
 
 Path = platform_info().Path

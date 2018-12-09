@@ -1,5 +1,4 @@
 import argparse
-import time
 
 hello_src = """
 #include <iostream>

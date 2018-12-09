@@ -1,14 +1,11 @@
 import os
 import re
-import subprocess
 import warnings
 from six import iteritems
-from six.moves import zip
 
 from .. import options as opts
 from .. import shell
-from ..iterutils import first, isiterable, iterate, listify, slice_dict
-from ..path import Path
+from ..iterutils import first, iterate, listify, slice_dict
 
 _modes = {
     'shared_library': 'EXPORTS',

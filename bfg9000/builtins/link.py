@@ -1,14 +1,12 @@
 import os.path
-import re
 import warnings
 from collections import defaultdict
 from itertools import chain
 from six import string_types
-from six.moves import reduce, filter as ifilter
+from six.moves import filter as ifilter
 
 from . import builtin
 from .. import options as opts
-from .compile import Compile, ObjectFiles
 from .file_types import local_file
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
@@ -16,7 +14,6 @@ from ..build_inputs import build_input, Edge
 from ..file_types import *
 from ..iterutils import (first, flatten, iterate, listify, merge_dicts,
                          merge_into_dict, slice_dict, uniques)
-from ..path import Path, Root
 from ..shell import posix as pshell
 
 build_input('link_flags')(lambda build_inputs, env: {

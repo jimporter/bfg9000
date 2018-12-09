@@ -1,29 +1,29 @@
 import unittest
 
-from bfg9000.file_types import *
+from bfg9000 import file_types
 from bfg9000.path import Path
 
 
 class TestNode(unittest.TestCase):
     def test_equality(self):
-        self.assertTrue(Node('foo') == Node('foo'))
-        self.assertFalse(Node('foo') != Node('foo'))
+        self.assertTrue(file_types.Node('foo') == file_types.Node('foo'))
+        self.assertFalse(file_types.Node('foo') != file_types.Node('foo'))
 
-        self.assertFalse(Node('foo') == Node('bar'))
-        self.assertTrue(Node('foo') != Node('bar'))
+        self.assertFalse(file_types.Node('foo') == file_types.Node('bar'))
+        self.assertTrue(file_types.Node('foo') != file_types.Node('bar'))
 
 
 class TestDualUseLibrary(unittest.TestCase):
     def test_equality(self):
-        shared_a = SharedLibrary(Path('shared_a'), 'elf')
-        shared_b = SharedLibrary(Path('shared_b'), 'elf')
-        static_a = SharedLibrary(Path('static_a'), 'elf')
-        static_b = SharedLibrary(Path('static_b'), 'elf')
+        shared_a = file_types.SharedLibrary(Path('shared_a'), 'elf')
+        shared_b = file_types.SharedLibrary(Path('shared_b'), 'elf')
+        static_a = file_types.SharedLibrary(Path('static_a'), 'elf')
+        static_b = file_types.SharedLibrary(Path('static_b'), 'elf')
 
-        D = DualUseLibrary
+        Dual = file_types.DualUseLibrary
 
-        self.assertTrue(D(shared_a, static_a) == D(shared_a, static_a))
-        self.assertFalse(D(shared_a, static_a) != D(shared_a, static_a))
+        self.assertTrue(Dual(shared_a, static_a) == Dual(shared_a, static_a))
+        self.assertFalse(Dual(shared_a, static_a) != Dual(shared_a, static_a))
 
-        self.assertFalse(D(shared_a, static_a) == D(shared_b, static_b))
-        self.assertTrue(D(shared_a, static_a) != D(shared_b, static_b))
+        self.assertFalse(Dual(shared_a, static_a) == Dual(shared_b, static_b))
+        self.assertTrue(Dual(shared_a, static_a) != Dual(shared_b, static_b))

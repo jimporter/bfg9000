@@ -1,4 +1,4 @@
-from .basepath import BasePath, Root, InstallRoot
+from .basepath import BasePath, InstallRoot
 from .core import Platform
 from .host import HostPlatform
 from .target import TargetPlatform
@@ -73,9 +73,9 @@ class WindowsTargetPlatform(TargetPlatform, WindowsPlatform):
     @property
     def install_dirs(self):
         return {
-            InstallRoot.prefix:      None,
+            InstallRoot.prefix     : None,
             InstallRoot.exec_prefix: WindowsPath('', InstallRoot.prefix),
-            InstallRoot.bindir:      WindowsPath('', InstallRoot.exec_prefix),
-            InstallRoot.libdir:      WindowsPath('', InstallRoot.exec_prefix),
-            InstallRoot.includedir:  WindowsPath('', InstallRoot.prefix),
+            InstallRoot.bindir     : WindowsPath('', InstallRoot.exec_prefix),
+            InstallRoot.libdir     : WindowsPath('', InstallRoot.exec_prefix),
+            InstallRoot.includedir : WindowsPath('', InstallRoot.prefix),
         }

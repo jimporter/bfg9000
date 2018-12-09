@@ -1,8 +1,7 @@
 import errno
-import os
 
 from .arguments.parser import ArgumentParser
-from .builtins import builtin, init as builtin_init, user_arguments
+from .builtins import builtin, init as builtin_init
 from .build_inputs import BuildInputs
 from .path import exists, Path, pushd, Root
 from .iterutils import listify

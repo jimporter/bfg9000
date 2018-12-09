@@ -1,9 +1,7 @@
-from itertools import chain, repeat
-from six.moves import cStringIO as StringIO
+from itertools import repeat
 
 from . import builtin
 from .file_types import source_file
-from .. import safe_str
 from .. import shell
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
@@ -12,7 +10,6 @@ from ..file_types import File, Node, Phony
 from ..iterutils import isiterable, iterate, listify
 from ..path import Path, Root
 from ..shell import posix as pshell
-from ..tools import common as tools
 
 
 class BaseCommand(Edge):

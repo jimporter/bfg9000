@@ -99,10 +99,9 @@ class TestReloadException(unittest.TestCase):
             driver.handle_reload_exception(e, True)
 
         assertRegex(self, self.stream.getvalue(),
-            'Unable to reload environment: message\n' +
-            '  Please re-run bfg9000 manually\n',
-            re.MULTILINE
-        )
+                    'Unable to reload environment: message\n' +
+                    '  Please re-run bfg9000 manually\n',
+                    re.MULTILINE)
 
     def test_no_message_rerun(self):
         try:
@@ -112,5 +111,4 @@ class TestReloadException(unittest.TestCase):
 
         assertRegex(self, self.stream.getvalue(),
                     'Unable to reload environment\n' +
-                    '  Please re-run bfg9000 manually\n'
-        )
+                    '  Please re-run bfg9000 manually\n')

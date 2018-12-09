@@ -3,7 +3,7 @@ import re
 import subprocess
 import warnings
 from collections import namedtuple
-from pkg_resources import get_entry_info, DistributionNotFound
+from pkg_resources import get_entry_info
 
 from ..objutils import memoize
 from ..versioning import SpecifierSet, Version

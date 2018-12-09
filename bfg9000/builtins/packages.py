@@ -5,8 +5,8 @@ from . import builtin
 from .find import find
 from .. import options as opts
 from ..exceptions import PackageResolutionError, PackageVersionError
-from ..file_types import *
-from ..iterutils import default_sentinel, iterate, listify
+from ..file_types import Directory, Executable
+from ..iterutils import default_sentinel, iterate
 from ..objutils import objectify
 from ..packages import CommonPackage, Framework, Package, PackageKind
 from ..path import Path, Root

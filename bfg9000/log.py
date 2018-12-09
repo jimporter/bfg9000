@@ -4,7 +4,7 @@ import os
 import sys
 import traceback
 import warnings
-from logging import getLogger, CRITICAL, ERROR, WARNING, INFO, DEBUG
+from logging import getLogger, CRITICAL, ERROR, WARNING, INFO, DEBUG  # noqa
 
 
 class UserDeprecationWarning(DeprecationWarning):

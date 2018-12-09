@@ -1,5 +1,4 @@
 import os
-import subprocess
 
 from ... import iterutils
 from ... import path

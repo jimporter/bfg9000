@@ -1,4 +1,4 @@
-from collections import Counter, defaultdict
+from collections import Counter
 from itertools import chain
 from six import iteritems, itervalues, string_types
 
@@ -8,7 +8,7 @@ from .install import can_install
 from .. import options as opts, path
 from ..build_inputs import build_input
 from ..file_types import *
-from ..iterutils import flatten, iterate, uniques, isiterable, recursive_walk
+from ..iterutils import flatten, iterate, uniques, recursive_walk
 from ..objutils import objectify
 from ..packages import CommonPackage
 from ..safe_str import literal, shell_literal

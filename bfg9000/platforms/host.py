@@ -1,5 +1,4 @@
 from .core import _get_platform_info, _platform_info, Platform
-from ..iterutils import listify
 
 
 class HostPlatform(Platform):

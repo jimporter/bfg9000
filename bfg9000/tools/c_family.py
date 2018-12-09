@@ -1,8 +1,5 @@
-import re
-
 from . import builder, cc, msvc
 from .common import choose_builder
-from .. import shell
 from ..languages import known_formats, known_langs
 
 with known_langs.make('c') as x:

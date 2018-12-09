@@ -4,7 +4,6 @@ import os
 import re
 import sys
 import unittest
-from collections import namedtuple
 
 from .common import BuiltinTest
 from ... import make_env
@@ -15,7 +14,6 @@ from bfg9000.exceptions import PackageResolutionError, PackageVersionError
 from bfg9000.file_types import Directory, HeaderDirectory
 from bfg9000.packages import CommonPackage, Framework
 from bfg9000.path import abspath
-from bfg9000.platforms import platform_name
 from bfg9000.versioning import SpecifierSet, Version
 
 if sys.version_info >= (3,):

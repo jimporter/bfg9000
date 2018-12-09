@@ -10,7 +10,6 @@ from six import iteritems
 from .. import make_env
 
 from bfg9000.backends import list_backends
-from bfg9000.environment import Environment
 from bfg9000.path import InstallRoot, makedirs, Path, Root
 
 this_dir = os.path.abspath(os.path.dirname(__file__))

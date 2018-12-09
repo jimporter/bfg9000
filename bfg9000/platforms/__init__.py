@@ -1,2 +1,2 @@
-from . import host, target
-from .core import *
+from . import host, target  # noqa
+from .core import *  # noqa

@@ -1,21 +1,26 @@
 import unittest
 
-from bfg9000.safe_str import *
+from bfg9000 import safe_str
+
+jbos = safe_str.jbos
+literal = safe_str.literal
+shell_literal = safe_str.shell_literal
 
 
 class TestSafeStr(unittest.TestCase):
     def test_string(self):
-        self.assertEqual(safe_str('foo'), 'foo')
+        self.assertEqual(safe_str.safe_str('foo'), 'foo')
 
     def test_literals(self):
-        self.assertEqual(safe_str(literal('foo')), literal('foo'))
-        self.assertEqual(safe_str(shell_literal('foo')), shell_literal('foo'))
+        self.assertEqual(safe_str.safe_str(literal('foo')), literal('foo'))
+        self.assertEqual(safe_str.safe_str(shell_literal('foo')),
+                         shell_literal('foo'))
 
     def test_jbos(self):
-        self.assertEqual(safe_str(jbos('foo')).bits, jbos('foo').bits)
+        self.assertEqual(safe_str.safe_str(jbos('foo')).bits, jbos('foo').bits)
 
     def test_invalid(self):
-        self.assertRaises(NotImplementedError, safe_str, 123)
+        self.assertRaises(NotImplementedError, safe_str.safe_str, 123)
 
 
 class TestLiteral(unittest.TestCase):
@@ -28,9 +33,10 @@ class TestLiteral(unittest.TestCase):
         self.assertRaises(TypeError, shell_literal, 123)
 
     def test_convert_to_str(self):
-        self.assertRaises(NotImplementedError, lambda: str(literal('foo')))
-        self.assertRaises(NotImplementedError,
-                          lambda: str(shell_literal('foo')))
+        with self.assertRaises(NotImplementedError):
+            str(safe_str.literal('foo'))
+        with self.assertRaises(NotImplementedError):
+            str(safe_str.shell_literal('foo'))
 
     def test_equality(self):
         self.assertTrue(literal('foo') == literal('foo'))
@@ -129,26 +135,26 @@ class TestJbos(unittest.TestCase):
 
 class TestJoin(unittest.TestCase):
     def test_join_empty(self):
-        s = join([], ',')
+        s = safe_str.join([], ',')
         self.assertEqual(s.bits, ())
 
     def test_join_strings(self):
-        s = join(['foo'], ',')
+        s = safe_str.join(['foo'], ',')
         self.assertEqual(s.bits, ('foo',))
 
-        s = join(['foo', 'bar'], ',')
+        s = safe_str.join(['foo', 'bar'], ',')
         self.assertEqual(s.bits, ('foo', ',', 'bar'))
 
     def test_join_literals(self):
-        s = join([literal('foo'), 'bar'], ',')
+        s = safe_str.join([literal('foo'), 'bar'], ',')
         self.assertEqual(s.bits, (literal('foo'), ',', 'bar'))
 
-        s = join([shell_literal('foo'), 'bar'], ',')
+        s = safe_str.join([shell_literal('foo'), 'bar'], ',')
         self.assertEqual(s.bits, (shell_literal('foo'), ',', 'bar'))
 
-        s = join([literal('foo'), 'bar'], literal(','))
+        s = safe_str.join([literal('foo'), 'bar'], literal(','))
         self.assertEqual(s.bits, (literal('foo'), literal(','), 'bar'))
 
-        s = join([shell_literal('foo'), 'bar'], shell_literal(','))
+        s = safe_str.join([shell_literal('foo'), 'bar'], shell_literal(','))
         self.assertEqual(s.bits, (shell_literal('foo'), shell_literal(','),
                                   'bar'))

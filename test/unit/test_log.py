@@ -1,12 +1,10 @@
 import inspect
 import logging
 import mock
-import re
 import sys
 import traceback
 import unittest
 import warnings
-from six import assertRegex
 
 from bfg9000 import log, iterutils
 
@@ -61,7 +59,7 @@ class TestStackfulStreamHandler(unittest.TestCase):
         self.assertEqual(record.full_stack, [
             (this_file, lineno, 'test_internal_error',
              "iterutils.first(None)"),
-            (iterutils_file, 48, 'first', 'raise LookupError()'),
+            (iterutils_file, 47, 'first', 'raise LookupError()'),
         ])
         self.assertEqual(record.stack_pre, '')
         self.assertEqual(record.stack, (
@@ -71,7 +69,7 @@ class TestStackfulStreamHandler(unittest.TestCase):
         ).format(this_file, lineno))
         self.assertEqual(record.stack_post, (
             '\n' +
-            '  File "{}", line 48, in first\n' +
+            '  File "{}", line 47, in first\n' +
             "    raise LookupError()"
         ).format(iterutils_file))
         self.assertEqual(record.user_pathname, this_file)
@@ -117,12 +115,12 @@ class TestStackfulStreamHandler(unittest.TestCase):
 
         iterutils_file = iterutils.__file__.rstrip('c')
         self.assertEqual(record.full_stack, [
-            (iterutils_file, 48, 'first', 'raise LookupError()'),
+            (iterutils_file, 47, 'first', 'raise LookupError()'),
         ])
 
         self.assertEqual(record.stack_pre, (
             '\n' +
-            '  File "{}", line 48, in first\n' +
+            '  File "{}", line 47, in first\n' +
             "    raise LookupError()"
         ).format(iterutils_file))
         self.assertEqual(record.stack, '')

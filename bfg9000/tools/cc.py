@@ -1,7 +1,5 @@
 import os
-import posixpath
 import re
-import subprocess
 from itertools import chain
 from six import string_types
 
@@ -14,8 +12,8 @@ from .ld import LdLinker
 from ..builtins.symlink import Symlink
 from ..exceptions import PackageResolutionError
 from ..file_types import *
-from ..iterutils import (default_sentinel, first, flatten, iterate, listify,
-                         uniques, recursive_walk)
+from ..iterutils import (default_sentinel, first, iterate, listify, uniques,
+                         recursive_walk)
 from ..languages import known_formats
 from ..packages import CommonPackage, Framework, PackageKind
 from ..path import InstallRoot, Path, Root
@@ -23,9 +21,9 @@ from ..platforms import parse_triplet
 from ..versioning import detect_version, SpecifierSet
 
 _optimize_flags = {
-    opts.OptimizeValue.disable:  '-O0',
-    opts.OptimizeValue.size:     '-Osize',
-    opts.OptimizeValue.speed:    '-O3',
+    opts.OptimizeValue.disable : '-O0',
+    opts.OptimizeValue.size    : '-Osize',
+    opts.OptimizeValue.speed   : '-O3',
     opts.OptimizeValue.linktime: '-flto',
 }
 

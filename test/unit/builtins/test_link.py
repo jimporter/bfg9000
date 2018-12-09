@@ -1,7 +1,7 @@
 import mock
 
 from .common import BuiltinTest
-from bfg9000.builtins import compile, default, link
+from bfg9000.builtins import compile, default, link  # noqa
 from bfg9000 import file_types
 from bfg9000.environment import LibraryMode
 from bfg9000.iterutils import listify, unlistify
@@ -216,15 +216,13 @@ class TestLibrary(LinkTest):
         ))
 
     def test_src_file_explicit_static(self):
-        result = self.builtin_dict['library']('library',
-                              kind='static')
+        result = self.builtin_dict['library']('library', kind='static')
         self.assertEqual(result, file_types.StaticLibrary(
             Path('library', Root.srcdir), None
         ))
 
     def test_src_file_explicit_shared(self):
-        result = self.builtin_dict['library']('library',
-                              kind='shared')
+        result = self.builtin_dict['library']('library', kind='shared')
         self.assertEqual(result, file_types.SharedLibrary(
             Path('library', Root.srcdir), None
         ))

@@ -1,4 +1,3 @@
-import os.path
 import re
 from six import assertRegex
 

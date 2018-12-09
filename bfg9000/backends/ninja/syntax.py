@@ -1,7 +1,6 @@
 import re
 from collections import namedtuple, OrderedDict
 from enum import Enum
-from itertools import chain
 from six import iteritems, string_types
 from six.moves import cStringIO as StringIO
 
@@ -9,7 +8,6 @@ from ... import path
 from ... import safe_str
 from ... import shell
 from ... import iterutils
-from ...objutils import objectify
 from ...platforms.host import platform_info
 from ...tools.common import Command
 from ...versioning import Version
@@ -140,7 +138,7 @@ def var(v):
 
 
 path_vars = {
-    path.Root.srcdir:   Variable('srcdir'),
+    path.Root.srcdir  : Variable('srcdir'),
     path.Root.builddir: None,
 }
 path_vars.update({i: Variable(i.name) for i in path.InstallRoot})

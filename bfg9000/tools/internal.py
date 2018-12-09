@@ -1,7 +1,7 @@
 from . import tool
 from .common import SimpleCommand
 from ..safe_str import shell_literal
-from ..shell import escape_line, shell_list
+from ..shell import shell_list
 
 
 @tool('bfg9000')

@@ -1,5 +1,3 @@
-import warnings
-from six import string_types
 from six.moves import cStringIO as StringIO
 
 from . import builtin
@@ -8,8 +6,8 @@ from .. import shell
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..build_inputs import build_input
-from ..file_types import Executable, File, Node
-from ..iterutils import first, isiterable, iterate, listify
+from ..file_types import Node
+from ..iterutils import first, iterate
 from ..shell import posix as pshell
 
 

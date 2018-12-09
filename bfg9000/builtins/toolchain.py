@@ -1,8 +1,7 @@
-import os
 from six import iteritems
 
 from . import builtin
-from .. import path, platforms, shell, tools
+from .. import path, platforms, shell
 from ..iterutils import first, isiterable
 from ..languages import known_formats, known_langs
 from ..shell import posix as pshell

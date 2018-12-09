@@ -1,6 +1,5 @@
 import importlib
 import pkgutil
-import sys
 import warnings
 
 from . import builtin

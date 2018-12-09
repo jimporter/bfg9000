@@ -1,5 +1,3 @@
-import warnings
-
 from .basepath import BasePath, Root, InstallRoot
 from .core import Platform
 from .framework import Framework
@@ -85,11 +83,11 @@ class PosixTargetPlatform(TargetPlatform, PosixPlatform):
     @property
     def install_dirs(self):
         return {
-            InstallRoot.prefix:      PosixPath('/usr/local', Root.absolute),
+            InstallRoot.prefix     : PosixPath('/usr/local', Root.absolute),
             InstallRoot.exec_prefix: PosixPath('', InstallRoot.prefix),
-            InstallRoot.bindir:      PosixPath('bin', InstallRoot.exec_prefix),
-            InstallRoot.libdir:      PosixPath('lib', InstallRoot.exec_prefix),
-            InstallRoot.includedir:  PosixPath('include', InstallRoot.prefix),
+            InstallRoot.bindir     : PosixPath('bin', InstallRoot.exec_prefix),
+            InstallRoot.libdir     : PosixPath('lib', InstallRoot.exec_prefix),
+            InstallRoot.includedir : PosixPath('include', InstallRoot.prefix),
         }
 
 

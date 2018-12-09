@@ -2,7 +2,7 @@ import os
 from itertools import chain
 
 from .. import options as opts, safe_str, shell
-from .common import BuildCommand, check_which, library_macro
+from .common import BuildCommand, library_macro
 from ..file_types import StaticLibrary
 from ..iterutils import iterate
 from ..objutils import memoize

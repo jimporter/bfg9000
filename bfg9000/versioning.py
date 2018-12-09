@@ -13,6 +13,11 @@ from .app_version import version as bfg_version
 from .exceptions import VersionError
 from .iterutils import iterate
 
+__all__ = ['bfg_version', 'check_version', 'detect_version', 'python_version',
+           'PythonSpecifier', 'PythonSpecifierSet', 'PythonVersion',
+           'simplify_specifiers', 'Specifier', 'SpecifierSet', 'Version',
+           'VersionError']
+
 bfg_version = PythonVersion(bfg_version)
 python_version = PythonVersion(platform.python_version())
 

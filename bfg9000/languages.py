@@ -1,7 +1,6 @@
-from functools import partial
 from six import iteritems
 
-from .iterutils import listify, iterate
+from .iterutils import listify
 
 
 class _Info(object):

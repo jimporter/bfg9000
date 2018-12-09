@@ -1,11 +1,11 @@
 import unittest
 
-from bfg9000.packages import *
-from bfg9000.path import Path
+from bfg9000 import packages
 
 
 class TestPackage(unittest.TestCase):
     def test_equality(self):
+        Package = packages.Package
         self.assertTrue(Package('foo', 'elf') == Package('foo', 'elf'))
         self.assertFalse(Package('foo', 'elf') != Package('foo', 'elf'))
 
@@ -17,10 +17,11 @@ class TestPackage(unittest.TestCase):
 
 class TestFramework(unittest.TestCase):
     def test_full_name(self):
-        self.assertEqual(Framework('foo').full_name, 'foo')
-        self.assertEqual(Framework('foo', 'bar').full_name, 'foo,bar')
+        self.assertEqual(packages.Framework('foo').full_name, 'foo')
+        self.assertEqual(packages.Framework('foo', 'bar').full_name, 'foo,bar')
 
     def test_equality(self):
+        Framework = packages.Framework
         self.assertTrue(Framework('foo') == Framework('foo'))
         self.assertFalse(Framework('foo') != Framework('foo'))
         self.assertTrue(Framework('foo', 'x') == Framework('foo', 'x'))

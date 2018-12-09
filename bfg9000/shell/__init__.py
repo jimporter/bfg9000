@@ -2,7 +2,7 @@ import os
 import subprocess
 from enum import Enum
 
-from .list import shell_list
+from .list import shell_list  # noqa
 from ..iterutils import listify
 from ..path import Path
 from ..platforms import platform_name
@@ -11,9 +11,9 @@ from ..safe_str import safe_str
 windows_names = ('winnt', 'win9x', 'msdos')
 
 if platform_name() in windows_names:
-    from .windows import *
+    from .windows import *  # noqa
 else:
-    from .posix import *
+    from .posix import *  # noqa
 
 Mode = Enum('Mode', ['normal', 'pipe', 'stdout', 'devnull'])
 CalledProcessError = subprocess.CalledProcessError
@@ -66,9 +66,9 @@ def execute(args, shell=False, env=None, base_dirs=None, stdout=Mode.normal,
                else None)
 
     def conv(mode):
-        return ({Mode.normal:  None,
-                 Mode.pipe:    subprocess.PIPE,
-                 Mode.stdout:  subprocess.STDOUT,
+        return ({Mode.normal : None,
+                 Mode.pipe   : subprocess.PIPE,
+                 Mode.stdout : subprocess.STDOUT,
                  Mode.devnull: devnull}).get(mode, mode)
 
     try:

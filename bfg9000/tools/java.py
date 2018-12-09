@@ -1,5 +1,4 @@
 from . import builder, cc, jvm
-from .. import shell
 from .common import choose_builder
 from ..languages import known_formats, known_langs
 

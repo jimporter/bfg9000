@@ -1,4 +1,3 @@
-import tarfile
 import time
 from six import assertRegex
 

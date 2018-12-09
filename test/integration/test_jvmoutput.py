@@ -1,6 +1,5 @@
 import os
 import sys
-from six import assertRegex
 
 from . import *
 

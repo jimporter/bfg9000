@@ -9,7 +9,7 @@ from ..arguments.windows import ArgumentParser
 from ..builtins.file_types import generated_file
 from ..exceptions import PackageResolutionError
 from ..file_types import *
-from ..iterutils import default_sentinel, flatten, iterate, listify, uniques
+from ..iterutils import default_sentinel, iterate, listify, uniques
 from ..languages import known_langs, known_formats
 from ..objutils import memoize
 from ..packages import CommonPackage, Framework, PackageKind
@@ -18,15 +18,15 @@ from ..versioning import detect_version, SpecifierSet
 
 _warning_flags = {
     opts.WarningValue.disable: '/w',
-    opts.WarningValue.all: '/W3',
-    opts.WarningValue.extra: '/W4',
-    opts.WarningValue.error: '/WX',
+    opts.WarningValue.all    : '/W3',
+    opts.WarningValue.extra  : '/W4',
+    opts.WarningValue.error  : '/WX',
 }
 
 _optimize_flags = {
-    opts.OptimizeValue.disable:  '/Od',
-    opts.OptimizeValue.size:     '/O1',
-    opts.OptimizeValue.speed:    '/O2',
+    opts.OptimizeValue.disable : '/Od',
+    opts.OptimizeValue.size    : '/O1',
+    opts.OptimizeValue.speed   : '/O2',
     opts.OptimizeValue.linktime: '/GL',
 }
 

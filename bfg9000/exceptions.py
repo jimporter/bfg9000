@@ -1,4 +1,4 @@
-from subprocess import CalledProcessError
+from subprocess import CalledProcessError  # noqa: F401
 
 
 class PackageResolutionError(Exception):

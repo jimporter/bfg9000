@@ -1,6 +1,5 @@
 from collections import Iterable
 from six import iteritems, string_types
-from six.moves import range, zip
 
 __all__ = ['default_sentinel', 'first', 'flatten', 'isiterable', 'iterate',
            'listify', 'merge_dicts', 'merge_into_dict', 'recursive_walk',
