@@ -8,13 +8,12 @@ from pkg_resources import get_entry_info, DistributionNotFound
 from ..objutils import memoize
 from ..versioning import SpecifierSet, Version
 
-__all__ = ['known_platforms', 'parse_triplet', 'PathTraits', 'Platform',
-           'PlatformTriplet', 'platform_name', 'platform_tuple']
+__all__ = ['known_platforms', 'parse_triplet', 'Platform', 'PlatformTriplet',
+           'platform_name', 'platform_tuple']
 
 # This lists the known platform families and genera.
 known_platforms = ['posix', 'windows', 'linux', 'darwin', 'cygwin', 'winnt',
                    'win9x', 'msdos']
-PathTraits = namedtuple('PathTraits', ['curdir', 'pathsep'])
 PlatformTriplet = namedtuple('PlatformTriplet', ['arch', 'vendor', 'sys',
                                                  'abi'])
 
