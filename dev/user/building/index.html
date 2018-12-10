@@ -242,7 +242,7 @@ building your software.</p>
 and other aspects of the environment. These settings are then forwarded on to
 the <code>build.bfg</code> script proper. Below is a simple toolchain file that
 demonstrates some common settings:</p>
-<pre><code class="python">target_platform('windows')
+<pre><code class="python">target_platform('windows', 'x86_64')
 
 compiler('x86_64-w64-mingw32-g++-win32', 'c++')
 compile_options(['-Wall'], 'c++')
