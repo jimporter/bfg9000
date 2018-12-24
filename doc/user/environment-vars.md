@@ -281,14 +281,14 @@ Default: *none*
 {: .subtitle}
 
 *MSVC-only*. A list of directories to search for [system
-libraries](reference.md#system_package), delimited by `;`.
+libraries](reference.md#package), delimited by `;`.
 
 #### *LIBRARY_PATH*
 Default: *none*
 {: .subtitle}
 
 A list of additional directories to search for [system
-libraries](reference.md#system_package). On POSIX systems, this is delimited by
+libraries](reference.md#package). On POSIX systems, this is delimited by
 `:`; on Windows, by `;`.
 
 #### *PATH*
