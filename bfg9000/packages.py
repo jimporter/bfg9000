@@ -21,9 +21,9 @@ class _PackageKindMeta(_EnumMeta):
 
 
 class PackageKind(_with_metaclass(_PackageKindMeta, _Flag)):
-        static = 1
-        shared = 2
-        any = static | shared
+    static = 1
+    shared = 2
+    any = static | shared
 
 
 class Package(object):

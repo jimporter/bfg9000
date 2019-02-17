@@ -77,7 +77,7 @@ def execute(args, shell=False, env=None, base_dirs=None, stdout=Mode.normal,
             stdout=conv(stdout), stderr=conv(stderr)
         )
         output = proc.communicate()
-        if ( returncode is not 'any' and
+        if ( returncode != 'any' and
              proc.returncode not in listify(returncode) ):
             raise CalledProcessError(proc.returncode, args)
 
