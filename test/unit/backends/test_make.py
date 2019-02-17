@@ -7,6 +7,7 @@ from six.moves import cStringIO as StringIO
 from bfg9000 import path
 from bfg9000 import safe_str
 from bfg9000.backends.make.syntax import *
+from bfg9000.file_types import File
 from bfg9000.platforms.host import platform_info
 from bfg9000.platforms.posix import PosixPath
 from bfg9000.platforms.windows import WindowsPath
@@ -212,10 +213,14 @@ class TestMakefile(unittest.TestCase):
         self.makefile._write_variable(out, var, 'value')
         self.assertEqual(out.stream.getvalue(), 'name := value\n')
 
+        # Test duplicate variables.
         var = self.makefile.variable('name', 'value2', exist_ok=True)
         self.assertEqual(var, Variable('name'))
 
         self.assertRaises(ValueError, self.makefile.variable, 'name', 'value')
+        self.assertRaises(ValueError, self.makefile.target_variable, 'name',
+                          'value')
+        self.assertRaises(ValueError, self.makefile.define, 'name', 'value')
 
     def test_target_variable(self):
         var = self.makefile.target_variable('name', 'value')
@@ -224,11 +229,14 @@ class TestMakefile(unittest.TestCase):
         self.makefile._write_variable(out, var, 'value', target=Pattern('%'))
         self.assertEqual(out.stream.getvalue(), '%: name := value\n')
 
+        # Test duplicate variables.
         var = self.makefile.target_variable('name', 'value2', exist_ok=True)
         self.assertEqual(var, Variable('name'))
 
+        self.assertRaises(ValueError, self.makefile.variable, 'name', 'value')
         self.assertRaises(ValueError, self.makefile.target_variable, 'name',
                           'value')
+        self.assertRaises(ValueError, self.makefile.define, 'name', 'value')
 
     def test_define(self):
         var = self.makefile.define('name', 'value')
@@ -248,6 +256,10 @@ class TestMakefile(unittest.TestCase):
         self.assertEqual(out.stream.getvalue(),
                          'define multi\nvalue1\nvalue2\nendef\n\n')
 
+        # Test duplicate variables.
+        self.assertRaises(ValueError, self.makefile.variable, 'name', 'value')
+        self.assertRaises(ValueError, self.makefile.target_variable, 'name',
+                          'value')
         self.assertRaises(ValueError, self.makefile.define, 'name', 'value')
 
     def test_rule(self):
@@ -259,3 +271,10 @@ class TestMakefile(unittest.TestCase):
                          'target: name := value\n'
                          'target:\n'
                          '\tcmd\n\n')
+
+        # Test duplicate targets.
+        self.assertRaises(ValueError, self.makefile.rule, 'target')
+        self.assertRaises(ValueError, self.makefile.rule,
+                          ['target', 'target2'])
+        self.assertRaises(ValueError, self.makefile.rule,
+                          File(path.Path('target', path.Root.builddir)))

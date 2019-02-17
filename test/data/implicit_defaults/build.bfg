@@ -3,4 +3,4 @@
 a = executable('a', files=['a.cpp'])
 b = executable('b', files=['b.cpp'])
 
-test(executable('test', files=['test.cpp']))
+test(executable('test_prog', files=['test_prog.cpp']))

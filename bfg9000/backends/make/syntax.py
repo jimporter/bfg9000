@@ -281,15 +281,22 @@ class Makefile(object):
     def include(self, name, optional=False):
         self._includes.append(Include(name, optional))
 
+    @staticmethod
+    def _target_str(name):
+        out = Writer(StringIO())
+        out.write(name, Syntax.target)
+        return out.stream.getvalue()
+
     def rule(self, target, deps=None, order_only=None, recipe=None,
              variables=None, phony=False):
         targets = iterutils.listify(target)
         if len(targets) == 0:
             raise ValueError('must have at least one target')
         for i in targets:
-            if self.has_rule(i):
-                raise ValueError("rule for '{}' already exists".format(i))
-            self._targets.add(i)
+            target = self._target_str(i)
+            if self.has_rule(target):
+                raise ValueError('rule for {!r} already exists'.format(target))
+            self._targets.add(target)
 
         if iterutils.isiterable(recipe):
             recipe = [self._convert_args(i) for i in recipe]

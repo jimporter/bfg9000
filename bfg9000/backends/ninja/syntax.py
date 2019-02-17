@@ -169,11 +169,11 @@ class NinjaFile(object):
         if self._min_version is None or version > self._min_version:
             self._min_version = version
 
-    def variable(self, name, value, section=Section.other, exist_ok=True):
+    def variable(self, name, value, section=Section.other, exist_ok=False):
         name = var(name)
         if self.has_variable(name):
             if not exist_ok:
-                raise ValueError("variable {!r} already exists".format(name))
+                raise ValueError('variable {!r} already exists'.format(name))
         else:
             self._var_table.add(name)
             value = self._convert_args(value)
@@ -195,13 +195,13 @@ class NinjaFile(object):
             if pool == 'console':
                 self.min_version('1.5')
             else:
-                raise ValueError("unknown pool '{}'".format(pool))
+                raise ValueError('unknown pool {!r}'.format(pool))
 
         if re.search(r'\W', name):
             raise ValueError('rule name contains invalid characters')
 
         if self.has_rule(name):
-            raise ValueError("rule '{}' already exists".format(name))
+            raise ValueError('rule {!r} already exists'.format(name))
 
         self._rules[name] = Rule(command, depfile, deps, description,
                                  generator, pool, restat)
@@ -209,19 +209,26 @@ class NinjaFile(object):
     def has_rule(self, name):
         return name in self._rules
 
+    @staticmethod
+    def _output_str(name):
+        out = Writer(StringIO())
+        out.write(name, Syntax.output)
+        return out.stream.getvalue()
+
     def build(self, output, rule, inputs=None, implicit=None, order_only=None,
               variables=None):
         if rule != 'phony' and not self.has_rule(rule):
-            raise ValueError("unknown rule '{}'".format(rule))
+            raise ValueError('unknown rule {!r}'.format(rule))
 
         variables = {var(k): self._convert_args(v) for k, v in
                      iteritems(variables or {})}
 
         outputs = iterutils.listify(output)
         for i in outputs:
-            if self.has_build(i):
-                raise ValueError("build for '{}' already exists".format(i))
-            self._build_outputs.add(i)
+            out = self._output_str(i)
+            if self.has_build(out):
+                raise ValueError('build for {!r} already exists'.format(out))
+            self._build_outputs.add(out)
         self._builds.append(Build(
             outputs, rule, iterutils.listify(inputs),
             iterutils.listify(implicit), iterutils.listify(order_only),
