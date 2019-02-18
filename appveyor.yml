@@ -84,7 +84,8 @@ for:
     install:
       - >
         C:\cygwin64\setup-x86_64 -qnNd -l C:\cygwin64\var\cache\setup
-        -R c:\cygwin64 -P python2 -P python2-pip -P ninja
+        -R c:\cygwin64 -P python27 -P python27-pip -P python27-setuptools
+        -P ninja
     build_script:
       - xcopy /i /q /s /h C:\projects\bfg9000 C:\cygwin64\home\appveyor\bfg9000
       - C:\cygwin64\bin\bash -lc "cd bfg9000 && pip2 install codecov .[test]"
