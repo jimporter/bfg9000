@@ -12,7 +12,10 @@ class UserDeprecationWarning(DeprecationWarning):
 
 
 def _is_bfg_src(filename):
-    rel = os.path.relpath(filename, os.path.dirname(__file__))
+    try:
+        rel = os.path.relpath(filename, os.path.dirname(__file__))
+    except ValueError:
+        return False
     return not rel.startswith(os.pardir + os.sep)
 
 

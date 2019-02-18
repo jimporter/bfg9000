@@ -128,6 +128,36 @@ class TestStackfulStreamHandler(unittest.TestCase):
         self.assertEqual(record.user_pathname, record.pathname)
         self.assertEqual(record.user_lineno, record.lineno)
 
+    def test_different_drives(self):
+        handler = log.StackfulStreamHandler()
+        try:
+            lineno = current_lineno() + 1
+            raise RuntimeError('runtime error')
+        except RuntimeError:
+            record = logging.LogRecord(
+                'name', 'level', 'pathname', 1, 'msg', [], sys.exc_info()
+            )
+
+        # Test with `os.path.relpath` raising a `ValueError` to match what
+        # happens when the two paths passed to it are on different drives.
+        with mock.patch.object(logging.StreamHandler, 'emit'), \
+             mock.patch('os.path.relpath', side_effect=ValueError()):  # noqa
+            handler.emit(record)
+
+        self.assertEqual(record.full_stack, [
+            (this_file, lineno, 'test_different_drives',
+             "raise RuntimeError('runtime error')"),
+        ])
+        self.assertEqual(record.stack_pre, '')
+        self.assertEqual(record.stack, (
+            '\n' +
+            '  File "{}", line {}, in test_different_drives\n' +
+            "    raise RuntimeError('runtime error')"
+        ).format(this_file, lineno))
+        self.assertEqual(record.stack_post, '')
+        self.assertEqual(record.user_pathname, this_file)
+        self.assertEqual(record.user_lineno, lineno)
+
 
 class TestLogStack(unittest.TestCase):
     def test_default(self):
