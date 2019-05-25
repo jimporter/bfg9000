@@ -16,7 +16,7 @@ from ..iterutils import (default_sentinel, first, iterate, listify, uniques,
                          recursive_walk)
 from ..languages import known_formats
 from ..packages import CommonPackage, Framework, PackageKind
-from ..path import InstallRoot, Path, Root
+from ..path import BasePath, InstallRoot, Path, Root
 from ..platforms import parse_triplet
 from ..versioning import detect_version, SpecifierSet
 
@@ -475,19 +475,22 @@ class CcLinker(BuildCommand):
         # them, so just return nothing.
         return [], []
 
-    def _installed_rpaths(self, options):
-        def gen(options):
-            for i in options:
-                if isinstance(i, opts.lib):
-                    lib = i.library
-                    if isinstance(lib, Library):
-                        yield file_install_path(lib, cross=self.env).parent()
-                    else:
-                        yield lib
-                elif isinstance(i, opts.rpath_dir):
-                    yield i.path
+    def _installed_rpaths(self, options, output):
+        result = []
+        changed = False
+        for i in options:
+            if isinstance(i, opts.lib):
+                lib = i.library
+                if isinstance(lib, Library) and lib.runtime_file:
+                    local = self._local_rpath(lib, output)[0][0]
+                    installed = file_install_path(lib, cross=self.env).parent()
+                    result.append(installed)
+                    if not isinstance(local, BasePath) or local != installed:
+                        changed = True
+            elif isinstance(i, opts.rpath_dir):
+                result.append(i.path)
 
-        return uniques(gen(options))
+        return uniques(result) if changed else []
 
     def _darwin_rpath(self, options, output):
         if output and self.builder.object_format == 'mach-o':
@@ -653,7 +656,7 @@ class CcLinker(BuildCommand):
         path = file_install_path(output)
 
         if self.builder.object_format == 'elf':
-            rpath = self._installed_rpaths(options)
+            rpath = self._installed_rpaths(options, output)
             return self.env.tool('patchelf')(path, rpath)
         else:  # mach-o
             rpath = self._darwin_rpath(options, output)
