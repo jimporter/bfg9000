@@ -48,8 +48,13 @@ def parse_triplet(s, default_vendor='unknown'):
 # TODO: remove this after 0.4 is released.
 class FancyString(str):
     _mapping = {
-        'windows': 'winnt',
-        'darwin': 'macos',
+        'genus': {
+            'windows': 'winnt',
+        },
+        'species': {
+            'windows': 'winnt',
+            'darwin': 'macos',
+        },
     }
 
     def __eq__(self, rhs):
@@ -68,6 +73,19 @@ class FancyString(str):
         if value in cls._mapping.values():
             return cls(value)
         return value
+
+
+class FancyStringGenus(FancyString):
+    _mapping = {
+        'windows': 'winnt',
+    }
+
+
+class FancyStringSpecies(FancyString):
+    _mapping = {
+        'windows': 'winnt',
+        'darwin': 'macos',
+    }
 
 
 @memoize
@@ -128,8 +146,8 @@ def platform_tuple(name=None):
 
 class Platform(object):
     def __init__(self, genus, species, arch):
-        self.genus = FancyString.maybe_make(genus)
-        self.species = FancyString.maybe_make(species)
+        self.genus = FancyStringGenus.maybe_make(genus)
+        self.species = FancyStringSpecies.maybe_make(species)
         self.arch = arch
 
     @property
