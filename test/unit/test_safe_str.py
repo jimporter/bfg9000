@@ -1,13 +1,13 @@
-import unittest
-
 from bfg9000 import safe_str
+
+from . import *
 
 jbos = safe_str.jbos
 literal = safe_str.literal
 shell_literal = safe_str.shell_literal
 
 
-class TestSafeStr(unittest.TestCase):
+class TestSafeStr(TestCase):
     def test_string(self):
         self.assertEqual(safe_str.safe_str('foo'), 'foo')
 
@@ -23,7 +23,7 @@ class TestSafeStr(unittest.TestCase):
         self.assertRaises(NotImplementedError, safe_str.safe_str, 123)
 
 
-class TestLiteral(unittest.TestCase):
+class TestLiteral(TestCase):
     def test_construct_from_string(self):
         self.assertEqual(literal('foo').string, 'foo')
         self.assertEqual(shell_literal('foo').string, 'foo')
@@ -80,7 +80,7 @@ class TestLiteral(unittest.TestCase):
         self.assertEqual(s.bits, (shell_literal('foo'), literal('bar')))
 
 
-class TestJbos(unittest.TestCase):
+class TestJbos(TestCase):
     def test_construct_from_strings(self):
         s = jbos('foo', literal('bar'), shell_literal('baz'))
         self.assertEqual(s.bits, ('foo', literal('bar'), shell_literal('baz')))
@@ -133,7 +133,7 @@ class TestJbos(unittest.TestCase):
         self.assertTrue(jbos('foo') != jbos('foo', 'bar'))
 
 
-class TestJoin(unittest.TestCase):
+class TestJoin(TestCase):
     def test_join_empty(self):
         s = safe_str.join([], ',')
         self.assertEqual(s.bits, ())

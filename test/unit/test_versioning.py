@@ -1,10 +1,9 @@
-import unittest
-from six import assertRaisesRegex
+from . import *
 
 from bfg9000.versioning import *
 
 
-class TestSpecifierSet(unittest.TestCase):
+class TestSpecifierSet(TestCase):
     def test_empty(self):
         spec = SpecifierSet('')
         self.assertEqual(set(spec), set())
@@ -22,7 +21,7 @@ class TestSpecifierSet(unittest.TestCase):
         self.assertEqual(set(spec), {Specifier('>1.0'), Specifier('>1.1')})
 
 
-class TestSimplifySpecifiers(unittest.TestCase):
+class TestSimplifySpecifiers(TestCase):
     def test_duplicate_equals(self):
         spec = SpecifierSet('==1.0,==1.0')
         self.assertEqual(simplify_specifiers(spec), SpecifierSet('==1.0'))
@@ -90,7 +89,7 @@ class TestSimplifySpecifiers(unittest.TestCase):
         self.assertRaises(ValueError, simplify_specifiers, spec)
 
 
-class TestCheckVersion(unittest.TestCase):
+class TestCheckVersion(TestCase):
     def test_success(self):
         check_version(Version('1.0'), SpecifierSet('>=1.0'), 'compiler')
 
@@ -103,7 +102,7 @@ class TestCheckVersion(unittest.TestCase):
         )
 
 
-class TestDetectVersion(unittest.TestCase):
+class TestDetectVersion(TestCase):
     def test_simple(self):
         self.assertEqual(detect_version('gcc 1.2.3 4.5'), Version('1.2.3'))
 

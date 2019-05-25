@@ -1,13 +1,12 @@
 import mock
-import unittest
 
-from ... import make_env
+from .. import *
 
 from bfg9000 import options as opts
 from bfg9000.file_types import *
 from bfg9000.languages import Languages
 from bfg9000.packages import Framework
-from bfg9000.path import InstallRoot, Path
+from bfg9000.path import InstallRoot
 from bfg9000.safe_str import jbos
 from bfg9000.tools.cc import CcBuilder
 from bfg9000.versioning import Version
@@ -34,10 +33,7 @@ def mock_execute(args, **kwargs):
         return 'SEARCH_DIR("/usr")\n'
 
 
-class TestCcBuilder(unittest.TestCase):
-    def setUp(self):
-        self.env = make_env()
-
+class TestCcBuilder(CrossPlatformTestCase):
     def test_properties(self):
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
@@ -142,9 +138,8 @@ class TestCcBuilder(unittest.TestCase):
         self.assertEqual(cc.linker('executable').command[-1], '-fuse-ld=gold')
 
 
-class TestCcCompiler(unittest.TestCase):
+class TestCcCompiler(CrossPlatformTestCase):
     def setUp(self):
-        self.env = make_env()
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
             self.compiler = CcBuilder(self.env, known_langs['c++'], ['c++'],
@@ -154,7 +149,7 @@ class TestCcCompiler(unittest.TestCase):
         self.assertEqual(self.compiler.flags(opts.option_list()), [])
 
     def test_flags_include_dir(self):
-        p = Path('/path/to/include')
+        p = self.Path('/path/to/include')
         self.assertEqual(self.compiler.flags(opts.option_list(
             opts.include_dir(HeaderDirectory(p))
         )), ['-I' + p])
@@ -164,7 +159,7 @@ class TestCcCompiler(unittest.TestCase):
         )), ['-isystem', p])
 
         if self.env.target_platform.genus == 'linux':
-            p = Path('/usr/include')
+            p = self.Path('/usr/include')
             self.assertEqual(self.compiler.flags(opts.option_list(
                 opts.include_dir(HeaderDirectory(p, system=True))
             )), ['-I' + p])
@@ -237,7 +232,7 @@ class TestCcCompiler(unittest.TestCase):
         )), ['-fPIC'])
 
     def test_flags_include_pch(self):
-        p = Path('/path/to/header.hpp')
+        p = self.Path('/path/to/header.hpp')
         self.assertEqual(self.compiler.flags(opts.option_list(
             opts.pch(PrecompiledHeader(p))
         )), ['-include', p.stripext()])
@@ -255,24 +250,23 @@ class TestCcCompiler(unittest.TestCase):
             self.compiler.flags(opts.option_list(123))
 
 
-class TestCcLinker(unittest.TestCase):
-    def _get_linker(self, lang, env=None):
+class TestCcLinker(CrossPlatformTestCase):
+    def _get_linker(self, lang):
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
-            return CcBuilder(env or self.env, known_langs[lang], ['c++'],
+            return CcBuilder(self.env, known_langs[lang], ['c++'],
                              'version').linker('executable')
 
     def setUp(self):
-        self.env = make_env()
         self.linker = self._get_linker('c++')
 
     def test_flags_empty(self):
         self.assertEqual(self.linker.flags(opts.option_list()), [])
 
     def test_flags_lib_dir(self):
-        libdir = Path('/path/to/lib')
-        lib = Path('/path/to/lib/libfoo.a')
-        output = Executable(Path('exe'), 'native')
+        libdir = self.Path('/path/to/lib')
+        lib = self.Path('/path/to/lib/libfoo.a')
+        output = Executable(self.Path('exe'), 'native')
 
         if self.env.target_platform.genus == 'linux':
             rpath = rpath_with_output = ['-Wl,-rpath,' + libdir]
@@ -296,8 +290,8 @@ class TestCcLinker(unittest.TestCase):
         ), output), ['-L' + libdir] + rpath_with_output)
 
         if self.env.target_platform.genus == 'linux':
-            libdir2 = Path('foo')
-            lib2 = Path('foo/libbar.a')
+            libdir2 = self.Path('foo')
+            lib2 = self.Path('foo/libbar.a')
 
             with self.assertRaises(ValueError):
                 self.linker.flags(opts.option_list(
@@ -323,7 +317,7 @@ class TestCcLinker(unittest.TestCase):
             opts.lib(Library(lib, 'native'))
         )), ['-L' + libdir])
 
-        mingw_lib = Path('/path/to/lib/foo.lib')
+        mingw_lib = self.Path('/path/to/lib/foo.lib')
         self.assertEqual(self.linker.flags(opts.option_list(
             opts.lib(Library(mingw_lib, 'native'))
         )), [])
@@ -348,8 +342,8 @@ class TestCcLinker(unittest.TestCase):
         ), output), ['-L' + libdir] + rpath_with_output)
 
     def test_flags_rpath(self):
-        p1 = Path('path1')
-        p2 = Path('path2')
+        p1 = self.Path('path1')
+        p2 = self.Path('path2')
 
         self.assertEqual(self.linker.flags(opts.option_list(
             opts.rpath_dir(p1)
@@ -361,8 +355,8 @@ class TestCcLinker(unittest.TestCase):
         )), ['-Wl,-rpath,' + p1 + ':' + p2])
 
     def test_flags_rpath_link(self):
-        p1 = Path('/path/to/lib')
-        p2 = Path('/path/to/another/lib')
+        p1 = self.Path('/path/to/lib')
+        p2 = self.Path('/path/to/another/lib')
 
         self.assertEqual(self.linker.flags(opts.option_list(
             opts.rpath_link_dir(p1)
@@ -374,7 +368,7 @@ class TestCcLinker(unittest.TestCase):
         )), ['-Wl,-rpath-link,' + p1 + ':' + p2])
 
     def test_flags_module_def(self):
-        path = Path('/path/to/module.def')
+        path = self.Path('/path/to/module.def')
         self.assertEqual(
             self.linker.flags(opts.option_list(
                 opts.module_def(ModuleDefFile(path))
@@ -436,7 +430,7 @@ class TestCcLinker(unittest.TestCase):
         self.assertEqual(self.linker.lib_flags(opts.option_list()), [])
 
     def test_lib_flags_lib(self):
-        lib = Path('/path/to/lib/libfoo.a')
+        lib = self.Path('/path/to/lib/libfoo.a')
 
         # Shared library
         self.assertEqual(self.linker.lib_flags(opts.option_list(
@@ -480,7 +474,7 @@ class TestCcLinker(unittest.TestCase):
             opts.lib(Library(lib, 'native'))
         )), ['-lfoo'])
 
-        mingw_lib = Path('/path/to/lib/foo.lib')
+        mingw_lib = self.Path('/path/to/lib/foo.lib')
         self.assertEqual(self.linker.lib_flags(opts.option_list(
             opts.lib(Library(mingw_lib, 'native'))
         )), [mingw_lib])
@@ -511,41 +505,41 @@ class TestCcLinker(unittest.TestCase):
     def test_lib_flags_ignored(self):
         self.assertEqual(self.linker.lib_flags(opts.option_list('-Lfoo')), [])
 
+    @only_if_platform('linux', hide=True)
     def test_installed_rpaths(self):
-        linker = self._get_linker('c++', make_env(platform='linux'))
-        output = Executable(Path('program'), 'native')
+        output = Executable(self.Path('program'), 'native')
 
         # Local shared lib
-        rpaths = linker._installed_rpaths(opts.option_list(
-            opts.lib(SharedLibrary(Path('libfoo.so'), 'native'))
+        rpaths = self.linker._installed_rpaths(opts.option_list(
+            opts.lib(SharedLibrary(self.Path('libfoo.so'), 'native'))
         ), output)
-        self.assertEqual(rpaths, [Path('', InstallRoot.libdir)])
+        self.assertEqual(rpaths, [self.Path('', InstallRoot.libdir)])
 
         # Absolute shared lib
-        rpaths = linker._installed_rpaths(opts.option_list(
-            opts.lib(SharedLibrary(Path('/path/to/libfoo.so'), 'native'))
+        rpaths = self.linker._installed_rpaths(opts.option_list(
+            opts.lib(SharedLibrary(self.Path('/path/to/libfoo.so'), 'native'))
         ), output)
         self.assertEqual(rpaths, [])
 
         # Local static lib
-        rpaths = linker._installed_rpaths(opts.option_list(
-            opts.lib(StaticLibrary(Path('libfoo.a'), 'native'))
+        rpaths = self.linker._installed_rpaths(opts.option_list(
+            opts.lib(StaticLibrary(self.Path('libfoo.a'), 'native'))
         ), output)
         self.assertEqual(rpaths, [])
 
         # Explicit rpath dir
-        rpaths = linker._installed_rpaths(opts.option_list(
-            opts.rpath_dir(Path('/path'))
+        rpaths = self.linker._installed_rpaths(opts.option_list(
+            opts.rpath_dir(self.Path('/path'))
         ), output)
         self.assertEqual(rpaths, [])
 
         # Mixed
-        rpaths = linker._installed_rpaths(opts.option_list(
-            opts.lib(SharedLibrary(Path('libfoo.so'), 'native')),
-            opts.lib(SharedLibrary(Path('/path/to/libfoo.so'), 'native')),
-            opts.lib(StaticLibrary(Path('libfoo.a'), 'native')),
-            opts.rpath_dir(Path('/path')),
-            opts.rpath_dir(Path('/path/to'))
+        rpaths = self.linker._installed_rpaths(opts.option_list(
+            opts.lib(SharedLibrary(self.Path('libfoo.so'), 'native')),
+            opts.lib(SharedLibrary(self.Path('/path/to/libfoo.so'), 'native')),
+            opts.lib(StaticLibrary(self.Path('libfoo.a'), 'native')),
+            opts.rpath_dir(self.Path('/path')),
+            opts.rpath_dir(self.Path('/path/to'))
         ), output)
-        self.assertEqual(rpaths, [Path('', InstallRoot.libdir),
-                                  Path('/path/to'), Path('/path')])
+        self.assertEqual(rpaths, [self.Path('', InstallRoot.libdir),
+                                  self.Path('/path/to'), self.Path('/path')])

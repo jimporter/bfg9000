@@ -1,5 +1,4 @@
 import re
-from six import assertRegex
 
 from . import *
 

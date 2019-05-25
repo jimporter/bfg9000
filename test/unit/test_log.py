@@ -3,8 +3,9 @@ import logging
 import mock
 import sys
 import traceback
-import unittest
 import warnings
+
+from . import *
 
 from bfg9000 import log, iterutils
 
@@ -16,7 +17,7 @@ def current_lineno():
     return inspect.stack()[1][2]
 
 
-class TestStackfulStreamHandler(unittest.TestCase):
+class TestStackfulStreamHandler(TestCase):
     def test_runtime_error(self):
         handler = log.StackfulStreamHandler()
         try:
@@ -159,7 +160,7 @@ class TestStackfulStreamHandler(unittest.TestCase):
         self.assertEqual(record.user_lineno, lineno)
 
 
-class TestLogStack(unittest.TestCase):
+class TestLogStack(TestCase):
     def test_default(self):
         with mock.patch('logging.log') as mocklog:
             log.log_stack(log.INFO, 'message')
@@ -189,7 +190,7 @@ class TestLogStack(unittest.TestCase):
             })
 
 
-class TestShowWarning(unittest.TestCase):
+class TestShowWarning(TestCase):
     def test_warn(self):
         with mock.patch('logging.log') as mocklog:
             class EqualWarning(UserWarning):
@@ -207,7 +208,7 @@ class TestShowWarning(unittest.TestCase):
             )
 
 
-class TestInit(unittest.TestCase):
+class TestInit(TestCase):
     def test_colors(self):
         with mock.patch('logging.addLevelName'), \
              mock.patch('logging.root.addHandler'), \

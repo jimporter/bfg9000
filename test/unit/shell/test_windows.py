@@ -1,9 +1,9 @@
-import unittest
+from .. import *
 
 from bfg9000.shell import windows
 
 
-class TestSplit(unittest.TestCase):
+class TestSplit(TestCase):
     def test_single(self):
         self.assertEqual(windows.split('foo'), ['foo'])
 
@@ -30,7 +30,7 @@ class TestSplit(unittest.TestCase):
         self.assertRaises(TypeError, windows.split, 1)
 
 
-class TestListify(unittest.TestCase):
+class TestListify(TestCase):
     def test_string(self):
         self.assertEqual(windows.listify('foo bar baz'), ['foo', 'bar', 'baz'])
 
@@ -45,7 +45,7 @@ class TestListify(unittest.TestCase):
                          ('foo bar', 'baz'))
 
 
-class TestQuote(unittest.TestCase):
+class TestQuote(TestCase):
     def test_simple(self):
         self.assertEqual(windows.quote('foo'), 'foo')
 

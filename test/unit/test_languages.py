@@ -1,10 +1,9 @@
-import unittest
-from six import assertRaisesRegex
+from . import *
 
 from bfg9000.languages import Languages
 
 
-class TestLanguages(unittest.TestCase):
+class TestLanguages(TestCase):
     def setUp(self):
         self.known_langs = Languages()
         with self.known_langs.make('c') as x:

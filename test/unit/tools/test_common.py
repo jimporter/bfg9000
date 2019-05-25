@@ -1,8 +1,6 @@
 import mock
-import unittest
-from six import assertRaisesRegex
 
-from ... import make_env
+from .. import *
 
 from bfg9000.languages import Languages
 from bfg9000.tools import cc, common
@@ -30,9 +28,10 @@ def mock_execute(args, **kwargs):
         return 'SEARCH_DIR("/usr")\n'
 
 
-class TestChooseBuilder(unittest.TestCase):
-    def setUp(self):
-        self.env = make_env(clear_variables=True)
+class TestChooseBuilder(CrossPlatformTestCase):
+    def __init__(self, *args, **kwargs):
+        CrossPlatformTestCase.__init__(self, clear_variables=True, *args,
+                                       **kwargs)
 
     def test_choose(self):
         with mock.patch('bfg9000.shell.which', mock_which), \

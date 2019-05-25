@@ -1,15 +1,12 @@
 import errno
 import mock
-import ntpath
-import posixpath
 import os
-import unittest
 from collections import namedtuple
+
+from . import *
 
 from bfg9000 import path
 from bfg9000.platforms import target
-from bfg9000.platforms.posix import PosixPath
-from bfg9000.platforms.windows import WindowsPath
 from bfg9000.safe_str import jbos
 
 MockEnv = namedtuple('MockEnv', ['target_platform'])
@@ -22,10 +19,7 @@ path_variables = {
 }
 
 
-class TestPath(unittest.TestCase):
-    Path = path.Path
-    ospath = os.path
-
+class TestPath(PathTestCase):
     def test_construct(self):
         p = self.Path('foo/bar', path.Root.srcdir)
         self.assertEqual(p.suffix, 'foo/bar')
@@ -401,17 +395,7 @@ class TestPath(unittest.TestCase):
         self.assertEqual(result.bits, ('baz', p))
 
 
-class TestPosixPath(TestPath):
-    Path = PosixPath
-    ospath = posixpath
-
-
-class TestWindowsPath(TestPath):
-    Path = WindowsPath
-    ospath = ntpath
-
-
-class TestAbsPath(unittest.TestCase):
+class TestAbsPath(TestCase):
     def test_abspath(self):
         self.assertEqual(
             path.abspath('/foo/bar'),
@@ -419,7 +403,7 @@ class TestAbsPath(unittest.TestCase):
         )
 
 
-class TestInstallPath(unittest.TestCase):
+class TestInstallPath(TestCase):
     def test_install_path_file(self):
         p = path.Path('foo/bar', path.Root.srcdir)
         self.assertEqual(path.install_path(p, path.InstallRoot.bindir),
@@ -490,7 +474,7 @@ class TestInstallPath(unittest.TestCase):
                              platform.Path('/foo/bar', path.Root.absolute))
 
 
-class TestCommonPrefix(unittest.TestCase):
+class TestCommonPrefix(TestCase):
     def test_empty(self):
         self.assertEqual(path.commonprefix([]), None)
 
@@ -518,7 +502,7 @@ class TestCommonPrefix(unittest.TestCase):
         self.assertEqual(path.commonprefix([p, q]), path.Path(''))
 
 
-class TestWrappedOsPath(unittest.TestCase):
+class TestWrappedOsPath(TestCase):
     def test_wrap(self):
         mocked = mock.MagicMock(return_value=True)
         mocked.__name__ = 'foo'
@@ -527,7 +511,7 @@ class TestWrappedOsPath(unittest.TestCase):
         mocked.assert_called_once_with(os.path.join(os.path.sep, 'foo', 'bar'))
 
 
-class TestSamefile(unittest.TestCase):
+class TestSamefile(TestCase):
     def test_real(self):
         with mock.patch('os.path.samefile', lambda x, y: x == y, create=True):
             self.assertEqual(path.samefile(path.Path('/foo/bar'),
@@ -544,7 +528,7 @@ class TestSamefile(unittest.TestCase):
                                            path.Path('/foo/bar')), True)
 
 
-class TestMakedirs(unittest.TestCase):
+class TestMakedirs(TestCase):
     def test_success(self):
         with mock.patch('os.makedirs') as os_makedirs:
             path.makedirs('foo')
@@ -573,7 +557,7 @@ class TestMakedirs(unittest.TestCase):
             self.assertRaises(OSError, path.makedirs, 'file')
 
 
-class TestPushd(unittest.TestCase):
+class TestPushd(TestCase):
     def test_basic(self):
         with mock.patch('os.getcwd', return_value='cwd'), \
              mock.patch('os.chdir') as os_chdir:  # noqa

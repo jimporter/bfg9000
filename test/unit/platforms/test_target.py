@@ -1,11 +1,12 @@
 import mock
-import unittest
+
+from .. import *
 
 from bfg9000.platforms import platform_name, target, posix
 from bfg9000.platforms.framework import Framework
 
 
-class TestTargetPlatform(unittest.TestCase):
+class TestTargetPlatform(TestCase):
     def setUp(self):
         platform_name._reset()
 

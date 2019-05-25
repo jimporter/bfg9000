@@ -1,9 +1,9 @@
-import unittest
+from .. import *
 
 from bfg9000.shell.list import shell_list
 
 
-class TestShellList(unittest.TestCase):
+class TestShellList(TestCase):
     def test_repr(self):
         x = shell_list([1, 2, 3])
         self.assertEqual(repr(x), '<shell_list([1, 2, 3])>')

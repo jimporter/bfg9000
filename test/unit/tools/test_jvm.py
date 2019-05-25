@@ -1,12 +1,10 @@
 import mock
 import os
-import unittest
 
-from ... import make_env
+from .. import *
 
 from bfg9000 import file_types, options as opts
 from bfg9000.languages import Languages
-from bfg9000.path import Path
 from bfg9000.safe_str import jbos
 from bfg9000.tools.jvm import JvmBuilder
 from bfg9000.versioning import Version
@@ -22,10 +20,7 @@ def mock_which(*args, **kwargs):
     return ['command']
 
 
-class TestJvmBuilder(unittest.TestCase):
-    def setUp(self):
-        self.env = make_env()
-
+class TestJvmBuilder(CrossPlatformTestCase):
     def test_properties(self):
         def mock_execute(*args, **kwargs):
             return 'version'
@@ -151,10 +146,8 @@ class TestJvmBuilder(unittest.TestCase):
         self.assertEqual(jvm.linker('shared_library').version, None)
 
 
-class TestJvmCompiler(unittest.TestCase):
+class TestJvmCompiler(CrossPlatformTestCase):
     def setUp(self):
-        self.env = make_env()
-
         def mock_execute(*args, **kwargs):
             return 'version'
 
@@ -167,8 +160,8 @@ class TestJvmCompiler(unittest.TestCase):
         self.assertEqual(self.compiler.flags(opts.option_list()), [])
 
     def test_flags_lib(self):
-        lib1 = Path('/path/to/lib/libfoo.jar')
-        lib2 = Path('/path/to/lib/libbar.jar')
+        lib1 = self.Path('/path/to/lib/libfoo.jar')
+        lib2 = self.Path('/path/to/lib/libbar.jar')
 
         self.assertEqual(self.compiler.flags(opts.option_list(
             opts.lib(file_types.StaticLibrary(lib1, 'jvm'))
@@ -267,10 +260,8 @@ class TestJvmCompiler(unittest.TestCase):
             self.compiler.flags(opts.option_list(123))
 
 
-class TestJvmLinker(unittest.TestCase):
+class TestJvmLinker(CrossPlatformTestCase):
     def setUp(self):
-        self.env = make_env()
-
         def mock_execute(*args, **kwargs):
             return 'version'
 

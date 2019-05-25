@@ -1,10 +1,11 @@
-import unittest
 from six.moves import cStringIO as StringIO
+
+from . import *
 
 from bfg9000 import depfixer
 
 
-class TestEmitDeps(unittest.TestCase):
+class TestEmitDeps(TestCase):
     def test_empty_deps(self):
         instream = StringIO('foo:\n')
         outstream = StringIO()

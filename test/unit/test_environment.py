@@ -1,7 +1,8 @@
 import os
-import unittest
 import sys
 from six import iteritems
+
+from . import *
 
 from bfg9000.environment import Environment, LibraryMode
 from bfg9000.path import Path, Root, InstallRoot
@@ -11,7 +12,7 @@ this_dir = os.path.abspath(os.path.dirname(__file__))
 test_data_dir = os.path.join(this_dir, '..', 'data')
 
 
-class TestEnvironment(unittest.TestCase):
+class TestEnvironment(TestCase):
     def assertDictsEqual(self, a, b):
         self.assertEqual(len(a), len(b))
         for i in a:

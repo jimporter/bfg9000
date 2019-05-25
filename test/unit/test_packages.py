@@ -1,9 +1,9 @@
-import unittest
+from . import *
 
 from bfg9000 import packages
 
 
-class TestPackage(unittest.TestCase):
+class TestPackage(TestCase):
     def test_equality(self):
         Package = packages.Package
         self.assertTrue(Package('foo', 'elf') == Package('foo', 'elf'))
@@ -15,7 +15,7 @@ class TestPackage(unittest.TestCase):
         self.assertTrue(Package('foo', 'elf') != Package('foo', 'coff'))
 
 
-class TestFramework(unittest.TestCase):
+class TestFramework(TestCase):
     def test_full_name(self):
         self.assertEqual(packages.Framework('foo').full_name, 'foo')
         self.assertEqual(packages.Framework('foo', 'bar').full_name, 'foo,bar')

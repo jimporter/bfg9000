@@ -1,7 +1,6 @@
 import mock
-import unittest
 
-from ... import make_env
+from .. import *
 
 from bfg9000.tools.ld import LdLinker
 from bfg9000.versioning import Version
@@ -11,10 +10,7 @@ def mock_execute(args, **kwargs):
     return 'SEARCH_DIR("/dir1")\nSEARCH_DIR("=/dir2")\n'
 
 
-class TestLdLinker(unittest.TestCase):
-    def setUp(self):
-        self.env = make_env()
-
+class TestLdLinker(CrossPlatformTestCase):
     def test_flavor(self):
         ld = LdLinker(None, self.env, ['ld'], 'version')
         self.assertEqual(ld.flavor, 'ld')

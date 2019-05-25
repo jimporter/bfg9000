@@ -1,12 +1,10 @@
 import mock
-import unittest
 
-from ... import make_env
+from .. import *
 
 from bfg9000 import file_types, options as opts
 from bfg9000.languages import Languages
 from bfg9000.packages import Framework
-from bfg9000.path import Path
 from bfg9000.tools.msvc import MsvcBuilder
 from bfg9000.versioning import Version
 
@@ -19,10 +17,7 @@ def mock_which(*args, **kwargs):
     return ['command']
 
 
-class TestMsvcBuilder(unittest.TestCase):
-    def setUp(self):
-        self.env = make_env()
-
+class TestMsvcBuilder(CrossPlatformTestCase):
     def test_properties(self):
         with mock.patch('bfg9000.shell.which', mock_which):
             cc = MsvcBuilder(self.env, known_langs['c++'], ['cl'], 'version')
@@ -94,9 +89,8 @@ class TestMsvcBuilder(unittest.TestCase):
         self.assertEqual(cc.linker('shared_library').version, None)
 
 
-class TestMsvcCompiler(unittest.TestCase):
+class TestMsvcCompiler(CrossPlatformTestCase):
     def setUp(self):
-        self.env = make_env()
         with mock.patch('bfg9000.shell.which', mock_which):
             self.compiler = MsvcBuilder(self.env, known_langs['c++'], ['cl'],
                                         'version').compiler
@@ -105,7 +99,7 @@ class TestMsvcCompiler(unittest.TestCase):
         self.assertEqual(self.compiler.flags(opts.option_list()), [])
 
     def test_flags_include_dir(self):
-        p = Path('/path/to/include')
+        p = self.Path('/path/to/include')
         self.assertEqual(self.compiler.flags(opts.option_list(
             opts.include_dir(file_types.HeaderDirectory(p))
         )), ['/I' + p])
@@ -178,7 +172,7 @@ class TestMsvcCompiler(unittest.TestCase):
         )), ['/O2', '/GL'])
 
     def test_flags_include_pch(self):
-        p = Path('/path/to/header.hpp')
+        p = self.Path('/path/to/header.hpp')
         self.assertEqual(self.compiler.flags(opts.option_list(
             opts.pch(file_types.MsvcPrecompiledHeader(p, None, 'header',
                                                       'native'))
@@ -197,10 +191,8 @@ class TestMsvcCompiler(unittest.TestCase):
             self.compiler.flags(opts.option_list(123))
 
 
-class TestMsvcLinker(unittest.TestCase):
+class TestMsvcLinker(CrossPlatformTestCase):
     def setUp(self):
-        self.env = make_env()
-
         version = ('Microsoft (R) C/C++ Optimizing Compiler Version ' +
                    '19.12.25831 for x86')
         with mock.patch('bfg9000.shell.which', mock_which):
@@ -211,8 +203,8 @@ class TestMsvcLinker(unittest.TestCase):
         self.assertEqual(self.linker.flags(opts.option_list()), [])
 
     def test_flags_lib_dir(self):
-        libdir = Path('/path/to/lib')
-        lib = Path('/path/to/lib/foo.so')
+        libdir = self.Path('/path/to/lib')
+        lib = self.Path('/path/to/lib/foo.so')
 
         # Lib dir
         self.assertEqual(self.linker.flags(opts.option_list(
@@ -239,7 +231,7 @@ class TestMsvcLinker(unittest.TestCase):
         )), ['/LIBPATH:' + libdir])
 
     def test_flags_module_def(self):
-        path = Path('/path/to/module.def')
+        path = self.Path('/path/to/module.def')
         self.assertEqual(
             self.linker.flags(opts.option_list(
                 opts.module_def(file_types.ModuleDefFile(path))
@@ -285,7 +277,7 @@ class TestMsvcLinker(unittest.TestCase):
         self.assertEqual(self.linker.lib_flags(opts.option_list()), [])
 
     def test_lib_flags_lib(self):
-        lib = Path('/path/to/lib/foo.lib')
+        lib = self.Path('/path/to/lib/foo.lib')
 
         self.assertEqual(self.linker.lib_flags(opts.option_list(
             opts.lib(file_types.SharedLibrary(lib, 'native'))
@@ -326,9 +318,8 @@ class TestMsvcLinker(unittest.TestCase):
         self.assertEqual(self.linker.lib_flags(opts.option_list('-Lfoo')), [])
 
 
-class TestMsvcStaticLinker(unittest.TestCase):
+class TestMsvcStaticLinker(CrossPlatformTestCase):
     def setUp(self):
-        self.env = make_env()
         with mock.patch('bfg9000.shell.which', mock_which):
             self.linker = MsvcBuilder(self.env, known_langs['c++'], ['cl'],
                                       'version').linker('static_library')

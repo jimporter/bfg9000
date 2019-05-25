@@ -1,9 +1,9 @@
-import unittest
+from .. import *
 
 from bfg9000.arguments.windows import *
 
 
-class TestWindowsArgParse(unittest.TestCase):
+class TestWindowsArgParse(TestCase):
     def test_empty(self):
         parser = ArgumentParser()
         self.assertEqual(parser.parse_known([]), ({}, []))

@@ -1,10 +1,10 @@
-import unittest
+from .. import *
 
 from bfg9000.builtins.pkg_config import *
 from bfg9000.safe_str import safe_str, shell_literal
 
 
-class TestPkgConfigRequirement(unittest.TestCase):
+class TestPkgConfigRequirement(TestCase):
     def test_merge_requirements(self):
         a = Requirement('foo', '>=1.0')
         b = Requirement('foo', '<=2.0')
@@ -57,7 +57,7 @@ class TestPkgConfigRequirement(unittest.TestCase):
         self.assertTrue(S('foo', '>=1.0') != R('foo', '>=1.0'))
 
 
-class TestPkgConfigSimpleRequirement(unittest.TestCase):
+class TestPkgConfigSimpleRequirement(TestCase):
     def test_stringify(self):
         r = SimpleRequirement('foo', '>=1.0')
         self.assertEqual(safe_str(r), shell_literal('foo >= 1.0'))
@@ -71,7 +71,7 @@ class TestPkgConfigSimpleRequirement(unittest.TestCase):
         self.assertEqual(safe_str(r), shell_literal('foo'))
 
 
-class TestPkgConfigRequirementSet(unittest.TestCase):
+class TestPkgConfigRequirementSet(TestCase):
     def test_init(self):
         s = RequirementSet([Requirement('foo', '>=1.0'),
                             Requirement('foo', '<=2.0'),

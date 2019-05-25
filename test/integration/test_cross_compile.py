@@ -1,5 +1,4 @@
 import time
-from six import assertRegex
 
 from . import *
 

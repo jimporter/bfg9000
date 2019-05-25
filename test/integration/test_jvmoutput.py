@@ -10,7 +10,7 @@ def print_stderr_args(message):
     )]
 
 
-class TestJvmOutput(TestCase):
+class TestJvmOutput(SubprocessTestCase):
     def test_no_args(self):
         self.assertPopen(['bfg9000-jvmoutput'], returncode=2)
 

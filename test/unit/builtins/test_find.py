@@ -1,9 +1,9 @@
-import unittest
+from .. import *
 
 from bfg9000.builtins.find import _filter_from_glob, FindResult
 
 
-class TestFilterFromGlob(unittest.TestCase):
+class TestFilterFromGlob(TestCase):
     def test_file(self):
         f = _filter_from_glob('f', '*', None, None)
         self.assertEqual(f('foo', 'foo', 'f'), FindResult.include)

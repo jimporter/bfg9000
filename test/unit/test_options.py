@@ -1,9 +1,9 @@
-import unittest
+from . import *
 
 from bfg9000 import options
 
 
-class TestOptionList(unittest.TestCase):
+class TestOptionList(TestCase):
     def test_empty(self):
         opts = options.option_list()
         self.assertEqual(list(opts), [])
@@ -102,7 +102,7 @@ class TestOptionList(unittest.TestCase):
             opts += [options.pic()]
 
 
-class TestOption(unittest.TestCase):
+class TestOption(TestCase):
     def test_create(self):
         my_option = options.option('my_option', ['value'])
 
@@ -158,7 +158,7 @@ class TestOption(unittest.TestCase):
         self.assertTrue(o1 != o3)
 
 
-class TestDefine(unittest.TestCase):
+class TestDefine(TestCase):
     def test_name_only(self):
         opt = options.define('NAME')
         self.assertEqual(type(opt), options.define)

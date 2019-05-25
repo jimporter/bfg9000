@@ -1,7 +1,6 @@
 import mock
-import unittest
 
-from ... import make_env
+from .. import *
 
 from bfg9000 import tools
 from bfg9000.builtins import builtin, toolchain
@@ -18,7 +17,7 @@ def mock_bad_which(*args, **kwargs):
     raise IOError()
 
 
-class TestToolchain(unittest.TestCase):
+class TestToolchain(TestCase):
     def setUp(self):
         self.env = make_env(clear_variables=True)
         self.builtin_dict = builtin.toolchain.bind(

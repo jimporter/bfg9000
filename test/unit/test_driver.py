@@ -2,15 +2,15 @@ import argparse
 import logging
 import mock
 import re
-import unittest
-from six import assertRegex
 from six.moves import cStringIO as StringIO
+
+from . import *
 
 from bfg9000 import driver, log, path
 from bfg9000.environment import EnvVersionError
 
 
-class TestEnvironmentFromArgs(unittest.TestCase):
+class TestEnvironmentFromArgs(TestCase):
     def setUp(self):
         self.args = argparse.Namespace(
             backend='make',
@@ -42,7 +42,7 @@ class TestEnvironmentFromArgs(unittest.TestCase):
         self.assertTrue('make' in backend.__name__)
 
 
-class TestDirectoryPair(unittest.TestCase):
+class TestDirectoryPair(TestCase):
     def setUp(self):
         self.pair = driver.directory_pair('srcdir', 'builddir')(None, None)
 
@@ -65,7 +65,7 @@ class TestDirectoryPair(unittest.TestCase):
         ))
 
 
-class TestReloadException(unittest.TestCase):
+class TestReloadException(TestCase):
     def setUp(self):
         self.stream = StringIO()
         log.init(stream=self.stream)

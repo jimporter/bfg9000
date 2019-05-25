@@ -3,10 +3,9 @@ import ntpath
 import os
 import re
 import sys
-import unittest
 
 from .common import BuiltinTest
-from ... import make_env
+from .. import *
 
 from bfg9000 import file_types, options as opts
 from bfg9000.builtins import packages
@@ -54,7 +53,7 @@ def mock_execute(args, **kwargs):
         return '1.2.3\n'
 
 
-class TestFramework(unittest.TestCase):
+class TestFramework(TestCase):
     def test_framework(self):
         env = make_env('macos')
         self.assertEqual(
@@ -127,7 +126,7 @@ class TestPackage(BuiltinTest):
             packages.package(self.env, 'name', kind='bad')
 
 
-class TestBoostPackage(unittest.TestCase):
+class TestBoostPackage(TestCase):
     def test_boost_version(self):
         data = '#define BOOST_LIB_VERSION "1_23_4"\n'
         with mock.patch(open_name, mock_open(read_data=data)):

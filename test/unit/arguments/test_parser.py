@@ -1,11 +1,12 @@
 import mock
-import unittest
+
+from .. import *
 
 from bfg9000 import path
 from bfg9000.arguments import parser
 
 
-class TestDirectory(unittest.TestCase):
+class TestDirectory(TestCase):
     def test_existent(self):
         with mock.patch('bfg9000.path.exists', return_value=True), \
              mock.patch('bfg9000.path.isdir', return_value=True):  # noqa
@@ -28,7 +29,7 @@ class TestDirectory(unittest.TestCase):
                 parser.Directory(True)('foo')
 
 
-class TestFile(unittest.TestCase):
+class TestFile(TestCase):
     def test_existent(self):
         with mock.patch('bfg9000.path.exists', return_value=True), \
              mock.patch('bfg9000.path.isfile', return_value=True):  # noqa

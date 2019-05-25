@@ -1,9 +1,9 @@
-import unittest
+from . import *
 
 from bfg9000.objutils import objectify
 
 
-class TestObjectify(unittest.TestCase):
+class TestObjectify(TestCase):
     def test_create(self):
         self.assertEqual(objectify('foo', list, None), ['f', 'o', 'o'])
 

@@ -1,4 +1,3 @@
-import functools
 import os
 import shutil
 import subprocess
@@ -7,7 +6,7 @@ import unittest
 from collections import namedtuple
 from six import iteritems
 
-from .. import make_env
+from .. import *
 
 from bfg9000.backends import list_backends
 from bfg9000.path import InstallRoot, makedirs, Path, Root
@@ -52,50 +51,6 @@ def cleandir(path, recreate=True):
         makedirs(path)
 
 
-def _add_hide_func(thing, predicate):
-    if not hasattr(thing, '_test_hide_if'):
-        thing._test_hide_if = predicate
-    else:
-        old = thing._test_hide_if
-        thing._test_hide_if = lambda self: old(self) or predicate(self)
-
-
-def skip_if(skip, msg='skipped', hide=False):
-    if hide:
-        def wrap(fn):
-            if skip:
-                _add_hide_func(fn, lambda self: True)
-            return fn
-
-        return wrap
-    return unittest.skipIf(skip, msg)
-
-
-def skip_pred(predicate, msg='skipped', hide=False):
-    def wrap(fn):
-        if hide:
-            _add_hide_func(fn, predicate)
-            return fn
-
-        if isinstance(fn, type):
-            @functools.wraps(fn, assigned=['__name__', '__module__'],
-                             updated=[])
-            class Wrap(fn):
-                def setUp(self):
-                    if predicate(self):
-                        raise unittest.SkipTest(msg)
-                    fn.setUp(self)
-
-            return Wrap
-        else:
-            def inner(self, *args, **kwargs):
-                if predicate(self):
-                    raise unittest.SkipTest(msg)
-                return fn(self, *args, **kwargs)
-            return inner
-    return wrap
-
-
 def skip_if_backend(backend, hide=False):
     return skip_pred(lambda x: x.backend == backend,
                      'not supported for backend "{}"'.format(backend), hide)
@@ -104,15 +59,6 @@ def skip_if_backend(backend, hide=False):
 def only_if_backend(backend, hide=False):
     return skip_pred(lambda x: x.backend != backend,
                      'only supported for backend "{}"'.format(backend), hide)
-
-
-def xfail_if(xfail):
-    def wrap(fn):
-        if xfail:
-            return unittest.expectedFailure(fn)
-        else:
-            return fn
-    return wrap
 
 
 class SubprocessError(unittest.TestCase.failureException):
@@ -126,25 +72,7 @@ class SubprocessError(unittest.TestCase.failureException):
         )
 
 
-# For some reason, six doesn't have this wrapper...
-def assertNotRegex(self, *args, **kwargs):
-    if hasattr(self, 'assertNotRegex'):
-        return self.assertNotRegex(*args, **kwargs)
-    else:
-        return self.assertNotRegexpMatches(*args, **kwargs)
-
-
-class TestCase(unittest.TestCase):
-    def _hideTest(self):
-        test_method = getattr(self, self._testMethodName)
-        return ( (hasattr(self, '_test_hide_if') and
-                  self._test_hide_if()) or
-                 (hasattr(test_method, '_test_hide_if') and
-                  test_method._test_hide_if(self)) )
-
-    def parameterize(self):
-        return [] if self._hideTest() else [self]
-
+class SubprocessTestCase(TestCase):
     def target_name(self, target):
         if self.backend == 'msbuild':
             if isinstance(target, Target):
@@ -198,13 +126,10 @@ class TestCase(unittest.TestCase):
             )
 
 
-class BasicIntegrationTest(TestCase):
+class BasicIntegrationTest(SubprocessTestCase):
     def __init__(self, srcdir, *args, **kwargs):
         install = kwargs.pop('install', False)
-
         self._configure = kwargs.pop('configure', True)
-        self._args = args
-        self._kwargs = kwargs
 
         stage_src = kwargs.pop('stage_src', False)
         self.backend = kwargs.pop('backend', None)
@@ -212,7 +137,7 @@ class BasicIntegrationTest(TestCase):
 
         self.extra_args = kwargs.pop('extra_args', [])
 
-        unittest.TestCase.__init__(self, *args, **kwargs)
+        SubprocessTestCase.__init__(self, *args, **kwargs)
         if self.backend is None:
             return
 
@@ -331,15 +256,7 @@ class BasicIntegrationTest(TestCase):
 
 class IntegrationTest(BasicIntegrationTest):
     def parameterize(self):
-        result = []
-        for i in backends:
-            try:
-                copy = self.__class__(backend=i, *self._args, **self._kwargs)
-                if not copy._hideTest():
-                    result.append(copy)
-            except unittest.SkipTest:
-                pass
-        return result
+        return parameterize_tests(self, backend=backends)
 
 
 def output_file(name):
@@ -395,11 +312,3 @@ def import_library(name):
         head, tail = os.path.split(shared_library(name).path)
         path = os.path.join(head, _static_library_prefix + tail + '.a')
         return Target(name, path)
-
-
-def load_tests(loader, standard_tests, pattern):
-    all_tests = unittest.TestSuite()
-    for suite in standard_tests:
-        for case in suite:
-            all_tests.addTests(case.parameterize())
-    return all_tests

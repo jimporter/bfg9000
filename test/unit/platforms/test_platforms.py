@@ -1,10 +1,11 @@
 import mock
-import unittest
+
+from .. import *
 
 from bfg9000 import platforms
 
 
-class TestPlatformName(unittest.TestCase):
+class TestPlatformName(TestCase):
     def setUp(self):
         platforms.platform_name._reset()
 
@@ -96,7 +97,7 @@ class TestPlatformName(unittest.TestCase):
             self.assertEqual(platforms.platform_name(), 'goofy')
 
 
-class TestPlatformTuple(unittest.TestCase):
+class TestPlatformTuple(TestCase):
     def setUp(self):
         platforms.platform_name._reset()
 
@@ -108,7 +109,7 @@ class TestPlatformTuple(unittest.TestCase):
                          platforms.platform_name())
 
 
-class TestParseTriplet(unittest.TestCase):
+class TestParseTriplet(TestCase):
     def test_with_vendor(self):
         Triplet = platforms.PlatformTriplet
         self.assertEqual(platforms.parse_triplet('i686-pc-linux-gnu'),

@@ -1,11 +1,12 @@
-import unittest
 from collections import namedtuple
+
+from . import *
 
 from bfg9000 import iterutils
 from bfg9000.shell.list import shell_list
 
 
-class TestIsIterable(unittest.TestCase):
+class TestIsIterable(TestCase):
     def test_list(self):
         self.assertTrue(iterutils.isiterable([]))
 
@@ -23,7 +24,7 @@ class TestIsIterable(unittest.TestCase):
         self.assertFalse(iterutils.isiterable(None))
 
 
-class TestIterate(unittest.TestCase):
+class TestIterate(TestCase):
     def test_none(self):
         self.assertEqual(list(iterutils.iterate(None)), [])
 
@@ -35,7 +36,7 @@ class TestIterate(unittest.TestCase):
                          ['foo', 'bar'])
 
 
-class TestListify(unittest.TestCase):
+class TestListify(TestCase):
     def test_none(self):
         self.assertEqual(iterutils.listify(None), [])
 
@@ -71,7 +72,7 @@ class TestListify(unittest.TestCase):
         self.assertEqual(res, ('foo', 'bar'))
 
 
-class TestFirst(unittest.TestCase):
+class TestFirst(TestCase):
     def test_none(self):
         self.assertRaises(LookupError, iterutils.first, None)
 
@@ -85,7 +86,7 @@ class TestFirst(unittest.TestCase):
         self.assertEqual(iterutils.first(['foo', 'bar']), 'foo')
 
 
-class TestUnlistify(unittest.TestCase):
+class TestUnlistify(TestCase):
     def test_none(self):
         self.assertEqual(iterutils.unlistify([]), None)
 
@@ -99,7 +100,7 @@ class TestUnlistify(unittest.TestCase):
         self.assertTrue(x is res)
 
 
-class TestFlatten(unittest.TestCase):
+class TestFlatten(TestCase):
     def test_empty(self):
         self.assertEqual(iterutils.flatten([]), [])
         self.assertEqual(iterutils.flatten(i for i in range(0)), [])
@@ -121,7 +122,7 @@ class TestFlatten(unittest.TestCase):
                          custom_list([0, 1, 1, 2, 2, 3]))
 
 
-class TestTween(unittest.TestCase):
+class TestTween(TestCase):
     def test_none(self):
         self.assertEqual(list(iterutils.tween([], ',')), [])
         self.assertEqual(list(iterutils.tween([], ',', '[', ']')), [])
@@ -137,7 +138,7 @@ class TestTween(unittest.TestCase):
                          ['[', 1, ',', 2, ']'])
 
 
-class TestUniques(unittest.TestCase):
+class TestUniques(TestCase):
     def test_none(self):
         self.assertEqual(iterutils.uniques([]), [])
 
@@ -148,7 +149,7 @@ class TestUniques(unittest.TestCase):
         self.assertEqual(iterutils.uniques([1, 2, 1, 3]), [1, 2, 3])
 
 
-class TestRecursiveWalk(unittest.TestCase):
+class TestRecursiveWalk(TestCase):
     def test_unified(self):
         T = namedtuple('T', ['children'])
         x = T([ T([T([])]), T([]) ])
@@ -167,7 +168,7 @@ class TestRecursiveWalk(unittest.TestCase):
         )
 
 
-class TestMergeIntoDict(unittest.TestCase):
+class TestMergeIntoDict(TestCase):
     def test_merge_empty(self):
         d = {}
         iterutils.merge_into_dict(d, {})
@@ -209,7 +210,7 @@ class TestMergeIntoDict(unittest.TestCase):
         self.assertEqual(d, {'foo': shell_list([1, 2])})
 
 
-class TestMergeDicts(unittest.TestCase):
+class TestMergeDicts(TestCase):
     def test_merge_empty(self):
         self.assertEqual(iterutils.merge_dicts({}, {}), {})
         self.assertEqual(iterutils.merge_dicts({}, {'foo': 1}), {'foo': 1})
@@ -258,7 +259,7 @@ class TestMergeDicts(unittest.TestCase):
         self.assertEqual(d, {'foo': [1]})
 
 
-class TestSliceDict(unittest.TestCase):
+class TestSliceDict(TestCase):
     def test_present(self):
         d = {'foo': 1, 'bar': 2, 'baz': 3}
         self.assertEqual(iterutils.slice_dict(d, ['foo', 'bar']),

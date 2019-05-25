@@ -1,16 +1,12 @@
-import ntpath
-import os.path
-import posixpath
-import unittest
 from six.moves import cStringIO as StringIO
+
+from .. import *
 
 from bfg9000 import path
 from bfg9000 import safe_str
 from bfg9000.backends.ninja.syntax import *
 from bfg9000.file_types import File
 from bfg9000.platforms.host import platform_info
-from bfg9000.platforms.posix import PosixPath
-from bfg9000.platforms.windows import WindowsPath
 
 quote_char = '"' if platform_info().family == 'windows' else "'"
 
@@ -19,7 +15,7 @@ def quoted(s):
     return quote_char + s + quote_char
 
 
-class TestVariable(unittest.TestCase):
+class TestVariable(TestCase):
     def test_equality(self):
         self.assertTrue(Variable('foo') == Variable('foo'))
         self.assertFalse(Variable('foo') != Variable('foo'))
@@ -28,7 +24,7 @@ class TestVariable(unittest.TestCase):
         self.assertTrue(Variable('foo') != Variable('bar'))
 
 
-class TestWriteString(unittest.TestCase):
+class TestWriteString(TestCase):
     def test_output(self):
         out = Writer(StringIO())
         out.write('foo: $bar', Syntax.output)
@@ -50,7 +46,7 @@ class TestWriteString(unittest.TestCase):
         self.assertEqual(out.stream.getvalue(), 'foo: $$bar')
 
 
-class TestWriteLiteral(unittest.TestCase):
+class TestWriteLiteral(TestCase):
     def test_output(self):
         out = Writer(StringIO())
         out.write(safe_str.literal('foo: $bar'), Syntax.output)
@@ -72,7 +68,7 @@ class TestWriteLiteral(unittest.TestCase):
         self.assertEqual(out.stream.getvalue(), 'foo: $bar')
 
 
-class TestWriteShellLiteral(unittest.TestCase):
+class TestWriteShellLiteral(TestCase):
     def test_output(self):
         out = Writer(StringIO())
         out.write(safe_str.shell_literal('foo: $bar'), Syntax.output)
@@ -94,7 +90,7 @@ class TestWriteShellLiteral(unittest.TestCase):
         self.assertEqual(out.stream.getvalue(), 'foo: $$bar')
 
 
-class TestWriteJbos(unittest.TestCase):
+class TestWriteJbos(TestCase):
     def test_output(self):
         out = Writer(StringIO())
         s = safe_str.jbos('$foo', safe_str.literal('$bar'))
@@ -124,10 +120,7 @@ class TestWriteJbos(unittest.TestCase):
         self.assertEqual(out.stream.getvalue(), '$$foo$bar')
 
 
-class TestWritePath(unittest.TestCase):
-    Path = path.Path
-    ospath = os.path
-
+class TestWritePath(PathTestCase):
     def test_output(self):
         out = Writer(StringIO())
         out.write(self.Path('foo', path.Root.srcdir), Syntax.output)
@@ -153,17 +146,7 @@ class TestWritePath(unittest.TestCase):
                          self.ospath.join('${srcdir}', 'foo'))
 
 
-class TestWritePosixPath(TestWritePath):
-    Path = PosixPath
-    ospath = posixpath
-
-
-class TestWriteWindowsPath(TestWritePath):
-    Path = WindowsPath
-    ospath = ntpath
-
-
-class TestNinjaFile(unittest.TestCase):
+class TestNinjaFile(TestCase):
     def setUp(self):
         self.ninjafile = NinjaFile('build.bfg')
 
