@@ -3,7 +3,6 @@ dist: trusty
 
 python:
   - 2.7
-  - 3.4
   - 3.5
   - 3.6
 os:
@@ -21,6 +20,23 @@ env:
 matrix:
   include:
 
+    # Python 3.7 builds
+
+    # gcj is busted in xenial
+    - python: 3.7
+      os: linux
+      dist: xenial
+      env: CC=gcc CXX=g++ BFG_EXTRA_TESTS="mingw-cross"
+      before_install: &xenial-before-install
+        - set -e
+        - export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
+        - unset _JAVA_OPTIONS
+    - python: 3.7
+      os: linux
+      dist: xenial
+      env: CC=clang CXX=clang++ BFG_EXTRA_TESTS="mingw-cross"
+      before_install: *xenial-before-install
+
     # macOS builds
 
     - language: generic
@@ -30,13 +46,24 @@ matrix:
       env: >
         PYTHON=python2 PIP=pip2 CC=clang CXX=clang++ BFG_SKIPPED_TESTS=scala
         BFG_EXTRA_TESTS=
+      before_install: &macos-before-install
+        - set -e
+        - shell_session_update() { :; }
+        - brew update
+        - brew install gcc libogg ninja
+        - |
+          if [ "${PYTHON}" = "python3" ]; then
+            brew install ${PYTHON} || brew upgrade ${PYTHON}
+          fi
+        - cp test/scripts/sitecustomize.py .
     - language: generic
-      python: 3.6
+      python: 3.7
       os: osx
       osx_image: xcode8.3
       env: >
         PYTHON=python3 PIP=pip3 CC=clang CXX=clang++ BFG_SKIPPED_TESTS=scala
         BFG_EXTRA_TESTS=
+      before_install: *macos-before-install
 
     # bdist_wheel builds
 
@@ -59,8 +86,9 @@ matrix:
           ! pip show pysetenv
           deactivate
       after_success: false
-    - python: 3.6
+    - python: 3.7
       os: linux
+      dist: xenial
       env: JOB=bdist_wheel
       install: true
       script:
@@ -81,8 +109,9 @@ matrix:
 
     # Linting
 
-    - python: 3.6
+    - python: 3.7
       os: linux
+      dist: xenial
       env: JOB=lint
       script: ${PYTHON} setup.py lint
       after_success: false
@@ -102,26 +131,15 @@ addons:
       - libogg-dev
       - mingw-w64
       - ninja-build
-      - openjdk-7-jdk
+      - default-jdk
       - scala
 cache:
   - apt
 
 before_install:
   - set -e
-  - |
-    if [ "${TRAVIS_OS_NAME}" = "osx" ]; then
-      shell_session_update() { :; }
-      brew update
-      brew install gcc libogg ninja
-      if [ "${PYTHON}" = "python3" ]; then
-        brew install ${PYTHON} || brew upgrade ${PYTHON}
-      fi
-      cp test/scripts/sitecustomize.py .
-    else
-      export JAVA_HOME=/usr/lib/jvm/java-7-openjdk-amd64
-      unset _JAVA_OPTIONS
-    fi
+  - export JAVA_HOME=/usr/lib/jvm/java-7-openjdk-amd64
+  - unset _JAVA_OPTIONS
 install:
   - ${PIP} install codecov .[test]
 script:
