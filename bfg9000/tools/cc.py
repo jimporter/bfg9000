@@ -18,7 +18,7 @@ from ..languages import known_formats
 from ..packages import CommonPackage, Framework, PackageKind
 from ..path import BasePath, InstallRoot, Path, Root
 from ..platforms import parse_triplet
-from ..versioning import detect_version, SpecifierSet
+from ..versioning import detect_version, SpecifierSet, Version
 
 _optimize_flags = {
     opts.OptimizeValue.disable : '-O0',
@@ -452,20 +452,19 @@ class CcLinker(BuildCommand):
                 path = path.relpath(output.path.parent(), prefix='$ORIGIN')
             rpath = [path]
 
-            # GNU's BFD-based ld doesn't correctly respect $ORIGIN in a shared
-            # library's DT_RPATH/DT_RUNPATH field. This results in ld being
-            # unable to find other shared libraries needed by the directly-
-            # linked library. For more information, see:
-            # <https://sourceware.org/bugzilla/show_bug.cgi?id=16936>.
+            # Prior to binutils 2.28, GNU's BFD-based ld doesn't correctly
+            # respect $ORIGIN in a shared library's DT_RPATH/DT_RUNPATH field.
+            # This results in ld being unable to find other shared libraries
+            # needed by the directly-linked library. For more information, see:
+            # <https://sourceware.org/bugzilla/show_bug.cgi?id=20535>.
             try:
-                brand = self.builder.linker('raw').brand
+                ld = self.builder.linker('raw')
+                fix_rpath = ld.brand == 'bfd' and ld.version < Version('2.28')
             except KeyError:
-                # Assume the brand is bfd, since setting -rpath-link shouldn't
-                # hurt anything.
-                brand = 'bfd'
+                fix_rpath = False
 
             rpath_link = []
-            if output and brand == 'bfd':
+            if output and fix_rpath:
                 rpath_link = [i.path.parent() for i in
                               recursive_walk(runtime_lib, 'runtime_deps')]
 
