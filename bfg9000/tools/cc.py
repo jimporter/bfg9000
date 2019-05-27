@@ -18,7 +18,7 @@ from ..languages import known_formats
 from ..packages import CommonPackage, Framework, PackageKind
 from ..path import BasePath, InstallRoot, Path, Root
 from ..platforms import parse_triplet
-from ..versioning import detect_version, SpecifierSet, Version
+from ..versioning import detect_version, SpecifierSet
 
 _optimize_flags = {
     opts.OptimizeValue.disable : '-O0',
@@ -459,7 +459,8 @@ class CcLinker(BuildCommand):
             # <https://sourceware.org/bugzilla/show_bug.cgi?id=20535>.
             try:
                 ld = self.builder.linker('raw')
-                fix_rpath = ld.brand == 'bfd' and ld.version < Version('2.28')
+                fix_rpath = (ld.brand == 'bfd' and ld.version in
+                             SpecifierSet('<2.28'))
             except KeyError:
                 fix_rpath = False
 
