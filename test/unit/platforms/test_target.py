@@ -51,18 +51,6 @@ class TestTargetPlatform(TestCase):
         self.assertEqual(platform.transform_package('gl'),
                          Framework('OpenGL'))
 
-        # TODO: remove this after 0.4 is released.
-        with mock.patch('warnings.warn'):
-            platform = target.platform_info('darwin')
-            self.assertEqual(platform.name, 'macos')
-            self.assertEqual(platform.species, 'macos')
-            self.assertEqual(platform.genus, 'darwin')
-            self.assertEqual(platform.family, 'posix')
-            self.assertEqual(platform.transform_package('gl'),
-                             Framework('OpenGL'))
-
-            self.assertEqual(platform.name, 'darwin')
-
     def test_linux(self):
         with mock.patch('platform.machine', return_value='x86_64'):
             platform = target.platform_info('linux')
@@ -92,17 +80,6 @@ class TestTargetPlatform(TestCase):
         self.assertEqual(platform.family, 'windows')
         self.assertEqual(platform.triplet, 'x86_64-unknown-win32')
         self.assertEqual(platform.transform_package('gl'), 'opengl32')
-
-        # TODO: remove this after 0.4 is released.
-        with mock.patch('warnings.warn'):
-            platform = target.platform_info('windows')
-            self.assertEqual(platform.name, 'winnt')
-            self.assertEqual(platform.species, 'winnt')
-            self.assertEqual(platform.genus, 'winnt')
-            self.assertEqual(platform.family, 'windows')
-            self.assertEqual(platform.transform_package('gl'), 'opengl32')
-
-            self.assertEqual(platform.name, 'windows')
 
     def test_unknown(self):
         with mock.patch('platform.machine', return_value='x86_64'):

@@ -1,7 +1,6 @@
 import platform
 import re
 import subprocess
-import warnings
 from collections import namedtuple
 from pkg_resources import get_entry_info
 
@@ -43,49 +42,6 @@ def parse_triplet(s, default_vendor='unknown'):
     if bits[-1] in _triplet_abi:
         return _result(bits[0], bits[1:-1], bits[-1])
     return _result(bits[0], bits[1:], None)
-
-
-# TODO: remove this after 0.4 is released.
-class FancyString(str):
-    _mapping = {
-        'genus': {
-            'windows': 'winnt',
-        },
-        'species': {
-            'windows': 'winnt',
-            'darwin': 'macos',
-        },
-    }
-
-    def __eq__(self, rhs):
-        if rhs in self._mapping:
-            mapped = self._mapping[rhs]
-            warnings.warn('{!r} is deprecated; use {!r} instead'
-                          .format(rhs, mapped))
-            return str.__eq__(self, mapped)
-        return str.__eq__(self, rhs)
-
-    def __hash__(self):  # pragma: no cover
-        return str.__hash__(self)
-
-    @classmethod
-    def maybe_make(cls, value):
-        if value in cls._mapping.values():
-            return cls(value)
-        return value
-
-
-class FancyStringGenus(FancyString):
-    _mapping = {
-        'windows': 'winnt',
-    }
-
-
-class FancyStringSpecies(FancyString):
-    _mapping = {
-        'windows': 'winnt',
-        'darwin': 'macos',
-    }
 
 
 @memoize
@@ -132,33 +88,20 @@ def platform_name():
 
 
 def platform_tuple(name=None):
-    # TODO: remove these after 0.4 is released.
-    if name == 'windows':
-        warnings.warn("'windows' is deprecated; use 'winnt' instead")
-        name = 'winnt'
-    elif name == 'darwin':
-        warnings.warn("'darwin' is deprecated; use 'macos' instead")
-        name = 'macos'
-    elif name is None:
+    if name is None:
         name = platform_name()
     return _platform_genus.get(name, str(name)), name
 
 
 class Platform(object):
     def __init__(self, genus, species, arch):
-        self.genus = FancyStringGenus.maybe_make(genus)
-        self.species = FancyStringSpecies.maybe_make(species)
+        self.genus = genus
+        self.species = species
         self.arch = arch
 
     @property
     def name(self):
         return self.species
-
-    # TODO: remove this after 0.4 is released.
-    @property
-    def flavor(self):  # pragma: no cover
-        warnings.warn('`flavor` is deprecated; use `family` instead')
-        return self.family
 
     @property
     def _triplet_vendor(self):
