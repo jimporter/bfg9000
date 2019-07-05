@@ -1,6 +1,6 @@
 # Changes
 
-## v0.4.0 (in progress)
+## v0.4.0 (2018-07-05)
 
 ### New features
 - Compilers and linkers now support semantic options, abstracting away the
