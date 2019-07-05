@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../../img/favicon.ico">
+        <title>Environment Variables - bfg9000</title>
+        <link href="../../css/bootstrap-custom.min.css" rel="stylesheet">
+        <link href="../../css/font-awesome-4.5.0.css" rel="stylesheet">
+        <link href="../../css/base.css" rel="stylesheet">
+        <link rel="stylesheet" href="../../css/highlight.css">
+        <link href="../../css/extra.css" rel="stylesheet">
+        <link href="../../css/version-select.css" rel="stylesheet">
+        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+        <![endif]-->
+
+        <script src="../../js/jquery-1.10.2.min.js"></script>
+        <script src="../../js/bootstrap-3.0.3.min.js"></script>
+        <script src="../../js/highlight.pack.js"></script> 
+    </head>
+
+    <body>
+
+        <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+
+        <!-- Collapsed navigation -->
+        <div class="navbar-header">
+            <!-- Expander button -->
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="../..">bfg9000</a>
+        </div>
+
+        <!-- Expanded navigation -->
+        <div class="navbar-collapse collapse">
+                <!-- Main navigation -->
+                <ul class="nav navbar-nav">
+                    <li >
+                        <a href="../..">Home</a>
+                    </li>
+                    <li >
+                        <a href="../../getting-started/">Getting Started</a>
+                    </li>
+                    <li class="dropdown active">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">User Guide <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                            
+<li >
+    <a href="../features/">Features</a>
+</li>
+                            
+<li >
+    <a href="../building/">Building with bfg9000</a>
+</li>
+                            
+<li >
+    <a href="../writing/">Writing a Build File</a>
+</li>
+                            
+<li >
+    <a href="../reference/">Reference</a>
+</li>
+                            
+<li >
+    <a href="../command-line/">Command-Line Reference</a>
+</li>
+                            
+<li class="active">
+    <a href="./">Environment Variables</a>
+</li>
+                        </ul>
+                    </li>
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Developer Guide <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                            
+<li >
+    <a href="../../developer/backends/">Build Backends</a>
+</li>
+                            
+<li >
+    <a href="../../developer/tools/">Build Tools</a>
+</li>
+                            
+<li >
+    <a href="../../developer/builtins/">Builtins</a>
+</li>
+                            
+<li >
+    <a href="../../developer/contributing/">Contributing</a>
+</li>
+                        </ul>
+                    </li>
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">About <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                            
+<li >
+    <a href="../../about/changes/">Changes</a>
+</li>
+                            
+<li >
+    <a href="../../about/license/">License</a>
+</li>
+                        </ul>
+                    </li>
+                </ul>
+
+            <ul class="nav navbar-nav navbar-right">
+                <li>
+                    <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
+                        <i class="fa fa-search"></i> Search
+                    </a>
+                </li>
+                    <li >
+                        <a rel="next" href="../command-line/">
+                            <i class="fa fa-arrow-left"></i> Previous
+                        </a>
+                    </li>
+                    <li >
+                        <a rel="prev" href="../../developer/backends/">
+                            Next <i class="fa fa-arrow-right"></i>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://github.com/jimporter/bfg9000/"><i class="fa fa-github"></i> GitHub</a>
+                    </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+        <div class="container">
+                <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+        <li class="main active"><a href="#environment-variables">Environment Variables</a></li>
+            <li><a href="#compilation-variables">Compilation variables</a></li>
+            <li><a href="#linking-variables">Linking variables</a></li>
+            <li><a href="#execution-variables">Execution variables</a></li>
+            <li><a href="#packaging-variables">Packaging variables</a></li>
+            <li><a href="#command-variables">Command variables</a></li>
+            <li><a href="#system-variables">System variables</a></li>
+    </ul>
+</div></div>
+                <div class="col-md-9" role="main">
+
+<h1 id="environment-variables">Environment Variables<a class="headerlink" href="#environment-variables" title="Permanent link">§</a></h1>
+<p>bfg9000 reads from a number of environment variables. These are the primary way
+in which users can customize parts of a specific build, e.g. by changing the
+tools to use or adding compiler flags. Below is a full list of all the
+environment variables bfg9000 recognizes.</p>
+<h2 id="compilation-variables">Compilation variables<a class="headerlink" href="#compilation-variables" title="Permanent link">§</a></h2>
+<h3 id="generic">Generic<a class="headerlink" href="#generic" title="Permanent link">§</a></h3>
+<hr />
+<h4 id="cppflags"><em>CPPFLAGS</em><a class="headerlink" href="#cppflags" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <em>none</em></p>
+<p>"C preprocessor flags"; command line arguments to pass to the compiler when
+compiling any C-family source file (C, C++, Objective C/C++).</p>
+<h3 id="c">C<a class="headerlink" href="#c" title="Permanent link">§</a></h3>
+<hr />
+<h4 id="cc"><em>CC</em><a class="headerlink" href="#cc" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <code>cc</code> (POSIX), <code>cl</code> (Windows)</p>
+<p>The command to use when compiling C source files. Also the command to use with
+cc-style toolchains when linking object files whose source is in C.</p>
+<h4 id="cflags"><em>CFLAGS</em><a class="headerlink" href="#cflags" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <em>none</em></p>
+<p>Command line arguments to pass to the compiler when compiling any C source file.</p>
+<h3 id="c_1">C++<a class="headerlink" href="#c_1" title="Permanent link">§</a></h3>
+<hr />
+<h4 id="cxx"><em>CXX</em><a class="headerlink" href="#cxx" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <code>c++</code> (POSIX), <code>cl</code> (Windows)</p>
+<p>The command to use when compiling C++ source files. Also the command to use with
+cc-style toolchains when linking object files whose source is in C++.</p>
+<h4 id="cxxflags"><em>CXXFLAGS</em><a class="headerlink" href="#cxxflags" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <em>none</em></p>
+<p>Command line arguments to pass to the compiler when compiling any C++ source
+file.</p>
+<h3 id="fortran">Fortran<a class="headerlink" href="#fortran" title="Permanent link">§</a></h3>
+<hr />
+<h4 id="fc"><em>FC</em><a class="headerlink" href="#fc" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <code>gfortran</code></p>
+<p>The command to use when compiling Fortran source files. Also the command to use
+when linking object files whose source is in Fortran.</p>
+<h4 id="fflags"><em>FFLAGS</em><a class="headerlink" href="#fflags" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <em>none</em></p>
+<p>Command line arguments to pass to the compiler when compiling any Fortran source
+file.</p>
+<h3 id="java">Java<a class="headerlink" href="#java" title="Permanent link">§</a></h3>
+<hr />
+<h4 id="javac"><em>JAVAC</em><a class="headerlink" href="#javac" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <code>javac</code></p>
+<p>The command to use when compiling Java source files.</p>
+<h4 id="javaflags"><em>JAVAFLAGS</em><a class="headerlink" href="#javaflags" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <em>none</em></p>
+<p>Command line arguments to pass to the compiler when compiling any Java source
+file.</p>
+<h3 id="objective-c">Objective C<a class="headerlink" href="#objective-c" title="Permanent link">§</a></h3>
+<hr />
+<h4 id="objc"><em>OBJC</em><a class="headerlink" href="#objc" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <code>cc</code></p>
+<p>The command to use when compiling Objective C source files. Also the command to
+use with cc-style toolchains when linking object files whose source is in
+Objective C.</p>
+<h4 id="objcflags"><em>OBJCFLAGS</em><a class="headerlink" href="#objcflags" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <em>none</em></p>
+<p>Command line arguments to pass to the compiler when compiling any Objective C
+source file.</p>
+<h3 id="objective-c_1">Objective C++<a class="headerlink" href="#objective-c_1" title="Permanent link">§</a></h3>
+<hr />
+<h4 id="objcxx"><em>OBJCXX</em><a class="headerlink" href="#objcxx" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <code>c++</code></p>
+<p>The command to use when compiling Objective C++ source files. Also the command
+to use with cc-style toolchains when linking object files whose source is in
+Objective C++.</p>
+<h4 id="objcxxflags"><em>OBJCXXFLAGS</em><a class="headerlink" href="#objcxxflags" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <em>none</em></p>
+<p>Command line arguments to pass to the compiler when compiling any Objective C++
+source file.</p>
+<h3 id="scala">Scala<a class="headerlink" href="#scala" title="Permanent link">§</a></h3>
+<hr />
+<h4 id="scalac"><em>SCALAC</em><a class="headerlink" href="#scalac" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <code>scalac</code></p>
+<p>The command to use when compiling Scala source files.</p>
+<h4 id="scalaflags"><em>SCALAFLAGS</em><a class="headerlink" href="#scalaflags" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <em>none</em></p>
+<p>Command line arguments to pass to the compiler when compiling any Scala source
+file.</p>
+<h2 id="linking-variables">Linking variables<a class="headerlink" href="#linking-variables" title="Permanent link">§</a></h2>
+<h3 id="static-linking">Static linking<a class="headerlink" href="#static-linking" title="Permanent link">§</a></h3>
+<hr />
+<h4 id="ar"><em>AR</em><a class="headerlink" href="#ar" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <code>ar</code> (POSIX), <code>lib</code> (Windows)</p>
+<p>The command to use when creating (native) static libraries from object files
+(typically <code>ar</code> on POSIX and <code>lib</code> on Windows).</p>
+<h4 id="arflags"><em>ARFLAGS</em><a class="headerlink" href="#arflags" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <code>cru</code> (POSIX)</p>
+<p>The arguments to pass to the static library builder (specified in <code>AR</code>) for
+native libraries.</p>
+<h4 id="jar"><em>JAR</em><a class="headerlink" href="#jar" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <code>jar</code></p>
+<p>The command to use when creating <code>.jar</code> files for JVM-based binaries.</p>
+<h4 id="jarflags"><em>JARFLAGS</em><a class="headerlink" href="#jarflags" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <code>cfm</code></p>
+<p>The arugments to pass to the JAR builders when creating <code>.jar</code> files.</p>
+<h3 id="dynamic-linking">Dynamic linking<a class="headerlink" href="#dynamic-linking" title="Permanent link">§</a></h3>
+<hr />
+<h4 id="ld"><em>LD</em><a class="headerlink" href="#ld" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <em>none</em> (POSIX), <code>link</code> (Windows)</p>
+<p>The command to use when linking shared libraries; when using a cc-like builder,
+this will be processed to infer the appropriate <code>-fuse-ld</code> flag for the linker.</p>
+<h4 id="ldflags"><em>LDFLAGS</em><a class="headerlink" href="#ldflags" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <em>none</em></p>
+<p>Command line arguments to pass to the linker when linking an executable or
+shared library.</p>
+<h4 id="ldlibs"><em>LDLIBS</em><a class="headerlink" href="#ldlibs" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <em>none</em></p>
+<p>Additional libraries to link into an executable or shared library. This is
+mainly useful for cases where a system library (e.g. the C++ Standard Library
+implementation) requires another library to be explicitly linked with it.</p>
+<h2 id="execution-variables">Execution variables<a class="headerlink" href="#execution-variables" title="Permanent link">§</a></h2>
+<hr />
+<h4 id="javacmd"><em>JAVACMD</em><a class="headerlink" href="#javacmd" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <code>java</code></p>
+<p>The command to use when running Java <code>.class</code> files or <code>.jar</code>s. (Does not apply
+when building with GCJ.)</p>
+<h4 id="lua"><em>LUA</em><a class="headerlink" href="#lua" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <code>lua</code></p>
+<p>The command to use when running Lua scripts.</p>
+<h4 id="perl"><em>PERL</em><a class="headerlink" href="#perl" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <code>perl</code></p>
+<p>The command to use when running Perl scripts.</p>
+<h4 id="python"><em>PYTHON</em><a class="headerlink" href="#python" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <em>sys.executable</em></p>
+<p>The command to use when running Python scripts. By default, this is the
+interpreter used to run bfg9000.</p>
+<h4 id="ruby"><em>RUBY</em><a class="headerlink" href="#ruby" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <code>ruby</code></p>
+<p>The command to use when running Ruby scripts.</p>
+<h4 id="scalacmd"><em>SCALACMD</em><a class="headerlink" href="#scalacmd" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <code>scala</code></p>
+<p>The command to use when running Scala <code>.class</code> files or <code>.jar</code>s.</p>
+<h2 id="packaging-variables">Packaging variables<a class="headerlink" href="#packaging-variables" title="Permanent link">§</a></h2>
+<hr />
+<h4 id="boost_root"><em>BOOST_ROOT</em><a class="headerlink" href="#boost_root" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <em>none</em></p>
+<p>The root directory where Boost headers and libraries are stored (as
+<code>$BOOST_ROOT/include</code> and <code>$BOOST_ROOT/lib</code>, respectively).</p>
+<h4 id="boost_includedir"><em>BOOST_INCLUDEDIR</em><a class="headerlink" href="#boost_includedir" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <em>none</em></p>
+<p>The root directory where Boost headers are stored. This takes precedence over
+<a href="#boost_root"><em>BOOST_ROOT</em></a>.</p>
+<h4 id="boost_librarydir"><em>BOOST_LIBRARYDIR</em><a class="headerlink" href="#boost_librarydir" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <em>none</em></p>
+<p>The root directory where Boost libraries are stored. This takes precedence over
+<a href="#boost_root"><em>BOOST_ROOT</em></a>.</p>
+<h4 id="classpath"><em>CLASSPATH</em><a class="headerlink" href="#classpath" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <em>none</em></p>
+<p>A list of additional directories to search for Java class files. On POSIX
+systems, this is delimited by <code>:</code>; on Windows, by <code>;</code>.</p>
+<h4 id="cpath"><em>CPATH</em><a class="headerlink" href="#cpath" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <em>none</em></p>
+<p>A list of additional directories to search for headers. On POSIX systems, this
+is delimited by <code>:</code>; on Windows, by <code>;</code>.</p>
+<h4 id="include"><em>INCLUDE</em><a class="headerlink" href="#include" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <em>none</em></p>
+<p><em>MSVC-only</em>. A list of directories to search for headers, delimited by <code>;</code>.</p>
+<h4 id="lib"><em>LIB</em><a class="headerlink" href="#lib" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <em>none</em></p>
+<p><em>MSVC-only</em>. A list of directories to search for <a href="../reference/#package">system
+libraries</a>, delimited by <code>;</code>.</p>
+<h4 id="library_path"><em>LIBRARY_PATH</em><a class="headerlink" href="#library_path" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <em>none</em></p>
+<p>A list of additional directories to search for <a href="../reference/#package">system
+libraries</a>. On POSIX systems, this is delimited by
+<code>:</code>; on Windows, by <code>;</code>.</p>
+<h4 id="path"><em>PATH</em><a class="headerlink" href="#path" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <em>none</em></p>
+<p>A list of directories to search for <a href="../reference/#system_executable">system
+executables</a>. On POSIX systems, this is
+delimited by <code>:</code>; on Windows, by <code>;</code>.</p>
+<h4 id="pathext"><em>PATHEXT</em><a class="headerlink" href="#pathext" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <em>none</em></p>
+<p><em>Windows-only</em>. A list of valid extensions for executable files under Windows,
+separated by <code>;</code>.</p>
+<h4 id="pkg_config"><em>PKG_CONFIG</em><a class="headerlink" href="#pkg_config" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <code>pkg_config</code></p>
+<p>The command to use when fetching pkg-config package information.</p>
+<h2 id="command-variables">Command variables<a class="headerlink" href="#command-variables" title="Permanent link">§</a></h2>
+<hr />
+<h4 id="bfg9000"><em>BFG9000</em><a class="headerlink" href="#bfg9000" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <code>/path/to/bfg9000</code></p>
+<p>The command to use when executing bfg9000 (e.g. when regenerating the build
+scripts because the list of source files has changed). This should only be
+necessary if you run bfg9000 from a wrapper script.</p>
+<h4 id="depfixer"><em>DEPFIXER</em><a class="headerlink" href="#depfixer" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <code>/path/to/bfg9000-depfixer</code></p>
+<p>The command to use when fixing up depfiles generated by your compiler for the
+Make backend. In general, you shouldn't need to touch this.</p>
+<h4 id="doppel"><em>DOPPEL</em><a class="headerlink" href="#doppel" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <code>doppel</code></p>
+<p>The command to use when installing files and building source distributions. For
+more information about doppel, see its <a href="https://github.com/jimporter/doppel">documentation</a>.</p>
+<h4 id="install_name_tool"><em>INSTALL_NAME_TOOL</em><a class="headerlink" href="#install_name_tool" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <code>install_name_tool</code></p>
+<p><em>Darwin-only</em>. The command to use when modifying the paths of the shared
+libraries linked to during installation.</p>
+<h4 id="mkdir_p"><em>MKDIR_P</em><a class="headerlink" href="#mkdir_p" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <code>mkdir -p</code></p>
+<p>The command to use when making a directory tree. This is used both for
+installing whole directories of files and for creating build directories under
+the Make backend.</p>
+<h4 id="patchelf"><em>PATCHELF</em><a class="headerlink" href="#patchelf" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <code>patchelf</code></p>
+<p><em>Linux-only</em>. The command to use when patching an ELF file's rpath for
+installation.</p>
+<h4 id="setenv"><em>SETENV</em><a class="headerlink" href="#setenv" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <code>/path/to/bfg9000-setenv</code></p>
+<p><em>Windows-only</em>. The command to use when setting temporary environment variables,
+similar to the POSIX <code>env</code> command. This is used when setting environment
+variables for tests.</p>
+<h2 id="system-variables">System variables<a class="headerlink" href="#system-variables" title="Permanent link">§</a></h2>
+<hr />
+<h4 id="destdir"><em>DESTDIR</em><a class="headerlink" href="#destdir" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <em>none</em></p>
+<p><em>POSIX-only</em>. A directory to prepend to the install location for the project,
+used in performing staged installs. For more information, see the <a href="https://www.gnu.org/prep/standards/html_node/DESTDIR.html">GNU coding
+standards</a>.</p>
+<h4 id="platform"><em>PLATFORM</em><a class="headerlink" href="#platform" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <code>Win32</code></p>
+<p><em>Windows-only</em>. The platform type to use when generating MSBuild files.</p>
+<h4 id="visualstudioversion"><em>VISUALSTUDIOVERSION</em><a class="headerlink" href="#visualstudioversion" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <code>14.0</code></p>
+<p><em>Windows-only</em>. The version of Visual Studio to target when generating MSBuild
+files.</p></div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+                <p>Copyright &copy; 2015-2019 Jim Porter</p>
+            <p>Documentation built with <a href="http://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script>var base_url = '../..';</script>
+        <script src="../../js/base.js"></script>
+        <script src="../../js/version-select.js"></script>
+        <script src="../../search/main.js"></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="exampleModalLabel">Search</h4>
+            </div>
+            <div class="modal-body">
+                <p>
+                    From here you can search these documents. Enter
+                    your search terms below.
+                </p>
+                <form role="form">
+                    <div class="form-group">
+                        <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="Keyboard Shortcuts Modal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="exampleModalLabel">Keyboard Shortcuts</h4>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td><kbd>&larr;</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td><kbd>&rarr;</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+
+    </body>
+</html>
