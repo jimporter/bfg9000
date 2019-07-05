@@ -10,6 +10,6 @@
 # Once these options are defined, you can fetch their results from the built-in
 # argv global in your `build.bfg` file:
 
-global_options(['-DNAME="{}"'.format(argv.name)], lang='c++')
+global_options([opts.define('NAME', '"' + argv.name + '"')], lang='c++')
 
 executable('simple', files=['simple.cpp'])

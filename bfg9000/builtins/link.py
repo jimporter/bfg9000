@@ -16,7 +16,7 @@ from ..iterutils import (first, flatten, iterate, listify, merge_dicts,
                          merge_into_dict, slice_dict, uniques)
 from ..shell import posix as pshell
 
-build_input('link_flags')(lambda build_inputs, env: {
+build_input('link_options')(lambda build_inputs, env: {
     'dynamic': defaultdict(list), 'static': defaultdict(list)
 })
 
@@ -359,18 +359,20 @@ def whole_archive(builtins, name, *args, **kwargs):
 @builtin.function('build_inputs')
 def global_link_options(build, options, family='native', mode='dynamic'):
     for i in iterate(family):
-        build['link_flags'][mode][i].extend(pshell.listify(options))
+        build['link_options'][mode][i].extend(pshell.listify(options))
 
 
 def _get_flags(backend, rule, build_inputs, buildfile):
     variables = {}
     cmd_kwargs = {}
 
-    if hasattr(rule.linker, 'flags_var'):
+    linker = rule.linker
+    if hasattr(linker, 'flags_var'):
         global_ldflags, ldflags = backend.flags_vars(
-            rule.linker.flags_var,
-            (rule.linker.global_flags +
-             build_inputs['link_flags'][rule.base_mode][rule.linker.family]),
+            linker.flags_var,
+            (linker.global_flags +
+             linker.flags(build_inputs['link_options'][rule.base_mode]
+                          [linker.family])),
             buildfile
         )
         cmd_kwargs['flags'] = ldflags
@@ -478,13 +480,13 @@ try:
     from .compile import CompileHeader
     from ..backends.msbuild import writer as msbuild
 
-    def _parse_compiler_cflags(compilers, global_cflags):
+    def _parse_compiler_cflags(compilers, global_options):
         per_compiler_cflags = {}
         for c in compilers:
             key = c.command_var
             if key not in per_compiler_cflags:
                 per_compiler_cflags[key] = c.parse_flags(msbuild.textify_each(
-                    c.global_flags + global_cflags[c.lang]
+                    c.global_flags + c.flags(global_options[c.lang])
                 ))
         return per_compiler_cflags
 
@@ -514,7 +516,7 @@ try:
         compilers = uniques(i.compiler for i in obj_creators)
 
         per_compiler_options = _parse_compiler_cflags(
-            compilers, build_inputs['compile_flags']
+            compilers, build_inputs['compile_options']
         )
         if len(per_compiler_options) == 1:
             common_compile_options = per_compiler_options.popitem()[1]
@@ -524,7 +526,8 @@ try:
         # Parse linking flags.
         ldflags = [
             rule.linker.global_flags +
-            build_inputs['link_flags'][rule.base_mode][rule.linker.family] +
+            rule.linker.flags(build_inputs['link_options'][rule.base_mode]
+                              [rule.linker.family]) +
             rule.flags
         ]
         if hasattr(rule.linker, 'libs_var'):

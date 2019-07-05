@@ -12,7 +12,7 @@ from ..iterutils import first, iterate, uniques
 from ..path import Path, Root
 from ..shell import posix as pshell
 
-build_input('compile_flags')(lambda build_inputs, env: defaultdict(list))
+build_input('compile_options')(lambda build_inputs, env: defaultdict(list))
 
 
 class ObjectFiles(list):
@@ -176,18 +176,21 @@ def precompiled_header(builtins, build, env, name=None, file=None, **kwargs):
 @builtin.function('build_inputs')
 def global_options(build, options, lang):
     for i in iterate(lang):
-        build['compile_flags'][i].extend(pshell.listify(options))
+        build['compile_options'][i].extend(pshell.listify(
+            options, type=opts.option_list
+        ))
 
 
 def _get_flags(backend, rule, build_inputs, buildfile):
     variables = {}
     cmd_kwargs = {}
 
-    if hasattr(rule.compiler, 'flags_var'):
+    compiler = rule.compiler
+    if hasattr(compiler, 'flags_var'):
         global_cflags, cflags = backend.flags_vars(
-            rule.compiler.flags_var,
-            ( rule.compiler.global_flags +
-              build_inputs['compile_flags'][rule.compiler.lang] ),
+            compiler.flags_var,
+            ( compiler.global_flags +
+              compiler.flags(build_inputs['compile_options'][compiler.lang]) ),
             buildfile
         )
         cmd_kwargs['flags'] = cflags
