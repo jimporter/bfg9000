@@ -1,12 +1,13 @@
 # Changes
 
-## v0.5.0 (in progress)
+## v0.4.1 (2019-07-05)
 
-No changes yet!
+### Bug fixes
+- Fix using semantic options in `global_options`
 
 ---
 
-## v0.4.0 (2018-07-05)
+## v0.4.0 (2019-07-05)
 
 ### New features
 - Compilers and linkers now support semantic options, abstracting away the

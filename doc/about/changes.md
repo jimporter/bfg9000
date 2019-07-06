@@ -1,10 +1,11 @@
 # Changes
 
-## v0.5.0
-in progress
+## v0.4.1
+2019-07-05
 {: .subtitle}
 
-No changes yet!
+### Bug fixes
+- Fix using semantic options in `global_options`
 
 ---
 
