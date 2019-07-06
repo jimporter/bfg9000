@@ -1,5 +1,11 @@
 # Changes
 
+## v0.5.0 (in progress)
+
+No changes yet!
+
+---
+
 ## v0.4.1 (2019-07-05)
 
 ### Bug fixes
