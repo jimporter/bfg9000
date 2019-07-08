@@ -19,7 +19,7 @@ def make_regenerate_rule(build_inputs, buildfile, env):
     make.multitarget_rule(
         buildfile,
         targets=[Path('Makefile')] + build_inputs['regenerate'].outputs,
-        deps=[build_inputs.bfgpath] + listify(env.toolchain.path),
+        deps=build_inputs.bootstrap_paths + listify(env.toolchain.path),
         recipe=[bfg9000(Path('.'))]
     )
 
@@ -37,5 +37,5 @@ def ninja_regenerate_rule(build_inputs, buildfile, env):
     buildfile.build(
         output=[Path('build.ninja')] + build_inputs['regenerate'].outputs,
         rule='regenerate',
-        implicit=[build_inputs.bfgpath] + listify(env.toolchain.path)
+        implicit=build_inputs.bootstrap_paths + listify(env.toolchain.path)
     )

@@ -40,12 +40,17 @@ class Edge(object):
 
 
 class BuildInputs(object):
-    def __init__(self, env, bfgpath):
-        self.bfgpath = bfgpath
-        self._sources = OrderedDict([ (bfgpath, File(bfgpath)) ])
+    def __init__(self, env, bfgpath, extra_bootstrap=[]):
+        self._sources = OrderedDict()
+        self.bootstrap_paths = []
         self._edges = []
         self._extra_targets = []
         self._extra_inputs = {}
+
+        self.bfgpath = bfgpath
+        for i in chain([bfgpath], extra_bootstrap):
+            self.bootstrap_paths.append(i)
+            self.add_source(File(i))
 
         for name, fn in iteritems(_build_inputs):
             self._extra_inputs[name] = fn(self, env)

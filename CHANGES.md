@@ -2,7 +2,8 @@
 
 ## v0.5.0 (in progress)
 
-No changes yet!
+### Bug fixes
+- Include `options.bfg` in dist tarballs
 
 ---
 

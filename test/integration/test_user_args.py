@@ -1,3 +1,5 @@
+import tarfile
+
 from . import *
 
 
@@ -35,3 +37,16 @@ class TestUserArgs(IntegrationTest):
         assertRegex(self, output, r'(?m)^project-defined arguments:$')
         assertRegex(self, output,
                     r'(?m)^\s+--name NAME\s+set the name to greet$')
+
+    @skip_if_backend('msbuild')
+    def test_dist(self):
+        dist = output_file('10_custom_args.tar.gz')
+        self.configure()
+        self.build('dist')
+        self.assertExists(dist)
+        with tarfile.open(self.target_path(dist)) as t:
+            self.assertEqual(set(t.getnames()), {
+                '10_custom_args/build.bfg',
+                '10_custom_args/options.bfg',
+                '10_custom_args/simple.cpp',
+            })

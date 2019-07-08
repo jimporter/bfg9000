@@ -104,9 +104,9 @@ class ConfigureHelp(argparse.Action):
 
         if getattr(namespace, 'srcdir', None):
             env, backend = environment_from_args(namespace)
-            build.print_user_help(env, parser)
-        else:
-            parser.print_help()
+            parser = build.fill_user_help(env, parser)
+
+        parser.print_help()
         parser.exit()
 
 
@@ -186,8 +186,7 @@ def configure(parser, subparser, args, extra):
             build.load_toolchain(env, args.toolchain)
         env.save(args.builddir.string())
 
-        argv = build.parse_user_args(env)
-        build_inputs = build.execute_script(env, argv)
+        build_inputs = build.configure_build(env)
         backend.write(env, build_inputs)
     except Exception as e:
         logger.exception(e)
@@ -209,8 +208,7 @@ def refresh(parser, subparser, args, extra):
         env.save(args.builddir.string())
 
         backend = list_backends()[env.backend]
-        argv = build.parse_user_args(env)
-        build_inputs = build.execute_script(env, argv)
+        build_inputs = build.configure_build(env)
         backend.write(env, build_inputs)
     except Exception as e:
         return handle_reload_exception(e, suggest_rerun=True)

@@ -32,7 +32,6 @@ def _execute_file(f, filename, builtin_dict):
 def load_toolchain(env, filename, reload=False):
     builtin_init()
     tools_init()
-
     if reload:
         env.init_variables()
 
@@ -44,14 +43,12 @@ def load_toolchain(env, filename, reload=False):
         env.toolchain.path = filename
 
 
-def _fill_parser(env, parent=None, filename=optsfile, usage='parse'):
-    builtin_init()
-
-    optspath = Path(filename, Root.srcdir)
-    prog = parent.prog if parent else filename
-
+def _execute_options(env, optspath, parent=None, usage='parse'):
+    prog = parent.prog if parent else optspath.basename()
     parser = ArgumentParser(prog=prog, parents=listify(parent),
                             add_help=False)
+    executed = False
+
     try:
         with open(optspath.string(env.base_dirs), 'r') as f, \
              pushd(env.srcdir.string()):  # noqa
@@ -60,35 +57,41 @@ def _fill_parser(env, parent=None, filename=optsfile, usage='parse'):
             group.usage = usage
 
             builtin_dict = builtin.options.bind(env=env, parser=group)
-            _execute_file(f, filename, builtin_dict)
+            _execute_file(f, optspath.basename(), builtin_dict)
             builtin.options.run_post(builtin_dict, env=env, parser=group)
+        executed = True
     except IOError as e:
         if e.errno != errno.ENOENT:
             raise
 
-    return parser
+    return parser, executed
 
 
-def print_user_help(env, parent, filename=optsfile, out=None):
-    parser = _fill_parser(env, parent, filename, usage='help')
-    parser.print_help(out)
-
-
-def parse_user_args(env, filename=optsfile):
-    parser = _fill_parser(env, None, filename)
-    return parser.parse_args(env.extra_args)
-
-
-def execute_script(env, argv, filename=bfgfile):
-    builtin_init()
-
-    bfgpath = Path(filename, Root.srcdir)
-    build = BuildInputs(env, bfgpath)
+def _execute_configure(env, argv, bfgpath, extra_bootstrap=[]):
+    build = BuildInputs(env, bfgpath, extra_bootstrap)
     builtin_dict = builtin.build.bind(build_inputs=build, argv=argv, env=env)
 
     with open(bfgpath.string(env.base_dirs), 'r') as f, \
          pushd(env.srcdir.string()):  # noqa
-        _execute_file(f, filename, builtin_dict)
+        _execute_file(f, bfgpath.basename(), builtin_dict)
         builtin.build.run_post(builtin_dict, build_inputs=build, argv=argv,
                                env=env)
     return build
+
+
+def fill_user_help(env, parent, filename=optsfile):
+    builtin_init()
+    optspath = Path(filename, Root.srcdir)
+    return _execute_options(env, optspath, parent, usage='help')[0]
+
+
+def configure_build(env, bfgfile=bfgfile, optsfile=optsfile):
+    builtin_init()
+    bfgpath = Path(bfgfile, Root.srcdir)
+    optspath = Path(optsfile, Root.srcdir)
+
+    parser, executed = _execute_options(env, optspath)
+    argv = parser.parse_args(env.extra_args)
+
+    extra_bootstrap = [optspath] if executed else []
+    return _execute_configure(env, argv, bfgpath, extra_bootstrap)

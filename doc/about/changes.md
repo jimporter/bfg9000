@@ -4,7 +4,8 @@
 in progress
 {: .subtitle}
 
-No changes yet!
+### Bug fixes
+- Include `options.bfg` in dist tarballs
 
 ---
 
