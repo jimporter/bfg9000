@@ -32,10 +32,15 @@ _comment_tmpl = """
 
 
 class Writer(object):
-    # Don't escape ":" if we're using Windows paths.
+    # For targets and deps, we want to backslash-escape glob characters,
+    # whitespace, '#' (comments), and '%' (patterns), plus '~' if it's at the
+    # *beginning* of a path. On non-Windows systems, also backslash-escape ':'
+    # (which separates targets and deps). Note: '$' is also escaped, but done
+    # separately, as it's escaped with a second '$'.
     __extra_escapes = '' if platform_info().family == 'windows' else ':'
-    __target_ex = re.compile(r'(\\*)([#?*\[\]~\s%{}])'.format(__extra_escapes))
-    __dep_ex = re.compile(r'(\\*)([#?*\[\]~\s|%{}])'.format(__extra_escapes))
+    __escape_chars = r'?*\[\]\s#%' + __extra_escapes
+    __target_ex = re.compile(r'(\\*)(^~|[' + __escape_chars + '])')
+    __dep_ex = re.compile(r'(\\*)(^~|[|' + __escape_chars + '])')
 
     def __init__(self, stream):
         self.stream = stream

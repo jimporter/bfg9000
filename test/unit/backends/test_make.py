@@ -40,26 +40,66 @@ class TestWriteString(TestCase):
         self.assertEqual(out.stream.getvalue(),
                          'foo' + esc_colon + '\\ $$bar|baz,quux')
 
+        out = Writer(StringIO())
+        out.write('~foo', Syntax.target)
+        self.assertEqual(out.stream.getvalue(), '\\~foo')
+
+        out = Writer(StringIO())
+        out.write('foo~bar ~ baz', Syntax.target)
+        self.assertEqual(out.stream.getvalue(), 'foo~bar\\ ~\\ baz')
+
     def test_dependency(self):
         out = Writer(StringIO())
         out.write('foo: $bar|baz,quux', Syntax.dependency)
         self.assertEqual(out.stream.getvalue(),
                          'foo' + esc_colon + '\\ $$bar\\|baz,quux')
 
+        out = Writer(StringIO())
+        out.write('~foo', Syntax.dependency)
+        self.assertEqual(out.stream.getvalue(), '\\~foo')
+
+        out = Writer(StringIO())
+        out.write('foo~bar ~ baz', Syntax.dependency)
+        self.assertEqual(out.stream.getvalue(), 'foo~bar\\ ~\\ baz')
+
     def test_function(self):
         out = Writer(StringIO())
         out.write('foo: $bar|baz,quux', Syntax.function)
         self.assertEqual(out.stream.getvalue(), quoted('foo: $$bar|baz$,quux'))
+
+        out = Writer(StringIO())
+        out.write('~foo', Syntax.function)
+        self.assertEqual(out.stream.getvalue(), quoted('~foo'))
+
+        out = Writer(StringIO())
+        out.write('foo~bar ~ baz', Syntax.function)
+        self.assertEqual(out.stream.getvalue(), quoted('foo~bar ~ baz'))
 
     def test_shell(self):
         out = Writer(StringIO())
         out.write('foo: $bar|baz,quux', Syntax.shell)
         self.assertEqual(out.stream.getvalue(), quoted('foo: $$bar|baz,quux'))
 
+        out = Writer(StringIO())
+        out.write('~foo', Syntax.shell)
+        self.assertEqual(out.stream.getvalue(), quoted('~foo'))
+
+        out = Writer(StringIO())
+        out.write('foo~bar ~ baz', Syntax.shell)
+        self.assertEqual(out.stream.getvalue(), quoted('foo~bar ~ baz'))
+
     def test_clean(self):
         out = Writer(StringIO())
         out.write('foo: $bar|baz,quux', Syntax.clean)
         self.assertEqual(out.stream.getvalue(), 'foo: $$bar|baz,quux')
+
+        out = Writer(StringIO())
+        out.write('~foo', Syntax.clean)
+        self.assertEqual(out.stream.getvalue(), '~foo')
+
+        out = Writer(StringIO())
+        out.write('foo~bar ~ baz', Syntax.clean)
+        self.assertEqual(out.stream.getvalue(), 'foo~bar ~ baz')
 
 
 class TestWriteLiteral(TestCase):

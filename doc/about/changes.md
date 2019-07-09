@@ -6,6 +6,7 @@ in progress
 
 ### Bug fixes
 - Include `options.bfg` in dist tarballs
+- Fix escaping of `~` in Makefiles
 
 ---
 
