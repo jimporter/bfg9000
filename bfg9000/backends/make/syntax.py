@@ -229,8 +229,9 @@ if platform_info().destdir:
 class Makefile(object):
     Section = Section
 
-    def __init__(self, bfgfile):
+    def __init__(self, bfgfile, gnu=False):
         self._bfgfile = bfgfile
+        self._gnu = gnu
 
         self._var_table = set()
         self._global_variables = {i: [] for i in Section}
@@ -368,8 +369,9 @@ class Makefile(object):
         out = Writer(out)
         out.write_literal(_comment_tmpl.format(self._bfgfile) + '\n\n')
 
-        # Don't let make use built-in suffix rules.
-        out.write_literal('.SUFFIXES:\n')
+        # Don't let make use built-in rules/variables.
+        out.write_literal('MAKEFLAGS += --no-builtin-variables\n' if self._gnu
+                          else '.SUFFIXES:\n')
 
         # Necessary for escaping commas in function calls.
         self._write_variable(out, Variable(','), ',')
