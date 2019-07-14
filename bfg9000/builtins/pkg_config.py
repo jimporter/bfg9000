@@ -312,11 +312,11 @@ class PkgConfigInfo(object):
 
         # Add the options from each of the system packages.
         for pkg in extra:
-            compile_options.extend(pkg.compile_options(compiler, None))
-            link_options.extend(pkg.link_options(linker, None))
+            compile_options.extend(pkg.compile_options(compiler))
+            link_options.extend(pkg.link_options(linker))
         for pkg in chain(extra_private, auto_extra):
-            compile_options.extend(pkg.compile_options(compiler, None))
-            link_options_private.extend(pkg.link_options(linker, None))
+            compile_options.extend(pkg.compile_options(compiler))
+            link_options_private.extend(pkg.link_options(linker))
 
         return {
             'desc_name': desc_name,

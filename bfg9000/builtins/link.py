@@ -159,7 +159,7 @@ class DynamicLink(Link):
         linkers = (env.builder(i).linker(self.mode) for i in self.langs)
         self._internal_options = opts.option_list(
             opts.module_def(self.module_defs) if self.module_defs else None,
-            (i.link_options(self.linker, output) for i in self.packages)
+            (i.link_options(self.linker) for i in self.packages)
         )
 
         if self.linker.needs_libs:

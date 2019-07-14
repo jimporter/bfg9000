@@ -73,7 +73,7 @@ class Compile(Edge):
         if self.compiler.needs_libs:
             lib_options = (opts.lib(i) for i in self.libs)
         self._internal_options = opts.option_list(
-            (i.compile_options(self.compiler, output) for i in self.packages),
+            (i.compile_options(self.compiler) for i in self.packages),
             (opts.include_dir(i) for i in self.includes),
             opts.pch(self.pch) if self.pch else None,
             lib_options, extra_options

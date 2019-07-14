@@ -5,7 +5,6 @@ from . import tool
 from .common import SimpleCommand
 from .. import options as opts, shell
 from ..exceptions import PackageResolutionError, PackageVersionError
-from ..iterutils import first
 from ..objutils import memoize
 from ..packages import Package, PackageKind
 from ..path import Path, Root
@@ -56,11 +55,11 @@ class PkgConfigPackage(Package):
         return shell.split(self._pkg_config.run(*args, **kwargs).strip(),
                            type=opts.option_list)
 
-    def compile_options(self, compiler, output):
+    def compile_options(self, compiler):
         return self._call(self.name, 'cflags', self.static,
                           compiler.flavor == 'msvc')
 
-    def link_options(self, linker, output):
+    def link_options(self, linker):
         flags = self._call(self.name, 'ldflags', self.static,
                            linker.flavor == 'msvc')
 
@@ -70,7 +69,7 @@ class PkgConfigPackage(Package):
                           linker.flavor == 'msvc')
         libs = opts.option_list(opts.lib_literal(i) for i in libs)
 
-        if first(output).format != 'elf' or self.static:
+        if linker.builder.object_format != 'elf' or self.static:
             return flags + libs
 
         # pkg-config packages don't generally include rpath information, so we
