@@ -593,7 +593,7 @@ class CcLinker(BuildCommand):
             raise
 
     def flags(self, options, output=None, mode='normal'):
-        raw_link = mode != 'pkg-config'
+        pkgconf_mode = mode == 'pkg-config'
         flags, rpaths, rpath_links, lib_dirs = [], [], [], []
         rpaths.extend(iterate(self._darwin_rpath(options, output)))
 
@@ -601,7 +601,7 @@ class CcLinker(BuildCommand):
             if isinstance(i, opts.lib_dir):
                 lib_dirs.append(i.directory.path)
             elif isinstance(i, opts.lib):
-                lib_dirs.extend(self._lib_dir(i.library, raw_link))
+                lib_dirs.extend(self._lib_dir(i.library, not pkgconf_mode))
                 rp, rplink = self._local_rpath(i.library, output)
                 rpaths.extend(rp)
                 rpath_links.extend(rplink)
@@ -633,18 +633,18 @@ class CcLinker(BuildCommand):
                 raise TypeError('unknown option type {!r}'.format(type(i)))
 
         flags.extend('-L' + i for i in uniques(lib_dirs))
-        if rpaths:
+        if not pkgconf_mode and rpaths:
             flags.append('-Wl,-rpath,' + safe_str.join(rpaths, ':'))
-        if rpath_links:
+        if not pkgconf_mode and rpath_links:
             flags.append('-Wl,-rpath-link,' + safe_str.join(rpath_links, ':'))
         return flags
 
     def lib_flags(self, options, mode='normal'):
-        raw_link = mode != 'pkg-config'
+        pkgconf_mode = mode == 'pkg-config'
         flags = []
         for i in options:
             if isinstance(i, opts.lib):
-                flags.extend(self._link_lib(i.library, raw_link))
+                flags.extend(self._link_lib(i.library, not pkgconf_mode))
             elif isinstance(i, opts.lib_literal):
                 flags.append(i.value)
         return flags
