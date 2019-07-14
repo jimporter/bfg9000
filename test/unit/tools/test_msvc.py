@@ -18,6 +18,10 @@ def mock_which(*args, **kwargs):
 
 
 class TestMsvcBuilder(CrossPlatformTestCase):
+    def __init__(self, *args, **kwargs):
+        CrossPlatformTestCase.__init__(self, clear_variables=True, *args,
+                                       **kwargs)
+
     def test_properties(self):
         with mock.patch('bfg9000.shell.which', mock_which):
             cc = MsvcBuilder(self.env, known_langs['c++'], ['cl'], 'version')
@@ -90,6 +94,10 @@ class TestMsvcBuilder(CrossPlatformTestCase):
 
 
 class TestMsvcCompiler(CrossPlatformTestCase):
+    def __init__(self, *args, **kwargs):
+        CrossPlatformTestCase.__init__(self, clear_variables=True, *args,
+                                       **kwargs)
+
     def setUp(self):
         with mock.patch('bfg9000.shell.which', mock_which):
             self.compiler = MsvcBuilder(self.env, known_langs['c++'], ['cl'],
@@ -192,6 +200,10 @@ class TestMsvcCompiler(CrossPlatformTestCase):
 
 
 class TestMsvcLinker(CrossPlatformTestCase):
+    def __init__(self, *args, **kwargs):
+        CrossPlatformTestCase.__init__(self, clear_variables=True, *args,
+                                       **kwargs)
+
     def setUp(self):
         version = ('Microsoft (R) C/C++ Optimizing Compiler Version ' +
                    '19.12.25831 for x86')
@@ -319,6 +331,10 @@ class TestMsvcLinker(CrossPlatformTestCase):
 
 
 class TestMsvcStaticLinker(CrossPlatformTestCase):
+    def __init__(self, *args, **kwargs):
+        CrossPlatformTestCase.__init__(self, clear_variables=True, *args,
+                                       **kwargs)
+
     def setUp(self):
         with mock.patch('bfg9000.shell.which', mock_which):
             self.linker = MsvcBuilder(self.env, known_langs['c++'], ['cl'],

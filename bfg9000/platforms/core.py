@@ -112,6 +112,9 @@ class Platform(object):
         return '{}-{}-{}'.format(self.arch, self._triplet_vendor,
                                  self._triplet_sys_abi)
 
+    def __repr__(self):
+        return '<{}({})>'.format(type(self).__name__, self.triplet)
+
     def to_json(self):
         return {
             'genus': self.genus,

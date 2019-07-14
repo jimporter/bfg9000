@@ -2,7 +2,7 @@ import mock
 
 from .. import *
 
-from bfg9000 import options as opts
+from bfg9000 import options as opts, platforms
 from bfg9000.file_types import *
 from bfg9000.languages import Languages
 from bfg9000.packages import Framework
@@ -34,6 +34,10 @@ def mock_execute(args, **kwargs):
 
 
 class TestCcBuilder(CrossPlatformTestCase):
+    def __init__(self, *args, **kwargs):
+        CrossPlatformTestCase.__init__(self, clear_variables=True, *args,
+                                       **kwargs)
+
     def test_properties(self):
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
@@ -88,6 +92,40 @@ class TestCcBuilder(CrossPlatformTestCase):
         self.assertEqual(cc.linker('executable').version, Version('5.4.0'))
         self.assertEqual(cc.linker('shared_library').version, Version('5.4.0'))
 
+    def test_cross_gcc(self):
+        def mock_cross_exec(args, **kwargs):
+            if args[-1] == '-dumpmachine':
+                return self.env.host_platform.triplet
+            return mock_execute(args, **kwargs)
+
+        subtests = (
+            ('x86_64', 'x86_64', []),
+            ('x86_64', 'i686', ['-m32']),
+            ('x86_64', 'i386', ['-m32']),
+            ('i686', 'x86_64', ['-m64']),
+            ('i686', 'i686', []),
+            ('i686', 'i386', []),
+            ('i386', 'x86_64', ['-m64']),
+            ('i386', 'i686', []),
+            ('i386', 'i386', []),
+            ('x86_64', 'goofy', []),
+        )
+        for host, target, flags in subtests:
+            self.env.host_platform = platforms.host.platform_info(
+                self.env.host_platform.name, host
+            )
+            self.env.target_platform = platforms.target.platform_info(
+                'linux', target
+            )
+
+            version = ('g++ (Ubuntu 5.4.0-6ubuntu1~16.04.6) 5.4.0 20160609\n' +
+                       'Copyright (C) 2015 Free Software Foundation, Inc.')
+
+            with mock.patch('bfg9000.shell.which', mock_which), \
+                 mock.patch('bfg9000.shell.execute', mock_cross_exec):  # noqa
+                cc = CcBuilder(self.env, known_langs['c++'], ['g++'], version)
+            self.assertEqual(cc.compiler.global_flags, flags)
+
     def test_clang(self):
         version = 'clang version 3.8.0-2ubuntu4 (tags/RELEASE_380/final)'
 
@@ -106,6 +144,19 @@ class TestCcBuilder(CrossPlatformTestCase):
         self.assertEqual(cc.pch_compiler.version, Version('3.8.0'))
         self.assertEqual(cc.linker('executable').version, Version('3.8.0'))
         self.assertEqual(cc.linker('shared_library').version, Version('3.8.0'))
+
+    def test_cross_clang(self):
+        self.env.target_platform = platforms.target.platform_info(
+            'linux', self.env.target_platform.arch
+        )
+
+        version = 'clang version 3.8.0-2ubuntu4 (tags/RELEASE_380/final)'
+        with mock.patch('bfg9000.shell.which', mock_which), \
+             mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
+            cc = CcBuilder(self.env, known_langs['c++'], ['g++'], version)
+        self.assertEqual(cc.compiler.global_flags,
+                         ['-target', self.env.target_platform.triplet]
+                         if self.env.host_platform.name != 'linux' else [])
 
     def test_unknown_brand(self):
         version = 'unknown'
@@ -139,6 +190,10 @@ class TestCcBuilder(CrossPlatformTestCase):
 
 
 class TestCcCompiler(CrossPlatformTestCase):
+    def __init__(self, *args, **kwargs):
+        CrossPlatformTestCase.__init__(self, clear_variables=True, *args,
+                                       **kwargs)
+
     def setUp(self):
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
@@ -251,6 +306,10 @@ class TestCcCompiler(CrossPlatformTestCase):
 
 
 class TestCcLinker(CrossPlatformTestCase):
+    def __init__(self, *args, **kwargs):
+        CrossPlatformTestCase.__init__(self, clear_variables=True, *args,
+                                       **kwargs)
+
     def _get_linker(self, lang):
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', mock_execute):  # noqa

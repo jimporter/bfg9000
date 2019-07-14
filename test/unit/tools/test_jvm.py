@@ -21,6 +21,10 @@ def mock_which(*args, **kwargs):
 
 
 class TestJvmBuilder(CrossPlatformTestCase):
+    def __init__(self, *args, **kwargs):
+        CrossPlatformTestCase.__init__(self, clear_variables=True, *args,
+                                       **kwargs)
+
     def test_properties(self):
         def mock_execute(*args, **kwargs):
             return 'version'
@@ -147,6 +151,10 @@ class TestJvmBuilder(CrossPlatformTestCase):
 
 
 class TestJvmCompiler(CrossPlatformTestCase):
+    def __init__(self, *args, **kwargs):
+        CrossPlatformTestCase.__init__(self, clear_variables=True, *args,
+                                       **kwargs)
+
     def setUp(self):
         def mock_execute(*args, **kwargs):
             return 'version'
@@ -261,6 +269,10 @@ class TestJvmCompiler(CrossPlatformTestCase):
 
 
 class TestJvmLinker(CrossPlatformTestCase):
+    def __init__(self, *args, **kwargs):
+        CrossPlatformTestCase.__init__(self, clear_variables=True, *args,
+                                       **kwargs)
+
     def setUp(self):
         def mock_execute(*args, **kwargs):
             return 'version'

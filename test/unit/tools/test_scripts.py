@@ -22,6 +22,10 @@ class TestPython(CrossPlatformTestCase):
     lang = 'python'
     default_cmd = sys.executable
 
+    def __init__(self, *args, **kwargs):
+        CrossPlatformTestCase.__init__(self, clear_variables=True, *args,
+                                       **kwargs)
+
     def setUp(self):
         with mock.patch.object(Environment, 'getvar', mock_getvar), \
              mock.patch('bfg9000.shell.which', mock_which):  # noqa

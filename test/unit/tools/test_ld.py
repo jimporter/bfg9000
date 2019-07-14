@@ -11,6 +11,10 @@ def mock_execute(args, **kwargs):
 
 
 class TestLdLinker(CrossPlatformTestCase):
+    def __init__(self, *args, **kwargs):
+        CrossPlatformTestCase.__init__(self, clear_variables=True, *args,
+                                       **kwargs)
+
     def test_flavor(self):
         ld = LdLinker(None, self.env, ['ld'], 'version')
         self.assertEqual(ld.flavor, 'ld')
