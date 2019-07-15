@@ -1,16 +1,16 @@
-import os.path
+import ntpath
+import posixpath
+from six import iteritems
 
 from .common import BuiltinTest
 
 from bfg9000.backends.ninja import writer as ninja
 from bfg9000.builtins import default, file_types, tests  # noqa
 from bfg9000.path import Path
-from bfg9000.safe_str import jbos, literal, shell_literal
-from bfg9000.shell import posix as pshell, shell_list
-
-
-def p(path):
-    return os.path.join('.', path)
+from bfg9000.platforms.posix import PosixPath
+from bfg9000.platforms.windows import WindowsPath
+from bfg9000.safe_str import jbos, literal, safe_str, shell_literal
+from bfg9000.shell import posix as pshell, windows as wshell, shell_list
 
 
 class TestTestInputs(BuiltinTest):
@@ -197,25 +197,83 @@ class TestTestDeps(BuiltinTest):
             self.builtin_dict['test_deps']()
 
 
-class TestBuildCommands(BuiltinTest):
+class TestBuildCommandsBase(BuiltinTest):
+    def make_basic(self):
+        test_exe = file_types.Executable(self.Path('test'), None)
+        self.builtin_dict['test'](test_exe)
+        return test_exe
+
+    def make_extras(self):
+        test_exe = file_types.Executable(self.Path('test'), None)
+        test_exe.creator = 'creator'
+        self.builtin_dict['test']([test_exe, '--foo'],
+                                  environment={'VAR': 'value'})
+        return test_exe
+
+    def make_empty_driver(self):
+        driver_exe = file_types.Executable(self.Path('driver'), None)
+        self.builtin_dict['test_driver'](driver_exe)
+        return driver_exe
+
+    def make_driver(self):
+        driver_exe = file_types.Executable(self.Path('driver'), None)
+        driver_exe.creator = 'creator'
+        driver = self.builtin_dict['test_driver'](driver_exe)
+
+        test_exe = file_types.Executable(self.Path('test'), None)
+        test_exe.creator = 'creator'
+        self.builtin_dict['test'](test_exe, driver=driver)
+        return driver_exe, test_exe
+
+    def make_complex(self):
+        test_exe = file_types.Executable(self.Path('test'), None)
+        test_exe.creator = 'creator'
+        self.builtin_dict['test'](test_exe)
+
+        driver_exe = file_types.Executable(self.Path('driver'), None)
+        driver = self.builtin_dict['test_driver'](driver_exe)
+
+        mid_driver_exe = file_types.Executable(self.Path('mid_driver'), None)
+        mid_driver = self.builtin_dict['test_driver'](mid_driver_exe,
+                                                      parent=driver)
+        mid_test_exe = file_types.Executable(self.Path('mid_test'), None)
+        mid_test_exe.creator = 'creator'
+        self.builtin_dict['test'](mid_test_exe, driver=mid_driver)
+
+        inner_driver_exe = file_types.Executable(self.Path('inner_driver'),
+                                                 None)
+        inner_driver = self.builtin_dict['test_driver'](inner_driver_exe,
+                                                        parent=mid_driver)
+        inner_test_exe = file_types.Executable(self.Path('inner_test'), None)
+        inner_test_exe.creator = 'creator'
+        self.builtin_dict['test']([inner_test_exe, '--foo'],
+                                  driver=inner_driver)
+
+        return (test_exe, driver_exe, mid_driver_exe, mid_test_exe,
+                inner_driver_exe, inner_test_exe)
+
+
+class TestBuildCommandsPosix(TestBuildCommandsBase):
+    Path = PosixPath
+
+    @staticmethod
+    def execpath(path):
+        return posixpath.join('.', path)
+
     def _build_commands(self):
         return tests._build_commands(
             self.build['tests'].tests, ninja.Writer, pshell, pshell.local_env
         )
 
     def test_basic(self):
-        test_exe = file_types.Executable(Path('test'), None)
-        self.builtin_dict['test'](test_exe)
+        test_exe = self.make_basic()
 
         cmd, deps = self._build_commands()
         self.assertEqual(cmd, [[test_exe]])
         self.assertEqual(deps, [])
 
     def test_extras(self):
-        test_exe = file_types.Executable(Path('test'), None)
-        test_exe.creator = 'creator'
-        self.builtin_dict['test']([test_exe, '--foo'],
-                                  environment={'VAR': 'value'})
+        test_exe = self.make_extras()
 
         cmd, deps = self._build_commands()
         self.assertEqual(cmd, [shell_list([
@@ -224,58 +282,140 @@ class TestBuildCommands(BuiltinTest):
         self.assertEqual(deps, [test_exe])
 
     def test_empty_driver(self):
-        driver_exe = file_types.Executable(Path('driver'), None)
-        self.builtin_dict['test_driver'](driver_exe)
+        driver_exe = self.make_empty_driver()
 
         cmd, deps = self._build_commands()
         self.assertEqual(cmd, [[driver_exe]])
         self.assertEqual(deps, [])
 
     def test_driver(self):
-        driver_exe = file_types.Executable(Path('driver'), None)
-        driver_exe.creator = 'creator'
-        driver = self.builtin_dict['test_driver'](driver_exe)
-
-        test_exe = file_types.Executable(Path('test'), None)
-        test_exe.creator = 'creator'
-        self.builtin_dict['test'](test_exe, driver=driver)
+        driver_exe, test_exe = self.make_driver()
 
         cmd, deps = self._build_commands()
-        self.assertEqual(cmd, [[driver_exe, literal(p('test'))]])
+        self.assertEqual(cmd, [[driver_exe, literal(self.execpath('test'))]])
         self.assertEqual(deps, [driver_exe, test_exe])
 
     def test_complex(self):
-        test_exe = file_types.Executable(Path('test'), None)
-        test_exe.creator = 'creator'
-        self.builtin_dict['test'](test_exe)
-
-        driver_exe = file_types.Executable(Path('driver'), None)
-        driver = self.builtin_dict['test_driver'](driver_exe)
-
-        mid_driver_exe = file_types.Executable(Path('mid_driver'), None)
-        mid_driver = self.builtin_dict['test_driver'](mid_driver_exe,
-                                                      parent=driver)
-        mid_test_exe = file_types.Executable(Path('mid_test'), None)
-        mid_test_exe.creator = 'creator'
-        self.builtin_dict['test'](mid_test_exe, driver=mid_driver)
-
-        inner_driver_exe = file_types.Executable(Path('inner_driver'), None)
-        inner_driver = self.builtin_dict['test_driver'](inner_driver_exe,
-                                                        parent=mid_driver)
-        inner_test_exe = file_types.Executable(Path('inner_test'), None)
-        inner_test_exe.creator = 'creator'
-        self.builtin_dict['test']([inner_test_exe, '--foo'],
-                                  driver=inner_driver)
+        p = self.execpath
+        (test_exe, driver_exe, mid_driver_exe, mid_test_exe, inner_driver_exe,
+         inner_test_exe) = self.make_complex()
 
         cmd, deps = self._build_commands()
-        some_quotes = "'\"'\"'"
-        many_quotes = "'\"'\"'\"'\"'\"'\"'\"'\"'"
+        self.assertEqual(deps, [test_exe, mid_test_exe, inner_test_exe])
+
         self.assertEqual(cmd, [
             [test_exe],
             [driver_exe, literal(
-                "'" + p('mid_driver') + ' ' + p('mid_test') + ' ' +
-                some_quotes + p('inner_driver') + ' ' + many_quotes +
-                p('inner_test') + ' --foo' + many_quotes + some_quotes + "'"
+                "'" + p('mid_driver') + ' ' + p('mid_test') + r" '\''" +
+                p('inner_driver') + r" '\''\'\'''\''" + p('inner_test') +
+                ' --foo' + r"'\''\'\'"
             )],
         ])
+
+        arg = pshell.split(cmd[1][1].string, escapes=True)
+        self.assertEqual(arg, [
+            p('mid_driver') + ' ' + p('mid_test') + " '" + p('inner_driver') +
+            r" '\''" + p('inner_test') + ' --foo' + r"'\'"
+        ])
+
+        arg = pshell.split(arg[0], escapes=True)
+        self.assertEqual(arg, [
+            p('mid_driver'),
+            p('mid_test'),
+            p('inner_driver') + " '" + p('inner_test') + ' --foo' + "'"
+        ])
+
+        arg = pshell.split(arg[2], escapes=True)
+        self.assertEqual(arg, [
+            p('inner_driver'),
+            p('inner_test') + ' --foo'
+        ])
+
+
+class TestBuildCommandsWindows(TestBuildCommandsBase):
+    Path = WindowsPath
+
+    @staticmethod
+    def execpath(path):
+        return ntpath.join('.', path)
+
+    def _build_commands(self):
+        def mock_local_env(env, line):
+            if env:
+                eq = shell_literal('=')
+                env_vars = [jbos(safe_str(name), eq, safe_str(value))
+                            for name, value in iteritems(env)]
+            else:
+                env_vars = []
+            return env_vars + wshell.escape_line(line, listify=True)
+
+        return tests._build_commands(
+            self.build['tests'].tests, lambda x: ninja.Writer(x, wshell),
+            wshell, mock_local_env
+        )
+
+    def test_basic(self):
+        test_exe = self.make_basic()
+
+        cmd, deps = self._build_commands()
+        self.assertEqual(cmd, [[test_exe]])
+        self.assertEqual(deps, [])
+
+    def test_extras(self):
+        test_exe = self.make_extras()
+
+        cmd, deps = self._build_commands()
+        self.assertEqual(cmd, [[
+            jbos('VAR', shell_literal('='), 'value'), test_exe, '--foo'
+        ]])
+        self.assertEqual(deps, [test_exe])
+
+    def test_empty_driver(self):
+        driver_exe = self.make_empty_driver()
+
+        cmd, deps = self._build_commands()
+        self.assertEqual(cmd, [[driver_exe]])
+        self.assertEqual(deps, [])
+
+    def test_driver(self):
+        driver_exe, test_exe = self.make_driver()
+
+        cmd, deps = self._build_commands()
+        self.assertEqual(cmd, [[driver_exe, literal(self.execpath('test'))]])
+        self.assertEqual(deps, [driver_exe, test_exe])
+
+    def test_complex(self):
+        p = self.execpath
+        (test_exe, driver_exe, mid_driver_exe, mid_test_exe, inner_driver_exe,
+         inner_test_exe) = self.make_complex()
+
+        cmd, deps = self._build_commands()
         self.assertEqual(deps, [test_exe, mid_test_exe, inner_test_exe])
+
+        self.assertEqual(cmd, [
+            [test_exe],
+            [driver_exe, literal(
+                '"' + p('mid_driver') + ' ' + p('mid_test') + r' \"' +
+                p('inner_driver') + r' \\\"' + p('inner_test') +
+                ' --foo' + r'\\\"\""'
+            )],
+        ])
+
+        arg = wshell.split(cmd[1][1].string)
+        self.assertEqual(arg, [
+            p('mid_driver') + ' ' + p('mid_test') + ' "' + p('inner_driver') +
+            r' \"' + p('inner_test') + ' --foo' + r'\""'
+        ])
+
+        arg = wshell.split(arg[0])
+        self.assertEqual(arg, [
+            p('mid_driver'),
+            p('mid_test'),
+            p('inner_driver') + ' "' + p('inner_test') + ' --foo' + '"'
+        ])
+
+        arg = wshell.split(arg[2])
+        self.assertEqual(arg, [
+            p('inner_driver'),
+            p('inner_test') + ' --foo'
+        ])

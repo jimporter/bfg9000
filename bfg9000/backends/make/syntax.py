@@ -91,11 +91,11 @@ class Writer(object):
         elif isinstance(thing, path.BasePath):
             out = Writer(StringIO())
             thing = thing.realize(path_vars, shelly)
-            escaped = out.write(thing, syntax, pshell.escape)
+            escaped = out.write(thing, syntax, pshell.inner_quote_info)
 
             thing = out.stream.getvalue()
             if shelly and escaped:
-                thing = pshell.quote_escaped(thing)
+                thing = pshell.wrap_quotes(thing)
             self.write_literal(thing)
         else:
             raise TypeError(type(thing))
@@ -177,7 +177,7 @@ class Variable(NamedEntity):
     def use(self):
         fmt = '${}' if len(self.name) == 1 else '$({})'
         if self.quoted:
-            fmt = pshell.quote_escaped(fmt)
+            fmt = pshell.wrap_quotes(fmt)
         return safe_str.literal(fmt.format(self.name))
 
 
@@ -206,7 +206,7 @@ class Function(NamedEntity):
         result = out.stream.getvalue()
 
         if self.quoted:
-            result = pshell.quote_escaped(result)
+            result = pshell.wrap_quotes(result)
         return safe_str.literal(result)
 
 

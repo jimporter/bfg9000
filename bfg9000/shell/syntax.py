@@ -35,11 +35,11 @@ class Writer(object):
         elif isinstance(thing, path.Path):
             out = Writer(StringIO())
             thing = thing.realize(path_vars, shelly)
-            escaped = out.write(thing, syntax, pshell.escape)
+            escaped = out.write(thing, syntax, pshell.inner_quote_info)
 
             thing = out.stream.getvalue()
             if shelly and escaped:
-                thing = pshell.quote_escaped(thing)
+                thing = pshell.wrap_quotes(thing)
             self.write_literal(thing)
         else:
             raise TypeError(type(thing))

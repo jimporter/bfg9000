@@ -5,22 +5,24 @@ from six import iteritems, string_types
 
 from .. import iterutils
 from .list import shell_list
-from ..platforms import platform_name
+from ..platforms.host import platform_info
 from ..safe_str import jbos, safe_str, shell_literal
 
-__all__ = ['split', 'join', 'listify', 'escape', 'quote_escaped', 'quote',
-           'quote_info', 'escape_line', 'join_lines', 'local_env',
-           'global_env']
+__all__ = ['split', 'join', 'listify', 'inner_quote', 'inner_quote_info',
+           'wrap_quotes', 'quote', 'quote_info', 'escape_line', 'join_lines',
+           'local_env', 'global_env']
 
 _bad_chars = re.compile(r'[^\w@%+:,./-]')
+_ends_unescaped_quote = re.compile(r"(^|[^\\])(\\\\)*'$")
 
 
-def split(s, type=list):
+def split(s, type=list, escapes=False):
     if not isinstance(s, string_types):
         raise TypeError('expected a string')
     lexer = shlex(s, posix=True)
     lexer.commenters = ''
-    lexer.escape = ''
+    if not escapes:
+        lexer.escape = ''
     lexer.whitespace_split = True
     return type(lexer)
 
@@ -35,25 +37,38 @@ def listify(thing, type=list):
     return iterutils.listify(thing, type=type)
 
 
-def escape(s):
-    if not s:
-        return '', False
-    if not _bad_chars.search(s):
-        return s, False
-    return s.replace("'", "'\"'\"'"), True
+def inner_quote_info(s):
+    if _bad_chars.search(s):
+        return s.replace("'", r"'\''"), True
+    return s, False
 
 
-def quote_escaped(s, escaped=True):
-    return "'" + s + "'" if escaped else s
+def inner_quote(s):
+    return inner_quote_info(s)[0]
 
 
-def quote(s):
-    return quote_escaped(*escape(s))
+def wrap_quotes(s):
+    def q(has_quote):
+        return '' if has_quote else "'"
+
+    # Any string less than 3 characters long can't have escaped quotes.
+    if len(s) < 3:
+        return "'" + s + "'"
+
+    start = 1 if s[0] == "'" else None
+    # Thanks to `inner_quote_info` above, we can guarantee that any single-
+    # quotes are unescaped, so we can deduplicate them if they're at the end.
+    end = -1 if s[-1] == "'" else None
+    return q(start) + s[start:end] + q(end)
 
 
 def quote_info(s):
-    s, esc = escape(s)
-    return quote_escaped(s, esc), esc
+    s, quoted = inner_quote_info(s)
+    return (wrap_quotes(s), True) if quoted else (s, False)
+
+
+def quote(s):
+    return quote_info(s)[0]
 
 
 def escape_line(line, listify=False):
@@ -67,7 +82,7 @@ def escape_line(line, listify=False):
         # already "escaped" command line. Otherwise, Windows users would be
         # pretty surprised to find that all the paths they specified like
         # C:\foo\bar are broken!
-        if platform_name() in ('winnt', 'win9x', 'msdos'):
+        if platform_info().family == 'windows':
             line = line.replace('\\', '\\\\')
         line = shell_literal(line)
     return shell_list([line])
@@ -77,8 +92,7 @@ def join_lines(lines):
     result = []
     for i in iterutils.tween( (escape_line(j, listify=True) for j in lines),
                               shell_list([shell_literal('&&')]) ):
-        if i:
-            result += i
+        result += i
     return result
 
 

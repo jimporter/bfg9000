@@ -16,3 +16,9 @@ class shell_list(list):
 
     def __getslice__(self, i, j):
         return shell_list(list.__getslice__(self, i, j))
+
+    def __eq__(self, rhs):
+        return isinstance(rhs, shell_list) and list.__eq__(self, rhs)
+
+    def __ne__(self, rhs):
+        return not self == rhs

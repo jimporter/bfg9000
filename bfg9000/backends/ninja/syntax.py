@@ -31,8 +31,9 @@ _comment_tmpl = """
 
 
 class Writer(object):
-    def __init__(self, stream):
+    def __init__(self, stream, shell=shell):
         self.stream = stream
+        self.shell = shell
 
     @staticmethod
     def escape_str(string, syntax):
@@ -53,7 +54,9 @@ class Writer(object):
     def write_literal(self, string):
         self.stream.write(string)
 
-    def write(self, thing, syntax, shell_quote=shell.quote_info):
+    def write(self, thing, syntax, shell_quote=iterutils.default_sentinel):
+        if shell_quote is iterutils.default_sentinel:
+            shell_quote = self.shell.quote_info
         thing = safe_str.safe_str(thing)
         shelly = syntax == Syntax.shell
         escaped = False
@@ -74,11 +77,11 @@ class Writer(object):
         elif isinstance(thing, path.BasePath):
             out = Writer(StringIO())
             thing = thing.realize(path_vars, shelly)
-            escaped = out.write(thing, syntax, shell.escape)
+            escaped = out.write(thing, syntax, self.shell.inner_quote_info)
 
             thing = out.stream.getvalue()
             if shelly and escaped:
-                thing = shell.quote_escaped(thing)
+                thing = self.shell.wrap_quotes(thing)
             self.write_literal(thing)
         else:
             raise TypeError(type(thing))

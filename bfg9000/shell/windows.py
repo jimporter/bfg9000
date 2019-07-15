@@ -10,12 +10,14 @@ from .list import shell_list
 from .. import iterutils
 from ..safe_str import safe_str, shell_literal
 
-__all__ = ['split', 'join', 'listify', 'escape', 'quote_escaped', 'quote',
-           'quote_info', 'escape_line', 'join_lines', 'global_env']
+__all__ = ['split', 'join', 'listify', 'inner_quote', 'inner_quote_info',
+           'wrap_quotes', 'quote', 'quote_info', 'escape_line', 'join_lines',
+           'global_env']
 
 # XXX: We need a way to escape cmd.exe-specific characters.
 _bad_chars = re.compile(r'(\s|"|\\$)')
 _replace = re.compile(r'(\\*)("|$)')
+_ends_unescaped_quote = re.compile(r'(^|[^\\])(\\\\)*"$')
 
 _Token = Enum('Token', ['char', 'quote', 'space'])
 _State = Enum('State', ['between', 'char', 'word', 'quoted'])
@@ -80,10 +82,7 @@ def listify(thing, type=list):
     return iterutils.listify(thing, type=type)
 
 
-def escape(s, escape_percent=False):
-    if not s:
-        return '', False
-
+def inner_quote_info(s, escape_percent=False):
     # In some contexts (mainly certain uses of the Windows shell), we want to
     # escape percent signs. This doesn't count as "escaping" for the purposes
     # of quoting the result though.
@@ -99,17 +98,24 @@ def escape(s, escape_percent=False):
     return _replace.sub(repl, s), True
 
 
-def quote_escaped(s, escaped=True):
-    return '"' + s + '"' if escaped else s
+def inner_quote(s, escape_percent=False):
+    return inner_quote_info(s, escape_percent)[0]
 
 
-def quote(s, escape_percent=False):
-    return quote_escaped(*escape(s, escape_percent))
+def wrap_quotes(s):
+    # Thanks to `inner_quote_info` above, we can guarantee that any double-
+    # quotes are escaped, so we don't need to worry about duplicates if they're
+    # at the end.
+    return '"' + s + '"'
 
 
 def quote_info(s, escape_percent=False):
-    s, esc = escape(s, escape_percent)
-    return quote_escaped(s, esc), esc
+    s, quoted = inner_quote_info(s, escape_percent)
+    return (wrap_quotes(s), True) if quoted else (s, False)
+
+
+def quote(s, escape_percent=False):
+    return quote_info(s, escape_percent)[0]
 
 
 def escape_line(line, listify=False):
@@ -126,8 +132,7 @@ def join_lines(lines):
     result = []
     for i in iterutils.tween( (escape_line(j, listify=True) for j in lines),
                               shell_list([shell_literal('&&')]) ):
-        if i:
-            result += i
+        result += i
     return result
 
 
