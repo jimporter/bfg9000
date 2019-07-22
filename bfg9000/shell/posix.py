@@ -12,7 +12,7 @@ __all__ = ['split', 'join', 'listify', 'inner_quote', 'inner_quote_info',
            'wrap_quotes', 'quote', 'quote_info', 'escape_line', 'join_lines',
            'local_env', 'global_env']
 
-_bad_chars = re.compile(r'[^\w@%+:,./-]')
+_bad_chars = re.compile(r'[^\w@%+=:,./-]')
 _ends_unescaped_quote = re.compile(r"(^|[^\\])(\\\\)*'$")
 
 
