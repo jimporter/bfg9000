@@ -3,7 +3,7 @@ from six import string_types
 
 from . import builtin
 from .. import options as opts
-from .file_types import local_file
+from .file_types import static_file
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..build_inputs import build_input, Edge
@@ -44,7 +44,7 @@ class Compile(Edge):
         self.header_files = []
         self.includes = []
         for i in iterate(includes):
-            if isinstance(i, HeaderFile):
+            if isinstance(i, CodeFile):
                 self.header_files.append(i)
             self.includes.append(builtins['header_directory'](i))
 
@@ -137,19 +137,19 @@ class CompileHeader(Compile):
 
 
 @builtin.function('builtins', 'build_inputs', 'env')
-@builtin.type(ObjectFile, in_type=string_types + (type(None),))
+@builtin.type(ObjectFile, extra_in_type=type(None))
 def object_file(builtins, build, env, name=None, file=None, **kwargs):
     if file is None:
         if name is None:
             raise TypeError('expected name')
         params = [('format', env.target_platform.object_format), ('lang', 'c')]
-        return local_file(build, ObjectFile, name, params, kwargs)
+        return static_file(build, ObjectFile, name, params, kwargs)
     return CompileSource(builtins, build, env, name, file,
                          **kwargs).public_output
 
 
 @builtin.function('builtins', 'build_inputs', 'env')
-@builtin.type(ObjectFile, in_type=string_types + (SourceFile,))
+@builtin.type(ObjectFile, extra_in_type=SourceFile)
 def _make_object_file(builtins, build, env, file, **kwargs):
     return CompileSource(builtins, build, env, None, file,
                          **kwargs).public_output
@@ -162,13 +162,13 @@ def object_files(builtins, build, env, files, **kwargs):
 
 
 @builtin.function('builtins', 'build_inputs', 'env')
-@builtin.type(PrecompiledHeader, in_type=string_types + (type(None),))
+@builtin.type(PrecompiledHeader, extra_in_type=type(None))
 def precompiled_header(builtins, build, env, name=None, file=None, **kwargs):
     if file is None:
         if name is None:
             raise TypeError('expected name')
         params = [('lang', 'c')]
-        return local_file(build, PrecompiledHeader, name, params, kwargs)
+        return static_file(build, PrecompiledHeader, name, params, kwargs)
     return CompileHeader(builtins, build, env, name, file,
                          **kwargs).public_output
 

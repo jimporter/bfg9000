@@ -34,7 +34,7 @@ class TestExecutable(LinkTest):
         result = self.builtin_dict['executable']('executable', ['main.cpp'])
         self.assertEqual(result, self.output_file(linker, 'executable', None))
 
-        src = file_types.SourceFile(Path('main.cpp', Root.srcdir))
+        src = self.builtin_dict['source_file']('main.cpp')
         result = self.builtin_dict['executable']('executable', [src])
         self.assertEqual(result, self.output_file(linker, 'executable', None))
 
@@ -83,7 +83,7 @@ class TestSharedLibrary(LinkTest):
         result = self.builtin_dict['shared_library']('shared', ['main.cpp'])
         self.assertEqual(result, self.output_file(linker, 'shared', None))
 
-        src = file_types.SourceFile(Path('main.cpp', Root.srcdir))
+        src = self.builtin_dict['source_file']('main.cpp')
         result = self.builtin_dict['shared_library']('shared', [src])
         self.assertEqual(result, self.output_file(linker, 'shared', None))
 
@@ -92,7 +92,7 @@ class TestSharedLibrary(LinkTest):
             version = '1'
             soversion = '1'
 
-        src = file_types.SourceFile(Path('main.cpp', Root.srcdir))
+        src = self.builtin_dict['source_file']('main.cpp')
         linker = self.env.builder('c++').linker('shared_library')
         result = self.builtin_dict['shared_library'](
             'shared', [src], version='1', soversion='1'
@@ -152,7 +152,7 @@ class TestStaticLibrary(LinkTest):
         result = self.builtin_dict['static_library']('static', ['main.cpp'])
         self.assertEqual(result, self.output_file(linker, 'static', Context()))
 
-        src = file_types.SourceFile(Path('main.cpp', Root.srcdir))
+        src = self.builtin_dict['source_file']('main.cpp')
         result = self.builtin_dict['static_library']('static', [src])
         self.assertEqual(result, self.output_file(linker, 'static', Context()))
 
@@ -238,7 +238,7 @@ class TestLibrary(LinkTest):
                                               kind='shared')
         self.assertEqual(result, self.output_file(linker, 'library', None))
 
-        src = file_types.SourceFile(Path('main.cpp', Root.srcdir))
+        src = self.builtin_dict['source_file']('main.cpp')
         result = self.builtin_dict['library']('library', [src], kind='shared')
         self.assertEqual(result, self.output_file(linker, 'library', None))
 
@@ -253,7 +253,7 @@ class TestLibrary(LinkTest):
         self.assertEqual(result, self.output_file(linker, 'library',
                                                   Context()))
 
-        src = file_types.SourceFile(Path('main.cpp', Root.srcdir))
+        src = self.builtin_dict['source_file']('main.cpp')
         result = self.builtin_dict['library']('library', [src], kind='static')
         self.assertEqual(result, self.output_file(linker, 'library',
                                                   Context()))
@@ -262,7 +262,7 @@ class TestLibrary(LinkTest):
         class Context(object):
             langs = ['c++']
 
-        src = file_types.SourceFile(Path('main.cpp', Root.srcdir))
+        src = self.builtin_dict['source_file']('main.cpp')
         shared_linker = self.env.builder('c++').linker('shared_library')
         static_linker = self.env.builder('c++').linker('static_library')
         with mock.patch('warnings.warn', lambda s: None):

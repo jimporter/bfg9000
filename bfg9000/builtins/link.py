@@ -2,12 +2,11 @@ import os.path
 import warnings
 from collections import defaultdict
 from itertools import chain
-from six import string_types
 from six.moves import filter as ifilter
 
 from . import builtin
 from .. import options as opts
-from .file_types import local_file
+from .file_types import static_file
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..build_inputs import build_input, Edge
@@ -245,13 +244,13 @@ class StaticLink(Link):
 def executable(builtins, build, env, name, files=None, **kwargs):
     if files is None and 'libs' not in kwargs:
         params = [('format', env.target_platform.object_format), ('lang', 'c')]
-        return local_file(build, Executable, name, params, kwargs)
+        return static_file(build, Executable, name, params, kwargs)
     return DynamicLink(builtins, build, env, name, files,
                        **kwargs).public_output
 
 
 @builtin.function('builtins', 'build_inputs', 'env')
-@builtin.type(SharedLibrary, in_type=string_types + (DualUseLibrary,))
+@builtin.type(SharedLibrary, extra_in_type=DualUseLibrary)
 def shared_library(builtins, build, env, name, files=None, **kwargs):
     if isinstance(name, DualUseLibrary):
         if files is not None or not set(kwargs.keys()) <= {'format', 'lang'}:
@@ -262,13 +261,13 @@ def shared_library(builtins, build, env, name, files=None, **kwargs):
         # XXX: What to do for pre-built shared libraries for Windows, which has
         # a separate DLL file?
         params = [('format', env.target_platform.object_format), ('lang', 'c')]
-        return local_file(build, SharedLibrary, name, params, kwargs)
+        return static_file(build, SharedLibrary, name, params, kwargs)
     return SharedLink(builtins, build, env, name, files,
                       **kwargs).public_output
 
 
 @builtin.function('builtins', 'build_inputs', 'env')
-@builtin.type(StaticLibrary, in_type=string_types + (DualUseLibrary,))
+@builtin.type(StaticLibrary, extra_in_type=DualUseLibrary)
 def static_library(builtins, build, env, name, files=None, **kwargs):
     if isinstance(name, DualUseLibrary):
         if files is not None or not set(kwargs.keys()) <= {'format', 'lang'}:
@@ -277,13 +276,13 @@ def static_library(builtins, build, env, name, files=None, **kwargs):
 
     if files is None and 'libs' not in kwargs:
         params = [('format', env.target_platform.object_format), ('lang', 'c')]
-        return local_file(build, StaticLibrary, name, params, kwargs)
+        return static_file(build, StaticLibrary, name, params, kwargs)
     return StaticLink(builtins, build, env, name, files,
                       **kwargs).public_output
 
 
 @builtin.function('builtins', 'build_inputs', 'env')
-@builtin.type(Library, in_type=string_types + (DualUseLibrary,))
+@builtin.type(Library, extra_in_type=DualUseLibrary)
 def library(builtins, build, env, name, files=None, **kwargs):
     explicit_kind = False
 
@@ -320,7 +319,7 @@ def library(builtins, build, env, name, files=None, **kwargs):
                                  "existing file")
 
         # XXX: Try to detect if a string refers to a shared lib?
-        return local_file(build, file_type, name, params, kwargs)
+        return static_file(build, file_type, name, params, kwargs)
 
     shared_kwargs = slice_dict(kwargs, SharedLink.extra_kwargs)
     static_kwargs = slice_dict(kwargs, StaticLink.extra_kwargs)
@@ -346,7 +345,7 @@ def library(builtins, build, env, name, files=None, **kwargs):
 
 
 @builtin.function('builtins')
-@builtin.type(WholeArchive, in_type=string_types + (StaticLibrary,))
+@builtin.type(WholeArchive, extra_in_type=StaticLibrary)
 def whole_archive(builtins, name, *args, **kwargs):
     if isinstance(name, StaticLibrary):
         if len(args) or len(kwargs):

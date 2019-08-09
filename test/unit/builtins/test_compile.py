@@ -39,7 +39,7 @@ class TestObjectFile(CompileTest):
         result = self.builtin_dict['object_file']('object', 'main.cpp')
         self.assertEqual(result, self.output_file(compiler, 'object', None))
 
-        src = file_types.SourceFile(Path('main.cpp', Root.srcdir))
+        src = self.builtin_dict['source_file']('main.cpp')
         result = self.builtin_dict['object_file']('object', src)
         self.assertEqual(result, self.output_file(compiler, 'object', None))
 
@@ -53,7 +53,7 @@ class TestObjectFile(CompileTest):
         self.assertRaises(ValueError, self.builtin_dict['object_file'],
                           'object', 'main.goofy')
 
-        src = file_types.SourceFile(Path('main.goofy', Root.srcdir))
+        src = self.builtin_dict['source_file']('main.goofy')
         self.assertRaises(ValueError, self.builtin_dict['object_file'],
                           'object', src)
 
@@ -73,7 +73,8 @@ class TestPrecompiledHeader(CompileTest):
             pass
 
     class Context(object):
-        pch_source = file_types.SourceFile(Path('file.cpp', Root.srcdir))
+        pch_source = file_types.SourceFile(Path('file.cpp', Root.srcdir),
+                                           'c++')
 
     def test_identity(self):
         obj = file_types.PrecompiledHeader(Path('header', Root.srcdir), None)
@@ -100,7 +101,7 @@ class TestPrecompiledHeader(CompileTest):
             self.assertEqual(result, self.output_file(compiler, 'object',
                                                       self.Context()))
 
-            src = file_types.HeaderFile(Path('main.hpp', Root.srcdir))
+            src = self.builtin_dict['header_file']('main.hpp')
             result = pch('object', src)
             self.assertEqual(result, self.output_file(compiler, 'object',
                                                       self.Context()))
@@ -116,7 +117,7 @@ class TestPrecompiledHeader(CompileTest):
                                                       self.Context()))
             self.assertRaises(ValueError, pch, 'object', 'main.goofy')
 
-            src = file_types.HeaderFile(Path('main.goofy', Root.srcdir))
+            src = self.builtin_dict['header_file']('main.goofy')
             self.assertRaises(ValueError, pch, 'object', src)
 
     def test_make_no_name_or_file(self):

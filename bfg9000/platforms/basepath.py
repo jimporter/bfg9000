@@ -6,6 +6,7 @@ from itertools import chain
 from six import string_types
 
 from .. import safe_str
+from ..objutils import objectify
 
 Root = Enum('Root', ['srcdir', 'builddir', 'absolute'])
 InstallRoot = Enum('InstallRoot', ['prefix', 'exec_prefix', 'bindir', 'libdir',
@@ -49,6 +50,10 @@ class BasePath(safe_str.safe_string):
             drive = cwddrive
         path = posixpath.normpath(posixpath.join(cwdpath, path))
         return cls(drive + path, Root.absolute)
+
+    @classmethod
+    def ensure(cls, path, root=Root.builddir, destdir=False, base=None):
+        return objectify(path, base or cls, cls, root=root, destdir=destdir)
 
     @staticmethod
     def __normalize(path, expand_user=False):

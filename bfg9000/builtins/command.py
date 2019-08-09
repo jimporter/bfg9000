@@ -1,7 +1,6 @@
 from itertools import repeat
 
 from . import builtin
-from .file_types import source_file
 from .. import shell
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
@@ -46,11 +45,11 @@ def command(build, env, name, **kwargs):
 class BuildStep(BaseCommand):
     msbuild_output = True
 
-    def __init__(self, build, env, name, **kwargs):
+    def __init__(self, build, builtins, env, name, **kwargs):
         name = listify(name)
         project_name = name[0]
 
-        type = kwargs.pop('type', source_file)
+        type = kwargs.pop('type', builtins['source_file'])
         if not isiterable(type):
             type = repeat(type, len(name))
 
@@ -71,16 +70,15 @@ class BuildStep(BaseCommand):
 
     @staticmethod
     def _make_outputs(name, type, args, kwargs):
-        f = getattr(type, 'type', type)
-        result = f(Path(name, Root.builddir), *args, **kwargs)
+        result = type(Path(name, Root.builddir), *args, **kwargs)
         if not isinstance(result, File):
             raise ValueError('expected a function returning a file')
         return result
 
 
-@builtin.function('build_inputs', 'env')
-def build_step(build, env, name, **kwargs):
-    return BuildStep(build, env, name, **kwargs).public_output
+@builtin.function('build_inputs', 'builtins', 'env')
+def build_step(build, builtins, env, name, **kwargs):
+    return BuildStep(build, builtins, env, name, **kwargs).public_output
 
 
 @make.rule_handler(Command, BuildStep)

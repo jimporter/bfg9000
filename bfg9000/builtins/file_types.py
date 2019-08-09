@@ -1,14 +1,14 @@
 from contextlib import contextmanager
-from six import string_types
 
 from . import builtin
 from .find import exclude_globs, filter_by_platform
 from ..file_types import *
 from ..iterutils import iterate, uniques
+from ..languages import known_langs
 from ..path import Path, Root, makedirs as _makedirs
 
 
-def local_file(build, file_type, name, params, kwargs):
+def static_file(build, file_type, name, params=[], kwargs={}):
     extra_args = []
     for key, default in params:
         extra_args.append(kwargs.pop(key, default))
@@ -16,7 +16,12 @@ def local_file(build, file_type, name, params, kwargs):
         raise TypeError("unexpected keyword argument '{}'".format(
             next(iter(kwargs))
         ))
-    return build.add_source(file_type(Path(name, Root.srcdir), *extra_args))
+
+    path = Path.ensure(name, Root.srcdir)
+    file = file_type(path, *extra_args)
+    if path.root == Root.srcdir:
+        build.add_source(file)
+    return file
 
 
 @contextmanager
@@ -31,25 +36,29 @@ def generated_file(build, env, file, mode='w', makedirs=True):
 @builtin.function('build_inputs')
 @builtin.type(File)
 def generic_file(build, name):
-    return build.add_source(File(Path(name, Root.srcdir)))
+    return static_file(build, File, name)
 
 
 @builtin.function('build_inputs')
 @builtin.type(SourceFile)
 def source_file(build, name, lang=None):
-    return build.add_source(SourceFile(Path(name, Root.srcdir), lang))
+    path = Path.ensure(name, Root.srcdir)
+    lang = lang or known_langs.fromext(path.ext(), 'source')
+    return static_file(build, SourceFile, path, [('lang', lang)])
 
 
 @builtin.function('build_inputs')
 @builtin.type(HeaderFile)
 def header_file(build, name, lang=None):
-    return build.add_source(HeaderFile(Path(name, Root.srcdir), lang))
+    path = Path.ensure(name, Root.srcdir)
+    lang = lang or known_langs.fromext(path.ext(), 'header')
+    return static_file(build, HeaderFile, path, [('lang', lang)])
 
 
 @builtin.function('build_inputs')
 @builtin.type(ModuleDefFile)
 def module_def_file(build, name):
-    return build.add_source(ModuleDefFile(Path(name, Root.srcdir)))
+    return static_file(build, ModuleDefFile, name)
 
 
 # These builtins will find all the files in a directory so that they can be
@@ -66,7 +75,7 @@ def _find(builtins, name, include, type, exclude, filter, as_object=True):
 
 
 @builtin.function('builtins', 'build_inputs')
-@builtin.type(Directory, in_type=string_types + (File,))
+@builtin.type(Directory, extra_in_type=File)
 def directory(builtins, build, name, include=None, exclude=exclude_globs,
               filter=filter_by_platform):
     if isinstance(name, File):
@@ -79,7 +88,7 @@ def directory(builtins, build, name, include=None, exclude=exclude_globs,
 
 
 @builtin.function('builtins', 'build_inputs')
-@builtin.type(HeaderDirectory, in_type=string_types + (HeaderFile,))
+@builtin.type(HeaderDirectory, extra_in_type=CodeFile)
 def header_directory(builtins, build, name, include=None,
                      exclude=exclude_globs, filter=filter_by_platform,
                      system=False, lang=None):

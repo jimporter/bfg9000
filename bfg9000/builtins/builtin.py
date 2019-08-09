@@ -4,7 +4,10 @@ import sys
 from itertools import chain
 from six import iteritems, iterkeys, itervalues, string_types
 
-from ..iterutils import iterate
+from ..iterutils import iterate, listify
+from ..platforms.basepath import BasePath
+
+string_or_path_types = string_types + (BasePath,)
 
 
 class Builtins(object):
@@ -132,7 +135,9 @@ def _get_value(argspec, builtin_bound, args, kwargs):
 _type = type
 
 
-def type(out_type, in_type=string_types):
+def type(out_type, in_type=string_or_path_types, extra_in_type=()):
+    in_type = listify(in_type, type=tuple) + listify(extra_in_type, type=tuple)
+
     def decorator(fn):
         if sys.version_info >= (3, 3):
             argspec = list(inspect.signature(fn).parameters.keys())
