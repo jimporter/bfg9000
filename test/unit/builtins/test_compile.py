@@ -20,35 +20,39 @@ class CompileTest(BuiltinTest):
 
 class TestObjectFile(CompileTest):
     def test_identity(self):
-        obj = file_types.ObjectFile(Path('object', Root.srcdir), None)
-        result = self.builtin_dict['object_file'](obj)
-        self.assertEqual(result, obj)
+        expected = file_types.ObjectFile(Path('object', Root.srcdir), None)
+        self.assertIs(self.builtin_dict['object_file'](expected), expected)
 
     def test_src_file(self):
-        result = self.builtin_dict['object_file']('object')
-        self.assertEqual(result, file_types.ObjectFile(
-            Path('object', Root.srcdir), None
-        ))
+        expected = file_types.ObjectFile(
+            Path('object', Root.srcdir),
+            self.env.target_platform.object_format, 'c'
+        )
+        self.assertSame(self.builtin_dict['object_file']('object'), expected)
 
     def test_make_simple(self):
         compiler = self.env.builder('c++').compiler
 
         result = self.builtin_dict['object_file'](file='main.cpp')
-        self.assertEqual(result, self.output_file(compiler, 'main', None))
+        self.assertSame(result, self.output_file(compiler, 'main', None),
+                        exclude={'creator'})
 
         result = self.builtin_dict['object_file']('object', 'main.cpp')
-        self.assertEqual(result, self.output_file(compiler, 'object', None))
+        self.assertSame(result, self.output_file(compiler, 'object', None),
+                        exclude={'creator'})
 
         src = self.builtin_dict['source_file']('main.cpp')
         result = self.builtin_dict['object_file']('object', src)
-        self.assertEqual(result, self.output_file(compiler, 'object', None))
+        self.assertSame(result, self.output_file(compiler, 'object', None),
+                        exclude={'creator'})
 
     def test_make_no_lang(self):
         compiler = self.env.builder('c++').compiler
 
         result = self.builtin_dict['object_file']('object', 'main.goofy',
                                                   lang='c++')
-        self.assertEqual(result, self.output_file(compiler, 'object', None))
+        self.assertSame(result, self.output_file(compiler, 'object', None),
+                        exclude={'creator'})
 
         self.assertRaises(ValueError, self.builtin_dict['object_file'],
                           'object', 'main.goofy')
@@ -73,19 +77,19 @@ class TestPrecompiledHeader(CompileTest):
             pass
 
     class Context(object):
-        pch_source = file_types.SourceFile(Path('file.cpp', Root.srcdir),
+        pch_source = file_types.SourceFile(Path('main.cpp', Root.srcdir),
                                            'c++')
 
     def test_identity(self):
-        obj = file_types.PrecompiledHeader(Path('header', Root.srcdir), None)
-        result = self.builtin_dict['precompiled_header'](obj)
-        self.assertEqual(result, obj)
+        ex = file_types.PrecompiledHeader(Path('header', Root.srcdir), None)
+        self.assertIs(self.builtin_dict['precompiled_header'](ex), ex)
 
     def test_src_file(self):
-        result = self.builtin_dict['precompiled_header']('header')
-        self.assertEqual(result, file_types.PrecompiledHeader(
-            Path('header', Root.srcdir), None
-        ))
+        expected = file_types.PrecompiledHeader(
+            Path('header', Root.srcdir), 'c'
+        )
+        self.assertSame(self.builtin_dict['precompiled_header']('header'),
+                        expected)
 
     def test_make_simple(self):
         with mock.patch('bfg9000.builtins.file_types.generated_file',
@@ -94,17 +98,20 @@ class TestPrecompiledHeader(CompileTest):
             pch = self.builtin_dict['precompiled_header']
 
             result = pch(file='main.hpp')
-            self.assertEqual(result, self.output_file(compiler, 'main.hpp',
-                                                      self.Context()))
+            self.assertSame(result, self.output_file(
+                compiler, 'main.hpp', self.Context()
+            ), exclude={'creator'})
 
             result = pch('object', 'main.hpp')
-            self.assertEqual(result, self.output_file(compiler, 'object',
-                                                      self.Context()))
+            self.assertSame(result, self.output_file(
+                compiler, 'object', self.Context()
+            ), exclude={'creator'})
 
             src = self.builtin_dict['header_file']('main.hpp')
             result = pch('object', src)
-            self.assertEqual(result, self.output_file(compiler, 'object',
-                                                      self.Context()))
+            self.assertSame(result, self.output_file(
+                compiler, 'object', self.Context()
+            ), exclude={'creator'})
 
     def test_make_no_lang(self):
         with mock.patch('bfg9000.builtins.file_types.generated_file',
@@ -113,8 +120,9 @@ class TestPrecompiledHeader(CompileTest):
             pch = self.builtin_dict['precompiled_header']
 
             result = pch('object', 'main.goofy', lang='c++')
-            self.assertEqual(result, self.output_file(compiler, 'object',
-                                                      self.Context()))
+            self.assertSame(result, self.output_file(
+                compiler, 'object', self.Context()
+            ), exclude={'creator'})
             self.assertRaises(ValueError, pch, 'object', 'main.goofy')
 
             src = self.builtin_dict['header_file']('main.goofy')

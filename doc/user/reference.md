@@ -42,8 +42,22 @@ as an argument, e.g. in the following snippet:
 command('script', cmd=['python', source_file('script.py')])
 ```
 
-Using [*source_file*](#source_filename-lang) here allows you to specify that the
-file is found in the *source directory*, rather than the build directory.
+Using [*source_file*](#source_file) here allows you to specify that the file is
+found in the *source directory*, rather than the build directory.
+
+### auto_file(*name*, [*lang*]) { #auto_file }
+
+Create a reference to an existing file named *name*. This function will try to
+automatically determine the file's kind based on its extension:
+[*source_file*](#source_file); [*header_file*](#header_file); or, if the
+extension is not recognized, [*generic_file*](#generic_file). If *lang* is
+specified, files with an unrecognized extension will always be treated as
+[*source_file*](#source_file)s.
+
+!!! note
+    This function is primarily useful for writing generic code that works with
+    multiple kinds of files; when creating a reference to a specific, *known*
+    file, the concrete function listed above should be used instead.
 
 ### directory(*name*, [*include*], [*exclude*], [*filter*]) { #directory }
 Availability: `build.bfg`

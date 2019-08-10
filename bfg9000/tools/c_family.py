@@ -10,6 +10,7 @@ with known_langs.make('c++') as x:
     x.vars(compiler='CXX', flags='CXXFLAGS')
     x.exts(source=['.cpp', '.cc', '.cp', '.cxx', '.CPP', '.c++', '.C'],
            header=['.hpp', '.hh', '.hp', '.hxx', '.HPP', '.h++', '.H'])
+    x.auxexts(header=['.h'])
 
 with known_langs.make('objc') as x:
     x.vars(compiler='OBJC', flags='OBJCFLAGS')

@@ -49,7 +49,7 @@ class BuildStep(BaseCommand):
         name = listify(name)
         project_name = name[0]
 
-        type = kwargs.pop('type', builtins['source_file'])
+        type = kwargs.pop('type', builtins['auto_file'])
         if not isiterable(type):
             type = repeat(type, len(name))
 

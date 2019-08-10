@@ -1,28 +1,47 @@
-from six import iteritems
+from itertools import chain
+from six import iteritems, iterkeys
 
 from .iterutils import listify
 
 
 class _Info(object):
-    def __init__(self, name, kind, vars, exts=None):
+    def __init__(self, name, kind, vars, exts=None, auxexts={}):
         self.name = name
         self._kind = kind
         self._var = vars
+
         if exts is not None:
-            self._exts = {k: listify(v) for k, v in iteritems(exts)}
+            allkeys = set(iterkeys(exts)) | set(iterkeys(auxexts))
+            self._exts = {i: listify(exts.get(i)) for i in allkeys}
+            self._auxexts = {i: listify(auxexts.get(i)) for i in allkeys}
 
-    def __getattr__(self, attr):
-        if not hasattr(self, '_' + attr):
-            raise AttributeError(attr)
-
-        def inner(key):
+    def __get_prop(attr, desc):
+        def inner(self, key):
             try:
-                return getattr(self, '_' + attr)[key]
+                return getattr(self, attr)[key]
             except KeyError:
-                desc = 'file type' if attr == 'exts' else attr
                 raise ValueError('{} {!r} does not support {} {!r}'
                                  .format(self._kind, self.name, desc, key))
         return inner
+
+    var = __get_prop('_var', 'var')
+    exts = __get_prop('_exts', 'file type')
+    auxexts = __get_prop('_auxexts', 'file type')
+
+    def allexts(self, key):
+        return self.exts(key) + self.auxexts(key)
+
+    def default_ext(self, key):
+        exts = self.exts(key)
+        if len(exts):
+            return exts[0]
+        return self.auxexts(key)[0]
+
+    def extkind(self, ext):
+        for k, v in chain(iteritems(self._exts), iteritems(self._auxexts)):
+            if ext in v:
+                return k
+        return None
 
 
 class _Definer(object):
@@ -59,22 +78,29 @@ class Languages(object):
         except KeyError:
             raise ValueError('unrecognized language {!r}'.format(name))
 
+    def __contains__(self, name):
+        return name in self._langs
+
     def _add(self, info):
         self._langs[info.name] = info
         for kind, exts in iteritems(info._exts):
             for ext in exts:
-                tolang = self._ext2lang.setdefault(ext, {})
-                if kind in tolang:
+                if ext in self._ext2lang:
                     raise ValueError('{ext!r} already used by {lang!r}'.format(
-                        ext=ext, lang=tolang[kind]
+                        ext=ext, lang=self._ext2lang[ext][0]
                     ))
-                tolang[kind] = info.name
+                self._ext2lang[ext] = (info.name, kind)
 
     def fromext(self, ext, kind):
-        return self._ext2lang.get(ext, {}).get(kind)
+        lang, langkind = self.extinfo(ext)
+        return lang if langkind == kind else None
+
+    def extinfo(self, ext):
+        return self._ext2lang.get(ext, (None, None))
 
     def make(self, name):
-        return _Definer(self, name, kind='language', fields=['vars', 'exts'])
+        return _Definer(self, name, kind='language',
+                        fields=['vars', 'exts', 'auxexts'])
 
 
 class Formats(object):

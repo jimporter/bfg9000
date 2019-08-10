@@ -7,6 +7,11 @@ from ..iterutils import iterate, uniques
 from ..languages import known_langs
 from ..path import Path, Root, makedirs as _makedirs
 
+_kind_to_file_type = {
+    'header': HeaderFile,
+    'source': SourceFile,
+}
+
 
 def static_file(build, file_type, name, params=[], kwargs={}):
     extra_args = []
@@ -59,6 +64,23 @@ def header_file(build, name, lang=None):
 @builtin.type(ModuleDefFile)
 def module_def_file(build, name):
     return static_file(build, ModuleDefFile, name)
+
+
+@builtin.function('build_inputs')
+@builtin.type(File)
+def auto_file(build, name, lang=None):
+    path = Path.ensure(name, Root.srcdir)
+    if lang:
+        kind = None
+        if lang in known_langs:
+            kind = known_langs[lang].extkind(path.ext())
+    else:
+        lang, kind = known_langs.extinfo(path.ext())
+
+    if lang:
+        return static_file(build, _kind_to_file_type[kind or 'source'], path,
+                           [('lang', lang)])
+    return static_file(build, File, path)
 
 
 # These builtins will find all the files in a directory so that they can be

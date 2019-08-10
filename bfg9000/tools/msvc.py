@@ -275,7 +275,7 @@ class MsvcPchCompiler(MsvcBaseCompiler):
         options = opts.option_list()
 
         if context.pch_source is None:
-            ext = known_langs[self.lang].exts('source')[0]
+            ext = known_langs[self.lang].default_ext('source')
             context.pch_source = SourceFile(header.path.stripext(ext).reroot(),
                                             header.lang)
             with generated_file(build, self.env, context.pch_source) as out:
