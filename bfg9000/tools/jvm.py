@@ -2,7 +2,7 @@ import os
 import re
 from itertools import chain
 
-from .common import BuildCommand, check_which
+from .common import Builder, BuildCommand, check_which
 from .. import options as opts, safe_str, shell
 from ..builtins.file_types import generated_file
 from ..exceptions import PackageResolutionError
@@ -27,13 +27,22 @@ _warning_flags = {
 }
 
 
-class JvmBuilder(object):
+class JvmBuilder(Builder):
     def __init__(self, env, langinfo, command, version_output):
+        # The default command name to run JVM programs is (usually) the same as
+        # the name of the language, so we'll just use that here as the default.
+        run_name = langinfo.var('runner').lower()
+        run_command = check_which(
+            env.getvar(langinfo.var('runner'), langinfo.name),
+            kind='{} runner'.format(langinfo.name)
+        )
+
+        brand, version = self._parse_brand(env, langinfo.name, version_output,
+                                           run_command)
+        Builder.__init__(self, langinfo.name, 'jvm', brand, version)
+
         name = langinfo.var('compiler').lower()
         ldinfo = known_formats['jvm', 'dynamic']
-
-        self.lang = langinfo.name
-        self.object_format = 'jvm'
 
         flags_name = langinfo.var('flags').lower()
         flags = shell.split(env.getvar(langinfo.var('flags'), ''))
@@ -45,17 +54,18 @@ class JvmBuilder(object):
         jarflags_name = ldinfo.var('flags').lower()
         jarflags = shell.split(env.getvar(ldinfo.var('flags'), 'cfm'))
 
-        # The default command name to run JVM programs is (usually) the same as
-        # the name of the language, so we'll just use that here as the default.
-        run_name = langinfo.var('runner').lower()
-        run_command = check_which(
-            env.getvar(langinfo.var('runner'), self.lang),
-            kind='{} runner'.format(self.lang)
-        )
+        self.compiler = JvmCompiler(self, env, name, command, flags_name,
+                                    flags)
+        self._linker = JarMaker(self, env, jar_name, jar_command,
+                                jarflags_name, jarflags)
+        self.packages = JvmPackageResolver(self, env, run_command)
+        self.runner = JvmRunner(self, env, run_name, run_command)
 
-        self.brand = 'unknown'
-        self.version = None
-        if self.lang == 'java':
+    @staticmethod
+    def _parse_brand(env, lang, version_output, run_command):
+        brand = 'unknown'
+        version = None
+        if lang == 'java':
             try:
                 # Get the brand from the run command (rather than the compile
                 # command).
@@ -64,23 +74,18 @@ class JvmBuilder(object):
                     stderr=shell.Mode.stdout
                 )
                 if re.search(r'Java\(TM\) (\w+ )?Runtime Environment', output):
-                    self.brand = 'oracle'
+                    brand = 'oracle'
                 elif 'OpenJDK Runtime Environment' in output:
-                    self.brand = 'openjdk'
+                    brand = 'openjdk'
             except (OSError, shell.CalledProcessError):
                 pass
-            self.version = detect_version(version_output)
-        elif self.lang == 'scala':
+            version = detect_version(version_output)
+        elif lang == 'scala':
             if 'EPFL' in version_output:
-                self.brand = 'epfl'
-                self.version = detect_version(version_output)
+                brand = 'epfl'
+                version = detect_version(version_output)
 
-        self.compiler = JvmCompiler(self, env, name, command, flags_name,
-                                    flags)
-        self._linker = JarMaker(self, env, jar_name, jar_command,
-                                jarflags_name, jarflags)
-        self.packages = JvmPackageResolver(self, env, run_command)
-        self.runner = JvmRunner(self, env, run_name, run_command)
+        return brand, version
 
     @staticmethod
     def check_command(env, command):

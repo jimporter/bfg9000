@@ -6,7 +6,7 @@ from six import string_types
 from . import pkg_config
 from .. import log, options as opts, safe_str, shell
 from .ar import ArLinker
-from .common import (BuildCommand, check_which, darwin_install_name,
+from .common import (Builder, BuildCommand, check_which, darwin_install_name,
                      library_macro)
 from .ld import LdLinker
 from ..builtins.symlink import Symlink
@@ -28,8 +28,13 @@ _optimize_flags = {
 }
 
 
-class CcBuilder(object):
+class CcBuilder(Builder):
     def __init__(self, env, langinfo, command, version_output):
+        brand, version, target_flags = self._parse_brand(env, command,
+                                                         version_output)
+        object_format = env.target_platform.object_format
+        Builder.__init__(self, langinfo.name, object_format, brand, version)
+
         name = langinfo.var('compiler').lower()
         ldinfo = known_formats['native', 'dynamic']
         arinfo = known_formats['native', 'static']
@@ -44,30 +49,6 @@ class CcBuilder(object):
                 log.info('setting `-fuse-ld={}` for `{}`'
                          .format(tail, shell.join(command)))
                 link_command.append('-fuse-ld={}'.format(tail))
-
-        self.lang = langinfo.name
-        self.object_format = env.target_platform.object_format
-
-        target_flags = []
-        if 'Free Software Foundation' in version_output:
-            self.brand = 'gcc'
-            self.version = detect_version(version_output)
-            if env.is_cross:
-                triplet = parse_triplet(env.execute(
-                    command + ['-dumpmachine'],
-                    stdout=shell.Mode.pipe, stderr=shell.Mode.devnull
-                ).rstrip())
-                target_flags = self._gcc_arch_flags(
-                    env.target_platform.arch, triplet.arch
-                )
-        elif 'clang' in version_output:
-            self.brand = 'clang'
-            self.version = detect_version(version_output)
-            if env.is_cross:
-                target_flags = ['-target', env.target_platform.triplet]
-        else:
-            self.brand = 'unknown'
-            self.version = None
 
         cflags_name = langinfo.var('flags').lower()
         cflags = (target_flags +
@@ -129,6 +110,31 @@ class CcBuilder(object):
 
         self.packages = CcPackageResolver(self, env, command, ldflags)
         self.runner = None
+
+    @classmethod
+    def _parse_brand(cls, env, command, version_output):
+        target_flags = []
+        if 'Free Software Foundation' in version_output:
+            brand = 'gcc'
+            version = detect_version(version_output)
+            if env.is_cross:
+                triplet = parse_triplet(env.execute(
+                    command + ['-dumpmachine'],
+                    stdout=shell.Mode.pipe, stderr=shell.Mode.devnull
+                ).rstrip())
+                target_flags = cls._gcc_arch_flags(
+                    env.target_platform.arch, triplet.arch
+                )
+        elif 'clang' in version_output:
+            brand = 'clang'
+            version = detect_version(version_output)
+            if env.is_cross:
+                target_flags = ['-target', env.target_platform.triplet]
+        else:
+            brand = 'unknown'
+            version = None
+
+        return brand, version, target_flags
 
     @staticmethod
     def _gcc_arch_flags(arch, native_arch):

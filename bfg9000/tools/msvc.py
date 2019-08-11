@@ -3,7 +3,7 @@ import re
 from itertools import chain
 
 from . import pkg_config
-from .common import BuildCommand, check_which, library_macro
+from .common import Builder, BuildCommand, check_which, library_macro
 from .. import options as opts, safe_str, shell
 from ..arguments.windows import ArgumentParser
 from ..builtins.file_types import generated_file
@@ -31,22 +31,15 @@ _optimize_flags = {
 }
 
 
-class MsvcBuilder(object):
+class MsvcBuilder(Builder):
     def __init__(self, env, langinfo, command, version_output):
+        brand, version = self._parse_brand(version_output)
+        object_format = env.target_platform.object_format
+        Builder.__init__(self, langinfo.name, object_format, brand, version)
+
         name = langinfo.var('compiler').lower()
         ldinfo = known_formats['native', 'dynamic']
         arinfo = known_formats['native', 'static']
-
-        self.lang = langinfo.name
-        self.object_format = env.target_platform.object_format
-
-        if 'Microsoft (R)' in version_output:
-            self.brand = 'msvc'
-            self.version = detect_version(version_output)
-        else:
-            # XXX: Detect clang-cl.
-            self.brand = 'unknown'
-            self.version = None
 
         # Look for the last argument that looks like our compiler and use its
         # directory as the base directory to find the linkers.
@@ -98,6 +91,13 @@ class MsvcBuilder(object):
         }
         self.packages = MsvcPackageResolver(self, env)
         self.runner = None
+
+    @staticmethod
+    def _parse_brand(version_output):
+        if 'Microsoft (R)' in version_output:
+            return 'msvc', detect_version(version_output)
+        # XXX: Detect clang-cl.
+        return 'unknown', None
 
     @staticmethod
     def check_command(env, command):

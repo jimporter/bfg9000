@@ -21,6 +21,14 @@ def library_macro(name, mode):
     )
 
 
+class Builder(object):
+    def __init__(self, lang, object_format, brand, version):
+        self.lang = lang
+        self.object_format = object_format
+        self.brand = brand
+        self.version = version
+
+
 class Command(object):
     def __init__(self, env, rule_name, command_var, command):
         self.env = env
