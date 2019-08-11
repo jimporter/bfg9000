@@ -13,6 +13,7 @@ from ..build_inputs import build_input, Edge
 from ..file_types import *
 from ..iterutils import (first, flatten, iterate, listify, merge_dicts,
                          merge_into_dict, slice_dict, uniques)
+from ..languages import known_langs
 from ..shell import posix as pshell
 
 build_input('link_options')(lambda build_inputs, env: {
@@ -28,16 +29,17 @@ class Link(Edge):
                  pch=None, libs=None, packages=None, compile_options=None,
                  link_options=None, entry_point=None, lang=None,
                  extra_deps=None, description=None):
+        src_lang = known_langs[lang].src_lang if lang else None
         self.name = self.__name(name)
 
         self.user_libs = [
-            builtins['library'](i, kind=self._preferred_lib, lang=lang)
+            builtins['library'](i, kind=self._preferred_lib, lang=src_lang)
             for i in iterate(libs)
         ]
         forward_opts = self.__get_forward_opts(self.user_libs)
         self.libs = self.user_libs + forward_opts.get('libs', [])
 
-        self.user_packages = [builtins['package'](i)
+        self.user_packages = [builtins['package'](i, lang=src_lang)
                               for i in iterate(packages)]
         self.packages = self.user_packages + forward_opts.get('packages', [])
 
@@ -67,10 +69,11 @@ class Link(Edge):
             (i.lang for i in self.files if i.lang is not None),
             (j for i in self.libs for j in iterate(i.lang))
         ))
-        if not self.langs:
+        if not src_lang and not self.langs:
             raise ValueError('unable to determine language')
 
-        self.linker = self.__find_linker(env, formats[0], self.langs)
+        search_langs = [src_lang] if src_lang else self.langs
+        self.linker = self.__find_linker(env, formats[0], search_langs)
 
         # Forward any necessary options to the compile step.
         if hasattr(self.linker, 'compile_options'):

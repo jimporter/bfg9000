@@ -4,6 +4,7 @@ from collections import namedtuple
 from .common import BuiltinTest
 from bfg9000.builtins import compile  # noqa
 from bfg9000 import file_types
+from bfg9000.environment import LibraryMode
 from bfg9000.iterutils import listify, unlistify
 from bfg9000.path import Path, Root
 
@@ -60,6 +61,47 @@ class TestObjectFile(CompileTest):
         src = self.builtin_dict['source_file']('main.goofy')
         self.assertRaises(ValueError, self.builtin_dict['object_file'],
                           'object', src)
+
+    def test_make_override_lang(self):
+        compiler = self.env.builder('c++').compiler
+
+        src = self.builtin_dict['source_file']('main.c', 'c')
+        result = self.builtin_dict['object_file']('object', src, lang='c++')
+        self.assertSame(result, self.output_file(compiler, 'object', None),
+                        exclude={'creator'})
+        self.assertEqual(result.creator.compiler.lang, 'c++')
+
+    def test_includes(self):
+        object_file = self.builtin_dict['object_file']
+
+        result = object_file(file='main.cpp', includes='include')
+        self.assertEqual(result.creator.includes, [
+            file_types.HeaderDirectory(Path('include', Root.srcdir))
+        ])
+
+        hdr = self.builtin_dict['header_file']('include/main.hpp')
+        result = object_file(file='main.cpp', includes=hdr)
+        self.assertEqual(result.creator.includes, [
+            file_types.HeaderDirectory(Path('include', Root.srcdir))
+        ])
+
+    def test_libs(self):
+        self.env.library_mode = LibraryMode(True, False)
+
+        result = self.builtin_dict['object_file'](file='main.java', libs='lib')
+        self.assertEqual(result.creator.libs, [
+            file_types.StaticLibrary(Path('lib', Root.srcdir), 'java')
+        ])
+
+    def test_pch(self):
+        pch = file_types.PrecompiledHeader(Path('pch', Root.builddir), 'c')
+        pch.object_file = 'foo'
+
+        result = self.builtin_dict['object_file'](file='main.cpp', pch=pch)
+        self.assertIs(result.creator.pch, pch)
+
+        self.assertRaises(TypeError, self.builtin_dict['object_file'],
+                          file='main.java', pch=pch)
 
     def test_make_no_name_or_file(self):
         self.assertRaises(TypeError, self.builtin_dict['object_file'])
@@ -127,6 +169,19 @@ class TestPrecompiledHeader(CompileTest):
 
             src = self.builtin_dict['header_file']('main.goofy')
             self.assertRaises(ValueError, pch, 'object', src)
+
+    def test_make_override_lang(self):
+        with mock.patch('bfg9000.builtins.file_types.generated_file',
+                        return_value=self.MockFile()):
+            compiler = self.env.builder('c++').pch_compiler
+            pch = self.builtin_dict['precompiled_header']
+
+            src = self.builtin_dict['header_file']('main.h', 'c')
+            result = pch('object', src, lang='c++')
+            self.assertSame(result, self.output_file(
+                compiler, 'object', self.Context()
+            ), exclude={'creator'})
+            self.assertEqual(result.creator.compiler.lang, 'c++')
 
     def test_make_no_name_or_file(self):
         self.assertRaises(TypeError, self.builtin_dict['precompiled_header'])

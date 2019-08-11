@@ -9,6 +9,7 @@ from ..backends.ninja import writer as ninja
 from ..build_inputs import build_input, Edge
 from ..file_types import *
 from ..iterutils import first, iterate, uniques
+from ..languages import known_langs
 from ..path import Path, Root
 from ..shell import posix as pshell
 
@@ -40,7 +41,7 @@ class Compile(Edge):
 
     def __init__(self, builtins, build, env, name, includes=None, pch=None,
                  libs=None, packages=None, options=None, lang=None,
-                 extra_deps=None, description=None):
+                 src_lang=None, extra_deps=None, description=None):
         self.header_files = []
         self.includes = []
         for i in iterate(includes):
@@ -52,10 +53,11 @@ class Compile(Edge):
         # languages that need libs during compilation don't support static
         # linking anyway.
         if self.compiler.needs_libs:
-            self.libs = [builtins['library'](i, lang=lang)
+            self.libs = [builtins['library'](i, lang=src_lang)
                          for i in iterate(libs)]
 
-        self.packages = [builtins['package'](i) for i in iterate(packages)]
+        self.packages = [builtins['package'](i, lang=src_lang)
+                         for i in iterate(packages)]
         self.user_options = pshell.listify(options, type=opts.option_list)
 
         if pch and not self.compiler.accepts_pch:
@@ -104,23 +106,31 @@ class Compile(Edge):
 
 
 class CompileSource(Compile):
-    def __init__(self, builtins, build, env, name, file, **kwargs):
-        self.file = builtins['source_file'](file, lang=kwargs.get('lang'))
-        if name is None:
-            name = self.file.path.stripext().suffix
-
+    def __init__(self, builtins, build, env, name, file, lang=None, **kwargs):
+        src_lang = known_langs[lang].src_lang if lang else None
+        self.file = builtins['source_file'](file, lang=src_lang)
         if self.file.lang is None:
             raise ValueError("unable to determine language for file {!r}"
                              .format(self.file.path))
-        self.compiler = env.builder(self.file.lang).compiler
-        Compile.__init__(self, builtins, build, env, name, **kwargs)
+
+        if name is None:
+            name = self.file.path.stripext().suffix
+
+        self.compiler = env.builder(lang or self.file.lang).compiler
+        Compile.__init__(self, builtins, build, env, name, lang=lang,
+                         src_lang=src_lang, **kwargs)
 
 
 class CompileHeader(Compile):
     desc_verb = 'compile-header'
 
-    def __init__(self, builtins, build, env, name, file, **kwargs):
-        self.file = builtins['header_file'](file, lang=kwargs.get('lang'))
+    def __init__(self, builtins, build, env, name, file, lang=None, **kwargs):
+        src_lang = known_langs[lang].src_lang if lang else None
+        self.file = builtins['header_file'](file, lang=src_lang)
+        if self.file.lang is None:
+            raise ValueError("unable to determine language for file {!r}"
+                             .format(self.file.path))
+
         if name is None:
             name = self.file.path.suffix
 
@@ -129,11 +139,9 @@ class CompileHeader(Compile):
             source, lang=self.file.lang
         ) if source else None
 
-        if self.file.lang is None:
-            raise ValueError("unable to determine language for file {!r}"
-                             .format(self.file.path))
-        self.compiler = env.builder(self.file.lang).pch_compiler
-        Compile.__init__(self, builtins, build, env, name, **kwargs)
+        self.compiler = env.builder(lang or self.file.lang).pch_compiler
+        Compile.__init__(self, builtins, build, env, name, lang=lang,
+                         src_lang=src_lang, **kwargs)
 
 
 @builtin.function('builtins', 'build_inputs', 'env')

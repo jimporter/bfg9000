@@ -40,9 +40,43 @@ class TestExecutable(LinkTest):
         self.assertSame(result, self.output_file(linker, 'exe', None),
                         exclude={'creator'})
 
+        obj = self.builtin_dict['object_file']('main.o', lang='c++')
+        result = self.builtin_dict['executable']('exe', [obj])
+        self.assertSame(result, self.output_file(linker, 'exe', None),
+                        exclude={'creator'})
+
+    def test_make_override_lang(self):
+        linker = self.env.builder('c++').linker('executable')
+
+        src = self.builtin_dict['source_file']('main.c', 'c')
+        result = self.builtin_dict['executable']('exe', [src], lang='c++')
+        self.assertSame(result, self.output_file(linker, 'exe', None),
+                        exclude={'creator'})
+        self.assertEqual(result.creator.langs, ['c++'])
+        self.assertEqual(result.creator.linker.lang, 'c++')
+
+        obj = self.builtin_dict['object_file']('main.o', lang='c')
+        result = self.builtin_dict['executable']('exe', [obj], lang='c++')
+        self.assertSame(result, self.output_file(linker, 'exe', None),
+                        exclude={'creator'})
+        self.assertEqual(result.creator.langs, ['c'])
+        self.assertEqual(result.creator.linker.lang, 'c++')
+
     def test_make_no_files(self):
         self.assertRaises(ValueError, self.builtin_dict['executable'],
                           'exe', [])
+
+    def test_make_multiple_formats(self):
+        obj1 = file_types.ObjectFile(Path('obj1.o', Root.srcdir), 'elf', 'c')
+        obj2 = file_types.ObjectFile(Path('obj2.o', Root.srcdir), 'coff', 'c')
+        self.assertRaises(ValueError, self.builtin_dict['executable'],
+                          'exe', [obj1, obj2])
+
+    def test_make_no_langs(self):
+        obj1 = file_types.ObjectFile(Path('obj1.o', Root.srcdir), 'elf')
+        obj2 = file_types.ObjectFile(Path('obj2.o', Root.srcdir), 'elf')
+        self.assertRaises(ValueError, self.builtin_dict['executable'],
+                          'exe', [obj1, obj2])
 
     def test_description(self):
         result = self.builtin_dict['executable'](
@@ -91,6 +125,11 @@ class TestSharedLibrary(LinkTest):
         self.assertSame(result, self.output_file(linker, 'shared', None),
                         exclude={'creator', 'post_install'})
 
+        obj = self.builtin_dict['object_file']('main.o', lang='c++')
+        result = self.builtin_dict['shared_library']('shared', [obj])
+        self.assertSame(result, self.output_file(linker, 'shared', None),
+                        exclude={'creator', 'post_install'})
+
     def test_make_soversion(self):
         class Context(object):
             version = '1'
@@ -109,6 +148,25 @@ class TestSharedLibrary(LinkTest):
         self.assertRaises(ValueError, self.builtin_dict['shared_library'],
                           'shared', [src], soversion='1')
 
+    def test_make_override_lang(self):
+        linker = self.env.builder('c++').linker('shared_library')
+
+        src = self.builtin_dict['source_file']('main.c', 'c')
+        result = self.builtin_dict['shared_library']('shared', [src],
+                                                     lang='c++')
+        self.assertSame(result, self.output_file(linker, 'shared', None),
+                        exclude={'creator', 'post_install'})
+        self.assertEqual(result.creator.langs, ['c++'])
+        self.assertEqual(result.creator.linker.lang, 'c++')
+
+        obj = self.builtin_dict['object_file']('main.o', lang='c')
+        result = self.builtin_dict['shared_library']('shared', [obj],
+                                                     lang='c++')
+        self.assertSame(result, self.output_file(linker, 'shared', None),
+                        exclude={'creator', 'post_install'})
+        self.assertEqual(result.creator.langs, ['c'])
+        self.assertEqual(result.creator.linker.lang, 'c++')
+
     def test_make_no_files(self):
         self.assertRaises(ValueError, self.builtin_dict['shared_library'],
                           'shared', [])
@@ -121,6 +179,10 @@ class TestSharedLibrary(LinkTest):
 
 
 class TestStaticLibrary(LinkTest):
+    class Context(object):
+        def __init__(self, langs=['c++']):
+            self.langs = langs
+
     def test_identity(self):
         ex = file_types.StaticLibrary(Path('static', Root.srcdir), None)
         self.assertIs(self.builtin_dict['static_library'](ex), ex)
@@ -149,19 +211,44 @@ class TestStaticLibrary(LinkTest):
                           lib, files=['foo.cpp'])
 
     def test_make_simple(self):
-        class Context(object):
-            langs = ['c++']
-
         linker = self.env.builder('c++').linker('static_library')
 
         result = self.builtin_dict['static_library']('static', ['main.cpp'])
-        self.assertSame(result, self.output_file(linker, 'static', Context()),
-                        exclude={'creator', 'forward_opts'})
+        self.assertSame(result, self.output_file(
+            linker, 'static', self.Context()
+        ), exclude={'creator', 'forward_opts'})
 
         src = self.builtin_dict['source_file']('main.cpp')
         result = self.builtin_dict['static_library']('static', [src])
-        self.assertSame(result, self.output_file(linker, 'static', Context()),
-                        exclude={'creator', 'forward_opts'})
+        self.assertSame(result, self.output_file(
+            linker, 'static', self.Context()
+        ), exclude={'creator', 'forward_opts'})
+
+        obj = self.builtin_dict['object_file']('main.o', lang='c++')
+        result = self.builtin_dict['static_library']('static', [obj])
+        self.assertSame(result, self.output_file(
+            linker, 'static', self.Context()
+        ), exclude={'creator', 'forward_opts'})
+
+    def test_make_override_lang(self):
+        linker = self.env.builder('c++').linker('static_library')
+        static_library = self.builtin_dict['static_library']
+
+        src = self.builtin_dict['source_file']('main.c', 'c')
+        result = static_library('static', [src], lang='c++')
+        self.assertSame(result, self.output_file(
+            linker, 'static', self.Context()
+        ), exclude={'creator', 'forward_opts'})
+        self.assertEqual(result.creator.langs, ['c++'])
+        self.assertEqual(result.creator.linker.lang, 'c++')
+
+        obj = self.builtin_dict['object_file']('main.o', lang='c')
+        result = static_library('static', [obj], lang='c++')
+        self.assertSame(result, self.output_file(
+            linker, 'static', self.Context(['c'])
+        ), exclude={'creator', 'forward_opts'})
+        self.assertEqual(result.creator.langs, ['c'])
+        self.assertEqual(result.creator.linker.lang, 'c++')
 
     def test_make_no_files(self):
         self.assertRaises(ValueError, self.builtin_dict['static_library'],

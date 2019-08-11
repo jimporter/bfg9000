@@ -15,13 +15,14 @@ class TestLanguages(TestCase):
             x.vars(compiler='CXX')
             x.exts(source=['.cxx', '.cpp'], header=['.hpp'])
             x.auxexts(header=['.h'])
-        with self.known_langs.make('goofy') as x:
+        with self.known_langs.make('goofy', base='c++') as x:
             x.vars(compiler='GOOFY')
             x.exts(source=['.goofy'])
             x.auxexts(header=['.h'])
 
         c = self.known_langs['c']
         self.assertEqual(c.name, 'c')
+        self.assertEqual(c.src_lang, 'c')
         self.assertEqual(c.var('compiler'), 'CC')
         self.assertEqual(c.exts('source'), ['.c'])
         self.assertEqual(c.exts('header'), ['.h'])
@@ -37,6 +38,7 @@ class TestLanguages(TestCase):
 
         cxx = self.known_langs['c++']
         self.assertEqual(cxx.name, 'c++')
+        self.assertEqual(cxx.src_lang, 'c++')
         self.assertEqual(cxx.var('compiler'), 'CXX')
         self.assertEqual(cxx.exts('source'), ['.cxx', '.cpp'])
         self.assertEqual(cxx.exts('header'), ['.hpp'])
@@ -52,6 +54,7 @@ class TestLanguages(TestCase):
 
         g = self.known_langs['goofy']
         self.assertEqual(g.name, 'goofy')
+        self.assertEqual(g.src_lang, 'c++')
         self.assertEqual(g.var('compiler'), 'GOOFY')
         self.assertEqual(g.exts('source'), ['.goofy'])
         self.assertEqual(g.exts('header'), [])

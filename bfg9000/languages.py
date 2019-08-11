@@ -4,29 +4,44 @@ from six import iteritems, iterkeys
 from .iterutils import listify
 
 
+def _get_prop(attr, desc):
+    def inner(self, key):
+        try:
+            return getattr(self, attr)[key]
+        except KeyError:
+            raise ValueError('{} {!r} does not support {} {!r}'
+                             .format(self._kind, self.name, desc, key))
+    return inner
+
+
 class _Info(object):
-    def __init__(self, name, kind, vars, exts=None, auxexts={}):
+    _fields = ('vars',)
+
+    def __init__(self, name, vars):
         self.name = name
-        self._kind = kind
         self._var = vars
 
-        if exts is not None:
-            allkeys = set(iterkeys(exts)) | set(iterkeys(auxexts))
-            self._exts = {i: listify(exts.get(i)) for i in allkeys}
-            self._auxexts = {i: listify(auxexts.get(i)) for i in allkeys}
+    var = _get_prop('_var', 'var')
 
-    def __get_prop(attr, desc):
-        def inner(self, key):
-            try:
-                return getattr(self, attr)[key]
-            except KeyError:
-                raise ValueError('{} {!r} does not support {} {!r}'
-                                 .format(self._kind, self.name, desc, key))
-        return inner
 
-    var = __get_prop('_var', 'var')
-    exts = __get_prop('_exts', 'file type')
-    auxexts = __get_prop('_auxexts', 'file type')
+class _LanguageInfo(_Info):
+    _kind = 'language'
+    _fields = _Info._fields + ('exts', 'auxexts')
+
+    def __init__(self, name, base, vars, exts, auxexts):
+        _Info.__init__(self, name, vars)
+        self._base = base
+
+        allkeys = set(iterkeys(exts)) | set(iterkeys(auxexts))
+        self._exts = {i: listify(exts.get(i)) for i in allkeys}
+        self._auxexts = {i: listify(auxexts.get(i)) for i in allkeys}
+
+    exts = _get_prop('_exts', 'file type')
+    auxexts = _get_prop('_auxexts', 'file type')
+
+    @property
+    def src_lang(self):
+        return self._base or self.name
 
     def allexts(self, key):
         return self.exts(key) + self.auxexts(key)
@@ -44,25 +59,34 @@ class _Info(object):
         return None
 
 
+class _FormatInfo(_Info):
+    _kind = 'format'
+
+
 class _Definer(object):
-    def __init__(self, parent, name, kind, fields):
+    def __init__(self, parent, type, name, **kwargs):
         self._parent = parent
+        self._type = type
         self._name = name
-        self._kind = kind
-        self._fields = {i: {} for i in fields}
+        self._fields = set(type._fields)
+
+        self._data = {i: {} for i in type._fields}
+        for k, v in iteritems(kwargs):
+            assert k not in self._fields
+            self._data[k] = v
 
     def __enter__(self):
         return self
 
     def __exit__(self, type, value, traceback):
-        self._parent._add(_Info(self._name, self._kind, **self._fields))
+        self._parent._add(self._type(self._name, **self._data))
 
     def __getattr__(self, attr):
         if attr not in self._fields:
             raise AttributeError(attr)
 
         def inner(**kwargs):
-            self._fields[attr] = kwargs
+            self._data[attr] = kwargs
 
         return inner
 
@@ -98,9 +122,8 @@ class Languages(object):
     def extinfo(self, ext):
         return self._ext2lang.get(ext, (None, None))
 
-    def make(self, name):
-        return _Definer(self, name, kind='language',
-                        fields=['vars', 'exts', 'auxexts'])
+    def make(self, name, base=None):
+        return _Definer(self, _LanguageInfo, name, base=base)
 
 
 class Formats(object):
@@ -120,7 +143,7 @@ class Formats(object):
         self._formats[name][mode] = info
 
     def make(self, name, mode):
-        return _Definer(self, (name, mode), kind='format', fields=['vars'])
+        return _Definer(self, _FormatInfo, (name, mode))
 
 
 known_langs = Languages()
