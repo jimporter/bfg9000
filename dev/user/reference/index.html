@@ -198,8 +198,21 @@ as an argument, e.g. in the following snippet:</p>
 <pre><code class="python">command('script', cmd=['python', source_file('script.py')])
 </code></pre>
 
-<p>Using <a href="#source_filename-lang"><em>source_file</em></a> here allows you to specify that the
-file is found in the <em>source directory</em>, rather than the build directory.</p>
+<p>Using <a href="#source_file"><em>source_file</em></a> here allows you to specify that the file is
+found in the <em>source directory</em>, rather than the build directory.</p>
+<h3 id="auto_file">auto_file(<em>name</em>, [<em>lang</em>])<a class="headerlink" href="#auto_file" title="Permanent link">§</a></h3>
+<p>Create a reference to an existing file named <em>name</em>. This function will try to
+automatically determine the file's kind based on its extension:
+<a href="#source_file"><em>source_file</em></a>; <a href="#header_file"><em>header_file</em></a>; or, if the
+extension is not recognized, <a href="#generic_file"><em>generic_file</em></a>. If <em>lang</em> is
+specified, files with an unrecognized extension will always be treated as
+<a href="#source_file"><em>source_file</em></a>s.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This function is primarily useful for writing generic code that works with
+multiple kinds of files; when creating a reference to a specific, <em>known</em>
+file, the concrete function listed above should be used instead.</p>
+</div>
 <h3 id="directory">directory(<em>name</em>, [<em>include</em>], [<em>exclude</em>], [<em>filter</em>])<a class="headerlink" href="#directory" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Create a reference to an existing directory named <em>name</em>. This allows you to
