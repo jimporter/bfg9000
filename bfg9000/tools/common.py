@@ -12,12 +12,17 @@ _modes = {
     'static_library': 'STATIC',
 }
 
+_macro_ex = re.compile(r'([^A-Za-z0-9_]|^(?=[0-9]))')
+_macro_ex2 = re.compile(r'^_')
+
 
 def library_macro(name, mode):
-    # Since the name always begins with "lib", this always produces a valid
-    # macro name. (FIXME: this isn't true)
+    # Replace all non-alphanumeric characters in the name with underscores and
+    # prepend an underscore if the name starts with a digit. Then add an extra
+    # 'LIB' to the beginning if the transformed name starts with an underscore.
     return '{name}_{suffix}'.format(
-        name=re.sub(r'\W', '_', name.upper()), suffix=_modes[mode]
+        name=_macro_ex2.sub('LIB_', _macro_ex.sub('_', name.upper())),
+        suffix=_modes[mode]
     )
 
 

@@ -28,6 +28,32 @@ def mock_execute(args, **kwargs):
         return 'SEARCH_DIR("/usr")\n'
 
 
+class TestLibraryMacro(TestCase):
+    def test_simple(self):
+        self.assertEqual(common.library_macro('libfoo', 'shared_library'),
+                         'LIBFOO_EXPORTS')
+        self.assertEqual(common.library_macro('libfoo', 'static_library'),
+                         'LIBFOO_STATIC')
+
+    def test_subdir(self):
+        self.assertEqual(common.library_macro('dir/libfoo', 'shared_library'),
+                         'DIR_LIBFOO_EXPORTS')
+        self.assertEqual(common.library_macro('dir/libfoo', 'static_library'),
+                         'DIR_LIBFOO_STATIC')
+
+    def test_leading_underscore(self):
+        self.assertEqual(common.library_macro('_dir/libfoo', 'shared_library'),
+                         'LIB_DIR_LIBFOO_EXPORTS')
+        self.assertEqual(common.library_macro('_dir/libfoo', 'static_library'),
+                         'LIB_DIR_LIBFOO_STATIC')
+
+    def test_leading_digits(self):
+        self.assertEqual(common.library_macro('1/libfoo', 'shared_library'),
+                         'LIB_1_LIBFOO_EXPORTS')
+        self.assertEqual(common.library_macro('1/libfoo', 'static_library'),
+                         'LIB_1_LIBFOO_STATIC')
+
+
 class TestChooseBuilder(CrossPlatformTestCase):
     def __init__(self, *args, **kwargs):
         CrossPlatformTestCase.__init__(self, clear_variables=True, *args,
