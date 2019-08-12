@@ -15,10 +15,12 @@ with known_langs.make('c++') as x:
 with known_langs.make('objc') as x:
     x.vars(compiler='OBJC', flags='OBJCFLAGS')
     x.exts(source=['.m'])
+    x.auxexts(header=['.h'])
 
 with known_langs.make('objc++') as x:
     x.vars(compiler='OBJCXX', flags='OBJCXXFLAGS')
     x.exts(source=['.mm', '.M'])
+    x.auxexts(header=['.h'])
 
 with known_formats.make('native', mode='dynamic') as x:
     x.vars(linker='LD', flags='LDFLAGS', libs='LDLIBS')
