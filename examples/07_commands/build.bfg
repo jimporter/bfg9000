@@ -26,6 +26,6 @@ command('script', cmds=[
 
 # Some targets don't have their own commands and are just aliases to other
 # targets. While bfg9000 automatically creates the `all` alias, you can also
-# specify you own aliases with the alias() function:
+# specify your own aliases with the alias() function:
 
 alias('hello-world', deps=[hello, world])

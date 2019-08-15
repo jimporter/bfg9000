@@ -66,29 +66,26 @@ def flags_vars(name, value, buildfile):
 
 
 def command_build(buildfile, env, output, inputs=None, implicit=None,
-                  order_only=None, command=[], console=True, description=None):
-    if console:
-        rule_name = 'console_command'
+                  order_only=None, command=[], console=False, phony=False,
+                  description=None):
+    if phony:
         extra_implicit = ['PHONY']
-
-        if not buildfile.has_rule('console_command'):
-            extra_kwargs = {}
-            if ( env.backend_version and env.backend_version in
-                 SpecifierSet('>=1.5') ):
-                extra_kwargs['pool'] = 'console'
-            buildfile.rule(name='console_command',
-                           command=shell.shell_list([var('cmd')]),
-                           **extra_kwargs)
-
         if not buildfile.has_build('PHONY'):
             buildfile.build(output='PHONY', rule='phony')
     else:
-        rule_name = 'command'
         extra_implicit = []
 
-        if not buildfile.has_rule('command'):
-            buildfile.rule(name='command',
-                           command=shell.shell_list([var('cmd')]))
+    if ( console and env.backend_version and env.backend_version in
+         SpecifierSet('>=1.5') ):
+        rule_name = 'console_command'
+        rule_kwargs = {'pool': 'console'}
+    else:
+        rule_name = 'command'
+        rule_kwargs = {}
+
+    if not buildfile.has_rule(rule_name):
+        buildfile.rule(name=rule_name, command=shell.shell_list([var('cmd')]),
+                       **rule_kwargs)
 
     variables = {'cmd': command}
     if description:

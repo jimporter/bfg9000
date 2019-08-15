@@ -83,7 +83,7 @@ def multitarget_rule(buildfile, targets, deps=None, order_only=None,
         first = targets[0]
         primary = _get_path(first).addext('.stamp')
         buildfile.rule(target=targets, deps=[primary])
-        recipe = listify(recipe) + [Silent([ 'touch', var('@') ])]
+        recipe = listify(recipe) + [Silent([ 'touch', qvar('@') ])]
     else:
         primary = targets[0]
 

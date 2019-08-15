@@ -1,3 +1,4 @@
+import warnings
 from itertools import repeat
 
 from . import builtin
@@ -33,6 +34,9 @@ class BaseCommand(Edge):
 
 
 class Command(BaseCommand):
+    phony = True
+    console = True
+
     def __init__(self, build, env, name, **kwargs):
         BaseCommand.__init__(self, build, env, name, Phony(name), **kwargs)
 
@@ -43,30 +47,41 @@ def command(build, env, name, **kwargs):
 
 
 class BuildStep(BaseCommand):
+    console = False
     msbuild_output = True
 
-    def __init__(self, build, builtins, env, name, **kwargs):
+    def __init__(self, build, builtins, env, name, type=None, args=None,
+                 kwargs=None, always_outdated=False, **fwd_kwargs):
+        self.phony = always_outdated
+
         name = listify(name)
         project_name = name[0]
 
-        type = kwargs.pop('type', builtins['auto_file'])
+        if type is None:
+            type = builtins['auto_file']
         if not isiterable(type):
             type = repeat(type, len(name))
 
-        type_args = kwargs.pop('args', None)
-        if type_args is None:
-            type_args = repeat([], len(name))
+        if args is None:
+            args = repeat([], len(name))
+        else:  # pragma: no cover
+            # TODO: remove this after 0.5 is released.
+            warnings.warn('"args" is deprecated; use "type" instead ' +
+                          '(e.g. with a lambda)')
 
-        type_kwargs = kwargs.pop('kwargs', None)
-        if type_kwargs is None:
-            type_kwargs = repeat({}, len(name))
+        if kwargs is None:
+            kwargs = repeat({}, len(name))
+        else:  # pragma: no cover
+            # TODO: remove this after 0.5 is released.
+            warnings.warn('"kwargs" is deprecated; use "type" instead ' +
+                          '(e.g. with a lambda)')
 
         outputs = [self._make_outputs(*i) for i in
-                   zip(name, type, type_args, type_kwargs)]
+                   zip(name, type, args, kwargs)]
 
-        desc = kwargs.pop('description', 'build => ' + ' '.join(name))
+        desc = fwd_kwargs.pop('description', 'build => ' + ' '.join(name))
         BaseCommand.__init__(self, build, env, project_name, outputs,
-                             description=desc, **kwargs)
+                             description=desc, **fwd_kwargs)
 
     @staticmethod
     def _make_outputs(name, type, args, kwargs):
@@ -84,13 +99,14 @@ def build_step(build, builtins, env, name, **kwargs):
 @make.rule_handler(Command, BuildStep)
 def make_command(rule, build_inputs, buildfile, env):
     # Join all the commands onto one line so that users can use 'cd' and such.
-    buildfile.rule(
-        target=rule.output,
+    make.multitarget_rule(
+        buildfile,
+        targets=rule.output,
         deps=rule.inputs + rule.extra_deps,
         order_only=(make.directory_deps(rule.output) if
                     isinstance(rule, BuildStep) else []),
         recipe=[pshell.global_env(rule.env, rule.cmds)],
-        phony=isinstance(rule, Command)
+        phony=rule.phony
     )
 
 
@@ -101,7 +117,8 @@ def ninja_command(rule, build_inputs, buildfile, env):
         output=rule.output,
         inputs=rule.inputs + rule.extra_deps,
         command=shell.global_env(rule.env, rule.cmds),
-        console=isinstance(rule, Command),
+        console=rule.console,
+        phony=rule.phony,
         description=rule.description
     )
 

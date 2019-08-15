@@ -2,8 +2,8 @@ import mock
 from collections import namedtuple
 
 from .common import BuiltinTest
-from bfg9000.builtins import compile  # noqa
 from bfg9000 import file_types
+from bfg9000.builtins import compile  # noqa
 from bfg9000.environment import LibraryMode
 from bfg9000.iterutils import listify, unlistify
 from bfg9000.path import Path, Root

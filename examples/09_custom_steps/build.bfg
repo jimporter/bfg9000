@@ -1,7 +1,5 @@
 # -*- python -*-
 
-import sys
-
 # Sometimes, you want to be able to perform a build step that bfg9000 doesn't
 # provide a built-in rule for. In this case, you can use the build_step()
 # function, which takes an arbitrary command and produces a file:
@@ -15,13 +13,10 @@ hello = build_step('hello.cpp', cmd=[
 executable('hello', files=[hello], description='link => hello :)')
 
 # Some build steps produce *multiple* files; you can specify this by passing a
-# list of names of the files to produce. In such cases, you'll probably also
-# find it useful to specify the `type` argument, which lets you indicate the
-# type of file object to return. You can also pass `args` and `kwargs` to
-# forward arguments along to `type`:
+# list of names of the files to produce:
 
 goodbye_hdr, goodbye_src = build_step(['goodbye.hpp', 'goodbye.cpp'], cmd=[
     generator, 'goodbye', 'goodbye.hpp', 'goodbye.cpp'
-], type=[header_file, source_file])
+])
 
 executable('goodbye', files=['main.cpp', goodbye_src], includes=[goodbye_hdr])

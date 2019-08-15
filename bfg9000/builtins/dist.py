@@ -59,7 +59,8 @@ def ninja_dist_rule(build_inputs, buildfile, env):
         ninja.command_build(
             buildfile, env,
             output='dist-{}'.format(fmt),
-            command=_dist_command(fmt, build_inputs, buildfile, env)
+            command=_dist_command(fmt, build_inputs, buildfile, env),
+            phony=True
         )
 
     buildfile.build(

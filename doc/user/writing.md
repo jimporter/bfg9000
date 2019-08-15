@@ -316,16 +316,32 @@ a file by running an arbitrary command:
 lex = build_step('lex.yy.c', cmd=[ 'flex', source_file('hello.lex') ])
 ```
 
-You can also define steps that produce *multiple* files. When doing this, you'll
-generally want to specify the *type* argument as well, which lets you indicate
-the type of file object to return. In addition, you can pass *args* and *kwargs*
-to forward arguments along to *type*:
+By default, the output of a custom build step is passed through
+[*auto_file*](reference.md#auto_file), which produces a source file, header
+file, or a generic file based on the path's extension. When this doesn't produce
+the expected results, you can supply the *type* argument, which lets you pass a
+function taking a path and returning a file object to represent the output:
+
+```python
+libfoo = shared_library(...)
+stripped = build_step('libfoo.so', cmd=[
+    'strip', '-o', 'libfoo.so', libfoo
+], type=shared_library)
+```
+
+Finally, you can define steps that produce *multiple* files by passing a list of
+names as the outputs of the step. This will then return a file object for each
+of the outputs:
 
 ```python
 hdr, src = build_step(['hello.tab.h', 'hello.tab.c'], cmd=[
-    'bison', 'hello.y'
-], type=[header_file, source_file])
+    'bison', source_file('hello.y')
+])
 ```
+
+When producing multiple files via *build_step*, the *type* argument can be
+passed as either a single function (which will be applied to every output) or as
+a list of function (which will be applied element-wise to each output).
 
 ## User-defined arguments
 

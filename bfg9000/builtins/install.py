@@ -138,11 +138,17 @@ def make_install_rule(build_inputs, buildfile, env):
         buildfile.variable(make.path_vars[path.DestDir.destdir],
                            env.variables.get('DESTDIR', ''), make.Section.path)
 
-    install = _install_commands(install_outputs, _doppel_cmd(env, buildfile))
-    buildfile.rule(target='install', deps='all', recipe=install, phony=True)
-
-    uninstall = _uninstall_command(install_outputs, _rm_cmd(env, buildfile))
-    buildfile.rule(target='uninstall', recipe=[uninstall], phony=True)
+    buildfile.rule(
+        target='install',
+        deps='all',
+        recipe=_install_commands(install_outputs, _doppel_cmd(env, buildfile)),
+        phony=True
+    )
+    buildfile.rule(
+        target='uninstall',
+        recipe=[_uninstall_command(install_outputs, _rm_cmd(env, buildfile))],
+        phony=True
+    )
 
 
 @ninja.post_rule
@@ -160,8 +166,16 @@ def ninja_install_rule(build_inputs, buildfile, env):
                            ninja.Section.path)
 
     install = _install_commands(install_outputs, _doppel_cmd(env, buildfile))
-    ninja.command_build(buildfile, env, output='install', inputs=['all'],
-                        command=shell.join_lines(install))
-
-    uninstall = _uninstall_command(install_outputs, _rm_cmd(env, buildfile))
-    ninja.command_build(buildfile, env, output='uninstall', command=uninstall)
+    ninja.command_build(
+        buildfile, env,
+        output='install',
+        inputs=['all'],
+        command=shell.join_lines(install),
+        phony=True
+    )
+    ninja.command_build(
+        buildfile, env,
+        output='uninstall',
+        command=_uninstall_command(install_outputs, _rm_cmd(env, buildfile)),
+        phony=True
+    )

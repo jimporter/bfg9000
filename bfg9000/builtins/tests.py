@@ -155,4 +155,5 @@ def ninja_test_rule(build_inputs, buildfile, env):
         output='test',
         inputs='tests',
         command=shell.join_lines(commands),
+        console=True, phony=True
     )

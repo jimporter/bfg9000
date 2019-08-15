@@ -148,35 +148,6 @@ vendor). This is described in more detail for each step below.
     executable file named "foo" on Windows, the resulting file will be
     `foo.exe`.
 
-### build_step(*name*, *cmd*|*cmds*, [*environment*], [*type*], [*args*], [*kwargs*], [*extra_deps*], [*description*]) { #build_step }
-Availability: `build.bfg`
-{: .subtitle}
-
-Create a custom build step that produces a file named *name* by running an
-arbitrary command (*cmd* or *cmds*). *name* may either be a single file name or
-a list of file names. For a description of the arguments *cmd*, *cmds*, and
-*environment*, see [*command*](#command) below.
-
-By default, this function return a [*source_file*](#source_file); you can adjust
-this with the *type* argument. This should be either 1) a function returning a
-file object, or 2) an object with a `.type` attribute that meets the criteria of
-(1). You can also pass *args* and *kwargs* to forward arguments along to this
-function.
-
-### command(*name*, *cmd*|*cmds*, [*environment*], [*extra_deps*], [*description*]) { #command }
-Availability: `build.bfg`
-{: .subtitle}
-
-Create a build step named *name* that runs a list of arbitrary commands,
-specified in either *cmd* or *cmds*; *cmd* takes a single command, whereas
-*cmds* takes a list of commands. Each command may be a string to be
-parsed according to shell rules, a file object (such as an
-[*executable*](#executable)), or a list of arguments to be passed directly to
-the process.
-
-You may also pass a dict to *environment* to set environment variables for the
-commands. These override any environment variables set on the command line.
-
 ### executable(*name*, [*files*, ..., [*extra_deps*], [*description*]]) { #executable }
 Availability: `build.bfg`
 {: .subtitle}
@@ -431,6 +402,50 @@ to turn a static library into a shared library.
 *whole_archive*'s arguments are the same as for
 [*static_library*](#static_library). In addition, you can pass an existing
 static library to *whole_archive* to convert it into a whole archive.
+
+## User-defined build steps
+
+While the standard build steps cover the most common tasks in a build, many
+projects need to run more-specialized commands. A build script can define custom
+steps via the [*build_step*](#build_step) and [*command*](#command) functions:
+*build_step* defines a step which outputs one or more files that can be used in
+other steps, while *command* defines a more general step that should always be
+run when it's a target (similar to the `test` or `install` targets).
+
+Both *build_step* and *command* allow you to specify an arbitrary command *cmd*
+or *cmds*; *cmd* takes a single command, whereas *cmds* takes a list of
+commands. Each command will be passed through
+[*env.run_arguments()*](#env-run_arguments) and may be a string (to be parsed
+according to shell rules), a file object (such as an
+[*executable*](#executable)), or a list of arguments to be passed directly to
+the process. Any file objects specified in the command will automatically be
+added as dependencies to this step.
+
+You may also pass a dict to *environment* to set environment variables for the
+commands. These override any environment variables set on the command line.
+
+### build_step(*name*, *cmd*|*cmds*, [*environment*], [*type*], [*always_outdated*], [*extra_deps*], [*description*]) { #build_step }
+Availability: `build.bfg`
+{: .subtitle}
+
+Create a custom build step that produces one or more files named *name* by
+running an arbitrary command (*cmd* or *cmds*). *name* may either be a single
+file name or a list of file names. If *always_outdated* is true, this build step
+will be considered out-of-date no matter the status of the output.
+
+By default, the output of this step is one or more [*auto_file*](#auto_file)s;
+you can adjust this with the *type* argument: this should be a function (or a
+list thereof) taking a path and returning a file object. If *type* is a single
+function, it will be applied to every output of *build_step*; if it's a list of
+functions, they will be applied element-wise to each output.
+
+### command(*name*, *cmd*|*cmds*, [*environment*], [*extra_deps*], [*description*]) { #command }
+Availability: `build.bfg`
+{: .subtitle}
+
+Create a build step named *name* that runs an arbitrary command, specified in
+either *cmd* or *cmds*. This build step is always considered out-of-date (as
+with a "phony" Makefile target, such as `test` or `install`).
 
 ## Grouping rules
 
