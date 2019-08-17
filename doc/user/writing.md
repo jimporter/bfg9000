@@ -2,7 +2,7 @@
 
 bfg9000's build script is called `build.bfg` and is (usually) placed in the root
 of your source tree. `build.bfg` files are just Python scripts with a handful of
-extra built-in functions to define all the rules for building your software.
+extra built-in functions to define all the steps for building your software.
 While bfg9000's goal is to make writing build scripts easy, sometimes complexity
 is unavoidable. By using a general-purpose language, this complexity can
 (hopefully!) be managed.
@@ -203,7 +203,7 @@ When you're building multiple binaries, you might want to be able to specify
 what gets built by default, i.e. when calling `make` (or `ninja`) with no
 arguments. Normally, every executable and library (except those passed to
 [*test()*](reference.md#test)) will get built. However, you can pass any build
-rule(s) to [*default()*](reference.md#default), and they'll be set as the
+steps to [*default()*](reference.md#default), and they'll be set as the
 default, overriding the normal behavior. This makes it easy to provide your
 users with a standard build that gets them all the bits they need, and none they
 don't.
@@ -233,7 +233,7 @@ executable('program', files=['main.cpp'], packages=[ogg, prog_opts])
 After building, you might want to allow your project to be installed onto the
 user's system somewhere. Most files (headers, executables, libraries) can be
 added to the list of installed files via the
-[*install()*](reference.md#install) rule. You can also install entire
+[*install()*](reference.md#install) function. You can also install entire
 directories of headers:
 
 ```python
@@ -242,9 +242,48 @@ lib = static_library('program', files=['src/prog.cpp'], includes=[include_dir])
 install(lib, include_dir)
 ```
 
+## Tests
+
+All good projects should have tests. Since your project is good (isn't it?),
+yours has tests too, and you should have a good way to execute those tests from
+your build system. bfg9000 provides a [set of
+functions](reference.md#test-steps) for running tests. The most important of
+these is aptly named [*test()*](reference.md#test). Any executable can be passed
+to this function, and it will be executed as a test; an exit status of 0 marks
+success, and non-zero marks failure:
+
+```python
+test( executable('test_foo', files=['test_foo.cpp']) )
+```
+
+In addition, you can provide a [test driver](reference.md#test_driver) that
+collects all of your tests together and runs them as one. *test_driver()* takes
+an executable (a [*system_executable*](reference.md#system_executable) by
+default) that runs all the test files. This allows you to aggregate multiple
+test files into a single run, which is very useful for reporting:
+
+```python
+mettle = test_driver('mettle')
+test( executable('test_foo', files=['test_foo.cpp']), driver=mettle )
+test( executable('test_bar', files=['test_bar.cpp']), driver=mettle )
+```
+
+## Aliases
+
+Sometimes, you just want to group a set of targets together to make it easier to
+build all of them at once. This automatically happens for [default
+targets](#default-targets) by creating an `all` alias, but you can do this
+yourself for any collection of targets:
+
+```python
+foo = executable('foo', files=['foo.cpp'])
+bar = executable('bar', files=['bar.cpp'])
+alias('foobar', [foo, bar])
+```
+
 ## Commands
 
-In addition to ordinary build rules, it can be useful to provide other common
+In addition to ordinary build steps, it can be useful to provide other common
 commands that apply to a project's source, such as linting the code or building
 documentation. Normally, you should pass the command to be run as an array of
 arguments. This will automatically handle escaping any quotes in each argument.
@@ -264,45 +303,6 @@ command('script', cmds=[
     'touch file',
     ['python', 'script.py']
 ])
-```
-
-## Aliases
-
-Sometimes, you just want to group a set of targets together to make it easier to
-build all of them at once. This automatically happens for [default
-targets](#default-targets) by creating an `all` alias, but you can do this
-yourself for any collection of targets:
-
-```python
-foo = executable('foo', files=['foo.cpp'])
-bar = executable('bar', files=['bar.cpp'])
-alias('foobar', [foo, bar])
-```
-
-## Tests
-
-All good projects should have tests. Since your project is good (isn't it?),
-yours has tests too, and you should have a good way to execute those tests from
-your build system. bfg9000 provides a [set of
-functions](reference.md#test-rules) for running tests. The most important of
-these is aptly named [*test()*](reference.md#test). Any executable can be passed
-to this function, and it will be executed as a test; an exit status of 0 marks
-success, and non-zero marks failure:
-
-```python
-test( executable('test_foo', files=['test_foo.cpp']) )
-```
-
-In addition, you can provide a [test driver](reference.md#test_driver) that
-collects all of your tests together and runs them as one. *test_driver()* takes
-an executable (a [*system_executable*](reference.md#system_executable) by
-default) that runs all the test files. This allows you to aggregate multiple
-test files into a single run, which is very useful for reporting:
-
-```python
-mettle = test_driver('mettle')
-test( executable('test_foo', files=['test_foo.cpp']), driver=mettle )
-test( executable('test_bar', files=['test_bar.cpp']), driver=mettle )
 ```
 
 ## Custom build steps
@@ -357,7 +357,7 @@ Inside `options.bfg`, you can define arguments with the
 ```python
 # Adds --name/--x-name to the list of available command-line options, e.g.:
 #   9k build/ --name=foobar
-argument('name', default='unnamed', help='set the program's name')
+argument('name', default='unnamed', help="set the program's name")
 ```
 
 It works much like [argparse][argparse]'s [*add_argument()*][add_argument]

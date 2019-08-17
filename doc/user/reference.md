@@ -25,25 +25,31 @@ equivalent to bfg9000.
     Windows-style paths with a drive letter and a *relative* path (e.g. `C:foo`)
     are unsupported by bfg9000.
 
-## File types
+## File objects
 
 Files used in a `build.bfg` script are divided by their types (e.g. source
 code, header files, etc). All files from the source directory which are
 referenced in the `build.bfg` script will automatically be added to the source
 distribution when it's built.
 
-In most cases, you can simply pass a string to functions expecting a file type;
-the string will automatically be converted to a file object of the appropriate
-type. However, in some cases, you may wish to explicitly create a file object.
-This can be useful, for instance, when running commands that take a source file
-as an argument, e.g. in the following snippet:
+In most cases, you can simply pass a string to functions expecting a file
+object; the string will automatically be converted to a file object of the
+appropriate type. However, in some cases, you may wish to explicitly create a
+file object. This can be useful, for instance, when running commands that take a
+source file as an argument, e.g. in the following snippet:
 
 ```python
-command('script', cmd=['python', source_file('script.py')])
+command('script', cmd=[source_file('script.py')])
 ```
 
 Using [*source_file*](#source_file) here allows you to specify that the file is
-found in the *source directory*, rather than the build directory.
+a source code file found in the *source directory*, rather than the build
+directory. Further, since the file is a Python script, it can be executed as
+part of a [*command*](#command) step.
+
+In addition to the functions listed in this section below,
+[build steps](#build_step) which generate a file can also be used to produce
+source files of that type (see each step's documentation for details).
 
 ### auto_file(*name*, [*lang*]) { #auto_file }
 
@@ -120,33 +126,36 @@ Create a reference to an existing source file named *name*. If *lang* is not
 specified, the language of the file is inferred from its extension.
 
 ## Build steps
-Availability: `build.bfg`
-{: .subtitle}
 
-Build steps define rules to create an output (usually a file) from zero or more
-inputs (also usually files). As you may expect, if the output doesn't exist, the
-step is run to generate it. Each input is a dependency on the output, and any
-changes to an input will result in a rebuild. This includes headers `#include`d
-by any of the source files, but does *not* include files external to the project
-(i.e. [packages](#package-resolvers)).
+Build steps describe how to create a target output (usually a file) from zero or
+more inputs (usually files or other build steps). As you may expect, if the
+output is a file and it's either out of date or doesn't exist, the step is run
+to generate it. Each input is a dependency on the output, and any changes to an
+input will result in a rebuild. This includes headers `#include`d by any of the
+source files, but does *not* include files external to the project (i.e.
+[packages](#package-resolvers)).
 
-In addition, all build steps have the ability to define extra dependencies via
-the *extra_deps* argument. These can be files or other build steps, and changes
-to them will trigger a rebuild as with the build's inputs.
+Most build steps also have the ability to define additional dependencies via the
+*extra_deps* argument. These can be files or other build steps, and changes to
+them will trigger a rebuild as with the build's inputs.
 
-Build steps also allow setting a custom description. This can be used to provide
-a friendlier message for the Ninja backend to show when building that step.
+Further, many build steps also allow setting a custom *description*. This can be
+used to provide a friendlier message for the Ninja backend to show when building
+that step.
 
-Finally, build steps which produce a file can also be used like the
-[file types](#file-types) described above to refer to prebuilt files already in
-the source tree (e.g. static libraries provided in binary form by a
+## File steps
+
+Naturally, the most common type of build step is one that generates a file.
+These are responsible for compiling object files, linking executables and
+libraries, and so on. In addition, all of these steps can be used like the [file
+object](#file-objects) functions described above to refer to prebuilt files
+already in the source tree (e.g. static libraries provided in binary form by a
 vendor). This is described in more detail for each step below.
 
 !!! note
-    For build steps which produce a file, the exact name of the output file is
-    determined by the platform you're running on. For instance, when building an
-    executable file named "foo" on Windows, the resulting file will be
-    `foo.exe`.
+    For file steps, the exact name of the output file is determined by the
+    platform you're running on. For instance, when building an executable file
+    named "foo" on Windows, the resulting file will be `foo.exe`.
 
 ### executable(*name*, [*files*, ..., [*extra_deps*], [*description*]]) { #executable }
 Availability: `build.bfg`
@@ -403,7 +412,90 @@ to turn a static library into a shared library.
 [*static_library*](#static_library). In addition, you can pass an existing
 static library to *whole_archive* to convert it into a whole archive.
 
-## User-defined build steps
+## Test steps
+
+These steps help you define automated tests that can all be run via the `test`
+target. For simple cases, you should only need the [*test*](#test) function, but
+you can also wrap your tests with a separate driver using
+[*test_driver*](#test_driver).
+
+For cases where you only want to *build* the tests, not run them, you can use
+the `tests` target.
+
+### test(*test*, [*environment*|*driver*]) { #test }
+Availability: `build.bfg`
+{: .subtitle}
+
+Create a single test. *cmd* is the base command (possibly with arguments)
+to run; this works much like the *cmd* argument in the [*command*](#command)
+built-in. You can also pass temporary environment variables as a dict via
+*environment*, or specify a test driver to add this test file to via *driver*.
+
+### test_driver(*cmd*, [*environment*|*parent*], [*wrap_children*]) { #test_driver }
+Availability: `build.bfg`
+{: .subtitle}
+
+Create a test driver which can run a series of tests, specified as command-line
+arguments to the driver. *cmd* is the base command (possibly with arguments)
+to run; this works much like the *cmd* argument in the [*command*](#command)
+built-in. You can also pass temporary environment variables as a dict with
+*environment*, or specify a parent test driver to wrap this driver via *parent*.
+
+Finally, you can specify *wrap_children* to determine how tests using this
+driver are run. If true, each test will be wrapped by
+[*env.run_arguments*](#env-run_arguments); if false (the default), tests will be
+used as-is.
+
+### test_deps(*...*) { #test_deps }
+Availability: `build.bfg`
+{: .subtitle}
+
+Specify a list of extra dependencies which must be satisfied when building the
+tests via the `tests` target.
+
+## Grouping steps
+
+### alias(*name*, [*deps*]) { #alias }
+Availability: `build.bfg`
+{: .subtitle}
+
+Create a build step named *name* that performs no actions on its own. Instead,
+it just runs its dependencies listed in *deps* as necessary. This build step is
+useful for grouping common steps together.
+
+### default(*...*) { #default }
+Availability: `build.bfg`
+{: .subtitle}
+
+Specify a list of build steps that should be run by default when building. These
+are all accumulated into the `all` target. If *default* is never called, all
+executables and libraries *not* passed to [*test*](#test) will be built by
+default.
+
+### install(*...*) { #install }
+Availability: `build.bfg`
+{: .subtitle}
+
+Specify a list of files that need to be installed for the project to work. Each
+will be installed to the appropriate location based on its type, e.g. header
+files will go in `$PREFIX/include` by default on POSIX systems. These are all
+accumulated into the `install` target. If there are any runtime dependencies for
+a file (such as shared libraries you just built), they will be installed as
+well.
+
+!!! note
+    When explicitly listing a target, *all* the files for that target will be
+    installed. For instance, on Windows, this means that passing in a shared
+    library will install the DLL *and* the import library.
+
+This step recognizes the following environment variables:
+[`DESTDIR`](environment-vars.md#destdir),
+[`INSTALL`](environment-vars.md#install),
+[`INSTALL_NAME_TOOL`](environment-vars.md#install_name_tool),
+[`MKDIR_P`](environment-vars.md#mkdir_p),
+[`PATCHELF`](environment-vars.md#patchelf).
+
+## User-defined steps
 
 While the standard build steps cover the most common tasks in a build, many
 projects need to run more-specialized commands. A build script can define custom
@@ -446,48 +538,6 @@ Availability: `build.bfg`
 Create a build step named *name* that runs an arbitrary command, specified in
 either *cmd* or *cmds*. This build step is always considered out-of-date (as
 with a "phony" Makefile target, such as `test` or `install`).
-
-## Grouping rules
-
-### alias(*name*, [*deps*]) { #alias }
-Availability: `build.bfg`
-{: .subtitle}
-
-Create a build step named *name* that performs no actions on its own. Instead,
-it just runs its dependencies listed in *deps* as necessary. This build step is
-useful for grouping common steps together.
-
-### default(*...*) { #default }
-Availability: `build.bfg`
-{: .subtitle}
-
-Specify a list of build steps that should be run by default when building. These
-are all accumulated into the `all` target. If *default* is never called, all
-executables and libraries *not* passed to [*test*](#test) will be built by
-default.
-
-### install(*...*) { #install }
-Availability: `build.bfg`
-{: .subtitle}
-
-Specify a list of files that need to be installed for the project to work. Each
-will be installed to the appropriate location based on its type, e.g. header
-files will go in `$PREFIX/include` by default on POSIX systems. These are all
-accumulated into the `install` target. If there are any runtime dependencies for
-a file (such as shared libraries you just built), they will be installed as
-well.
-
-!!! note
-    When explicitly listing a target, *all* the files for that target will be
-    installed. For instance, on Windows, this means that passing in a shared
-    library will install the DLL *and* the import library.
-
-This rule recognizes the following environment variables:
-[`DESTDIR`](environment-vars.md#destdir),
-[`INSTALL`](environment-vars.md#install),
-[`INSTALL_NAME_TOOL`](environment-vars.md#install_name_tool),
-[`MKDIR_P`](environment-vars.md#mkdir_p),
-[`PATCHELF`](environment-vars.md#patchelf).
 
 ## Semantic options
 
@@ -575,47 +625,6 @@ to modify [static libraries](#static_library).
     your project, any linker options that need to be forwarded on to `ld` should
     be prepended with `'-Wl,'`.
 
-## Test rules
-
-These rules help you define automated tests that can all be run via the `test`
-target. For simple cases, you should only need the [*test*](#test) rule, but you
-can also wrap your tests with a separate driver using
-[*test_driver*](#test_driver).
-
-For cases where you only want to *build* the tests, not run them, you can use
-the `tests` target.
-
-### test(*test*, [*environment*|*driver*]) { #test }
-Availability: `build.bfg`
-{: .subtitle}
-
-Create a single test. *cmd* is the base command (possibly with arguments)
-to run; this works much like the *cmd* argument in the [*command*](#command)
-built-in. You can also pass temporary environment variables as a dict via
-*environment*, or specify a test driver to add this test file to via *driver*.
-
-### test_driver(*cmd*, [*environment*|*parent*], [*wrap_children*]) { #test_driver }
-Availability: `build.bfg`
-{: .subtitle}
-
-Create a test driver which can run a series of tests, specified as command-line
-arguments to the driver. *cmd* is the base command (possibly with arguments)
-to run; this works much like the *cmd* argument in the [*command*](#command)
-built-in. You can also pass temporary environment variables as a dict with
-*environment*, or specify a parent test driver to wrap this driver via *parent*.
-
-Finally, you can specify *wrap_children* to determine how tests using this
-driver are run. If true, each test will be wrapped by
-[*env.run_arguments*](#env-run_arguments); if false (the default), tests will be
-used as-is.
-
-### test_deps(*...*) { #test_deps }
-Availability: `build.bfg`
-{: .subtitle}
-
-Specify a list of extra dependencies which must be satisfied when building the
-tests via the `tests` target.
-
 ## Package resolvers
 
 ### boost_package([*name*], [*version*]) { #boost_package }
@@ -634,7 +643,7 @@ If this function is unable to find the specified Boost library, it will raise a
 doesn't match the required version, a
 [*PackageVersionError*](#packageversionerror) will be raised instead.
 
-This rule recognizes the following environment variables:
+This function recognizes the following environment variables:
 [`BOOST_ROOT`](environment-vars.md#boost_root),
 [`BOOST_INCLUDEDIR`](environment-vars.md#boost_includedir),
 [`BOOST_LIBRARYDIR`](environment-vars.md#boost_librarydir),
@@ -679,7 +688,7 @@ package; by default, this is set to the package's *name*. You can also pass
 *None* to *libs* in order to explicitly indicate that the library is
 header-only.
 
-This rule recognizes the following environment variables:
+This function recognizes the following environment variables:
 [`CLASSPATH`](environment-vars.md#classpath),
 [`CPATH`](environment-vars.md#cpath),
 [`INCLUDE`](environment-vars.md#include),
@@ -749,7 +758,7 @@ Availability: `build.bfg`
 
 Search for an executable named *name* somewhere in the system's PATH.
 
-This rule recognizes the following environment variables:
+This function recognizes the following environment variables:
 [`PATH`](environment-vars.md#path), [`PATHEXT`](environment-vars.md#pathext).
 
 ## Environment

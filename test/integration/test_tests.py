@@ -7,7 +7,7 @@ from . import *
 class TestTests(IntegrationTest):
     def __init__(self, *args, **kwargs):
         IntegrationTest.__init__(
-            self, os.path.join(examples_dir, '08_tests'), *args, **kwargs
+            self, os.path.join(examples_dir, '07_tests'), *args, **kwargs
         )
 
     def test_test(self):
