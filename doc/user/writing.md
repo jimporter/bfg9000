@@ -316,6 +316,15 @@ a file by running an arbitrary command:
 lex = build_step('lex.yy.c', cmd=[ 'flex', source_file('hello.lex') ])
 ```
 
+To reduce repetition, you can also use the `build_step.input` and
+`build_step.output` placeholders in your command.
+
+```python
+lex = build_step('hello-lex.c', cmd=[
+    'flex', build_step.input, '-o' build_step.output
+], files=['hello.lex'])
+```
+
 By default, the output of a custom build step is passed through
 [*auto_file*](reference.md#auto_file), which produces a source file, header
 file, or a generic file based on the path's extension. When this doesn't produce
@@ -325,7 +334,7 @@ function taking a path and returning a file object to represent the output:
 ```python
 libfoo = shared_library(...)
 stripped = build_step('libfoo.so', cmd=[
-    'strip', '-o', 'libfoo.so', libfoo
+    'strip', '-o', build_step.output, libfoo
 ], type=shared_library)
 ```
 

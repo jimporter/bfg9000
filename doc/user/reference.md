@@ -511,12 +511,15 @@ commands. Each command will be passed through
 according to shell rules), a file object (such as an
 [*executable*](#executable)), or a list of arguments to be passed directly to
 the process. Any file objects specified in the command will automatically be
-added as dependencies to this step.
+added as dependencies to this step. In addition, commands can include
+[placeholders](#placeholder), which will automatically be expanded to the files
+corresponding to that placeholder.
+
 
 You may also pass a dict to *environment* to set environment variables for the
 commands. These override any environment variables set on the command line.
 
-### build_step(*name*, *cmd*|*cmds*, [*environment*], [*type*], [*always_outdated*], [*extra_deps*], [*description*]) { #build_step }
+### build_step(*name*, *cmd*|*cmds*, [*files*], [*environment*], [*type*], [*always_outdated*], [*extra_deps*], [*description*]) { #build_step }
 Availability: `build.bfg`
 {: .subtitle}
 
@@ -525,19 +528,44 @@ running an arbitrary command (*cmd* or *cmds*). *name* may either be a single
 file name or a list of file names. If *always_outdated* is true, this build step
 will be considered out-of-date no matter the status of the output.
 
+The command argument can use the [placeholders](#placeholder)
+`build_step.output` to refer to the output files (defined by *name*) and
+`build_step.input` to refer to the input files (defined by *files*).
+
 By default, the output of this step is one or more [*auto_file*](#auto_file)s;
 you can adjust this with the *type* argument: this should be a function (or a
 list thereof) taking a path and returning a file object. If *type* is a single
 function, it will be applied to every output of *build_step*; if it's a list of
 functions, they will be applied element-wise to each output.
 
-### command(*name*, *cmd*|*cmds*, [*environment*], [*extra_deps*], [*description*]) { #command }
+### command(*name*, *cmd*|*cmds*, [*files*], [*environment*], [*extra_deps*], [*description*]) { #command }
 Availability: `build.bfg`
 {: .subtitle}
 
 Create a build step named *name* that runs an arbitrary command, specified in
 either *cmd* or *cmds*. This build step is always considered out-of-date (as
 with a "phony" Makefile target, such as `test` or `install`).
+
+The command argument can use the [placeholder](#placeholder) `command.input` to
+refer to the input files (defined by *files*).
+
+### *placeholder*
+Availability: `build.bfg`
+{: .subtitle}
+
+When used in the *cmd* or *cmds* argument of [*build_step*](#build_step) or
+[*command*](#command), this will create a reference to the inputs or outputs of
+the step. Placeholders can be indexed or sliced just like ordinary Python lists,
+and can also be combined with strings to add prefixes and suffixes:
+
+```python
+script = source_file('script.py')
+
+# Roughly equivalent to `python script.py -ifoo.txt -sbar.txt -squux.txt`
+command('foo', cmd=[
+    script, '-i' + command.input[0], '-s' + command.input[1:]
+], files=['foo.txt', 'bar.txt', 'quux.txt'])
+```
 
 ## Semantic options
 

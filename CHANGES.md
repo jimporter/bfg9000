@@ -3,6 +3,7 @@
 ## v0.5.0 (in progress)
 
 ### New features
+- Add the ability to use placeholders for `build_step()` and `command()`
 - Add an `auto_file()` function that infers the kind of file based on its
   extension; `build_step()` now uses this by default for outputs
 - Add `always_outdated` argument to `build_step()`

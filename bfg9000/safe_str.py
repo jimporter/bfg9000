@@ -81,7 +81,7 @@ class jbos(safe_string):  # Just a Bunch of Strings
                 if isinstance(i, jbos):
                     for j in i.bits:
                         yield j
-                elif isinstance(i, (stringy_types)):
+                elif isinstance(i, stringy_types):
                     yield i
                 else:
                     raise TypeError(type(i))

@@ -13,10 +13,11 @@ hello = build_step('hello.cpp', cmd=[
 executable('hello', files=[hello], description='link => hello :)')
 
 # Some build steps produce *multiple* files; you can specify this by passing a
-# list of names of the files to produce:
+# list of names of the files to produce. In these cases, it's often especially
+# helpful to use the `build_step.output` placeholder to avoid repetition:
 
 goodbye_hdr, goodbye_src = build_step(['goodbye.hpp', 'goodbye.cpp'], cmd=[
-    generator, 'goodbye', 'goodbye.hpp', 'goodbye.cpp'
+    generator, 'goodbye', build_step.output
 ])
 
 executable('goodbye', files=['main.cpp', goodbye_src], includes=[goodbye_hdr])

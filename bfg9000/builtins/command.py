@@ -1,5 +1,6 @@
 import warnings
-from itertools import repeat
+from itertools import chain, repeat
+from six.moves import filter as ifilter
 
 from . import builtin
 from .. import shell
@@ -9,51 +10,110 @@ from ..build_inputs import Edge
 from ..file_types import File, Node, Phony
 from ..iterutils import isiterable, iterate, listify
 from ..path import Path, Root
+from ..safe_str import jbos, safe_str, safe_string
 from ..shell import posix as pshell
 
 
+class Placeholder(safe_string):
+    def __init__(self, field, key=slice(None)):
+        self._field = field
+        self._key = key
+
+    def __getitem__(self, key):
+        if self._key != slice(None):
+            raise TypeError('{!r} object has already been indexed'
+                            .format(type(self).__name__))
+        return Placeholder(self._field, key)
+
+    def expand(self, rule):
+        data = getattr(rule, self._field)
+        if isinstance(self._key, slice):
+            return data[self._key]
+        else:
+            return [data[self._key]]
+
+    @classmethod
+    def expand_word(cls, word, rule):
+        if isinstance(word, cls):
+            return word.expand(rule)
+        elif isinstance(word, jbos):
+            placeholders = list(ifilter(lambda i: isinstance(i[1], cls),
+                                        enumerate(word.bits)))
+            if len(placeholders) > 1:
+                raise ValueError('only one placeholder per word permitted')
+            elif len(placeholders) == 1:
+                index, bit = placeholders[0]
+                expanded = bit.expand(rule)
+                pre, post = word.bits[:index], word.bits[index + 1:]
+                return [jbos(*(pre + (safe_str(i),) + post)) for i in expanded]
+        return [word]
+
+
+Input = Placeholder('files')
+Output = Placeholder('output')
+
+
 class BaseCommand(Edge):
-    def __init__(self, build, env, name, outputs, cmd=None, cmds=None,
-                 environment=None, extra_deps=None, description=None):
+    def __init__(self, build, builtins, env, name, outputs, cmd=None,
+                 cmds=None, files=None, environment=None, phony=False,
+                 extra_deps=None, description=None):
         if (cmd is None) == (cmds is None):
             raise ValueError('exactly one of "cmd" or "cmds" must be ' +
                              'specified')
         elif cmds is None:
             cmds = [cmd]
 
-        inputs = [i for line in cmds for i in iterate(line)
-                  if isinstance(i, Node) and i.creator]
-        cmds = [env.run_arguments(line) for line in cmds]
-
         self.name = name
-        self.cmds = cmds
-        self.inputs = inputs
-        self.env = environment or {}
-        Edge.__init__(self, build, outputs, extra_deps=extra_deps,
+        self.files = [builtins['auto_file'](i) for i in iterate(files)]
+        self.phony = phony
+
+        implicit = [i for line in cmds for i in iterate(line)
+                    if isinstance(i, Node) and (i.creator or not phony)]
+        implicit.extend(iterate(extra_deps))
+
+        Edge.__init__(self, build, outputs, extra_deps=implicit,
                       description=description)
+
+        # Do this after Edge.__init__ so that self.output is set for our
+        # placeholders.
+        self.cmds = [env.run_arguments(self._expand_cmd(line))
+                     for line in cmds]
+        self.env = environment or {}
+
+    def _expand_cmd(self, cmd):
+        if not isiterable(cmd):
+            expanded = Placeholder.expand_word(cmd, self)
+            if len(expanded) > 1:
+                raise ValueError('placeholder can only expand to one item ' +
+                                 'when used in a string command line')
+            return expanded[0]
+        return list(chain.from_iterable(
+            Placeholder.expand_word(i, self) for i in cmd)
+        )
 
 
 class Command(BaseCommand):
-    phony = True
     console = True
 
-    def __init__(self, build, env, name, **kwargs):
-        BaseCommand.__init__(self, build, env, name, Phony(name), **kwargs)
+    def __init__(self, build, builtins, env, name, **kwargs):
+        BaseCommand.__init__(self, build, builtins, env, name, Phony(name),
+                             phony=True, **kwargs)
 
 
-@builtin.function('build_inputs', 'env')
-def command(build, env, name, **kwargs):
-    return Command(build, env, name, **kwargs).public_output
+@builtin.function('build_inputs', 'builtins', 'env')
+def command(build, builtins, env, name, **kwargs):
+    return Command(build, builtins, env, name, **kwargs).public_output
+
+
+command.input = Input
 
 
 class BuildStep(BaseCommand):
     console = False
     msbuild_output = True
 
-    def __init__(self, build, builtins, env, name, type=None, args=None,
-                 kwargs=None, always_outdated=False, **fwd_kwargs):
-        self.phony = always_outdated
-
+    def __init__(self, build, builtins, env, name, type=None,
+                 args=None, kwargs=None, always_outdated=False, **fwd_kwargs):
         name = listify(name)
         project_name = name[0]
 
@@ -80,8 +140,9 @@ class BuildStep(BaseCommand):
                    zip(name, type, args, kwargs)]
 
         desc = fwd_kwargs.pop('description', 'build => ' + ' '.join(name))
-        BaseCommand.__init__(self, build, env, project_name, outputs,
-                             description=desc, **fwd_kwargs)
+        BaseCommand.__init__(self, build, builtins, env, project_name, outputs,
+                             phony=always_outdated, description=desc,
+                             **fwd_kwargs)
 
     @staticmethod
     def _make_outputs(name, type, args, kwargs):
@@ -96,13 +157,17 @@ def build_step(build, builtins, env, name, **kwargs):
     return BuildStep(build, builtins, env, name, **kwargs).public_output
 
 
+build_step.input = Input
+build_step.output = Output
+
+
 @make.rule_handler(Command, BuildStep)
 def make_command(rule, build_inputs, buildfile, env):
     # Join all the commands onto one line so that users can use 'cd' and such.
     make.multitarget_rule(
         buildfile,
         targets=rule.output,
-        deps=rule.inputs + rule.extra_deps,
+        deps=rule.files + rule.extra_deps,
         order_only=(make.directory_deps(rule.output) if
                     isinstance(rule, BuildStep) else []),
         recipe=[pshell.global_env(rule.env, rule.cmds)],
@@ -115,7 +180,8 @@ def ninja_command(rule, build_inputs, buildfile, env):
     ninja.command_build(
         buildfile, env,
         output=rule.output,
-        inputs=rule.inputs + rule.extra_deps,
+        inputs=rule.files,
+        implicit=rule.extra_deps,
         command=shell.global_env(rule.env, rule.cmds),
         console=rule.console,
         phony=rule.phony,
