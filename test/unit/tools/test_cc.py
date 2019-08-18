@@ -7,7 +7,6 @@ from bfg9000.file_types import *
 from bfg9000.languages import Languages
 from bfg9000.packages import Framework
 from bfg9000.path import InstallRoot
-from bfg9000.safe_str import jbos
 from bfg9000.tools.cc import CcBuilder
 from bfg9000.versioning import Version
 
@@ -331,7 +330,7 @@ class TestCcLinker(CrossPlatformTestCase):
             rpath = rpath_with_output = ['-Wl,-rpath,' + libdir]
         elif self.env.target_platform.genus == 'darwin':
             rpath = []
-            rpath_with_output = [jbos('-Wl,-rpath,', '@loader_path')]
+            rpath_with_output = ['-Wl,-rpath,@loader_path']
         else:
             rpath = rpath_with_output = []
 
@@ -360,7 +359,7 @@ class TestCcLinker(CrossPlatformTestCase):
                 self.linker.flags(opts.option_list(
                     opts.lib(SharedLibrary(lib2, 'native'))
                 ), output),
-                ['-L' + libdir2, jbos('-Wl,-rpath,', '$ORIGIN/foo')]
+                ['-L' + libdir2, '-Wl,-rpath,$ORIGIN/foo']
             )
 
         # Static library

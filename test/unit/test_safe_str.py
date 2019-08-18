@@ -7,6 +7,24 @@ literal = safe_str.literal
 shell_literal = safe_str.shell_literal
 
 
+class MyString(object):
+    def _safe_str(self):
+        return 'foo'
+
+
+class MyLiteral(object):
+    def _safe_str(self):
+        return literal('foo')
+
+
+class MySafeStr(safe_str.safe_string):
+    def __init__(self, i):
+        self.i = i
+
+    def __eq__(self, rhs):
+        return type(self) == type(rhs) and self.i == rhs.i
+
+
 class TestSafeStr(TestCase):
     def test_string(self):
         self.assertEqual(safe_str.safe_str('foo'), 'foo')
@@ -17,7 +35,12 @@ class TestSafeStr(TestCase):
                          shell_literal('foo'))
 
     def test_jbos(self):
-        self.assertEqual(safe_str.safe_str(jbos('foo')).bits, jbos('foo').bits)
+        self.assertEqual(safe_str.safe_str(jbos('foo')), jbos('foo'))
+
+    def test_objects(self):
+        self.assertEqual(safe_str.safe_str(MyString()), 'foo')
+        self.assertEqual(safe_str.safe_str(MyLiteral()), literal('foo'))
+        self.assertEqual(safe_str.safe_str(MySafeStr(1)), MySafeStr(1))
 
     def test_invalid(self):
         self.assertRaises(NotImplementedError, safe_str.safe_str, 123)
@@ -121,6 +144,17 @@ class TestJbos(TestCase):
         s = 'foo' + jbos('bar')
         self.assertEqual(s.bits, ('foobar',))
 
+    def test_simplify(self):
+        self.assertEqual(jbos().simplify(), '')
+
+        self.assertEqual(jbos('foo').simplify(), 'foo')
+        self.assertEqual(jbos(literal('foo')).simplify(), literal('foo'))
+        self.assertEqual(jbos(shell_literal('foo')).simplify(),
+                         shell_literal('foo'))
+
+        self.assertEqual(jbos('foo', literal('bar')).simplify(),
+                         jbos('foo', literal('bar')))
+
     def test_equality(self):
         self.assertTrue(jbos() == jbos())
         self.assertFalse(jbos() != jbos())
@@ -144,14 +178,17 @@ class TestJbos(TestCase):
 class TestJoin(TestCase):
     def test_join_empty(self):
         s = safe_str.join([], ',')
-        self.assertEqual(s.bits, ())
+        self.assertEqual(s, '')
+
+        s = safe_str.join([], literal(','))
+        self.assertEqual(s, '')
 
     def test_join_strings(self):
         s = safe_str.join(['foo'], ',')
-        self.assertEqual(s.bits, ('foo',))
+        self.assertEqual(s, 'foo')
 
         s = safe_str.join(['foo', 'bar'], ',')
-        self.assertEqual(s.bits, ('foo,bar',))
+        self.assertEqual(s, 'foo,bar')
 
     def test_join_literals(self):
         s = safe_str.join([literal('foo'), 'bar'], ',')
@@ -165,3 +202,44 @@ class TestJoin(TestCase):
 
         s = safe_str.join([shell_literal('foo'), 'bar'], shell_literal(','))
         self.assertEqual(s.bits, (shell_literal('foo,'), 'bar'))
+
+
+class TestSafeFormat(TestCase):
+    def test_simple(self):
+        self.assertEqual(safe_str.safe_format('foo'), 'foo')
+
+    def test_auto(self):
+        self.assertEqual(safe_str.safe_format('{}', 'foo'), 'foo')
+        self.assertEqual(safe_str.safe_format('a{}z', 'foo'), 'afooz')
+
+        foo = literal('foo')
+        self.assertEqual(safe_str.safe_format('{}', foo), foo)
+        self.assertEqual(safe_str.safe_format('a{}z', foo),
+                         jbos('a', foo, 'z'))
+
+        self.assertEqual(safe_str.safe_format('{}', MyString()), 'foo')
+        self.assertEqual(safe_str.safe_format('a{}z', MyString()), 'afooz')
+
+        self.assertEqual(safe_str.safe_format('{}', MyLiteral()), foo)
+        self.assertEqual(safe_str.safe_format('a{}z', MyLiteral()),
+                         jbos('a', foo, 'z'))
+
+    def test_index(self):
+        self.assertEqual(safe_str.safe_format('{0}', 'foo'), 'foo')
+        self.assertEqual(safe_str.safe_format('a{0}z', 'foo'), 'afooz')
+
+        foo = literal('foo')
+        self.assertEqual(safe_str.safe_format('{0}', foo), foo)
+        self.assertEqual(safe_str.safe_format('a{0}z', foo),
+                         jbos('a', foo, 'z'))
+
+        self.assertEqual(safe_str.safe_format('{0}', MyString()), 'foo')
+        self.assertEqual(safe_str.safe_format('a{0}z', MyString()), 'afooz')
+
+        self.assertEqual(safe_str.safe_format('{0}', MyLiteral()), foo)
+        self.assertEqual(safe_str.safe_format('a{0}z', MyLiteral()),
+                         jbos('a', foo, 'z'))
+
+    def test_invalid(self):
+        self.assertRaises(ValueError, safe_str.safe_format, '{}{0}', 'foo')
+        self.assertRaises(ValueError, safe_str.safe_format, '{0}{}', 'foo')

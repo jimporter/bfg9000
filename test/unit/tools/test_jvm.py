@@ -5,7 +5,6 @@ from .. import *
 
 from bfg9000 import file_types, options as opts
 from bfg9000.languages import Languages
-from bfg9000.safe_str import jbos
 from bfg9000.tools.jvm import JvmBuilder
 from bfg9000.versioning import Version
 
@@ -173,7 +172,7 @@ class TestJvmCompiler(CrossPlatformTestCase):
 
         self.assertEqual(self.compiler.flags(opts.option_list(
             opts.lib(file_types.StaticLibrary(lib1, 'jvm'))
-        )), ['-cp', jbos(lib1)])
+        )), ['-cp', lib1])
         self.assertEqual(self.compiler.flags(opts.option_list(
             opts.lib(file_types.StaticLibrary(lib1, 'jvm')),
             opts.lib(file_types.StaticLibrary(lib2, 'jvm'))
