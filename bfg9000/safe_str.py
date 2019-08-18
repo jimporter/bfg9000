@@ -1,3 +1,4 @@
+from six.moves import filter as ifilter
 from six import string_types
 from six.moves import zip
 
@@ -5,7 +6,19 @@ from . import iterutils
 
 
 class safe_string(object):
-    pass
+    def __add__(self, rhs):
+        return jbos(self, safe_str(rhs))
+
+    def __radd__(self, lhs):
+        return jbos(safe_str(lhs), self)
+
+
+class safe_string_ops(object):
+    def __add__(self, rhs):
+        return jbos(safe_str(self), safe_str(rhs))
+
+    def __radd__(self, lhs):
+        return jbos(safe_str(lhs), safe_str(self))
 
 
 stringy_types = string_types + (safe_string,)
@@ -40,12 +53,6 @@ class literal_types(safe_string):
     def __ne__(self, rhs):
         return not (self == rhs)
 
-    def __add__(self, rhs):
-        return jbos(self, rhs)
-
-    def __radd__(self, lhs):
-        return jbos(lhs, self)
-
 
 class shell_literal(literal_types):
     """A string which has already been escaped for shell purposes, useful if
@@ -61,18 +68,36 @@ class literal(literal_types):
 
 class jbos(safe_string):  # Just a Bunch of Strings
     def __init__(self, *args):
-        self.__bits = tuple(self.__flatten(args))
+        self.__bits = tuple(self.__canonicalize(args))
 
     @staticmethod
-    def __flatten(value):
-        for i in value:
-            if isinstance(i, jbos):
-                for j in i.bits:
-                    yield j
-            elif isinstance(i, (stringy_types)):
-                yield i
+    def __canonicalize(value):
+        def flatten_bits(value):
+            for i in value:
+                if isinstance(i, jbos):
+                    for j in i.bits:
+                        yield j
+                elif isinstance(i, (stringy_types)):
+                    yield i
+                else:
+                    raise TypeError(type(i))
+
+        bits = ifilter(None, flatten_bits(value))
+        try:
+            last = next(bits)
+        except StopIteration:
+            return
+
+        for i in bits:
+            same_type = type(i) == type(last)
+            if same_type and isinstance(i, string_types):
+                last += i
+            elif same_type and isinstance(i, literal_types):
+                last = type(i)(last.string + i.string)
             else:
-                raise TypeError(type(i))
+                yield last
+                last = i
+        yield last
 
     @property
     def bits(self):
@@ -82,7 +107,7 @@ class jbos(safe_string):  # Just a Bunch of Strings
         raise NotImplementedError()
 
     def __repr__(self):
-        return 'jbos({})'.format(', '.join(repr(i) for i in self.bits))
+        return '|{}|'.format(', '.join(repr(i) for i in self.bits))
 
     def __eq__(self, rhs):
         if type(self) is not type(rhs):
@@ -93,16 +118,8 @@ class jbos(safe_string):  # Just a Bunch of Strings
     def __ne__(self, rhs):
         return not (self == rhs)
 
-    def __add__(self, rhs):
-        if isinstance(rhs, stringy_types):
-            return jbos(self, rhs)
-        return NotImplemented
-
-    def __radd__(self, lhs):
-        if isinstance(lhs, stringy_types):
-            return jbos(lhs, self)
-        return NotImplemented
-
 
 def join(iterable, delim):
-    return sum(iterutils.tween(iterable, delim), jbos())
+    if delim:
+        iterable = iterutils.tween(iterable, delim)
+    return sum(iterable, jbos())

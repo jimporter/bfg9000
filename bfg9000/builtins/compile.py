@@ -8,7 +8,7 @@ from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..build_inputs import build_input, Edge
 from ..file_types import *
-from ..iterutils import first, iterate, uniques
+from ..iterutils import first, iterate
 from ..languages import known_langs
 from ..path import Path, Root
 from ..shell import posix as pshell
@@ -252,12 +252,11 @@ def make_compile(rule, build_inputs, buildfile, env):
     if compiler.needs_libs:
         deps.extend(rule.libs)
 
-    dirs = uniques(i.path.parent() for i in rule.output)
     make.multitarget_rule(
         buildfile,
         targets=rule.output,
         deps=deps + rule.extra_deps,
-        order_only=[i.append(make.dir_sentinel) for i in dirs if i],
+        order_only=make.directory_deps(rule.output),
         recipe=make.Call(recipename, *output_params),
         variables=variables
     )

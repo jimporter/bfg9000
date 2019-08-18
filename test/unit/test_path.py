@@ -117,6 +117,9 @@ class TestPath(PathTestCase):
         self.assertTrue(self.Path('a', path.InstallRoot.bindir, True) !=
                         self.Path('a', path.InstallRoot.bindir, False))
 
+        self.assertFalse(self.Path('a', path.Root.srcdir) == 'a')
+        self.assertTrue(self.Path('a', path.Root.srcdir) != 'a')
+
     def test_cross(self):
         for name in ('winnt', 'linux'):
             platform = target.platform_info(name)
@@ -375,14 +378,6 @@ class TestPath(PathTestCase):
              self.Path('bar', path.InstallRoot.bindir),
              self.Path('bar', path.InstallRoot.bindir, destdir=True)}
         self.assertEqual(len(d), 5)
-
-    def test_bool(self):
-        self.assertEqual(bool(self.Path('.', path.Root.builddir)), False)
-        self.assertEqual(bool(self.Path('.', path.Root.srcdir)), True)
-        self.assertEqual(bool(self.Path('.', path.InstallRoot.bindir)), True)
-        self.assertEqual(bool(self.Path('foo', path.Root.builddir)), True)
-        self.assertEqual(bool(self.Path('foo', path.Root.srcdir)), True)
-        self.assertEqual(bool(self.Path('foo', path.InstallRoot.bindir)), True)
 
     def test_add(self):
         p = self.Path('foo/bar', path.Root.srcdir)

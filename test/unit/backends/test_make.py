@@ -23,6 +23,27 @@ class TestPattern(TestCase):
         self.assertFalse(Pattern('%.c') == Pattern('%.h'))
         self.assertTrue(Pattern('%.c') != Pattern('%.h'))
 
+    def test_concat_str(self):
+        self.assertEqual(Pattern('%.c') + 'bar', safe_str.jbos(
+            safe_str.literal('%'), '.cbar'
+        ))
+        self.assertEqual('foo' + Pattern('%.h'), safe_str.jbos(
+            'foo', safe_str.literal('%'), '.h'
+        ))
+
+    def test_concat_path(self):
+        self.assertEqual(Pattern('%.c') + path.Path('bar'), safe_str.jbos(
+            safe_str.literal('%'), '.c', path.Path('bar')
+        ))
+        self.assertEqual(path.Path('foo') + Pattern('%.h'), safe_str.jbos(
+            path.Path('foo'), safe_str.literal('%'), '.h'
+        ))
+
+    def test_concat_pattern(self):
+        self.assertEqual(Pattern('%.c') + Pattern('%.h'), safe_str.jbos(
+            safe_str.literal('%'), '.c', safe_str.literal('%'), '.h'
+        ))
+
 
 class TestVariable(TestCase):
     def test_equality(self):
@@ -31,6 +52,27 @@ class TestVariable(TestCase):
 
         self.assertFalse(Variable('foo') == Variable('bar'))
         self.assertTrue(Variable('foo') != Variable('bar'))
+
+    def test_concat_str(self):
+        self.assertEqual(Variable('foo') + 'bar', safe_str.jbos(
+            safe_str.literal('$(foo)'), 'bar'
+        ))
+        self.assertEqual('foo' + Variable('bar'), safe_str.jbos(
+            'foo', safe_str.literal('$(bar)')
+        ))
+
+    def test_concat_path(self):
+        self.assertEqual(Variable('foo') + path.Path('bar'), safe_str.jbos(
+            safe_str.literal('$(foo)'), path.Path('bar')
+        ))
+        self.assertEqual(path.Path('foo') + Variable('bar'), safe_str.jbos(
+            path.Path('foo'), safe_str.literal('$(bar)')
+        ))
+
+    def test_concat_var(self):
+        self.assertEqual(Variable('foo') + Variable('bar'), safe_str.jbos(
+            safe_str.literal('$(foo)'), safe_str.literal('$(bar)')
+        ))
 
 
 class TestWriteString(TestCase):

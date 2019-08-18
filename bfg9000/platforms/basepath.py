@@ -185,20 +185,10 @@ class BasePath(safe_str.safe_string):
         return hash(self.suffix)
 
     def __eq__(self, rhs):
+        if type(self) is not type(rhs):
+            return NotImplemented
         return (self.root == rhs.root and self.suffix == rhs.suffix and
                 self.destdir == rhs.destdir)
 
     def __ne__(self, rhs):
         return not (self == rhs)
-
-    def __nonzero__(self):
-        return self.__bool__()
-
-    def __bool__(self):
-        return self.root != Root.builddir or bool(self.suffix)
-
-    def __add__(self, rhs):
-        return safe_str.jbos(self, rhs)
-
-    def __radd__(self, lhs):
-        return safe_str.jbos(lhs, self)

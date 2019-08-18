@@ -104,7 +104,7 @@ class Writer(object):
                         suffix=suffix)
 
 
-class Variable(object):
+class Variable(safe_str.safe_string_ops):
     def __init__(self, name):
         self.name = re.sub(r'\W', '_', name)
 
@@ -128,12 +128,6 @@ class Variable(object):
 
     def __ne__(self, rhs):
         return not (self == rhs)
-
-    def __add__(self, rhs):
-        return self.use() + safe_str.safe_str(rhs)
-
-    def __radd__(self, lhs):
-        return safe_str.safe_str(lhs) + self.use()
 
 
 def var(v):

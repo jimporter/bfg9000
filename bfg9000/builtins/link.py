@@ -426,12 +426,11 @@ def make_link(rule, build_inputs, buildfile, env):
 
     manifest = listify(getattr(rule, 'manifest', None))
     module_defs = listify(getattr(rule, 'module_defs', None))
-    dirs = uniques(i.path.parent() for i in rule.output)
     make.multitarget_rule(
         buildfile,
         targets=rule.output,
         deps=rule.files + rule.libs + module_defs + manifest + rule.extra_deps,
-        order_only=[i.append(make.dir_sentinel) for i in dirs if i],
+        order_only=make.directory_deps(rule.output),
         recipe=make.Call(recipename, files, *output_params),
         variables=variables
     )

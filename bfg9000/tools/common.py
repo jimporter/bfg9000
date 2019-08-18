@@ -4,7 +4,7 @@ import warnings
 from six import iteritems
 
 from .. import options as opts
-from .. import shell
+from .. import path, shell
 from ..iterutils import first, iterate, listify, slice_dict
 
 _modes = {
@@ -24,6 +24,12 @@ def library_macro(name, mode):
         name=_macro_ex2.sub('LIB_', _macro_ex.sub('_', name.upper())),
         suffix=_modes[mode]
     )
+
+
+def not_buildroot(thing):
+    if isinstance(thing, path.BasePath):
+        return thing != type(thing)('.')
+    return thing is not None
 
 
 class Builder(object):

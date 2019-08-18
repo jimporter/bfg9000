@@ -87,6 +87,8 @@ def make_command(rule, build_inputs, buildfile, env):
     buildfile.rule(
         target=rule.output,
         deps=rule.inputs + rule.extra_deps,
+        order_only=(make.directory_deps(rule.output) if
+                    isinstance(rule, BuildStep) else []),
         recipe=[pshell.global_env(rule.env, rule.cmds)],
         phony=isinstance(rule, Command)
     )

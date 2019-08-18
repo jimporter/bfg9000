@@ -4,7 +4,7 @@ import re
 from ... import path
 from ... import shell
 from .syntax import *
-from ...iterutils import listify
+from ...iterutils import listify, uniques
 from ...versioning import Version
 
 
@@ -72,19 +72,28 @@ def flags_vars(name, value, buildfile):
     return gflags, flags
 
 
+def _get_path(thing):
+    return thing if isinstance(thing, path.Path) else thing.path
+
+
 def multitarget_rule(buildfile, targets, deps=None, order_only=None,
                      recipe=None, variables=None, phony=None):
     targets = listify(targets)
     if len(targets) > 1:
         first = targets[0]
-        first_path = first if isinstance(first, path.Path) else first.path
-        primary = first_path.addext('.stamp')
+        primary = _get_path(first).addext('.stamp')
         buildfile.rule(target=targets, deps=[primary])
         recipe = listify(recipe) + [Silent([ 'touch', var('@') ])]
     else:
         primary = targets[0]
 
     buildfile.rule(primary, deps, order_only, recipe, variables, phony)
+
+
+def directory_deps(targets):
+    builddir = path.Path('.')
+    dirs = uniques(_get_path(i).parent() for i in targets)
+    return [i.append(dir_sentinel) for i in dirs if i != builddir]
 
 
 @post_rule

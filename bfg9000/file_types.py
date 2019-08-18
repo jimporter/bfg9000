@@ -1,8 +1,8 @@
 import copy as _copy
 
+from . import safe_str as _safe_str
 from .iterutils import listify as _listify
 from .path import InstallRoot as _InstallRoot, install_path as _install_path
-from .safe_str import safe_str as _safe_str
 
 
 def file_install_path(file, cross=None):
@@ -16,7 +16,7 @@ def installify(file, cross=None):
     return file
 
 
-class Node(object):
+class Node(_safe_str.safe_string_ops):
     private = False
 
     def __init__(self, path):
@@ -24,7 +24,7 @@ class Node(object):
         self.path = path
 
     def _safe_str(self):
-        return _safe_str(self.path)
+        return _safe_str.safe_str(self.path)
 
     @property
     def all(self):

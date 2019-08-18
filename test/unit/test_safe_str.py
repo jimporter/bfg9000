@@ -62,7 +62,7 @@ class TestLiteral(TestCase):
         self.assertEqual(s.bits, ('foo', literal('bar')))
 
         s = literal('foo') + literal('bar')
-        self.assertEqual(s.bits, (literal('foo'), literal('bar')))
+        self.assertEqual(s.bits, (literal('foobar'),))
 
         s = shell_literal('foo') + 'bar'
         self.assertEqual(s.bits, (shell_literal('foo'), 'bar'))
@@ -71,7 +71,7 @@ class TestLiteral(TestCase):
         self.assertEqual(s.bits, ('foo', shell_literal('bar')))
 
         s = shell_literal('foo') + shell_literal('bar')
-        self.assertEqual(s.bits, (shell_literal('foo'), shell_literal('bar')))
+        self.assertEqual(s.bits, (shell_literal('foobar'),))
 
         s = literal('foo') + shell_literal('bar')
         self.assertEqual(s.bits, (literal('foo'), shell_literal('bar')))
@@ -89,48 +89,56 @@ class TestJbos(TestCase):
         s = jbos(jbos('foo', literal('bar')), jbos(shell_literal('baz')))
         self.assertEqual(s.bits, ('foo', literal('bar'), shell_literal('baz')))
 
+    def test_canonicalize(self):
+        s = jbos('foo', 'bar')
+        self.assertEqual(s.bits, ('foobar',))
+
+        s = jbos(literal('foo'), literal('bar'))
+        self.assertEqual(s.bits, (literal('foobar'),))
+
+        s = jbos(shell_literal('foo'), shell_literal('bar'))
+        self.assertEqual(s.bits, (shell_literal('foobar'),))
+
     def test_construct_invalid(self):
         self.assertRaises(TypeError, jbos, 123)
 
     def test_concatenate(self):
-        s = jbos('foo', 'bar') + literal('baz')
-        self.assertEqual(s.bits, ('foo', 'bar', literal('baz')))
+        s = jbos('foo') + literal('bar')
+        self.assertEqual(s.bits, ('foo', literal('bar')))
 
-        s = jbos('foo', 'bar') + shell_literal('baz')
-        self.assertEqual(s.bits, ('foo', 'bar', shell_literal('baz')))
+        s = jbos('foo') + shell_literal('bar')
+        self.assertEqual(s.bits, ('foo', shell_literal('bar')))
 
-        s = jbos('foo', 'bar') + 'baz'
-        self.assertEqual(s.bits, ('foo', 'bar', 'baz'))
+        s = jbos('foo') + 'bar'
+        self.assertEqual(s.bits, ('foobar',))
 
-        s = literal('foo') + jbos('bar', 'baz')
-        self.assertEqual(s.bits, (literal('foo'), 'bar', 'baz'))
+        s = literal('foo') + jbos('bar')
+        self.assertEqual(s.bits, (literal('foo'), 'bar'))
 
-        s = shell_literal('foo') + jbos('bar', 'baz')
-        self.assertEqual(s.bits, (shell_literal('foo'), 'bar', 'baz'))
+        s = shell_literal('foo') + jbos('bar')
+        self.assertEqual(s.bits, (shell_literal('foo'), 'bar'))
 
-        s = 'foo' + jbos('bar', 'baz')
-        self.assertEqual(s.bits, ('foo', 'bar', 'baz'))
+        s = 'foo' + jbos('bar')
+        self.assertEqual(s.bits, ('foobar',))
 
     def test_equality(self):
         self.assertTrue(jbos() == jbos())
         self.assertFalse(jbos() != jbos())
 
-        self.assertTrue(jbos('foo', 'bar') == jbos('foo', 'bar'))
+        self.assertTrue(jbos('foo') == jbos('foo'))
         self.assertTrue(jbos('foo', literal('bar')) ==
                         jbos('foo', literal('bar')))
-        self.assertFalse(jbos('foo', 'bar') != jbos('foo', 'bar'))
+        self.assertFalse(jbos('foo') != jbos('foo'))
         self.assertFalse(jbos('foo', literal('bar')) !=
                          jbos('foo', literal('bar')))
 
-        self.assertFalse(jbos('foo', 'bar') == jbos('foo', 'quux'))
         self.assertFalse(jbos('foo', literal('bar')) ==
                          jbos('foo', literal('quux')))
-        self.assertTrue(jbos('foo', 'bar') != jbos('foo', 'quux'))
         self.assertTrue(jbos('foo', literal('bar')) !=
                         jbos('foo', literal('quux')))
 
-        self.assertFalse(jbos('foo') == jbos('foo', 'bar'))
-        self.assertTrue(jbos('foo') != jbos('foo', 'bar'))
+        self.assertFalse(jbos('foo') == jbos('foo', literal('bar')))
+        self.assertTrue(jbos('foo') != jbos('foo', literal('bar')))
 
 
 class TestJoin(TestCase):
@@ -143,18 +151,17 @@ class TestJoin(TestCase):
         self.assertEqual(s.bits, ('foo',))
 
         s = safe_str.join(['foo', 'bar'], ',')
-        self.assertEqual(s.bits, ('foo', ',', 'bar'))
+        self.assertEqual(s.bits, ('foo,bar',))
 
     def test_join_literals(self):
         s = safe_str.join([literal('foo'), 'bar'], ',')
-        self.assertEqual(s.bits, (literal('foo'), ',', 'bar'))
+        self.assertEqual(s.bits, (literal('foo'), ',bar'))
 
         s = safe_str.join([shell_literal('foo'), 'bar'], ',')
-        self.assertEqual(s.bits, (shell_literal('foo'), ',', 'bar'))
+        self.assertEqual(s.bits, (shell_literal('foo'), ',bar'))
 
         s = safe_str.join([literal('foo'), 'bar'], literal(','))
-        self.assertEqual(s.bits, (literal('foo'), literal(','), 'bar'))
+        self.assertEqual(s.bits, (literal('foo,'), 'bar'))
 
         s = safe_str.join([shell_literal('foo'), 'bar'], shell_literal(','))
-        self.assertEqual(s.bits, (shell_literal('foo'), shell_literal(','),
-                                  'bar'))
+        self.assertEqual(s.bits, (shell_literal('foo,'), 'bar'))

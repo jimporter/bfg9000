@@ -2,7 +2,7 @@ import os
 import re
 from itertools import chain
 
-from .common import Builder, BuildCommand, check_which
+from .common import Builder, BuildCommand, check_which, not_buildroot
 from .. import options as opts, safe_str, shell
 from ..builtins.file_types import generated_file
 from ..exceptions import PackageResolutionError
@@ -353,7 +353,7 @@ class JvmRunner(BuildCommand):
         result = list(cmd)
         if jar and self.lang != 'scala':
             result.append('-jar')
-        if cp:
+        if not_buildroot(cp):
             result.extend(['-cp', cp])
         result.append(file)
         return result

@@ -1,5 +1,5 @@
 from . import tool
-from .common import SimpleCommand
+from .common import not_buildroot, SimpleCommand
 
 from ..iterutils import iterate
 
@@ -21,7 +21,7 @@ class Doppel(SimpleCommand):
 
         elif mode == 'into':
             result = cmd + ['-ipN']
-            if directory:
+            if not_buildroot(directory):
                 result.extend(['-C', directory])
             result.extend(iterate(src))
             result.append(dst)
@@ -29,7 +29,7 @@ class Doppel(SimpleCommand):
 
         elif mode == 'archive':
             result = cmd + ['-ipN', '-f', format]
-            if directory:
+            if not_buildroot(directory):
                 result.extend(['-C', directory])
             if dest_prefix:
                 result.extend(['-P', dest_prefix])

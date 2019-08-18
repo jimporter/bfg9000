@@ -52,7 +52,7 @@ class Writer(object):
             self.write(i, syntax, shell_quote)
 
 
-class Variable(object):
+class Variable(safe_str.safe_string_ops):
     def __init__(self, name):
         self.name = name
 
@@ -76,12 +76,6 @@ class Variable(object):
 
     def __ne__(self, rhs):
         return not (self == rhs)
-
-    def __add__(self, rhs):
-        return self.use() + rhs
-
-    def __radd__(self, lhs):
-        return lhs + self.use()
 
 
 path_vars = {i: Variable(i.name) for i in path.InstallRoot}

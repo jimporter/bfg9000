@@ -3,6 +3,7 @@ import mock
 from .. import *
 
 from bfg9000.languages import Languages
+from bfg9000.path import Root
 from bfg9000.tools import cc, common
 
 known_langs = Languages()
@@ -52,6 +53,19 @@ class TestLibraryMacro(TestCase):
                          'LIB_1_LIBFOO_EXPORTS')
         self.assertEqual(common.library_macro('1/libfoo', 'static_library'),
                          'LIB_1_LIBFOO_STATIC')
+
+
+class TestNotBuildroot(CrossPlatformTestCase):
+    def test_none(self):
+        self.assertFalse(common.not_buildroot(None))
+
+    def test_path(self):
+        self.assertTrue(common.not_buildroot(self.Path('foo')))
+        self.assertFalse(common.not_buildroot(self.Path('.')))
+        self.assertTrue(common.not_buildroot(self.Path('.', Root.srcdir)))
+
+    def test_misc(self):
+        self.assertTrue(common.not_buildroot('foo'))
 
 
 class TestChooseBuilder(CrossPlatformTestCase):

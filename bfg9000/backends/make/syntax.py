@@ -115,7 +115,7 @@ class Writer(object):
         self.write_each(iterutils.iterate(thing), syntax)
 
 
-class Entity(object):
+class Entity(safe_str.safe_string_ops):
     def use(self):
         raise NotImplementedError()
 
@@ -127,12 +127,6 @@ class Entity(object):
 
     def __repr__(self):
         return repr(self.use())
-
-    def __add__(self, rhs):
-        return self.use() + safe_str.safe_str(rhs)
-
-    def __radd__(self, lhs):
-        return safe_str.safe_str(lhs) + self.use()
 
 
 class NamedEntity(Entity):
