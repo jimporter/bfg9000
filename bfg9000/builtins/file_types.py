@@ -114,7 +114,7 @@ def directory(builtins, build, name, include=None, exclude=exclude_globs,
 def header_directory(builtins, build, name, include=None,
                      exclude=exclude_globs, filter=filter_by_platform,
                      system=False, lang=None):
-    if isinstance(name, HeaderFile):
+    if isinstance(name, CodeFile):
         path = name.path.parent()
         lang = name.lang
     else:
