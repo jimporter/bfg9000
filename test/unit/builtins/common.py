@@ -1,6 +1,6 @@
 from six import iterkeys
 
-from .. import make_env, TestCase
+from .. import AttrDict, make_env, TestCase  # noqa
 
 from bfg9000 import file_types
 from bfg9000.builtins import builtin
@@ -20,9 +20,22 @@ class BuiltinTest(TestCase):
             build_inputs=self.build, env=self.env, argv=None
         )
 
-    def assertSame(self, a, b, exclude=set()):
+    def assertSameFile(self, a, b, exclude=set(), seen=None):
+        if seen is None:
+            seen = set()
+        seen.add(id(a))
+
         self.assertEqual(type(a), type(b))
-        keys = set(iterkeys(a.__dict__)) & set(iterkeys(b.__dict__)) - exclude
+        keys = ((set(iterkeys(a.__dict__)) | set(iterkeys(b.__dict__))) -
+                exclude - {'creator'})
+
         for i in keys:
-            ai, bi = getattr(a, i), getattr(b, i)
-            self.assertEqual(ai, bi, '{!r}: {!r} != {!r}'.format(i, ai, bi))
+            ai, bi = getattr(a, i, None), getattr(b, i, None)
+            if ( isinstance(ai, file_types.Node) and
+                 isinstance(bi, file_types.Node) ):
+                if not id(ai) in seen:
+                    self.assertSameFile(ai, bi, exclude, seen)
+            else:
+                self.assertEqual(
+                    ai, bi, '{!r}: {!r} != {!r}'.format(i, ai, bi)
+                )

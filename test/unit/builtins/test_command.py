@@ -1,6 +1,4 @@
-from six import iteritems
-
-from .common import BuiltinTest, TestCase
+from .common import AttrDict, BuiltinTest, TestCase
 
 from bfg9000 import file_types
 from bfg9000.builtins.command import Placeholder
@@ -21,18 +19,18 @@ class TestBaseCommand(BuiltinTest):
 class TestCommand(TestBaseCommand):
     def test_single_cmd(self):
         result = self.builtin_dict['command']('foo', cmd=['echo', 'foo'])
-        self.assertSame(result, file_types.Phony('foo'), exclude={'creator'})
+        self.assertSameFile(result, file_types.Phony('foo'))
         self.assertCommand(result.creator, [['echo', 'foo']])
 
     def test_string_cmd(self):
         result = self.builtin_dict['command']('foo', cmd='echo foo')
-        self.assertSame(result, file_types.Phony('foo'), exclude={'creator'})
+        self.assertSameFile(result, file_types.Phony('foo'))
         self.assertCommand(result.creator, ['echo foo'])
 
     def test_file_cmd(self):
         script = self.builtin_dict['source_file']('script.py')
         result = self.builtin_dict['command']('foo', cmd=script)
-        self.assertSame(result, file_types.Phony('foo'), exclude={'creator'})
+        self.assertSameFile(result, file_types.Phony('foo'))
         self.assertCommand(result.creator, [
             self.env.tool('python')(script)
         ], [])
@@ -40,7 +38,7 @@ class TestCommand(TestBaseCommand):
     def test_file_cmd_list(self):
         script = self.builtin_dict['source_file']('script.py')
         result = self.builtin_dict['command']('foo', cmd=[script, '--foo'])
-        self.assertSame(result, file_types.Phony('foo'), exclude={'creator'})
+        self.assertSameFile(result, file_types.Phony('foo'))
         self.assertCommand(result.creator, [
             self.env.tool('python')(script) + ['--foo']
         ], [])
@@ -50,7 +48,7 @@ class TestCommand(TestBaseCommand):
         script.creator = 'foo'
 
         result = self.builtin_dict['command']('foo', cmd=script)
-        self.assertSame(result, file_types.Phony('foo'), exclude={'creator'})
+        self.assertSameFile(result, file_types.Phony('foo'))
         self.assertCommand(result.creator, [
             self.env.tool('python')(script)
         ], extra_deps=[script])
@@ -60,19 +58,19 @@ class TestCommand(TestBaseCommand):
 
         command = self.builtin_dict['command']
         result = command('foo', cmd=[command.input], files=script)
-        self.assertSame(result, file_types.Phony('foo'), exclude={'creator'})
+        self.assertSameFile(result, file_types.Phony('foo'))
         self.assertCommand(result.creator, [
             self.env.tool('python')(script)
         ], [script])
 
         result = command('foo', cmd=[command.input[0]], files=script)
-        self.assertSame(result, file_types.Phony('foo'), exclude={'creator'})
+        self.assertSameFile(result, file_types.Phony('foo'))
         self.assertCommand(result.creator, [
             self.env.tool('python')(script)
         ], [script])
 
         result = command('foo', cmd=[command.input[0:]], files=script)
-        self.assertSame(result, file_types.Phony('foo'), exclude={'creator'})
+        self.assertSameFile(result, file_types.Phony('foo'))
         self.assertCommand(result.creator, [
             self.env.tool('python')(script)
         ], [script])
@@ -85,19 +83,19 @@ class TestCommand(TestBaseCommand):
 
         command = self.builtin_dict['command']
         result = command('foo', cmd=command.input, files=script)
-        self.assertSame(result, file_types.Phony('foo'), exclude={'creator'})
+        self.assertSameFile(result, file_types.Phony('foo'))
         self.assertCommand(result.creator, [
             self.env.tool('python')(script)
         ], [script])
 
         result = command('foo', cmd=command.input[0], files=script)
-        self.assertSame(result, file_types.Phony('foo'), exclude={'creator'})
+        self.assertSameFile(result, file_types.Phony('foo'))
         self.assertCommand(result.creator, [
             self.env.tool('python')(script)
         ], [script])
 
         result = command('foo', cmd=command.input[0:], files=script)
-        self.assertSame(result, file_types.Phony('foo'), exclude={'creator'})
+        self.assertSameFile(result, file_types.Phony('foo'))
         self.assertCommand(result.creator, [
             self.env.tool('python')(script)
         ], [script])
@@ -113,7 +111,7 @@ class TestCommand(TestBaseCommand):
 
         command = self.builtin_dict['command']
         result = command('foo', cmd=[command.input], files=script)
-        self.assertSame(result, file_types.Phony('foo'), exclude={'creator'})
+        self.assertSameFile(result, file_types.Phony('foo'))
         self.assertCommand(result.creator, [
             self.env.tool('python')(script)
         ], [script])
@@ -123,13 +121,13 @@ class TestCommand(TestBaseCommand):
             ['echo', 'foo'],
             ['touch', 'bar']
         ])
-        self.assertSame(result, file_types.Phony('foo'), exclude={'creator'})
+        self.assertSameFile(result, file_types.Phony('foo'))
         self.assertCommand(result.creator, [['echo', 'foo'], ['touch', 'bar']])
 
     def test_env(self):
         result = self.builtin_dict['command']('foo', cmd=['echo', 'foo'],
                                               environment={'NAME': 'value'})
-        self.assertSame(result, file_types.Phony('foo'), exclude={'creator'})
+        self.assertSameFile(result, file_types.Phony('foo'))
         self.assertCommand(result.creator, [['echo', 'foo']],
                            env={'NAME': 'value'})
 
@@ -144,7 +142,7 @@ class TestBuildStep(TestBaseCommand):
             'lex', 'foo.lex'
         ])
         expected = file_types.SourceFile(Path('lex.yy.c', Root.builddir), 'c')
-        self.assertSame(result, expected, exclude={'creator'})
+        self.assertSameFile(result, expected)
         self.assertCommand(result.creator, [['lex', 'foo.lex']], phony=False)
 
     def test_multiple_outputs(self):
@@ -156,7 +154,7 @@ class TestBuildStep(TestBaseCommand):
             file_types.SourceFile(Path('hello.tab.c', Root.builddir), 'c')
         ]
         for i, j in zip(result, expected):
-            self.assertSame(i, j, exclude={'creator'})
+            self.assertSameFile(i, j)
             self.assertCommand(i.creator, [['bison', 'hello.y']], phony=False)
 
     def test_file_cmd(self):
@@ -165,7 +163,7 @@ class TestBuildStep(TestBaseCommand):
             'lex', foolex
         ])
         expected = file_types.SourceFile(Path('lex.yy.c', Root.builddir), 'c')
-        self.assertSame(result, expected, exclude={'creator'})
+        self.assertSameFile(result, expected)
         self.assertCommand(result.creator, [['lex', foolex]],
                            extra_deps=[foolex], phony=False)
 
@@ -176,19 +174,19 @@ class TestBuildStep(TestBaseCommand):
 
         result = build_step('lex.yy.c', cmd=['lex', build_step.input],
                             files=foolex)
-        self.assertSame(result, expected, exclude={'creator'})
+        self.assertSameFile(result, expected)
         self.assertCommand(result.creator, [['lex', foolex]], [foolex],
                            phony=False)
 
         result = build_step('lex.yy.c', cmd=['lex', build_step.input[0]],
                             files=foolex)
-        self.assertSame(result, expected, exclude={'creator'})
+        self.assertSameFile(result, expected)
         self.assertCommand(result.creator, [['lex', foolex]], [foolex],
                            phony=False)
 
         result = build_step('lex.yy.c', cmd=['lex', build_step.input[0:]],
                             files=foolex)
-        self.assertSame(result, expected, exclude={'creator'})
+        self.assertSameFile(result, expected)
         self.assertCommand(result.creator, [['lex', foolex]], [foolex],
                            phony=False)
 
@@ -201,17 +199,17 @@ class TestBuildStep(TestBaseCommand):
         expected = file_types.SourceFile(Path('foo.c', Root.builddir), 'c')
 
         result = build_step('foo.c', cmd=build_step.input, files=foopy)
-        self.assertSame(result, expected, exclude={'creator'})
+        self.assertSameFile(result, expected)
         self.assertCommand(result.creator, [self.env.tool('python')(foopy)],
                            [foopy], phony=False)
 
         result = build_step('foo.c', cmd=build_step.input[0], files=foopy)
-        self.assertSame(result, expected, exclude={'creator'})
+        self.assertSameFile(result, expected)
         self.assertCommand(result.creator, [self.env.tool('python')(foopy)],
                            [foopy], phony=False)
 
         result = build_step('foo.c', cmd=build_step.input[0:], files=foopy)
-        self.assertSame(result, expected, exclude={'creator'})
+        self.assertSameFile(result, expected)
         self.assertCommand(result.creator, [self.env.tool('python')(foopy)],
                            [foopy], phony=False)
 
@@ -227,7 +225,7 @@ class TestBuildStep(TestBaseCommand):
         result = build_step('foo-lex.c', cmd=[
             'lex', 'foo.lex', '-o', build_step.output
         ])
-        self.assertSame(result, expected, exclude={'creator'})
+        self.assertSameFile(result, expected)
         self.assertCommand(result.creator, [[
             'lex', 'foo.lex', '-o', expected
         ]], phony=False)
@@ -235,7 +233,7 @@ class TestBuildStep(TestBaseCommand):
         result = build_step('foo-lex.c', cmd=[
             'lex', 'foo.lex', '-o', build_step.output[0]
         ])
-        self.assertSame(result, expected, exclude={'creator'})
+        self.assertSameFile(result, expected)
         self.assertCommand(result.creator, [[
             'lex', 'foo.lex', '-o', expected
         ]], phony=False)
@@ -243,7 +241,7 @@ class TestBuildStep(TestBaseCommand):
         result = build_step('foo-lex.c', cmd=[
             'lex', 'foo.lex', '-o', build_step.output[0:]
         ])
-        self.assertSame(result, expected, exclude={'creator'})
+        self.assertSameFile(result, expected)
         self.assertCommand(result.creator, [[
             'lex', 'foo.lex', '-o', expected
         ]], phony=False)
@@ -256,7 +254,7 @@ class TestBuildStep(TestBaseCommand):
             'lex', 'foo.lex'
         ], always_outdated=True)
         expected = file_types.SourceFile(Path('lex.yy.c', Root.builddir), 'c')
-        self.assertSame(result, expected, exclude={'creator'})
+        self.assertSameFile(result, expected)
         self.assertCommand(result.creator, [['lex', 'foo.lex']], phony=True)
 
     def test_type(self):
@@ -264,7 +262,7 @@ class TestBuildStep(TestBaseCommand):
             'lex', 'foo.lex'
         ], type=self.builtin_dict['generic_file'])
         expected = file_types.File(Path('lex.yy.c', Root.builddir))
-        self.assertSame(result, expected, exclude={'creator'})
+        self.assertSameFile(result, expected)
         self.assertCommand(result.creator, [['lex', 'foo.lex']], phony=False)
 
     def test_type_multiple_files(self):
@@ -277,7 +275,7 @@ class TestBuildStep(TestBaseCommand):
             file_types.File(Path('hello.tab.c', Root.builddir))
         ]
         for i, j in zip(result, expected):
-            self.assertSame(i, j, exclude={'creator'})
+            self.assertSameFile(i, j)
             self.assertCommand(i.creator, [['bison', 'hello.y']], phony=False)
 
     def test_multiple_types(self):
@@ -291,7 +289,7 @@ class TestBuildStep(TestBaseCommand):
             file_types.HeaderFile(Path('hello.tab.c', Root.builddir), None)
         ]
         for i, j in zip(result, expected):
-            self.assertSame(i, j, exclude={'creator'})
+            self.assertSameFile(i, j)
             self.assertCommand(i.creator, [['bison', 'hello.y']], phony=False)
 
     def test_invalid_type(self):
@@ -304,38 +302,31 @@ class TestBuildStep(TestBaseCommand):
 
 
 class TestPlaceholder(TestCase):
-    class FakeRule(object):
-        def __init__(self, **kwargs):
-            for k, v in iteritems(kwargs):
-                setattr(self, k, v)
-
     def test_expand(self):
         p = Placeholder('files')
-        self.assertEqual(p.expand(self.FakeRule(files=[])), [])
-        self.assertEqual(p.expand(self.FakeRule(files=['foo'])), ['foo'])
-        self.assertEqual(p.expand(self.FakeRule(files=['foo', 'bar'])),
+        self.assertEqual(p.expand(AttrDict(files=[])), [])
+        self.assertEqual(p.expand(AttrDict(files=['foo'])), ['foo'])
+        self.assertEqual(p.expand(AttrDict(files=['foo', 'bar'])),
                          ['foo', 'bar'])
 
     def test_expand_index(self):
         p = Placeholder('files')[0]
         with self.assertRaises(IndexError):
-            p.expand(self.FakeRule(files=[]))
-        self.assertEqual(p.expand(self.FakeRule(files=['foo'])), ['foo'])
-        self.assertEqual(p.expand(self.FakeRule(files=['foo', 'bar'])),
-                         ['foo'])
+            p.expand(AttrDict(files=[]))
+        self.assertEqual(p.expand(AttrDict(files=['foo'])), ['foo'])
+        self.assertEqual(p.expand(AttrDict(files=['foo', 'bar'])), ['foo'])
 
     def test_expand_slice(self):
         p = Placeholder('files')[0:1]
-        self.assertEqual(p.expand(self.FakeRule(files=[])), [])
-        self.assertEqual(p.expand(self.FakeRule(files=['foo'])), ['foo'])
-        self.assertEqual(p.expand(self.FakeRule(files=['foo', 'bar'])),
-                         ['foo'])
+        self.assertEqual(p.expand(AttrDict(files=[])), [])
+        self.assertEqual(p.expand(AttrDict(files=['foo'])), ['foo'])
+        self.assertEqual(p.expand(AttrDict(files=['foo', 'bar'])), ['foo'])
 
     def test_expand_word(self):
         p = Placeholder('files')
-        zero = self.FakeRule(files=[])
-        one = self.FakeRule(files=['foo'])
-        two = self.FakeRule(files=['foo', 'bar'])
+        zero = AttrDict(files=[])
+        one = AttrDict(files=['foo'])
+        two = AttrDict(files=['foo', 'bar'])
 
         self.assertEqual(Placeholder.expand_word(p, zero), [])
         self.assertEqual(Placeholder.expand_word(p, one), ['foo'])
@@ -352,9 +343,9 @@ class TestPlaceholder(TestCase):
 
     def test_expand_word_jbos(self):
         p = Placeholder('files')
-        zero = self.FakeRule(files=[])
-        one = self.FakeRule(files=[literal('foo')])
-        two = self.FakeRule(files=[literal('foo'), literal('bar')])
+        zero = AttrDict(files=[])
+        one = AttrDict(files=[literal('foo')])
+        two = AttrDict(files=[literal('foo'), literal('bar')])
         foo = jbos('{', literal('foo'), '}')
         bar = jbos('{', literal('bar'), '}')
 
@@ -384,13 +375,13 @@ class TestPlaceholder(TestCase):
 
     def test_expand_word_misc(self):
         self.assertEqual(Placeholder.expand_word(
-            'foo', self.FakeRule(files=[])
+            'foo', AttrDict(files=[])
         ), ['foo'])
         self.assertEqual(Placeholder.expand_word(
-            'foo', self.FakeRule(files=['foo'])
+            'foo', AttrDict(files=['foo'])
         ), ['foo'])
         self.assertEqual(Placeholder.expand_word(
-            'foo', self.FakeRule(files=['foo', 'bar'])
+            'foo', AttrDict(files=['foo', 'bar'])
         ), ['foo'])
 
     def test_index_twice(self):

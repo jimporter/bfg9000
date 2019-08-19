@@ -3,6 +3,7 @@ import ntpath
 import os.path
 import posixpath
 import sys
+from six import iteritems
 
 from .. import *
 
@@ -33,6 +34,12 @@ def skip_if_platform(platform, hide=False):
 def only_if_platform(platform, hide=False):
     return skip_pred(lambda x: x.platform_name != platform,
                      'only supported for platform "{}"'.format(platform), hide)
+
+
+class AttrDict(object):
+    def __init__(self, **kwargs):
+        for k, v in iteritems(kwargs):
+            setattr(self, k, v)
 
 
 class CrossPlatformTestCase(TestCase):
