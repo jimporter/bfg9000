@@ -131,18 +131,6 @@ class MsvcBaseCompiler(BuildCommand):
                               command, flags=(cflags_name, cflags))
 
     @property
-    def brand(self):
-        return self.builder.brand
-
-    @property
-    def version(self):
-        return self.builder.version
-
-    @property
-    def flavor(self):
-        return 'msvc'
-
-    @property
     def deps_flavor(self):
         return 'msvc'
 
@@ -321,18 +309,6 @@ class MsvcLinker(BuildCommand):
                              .format(basename))
         return m.group(1)
 
-    @property
-    def brand(self):
-        return self.builder.brand
-
-    @property
-    def version(self):
-        return self.builder.version
-
-    @property
-    def flavor(self):
-        return 'msvc'
-
     def can_link(self, format, langs):
         return (format == self.builder.object_format and
                 self.__allowed_langs[self.lang].issuperset(langs))
@@ -507,10 +483,6 @@ class MsvcStaticLinker(BuildCommand):
     def __init__(self, builder, env, name, command, arflags_name, arflags):
         BuildCommand.__init__(self, builder, env, name, name,
                               command, flags=(arflags_name, arflags))
-
-    @property
-    def flavor(self):
-        return 'msvc'
 
     def can_link(self, format, langs):
         return format == self.builder.object_format

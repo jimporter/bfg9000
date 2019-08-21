@@ -26,6 +26,10 @@ class LdLinker(object):
         return self.builder.lang
 
     @property
+    def family(self):
+        return self.builder.family
+
+    @property
     def flavor(self):
         return 'ld'
 

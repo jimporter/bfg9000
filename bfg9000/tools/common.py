@@ -106,6 +106,18 @@ class BuildCommand(Command):
     def family(self):
         return self.builder.family
 
+    @property
+    def brand(self):
+        return self.builder.brand
+
+    @property
+    def version(self):
+        return self.builder.version
+
+    @property
+    def flavor(self):
+        return self.builder.flavor
+
     def pre_build(self, build, name, context):
         return opts.option_list()
 

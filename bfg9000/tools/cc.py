@@ -178,18 +178,6 @@ class CcBaseCompiler(BuildCommand):
                               command, flags=(cflags_name, cflags))
 
     @property
-    def brand(self):
-        return self.builder.brand
-
-    @property
-    def version(self):
-        return self.builder.version
-
-    @property
-    def flavor(self):
-        return 'cc'
-
-    @property
     def deps_flavor(self):
         return None if self.lang in ('f77', 'f95') else 'gcc'
 
@@ -324,7 +312,7 @@ class CcPchCompiler(CcCompiler):
         return False
 
     def output_file(self, name, context):
-        ext = '.gch' if self.builder.brand == 'gcc' else '.pch'
+        ext = '.gch' if self.brand == 'gcc' else '.pch'
         return PrecompiledHeader(Path(name + ext), self.lang)
 
 
@@ -363,18 +351,6 @@ class CcLinker(BuildCommand):
 
         # Get the first non-None group from the match.
         return next(i for i in m.groups() if i is not None)
-
-    @property
-    def brand(self):
-        return self.builder.brand
-
-    @property
-    def version(self):
-        return self.builder.version
-
-    @property
-    def flavor(self):
-        return 'cc'
 
     def can_link(self, format, langs):
         return (format == self.builder.object_format and
@@ -415,7 +391,7 @@ class CcLinker(BuildCommand):
 
             # clang doesn't respect LIBRARY_PATH with -print-search-dirs;
             # see <https://bugs.llvm.org//show_bug.cgi?id=23877>.
-            if self.builder.brand == 'clang':
+            if self.brand == 'clang':
                 search_dirs = (self.env.getvar('LIBRARY_PATH', '')
                                .split(os.pathsep)) + search_dirs
         except (OSError, shell.CalledProcessError):

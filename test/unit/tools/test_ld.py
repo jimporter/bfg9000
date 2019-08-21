@@ -21,11 +21,17 @@ class TestLdLinker(CrossPlatformTestCase):
 
     def test_lang(self):
         class MockBuilder(object):
-            def __init__(self):
-                self.lang = 'c++'
+            lang = 'c++'
 
         ld = LdLinker(MockBuilder(), self.env, ['ld'], 'version')
         self.assertEqual(ld.lang, 'c++')
+
+    def test_family(self):
+        class MockBuilder(object):
+            family = 'native'
+
+        ld = LdLinker(MockBuilder(), self.env, ['ld'], 'version')
+        self.assertEqual(ld.family, 'native')
 
     def test_gnu_ld(self):
         version = 'GNU ld (GNU Binutils for Ubuntu) 2.26.1'
