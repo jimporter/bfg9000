@@ -285,6 +285,9 @@ class CcCompiler(CcBaseCompiler):
     def accepts_pch(self):
         return True
 
+    def default_name(self, input):
+        return input.path.stripext().suffix
+
     def output_file(self, name, context):
         # XXX: MinGW's object format doesn't appear to be COFF...
         return ObjectFile(Path(name + '.o'), self.builder.object_format,
@@ -310,6 +313,9 @@ class CcPchCompiler(CcCompiler):
     def accepts_pch(self):
         # You can't pass a PCH to a PCH compiler!
         return False
+
+    def default_name(self, input):
+        return input.path.suffix
 
     def output_file(self, name, context):
         ext = '.gch' if self.brand == 'gcc' else '.pch'

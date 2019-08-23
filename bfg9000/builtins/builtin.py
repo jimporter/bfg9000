@@ -135,7 +135,8 @@ def _get_value(argspec, builtin_bound, args, kwargs):
 _type = type
 
 
-def type(out_type, in_type=string_or_path_types, extra_in_type=()):
+def type(out_type, in_type=string_or_path_types, extra_in_type=(),
+         short_circuit=True):
     in_type = listify(in_type, type=tuple) + listify(extra_in_type, type=tuple)
 
     def decorator(fn):
@@ -152,7 +153,7 @@ def type(out_type, in_type=string_or_path_types, extra_in_type=()):
             try:
                 thing = _get_value(argspec, wrapper._builtin_bound, args,
                                    kwargs)
-                if isinstance(thing, wrapper.type):
+                if short_circuit and isinstance(thing, wrapper.type):
                     return thing
                 if not isinstance(thing, wrapper.in_type):
                     gen = (i.__name__ for i in chain(

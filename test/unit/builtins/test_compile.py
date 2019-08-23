@@ -12,6 +12,14 @@ from bfg9000.path import Path, Root
 MockCompile = namedtuple('MockCompile', ['file'])
 
 
+def mock_which(*args, **kwargs):
+    return ['command']
+
+
+def mock_execute(*args, **kwargs):
+    return 'version'
+
+
 class CompileTest(BuiltinTest):
     def output_file(self, name, context={}, lang='c++', mode=None, extra={}):
         compiler = getattr(self.env.builder(lang), mode or self.mode)
@@ -134,7 +142,7 @@ class TestPrecompiledHeader(CompileTest):
                             expected)
 
     def test_make_simple(self):
-        with mock.patch('bfg9000.builtins.file_types.generated_file',
+        with mock.patch('bfg9000.builtins.file_types.make_immediate_file',
                         return_value=self.MockFile()):
             pch = self.builtin_dict['precompiled_header']
 
@@ -155,7 +163,7 @@ class TestPrecompiledHeader(CompileTest):
             ))
 
     def test_make_no_lang(self):
-        with mock.patch('bfg9000.builtins.file_types.generated_file',
+        with mock.patch('bfg9000.builtins.file_types.make_immediate_file',
                         return_value=self.MockFile()):
             pch = self.builtin_dict['precompiled_header']
 
@@ -169,7 +177,7 @@ class TestPrecompiledHeader(CompileTest):
             self.assertRaises(ValueError, pch, 'object', src)
 
     def test_make_override_lang(self):
-        with mock.patch('bfg9000.builtins.file_types.generated_file',
+        with mock.patch('bfg9000.builtins.file_types.make_immediate_file',
                         return_value=self.MockFile()):
             pch = self.builtin_dict['precompiled_header']
 
@@ -190,8 +198,56 @@ class TestPrecompiledHeader(CompileTest):
         self.assertEqual(result.creator.description, 'my description')
 
 
+class TestGeneratedSource(CompileTest):
+    mode = 'transpiler'
+
+    def setUp(self):
+        CompileTest.setUp(self)
+        with mock.patch('bfg9000.shell.which', mock_which), \
+             mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
+            self.env.builder('qrc')
+
+    def test_no_file(self):
+        with self.assertRaises(TypeError):
+            self.builtin_dict['generated_source']('source')
+
+    def test_make_simple(self):
+        result = self.builtin_dict['generated_source'](file='file.qrc')
+        self.assertSameFile(result, self.output_file('file.cpp', lang='qrc'))
+
+        result = self.builtin_dict['generated_source']('name.cpp', 'file.qrc')
+        self.assertSameFile(result, self.output_file('name.cpp', lang='qrc'))
+
+        src = self.builtin_dict['resource_file']('file.qrc')
+        result = self.builtin_dict['generated_source']('name.cpp', src)
+        self.assertSameFile(result, self.output_file('name.cpp', lang='qrc'))
+
+    def test_make_no_lang(self):
+        gen_src = self.builtin_dict['generated_source']
+        result = gen_src('file.cpp', 'file.goofy', lang='qrc')
+        self.assertSameFile(result, self.output_file('file.cpp', lang='qrc'))
+
+        self.assertRaises(ValueError, gen_src, 'file.cpp', 'file.goofy')
+
+        src = self.builtin_dict['resource_file']('file.goofy')
+        self.assertRaises(ValueError, gen_src, 'file.cpp', src)
+
+    def test_make_override_lang(self):
+        src = self.builtin_dict['resource_file']('main.ui', 'qtui')
+        result = self.builtin_dict['generated_source']('main.cpp', src,
+                                                       lang='qrc')
+        self.assertSameFile(result, self.output_file('main.cpp', lang='qrc'))
+        self.assertEqual(result.creator.compiler.lang, 'qrc')
+
+    def test_description(self):
+        result = self.builtin_dict['generated_source'](
+            file='main.qrc', description='my description'
+        )
+        self.assertEqual(result.creator.description, 'my description')
+
+
 class TestObjectFiles(BuiltinTest):
-    def make_object_files(self, make_src=False):
+    def make_file_list(self, make_src=False):
         files = [file_types.ObjectFile(Path(i, Root.srcdir), None)
                  for i in ['obj1', 'obj2']]
         if make_src:
@@ -200,36 +256,56 @@ class TestObjectFiles(BuiltinTest):
             for f, s in zip(files, src_files):
                 f.creator = MockCompile(s)
 
-        obj_files = self.builtin_dict['object_files'](files)
+        file_list = self.builtin_dict['object_files'](files)
 
         if make_src:
-            return obj_files, files, src_files
-        return obj_files, files
+            return file_list, files, src_files
+        return file_list, files
 
     def test_initialize(self):
-        obj_files, files = self.make_object_files()
-        self.assertEqual(list(obj_files), files)
+        file_list, files = self.make_file_list()
+        self.assertEqual(list(file_list), files)
 
     def test_getitem_index(self):
-        obj_files, files = self.make_object_files()
-        self.assertEqual(obj_files[0], files[0])
+        file_list, files = self.make_file_list()
+        self.assertEqual(file_list[0], files[0])
 
     def test_getitem_string(self):
-        obj_files, files, src_files = self.make_object_files(True)
-        self.assertEqual(obj_files['src1'], files[0])
+        file_list, files, src_files = self.make_file_list(True)
+        self.assertEqual(file_list['src1'], files[0])
 
     def test_getitem_path(self):
-        obj_files, files, src_files = self.make_object_files(True)
-        self.assertEqual(obj_files[src_files[0].path], files[0])
+        file_list, files, src_files = self.make_file_list(True)
+        self.assertEqual(file_list[src_files[0].path], files[0])
 
     def test_getitem_file(self):
-        obj_files, files, src_files = self.make_object_files(True)
-        self.assertEqual(obj_files[src_files[0]], files[0])
+        file_list, files, src_files = self.make_file_list(True)
+        self.assertEqual(file_list[src_files[0]], files[0])
 
     def test_getitem_not_found(self):
-        obj_files, files, src_files = self.make_object_files(True)
-        self.assertRaises(IndexError, lambda: obj_files[2])
-        self.assertRaises(IndexError, lambda: obj_files['src3'])
-        self.assertRaises(IndexError, lambda: obj_files[Path(
+        file_list, files, src_files = self.make_file_list(True)
+        self.assertRaises(IndexError, lambda: file_list[2])
+        self.assertRaises(IndexError, lambda: file_list['src3'])
+        self.assertRaises(IndexError, lambda: file_list[Path(
             'src3', Root.srcdir
         )])
+
+
+class TestGeneratedSources(TestObjectFiles):
+    def setUp(self):
+        TestObjectFiles.setUp(self)
+        with mock.patch('bfg9000.shell.which', mock_which), \
+             mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
+            self.env.builder('qrc')
+
+    def make_file_list(self, return_src=False):
+        files = [file_types.SourceFile(Path(i, Root.builddir), 'c++')
+                 for i in ['src1.cpp', 'src2.cpp']]
+        src_files = [file_types.SourceFile(Path(i, Root.srcdir), 'qrc')
+                     for i in ['src1', 'src2']]
+
+        file_list = self.builtin_dict['generated_sources'](src_files)
+
+        if return_src:
+            return file_list, files, src_files
+        return file_list, files

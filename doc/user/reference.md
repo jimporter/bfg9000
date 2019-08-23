@@ -55,10 +55,10 @@ source files of that type (see each step's documentation for details).
 
 Create a reference to an existing file named *name*. This function will try to
 automatically determine the file's kind based on its extension:
-[*source_file*](#source_file); [*header_file*](#header_file); or, if the
-extension is not recognized, [*generic_file*](#generic_file). If *lang* is
-specified, files with an unrecognized extension will always be treated as
-[*source_file*](#source_file)s.
+[*source_file*](#source_file); [*header_file*](#header_file);
+[*resource_file*](#resource_file); or, if the extension is not recognized,
+[*generic_file*](#generic_file). If *lang* is specified, files with an
+unrecognized extension will always be treated as [*source_file*](#source_file)s.
 
 !!! note
     This function is primarily useful for writing generic code that works with
@@ -117,6 +117,13 @@ Availability: `build.bfg`
 Create a reference to an existing module-definition file named *name*.
 [Module-definition files][def-file] are sometimes used when building libraries
 on Windows.
+
+### resource_file(*name*, [*lang*]) { #resource_file }
+Availability: `build.bfg`
+{: .subtitle}
+
+Create a reference to an existing resource file named *name*. If *lang* is not
+specified, the language of the file is inferred from its extension.
 
 ### source_file(*name*, [*lang*]) { #source_file }
 Availability: `build.bfg`
@@ -200,6 +207,38 @@ relevant language.
     to build your project, any linker options that need to be forwarded on to
     `ld` should be prepended with `'-Wl,'`.
 
+### generated_source([*name*], *file*, ..., [*extra_deps*], [*description*]) { #generated_source }
+Availability: `build.bfg`
+{: .subtitle}
+
+Create a build step that generates a source file named *name* from an input
+(typically another source file) named *file*; if *name* is not specified, this
+function will use the filename in *file* as a base (typically the filename with
+a different extension). Note that unlike with other file steps, *name*
+represents the exact file name to be used for the output file (i.e. the file
+extension isn't added automatically).
+
+The following arguments may also be specified:
+
+* *options*: Command-line options to pass to the compiler
+* *lang*: The language of the source file; useful if the source file's extension
+  isn't recognized by bfg9000
+
+This build step recognizes the [compilation environment
+variables](environment-vars.md#compilation-variables) for the relevant language.
+
+### generated_sources(*files*, ..., [*extra_deps*], [*description*]) { #generated_sources }
+Availability: `build.bfg`
+{: .subtitle}
+
+Create a source-generation build step for each of the files in *files*; this is
+equivalent to calling [*generated_source*](#generated_source) for each element
+in *files*.
+
+Like [*object_files*](#object_files), *generated_sources* returns a special list
+that allows you to index into it using the filename of one of the source files
+listed in *files*.
+
 ### library(*name*, [*files*, ..., [*extra_deps*], [*description*]]) { #library }
 Availability: `build.bfg`
 {: .subtitle}
@@ -243,8 +282,8 @@ Availability: `build.bfg`
 {: .subtitle}
 
 Create a build step that compiles a source file named *file* to an object file
-named *name*; if *name* is not specified, it takes the file name in *file*
-without the extension.
+named *name*; if *name* is not specified, this function will use the filename
+in *file* as a base (typically the filename without the extension).
 
 The following arguments may also be specified:
 

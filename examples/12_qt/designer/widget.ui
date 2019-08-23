@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MyWidget</class>
+ <widget class="QWidget" name="MyWidget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>100</width>
+    <height>50</height>
+   </rect>
+  </property>
+  <widget class="QPushButton" name="mybutton">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>10</y>
+     <width>80</width>
+     <height>30</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Hello, world!</string>
+   </property>
+   <property name="checkable">
+     <bool>true</bool>
+   </property>
+  </widget>
+ </widget>
+</ui>

@@ -10,6 +10,7 @@ from ..path import Path, Root, makedirs as _makedirs
 _kind_to_file_type = {
     'header': HeaderFile,
     'source': SourceFile,
+    'resource': ResourceFile,
 }
 
 
@@ -30,7 +31,7 @@ def static_file(build, file_type, name, params=[], kwargs={}):
 
 
 @contextmanager
-def generated_file(build, env, file, mode='w', makedirs=True):
+def make_immediate_file(build, env, file, mode='w', makedirs=True):
     if makedirs:
         _makedirs(file.path.parent().string(env.base_dirs), exist_ok=True)
 
@@ -50,6 +51,14 @@ def source_file(build, name, lang=None):
     path = Path.ensure(name, Root.srcdir)
     lang = lang or known_langs.fromext(path.ext(), 'source')
     return static_file(build, SourceFile, path, [('lang', lang)])
+
+
+@builtin.function('build_inputs')
+@builtin.type(ResourceFile)
+def resource_file(build, name, lang=None):
+    path = Path.ensure(name, Root.srcdir)
+    lang = lang or known_langs.fromext(path.ext(), 'resource')
+    return static_file(build, ResourceFile, path, [('lang', lang)])
 
 
 @builtin.function('build_inputs')
@@ -110,11 +119,11 @@ def directory(builtins, build, name, include=None, exclude=exclude_globs,
 
 
 @builtin.function('builtins', 'build_inputs')
-@builtin.type(HeaderDirectory, extra_in_type=CodeFile)
+@builtin.type(HeaderDirectory, extra_in_type=SourceCodeFile)
 def header_directory(builtins, build, name, include=None,
                      exclude=exclude_globs, filter=filter_by_platform,
                      system=False, lang=None):
-    if isinstance(name, CodeFile):
+    if isinstance(name, SourceCodeFile):
         path = name.path.parent()
         lang = name.lang
     else:

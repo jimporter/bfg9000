@@ -5,6 +5,7 @@ from .. import *
 
 from bfg9000 import file_types, options as opts
 from bfg9000.languages import Languages
+from bfg9000.path import Path, Root
 from bfg9000.tools.jvm import JvmBuilder
 from bfg9000.versioning import Version
 
@@ -163,6 +164,23 @@ class TestJvmCompiler(CrossPlatformTestCase):
             self.compiler = JvmBuilder(self.env, known_langs['java'],
                                        ['javac'], 'version').compiler
 
+    def test_call(self):
+        extra = self.compiler._always_flags
+        with mock.patch('bfg9000.shell.which', mock_which):
+            jvmout = self.env.tool('jvmoutput')
+            self.assertEqual(
+                self.compiler('in', 'out'),
+                [jvmout, '-o', 'out', self.compiler] + extra + ['in']
+            )
+            self.assertEqual(
+                self.compiler('in', 'out', ['flags']),
+                [jvmout, '-o', 'out', self.compiler] + extra + ['flags', 'in']
+            )
+
+    def test_default_name(self):
+        src = file_types.SourceFile(Path('file.java', Root.srcdir), 'java')
+        self.assertEqual(self.compiler.default_name(src), 'file')
+
     def test_flags_empty(self):
         self.assertEqual(self.compiler.flags(opts.option_list()), [])
 
@@ -280,6 +298,12 @@ class TestJvmLinker(CrossPlatformTestCase):
              mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
             self.linker = JvmBuilder(self.env, known_langs['java'], ['javac'],
                                      'version').linker('executable')
+
+    def test_call(self):
+        self.assertEqual(self.linker('in', 'out', 'manifest'),
+                         [self.linker, 'out', 'manifest', 'in'])
+        self.assertEqual(self.linker('in', 'out', 'manifest', ['flags']),
+                         [self.linker, 'flags', 'out', 'manifest', 'in'])
 
     def test_flags_empty(self):
         self.assertEqual(self.linker.flags(opts.option_list()), [])

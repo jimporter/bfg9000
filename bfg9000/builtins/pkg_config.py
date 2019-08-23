@@ -3,7 +3,7 @@ from itertools import chain
 from six import iteritems, itervalues, string_types
 
 from . import builtin
-from .file_types import generated_file
+from .file_types import make_immediate_file
 from .install import can_install
 from .. import options as opts, path
 from ..build_inputs import build_input
@@ -389,6 +389,6 @@ def finalize_pkg_config(builtins, build, env):
             raise ValueError("duplicate pkg-config package '{}'".format(name))
 
     for info in build['pkg_config']:
-        with generated_file(build, env, info.output) as out:
+        with make_immediate_file(build, env, info.output) as out:
             info.write(out, env)
             builtins['install'](info.output)

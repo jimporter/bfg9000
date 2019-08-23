@@ -5,6 +5,9 @@ in progress
 {: .subtitle}
 
 ### New features
+- Add `generated_source()` to allow generating source code from domain-specific
+  languages
+- Add support for Qt build tools (`moc`, `rcc`, `uic`)
 - Add the ability to use placeholders for `build_step()` and `command()`
 - Add an `auto_file()` function that infers the kind of file based on its
   extension; `build_step()` now uses this by default for outputs

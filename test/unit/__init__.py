@@ -47,6 +47,7 @@ class CrossPlatformTestCase(TestCase):
 
     def __init__(self, *args, **kwargs):
         clear_variables = kwargs.pop('clear_variables', False)
+        variables = kwargs.pop('variables', {})
         self.platform_name = kwargs.pop('platform_name', None)
 
         TestCase.__init__(self, *args, **kwargs)
@@ -54,7 +55,8 @@ class CrossPlatformTestCase(TestCase):
             return
 
         self.env = make_env(platform=self.platform_name,
-                            clear_variables=clear_variables)
+                            clear_variables=clear_variables,
+                            variables=variables)
 
     @property
     def Path(self):

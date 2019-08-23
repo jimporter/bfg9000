@@ -1,0 +1,34 @@
+# -*- python -*-
+
+global_options([opts.pic(), opts.std('c++11')], lang='c++')
+
+# Qt provides two main ways to build user interfaces: the Qt Designer, which
+# works directly with Qt widgets, or via Qt Quick, which uses QML. In both
+# cases, building Qt needs some additional build steps:
+
+widgets = package('Qt5Widgets')
+
+# Compiling Qt UI files is simple: just use the `generated_source` build step
+# and the output will be a C++ file ready to be compiled.
+
+ui = generated_source(file='designer/widget.ui')
+
+# Running C++ source files through the meta-object compiler isn't much harder;
+# again, just use `generated_source`. However, you'll need to explicitly pass
+# the language as it can't be automatically determined from the file extension:
+
+moc = generated_source(file='designer/window.hpp', lang='qtmoc')
+executable('qt-designer', ['designer/main.cpp', 'designer/window.cpp', moc],
+           includes=[ui], packages=widgets)
+
+# Building Qt Quick projects is easy too. Much like Qt Designer projects, all
+# you'll need to do is add some extra build step for the Qt-specific bits:
+
+qml = package('Qt5Qml')
+
+# Like with `object_files`, you can generate sources for multiple inputs at
+# once using `generated_sources`. Each input in the list will be forwarded on
+# to `generated_source` along with all the other arguments:
+
+qrc = generated_sources(['qml/qml.qrc'])
+executable('qt-qml', ['qml/main.cpp'] + qrc, packages=[widgets, qml])

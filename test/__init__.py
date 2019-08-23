@@ -12,7 +12,7 @@ __all__ = ['assertNotRegex', 'assertRaisesRegex', 'assertRegex', 'load_tests',
            'TestCase', 'xfail_if']
 
 
-def make_env(platform=None, clear_variables=False):
+def make_env(platform=None, clear_variables=False, variables={}):
     args = (Path('bfgdir', Root.srcdir), None, None, abspath('srcdir'),
             abspath('builddir'), {}, (False, False))
     if platform:
@@ -24,6 +24,7 @@ def make_env(platform=None, clear_variables=False):
 
     if clear_variables:
         env.variables = {}
+    env.variables.update(variables)
     return env
 
 

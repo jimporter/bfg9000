@@ -75,11 +75,19 @@ class CodeFile(File):
         self.lang = lang
 
 
-class SourceFile(CodeFile):
+class ResourceFile(CodeFile):
     pass
 
 
-class HeaderFile(CodeFile):
+class SourceCodeFile(CodeFile):
+    pass
+
+
+class SourceFile(SourceCodeFile):
+    pass
+
+
+class HeaderFile(SourceCodeFile):
     install_kind = 'data'
     install_root = _InstallRoot.includedir
 

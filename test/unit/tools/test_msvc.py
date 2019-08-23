@@ -5,6 +5,7 @@ from .. import *
 from bfg9000 import file_types, options as opts
 from bfg9000.languages import Languages
 from bfg9000.packages import Framework
+from bfg9000.path import Path, Root
 from bfg9000.tools.msvc import MsvcBuilder
 from bfg9000.versioning import Version
 
@@ -103,6 +104,29 @@ class TestMsvcCompiler(CrossPlatformTestCase):
             self.compiler = MsvcBuilder(self.env, known_langs['c++'], ['cl'],
                                         'version').compiler
 
+    def test_call(self):
+        extra = self.compiler._always_flags
+        self.assertEqual(self.compiler('in', 'out'),
+                         [self.compiler] + extra + ['/c', 'in', '/Foout'])
+        self.assertEqual(
+            self.compiler('in', 'out', flags=['flags']),
+            [self.compiler] + extra + ['flags', '/c', 'in', '/Foout']
+        )
+
+        self.assertEqual(
+            self.compiler('in', 'out', 'out.d'),
+            [self.compiler] + extra + ['/showIncludes', '/c', 'in', '/Foout']
+        )
+        self.assertEqual(
+            self.compiler('in', 'out', 'out.d', ['flags']),
+            [self.compiler] + extra + ['flags', '/showIncludes', '/c', 'in',
+                                       '/Foout']
+        )
+
+    def test_default_name(self):
+        src = file_types.SourceFile(Path('file.cpp', Root.srcdir), 'c++')
+        self.assertEqual(self.compiler.default_name(src), 'file')
+
     def test_flags_empty(self):
         self.assertEqual(self.compiler.flags(opts.option_list()), [])
 
@@ -199,6 +223,39 @@ class TestMsvcCompiler(CrossPlatformTestCase):
             self.compiler.flags(opts.option_list(123))
 
 
+class TestMsvcPchCompiler(TestMsvcCompiler):
+    def setUp(self):
+        with mock.patch('bfg9000.shell.which', mock_which):
+            self.compiler = MsvcBuilder(self.env, known_langs['c++'], ['cl'],
+                                      'version').pch_compiler
+
+    def test_call(self):
+        extra = self.compiler._always_flags
+        self.assertEqual(self.compiler('in', ['out_pch', 'out']),
+                         [self.compiler] + extra + ['/c', 'in', '/Foout',
+                                                    '/Fpout_pch'])
+        self.assertEqual(
+            self.compiler('in', ['out_pch', 'out'], flags=['flags']),
+            [self.compiler] + extra + ['flags', '/c', 'in', '/Foout',
+                                       '/Fpout_pch']
+        )
+
+        self.assertEqual(
+            self.compiler('in', ['out_pch', 'out'], 'out.d'),
+            [self.compiler] + extra + ['/showIncludes', '/c', 'in', '/Foout',
+                                       '/Fpout_pch']
+        )
+        self.assertEqual(
+            self.compiler('in', ['out_pch', 'out'], 'out.d', ['flags']),
+            [self.compiler] + extra + ['flags', '/showIncludes', '/c', 'in',
+                                       '/Foout', '/Fpout_pch']
+        )
+
+    def test_default_name(self):
+        hdr = file_types.HeaderFile(Path('file.hpp', Root.srcdir), 'c++')
+        self.assertEqual(self.compiler.default_name(hdr), 'file.hpp')
+
+
 class TestMsvcLinker(CrossPlatformTestCase):
     def __init__(self, *args, **kwargs):
         CrossPlatformTestCase.__init__(self, clear_variables=True, *args,
@@ -210,6 +267,20 @@ class TestMsvcLinker(CrossPlatformTestCase):
         with mock.patch('bfg9000.shell.which', mock_which):
             self.linker = MsvcBuilder(self.env, known_langs['c++'], ['cl'],
                                       version).linker('executable')
+
+    def test_call(self):
+        extra = self.linker._always_flags
+        self.assertEqual(self.linker(['in'], 'out'),
+                         [self.linker] + extra + ['in', '/OUT:out'])
+        self.assertEqual(self.linker(['in'], 'out', flags=['flags']),
+                         [self.linker] + extra + ['flags', 'in', '/OUT:out'])
+
+        self.assertEqual(self.linker(['in'], 'out', ['lib']),
+                         [self.linker] + extra + ['in', 'lib', '/OUT:out'])
+        self.assertEqual(
+            self.linker(['in'], 'out', ['lib'], ['flags']),
+            [self.linker] + extra + ['flags', 'in', 'lib', '/OUT:out']
+        )
 
     def test_flags_empty(self):
         self.assertEqual(self.linker.flags(opts.option_list()), [])
@@ -330,6 +401,34 @@ class TestMsvcLinker(CrossPlatformTestCase):
         self.assertEqual(self.linker.lib_flags(opts.option_list('-Lfoo')), [])
 
 
+class TestMsvcSharedLinker(TestMsvcLinker):
+    def setUp(self):
+        with mock.patch('bfg9000.shell.which', mock_which):
+            self.linker = MsvcBuilder(self.env, known_langs['c++'], ['cl'],
+                                      'version').linker('shared_library')
+
+    def test_call(self):
+        extra = self.linker._always_flags
+        self.assertEqual(
+            self.linker(['in'], ['out', 'imp']),
+            [self.linker] + extra + ['in', '/OUT:out', '/IMPLIB:imp']
+        )
+        self.assertEqual(
+            self.linker(['in'], ['out', 'imp'], flags=['flags']),
+            [self.linker] + extra + ['flags', 'in', '/OUT:out', '/IMPLIB:imp']
+        )
+
+        self.assertEqual(
+            self.linker(['in'], ['out', 'imp'], ['lib']),
+            [self.linker] + extra + ['in', 'lib', '/OUT:out', '/IMPLIB:imp']
+        )
+        self.assertEqual(
+            self.linker(['in'], ['out', 'imp'], ['lib'], ['flags']),
+            [self.linker] + extra + ['flags', 'in', 'lib', '/OUT:out',
+                                     '/IMPLIB:imp']
+        )
+
+
 class TestMsvcStaticLinker(CrossPlatformTestCase):
     def __init__(self, *args, **kwargs):
         CrossPlatformTestCase.__init__(self, clear_variables=True, *args,
@@ -339,6 +438,12 @@ class TestMsvcStaticLinker(CrossPlatformTestCase):
         with mock.patch('bfg9000.shell.which', mock_which):
             self.linker = MsvcBuilder(self.env, known_langs['c++'], ['cl'],
                                       'version').linker('static_library')
+
+    def test_call(self):
+        self.assertEqual(self.linker(['in'], 'out'),
+                         [self.linker, 'in', '/OUT:out'])
+        self.assertEqual(self.linker(['in'], 'out', flags=['flags']),
+                         [self.linker, 'flags', 'in', '/OUT:out'])
 
     def test_flags_empty(self):
         self.assertEqual(self.linker.flags(opts.option_list()), [])

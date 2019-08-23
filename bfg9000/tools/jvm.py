@@ -4,7 +4,7 @@ from itertools import chain
 
 from .common import Builder, BuildCommand, check_which, not_buildroot
 from .. import options as opts, safe_str, shell
-from ..builtins.file_types import generated_file
+from ..builtins.file_types import make_immediate_file
 from ..exceptions import PackageResolutionError
 from ..file_types import *
 from ..iterutils import flatten, iterate, uniques
@@ -171,6 +171,9 @@ class JvmCompiler(BuildCommand):
                                                os.pathsep)])
         return flags
 
+    def default_name(self, input):
+        return input.path.stripext().suffix
+
     def output_file(self, name, context):
         return ObjectFileList(Path(name + '.classlist'), Path(name + '.class'),
                               self.builder.object_format, self.lang)
@@ -214,7 +217,7 @@ class JarMaker(BuildCommand):
         base = Path(name).parent()
 
         context.manifest = File(Path(name + '-manifest.txt'))
-        with generated_file(build, self.env, context.manifest) as out:
+        with make_immediate_file(build, self.env, context.manifest) as out:
             classpath = ' '.join(fix_path(i.relpath(base)) for i in dirs)
             if classpath:
                 out.write('Class-Path: {}\n'.format(classpath))
@@ -224,7 +227,7 @@ class JarMaker(BuildCommand):
 
         return opts.option_list()
 
-    def _call(self, cmd, input, output, manifest, libs=None, flags=None):
+    def _call(self, cmd, input, output, manifest, flags=None):
         return list(chain(
             cmd, iterate(flags), [output, manifest], iterate(input)
         ))

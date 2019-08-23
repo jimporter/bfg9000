@@ -50,7 +50,8 @@ matrix:
         - set -e
         - shell_session_update() { :; }
         - brew update
-        - brew install gcc libogg ninja
+        - brew install gcc libogg ninja qt5
+        - brew link qt5 --force
         - |
           if [ "${PYTHON}" = "python3" ]; then
             brew install ${PYTHON} || brew upgrade ${PYTHON}
@@ -119,6 +120,7 @@ matrix:
 addons:
   apt:
     packages:
+      - default-jdk
       - freeglut3-dev
       - gcc-multilib
       - gcj-jdk
@@ -131,7 +133,8 @@ addons:
       - libogg-dev
       - mingw-w64
       - ninja-build
-      - default-jdk
+      - qt5-default
+      - qtdeclarative5-dev
       - scala
 cache:
   - apt

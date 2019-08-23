@@ -1,4 +1,5 @@
 import mock
+import os
 
 from .. import *
 
@@ -6,7 +7,7 @@ from bfg9000 import options as opts, platforms
 from bfg9000.file_types import *
 from bfg9000.languages import Languages
 from bfg9000.packages import Framework
-from bfg9000.path import InstallRoot
+from bfg9000.path import InstallRoot, Path, Root
 from bfg9000.tools.cc import CcBuilder
 from bfg9000.versioning import Version
 
@@ -199,6 +200,30 @@ class TestCcCompiler(CrossPlatformTestCase):
             self.compiler = CcBuilder(self.env, known_langs['c++'], ['c++'],
                                       'version').compiler
 
+    def test_call(self):
+        extra = self.compiler._always_flags
+        self.assertEqual(self.compiler('in', 'out'),
+                         [self.compiler] + extra + ['-c', 'in', '-o', 'out'])
+        self.assertEqual(
+            self.compiler('in', 'out', flags=['flags']),
+            [self.compiler] + extra + ['flags', '-c', 'in', '-o', 'out']
+        )
+
+        self.assertEqual(
+            self.compiler('in', 'out', 'out.d'),
+            [self.compiler] + extra + ['-c', 'in', '-MMD', '-MF', 'out.d',
+                                       '-o', 'out']
+        )
+        self.assertEqual(
+            self.compiler('in', 'out', 'out.d', ['flags']),
+            [self.compiler] + extra + ['flags', '-c', 'in', '-MMD', '-MF',
+                                       'out.d', '-o', 'out']
+        )
+
+    def test_default_name(self):
+        src = SourceFile(Path('file.cpp', Root.srcdir), 'c++')
+        self.assertEqual(self.compiler.default_name(src), 'file')
+
     def test_flags_empty(self):
         self.assertEqual(self.compiler.flags(opts.option_list()), [])
 
@@ -304,7 +329,21 @@ class TestCcCompiler(CrossPlatformTestCase):
             self.compiler.flags(opts.option_list(123))
 
 
+class TestCcPchCompiler(TestCcCompiler):
+    def setUp(self):
+        with mock.patch('bfg9000.shell.which', mock_which), \
+             mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
+            self.compiler = CcBuilder(self.env, known_langs['c++'], ['c++'],
+                                      'version').pch_compiler
+
+    def test_default_name(self):
+        hdr = HeaderFile(Path('file.hpp', Root.srcdir), 'c++')
+        self.assertEqual(self.compiler.default_name(hdr), 'file.hpp')
+
+
 class TestCcLinker(CrossPlatformTestCase):
+    shared = False
+
     def __init__(self, *args, **kwargs):
         CrossPlatformTestCase.__init__(self, clear_variables=True, *args,
                                        **kwargs)
@@ -318,13 +357,36 @@ class TestCcLinker(CrossPlatformTestCase):
     def setUp(self):
         self.linker = self._get_linker('c++')
 
+    def test_call(self):
+        extra = self.linker._always_flags
+        self.assertEqual(self.linker(['in'], 'out'),
+                         [self.linker] + extra + ['in', '-o', 'out'])
+        self.assertEqual(self.linker(['in'], 'out', flags=['flags']),
+                         [self.linker] + extra + ['flags', 'in', '-o', 'out'])
+
+        self.assertEqual(self.linker(['in'], 'out', ['lib']),
+                         [self.linker] + extra + ['in', 'lib', '-o', 'out'])
+        self.assertEqual(
+            self.linker(['in'], 'out', ['lib'], ['flags']),
+            [self.linker] + extra + ['flags', 'in', 'lib', '-o', 'out']
+        )
+
     def test_flags_empty(self):
         self.assertEqual(self.linker.flags(opts.option_list()), [])
 
     def test_flags_lib_dir(self):
         libdir = self.Path('/path/to/lib')
         lib = self.Path('/path/to/lib/libfoo.a')
-        output = Executable(self.Path('exe'), 'native')
+
+        if self.shared:
+            output = SharedLibrary(self.Path('out'), 'native')
+            if self.env.target_platform.genus == 'darwin':
+                soname = ['-install_name', os.path.join('@rpath', 'out')]
+            else:
+                soname = ['-Wl,-soname,out']
+        else:
+            output = Executable(self.Path('exe'), 'native')
+            soname = []
 
         if self.env.target_platform.genus == 'linux':
             rpath = rpath_with_output = ['-Wl,-rpath,' + libdir]
@@ -345,7 +407,7 @@ class TestCcLinker(CrossPlatformTestCase):
         )), ['-L' + libdir] + rpath)
         self.assertEqual(self.linker.flags(opts.option_list(
             opts.lib(SharedLibrary(lib, 'native'))
-        ), output), ['-L' + libdir] + rpath_with_output)
+        ), output), ['-L' + libdir] + rpath_with_output + soname)
 
         if self.env.target_platform.genus == 'linux':
             libdir2 = self.Path('foo')
@@ -359,7 +421,7 @@ class TestCcLinker(CrossPlatformTestCase):
                 self.linker.flags(opts.option_list(
                     opts.lib(SharedLibrary(lib2, 'native'))
                 ), output),
-                ['-L' + libdir2, '-Wl,-rpath,$ORIGIN/foo']
+                ['-L' + libdir2, '-Wl,-rpath,$ORIGIN/foo'] + soname
             )
 
         # Static library
@@ -397,7 +459,7 @@ class TestCcLinker(CrossPlatformTestCase):
         self.assertEqual(self.linker.flags(opts.option_list(
             opts.lib_dir(Directory(libdir)),
             opts.lib(SharedLibrary(lib, 'native'))
-        ), output), ['-L' + libdir] + rpath_with_output)
+        ), output), ['-L' + libdir] + rpath_with_output + soname)
 
     def test_flags_rpath(self):
         p1 = self.Path('path1')
@@ -601,3 +663,39 @@ class TestCcLinker(CrossPlatformTestCase):
         ), output)
         self.assertEqual(rpaths, [self.Path('', InstallRoot.libdir),
                                   self.Path('/path/to'), self.Path('/path')])
+
+
+class TestCcSharedLinker(TestCcLinker):
+    shared = True
+
+    def _get_linker(self, lang):
+        with mock.patch('bfg9000.shell.which', mock_which), \
+             mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
+            return CcBuilder(self.env, known_langs[lang], ['c++'],
+                             'version').linker('shared_library')
+
+    def test_call(self):
+        if not self.env.target_platform.has_import_library:
+            return TestCcLinker.test_call(self)
+
+        extra = self.linker._always_flags
+        self.assertEqual(
+            self.linker(['in'], ['out', 'imp']),
+            [self.linker] + extra + ['in', '-o', 'out', '-Wl,--out-implib=imp']
+        )
+        self.assertEqual(
+            self.linker(['in'], ['out', 'imp'], flags=['flags']),
+            [self.linker] + extra + ['flags', 'in', '-o', 'out',
+                                     '-Wl,--out-implib=imp']
+        )
+
+        self.assertEqual(
+            self.linker(['in'], ['out', 'imp'], ['lib']),
+            [self.linker] + extra + ['in', 'lib', '-o', 'out',
+                                     '-Wl,--out-implib=imp']
+        )
+        self.assertEqual(
+            self.linker(['in'], ['out', 'imp'], ['lib'], ['flags']),
+            [self.linker] + extra + ['flags', 'in', 'lib', '-o', 'out',
+                                     '-Wl,--out-implib=imp']
+        )

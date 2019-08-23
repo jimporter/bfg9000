@@ -2,8 +2,8 @@ import sys
 
 from enum import Enum
 
-from .arguments import parser as argparse
 from .app_version import version
+from .arguments import parser as argparse
 
 # Munge the depfile so that it works a little better under Make. Specifically,
 # we need all the dependencies in the depfile to also be targets, so that we

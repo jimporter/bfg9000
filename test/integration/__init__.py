@@ -9,6 +9,7 @@ from six import iteritems
 from .. import *
 
 from bfg9000.backends import list_backends
+from bfg9000.iterutils import listify
 from bfg9000.path import InstallRoot, makedirs, Path, Root
 
 this_dir = os.path.abspath(os.path.dirname(__file__))
@@ -106,7 +107,9 @@ class SubprocessTestCase(TestCase):
             stderr=subprocess.STDOUT, env=final_env, universal_newlines=True
         )
         output = proc.communicate(input)[0]
-        if proc.returncode != returncode:
+        if not (returncode == 'any' or
+                (returncode == 'fail' and proc.returncode != 0) or
+                proc.returncode in listify(returncode)):
             raise SubprocessError(proc.returncode, env, output)
         return output
 

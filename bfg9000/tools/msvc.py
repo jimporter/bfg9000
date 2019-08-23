@@ -6,7 +6,7 @@ from . import pkg_config
 from .common import Builder, BuildCommand, check_which, library_macro
 from .. import options as opts, safe_str, shell
 from ..arguments.windows import ArgumentParser
-from ..builtins.file_types import generated_file
+from ..builtins.file_types import make_immediate_file
 from ..exceptions import PackageResolutionError
 from ..file_types import *
 from ..iterutils import default_sentinel, iterate, listify, uniques
@@ -153,8 +153,7 @@ class MsvcBaseCompiler(BuildCommand):
         result = list(chain( cmd, self._always_flags, iterate(flags) ))
         if deps:
             result.append('/showIncludes')
-        result.extend(['/c', input])
-        result.append('/Fo' + output)
+        result.extend(['/c', input, '/Fo' + output])
         return result
 
     @property
@@ -228,6 +227,9 @@ class MsvcCompiler(MsvcBaseCompiler):
     def accepts_pch(self):
         return True
 
+    def default_name(self, input):
+        return input.path.stripext().suffix
+
     def output_file(self, name, context):
         pch = getattr(context, 'pch', None)
         output = ObjectFile(Path(name + '.obj'),
@@ -266,7 +268,8 @@ class MsvcPchCompiler(MsvcBaseCompiler):
             ext = known_langs[self.lang].default_ext('source')
             context.pch_source = SourceFile(header.path.stripext(ext).reroot(),
                                             header.lang)
-            with generated_file(build, self.env, context.pch_source) as out:
+            with make_immediate_file(build, self.env, context.pch_source) \
+                 as out:  # noqa
                 out.write('#include "{}"\n'.format(header.path.basename()))
 
             # Add the include path for the header to ensure the PCH source
@@ -277,6 +280,9 @@ class MsvcPchCompiler(MsvcBaseCompiler):
         # Add flag to create PCH file.
         options.append('/Yc' + header.path.suffix)
         return options
+
+    def default_name(self, input):
+        return input.path.suffix
 
     def output_file(self, name, context):
         pchpath = Path(name).stripext('.pch')

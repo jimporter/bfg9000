@@ -35,3 +35,13 @@ class JvmOutput(SimpleCommand):
 
     def _call(self, cmd, output, subcmd):
         return cmd + ['-o', output] + subcmd
+
+
+@tool('rccdep')
+class RccDep(SimpleCommand):
+    def __init__(self, env):
+        SimpleCommand.__init__(self, env, name='rccdep', env_var='RCCDEP',
+                               default=env.bfgdir.append('bfg9000-rccdep'))
+
+    def _call(self, cmd, subcmd, depfile):
+        return cmd + subcmd + ['-d', depfile]

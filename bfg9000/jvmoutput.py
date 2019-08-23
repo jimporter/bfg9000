@@ -4,8 +4,8 @@ import re
 import subprocess
 import sys
 
-from .arguments import parser as argparse
 from .app_version import version
+from .arguments import parser as argparse
 
 # This captures a few kinds of messages emitted via `javac -verbose` (or
 # scalac or whatever):

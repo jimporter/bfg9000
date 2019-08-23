@@ -1,7 +1,7 @@
 from .common import BuiltinTest
 
 from bfg9000.builtins.file_types import static_file
-from bfg9000.file_types import File, HeaderFile, SourceFile
+from bfg9000.file_types import *
 from bfg9000.path import Path, Root
 
 
@@ -89,3 +89,48 @@ class TestAutoFile(BuiltinTest):
             'file.goofy', 'goofy'
         ), expected)
         self.assertEqual(list(self.build.sources()), [self.bfgfile, expected])
+
+
+class TestSourceFile(BuiltinTest):
+    type = SourceFile
+    fn = 'source_file'
+    filename = 'file.cpp'
+    lang = 'c++'
+
+    def test_identity(self):
+        expected = self.type(Path(self.filename, Root.srcdir), self.lang)
+        self.assertIs(self.builtin_dict[self.fn](expected), expected)
+        self.assertEqual(list(self.build.sources()), [self.bfgfile])
+
+    def test_basic(self):
+        expected = self.type(Path(self.filename, Root.srcdir), self.lang)
+        self.assertSameFile(self.builtin_dict[self.fn](self.filename),
+                            expected)
+        self.assertEqual(list(self.build.sources()), [self.bfgfile, expected])
+
+    def test_path(self):
+        path = Path(self.filename, Root.srcdir)
+        expected = self.type(path, self.lang)
+        self.assertSameFile(self.builtin_dict[self.fn](path), expected)
+        self.assertEqual(list(self.build.sources()), [self.bfgfile, expected])
+
+    def test_lang(self):
+        expected = self.type(Path('file.goofy', Root.srcdir), self.lang)
+        self.assertSameFile(self.builtin_dict[self.fn](
+            'file.goofy', lang=self.lang
+        ), expected)
+        self.assertEqual(list(self.build.sources()), [self.bfgfile, expected])
+
+
+class TestHeaderFile(TestSourceFile):
+    type = HeaderFile
+    fn = 'header_file'
+    filename = 'file.hpp'
+    lang = 'c++'
+
+
+class TestReourceFile(TestSourceFile):
+    type = ResourceFile
+    fn = 'resource_file'
+    filename = 'file.qrc'
+    lang = 'qrc'

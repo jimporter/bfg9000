@@ -47,6 +47,12 @@ class TestArLinker(CrossPlatformTestCase):
             self.assertEqual(self.ar.brand, 'unknown')
             self.assertEqual(self.ar.version, None)
 
+    def test_call(self):
+        self.assertEqual(self.ar(['in'], 'out'),
+                         [self.ar, 'out', 'in'])
+        self.assertEqual(self.ar(['in'], 'out', ['flags']),
+                         [self.ar, 'flags', 'out', 'in'])
+
     def test_flags_empty(self):
         self.assertEqual(self.ar.flags(opts.option_list()), [])
 

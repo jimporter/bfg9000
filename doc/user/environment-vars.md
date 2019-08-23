@@ -119,6 +119,53 @@ Default: *none*
 Command line arguments to pass to the compiler when compiling any Objective C++
 source file.
 
+### Qt MOC
+---
+
+#### *MOC*
+Default: `moc`
+{: .subtitle}
+
+The command to use when processing Qt meta-object macros.
+
+#### *MOCFLAGS*
+Default: *none*
+{: .subtitle}
+
+Command line arguments to pass to the compiler when processing Qt meta-object
+macros.
+
+### Qt QRC
+---
+
+#### *RCC*
+Default: `rcc`
+{: .subtitle}
+
+The command to use when building Qt `.qrc` files.
+
+#### *RCCFLAGS*
+Default: *none*
+{: .subtitle}
+
+Command line arguments to pass to the compiler when building Qt `.qrc` files.
+
+### Qt UI
+---
+
+#### *UIC*
+Default: `uic`
+{: .subtitle}
+
+The command to use when building Qt `.ui` files.
+
+#### *UICFLAGS*
+Default: *none*
+{: .subtitle}
+
+Command line arguments to pass to the compiler when building Qt `.ui` files.
+macros.
+
 ### Scala
 ---
 
@@ -358,6 +405,13 @@ Default: `patchelf`
 
 *Linux-only*. The command to use when patching an ELF file's rpath for
 installation.
+
+#### *RCCDEP*
+Default: `/path/to/bfg9000-rccdep`
+{: .subtitle}
+
+The command to use when generating depfiles for Qt's `rcc` tool. In general, you
+shouldn't need to touch this.
 
 #### *SETENV*
 Default: `/path/to/bfg9000-setenv`

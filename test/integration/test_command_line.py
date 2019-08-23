@@ -106,9 +106,7 @@ class TestHelp(BasicIntegrationTest):
 
     def test_help_configure(self):
         os.chdir(self.srcdir)
-        output = self.assertPopen(
-            ['bfg9000', 'help', 'configure']
-        )
+        output = self.assertPopen(['bfg9000', 'help', 'configure'])
         assertRegex(self, output, r'(?m)^build arguments:$')
 
     def test_help_configure_explicit_srcdir(self):
@@ -120,9 +118,7 @@ class TestHelp(BasicIntegrationTest):
 
     def test_help_configure_no_srcdir(self):
         os.chdir(this_dir)
-        output = self.assertPopen(
-            ['bfg9000', 'help', 'configure']
-        )
+        output = self.assertPopen(['bfg9000', 'help', 'configure'])
         assertRegex(self, output, r'(?m)^build arguments:$')
 
 
@@ -134,18 +130,13 @@ class TestRefresh(BasicIntegrationTest):
         )
 
     def test_refresh_extra_args(self):
-        output = self.assertPopen(
-            ['bfg9000', 'refresh', '--foo'],
-            returncode=2
-        )
+        output = self.assertPopen(['bfg9000', 'refresh', '--foo'],
+                                  returncode=2)
         assertRegex(self, output, 'unrecognized arguments: --foo')
 
     def test_refresh_in_srcdir(self):
         os.chdir(self.srcdir)
-        output = self.assertPopen(
-            ['bfg9000', 'refresh'],
-            returncode=2
-        )
+        output = self.assertPopen(['bfg9000', 'refresh'], returncode=2)
         assertRegex(self, output,
                     'build directory must not contain a build.bfg file')
 
@@ -168,18 +159,12 @@ class TestEnv(BasicIntegrationTest):
         self.assertEqual(output, 'MY_ENV_VAR=value\n')
 
     def test_env_extra_args(self):
-        output = self.assertPopen(
-            ['bfg9000', 'env', '--foo'],
-            returncode=2
-        )
+        output = self.assertPopen(['bfg9000', 'env', '--foo'], returncode=2)
         assertRegex(self, output, 'unrecognized arguments: --foo')
 
     def test_env_in_srcdir(self):
         os.chdir(self.srcdir)
-        output = self.assertPopen(
-            ['bfg9000', 'env'],
-            returncode=2
-        )
+        output = self.assertPopen(['bfg9000', 'env'], returncode=2)
         assertRegex(self, output,
                     'build directory must not contain a build.bfg file')
 
@@ -194,3 +179,12 @@ class TestDepfixer(SubprocessTestCase):
 
     def test_invalid(self):
         self.assertPopen(['bfg9000-depfixer'], input='foo\n', returncode=2)
+
+
+class TestRccDep(SubprocessTestCase):
+    def setUp(self):
+        self.rcc = os.getenv('RCC', 'rcc')
+
+    def test_invalid(self):
+        self.assertPopen(['bfg9000-rccdep', '-o', 'foo', '-d', 'foo.d',
+                          self.rcc, 'nonexist'], returncode=2)
