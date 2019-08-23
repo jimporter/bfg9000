@@ -228,6 +228,32 @@ Objective C++.</p>
 <p class="subtitle">Default: <em>none</em></p>
 <p>Command line arguments to pass to the compiler when compiling any Objective C++
 source file.</p>
+<h3 id="qt-moc">Qt MOC<a class="headerlink" href="#qt-moc" title="Permanent link">§</a></h3>
+<hr />
+<h4 id="moc"><em>MOC</em><a class="headerlink" href="#moc" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <code>moc</code></p>
+<p>The command to use when processing Qt meta-object macros.</p>
+<h4 id="mocflags"><em>MOCFLAGS</em><a class="headerlink" href="#mocflags" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <em>none</em></p>
+<p>Command line arguments to pass to the compiler when processing Qt meta-object
+macros.</p>
+<h3 id="qt-qrc">Qt QRC<a class="headerlink" href="#qt-qrc" title="Permanent link">§</a></h3>
+<hr />
+<h4 id="rcc"><em>RCC</em><a class="headerlink" href="#rcc" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <code>rcc</code></p>
+<p>The command to use when building Qt <code>.qrc</code> files.</p>
+<h4 id="rccflags"><em>RCCFLAGS</em><a class="headerlink" href="#rccflags" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <em>none</em></p>
+<p>Command line arguments to pass to the compiler when building Qt <code>.qrc</code> files.</p>
+<h3 id="qt-ui">Qt UI<a class="headerlink" href="#qt-ui" title="Permanent link">§</a></h3>
+<hr />
+<h4 id="uic"><em>UIC</em><a class="headerlink" href="#uic" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <code>uic</code></p>
+<p>The command to use when building Qt <code>.ui</code> files.</p>
+<h4 id="uicflags"><em>UICFLAGS</em><a class="headerlink" href="#uicflags" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <em>none</em></p>
+<p>Command line arguments to pass to the compiler when building Qt <code>.ui</code> files.
+macros.</p>
 <h3 id="scala">Scala<a class="headerlink" href="#scala" title="Permanent link">§</a></h3>
 <hr />
 <h4 id="scalac"><em>SCALAC</em><a class="headerlink" href="#scalac" title="Permanent link">§</a></h4>
@@ -365,6 +391,10 @@ the Make backend.</p>
 <p class="subtitle">Default: <code>patchelf</code></p>
 <p><em>Linux-only</em>. The command to use when patching an ELF file's rpath for
 installation.</p>
+<h4 id="rccdep"><em>RCCDEP</em><a class="headerlink" href="#rccdep" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <code>/path/to/bfg9000-rccdep</code></p>
+<p>The command to use when generating depfiles for Qt's <code>rcc</code> tool. In general, you
+shouldn't need to touch this.</p>
 <h4 id="setenv"><em>SETENV</em><a class="headerlink" href="#setenv" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <code>/path/to/bfg9000-setenv</code></p>
 <p><em>Windows-only</em>. The command to use when setting temporary environment variables,

@@ -210,10 +210,10 @@ source files of that type (see each step's documentation for details).</p>
 <h3 id="auto_file">auto_file(<em>name</em>, [<em>lang</em>])<a class="headerlink" href="#auto_file" title="Permanent link">§</a></h3>
 <p>Create a reference to an existing file named <em>name</em>. This function will try to
 automatically determine the file's kind based on its extension:
-<a href="#source_file"><em>source_file</em></a>; <a href="#header_file"><em>header_file</em></a>; or, if the
-extension is not recognized, <a href="#generic_file"><em>generic_file</em></a>. If <em>lang</em> is
-specified, files with an unrecognized extension will always be treated as
-<a href="#source_file"><em>source_file</em></a>s.</p>
+<a href="#source_file"><em>source_file</em></a>; <a href="#header_file"><em>header_file</em></a>;
+<a href="#resource_file"><em>resource_file</em></a>; or, if the extension is not recognized,
+<a href="#generic_file"><em>generic_file</em></a>. If <em>lang</em> is specified, files with an
+unrecognized extension will always be treated as <a href="#source_file"><em>source_file</em></a>s.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>This function is primarily useful for writing generic code that works with
@@ -254,6 +254,10 @@ like to <a href="#install">install</a> a single header file for your project.</p
 <p>Create a reference to an existing module-definition file named <em>name</em>.
 <a href="https://docs.microsoft.com/en-us/cpp/build/reference/module-definition-dot-def-files">Module-definition files</a> are sometimes used when building libraries
 on Windows.</p>
+<h3 id="resource_file">resource_file(<em>name</em>, [<em>lang</em>])<a class="headerlink" href="#resource_file" title="Permanent link">§</a></h3>
+<p class="subtitle">Availability: <code>build.bfg</code></p>
+<p>Create a reference to an existing resource file named <em>name</em>. If <em>lang</em> is not
+specified, the language of the file is inferred from its extension.</p>
 <h3 id="source_file">source_file(<em>name</em>, [<em>lang</em>])<a class="headerlink" href="#source_file" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Create a reference to an existing source file named <em>name</em>. If <em>lang</em> is not
@@ -325,6 +329,30 @@ source language; in particular, this means that when using a tool like GCC
 to build your project, any linker options that need to be forwarded on to
 <code>ld</code> should be prepended with <code>'-Wl,'</code>.</p>
 </div>
+<h3 id="generated_source">generated_source([<em>name</em>], <em>file</em>, ..., [<em>extra_deps</em>], [<em>description</em>])<a class="headerlink" href="#generated_source" title="Permanent link">§</a></h3>
+<p class="subtitle">Availability: <code>build.bfg</code></p>
+<p>Create a build step that generates a source file named <em>name</em> from an input
+(typically another source file) named <em>file</em>; if <em>name</em> is not specified, this
+function will use the filename in <em>file</em> as a base (typically the filename with
+a different extension). Note that unlike with other file steps, <em>name</em>
+represents the exact file name to be used for the output file (i.e. the file
+extension isn't added automatically).</p>
+<p>The following arguments may also be specified:</p>
+<ul>
+<li><em>options</em>: Command-line options to pass to the compiler</li>
+<li><em>lang</em>: The language of the source file; useful if the source file's extension
+  isn't recognized by bfg9000</li>
+</ul>
+<p>This build step recognizes the <a href="../environment-vars/#compilation-variables">compilation environment
+variables</a> for the relevant language.</p>
+<h3 id="generated_sources">generated_sources(<em>files</em>, ..., [<em>extra_deps</em>], [<em>description</em>])<a class="headerlink" href="#generated_sources" title="Permanent link">§</a></h3>
+<p class="subtitle">Availability: <code>build.bfg</code></p>
+<p>Create a source-generation build step for each of the files in <em>files</em>; this is
+equivalent to calling <a href="#generated_source"><em>generated_source</em></a> for each element
+in <em>files</em>.</p>
+<p>Like <a href="#object_files"><em>object_files</em></a>, <em>generated_sources</em> returns a special list
+that allows you to index into it using the filename of one of the source files
+listed in <em>files</em>.</p>
 <h3 id="library">library(<em>name</em>, [<em>files</em>, ..., [<em>extra_deps</em>], [<em>description</em>]])<a class="headerlink" href="#library" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Create a build step that builds a shared library named <em>name</em>. Its arguments are
@@ -362,8 +390,8 @@ only the shared library.</p>
 <h3 id="object_file">object_file([<em>name</em>], [<em>file</em>, ..., [<em>extra_deps</em>], [<em>description</em>]])<a class="headerlink" href="#object_file" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Create a build step that compiles a source file named <em>file</em> to an object file
-named <em>name</em>; if <em>name</em> is not specified, it takes the file name in <em>file</em>
-without the extension.</p>
+named <em>name</em>; if <em>name</em> is not specified, this function will use the filename
+in <em>file</em> as a base (typically the filename without the extension).</p>
 <p>The following arguments may also be specified:</p>
 <ul>
 <li><em>includes</em>: A list of <a href="#header_directory">directories</a> to search for header
