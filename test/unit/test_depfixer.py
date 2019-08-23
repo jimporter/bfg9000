@@ -70,6 +70,11 @@ class TestEmitDeps(TestCase):
         self.assertRaises(depfixer.UnexpectedTokenError, depfixer.emit_deps,
                           instream, outstream)
 
+        instream = StringIO('foo: bar:\n')
+        outstream = StringIO()
+        self.assertRaises(depfixer.UnexpectedTokenError, depfixer.emit_deps,
+                          instream, outstream)
+
     def test_unexpected_eof(self):
         instream = StringIO('foo: bar')
         outstream = StringIO()

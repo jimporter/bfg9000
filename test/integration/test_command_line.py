@@ -182,3 +182,15 @@ class TestEnv(BasicIntegrationTest):
         )
         assertRegex(self, output,
                     'build directory must not contain a build.bfg file')
+
+
+class TestDepfixer(SubprocessTestCase):
+    def test_empty_deps(self):
+        self.assertOutput(['bfg9000-depfixer'], input='foo:\n', output='')
+
+    def test_multiple_deps(self):
+        self.assertOutput(['bfg9000-depfixer'], input='foo: bar baz\n',
+                          output='bar:\nbaz:\n')
+
+    def test_invalid(self):
+        self.assertPopen(['bfg9000-depfixer'], input='foo\n', returncode=2)

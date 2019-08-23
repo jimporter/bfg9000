@@ -93,7 +93,8 @@ class SubprocessTestCase(TestCase):
             return os.path.join(prefix, target.path)
         return target
 
-    def assertPopen(self, command, env=None, env_update=True, returncode=0):
+    def assertPopen(self, command, env=None, env_update=True, input=None,
+                    returncode=0):
         final_env = env
         if env is not None and env_update:
             final_env = dict(os.environ)
@@ -101,16 +102,30 @@ class SubprocessTestCase(TestCase):
 
         command = [self.target_path(i) for i in command]
         proc = subprocess.Popen(
-            command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-            env=final_env, universal_newlines=True
+            command, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT, env=final_env, universal_newlines=True
         )
-        output = proc.communicate()[0]
+        output = proc.communicate(input)[0]
         if proc.returncode != returncode:
             raise SubprocessError(proc.returncode, env, output)
         return output
 
     def assertOutput(self, command, output, *args, **kwargs):
         self.assertEqual(self.assertPopen(command, *args, **kwargs), output)
+
+    def assertExists(self, path):
+        realpath = self.target_path(path)
+        if not os.path.exists(realpath):
+            raise unittest.TestCase.failureException(
+                "'{}' does not exist".format(realpath)
+            )
+
+    def assertNotExists(self, path):
+        realpath = self.target_path(path)
+        if os.path.exists(realpath):
+            raise unittest.TestCase.failureException(
+                "'{}' exists".format(os.path.normpath(realpath))
+            )
 
     def assertDirectory(self, path, contents):
         path = os.path.normpath(path)
@@ -238,20 +253,6 @@ class BasicIntegrationTest(SubprocessTestCase):
 
     def wait(self, t=1):
         time.sleep(t)
-
-    def assertExists(self, path):
-        realpath = self.target_path(path)
-        if not os.path.exists(realpath):
-            raise unittest.TestCase.failureException(
-                "'{}' does not exist".format(realpath)
-            )
-
-    def assertNotExists(self, path):
-        realpath = self.target_path(path)
-        if os.path.exists(realpath):
-            raise unittest.TestCase.failureException(
-                "'{}' exists".format(os.path.normpath(realpath))
-            )
 
 
 class IntegrationTest(BasicIntegrationTest):
