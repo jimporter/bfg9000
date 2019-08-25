@@ -47,9 +47,9 @@ def which(names, env=os.environ, base_dirs=None, resolve=False,
                 if os.path.exists(withext):
                     return [withext] + name[1:] if resolve else name
 
-    raise IOError("unable to find {kind}{filler} {names}".format(
+    raise IOError('unable to find {kind}{filler} {names}'.format(
         kind=kind, filler='; tried' if len(names) > 1 else '',
-        names=', '.join("{!r}".format(i) for i in names)
+        names=', '.join('{!r}'.format(i) for i in names)
     ))
 
 
