@@ -573,10 +573,12 @@ it just runs its dependencies listed in <em>deps</em> as necessary. This build s
 useful for grouping common steps together.</p>
 <h3 id="default">default(<em>...</em>)<a class="headerlink" href="#default" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
-<p>Specify a list of build steps that should be run by default when building. These
-are all accumulated into the <code>all</code> target. If <em>default</em> is never called, all
-executables and libraries <em>not</em> passed to <a href="#test"><em>test</em></a> will be built by
-default.</p>
+<p>Specify a list of build outputs that should be run by default when building.
+These are all accumulated into the <code>all</code> target. If <em>default</em> is never called,
+all executables and libraries <em>not</em> passed to <a href="#test"><em>test</em></a> will be built by
+default. To allow this to be chained with other functions, <em>default</em> will return
+the arguments passed into it: as a single object if one argument is passed, or
+a tuple if multiple are passed.</p>
 <h3 id="install">install(<em>...</em>)<a class="headerlink" href="#install" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Specify a list of files that need to be installed for the project to work. Each
@@ -584,7 +586,8 @@ will be installed to the appropriate location based on its type, e.g. header
 files will go in <code>$PREFIX/include</code> by default on POSIX systems. These are all
 accumulated into the <code>install</code> target. If there are any runtime dependencies for
 a file (such as shared libraries you just built), they will be installed as
-well.</p>
+well. As with <a href="#default"><em>default</em></a>, this function will return the files passed
+into it.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>When explicitly listing a target, <em>all</em> the files for that target will be
