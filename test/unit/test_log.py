@@ -189,6 +189,28 @@ class TestLogStack(TestCase):
                 'full_stack': tb, 'show_stack': False
             })
 
+    def test_info(self):
+        for show_stack in (False, True):
+            with mock.patch('logging.log') as mocklog:
+                log.info('message', show_stack)
+
+                tb = traceback.extract_stack()[1:]
+                tb[-1] = mocklog.call_args[1]['extra']['full_stack'][-1]
+                mocklog.assert_called_once_with(log.INFO, 'message', extra={
+                    'full_stack': tb, 'show_stack': show_stack
+                })
+
+    def test_debug(self):
+        for show_stack in (False, True):
+            with mock.patch('logging.log') as mocklog:
+                log.debug('message', show_stack)
+
+                tb = traceback.extract_stack()[1:]
+                tb[-1] = mocklog.call_args[1]['extra']['full_stack'][-1]
+                mocklog.assert_called_once_with(log.DEBUG, 'message', extra={
+                    'full_stack': tb, 'show_stack': show_stack
+                })
+
 
 class TestShowWarning(TestCase):
     def test_warn(self):
