@@ -9,7 +9,7 @@ from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..build_inputs import build_input
 from ..file_types import Directory, File, file_install_path
-from ..iterutils import flatten, iterate
+from ..iterutils import flatten, iterate, unlistify
 
 
 @build_input('install')
@@ -54,7 +54,7 @@ def can_install(env):
 @builtin.function('builtins', 'build_inputs', 'env')
 def install(builtins, build, env, *args):
     if len(args) == 0:
-        raise ValueError('expected at least one argument')
+        return
 
     can_inst = can_install(env)
     if not can_inst:
@@ -65,6 +65,8 @@ def install(builtins, build, env, *args):
         if can_inst:
             build['install'].add(i)
         builtins['default'](i)
+
+    return unlistify(args)
 
 
 def _doppel_cmd(env, buildfile):

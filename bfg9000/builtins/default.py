@@ -2,6 +2,7 @@ from . import builtin
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..build_inputs import build_input
+from ..iterutils import unlistify
 
 
 @build_input('defaults')
@@ -18,9 +19,9 @@ class DefaultOutputs(object):
 
     def remove(self, output, explicit=False):
         outputs = self.default_outputs if explicit else self.fallback_defaults
-        for i, fallback in enumerate(outputs):
-            if output is fallback:
-                self.fallback_defaults.pop(i)
+        for i, v in enumerate(outputs):
+            if output is v:
+                outputs.pop(i)
 
     @property
     def outputs(self):
@@ -31,6 +32,7 @@ class DefaultOutputs(object):
 def default(build, *args):
     for i in args:
         build['defaults'].add(i, explicit=True)
+    return unlistify(args)
 
 
 @make.pre_rule
