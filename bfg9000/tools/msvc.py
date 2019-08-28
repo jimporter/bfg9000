@@ -9,7 +9,8 @@ from ..arguments.windows import ArgumentParser
 from ..builtins.file_types import make_immediate_file
 from ..exceptions import PackageResolutionError
 from ..file_types import *
-from ..iterutils import default_sentinel, iterate, listify, uniques
+from ..iterutils import (default_sentinel, iterate, listify, merge_into_dict,
+                         uniques)
 from ..languages import known_langs, known_formats
 from ..objutils import memoize
 from ..packages import CommonPackage, Framework, PackageKind
@@ -205,6 +206,7 @@ class MsvcBaseCompiler(BuildCommand):
         warn.add('0', '1', '2', '3', '4', 'all', dest='level')
         warn.add('X', type=bool, dest='as_error')
         warn.add('X-', type=bool, dest='as_error', value=False)
+        parser.add('/w', type='alias', base=warn, value='0')
 
         pch = parser.add('/Y', type=dict, dest='pch')
         pch.add('u', type=str, dest='use')
@@ -431,7 +433,7 @@ class MsvcLinker(BuildCommand):
         result, extra = self.__parser().parse_known(flags)
         libresult, libextra = self.__lib_parser().parse_known(lib_flags)
 
-        result.update(libresult)
+        merge_into_dict(result, libresult)
         result['extra'] = extra + libextra
         return result
 

@@ -121,6 +121,8 @@ def merge_into_dict(dst, *args):
                 if curr is not None and isiterable(curr):
                     raise TypeError('type mismatch for {}'.format(k))
                 dst[k] = v
+            elif k not in dst:
+                dst[k] = None  # v is always None here
 
 
 def merge_dicts(*args):

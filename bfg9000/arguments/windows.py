@@ -29,9 +29,17 @@ class ArgumentParser(object):
         for i in args:
             if i[0] not in self.prefix_chars:
                 raise ValueError('names must begin with a prefix char')
+
             if len(i) == 2:
+                if i in self._short_names:
+                    raise ValueError('{!r} already defined'.format(i))
                 self._short_names[i] = info
             else:
+                if i[:2] in self._short_names:
+                    raise ValueError('{!r} collides with {!r}'
+                                     .format(i, i[:2]))
+                if i in self._long_names:
+                    raise ValueError('{!r} already defined'.format(i))
                 self._long_names[i] = info
 
         self._options.append(info)
@@ -41,7 +49,7 @@ class ArgumentParser(object):
         self._unnamed_dest = dest
 
     def parse_known(self, args):
-        result = {i.name: i.default() for i in self._options}
+        result = {i.name: i.default() for i in self._options if i.name}
         if self._unnamed_dest:
             result[self._unnamed_dest] = []
         extra = []
@@ -59,7 +67,10 @@ class ArgumentParser(object):
                     info = self._short_names[key]
                     if info.takes_value:
                         if not value:
-                            value = next(args)
+                            try:
+                                value = next(args)
+                            except StopIteration:
+                                raise ValueError('expected value for option')
                     elif value:
                         raise ValueError('no value expected for option')
                 else:
@@ -68,6 +79,8 @@ class ArgumentParser(object):
                         info = self._long_names[key]
                         if not info.takes_value and colon:
                             raise ValueError('no value expected for option')
+                        elif info.takes_value and not value:
+                            raise ValueError('expected value for option')
             elif self._unnamed_dest:
                 result[self._unnamed_dest].append(i)
                 continue
@@ -98,6 +111,25 @@ class KeyArgumentInfo(ArgumentInfo):
         results[self.name] = key
 
 
+@ArgumentParser.handler('alias')
+class AliasArgumentInfo(ArgumentInfo):
+    def __init__(self, name, base, value=None):
+        ArgumentInfo.__init__(self, None)
+        self.base = base
+        self.value = value
+        if self.value is not None and not self.base.takes_value:
+            raise TypeError('base argument does not take a value')
+
+    def fill_value(self, results, key, value):
+        if self.value is not None:
+            value = self.value
+        self.base.fill_value(results, key, value)
+
+    @property
+    def takes_value(self):
+        return self.value is None and self.base.takes_value
+
+
 @ArgumentParser.handler(bool)
 class BoolArgumentInfo(ArgumentInfo):
     def __init__(self, name, value=True):
@@ -118,8 +150,6 @@ class StrArgumentInfo(ArgumentInfo):
         ArgumentInfo.__init__(self, name)
 
     def fill_value(self, results, key, value):
-        if not value:
-            raise ValueError('expected value for option')
         results[self.name] = value
 
 
@@ -132,8 +162,6 @@ class ListArgumentInfo(ArgumentInfo):
         return []
 
     def fill_value(self, results, key, value):
-        if not value:
-            raise ValueError('expected value for option')
         results[self.name].append(value)
 
 
@@ -166,9 +194,6 @@ class DictArgumentInfo(ArgumentInfo):
         return {i.name: i.default() for i in self._options}
 
     def fill_value(self, results, key, value):
-        if not value:
-            raise ValueError('expected value for option')
-
         subkey, subvalue = value[:1], value[1:]
         if subkey in self._short_names:
             info = self._short_names[subkey]
@@ -176,3 +201,5 @@ class DictArgumentInfo(ArgumentInfo):
         elif value in self._long_names:
             info = self._long_names[value]
             info.fill_value(results[self.name], value, None)
+        else:
+            raise ValueError('unexpected value for option')

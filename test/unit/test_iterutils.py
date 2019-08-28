@@ -222,6 +222,11 @@ class TestMergeDicts(TestCase):
         self.assertEqual(iterutils.merge_dicts({'foo': 1}, {'foo': None}),
                          {'foo': 1})
 
+        self.assertEqual(iterutils.merge_dicts({'foo': None}, {'bar': 1}),
+                         {'foo': None, 'bar': 1})
+        self.assertEqual(iterutils.merge_dicts({'foo': 1}, {'bar': None}),
+                         {'foo': 1, 'bar': None})
+
     def test_merge_single(self):
         self.assertEqual(iterutils.merge_dicts({'foo': 1}, {'foo': 2}),
                          {'foo': 2})

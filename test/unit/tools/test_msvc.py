@@ -3,6 +3,7 @@ import mock
 from .. import *
 
 from bfg9000 import file_types, options as opts
+from bfg9000.iterutils import merge_dicts
 from bfg9000.languages import Languages
 from bfg9000.packages import Framework
 from bfg9000.path import Path, Root
@@ -222,6 +223,35 @@ class TestMsvcCompiler(CrossPlatformTestCase):
         with self.assertRaises(TypeError):
             self.compiler.flags(opts.option_list(123))
 
+    def test_parse_flags(self):
+        default = {
+            'defines': [],
+            'extra': [],
+            'includes': [],
+            'nologo': None,
+            'pch': {'create': None, 'use': None},
+            'warnings': {'as_error': None, 'level': None}
+        }
+
+        def assertFlags(flags, extra={}):
+            self.assertEqual(self.compiler.parse_flags(flags),
+                             merge_dicts(default, extra))
+
+        assertFlags([])
+        assertFlags(['/un', 'known'], {'extra': ['/un', 'known']})
+        assertFlags(['/nologo'], {'nologo': True})
+        assertFlags(['/Dfoo'], {'defines': ['foo']})
+        assertFlags(['/Idir'], {'includes': ['dir']})
+
+        assertFlags(['/W0'], {'warnings': {'level': '0'}})
+        assertFlags(['/Wall'], {'warnings': {'level': 'all'}})
+        assertFlags(['/WX'], {'warnings': {'as_error': True}})
+        assertFlags(['/WX-'], {'warnings': {'as_error': False}})
+        assertFlags(['/w'], {'warnings': {'level': '0'}})
+
+        assertFlags(['/Yufoo'], {'pch': {'use': 'foo'}})
+        assertFlags(['/Ycfoo'], {'pch': {'create': 'foo'}})
+
 
 class TestMsvcPchCompiler(TestMsvcCompiler):
     def setUp(self):
@@ -400,6 +430,24 @@ class TestMsvcLinker(CrossPlatformTestCase):
     def test_lib_flags_ignored(self):
         self.assertEqual(self.linker.lib_flags(opts.option_list('-Lfoo')), [])
 
+    def test_parse_flags(self):
+        default = {
+            'extra': [],
+            'libs': [],
+            'nologo': None,
+        }
+
+        def assertFlags(flags, libflags, extra={}):
+            self.assertEqual(self.linker.parse_flags(flags, libflags),
+                             merge_dicts(default, extra))
+
+        assertFlags([], [])
+        assertFlags(['/foo', 'bar'], ['/baz', 'quux'],
+                    {'libs': ['quux'], 'extra': ['/foo', 'bar', '/baz']})
+        assertFlags(['/nologo'], [], {'nologo': True})
+        assertFlags([], ['/nologo'], {'nologo': True})
+        assertFlags(['/nologo'], ['/nologo'], {'nologo': True})
+
 
 class TestMsvcSharedLinker(TestMsvcLinker):
     def setUp(self):
@@ -454,3 +502,8 @@ class TestMsvcStaticLinker(CrossPlatformTestCase):
     def test_flags_invalid(self):
         with self.assertRaises(TypeError):
             self.linker.flags(opts.option_list(123))
+
+    def test_parse_flags(self):
+        self.assertEqual(self.linker.parse_flags([]), {'extra': []})
+        self.assertEqual(self.linker.parse_flags(['/foo', 'bar']),
+                         {'extra': ['/foo', 'bar']})
