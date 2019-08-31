@@ -57,6 +57,11 @@ class TestOptionList(TestCase):
         self.assertTrue(opts is not opts2)
         self.assertEqual(opts, opts2)
 
+    def test_filter(self):
+        opts = options.option_list(options.pthread(), options.pic())
+        opts2 = opts.filter(options.pic)
+        self.assertEqual(opts2, options.option_list(options.pic()))
+
     def test_iter(self):
         opts = options.option_list(options.pthread(), options.pic())
         self.assertEqual(list(iter(opts)), [options.pthread(), options.pic()])
@@ -70,6 +75,16 @@ class TestOptionList(TestCase):
 
         opts = options.option_list(options.pthread(), options.pic())
         self.assertEqual(len(opts), 2)
+
+    def test_index(self):
+        opts = options.option_list(options.pthread(), options.pic())
+        self.assertEqual(opts[0], options.pthread())
+        self.assertEqual(opts[0:1], options.option_list(options.pthread()))
+
+        opts[0] = '-v'
+        self.assertEqual(opts, options.option_list('-v', options.pic()))
+        opts[0:] = [options.define('name')]
+        self.assertEqual(opts, options.option_list(options.define('name')))
 
     def test_eq(self):
         opts1 = options.option_list(options.pthread())

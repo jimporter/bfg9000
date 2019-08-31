@@ -2,7 +2,7 @@ import os
 import re
 from itertools import chain
 
-from .common import Builder, BuildCommand, check_which, not_buildroot
+from .common import BuildCommand, Builder, check_which, not_buildroot
 from .. import options as opts, safe_str, shell
 from ..builtins.file_types import make_immediate_file
 from ..exceptions import PackageResolutionError
@@ -37,9 +37,10 @@ class JvmBuilder(Builder):
             kind='{} runner'.format(langinfo.name)
         )
 
-        brand, version = self._parse_brand(env, langinfo.name, version_output,
-                                           run_command)
-        Builder.__init__(self, langinfo.name, 'jvm', brand, version)
+        Builder.__init__(self, langinfo.name, *self._parse_brand(
+            env, langinfo.name, version_output, run_command
+        ))
+        self.object_format = 'jvm'
 
         name = langinfo.var('compiler').lower()
         ldinfo = known_formats['jvm', 'dynamic']
@@ -171,7 +172,7 @@ class JvmCompiler(BuildCommand):
                                                os.pathsep)])
         return flags
 
-    def default_name(self, input):
+    def default_name(self, input, context):
         return input.path.stripext().suffix
 
     def output_file(self, name, context):

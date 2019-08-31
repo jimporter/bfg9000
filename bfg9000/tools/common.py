@@ -33,11 +33,13 @@ def not_buildroot(thing):
 
 
 class Builder(object):
-    def __init__(self, lang, object_format, brand, version):
+    def __init__(self, lang, brand, version):
         self.lang = lang
-        self.object_format = object_format
         self.brand = brand
         self.version = version
+
+    def __repr__(self):
+        return '<{}({!r})>'.format(type(self).__name__, self.brand)
 
 
 class Command(object):
@@ -117,6 +119,10 @@ class BuildCommand(Command):
     @property
     def flavor(self):
         return self.builder.flavor
+
+    @property
+    def num_outputs(self):
+        return 'all'
 
     def pre_build(self, build, name, context):
         return opts.option_list()

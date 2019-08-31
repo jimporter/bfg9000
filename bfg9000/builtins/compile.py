@@ -41,7 +41,7 @@ class BaseCompile(Edge):
     def __init__(self, builtins, build, env, name, internal_options,
                  extra_deps=None, description=None):
         if name is None:
-            name = self.compiler.default_name(self.file)
+            name = self.compiler.default_name(self.file, self)
 
         extra_options = self.compiler.pre_build(build, name, self)
         output = self.compiler.output_file(name, self)
@@ -261,7 +261,7 @@ def make_compile(rule, build_inputs, buildfile, env):
     variables, cmd_kwargs = _get_flags(make, rule, build_inputs, buildfile)
 
     output_params = []
-    if len(rule.output) == 1:
+    if compiler.num_outputs == 'all':
         output_vars = make.qvar('@')
     else:
         output_vars = []
@@ -315,7 +315,7 @@ def ninja_compile(rule, build_inputs, buildfile, env):
     if rule.description:
         variables['description'] = rule.description
 
-    if len(rule.output) == 1:
+    if compiler.num_outputs == 'all':
         output_vars = ninja.var('out')
     elif compiler.num_outputs == 1:
         output_vars = ninja.var('output')

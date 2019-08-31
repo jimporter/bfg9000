@@ -405,7 +405,7 @@ def make_link(rule, build_inputs, buildfile, env):
     variables, cmd_kwargs = _get_flags(make, rule, build_inputs, buildfile)
 
     output_params = []
-    if len(rule.output) == 1:
+    if linker.num_outputs == 'all':
         output_vars = make.qvar('@')
     else:
         output_vars = []
@@ -443,7 +443,7 @@ def ninja_link(rule, build_inputs, buildfile, env):
     if rule.description:
         variables['description'] = rule.description
 
-    if len(rule.output) == 1:
+    if linker.num_outputs == 'all':
         output_vars = ninja.var('out')
     elif linker.num_outputs == 1:
         output_vars = ninja.var('output')

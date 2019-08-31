@@ -112,7 +112,7 @@ def directory(builtins, build, name, include=None, exclude=exclude_globs,
     if isinstance(name, File):
         path = name.path.parent()
     else:
-        path = Path(name, Root.srcdir)
+        path = Path.ensure(name, Root.srcdir)
 
     files = _find(builtins, name, include, '*', exclude, filter)
     return Directory(path, files)
@@ -127,7 +127,7 @@ def header_directory(builtins, build, name, include=None,
         path = name.path.parent()
         lang = name.lang
     else:
-        path = Path(name, Root.srcdir)
+        path = Path.ensure(name, Root.srcdir)
 
     files = _find(builtins, name, include, 'f', exclude, filter,
                   lambda p: HeaderFile(p, lang))

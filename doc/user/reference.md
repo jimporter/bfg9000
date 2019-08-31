@@ -224,6 +224,13 @@ The following arguments may also be specified:
 * *lang*: The language of the source file; useful if the source file's extension
   isn't recognized by bfg9000
 
+!!! note
+    When building files via `yacc`, this step will automatically generate both
+    source and header files named `<name>.tab.c` and `<name>.tab.h`. You can
+    force this step to build only the source file by passing a single filename
+    to the *name* argument; you can also customize the names by passing a pair
+    of filenames: `generated_source(['foo.c', 'foo.h'], 'bar.y')`
+
 This build step recognizes the [compilation environment
 variables](environment-vars.md#compilation-variables) for the relevant language.
 

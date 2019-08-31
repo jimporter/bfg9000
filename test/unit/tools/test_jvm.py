@@ -179,7 +179,14 @@ class TestJvmCompiler(CrossPlatformTestCase):
 
     def test_default_name(self):
         src = file_types.SourceFile(Path('file.java', Root.srcdir), 'java')
-        self.assertEqual(self.compiler.default_name(src), 'file')
+        self.assertEqual(self.compiler.default_name(src, None), 'file')
+
+    def test_output_file(self):
+        self.assertEqual(
+            self.compiler.output_file('file', None),
+            file_types.ObjectFileList(Path('file.classlist'),
+                                      Path('file.class'), 'jvm', 'java')
+        )
 
     def test_flags_empty(self):
         self.assertEqual(self.compiler.flags(opts.option_list()), [])
@@ -304,6 +311,13 @@ class TestJvmLinker(CrossPlatformTestCase):
                          [self.linker, 'out', 'manifest', 'in'])
         self.assertEqual(self.linker('in', 'out', 'manifest', ['flags']),
                          [self.linker, 'flags', 'out', 'manifest', 'in'])
+
+    def test_output_file(self):
+        self.assertEqual(self.linker.output_file('file', None),
+                         file_types.Library(Path('file.jar'), 'jvm', 'java'))
+        self.assertEqual(self.linker.output_file('file', AttrDict(
+            entry_point='foo'
+        )), file_types.ExecutableLibrary(Path('file.jar'), 'jvm', 'java'))
 
     def test_flags_empty(self):
         self.assertEqual(self.linker.flags(opts.option_list()), [])

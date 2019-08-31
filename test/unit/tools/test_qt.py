@@ -29,6 +29,11 @@ class TestMocBuilder(CrossPlatformTestCase):
                               'version')
         self.compiler = self.moc.transpiler
 
+    def test_properties(self):
+        self.assertEqual(self.compiler.num_outputs, 'all')
+        self.assertEqual(self.compiler.deps_flavor, None)
+        self.assertEqual(self.compiler.needs_libs, False)
+
     def test_call(self):
         self.assertEqual(self.compiler('in', 'out'),
                          [self.compiler, 'in', '-o', 'out'])
@@ -37,10 +42,14 @@ class TestMocBuilder(CrossPlatformTestCase):
 
     def test_default_name(self):
         src = SourceFile(Path('file.cpp', Root.srcdir), 'c++')
-        self.assertEqual(self.compiler.default_name(src), 'file.moc')
+        self.assertEqual(self.compiler.default_name(src, None), 'file.moc')
 
         hdr = HeaderFile(Path('file.hpp', Root.srcdir), 'c++')
-        self.assertEqual(self.compiler.default_name(hdr), 'moc_file.cpp')
+        self.assertEqual(self.compiler.default_name(hdr, None), 'moc_file.cpp')
+
+    def test_output_file(self):
+        self.assertEqual(self.compiler.output_file('file.moc', None),
+                         SourceFile(Path('file.moc'), 'c++'))
 
     def test_flags_empty(self):
         self.assertEqual(self.compiler.flags(opts.option_list()), [])
@@ -86,6 +95,11 @@ class TestRccBuilder(CrossPlatformTestCase):
         self.rcc = RccBuilder(self.env, known_langs['qrc'], ['rcc'], 'version')
         self.compiler = self.rcc.transpiler
 
+    def test_properties(self):
+        self.assertEqual(self.compiler.num_outputs, 'all')
+        self.assertEqual(self.compiler.deps_flavor, 'gcc')
+        self.assertEqual(self.compiler.needs_libs, False)
+
     def test_call(self):
         self.assertEqual(self.compiler('in', 'out'),
                          [self.compiler, 'in', '-o', 'out'])
@@ -106,7 +120,11 @@ class TestRccBuilder(CrossPlatformTestCase):
 
     def test_default_name(self):
         src = ResourceFile(Path('file.qrc', Root.srcdir), 'qrc')
-        self.assertEqual(self.compiler.default_name(src), 'file.cpp')
+        self.assertEqual(self.compiler.default_name(src, None), 'file.cpp')
+
+    def test_output_file(self):
+        self.assertEqual(self.compiler.output_file('file.cpp', None),
+                         SourceFile(Path('file.cpp'), 'c++'))
 
     def test_flags_empty(self):
         self.assertEqual(self.compiler.flags(opts.option_list()), [])
@@ -129,6 +147,11 @@ class TestUicBuilder(CrossPlatformTestCase):
                               'version')
         self.compiler = self.uic.transpiler
 
+    def test_properties(self):
+        self.assertEqual(self.compiler.num_outputs, 'all')
+        self.assertEqual(self.compiler.deps_flavor, None)
+        self.assertEqual(self.compiler.needs_libs, False)
+
     def test_call(self):
         self.assertEqual(self.compiler('in', 'out'),
                          [self.compiler, 'in', '-o', 'out'])
@@ -137,7 +160,11 @@ class TestUicBuilder(CrossPlatformTestCase):
 
     def test_default_name(self):
         src = ResourceFile(Path('file.ui', Root.srcdir), 'qtui')
-        self.assertEqual(self.compiler.default_name(src), 'ui_file.h')
+        self.assertEqual(self.compiler.default_name(src, None), 'ui_file.h')
+
+    def test_output_file(self):
+        self.assertEqual(self.compiler.output_file('ui_file.h', None),
+                         HeaderFile(Path('ui_file.h'), 'c++'))
 
     def test_flags_empty(self):
         self.assertEqual(self.compiler.flags(opts.option_list()), [])

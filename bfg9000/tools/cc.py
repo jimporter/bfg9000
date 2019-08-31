@@ -6,7 +6,7 @@ from six import string_types
 from . import pkg_config
 from .. import log, options as opts, safe_str, shell
 from .ar import ArLinker
-from .common import (Builder, BuildCommand, check_which, darwin_install_name,
+from .common import (BuildCommand, Builder, check_which, darwin_install_name,
                      library_macro)
 from .ld import LdLinker
 from ..builtins.symlink import Symlink
@@ -32,8 +32,8 @@ class CcBuilder(Builder):
     def __init__(self, env, langinfo, command, version_output):
         brand, version, target_flags = self._parse_brand(env, command,
                                                          version_output)
-        object_format = env.target_platform.object_format
-        Builder.__init__(self, langinfo.name, object_format, brand, version)
+        Builder.__init__(self, langinfo.name, brand, version)
+        self.object_format = env.target_platform.object_format
 
         name = langinfo.var('compiler').lower()
         ldinfo = known_formats['native', 'dynamic']
@@ -182,10 +182,6 @@ class CcBaseCompiler(BuildCommand):
         return None if self.lang in ('f77', 'f95') else 'gcc'
 
     @property
-    def num_outputs(self):
-        return 1
-
-    @property
     def needs_libs(self):
         return False
 
@@ -285,7 +281,7 @@ class CcCompiler(CcBaseCompiler):
     def accepts_pch(self):
         return True
 
-    def default_name(self, input):
+    def default_name(self, input, context):
         return input.path.stripext().suffix
 
     def output_file(self, name, context):
@@ -314,7 +310,7 @@ class CcPchCompiler(CcCompiler):
         # You can't pass a PCH to a PCH compiler!
         return False
 
-    def default_name(self, input):
+    def default_name(self, input, context):
         return input.path.suffix
 
     def output_file(self, name, context):
@@ -405,10 +401,6 @@ class CcLinker(BuildCommand):
                 raise
             search_dirs = self.env.getvar('LIBRARY_PATH', '').split(os.pathsep)
         return [os.path.abspath(i) for i in search_dirs]
-
-    @property
-    def num_outputs(self):
-        return 1
 
     def _call(self, cmd, input, output, libs=None, flags=None):
         return list(chain(
@@ -679,7 +671,7 @@ class CcSharedLibraryLinker(CcLinker):
 
     @property
     def num_outputs(self):
-        return 2 if self.env.target_platform.has_import_library else 1
+        return 2 if self.env.target_platform.has_import_library else 'all'
 
     def _call(self, cmd, input, output, libs=None, flags=None):
         output = listify(output)

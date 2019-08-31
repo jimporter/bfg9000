@@ -83,6 +83,22 @@ Default: *none*
 Command line arguments to pass to the compiler when compiling any Java source
 file.
 
+### Lex
+---
+
+#### *LEX*
+Default: `lex`
+{: .subtitle}
+
+The command to use when building Lex source files.
+
+#### *LFLAGS*
+Default: *none*
+{: .subtitle}
+
+Command line arguments to pass to the compiler when building any Lex source
+file.
+
 ### Objective C
 ---
 
@@ -180,6 +196,22 @@ Default: *none*
 {: .subtitle}
 
 Command line arguments to pass to the compiler when compiling any Scala source
+file.
+
+### Yacc
+---
+
+#### *YACC*
+Default: `yacc`
+{: .subtitle}
+
+The command to use when building Yacc source files.
+
+#### *YFLAGS*
+Default: *none*
+{: .subtitle}
+
+Command line arguments to pass to the compiler when building any Yacc source
 file.
 
 ## Linking variables
@@ -354,7 +386,7 @@ Default: *none*
 separated by `;`.
 
 #### *PKG_CONFIG*
-Default: `pkg_config`
+Default: `pkg-config`
 {: .subtitle}
 
 The command to use when fetching pkg-config package information.

@@ -2,7 +2,7 @@ import mock
 
 from .. import *
 
-from bfg9000 import options as opts
+from bfg9000 import file_types, options as opts
 from bfg9000.tools.ar import ArLinker
 from bfg9000.versioning import Version
 
@@ -18,7 +18,9 @@ class TestArLinker(CrossPlatformTestCase):
 
     def setUp(self):
         with mock.patch('bfg9000.shell.which', mock_which):
-            self.ar = ArLinker(None, self.env, 'ar', ['ar'], 'arflags', [])
+            fmt = self.env.target_platform.object_format
+            self.ar = ArLinker(AttrDict(object_format=fmt), self.env, 'ar',
+                               ['ar'], 'arflags', [])
 
     def test_flavor(self):
         self.assertEqual(self.ar.flavor, 'ar')
@@ -52,6 +54,13 @@ class TestArLinker(CrossPlatformTestCase):
                          [self.ar, 'out', 'in'])
         self.assertEqual(self.ar(['in'], 'out', ['flags']),
                          [self.ar, 'flags', 'out', 'in'])
+
+    def test_output_file(self):
+        fmt = self.env.target_platform.object_format
+        self.assertEqual(
+            self.ar.output_file('foo', AttrDict(langs=['c++'])),
+            file_types.StaticLibrary(Path('libfoo.a'), fmt, ['c++'])
+        )
 
     def test_flags_empty(self):
         self.assertEqual(self.ar.flags(opts.option_list()), [])

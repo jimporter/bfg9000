@@ -44,13 +44,14 @@ matrix:
       os: osx
       osx_image: xcode8.3
       env: >
-        PYTHON=python2 PIP=pip2 CC=clang CXX=clang++ BFG_SKIPPED_TESTS=scala
-        BFG_EXTRA_TESTS=
+        PYTHON=python2 PIP=pip2 CC=clang CXX=clang++
+        YACC=/usr/local/opt/bison/bin/bison
+        BFG_SKIPPED_TESTS=scala BFG_EXTRA_TESTS=
       before_install: &macos-before-install
         - set -e
         - shell_session_update() { :; }
         - brew update
-        - brew install gcc libogg ninja qt5
+        - brew install bison gcc libogg ninja qt5
         - brew link qt5 --force
         - |
           if [ "${PYTHON}" = "python3" ]; then
@@ -62,8 +63,9 @@ matrix:
       os: osx
       osx_image: xcode8.3
       env: >
-        PYTHON=python3 PIP=pip3 CC=clang CXX=clang++ BFG_SKIPPED_TESTS=scala
-        BFG_EXTRA_TESTS=
+        PYTHON=python3 PIP=pip3 CC=clang CXX=clang++
+        YACC=/usr/local/opt/bison/bin/bison
+        BFG_SKIPPED_TESTS=scala BFG_EXTRA_TESTS=
       before_install: *macos-before-install
 
     # bdist_wheel builds
@@ -120,7 +122,9 @@ matrix:
 addons:
   apt:
     packages:
+      - bison
       - default-jdk
+      - flex
       - freeglut3-dev
       - gcc-multilib
       - gcj-jdk

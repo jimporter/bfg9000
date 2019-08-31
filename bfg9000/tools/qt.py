@@ -2,11 +2,12 @@ from itertools import chain
 
 from . import builder
 from .. import options as opts, safe_str, shell
-from .common import BuildCommand, choose_builder
+from .common import BuildCommand, Builder, choose_builder
 from ..file_types import HeaderFile, SourceFile
 from ..iterutils import iterate
 from ..languages import known_langs
 from ..path import Path
+from ..versioning import detect_version
 
 with known_langs.make('qtmoc', base='c++') as x:
     x.vars(compiler='MOC', flags='MOCFLAGS')
@@ -25,16 +26,23 @@ def moc_builder(env):
     return choose_builder(env, known_langs['qtmoc'], ['moc'], (MocBuilder,))
 
 
-class MocBuilder(object):
+class MocBuilder(Builder):
     def __init__(self, env, langinfo, command, version_output):
-        name = langinfo.var('compiler').lower()
-        self.lang = langinfo.name
+        Builder.__init__(self, langinfo.name,
+                         *self._parse_brand(version_output))
 
+        name = langinfo.var('compiler').lower()
         mocflags_name = langinfo.var('flags').lower()
         mocflags = shell.split(env.getvar(langinfo.var('flags'), ''))
 
-        self.transpiler = MocCompiler(self, env, name, command, mocflags_name,
-                                      mocflags)
+        self.transpiler = MocCompiler(self, env, name, name, command,
+                                      flags=(mocflags_name, mocflags))
+
+    @staticmethod
+    def _parse_brand(version_output):
+        if 'moc' in version_output:
+            return 'qt', detect_version(version_output)
+        return 'unknown', None
 
     @staticmethod
     def check_command(env, command):
@@ -43,10 +51,6 @@ class MocBuilder(object):
 
 
 class MocCompiler(BuildCommand):
-    def __init__(self, builder, env, name, command, mocflags_name, mocflags):
-        BuildCommand.__init__(self, builder, env, name, name, command,
-                              flags=(mocflags_name, mocflags))
-
     @property
     def deps_flavor(self):
         return None
@@ -60,7 +64,7 @@ class MocCompiler(BuildCommand):
             cmd, iterate(flags), [input, '-o', output]
         ))
 
-    def default_name(self, input):
+    def default_name(self, input, context):
         if isinstance(input, SourceFile):
             return input.path.stripext('.moc').suffix
         base, leaf = input.path.stripext(
@@ -100,16 +104,23 @@ def qrc_builder(env):
     return choose_builder(env, known_langs['qrc'], ['rcc'], (RccBuilder,))
 
 
-class RccBuilder(object):
+class RccBuilder(Builder):
     def __init__(self, env, langinfo, command, version_output):
-        name = langinfo.var('compiler').lower()
-        self.lang = langinfo.name
+        Builder.__init__(self, langinfo.name,
+                         *self._parse_brand(version_output))
 
+        name = langinfo.var('compiler').lower()
         rccflags_name = langinfo.var('flags').lower()
         rccflags = shell.split(env.getvar(langinfo.var('flags'), ''))
 
         self.transpiler = RccCompiler(self, env, name, command, rccflags_name,
                                       rccflags)
+
+    @staticmethod
+    def _parse_brand(version_output):
+        if 'rcc' in version_output:
+            return 'qt', detect_version(version_output)
+        return 'unknown', None
 
     @staticmethod
     def check_command(env, command):
@@ -136,7 +147,7 @@ class RccCompiler(BuildCommand):
             return self.env.tool('rccdep')(result, deps)
         return result
 
-    def default_name(self, input):
+    def default_name(self, input, context):
         return input.path.stripext(
             known_langs['c++'].default_ext('source')
         ).suffix
@@ -159,16 +170,23 @@ def qtui_builder(env):
     return choose_builder(env, known_langs['qtui'], ['uic'], (UicBuilder,))
 
 
-class UicBuilder(object):
+class UicBuilder(Builder):
     def __init__(self, env, langinfo, command, version_output):
-        name = langinfo.var('compiler').lower()
-        self.lang = langinfo.name
+        Builder.__init__(self, langinfo.name,
+                         *self._parse_brand(version_output))
 
+        name = langinfo.var('compiler').lower()
         uicflags_name = langinfo.var('flags').lower()
         uicflags = shell.split(env.getvar(langinfo.var('flags'), ''))
 
         self.transpiler = UicCompiler(self, env, name, command, uicflags_name,
                                       uicflags)
+
+    @staticmethod
+    def _parse_brand(version_output):
+        if 'uic' in version_output:
+            return 'qt', detect_version(version_output)
+        return 'unknown', None
 
     @staticmethod
     def check_command(env, command):
@@ -194,7 +212,7 @@ class UicCompiler(BuildCommand):
             cmd, iterate(flags), [input, '-o', output]
         ))
 
-    def default_name(self, input):
+    def default_name(self, input, context):
         base, leaf = input.path.stripext('.h').splitleaf()
         return base.append('ui_' + leaf).suffix
 

@@ -34,17 +34,34 @@ class option_list(object):
     def copy(self):
         return option_list(self._options)
 
+    def filter(self, type):
+        return option_list(i for i in self._options if isinstance(i, type))
+
     def __iter__(self):
         return iter(self._options)
 
     def __len__(self):
         return len(self._options)
 
+    def __getitem__(self, key):
+        if isinstance(key, slice):
+            return type(self)(self._options[key])
+        return self._options[key]
+
+    def __setitem__(self, key, value):
+        self._options[key] = value
+
     def __eq__(self, rhs):
         return type(self) == type(rhs) and self._options == rhs._options
 
     def __ne__(self, rhs):
         return not (self == rhs)
+
+    def __nonzero__(self):
+        return self.__bool__()
+
+    def __bool__(self):
+        return bool(self._options)
 
     def __repr__(self):
         return '<option_list({})>'.format(repr(self._options))
@@ -193,6 +210,7 @@ entry_point = option('entry_point', [('value', str)])
 
 # General options
 debug = option('debug')
+lang = option('lang', [('value', str)])
 pthread = option('pthread')
 
 OptimizeValue = OptionEnum('OptimizeValue', ['disable', 'size', 'speed',

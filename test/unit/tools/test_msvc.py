@@ -39,9 +39,9 @@ class TestMsvcBuilder(CrossPlatformTestCase):
         self.assertEqual(cc.auto_link, True)
         self.assertEqual(cc.can_dual_link, False)
 
-        self.assertEqual(cc.compiler.num_outputs, 1)
+        self.assertEqual(cc.compiler.num_outputs, 'all')
         self.assertEqual(cc.pch_compiler.num_outputs, 2)
-        self.assertEqual(cc.linker('executable').num_outputs, 1)
+        self.assertEqual(cc.linker('executable').num_outputs, 'all')
         self.assertEqual(cc.linker('shared_library').num_outputs, 2)
 
         self.assertEqual(cc.compiler.deps_flavor, 'msvc')
@@ -126,7 +126,12 @@ class TestMsvcCompiler(CrossPlatformTestCase):
 
     def test_default_name(self):
         src = file_types.SourceFile(Path('file.cpp', Root.srcdir), 'c++')
-        self.assertEqual(self.compiler.default_name(src), 'file')
+        self.assertEqual(self.compiler.default_name(src, None), 'file')
+
+    def test_output_file(self):
+        fmt = self.env.target_platform.object_format
+        self.assertEqual(self.compiler.output_file('file', None),
+                         file_types.ObjectFile(Path('file.obj'), fmt, 'c++'))
 
     def test_flags_empty(self):
         self.assertEqual(self.compiler.flags(opts.option_list()), [])
@@ -283,7 +288,16 @@ class TestMsvcPchCompiler(TestMsvcCompiler):
 
     def test_default_name(self):
         hdr = file_types.HeaderFile(Path('file.hpp', Root.srcdir), 'c++')
-        self.assertEqual(self.compiler.default_name(hdr), 'file.hpp')
+        self.assertEqual(self.compiler.default_name(hdr, None), 'file.hpp')
+
+    def test_output_file(self):
+        fmt = self.env.target_platform.object_format
+        out = file_types.MsvcPrecompiledHeader(
+            Path('hdr.pch'), Path('src.obj'), 'hdr.h', fmt, 'c++'
+        )
+        self.assertEqual(self.compiler.output_file('hdr.h', AttrDict(
+            pch_source=file_types.SourceFile(Path('src.c'), 'c')
+        )), [out, out.object_file])
 
 
 class TestMsvcLinker(CrossPlatformTestCase):
@@ -311,6 +325,12 @@ class TestMsvcLinker(CrossPlatformTestCase):
             self.linker(['in'], 'out', ['lib'], ['flags']),
             [self.linker] + extra + ['flags', 'in', 'lib', '/OUT:out']
         )
+
+    def test_output_file(self):
+        fmt = self.env.target_platform.object_format
+        ext = self.env.target_platform.executable_ext
+        self.assertEqual(self.linker.output_file('prog', None),
+                         file_types.Executable(Path('prog' + ext), fmt, 'c++'))
 
     def test_flags_empty(self):
         self.assertEqual(self.linker.flags(opts.option_list()), [])
@@ -476,6 +496,14 @@ class TestMsvcSharedLinker(TestMsvcLinker):
                                      '/IMPLIB:imp']
         )
 
+    def test_output_file(self):
+        fmt = self.env.target_platform.object_format
+        ext = self.env.target_platform.shared_library_ext
+        out = file_types.DllBinary(Path('lib' + ext), fmt, 'c++',
+                                   Path('lib.lib'), Path('lib.exp'))
+        self.assertEqual(self.linker.output_file('lib', None),
+                         [out, out.import_lib, out.export_file])
+
 
 class TestMsvcStaticLinker(CrossPlatformTestCase):
     def __init__(self, *args, **kwargs):
@@ -492,6 +520,13 @@ class TestMsvcStaticLinker(CrossPlatformTestCase):
                          [self.linker, 'in', '/OUT:out'])
         self.assertEqual(self.linker(['in'], 'out', flags=['flags']),
                          [self.linker, 'flags', 'in', '/OUT:out'])
+
+    def test_output_file(self):
+        fmt = self.env.target_platform.object_format
+        self.assertEqual(
+            self.linker.output_file('lib', AttrDict(langs=['c++'])),
+            file_types.StaticLibrary(Path('lib.lib'), fmt, ['c++'])
+        )
 
     def test_flags_empty(self):
         self.assertEqual(self.linker.flags(opts.option_list()), [])

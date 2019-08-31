@@ -1,0 +1,8 @@
+# -*- python -*-
+
+opts = ['--wincompat'] if env.host_platform.family == 'windows' else []
+
+lex = generated_source(file='calc.l', options=opts)
+parse, parse_h = generated_source(file='calc.y')
+
+executable('calc', files=[lex, parse], includes=parse_h)

@@ -3,7 +3,7 @@ import re
 from itertools import chain
 
 from . import pkg_config
-from .common import Builder, BuildCommand, check_which, library_macro
+from .common import BuildCommand, Builder, check_which, library_macro
 from .. import options as opts, safe_str, shell
 from ..arguments.windows import ArgumentParser
 from ..builtins.file_types import make_immediate_file
@@ -34,9 +34,9 @@ _optimize_flags = {
 
 class MsvcBuilder(Builder):
     def __init__(self, env, langinfo, command, version_output):
-        brand, version = self._parse_brand(version_output)
-        object_format = env.target_platform.object_format
-        Builder.__init__(self, langinfo.name, object_format, brand, version)
+        Builder.__init__(self, langinfo.name,
+                         *self._parse_brand(version_output))
+        self.object_format = env.target_platform.object_format
 
         name = langinfo.var('compiler').lower()
         ldinfo = known_formats['native', 'dynamic']
@@ -136,10 +136,6 @@ class MsvcBaseCompiler(BuildCommand):
         return 'msvc'
 
     @property
-    def num_outputs(self):
-        return 1
-
-    @property
     def needs_libs(self):
         return False
 
@@ -229,7 +225,7 @@ class MsvcCompiler(MsvcBaseCompiler):
     def accepts_pch(self):
         return True
 
-    def default_name(self, input):
+    def default_name(self, input, context):
         return input.path.stripext().suffix
 
     def output_file(self, name, context):
@@ -283,7 +279,7 @@ class MsvcPchCompiler(MsvcBaseCompiler):
         options.append('/Yc' + header.path.suffix)
         return options
 
-    def default_name(self, input):
+    def default_name(self, input, context):
         return input.path.suffix
 
     def output_file(self, name, context):
@@ -335,10 +331,6 @@ class MsvcLinker(BuildCommand):
         lib = [os.path.abspath(i) for i in
                self.env.getvar('LIB', '').split(os.pathsep)]
         return lib_path + lib
-
-    @property
-    def num_outputs(self):
-        return 1
 
     def _call(self, cmd, input, output, libs=None, flags=None):
         return list(chain(

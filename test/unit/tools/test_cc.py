@@ -54,12 +54,12 @@ class TestCcBuilder(CrossPlatformTestCase):
         self.assertEqual(cc.auto_link, False)
         self.assertEqual(cc.can_dual_link, True)
 
-        self.assertEqual(cc.compiler.num_outputs, 1)
-        self.assertEqual(cc.pch_compiler.num_outputs, 1)
-        self.assertEqual(cc.linker('executable').num_outputs, 1)
+        self.assertEqual(cc.compiler.num_outputs, 'all')
+        self.assertEqual(cc.pch_compiler.num_outputs, 'all')
+        self.assertEqual(cc.linker('executable').num_outputs, 'all')
 
-        num_outputs = 2 if self.env.target_platform.has_import_library else 1
-        self.assertEqual(cc.linker('shared_library').num_outputs, num_outputs)
+        num_out = 2 if self.env.target_platform.has_import_library else 'all'
+        self.assertEqual(cc.linker('shared_library').num_outputs, num_out)
 
         self.assertEqual(cc.compiler.deps_flavor, 'gcc')
         self.assertEqual(cc.pch_compiler.deps_flavor, 'gcc')
@@ -222,7 +222,12 @@ class TestCcCompiler(CrossPlatformTestCase):
 
     def test_default_name(self):
         src = SourceFile(Path('file.cpp', Root.srcdir), 'c++')
-        self.assertEqual(self.compiler.default_name(src), 'file')
+        self.assertEqual(self.compiler.default_name(src, None), 'file')
+
+    def test_output_file(self):
+        fmt = self.env.target_platform.object_format
+        self.assertEqual(self.compiler.output_file('file', None),
+                         ObjectFile(Path('file.o'), fmt, 'c++'))
 
     def test_flags_empty(self):
         self.assertEqual(self.compiler.flags(opts.option_list()), [])
@@ -338,7 +343,12 @@ class TestCcPchCompiler(TestCcCompiler):
 
     def test_default_name(self):
         hdr = HeaderFile(Path('file.hpp', Root.srcdir), 'c++')
-        self.assertEqual(self.compiler.default_name(hdr), 'file.hpp')
+        self.assertEqual(self.compiler.default_name(hdr, None), 'file.hpp')
+
+    def test_output_file(self):
+        ext = '.gch' if self.compiler.brand == 'gcc' else '.pch'
+        self.assertEqual(self.compiler.output_file('file.h', None),
+                         PrecompiledHeader(Path('file.h' + ext), 'c++'))
 
 
 class TestCcLinker(CrossPlatformTestCase):
@@ -370,6 +380,12 @@ class TestCcLinker(CrossPlatformTestCase):
             self.linker(['in'], 'out', ['lib'], ['flags']),
             [self.linker] + extra + ['flags', 'in', 'lib', '-o', 'out']
         )
+
+    def test_output_file(self):
+        fmt = self.env.target_platform.object_format
+        ext = self.env.target_platform.executable_ext
+        self.assertEqual(self.linker.output_file('prog', None),
+                         Executable(Path('prog' + ext), fmt, 'c++'))
 
     def test_flags_empty(self):
         self.assertEqual(self.linker.flags(opts.option_list()), [])
@@ -699,3 +715,15 @@ class TestCcSharedLinker(TestCcLinker):
             [self.linker] + extra + ['flags', 'in', 'lib', '-o', 'out',
                                      '-Wl,--out-implib=imp']
         )
+
+    def test_output_file(self):
+        fmt = self.env.target_platform.object_format
+        ext = self.env.target_platform.shared_library_ext
+        if self.env.target_platform.has_import_library:
+            out = DllBinary(Path('foo' + ext), fmt, 'c++',
+                            Path('libfoo.dll.a'))
+            self.assertEqual(self.linker.output_file('foo', None),
+                             [out, out.import_lib])
+        else:
+            self.assertEqual(self.linker.output_file('foo', None),
+                             SharedLibrary(Path('libfoo' + ext), fmt, 'c++'))
