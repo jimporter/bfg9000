@@ -107,7 +107,7 @@ except ImportError:
 more_requires = []
 
 if os.getenv('NO_DOPPEL') not in ['1', 'true']:
-    more_requires.append('doppel >= 0.3.1')
+    more_requires.append('doppel >= 0.4.0')
 if os.getenv('NO_PATCHELF') not in ['1', 'true']:
     more_requires.append('patchelf-wrapper;platform_system=="Linux"')
 

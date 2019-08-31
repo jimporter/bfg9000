@@ -228,11 +228,14 @@ class TestVersionedLibrary(IntegrationTest):
     def test_install(self):
         self.build('install')
 
+        real = pjoin(self.libdir, shared_library('library', '1.2.3').path)
+        link = pjoin(self.libdir, shared_library('library', '1').path)
         self.assertDirectory(self.installdir, [
             pjoin(self.bindir, executable('program').path),
-            pjoin(self.libdir, shared_library('library', '1.2.3').path),
-            pjoin(self.libdir, shared_library('library', '1').path),
+            real, link
         ])
+        self.assertFalse(os.path.islink(pjoin(self.installdir, real)))
+        self.assertTrue(os.path.islink(pjoin(self.installdir, link)))
 
         os.chdir(self.srcdir)
         cleandir(self.builddir)
