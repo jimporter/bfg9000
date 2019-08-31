@@ -343,6 +343,14 @@ extension isn't added automatically).</p>
 <li><em>lang</em>: The language of the source file; useful if the source file's extension
   isn't recognized by bfg9000</li>
 </ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>When building files via <code>yacc</code>, this step will automatically generate both
+source and header files named <code>&lt;name&gt;.tab.c</code> and <code>&lt;name&gt;.tab.h</code>. You can
+force this step to build only the source file by passing a single filename
+to the <em>name</em> argument; you can also customize the names by passing a pair
+of filenames: <code>generated_source(['foo.c', 'foo.h'], 'bar.y')</code></p>
+</div>
 <p>This build step recognizes the <a href="../environment-vars/#compilation-variables">compilation environment
 variables</a> for the relevant language.</p>
 <h3 id="generated_sources">generated_sources(<em>files</em>, ..., [<em>extra_deps</em>], [<em>description</em>])<a class="headerlink" href="#generated_sources" title="Permanent link">§</a></h3>
