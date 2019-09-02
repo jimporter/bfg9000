@@ -42,6 +42,10 @@ env_desc = """
 Print the environment variables stored by this build configuration.
 """
 
+e1m1_desc = """
+You find yourself standing at Doom's gate.
+"""
+
 
 def handle_reload_exception(e, suggest_rerun=False):
     msg = 'Unable to reload environment'
@@ -232,6 +236,15 @@ def env(parser, subparser, args, extra):
         return handle_reload_exception(e)
 
 
+def e1m1(parser, subparser, args, extra):  # pragma: no cover
+    import e1m1
+    try:
+        e1m1.play(args.tempo, args.long)
+    except Exception as e:
+        logger.exception(e)
+        return 1
+
+
 def help(parser, subparser, args, extra):
     parser.parse_args(extra + ['--help'])
 
@@ -284,6 +297,16 @@ def main():
     env_p.add_argument('builddir', type=argparse.Directory(must_exist=True),
                        metavar='BUILDDIR', nargs='?', default='.',
                        help='build directory')
+
+    e1m1_p = subparsers.add_parser('e1m1', description=e1m1_desc)
+    e1m1_p.set_defaults(func=e1m1, parser=e1m1_p)
+    # Windows gets glitchy if we play back too fast...
+    tempo = 100 if platform_info().family == 'windows' else 120
+    e1m1_p.add_argument('-t', '--tempo', metavar='BPM', type=int,
+                        default=tempo,
+                        help='playback speed (default:  %(default)s)')
+    e1m1_p.add_argument('-L', '--long', action='store_true',
+                        help='play for longer')
 
     help_p = subparsers.add_parser(
         'help', help='show this help message and exit', add_help=False
