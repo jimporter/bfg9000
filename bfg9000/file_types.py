@@ -121,9 +121,6 @@ class ModuleDefFile(File):
 
 
 class Binary(File):
-    install_kind = 'program'
-    install_root = _InstallRoot.libdir
-
     def __init__(self, path, format, lang=None, external=False):
         File.__init__(self, path, external)
         self.format = format
@@ -142,9 +139,13 @@ class ObjectFileList(ObjectFile):
         self.object_file = ObjectFile(object_name, format, lang, external)
 
 
-# This is sort of a misnomer. It's really just "a binary that is not an object
-# file", even though it's not necessarily been linked.
+# This represents any kind of binary data that's been "linked" (or had some
+# similar process applied to it) so that it can be used by a linker/loader,
+# installed to the system, etc.
 class LinkedBinary(Binary):
+    install_kind = 'program'
+    install_root = _InstallRoot.libdir
+
     def __init__(self, *args, **kwargs):
         Binary.__init__(self, *args, **kwargs)
         self.runtime_deps = []
