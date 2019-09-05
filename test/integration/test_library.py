@@ -229,15 +229,36 @@ class TestVersionedLibrary(IntegrationTest):
         self.build('install')
 
         real = pjoin(self.libdir, shared_library('library', '1.2.3').path)
-        link = pjoin(self.libdir, shared_library('library', '1').path)
+        soname = pjoin(self.libdir, shared_library('library', '1').path)
         self.assertDirectory(self.installdir, [
             pjoin(self.bindir, executable('program').path),
-            real, link
+            real, soname
         ])
         self.assertFalse(os.path.islink(pjoin(self.installdir, real)))
-        self.assertTrue(os.path.islink(pjoin(self.installdir, link)))
+        self.assertTrue(os.path.islink(pjoin(self.installdir, soname)))
 
         os.chdir(self.srcdir)
         cleandir(self.builddir)
         self.assertOutput([pjoin(self.bindir, executable('program').path)],
                           'hello, library!\n')
+
+
+# No versioned libraries on Windows.
+@skip_if(env.target_platform.family == 'windows', hide=True)
+class TestInstallVersionedLibrary(IntegrationTest):
+    def __init__(self, *args, **kwargs):
+        IntegrationTest.__init__(
+            self, 'install_versioned_library', install=True, *args, **kwargs
+        )
+
+    def test_install(self):
+        self.build('install')
+
+        real = pjoin(self.libdir, shared_library('library', '1.2.3').path)
+        soname = pjoin(self.libdir, shared_library('library', '1').path)
+        link = pjoin(self.libdir, shared_library('library').path)
+
+        self.assertDirectory(self.installdir, [real, soname, link])
+        self.assertFalse(os.path.islink(pjoin(self.installdir, real)))
+        self.assertTrue(os.path.islink(pjoin(self.installdir, soname)))
+        self.assertTrue(os.path.islink(pjoin(self.installdir, link)))
