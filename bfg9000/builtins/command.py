@@ -9,6 +9,7 @@ from ..backends.ninja import writer as ninja
 from ..build_inputs import Edge
 from ..file_types import File, Node, Phony
 from ..iterutils import isiterable, iterate, listify
+from ..objutils import convert_each
 from ..path import Path, Root
 from ..safe_str import jbos, safe_str, safe_string
 from ..shell import posix as pshell
@@ -54,17 +55,11 @@ Output = Placeholder('output')
 
 
 class BaseCommand(Edge):
-    def __init__(self, build, builtins, env, name, outputs, cmd=None,
-                 cmds=None, files=None, environment=None, phony=False,
-                 extra_deps=None, description=None):
-        if (cmd is None) == (cmds is None):
-            raise ValueError('exactly one of "cmd" or "cmds" must be ' +
-                             'specified')
-        elif cmds is None:
-            cmds = [cmd]
-
+    def __init__(self, build, env, name, outputs, cmds, files,
+                 environment=None, phony=False, extra_deps=None,
+                 description=None):
         self.name = name
-        self.files = [builtins['auto_file'](i) for i in iterate(files)]
+        self.files = files
         self.phony = phony
 
         implicit = [i for line in cmds for i in iterate(line)
@@ -79,6 +74,18 @@ class BaseCommand(Edge):
         self.cmds = [env.run_arguments(self._expand_cmd(line))
                      for line in cmds]
         self.env = environment or {}
+
+    @staticmethod
+    def convert_args(builtins, kwargs):
+        cmd = kwargs.pop('cmd', None)
+        cmds = kwargs.pop('cmds', None)
+        if (cmd is None) == (cmds is None):
+            raise ValueError('exactly one of "cmd" or "cmds" must be ' +
+                             'specified')
+        kwargs['cmds'] = [cmd] if cmds is None else cmds
+
+        convert_each(kwargs, 'files', builtins['auto_file'])
+        return kwargs
 
     def _expand_cmd(self, cmd):
         if not isiterable(cmd):
@@ -95,14 +102,15 @@ class BaseCommand(Edge):
 class Command(BaseCommand):
     console = True
 
-    def __init__(self, build, builtins, env, name, **kwargs):
-        BaseCommand.__init__(self, build, builtins, env, name, Phony(name),
-                             phony=True, **kwargs)
+    def __init__(self, build, env, name, **kwargs):
+        BaseCommand.__init__(self, build, env, name, Phony(name), phony=True,
+                             **kwargs)
 
 
 @builtin.function('build_inputs', 'builtins', 'env')
 def command(build, builtins, env, name, **kwargs):
-    return Command(build, builtins, env, name, **kwargs).public_output
+    kwargs = Command.convert_args(builtins, kwargs)
+    return Command(build, env, name, **kwargs).public_output
 
 
 command.input = Input
@@ -112,13 +120,11 @@ class BuildStep(BaseCommand):
     console = False
     msbuild_output = True
 
-    def __init__(self, build, builtins, env, name, type=None,
-                 args=None, kwargs=None, always_outdated=False, **fwd_kwargs):
+    def __init__(self, build, env, name, type=None, args=None, kwargs=None,
+                 always_outdated=False, **fwd_kwargs):
         name = listify(name)
         project_name = name[0]
 
-        if type is None:
-            type = builtins['auto_file']
         if not isiterable(type):
             type = repeat(type, len(name))
 
@@ -140,9 +146,15 @@ class BuildStep(BaseCommand):
                    zip(name, type, args, kwargs)]
 
         desc = fwd_kwargs.pop('description', 'build => ' + ' '.join(name))
-        BaseCommand.__init__(self, build, builtins, env, project_name, outputs,
+        BaseCommand.__init__(self, build, env, project_name, outputs,
                              phony=always_outdated, description=desc,
                              **fwd_kwargs)
+
+    @staticmethod
+    def convert_args(builtins, kwargs):
+        if kwargs.get('type') is None:
+            kwargs['type'] = builtins['auto_file']
+        return BaseCommand.convert_args(builtins, kwargs)
 
     @staticmethod
     def _make_outputs(name, type, args, kwargs):
@@ -154,7 +166,8 @@ class BuildStep(BaseCommand):
 
 @builtin.function('build_inputs', 'builtins', 'env')
 def build_step(build, builtins, env, name, **kwargs):
-    return BuildStep(build, builtins, env, name, **kwargs).public_output
+    kwargs = BuildStep.convert_args(builtins, kwargs)
+    return BuildStep(build, env, name, **kwargs).public_output
 
 
 build_step.input = Input

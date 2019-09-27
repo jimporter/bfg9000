@@ -14,6 +14,7 @@ from ..file_types import *
 from ..iterutils import (first, flatten, iterate, listify, merge_dicts,
                          merge_into_dict, slice_dict, uniques)
 from ..languages import known_langs
+from ..objutils import convert_each, convert_one
 from ..shell import posix as pshell
 
 build_input('link_options')(lambda build_inputs, env: {
@@ -25,28 +26,19 @@ class Link(Edge):
     msbuild_output = True
     extra_kwargs = ()
 
-    def __init__(self, builtins, build, env, name, files=None, includes=None,
-                 pch=None, libs=None, packages=None, compile_options=None,
-                 link_options=None, entry_point=None, lang=None,
-                 extra_deps=None, description=None):
-        src_lang = known_langs[lang].src_lang if lang else None
+    def __init__(self, build, env, name, files, libs, packages, link_options,
+                 entry_point=None, lang=None, extra_deps=None,
+                 description=None):
         self.name = self.__name(name)
 
-        self.user_libs = [
-            builtins['library'](i, kind=self._preferred_lib, lang=src_lang)
-            for i in iterate(libs)
-        ]
+        self.user_libs = libs
         forward_opts = self.__get_forward_opts(self.user_libs)
         self.libs = self.user_libs + forward_opts.get('libs', [])
 
-        self.user_packages = [builtins['package'](i, lang=src_lang)
-                              for i in iterate(packages)]
+        self.user_packages = packages
         self.packages = self.user_packages + forward_opts.get('packages', [])
 
-        self.user_files = builtins['object_files'](
-            files, includes=includes, pch=pch, libs=self.user_libs,
-            packages=self.user_packages, options=compile_options, lang=lang
-        )
+        self.user_files = files
         self.files = self.user_files + flatten(
             getattr(i, 'extra_objects', []) for i in self.user_files
         )
@@ -55,8 +47,7 @@ class Link(Edge):
              not any(isinstance(i, WholeArchive) for i in self.user_libs) ):
             raise ValueError('need at least one source file')
 
-        self.user_options = pshell.listify(link_options, type=opts.option_list)
-
+        self.user_options = link_options
         if entry_point:
             self.entry_point = entry_point
 
@@ -69,10 +60,10 @@ class Link(Edge):
             (i.lang for i in self.files if i.lang is not None),
             (j for i in self.libs for j in iterate(i.lang))
         ))
-        if not src_lang and not self.langs:
+        if not lang and not self.langs:
             raise ValueError('unable to determine language')
 
-        search_langs = [src_lang] if src_lang else self.langs
+        search_langs = [lang] if lang else self.langs
         self.linker = self.__find_linker(env, formats[0], search_langs)
 
         # Forward any necessary options to the compile step.
@@ -102,6 +93,28 @@ class Link(Edge):
                       description)
 
         build['defaults'].add(primary)
+
+    @classmethod
+    def convert_args(cls, builtins, files, kwargs):
+        lang = kwargs.get('lang')
+        src_lang = known_langs[lang].src_lang if lang else None
+        kwargs['lang'] = src_lang
+
+        convert_each(kwargs, 'libs', builtins['library'],
+                     kind=cls._preferred_lib, lang=src_lang)
+        convert_each(kwargs, 'packages', builtins['package'], lang=src_lang)
+
+        kwargs['link_options'] = pshell.listify(kwargs.get('link_options'),
+                                                type=opts.option_list)
+
+        files = builtins['object_files'](
+            files, includes=kwargs.pop('includes', None),
+            pch=kwargs.pop('pch', None),
+            options=kwargs.pop('compile_options', None),
+            libs=kwargs['libs'], packages=kwargs['packages'], lang=lang
+        )
+
+        return files, kwargs
 
     @classmethod
     def __name(cls, name):
@@ -139,11 +152,14 @@ class DynamicLink(Link):
 
     extra_kwargs = ('module_defs',)
 
-    def __init__(self, builtins, *args, **kwargs):
-        module_defs = kwargs.pop('module_defs', None)
-        self.module_defs = (builtins['module_def_file'](module_defs)
-                            if module_defs else None)
-        Link.__init__(self, builtins, *args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        self.module_defs = kwargs.pop('module_defs', None)
+        Link.__init__(self, *args, **kwargs)
+
+    @classmethod
+    def convert_args(cls, builtins, files, kwargs):
+        convert_one(kwargs, 'module_defs', builtins['module_def_file'])
+        return super(DynamicLink, cls).convert_args(builtins, files, kwargs)
 
     @property
     def options(self):
@@ -205,11 +221,15 @@ class StaticLink(Link):
     extra_kwargs = ('static_link_options',)
 
     def __init__(self, *args, **kwargs):
-        self.user_static_options = pshell.listify(
-            kwargs.pop('static_link_options', None),
-            type=opts.option_list
-        )
+        self.user_static_options = kwargs.pop('static_link_options', None)
         Link.__init__(self, *args, **kwargs)
+
+    @classmethod
+    def convert_args(cls, builtins, files, kwargs):
+        kwargs['static_link_options'] = pshell.listify(
+            kwargs.get('static_link_options'), type=opts.option_list
+        )
+        return super(StaticLink, cls).convert_args(builtins, files, kwargs)
 
     @property
     def options(self):
@@ -248,8 +268,8 @@ def executable(builtins, build, env, name, files=None, **kwargs):
     if files is None and 'libs' not in kwargs:
         params = [('format', env.target_platform.object_format), ('lang', 'c')]
         return static_file(build, Executable, name, params, kwargs)
-    return DynamicLink(builtins, build, env, name, files,
-                       **kwargs).public_output
+    files, kwargs = DynamicLink.convert_args(builtins, files, kwargs)
+    return DynamicLink(build, env, name, files, **kwargs).public_output
 
 
 @builtin.function('builtins', 'build_inputs', 'env')
@@ -265,8 +285,8 @@ def shared_library(builtins, build, env, name, files=None, **kwargs):
         # a separate DLL file?
         params = [('format', env.target_platform.object_format), ('lang', 'c')]
         return static_file(build, SharedLibrary, name, params, kwargs)
-    return SharedLink(builtins, build, env, name, files,
-                      **kwargs).public_output
+    files, kwargs = SharedLink.convert_args(builtins, files, kwargs)
+    return SharedLink(build, env, name, files, **kwargs).public_output
 
 
 @builtin.function('builtins', 'build_inputs', 'env')
@@ -280,8 +300,8 @@ def static_library(builtins, build, env, name, files=None, **kwargs):
     if files is None and 'libs' not in kwargs:
         params = [('format', env.target_platform.object_format), ('lang', 'c')]
         return static_file(build, StaticLibrary, name, params, kwargs)
-    return StaticLink(builtins, build, env, name, files,
-                      **kwargs).public_output
+    files, kwargs = StaticLink.convert_args(builtins, files, kwargs)
+    return StaticLink(build, env, name, files, **kwargs).public_output
 
 
 @builtin.function('builtins', 'build_inputs', 'env')
@@ -330,21 +350,26 @@ def library(builtins, build, env, name, files=None, **kwargs):
     static_kwargs.update(kwargs)
 
     if kind == 'dual':
-        shared = SharedLink(builtins, build, env, name, files, **shared_kwargs)
+        shared_files, shared_kwargs = SharedLink.convert_args(
+            builtins, files, shared_kwargs
+        )
+        shared = SharedLink(build, env, name, shared_files, **shared_kwargs)
         if not shared.linker.builder.can_dual_link:
             warnings.warn("dual linking not supported with {}"
                           .format(shared.linker.brand))
             return shared.public_output
 
-        static = StaticLink(builtins, build, env, name, shared.files,
-                            **static_kwargs)
+        static_files, static_kwargs = StaticLink.convert_args(
+            builtins, shared_files, static_kwargs
+        )
+        static = StaticLink(build, env, name, static_files, **static_kwargs)
         return DualUseLibrary(shared.public_output, static.public_output)
     elif kind == 'shared':
-        return SharedLink(builtins, build, env, name, files,
-                          **shared_kwargs).public_output
+        files, kw = SharedLink.convert_args(builtins, files, shared_kwargs)
+        return SharedLink(build, env, name, files, **kw).public_output
     else:  # kind == 'static'
-        return StaticLink(builtins, build, env, name, files,
-                          **static_kwargs).public_output
+        files, kw = StaticLink.convert_args(builtins, files, static_kwargs)
+        return StaticLink(build, env, name, files, **kw).public_output
 
 
 @builtin.function('builtins')
@@ -421,8 +446,8 @@ def make_link(rule, build_inputs, buildfile, env):
         )])
 
     files = rule.files
-    if hasattr(rule.linker, 'transform_input'):
-        files = rule.linker.transform_input(files)
+    if hasattr(linker, 'transform_input'):
+        files = linker.transform_input(files)
 
     manifest = listify(getattr(rule, 'manifest', None))
     module_defs = listify(getattr(rule, 'module_defs', None))
@@ -455,9 +480,9 @@ def ninja_link(rule, build_inputs, buildfile, env):
             output_vars.append(v)
             variables[v] = rule.output[i]
 
-    if hasattr(rule.linker, 'transform_input'):
+    if hasattr(linker, 'transform_input'):
         input_var = ninja.var('input')
-        variables[input_var] = rule.linker.transform_input(rule.files)
+        variables[input_var] = linker.transform_input(rule.files)
     else:
         input_var = ninja.var('in')
 

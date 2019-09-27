@@ -23,6 +23,17 @@ def objectify(thing, valid_type, creator=None, in_type=string_types,
         return creator(thing, **kwargs)
 
 
+def convert_one(kwargs, key, fn, **fn_kwargs):
+    if kwargs.get(key):
+        kwargs[key] = fn(kwargs[key], **fn_kwargs)
+    else:
+        kwargs[key] = None
+
+
+def convert_each(kwargs, key, fn, **fn_kwargs):
+    kwargs[key] = [fn(i, **fn_kwargs) for i in iterate(kwargs.get(key))]
+
+
 def hashify(thing):
     if isinstance(thing, dict):
         return frozenset((hashify(k), hashify(v)) for k, v in iteritems(thing))
