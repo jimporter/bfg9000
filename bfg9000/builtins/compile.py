@@ -1,9 +1,8 @@
 from collections import defaultdict
-from six import string_types
 
 from . import builtin
 from .. import options as opts
-from .file_types import static_file
+from .file_types import FileList, static_file
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..build_inputs import build_input, Edge
@@ -11,29 +10,9 @@ from ..file_types import *
 from ..iterutils import first, iterate
 from ..languages import known_langs
 from ..objutils import convert_each, convert_one
-from ..path import Path, Root
 from ..shell import posix as pshell
 
 build_input('compile_options')(lambda build_inputs, env: defaultdict(list))
-
-
-class FileList(list):
-    def __init__(self, fn, files, **kwargs):
-        list.__init__(self, (fn(i, **kwargs) for i in iterate(files)))
-
-    def __getitem__(self, key):
-        if isinstance(key, string_types):
-            key = Path(key, Root.srcdir)
-        elif isinstance(key, File):
-            key = key.path
-
-        if isinstance(key, Path):
-            for i in self:
-                if i.creator and i.creator.file.path == key:
-                    return i
-            raise IndexError("{!r} not found".format(key))
-        else:
-            return list.__getitem__(self, key)
 
 
 class BaseCompile(Edge):

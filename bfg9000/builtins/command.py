@@ -207,9 +207,14 @@ try:
 
     @msbuild.rule_handler(Command, BuildStep)
     def msbuild_command(rule, build_inputs, solution, env):
-        project = msbuild.ExecProject(
+        command = msbuild.CommandProject.convert_command(shell.global_env(
+            rule.env, rule.cmds
+        ))
+        project = msbuild.CommandProject(
             env, name=rule.name,
-            commands=[shell.global_env(rule.env, rule.cmds)],
+            commands=[msbuild.CommandProject.task(
+                'Exec', Command=command, WorkingDirectory='$(OutDir)'
+            )],
             dependencies=solution.dependencies(rule.extra_deps),
         )
         solution[rule.output[0]] = project

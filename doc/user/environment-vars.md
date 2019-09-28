@@ -402,6 +402,12 @@ The command to use when executing bfg9000 (e.g. when regenerating the build
 scripts because the list of source files has changed). This should only be
 necessary if you run bfg9000 from a wrapper script.
 
+#### *CP*
+Default: `cp -f` (POSIX), `cmd /c copy` (Windows)
+{: .subtitle}
+
+The command to use when creating symlinks.
+
 #### *DEPFIXER*
 Default: `/path/to/bfg9000-depfixer`
 {: .subtitle}
@@ -415,6 +421,12 @@ Default: `doppel`
 
 The command to use when installing files and building source distributions. For
 more information about doppel, see its [documentation][doppel].
+
+#### *HARDLINK*
+Default: `ln -f` (POSIX), `cmd /c mklink /H` (Windows)
+{: .subtitle}
+
+The command to use when creating hard links.
 
 #### *INSTALL_NAME_TOOL*
 Default: `install_name_tool`
@@ -452,6 +464,12 @@ Default: `/path/to/bfg9000-setenv`
 *Windows-only*. The command to use when setting temporary environment variables,
 similar to the POSIX `env` command. This is used when setting environment
 variables for tests.
+
+#### *SYMLINK*
+Default: `ln -sf` (POSIX), `cmd /c mklink` (Windows)
+{: .subtitle}
+
+The command to use when creating symlinks.
 
 ## System variables
 ---

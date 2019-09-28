@@ -9,7 +9,7 @@ from .ar import ArLinker
 from .common import (BuildCommand, Builder, check_which, darwin_install_name,
                      library_macro)
 from .ld import LdLinker
-from ..builtins.symlink import Symlink
+from ..builtins.copy_file import CopyFile
 from ..exceptions import PackageResolutionError
 from ..file_types import *
 from ..iterutils import (default_sentinel, first, iterate, listify, uniques,
@@ -688,8 +688,9 @@ class CcSharedLibraryLinker(CcLinker):
     def post_build(self, build, options, output, context):
         if isinstance(output, VersionedSharedLibrary):
             # Make symlinks for the various versions of the shared lib.
-            Symlink(build, output.soname, output)
-            Symlink(build, output.link, output.soname)
+            CopyFile(build, self.env, output.soname, output, mode='symlink')
+            CopyFile(build, self.env, output.link, output.soname,
+                     mode='symlink')
             return output.link
 
     def output_file(self, name, context):

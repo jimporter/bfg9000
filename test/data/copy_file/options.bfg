@@ -1,0 +1,3 @@
+# -*- python -*-
+
+argument('mode', default='copy')

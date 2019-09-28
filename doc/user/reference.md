@@ -164,6 +164,31 @@ vendor). This is described in more detail for each step below.
     platform you're running on. For instance, when building an executable file
     named "foo" on Windows, the resulting file will be `foo.exe`.
 
+### copy_file([*name*], *file*, [*mode*], [*extra_deps*], [*description*]) { #copy_file }
+Availability: `build.bfg`
+{: .subtitle}
+
+Create a build step that copies a file named *file* to a destination named
+*name*; if *name* is not specified, this function will use the filename in
+*file* as a base (this is primarily useful for copying a file from the source
+directory to the build directory). *mode* specifies how the file should be
+copied: `'copy'`, `'symlink'`, or `'hardlink'`.
+
+This build step recognizes the [environment
+variables](environment-vars.md#command-variables) for the relevant copy mode.
+
+### copy_files(*files*, [*mode*], [*extra_deps*], [*description*]) { #copy_files }
+Availability: `build.bfg`
+{: .subtitle}
+
+Create a build step to copy each of the files in *files* using the specified
+*mode*; this is equivalent to calling [*copy_file*](#copy_file) for each element
+in *files*.
+
+Like [*object_files*](#object_files), *copy_files* returns a special list that
+allows you to index into it using the filename of one of the source files listed
+in *files*.
+
 ### executable(*name*, [*files*, ..., [*extra_deps*], [*description*]]) { #executable }
 Availability: `build.bfg`
 {: .subtitle}

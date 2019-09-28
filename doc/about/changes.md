@@ -12,6 +12,7 @@ in progress
 - Add an `auto_file()` function that infers the kind of file based on its
   extension; `build_step()` now uses this by default for outputs
 - Add `always_outdated` argument to `build_step()`
+- Add `copy_file()` and `copy_files()` functions
 - `default()` and `install()` now return the files passed into them
 
 ### Breaking changes

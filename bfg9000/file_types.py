@@ -5,15 +5,19 @@ from .iterutils import listify as _listify
 from .path import InstallRoot as _InstallRoot, install_path as _install_path
 
 
+def clone_file(file, path):
+    file = _copy.copy(file)
+    file.path = path
+    return file
+
+
 def file_install_path(file, cross=None):
     return _install_path(file.path, file.install_root,
                          directory=isinstance(file, Directory), cross=cross)
 
 
 def installify(file, cross=None):
-    file = _copy.copy(file)
-    file.path = file_install_path(file, cross)
-    return file
+    return clone_file(file, file_install_path(file, cross))
 
 
 class Node(_safe_str.safe_string_ops):

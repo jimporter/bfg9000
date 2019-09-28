@@ -1,4 +1,5 @@
 from contextlib import contextmanager
+from six import string_types
 
 from . import builtin
 from .find import exclude_globs, filter_by_platform
@@ -28,6 +29,25 @@ def static_file(build, file_type, name, params=[], kwargs={}):
     if path.root == Root.srcdir:
         build.add_source(file)
     return file
+
+
+class FileList(list):
+    def __init__(self, fn, files, **kwargs):
+        list.__init__(self, (fn(i, **kwargs) for i in iterate(files)))
+
+    def __getitem__(self, key):
+        if isinstance(key, string_types):
+            key = Path(key, Root.srcdir)
+        elif isinstance(key, File):
+            key = key.path
+
+        if isinstance(key, Path):
+            for i in self:
+                if i.creator and i.creator.file.path == key:
+                    return i
+            raise IndexError("{!r} not found".format(key))
+        else:
+            return list.__getitem__(self, key)
 
 
 @contextmanager

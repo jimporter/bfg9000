@@ -16,7 +16,7 @@ from ...file_types import File
 from ...iterutils import isiterable
 from ...tools.common import Command
 
-__all__ = ['BuildDir', 'ExecProject', 'NoopProject', 'Solution', 'UuidMap',
+__all__ = ['BuildDir', 'CommandProject', 'NoopProject', 'Solution', 'UuidMap',
            'VcxProject', 'textify', 'textify_each']
 
 BuildDir = Enum('BuildDir', ['output', 'intermediate', 'solution'])
@@ -430,28 +430,42 @@ class VcxProject(Project):
 
 class NoopProject(Project):
     def write(self, out):
-        self._write(out, [E.Target({'Name': 'Build'})])
+        self._write(out, [E.Target(Name='Build')])
 
 
-class ExecProject(Project):
+class CommandProject(Project):
     def __init__(self, env, name, configuration=None, commands=None,
-                 dependencies=None):
+                 dependencies=None, makedir='$(OutDir)'):
         Project.__init__(self, env, name, configuration, dependencies)
         self.commands = commands or []
+        self.makedir = makedir
+
+    @staticmethod
+    def convert_attr(value):
+        if isiterable(value):
+            return ';'.join(textify_each(value, quoted=True))
+        else:
+            return textify(value)
+
+    @staticmethod
+    def convert_command(value):
+        value = Command.convert_args(value, lambda x: x.command)
+        return ' '.join(textify_each(value, quoted=True))
+
+    @classmethod
+    def task(cls, task, **kwargs):
+        return E(task, **{k: cls.convert_attr(v)
+                          for k, v in iteritems(kwargs)})
 
     def write(self, out):
-        target = E.Target({'Name': 'Build'},
-            E.MakeDir(Directories='$(OutDir)')
-        )
+        target = E.Target(Name='Build')
+        if self.makedir:
+            target.append(E.MakeDir(Directories=self.makedir))
+
         for line in self.commands:
-            if isiterable(line):
-                line = Command.convert_args(line, lambda x: x.command)
-                cmd = ' '.join(textify_each(line, quoted=True))
-            else:
-                cmd = textify(line)
-            target.append(E.Exec({
-                'Command': cmd, 'WorkingDirectory': '$(OutDir)'
-            }))
+            if not isinstance(line, etree._Element):  # pragma: no cover
+                raise TypeError('expected an lxml element')
+            target.append(line)
 
         self._write(out, [
             # Import the C++ properties to get $(OutDir). There might be a
