@@ -3,7 +3,8 @@ import re
 
 from ... import path
 from ... import shell
-from .syntax import *
+from .solution import Solution, UuidMap
+from .syntax import *  # noqa
 from ...versioning import Version
 
 

@@ -1,6 +1,6 @@
 from six.moves import cStringIO as StringIO
 
-from .. import *
+from ... import *
 
 from bfg9000 import path
 from bfg9000 import safe_str

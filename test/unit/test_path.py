@@ -117,6 +117,11 @@ class TestPath(PathTestCase):
         self.assertTrue(self.Path('a', path.InstallRoot.bindir, True) !=
                         self.Path('a', path.InstallRoot.bindir, False))
 
+        winpath = target.platform_info('winnt').Path
+        linuxpath = target.platform_info('linux').Path
+        self.assertFalse(winpath('a') == linuxpath('a'))
+        self.assertTrue(winpath('a') != linuxpath('a'))
+
         self.assertFalse(self.Path('a', path.Root.srcdir) == 'a')
         self.assertTrue(self.Path('a', path.Root.srcdir) != 'a')
 
