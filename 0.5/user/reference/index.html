@@ -289,6 +289,23 @@ vendor). This is described in more detail for each step below.</p>
 platform you're running on. For instance, when building an executable file
 named "foo" on Windows, the resulting file will be <code>foo.exe</code>.</p>
 </div>
+<h3 id="copy_file">copy_file([<em>name</em>], <em>file</em>, [<em>mode</em>], [<em>extra_deps</em>], [<em>description</em>])<a class="headerlink" href="#copy_file" title="Permanent link">§</a></h3>
+<p class="subtitle">Availability: <code>build.bfg</code></p>
+<p>Create a build step that copies a file named <em>file</em> to a destination named
+<em>name</em>; if <em>name</em> is not specified, this function will use the filename in
+<em>file</em> as a base (this is primarily useful for copying a file from the source
+directory to the build directory). <em>mode</em> specifies how the file should be
+copied: <code>'copy'</code>, <code>'symlink'</code>, or <code>'hardlink'</code>.</p>
+<p>This build step recognizes the <a href="../environment-vars/#command-variables">environment
+variables</a> for the relevant copy mode.</p>
+<h3 id="copy_files">copy_files(<em>files</em>, [<em>mode</em>], [<em>extra_deps</em>], [<em>description</em>])<a class="headerlink" href="#copy_files" title="Permanent link">§</a></h3>
+<p class="subtitle">Availability: <code>build.bfg</code></p>
+<p>Create a build step to copy each of the files in <em>files</em> using the specified
+<em>mode</em>; this is equivalent to calling <a href="#copy_file"><em>copy_file</em></a> for each element
+in <em>files</em>.</p>
+<p>Like <a href="#object_files"><em>object_files</em></a>, <em>copy_files</em> returns a special list that
+allows you to index into it using the filename of one of the source files listed
+in <em>files</em>.</p>
 <h3 id="executable">executable(<em>name</em>, [<em>files</em>, ..., [<em>extra_deps</em>], [<em>description</em>]])<a class="headerlink" href="#executable" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Create a build step that builds an executable file named <em>name</em>. <em>files</em> is the
