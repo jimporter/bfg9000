@@ -207,12 +207,11 @@ class TestGeneratedSource(CompileTest):
              mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
             self.env.builder('qrc')
 
-    def test_no_file(self):
-        with self.assertRaises(TypeError):
-            self.builtin_dict['generated_source']('source')
-
     def test_make_simple(self):
         result = self.builtin_dict['generated_source'](file='file.qrc')
+        self.assertSameFile(result, self.output_file('file.cpp', lang='qrc'))
+
+        result = self.builtin_dict['generated_source']('file.qrc')
         self.assertSameFile(result, self.output_file('file.cpp', lang='qrc'))
 
         result = self.builtin_dict['generated_source']('name.cpp', 'file.qrc')

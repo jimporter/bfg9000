@@ -11,7 +11,7 @@ widgets = package('Qt5Widgets')
 # Compiling Qt UI files is simple: just use the `generated_source` build step
 # and the output will be a C++ file ready to be compiled.
 
-ui = generated_source(file='designer/widget.ui')
+ui = generated_source('designer/widget.ui')
 
 # Running C++ source files through the meta-object compiler isn't much harder;
 # again, just use `generated_source`. However, you'll need to explicitly pass

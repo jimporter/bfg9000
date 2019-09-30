@@ -45,6 +45,10 @@ class TestExecutable(LinkTest):
         result = self.builtin_dict['executable']('exe', ['main.cpp'])
         self.assertSameFile(result, self.output_file('exe'))
 
+        result = self.builtin_dict['executable'](name='exe',
+                                                 files=['main.cpp'])
+        self.assertSameFile(result, self.output_file('exe'))
+
         src = self.builtin_dict['source_file']('main.cpp')
         result = self.builtin_dict['executable']('exe', [src])
         self.assertSameFile(result, self.output_file('exe'))
@@ -67,6 +71,11 @@ class TestExecutable(LinkTest):
         self.assertSameFile(result, expected)
         self.assertEqual(result.creator.langs, ['c'])
         self.assertEqual(result.creator.linker.lang, 'c++')
+
+    def test_invalid_type(self):
+        src = self.builtin_dict['source_file']('main.cpp')
+        self.assertRaises(TypeError, self.builtin_dict['executable'], src,
+                          [src])
 
     def test_make_no_files(self):
         self.assertRaises(ValueError, self.builtin_dict['executable'],
@@ -127,6 +136,10 @@ class TestSharedLibrary(LinkTest):
         result = self.builtin_dict['shared_library']('shared', ['main.cpp'])
         self.assertSameFile(result, expected, exclude={'post_install'})
 
+        result = self.builtin_dict['shared_library'](name='shared',
+                                                     files=['main.cpp'])
+        self.assertSameFile(result, expected, exclude={'post_install'})
+
         src = self.builtin_dict['source_file']('main.cpp')
         result = self.builtin_dict['shared_library']('shared', [src])
         self.assertSameFile(result, expected, exclude={'post_install'})
@@ -173,6 +186,11 @@ class TestSharedLibrary(LinkTest):
         expected.runtime_file.runtime_deps = [libfoo.runtime_file]
         result = shared_library('shared', ['main.cpp'], libs=[libfoo])
         self.assertSameFile(result, expected, exclude={'post_install'})
+
+    def test_invalid_type(self):
+        src = self.builtin_dict['source_file']('main.cpp')
+        self.assertRaises(TypeError, self.builtin_dict['shared_library'],
+                          src, [src])
 
     def test_make_no_files(self):
         self.assertRaises(ValueError, self.builtin_dict['shared_library'],
@@ -234,6 +252,10 @@ class TestStaticLibrary(LinkTest):
         result = self.builtin_dict['static_library']('static', ['main.cpp'])
         self.assertSameFile(result, expected)
 
+        result = self.builtin_dict['static_library'](name='static',
+                                                     files=['main.cpp'])
+        self.assertSameFile(result, expected)
+
         src = self.builtin_dict['source_file']('main.cpp')
         result = self.builtin_dict['static_library']('static', [src])
         self.assertSameFile(result, expected)
@@ -270,6 +292,11 @@ class TestStaticLibrary(LinkTest):
             'static', lang='c',
             extra=self.extra('c', [libfoo], linktime_deps=[libfoo])
         ))
+
+    def test_invalid_type(self):
+        src = self.builtin_dict['source_file']('main.cpp')
+        self.assertRaises(TypeError, self.builtin_dict['static_library'],
+                          src, [src])
 
     def test_make_no_files(self):
         self.assertRaises(ValueError, self.builtin_dict['static_library'],

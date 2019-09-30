@@ -214,25 +214,16 @@ def precompiled_header(builtins, build, env, name=None, file=None, **kwargs):
 
 
 @builtin.function('builtins', 'build_inputs', 'env')
-@builtin.type(SourceCodeFile, extra_in_type=type(None))
-def generated_source(builtins, build, env, name=None, file=None, **kwargs):
-    if file is None:
-        raise TypeError('expected file')
+@builtin.type(SourceCodeFile, short_circuit=False, first_optional=True)
+def generated_source(builtins, build, env, name, file, **kwargs):
     file, kwargs = GenerateSource.convert_args(builtins, file, kwargs)
     return GenerateSource(build, env, name, file, **kwargs).public_output
-
-
-@builtin.function('builtins', 'build_inputs', 'env')
-@builtin.type(SourceCodeFile, extra_in_type=CodeFile, short_circuit=False)
-def _make_generated_source(builtins, build, env, file, **kwargs):
-    file, kwargs = GenerateSource.convert_args(builtins, file, kwargs)
-    return GenerateSource(build, env, None, file, **kwargs).public_output
 
 
 @builtin.function('builtins')
 @builtin.type(FileList, in_type=object)
 def generated_sources(builtins, files, **kwargs):
-    return FileList(builtins['_make_generated_source'], files, **kwargs)
+    return FileList(builtins['generated_source'], files, **kwargs)
 
 
 @builtin.function('build_inputs')

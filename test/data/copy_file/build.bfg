@@ -1,4 +1,4 @@
 # -*- python -*-
 
-txt = copy_file(file='data.txt', mode=argv.mode, description='copy file')
+txt = copy_file('data.txt', mode=argv.mode, description='copy file')
 executable('simple', files=['simple.cpp'], extra_deps=txt)

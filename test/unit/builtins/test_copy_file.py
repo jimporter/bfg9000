@@ -10,6 +10,9 @@ class TestCopyFile(BuiltinTest):
         result = self.builtin_dict['copy_file'](file='file.txt')
         self.assertSameFile(result, expected)
 
+        result = self.builtin_dict['copy_file']('file.txt')
+        self.assertSameFile(result, expected)
+
     def test_make_no_name_or_file(self):
         self.assertRaises(TypeError, self.builtin_dict['copy_file'])
 

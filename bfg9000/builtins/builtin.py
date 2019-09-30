@@ -119,49 +119,60 @@ getter = _Decorator('default', _GetterBinder)
 post = _Decorator('post', _PostWrapper)
 
 
-def _get_value(argspec, builtin_bound, args, kwargs):
-    # Get the value of the first argument to this function, whether it's
-    # passed positionally or as a keyword argument.
-    if len(args) > builtin_bound:
-        return args[builtin_bound]
-    name = argspec[builtin_bound]
+def _get_argspec(fn):
+    if sys.version_info >= (3, 3):
+        return list(inspect.signature(fn).parameters.keys())
+    return inspect.getargspec(fn).args
+
+
+def _get_value(argspec, index, args, kwargs):
+    # Get the value of the nth argument to this function, whether it's
+    # passed positionally or as a keyword argument. Note that `index` should be
+    # at least as large as the number of builtins bound to the function.
+    if len(args) > index:
+        return args[index]
+    name = argspec[index]
     if name in kwargs:
         return kwargs[name]
     raise IndexError('unable to find user-provided argument')
 
 
-# We need to use the `type()` built-in inside our function that's *also* called
-# `type`!
-_type = type
+def check_types(thing, expected_types, extra_types=[]):
+    if not isinstance(thing, expected_types):
+        types = chain(extra_types, expected_types)
+        raise TypeError('expected {}; but got {}'.format(
+            ', '.join(i.__name__ for i in types),
+            __builtins__['type'](thing).__name__
+        ))
 
 
 def type(out_type, in_type=string_or_path_types, extra_in_type=(),
-         short_circuit=True):
+         short_circuit=True, first_optional=False):
     in_type = listify(in_type, type=tuple) + listify(extra_in_type, type=tuple)
+    if first_optional:
+        in_type = in_type + (__builtins__['type'](None),)
 
     def decorator(fn):
-        if sys.version_info >= (3, 3):
-            argspec = list(inspect.signature(fn).parameters.keys())
-        else:
-            argspec = inspect.getargspec(fn).args
+        spec = _get_argspec(fn)
+        all_types = (out_type,) + in_type
 
         @functools.wraps(fn)
         def wrapper(*args, **kwargs):
+            bound = wrapper._builtin_bound
+            if first_optional and len(args) < 2 + bound:
+                args = args[:bound] + (None, ) + args[bound:]
+
             # Try to get the first argument to this function. If it's the
-            # output type, just return it immediately; otherwise, check if
-            # it's a valid input type and then call the function.
+            # output type, just return it immediately; otherwise, check if it's
+            # a valid input type and then call the function.
             try:
-                thing = _get_value(argspec, wrapper._builtin_bound, args,
-                                   kwargs)
-                if short_circuit and isinstance(thing, wrapper.type):
-                    return thing
-                if not isinstance(thing, wrapper.in_type):
-                    gen = (i.__name__ for i in chain(
-                        [wrapper.type], iterate(wrapper.in_type))
-                    )
-                    raise TypeError('expected {}; but got {}'.format(
-                        ', '.join(gen), _type(thing).__name__
-                    ))
+                thing = _get_value(spec, wrapper._builtin_bound, args, kwargs)
+                if short_circuit:
+                    if isinstance(thing, wrapper.type):
+                        return thing
+                    check_types(thing, wrapper.in_type, [wrapper.type])
+                else:
+                    check_types(thing, all_types)
             except IndexError:
                 pass
             return fn(*args, **kwargs)

@@ -5,7 +5,7 @@ from .file_types import FileList
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..build_inputs import Edge
-from ..file_types import clone_file
+from ..file_types import clone_file, File
 from ..path import Path, Root
 from ..versioning import SpecifierSet
 
@@ -34,27 +34,20 @@ class CopyFile(Edge):
 
 
 @builtin.function('builtins', 'build_inputs', 'env')
-def copy_file(builtins, build, env, name=None, file=None, **kwargs):
+@builtin.type(File, short_circuit=False, first_optional=True)
+def copy_file(builtins, build, env, name, file, **kwargs):
     # Note: this only handles single files. File objects with multiple
     # related files (e.g. a DLL and its import library) will only copy the
     # primary file. In practice, this shouldn't matter, as this function is
     # mostly useful for copying data files to the build directory.
-    if file is None:
-        raise TypeError('expected file')
     output, file = CopyFile.convert_args(builtins, name, file)
-    return CopyFile(build, env, output, file, **kwargs).public_output
-
-
-@builtin.function('builtins', 'build_inputs', 'env')
-def _do_copy_file(builtins, build, env, file, **kwargs):
-    output, file = CopyFile.convert_args(builtins, None, file)
     return CopyFile(build, env, output, file, **kwargs).public_output
 
 
 @builtin.function('builtins')
 @builtin.type(FileList, in_type=object)
 def copy_files(builtins, files, **kwargs):
-    return FileList(builtins['_do_copy_file'], files, **kwargs)
+    return FileList(builtins['copy_file'], files, **kwargs)
 
 
 @make.rule_handler(CopyFile)
