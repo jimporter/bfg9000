@@ -172,7 +172,7 @@ Create a build step that copies a file named *file* to a destination named
 *name*; if *name* is not specified, this function will use the filename in
 *file* as a base (this is primarily useful for copying a file from the source
 directory to the build directory). *mode* specifies how the file should be
-copied: `'copy'`, `'symlink'`, or `'hardlink'`.
+copied: `'copy'` (the default), `'symlink'`, or `'hardlink'`.
 
 This build step recognizes the [environment
 variables](environment-vars.md#command-variables) for the relevant copy mode.
