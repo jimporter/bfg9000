@@ -37,4 +37,4 @@ class Doppel(SimpleCommand):
             result.append(dst)
             return result
 
-        raise ValueError("unknown mode '{}'".format(mode))  # pragma: no cover
+        raise ValueError("unknown mode '{}'".format(mode))

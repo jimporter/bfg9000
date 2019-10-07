@@ -88,7 +88,7 @@ class File(BaseFile):
 def add_user_argument(parser, *names, **kwargs):
     if any(not i.startswith('--') for i in names):
         raise ValueError('option string must begin with "--"')
-    if any(i.startswith('x-') for i in names):
+    if any(i.startswith('--x-') for i in names):
         raise ValueError('"x-" prefix is reserved')
 
     if parser.usage == 'parse':

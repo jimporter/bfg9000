@@ -2,6 +2,7 @@ from collections import OrderedDict
 
 from .. import *
 
+from bfg9000.path import Path
 from bfg9000.shell import windows
 from bfg9000.safe_str import jbos, literal, shell_literal
 from bfg9000.shell.list import shell_list
@@ -10,6 +11,9 @@ from bfg9000.shell.list import shell_list
 class TestSplit(TestCase):
     def test_single(self):
         self.assertEqual(windows.split('foo'), ['foo'])
+        self.assertEqual(windows.split(' foo'), ['foo'])
+        self.assertEqual(windows.split('foo '), ['foo'])
+        self.assertEqual(windows.split(' foo '), ['foo'])
 
     def test_multiple(self):
         self.assertEqual(windows.split('foo bar baz'), ['foo', 'bar', 'baz'])
@@ -127,6 +131,10 @@ class TestEscapeLine(TestCase):
             windows.escape_line(jbos('foo', literal('bar'))),
             shell_list([ jbos(shell_literal('foo'), literal('bar')) ])
         )
+
+    def test_path(self):
+        self.assertEqual(windows.escape_line(Path('foo')),
+                         shell_list([Path('foo')]))
 
     def test_iterable(self):
         self.assertEqual(windows.escape_line(['foo', 'bar']), ['foo', 'bar'])

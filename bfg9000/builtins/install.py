@@ -88,12 +88,6 @@ def _doppel_cmd(env, buildfile):
     return wrapper
 
 
-def _rm_cmd(env, buildfile):
-    rm = env.tool('rm')
-    cmd = buildfile.cmd_var(rm)
-    return lambda *args, **kwargs: rm(*args, cmd=cmd, **kwargs)
-
-
 def _install_commands(install_outputs, doppel):
     def install_line(output):
         cmd = doppel(output.install_kind)
@@ -148,7 +142,7 @@ def make_install_rule(build_inputs, buildfile, env):
     )
     buildfile.rule(
         target='uninstall',
-        recipe=[_uninstall_command(install_outputs, _rm_cmd(env, buildfile))],
+        recipe=[_uninstall_command(install_outputs, env.tool('rm'))],
         phony=True
     )
 
@@ -178,6 +172,6 @@ def ninja_install_rule(build_inputs, buildfile, env):
     ninja.command_build(
         buildfile, env,
         output='uninstall',
-        command=_uninstall_command(install_outputs, _rm_cmd(env, buildfile)),
+        command=_uninstall_command(install_outputs, env.tool('rm')),
         phony=True
     )

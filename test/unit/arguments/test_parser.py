@@ -1,3 +1,4 @@
+import argparse
 import mock
 
 from .. import *
@@ -50,3 +51,33 @@ class TestFile(TestCase):
             self.assertEqual(parser.File()('foo'), path.abspath('foo'))
             with self.assertRaises(parser.ArgumentTypeError):
                 parser.File(True)('foo')
+
+
+class TestAddUserArgument(TestCase):
+    def test_parse(self):
+        p = argparse.ArgumentParser()
+        p.usage = 'parse'
+
+        parser.add_user_argument(p, '--foo', action='store_true')
+        self.assertEqual(p.parse_args(['--foo']), argparse.Namespace(foo=True))
+        self.assertEqual(p.parse_args(['--x-foo']),
+                         argparse.Namespace(foo=True))
+
+    def test_help(self):
+        p = argparse.ArgumentParser()
+        p.usage = 'help'
+
+        parser.add_user_argument(p, '--foo', action='store_true')
+        self.assertEqual(p.parse_args(['--foo']), argparse.Namespace(foo=True))
+        with self.assertRaises(SystemExit):
+            p.parse_args(['--x-foo'])
+
+    def test_invalid(self):
+        add_user_argument = parser.add_user_argument
+        p = argparse.ArgumentParser()
+        p.usage = 'parse'
+
+        self.assertRaises(ValueError, add_user_argument, p, '-f')
+        self.assertRaises(ValueError, add_user_argument, p, 'foo')
+        self.assertRaises(ValueError, add_user_argument, p, '--foo', '-f')
+        self.assertRaises(ValueError, add_user_argument, p, '--x-foo')

@@ -16,7 +16,7 @@ def list_backends():
         # better, but setuptools < 11.0 won't let you upgrade setuptools during
         # bfg's installation. Since Ubuntu 14.04 is supported until 2019 and
         # has setuptools 2.2 by default, we're stuck with this for a while.
-        except (DistributionNotFound, ImportError):
+        except (DistributionNotFound, ImportError):  # pragma: no cover
             pass
 
     def sort_key(x):

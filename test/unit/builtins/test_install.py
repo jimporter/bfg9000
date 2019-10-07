@@ -18,3 +18,11 @@ class TestInstall(BuiltinTest):
         exe2 = file_types.Executable(Path('exe2', Root.srcdir), None)
         self.assertEqual(self.builtin_dict['install'](exe1, exe2),
                          (exe1, exe2))
+
+    def test_invalid(self):
+        phony = file_types.Phony('name')
+        self.assertRaises(TypeError, self.builtin_dict['install'], phony)
+
+        exe = file_types.Executable(Path('exe', Root.srcdir), None,
+                                    external=True)
+        self.assertRaises(ValueError, self.builtin_dict['install'], exe)

@@ -240,6 +240,22 @@ class TestSafeFormat(TestCase):
         self.assertEqual(safe_str.safe_format('a{0}z', MyLiteral()),
                          jbos('a', foo, 'z'))
 
+    def test_name(self):
+        self.assertEqual(safe_str.safe_format('{f}', f='foo'), 'foo')
+        self.assertEqual(safe_str.safe_format('a{f}z', f='foo'), 'afooz')
+
+        foo = literal('foo')
+        self.assertEqual(safe_str.safe_format('{f}', f=foo), foo)
+        self.assertEqual(safe_str.safe_format('a{f}z', f=foo),
+                         jbos('a', foo, 'z'))
+
+        self.assertEqual(safe_str.safe_format('{f}', f=MyString()), 'foo')
+        self.assertEqual(safe_str.safe_format('a{f}z', f=MyString()), 'afooz')
+
+        self.assertEqual(safe_str.safe_format('{f}', f=MyLiteral()), foo)
+        self.assertEqual(safe_str.safe_format('a{f}z', f=MyLiteral()),
+                         jbos('a', foo, 'z'))
+
     def test_invalid(self):
         self.assertRaises(ValueError, safe_str.safe_format, '{}{0}', 'foo')
         self.assertRaises(ValueError, safe_str.safe_format, '{0}{}', 'foo')

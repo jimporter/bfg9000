@@ -218,5 +218,5 @@ try:
             dependencies=solution.dependencies(rule.extra_deps),
         )
         solution[rule.output[0]] = project
-except ImportError:
+except ImportError:  # pragma: no cover
     pass

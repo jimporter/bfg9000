@@ -594,5 +594,5 @@ try:
             dependencies=solution.dependencies(deps),
         )
         solution[output] = project
-except ImportError:
+except ImportError:  # pragma: no cover
     pass

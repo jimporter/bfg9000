@@ -3,6 +3,7 @@ from collections import OrderedDict
 
 from .. import *
 
+from bfg9000.path import Path
 from bfg9000.safe_str import jbos, literal, shell_literal
 from bfg9000.shell import posix
 from bfg9000.shell.list import shell_list
@@ -140,6 +141,10 @@ class TestEscapeLine(TestCase):
             self.assertEqual(posix.escape_line(s), shell_list([jbos(
                 shell_literal(r'foo\\bar'), literal(r'baz\quux')
             )]))
+
+    def test_path(self):
+        self.assertEqual(posix.escape_line(Path('foo')),
+                         shell_list([Path('foo')]))
 
     def test_iterable(self):
         self.assertEqual(posix.escape_line(['foo', 'bar']), ['foo', 'bar'])
