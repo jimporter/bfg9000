@@ -69,8 +69,8 @@ class TestAddUserArgument(TestCase):
 
         parser.add_user_argument(p, '--foo', action='store_true')
         self.assertEqual(p.parse_args(['--foo']), argparse.Namespace(foo=True))
-        with self.assertRaises(SystemExit):
-            p.parse_args(['--x-foo'])
+        self.assertEqual(p.parse_known_args(['--x-foo']),
+                         (argparse.Namespace(foo=False), ['--x-foo']))
 
     def test_invalid(self):
         add_user_argument = parser.add_user_argument

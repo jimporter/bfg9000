@@ -1,3 +1,5 @@
+import mock
+
 from .. import *
 
 from bfg9000.tools.doppel import Doppel
@@ -9,7 +11,8 @@ class TestDoppel(CrossPlatformTestCase):
                                        **kwargs)
 
     def setUp(self):
-        self.doppel = Doppel(self.env)
+        with mock.patch('bfg9000.shell.which', return_value=['command']):
+            self.doppel = Doppel(self.env)
 
     def test_data_args(self):
         self.assertEqual(type(self.doppel.data_args), list)
