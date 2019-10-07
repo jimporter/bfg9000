@@ -1,6 +1,7 @@
 [run]
 source = bfg9000
 parallel = True
+branch = True
 
 [paths]
 source =
