@@ -3,7 +3,7 @@ from collections import OrderedDict
 from .. import *
 
 from bfg9000.shell import windows
-from bfg9000.safe_str import shell_literal
+from bfg9000.safe_str import jbos, literal, shell_literal
 from bfg9000.shell.list import shell_list
 
 
@@ -121,6 +121,12 @@ class TestEscapeLine(TestCase):
     def test_string(self):
         self.assertEqual(windows.escape_line('foo bar'),
                          shell_list([shell_literal('foo bar')]))
+
+    def test_jbos(self):
+        self.assertEqual(
+            windows.escape_line(jbos('foo', literal('bar'))),
+            shell_list([ jbos(shell_literal('foo'), literal('bar')) ])
+        )
 
     def test_iterable(self):
         self.assertEqual(windows.escape_line(['foo', 'bar']), ['foo', 'bar'])

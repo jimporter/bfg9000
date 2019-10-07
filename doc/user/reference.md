@@ -1181,6 +1181,80 @@ source files and not have to worry about manually rerunning bfg9000.
 Log an informational message with the value *message*. If *show_stack* is true,
 show the stack trace where the message was logged from.
 
+### InstallRoot
+
+An enumeration of root directories for [*Path*](#Path) objects, to be used
+during installation. Possible values are:
+
+* *prefix*: A path relative to the prefix where the build will be installed
+* *exec_prefix*: A path relative to the prefix where executable code (binaries
+  and libraries) will be installed
+* *bindir*: A path relative to where binaries will be installed
+* *libdir*: A path relative to where libraries will be installed
+* *includedir*: A path relative to where header files will be installed
+
+### Path(*path*, [*root*], [*destdir*]) { #Path }
+
+Create a new path object for a given *path*. *root* may be a value in the
+[*Root*](#Root) or [*InstallRoot*](#InstallRoot) enumerations. When the root is
+a value in *InstallRoot*, you can also specify *destdir*; if true, this path
+will be prepended with [`$DESTDIR`](environment-vars.md#destdir) on platforms
+that support destdirs.
+
+#### *Path*.addext(*ext*) { #Path-addext }
+
+Append the extension *ext* to this path and return the new path. Note that *ext*
+should include the leading dot, e.g. `'.txt'`.
+
+#### *Path*.append(*path*) { #Path-append }
+
+Append a new path component to this path and return the result.
+
+#### *Path*.basename() { #Path-basename }
+
+Return the basename (the last path component) of this path.
+
+#### *Path*.ext() { #Path-ext }
+
+Return the extension of this path, if any; otherwise, return `''`.
+
+#### *Path*.parent() { #Path-parent }
+
+Return the parent of this path as a new *Path* object.
+
+#### *Path*.relpath(*start*, [*prefix*]) { #Path-relpath }
+
+Return a string representing this path's location relative to a starting path
+*start*. Both paths should have the same [*Root*](#Root)
+
+#### *Path*.reroot(*root*) { #Path-reroot }
+
+Return a new *Path* object with the same path suffix as this path, but with the
+path root set to *root*.
+
+#### *Path*.root { #Path-root }
+
+Return the [*Root*](#Root) of this path.
+
+#### *Path*.split() { #Path-split }
+
+Split this path's [suffix](#Path-suffix) into a list of its components.
+
+#### *Path*.splitleaf()
+
+Split the leaf component of this path and return the parent and leaf. Equivalent
+to `(path.parent(), path.basename())`.
+
+#### *Path*.suffix { #Path-suffix }
+
+Return the suffix of this path (the portion that would be appended to the path's
+[root](#Path-root).
+
+#### *Path*.stripext([*replace*]) { #Path-stripext }
+
+Remove the extension from this path and replace it with an optional new
+extension specified in *replace*, returning the newly-created *Path* object.
+
 ### project(*name*, [*version*]) { #project }
 Availability: `build.bfg`
 {: .subtitle}
@@ -1189,6 +1263,27 @@ Set the name (and optionally the version) of the project. If you don't call
 this function to specify a project name, it defaults to the name of the
 project's source directory. This is primarily useful for creating [source
 distributions](writing.md#distributing-your-source).
+
+### Root
+
+An enumeration of root directories for [*Path*](#Path) objects. Possible values
+are:
+
+* *srcdir*: A path relative to the project's source directory
+* *builddir*: A path relative to the build directory
+* *absolute*: An absolute path
+
+### safe_format(*fmt*, ...) { #safe_format }
+
+Safely format a string *fmt*, as with [*str.format*][str-format]. Unlike
+*str.format* however, this converts placeholders to string via
+[*safe_str*](#safe_str), ensuring that the result is correctly-escaped when
+used in a build script.
+
+### safe_str(*s*) { #safe_str }
+
+Convert an object *s* into a "safe" string, if possible. Safe strings are used
+by the build backends to correctly handle escaping special characters as needed.
 
 ### warning(*message*) { #warning }
 
@@ -1348,4 +1443,5 @@ specifier.
 [pkg-config]: https://www.freedesktop.org/wiki/Software/pkg-config/
 [add_argument]: https://docs.python.org/library/argparse.html#the-add-argument-method
 [namespace]: https://docs.python.org/library/argparse.html#argparse.Namespace
+[str-format]: https://docs.python.org/library/stdtypes.html#str.format
 [subprocess-CalledProcessError]: https://docs.python.org/library/subprocess.html#subprocess.CalledProcessError

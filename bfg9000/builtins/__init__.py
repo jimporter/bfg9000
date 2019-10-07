@@ -3,8 +3,7 @@ import pkgutil
 import warnings
 
 from . import builtin
-from .. import exceptions
-from .. import log
+from .. import exceptions, log, path, safe_str
 from ..objutils import memoize
 
 
@@ -39,3 +38,8 @@ for i in dir(exceptions):
     i = getattr(exceptions, i)
     if isinstance(i, type):
         builtin.function(context='*')(i)
+
+for i in (path.Root, path.InstallRoot, safe_str.safe_str,
+          safe_str.safe_format):
+    builtin.function(context='*')(i)
+builtin.function(context='*', name='Path')(path.Path)

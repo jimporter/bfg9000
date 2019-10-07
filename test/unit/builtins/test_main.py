@@ -4,6 +4,8 @@ import mock
 from .common import BuiltinTest
 from bfg9000 import builtins
 from bfg9000 import exceptions
+from bfg9000.path import Path, Root, InstallRoot
+from bfg9000.safe_str import safe_str, safe_format
 
 
 class TestBuiltin(BuiltinTest):
@@ -46,4 +48,13 @@ class TestBuiltin(BuiltinTest):
         for name in dir(exceptions):
             t = getattr(exceptions, name)
             if isinstance(t, type):
-                self.assertTrue(self.builtin_dict[name] is t)
+                self.assertIs(self.builtin_dict[name], t)
+
+    def test_path(self):
+        self.assertIs(self.builtin_dict['Path'], Path)
+        self.assertIs(self.builtin_dict['Root'], Root)
+        self.assertIs(self.builtin_dict['InstallRoot'], InstallRoot)
+
+    def test_safe_str(self):
+        self.assertIs(self.builtin_dict['safe_str'], safe_str)
+        self.assertIs(self.builtin_dict['safe_format'], safe_format)

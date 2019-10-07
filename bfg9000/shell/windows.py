@@ -8,7 +8,7 @@ from six import iteritems, string_types
 
 from .list import shell_list
 from .. import iterutils
-from ..safe_str import safe_str, shell_literal
+from ..safe_str import jbos, safe_str, shell_literal
 
 __all__ = ['split', 'join', 'listify', 'inner_quote', 'inner_quote_info',
            'wrap_quotes', 'quote', 'quote_info', 'escape_line', 'join_lines',
@@ -125,6 +125,9 @@ def escape_line(line, listify=False):
     line = safe_str(line)
     if isinstance(line, string_types):
         line = shell_literal(line)
+    elif isinstance(line, jbos):
+        line = jbos(*(shell_literal(i) if isinstance(i, string_types) else i
+                      for i in line.bits))
     return shell_list([line])
 
 

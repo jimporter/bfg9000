@@ -3,7 +3,7 @@ from collections import OrderedDict
 
 from .. import *
 
-from bfg9000.safe_str import jbos, shell_literal
+from bfg9000.safe_str import jbos, literal, shell_literal
 from bfg9000.shell import posix
 from bfg9000.shell.list import shell_list
 
@@ -104,20 +104,42 @@ class TestWrapQuotes(TestCase):
 
 
 class TestEscapeLine(TestCase):
+    class FakePlatform(object):
+        def __init__(self, family):
+            self.family = family
+
     def test_string(self):
-        class FakePlatform(object):
-            def __init__(self, family):
-                self.family = family
+        self.assertEqual(posix.escape_line('foobar'),
+                         shell_list([shell_literal(r'foobar')]))
 
         with mock.patch('bfg9000.shell.posix.platform_info',
-                        return_value=FakePlatform('posix')):
+                        return_value=self.FakePlatform('posix')):
             self.assertEqual(posix.escape_line(r'foo\bar'),
                              shell_list([shell_literal(r'foo\bar')]))
 
         with mock.patch('bfg9000.shell.posix.platform_info',
-                        return_value=FakePlatform('windows')):
+                        return_value=self.FakePlatform('windows')):
             self.assertEqual(posix.escape_line(r'foo\bar'),
                              shell_list([shell_literal(r'foo\\bar')]))
+
+    def test_jbos(self):
+        self.assertEqual(
+            posix.escape_line(jbos('foo', literal('bar'))),
+            shell_list([ jbos(shell_literal('foo'), literal('bar')) ])
+        )
+
+        s = jbos(r'foo\bar', literal(r'baz\quux'))
+        with mock.patch('bfg9000.shell.posix.platform_info',
+                        return_value=self.FakePlatform('posix')):
+            self.assertEqual(posix.escape_line(s), shell_list([jbos(
+                shell_literal(r'foo\bar'), literal(r'baz\quux')
+            )]))
+
+        with mock.patch('bfg9000.shell.posix.platform_info',
+                        return_value=self.FakePlatform('windows')):
+            self.assertEqual(posix.escape_line(s), shell_list([jbos(
+                shell_literal(r'foo\\bar'), literal(r'baz\quux')
+            )]))
 
     def test_iterable(self):
         self.assertEqual(posix.escape_line(['foo', 'bar']), ['foo', 'bar'])

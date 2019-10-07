@@ -1,0 +1,9 @@
+# -*- python -*-
+
+command('foo', cmds=[
+    safe_format('echo {}', generic_file('foo.txt')),
+])
+
+command('bar', cmds=[
+    safe_format('echo {}', Path('bar.txt', Root.srcdir)),
+])

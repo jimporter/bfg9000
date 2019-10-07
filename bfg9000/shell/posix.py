@@ -71,20 +71,27 @@ def quote(s):
     return quote_info(s)[0]
 
 
+def _escape_word(word):
+    # Since we can sometimes use an sh-style shell even on Windows (e.g.
+    # with the Make backend), we want to escape backslashes when writing an
+    # already "escaped" command line. Otherwise, Windows users would be
+    # pretty surprised to find that all the paths they specified like
+    # C:\foo\bar are broken!
+    if platform_info().family == 'windows':
+        word = word.replace('\\', '\\\\')
+    return shell_literal(word)
+
+
 def escape_line(line, listify=False):
     if iterutils.isiterable(line):
         return iterutils.listify(line) if listify else line
 
     line = safe_str(line)
     if isinstance(line, string_types):
-        # Since we can sometimes use an sh-style shell even on Windows (e.g.
-        # with the Make backend), we want to escape backslashes when writing an
-        # already "escaped" command line. Otherwise, Windows users would be
-        # pretty surprised to find that all the paths they specified like
-        # C:\foo\bar are broken!
-        if platform_info().family == 'windows':
-            line = line.replace('\\', '\\\\')
-        line = shell_literal(line)
+        line = _escape_word(line)
+    elif isinstance(line, jbos):
+        line = jbos(*(_escape_word(i) if isinstance(i, string_types) else i
+                      for i in line.bits))
     return shell_list([line])
 
 

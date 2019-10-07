@@ -1,5 +1,4 @@
 import os.path
-import re
 
 from . import *
 
@@ -11,22 +10,19 @@ class TestCommand(IntegrationTest):
         )
 
     def test_hello(self):
-        assertRegex(self, self.build('hello'),
-                    re.compile(r'^\s*hello$', re.MULTILINE))
+        assertRegex(self, self.build('hello'), r'(?m)^\s*hello$')
 
     def test_world(self):
-        assertRegex(self, self.build('world'),
-                    re.compile(r'^\s*world$', re.MULTILINE))
+        assertRegex(self, self.build('world'), r'(?m)^\s*world$')
 
     def test_script(self):
-        assertRegex(self, self.build('script'),
-                    re.compile(r'^\s*hello, world!$', re.MULTILINE))
+        assertRegex(self, self.build('script'), r'(?m)^\s*hello, world!$')
         self.assertExists(output_file('file'))
 
     def test_alias(self):
         output = self.build('hello-world')
-        assertRegex(self, output, re.compile(r'^\s*hello$', re.MULTILINE))
-        assertRegex(self, output, re.compile(r'^\s*world$', re.MULTILINE))
+        assertRegex(self, output, r'(?m)^\s*hello$')
+        assertRegex(self, output, r'(?m)^\s*world$')
 
 
 @skip_if_backend('msbuild')
@@ -38,17 +34,14 @@ class TestRunExecutable(IntegrationTest):
         self.assertExists(output_file('file.txt'))
 
     def test_cxx(self):
-        assertRegex(self, self.build('cxx'),
-                    re.compile(r'^\s*hello from c\+\+!$', re.MULTILINE))
+        assertRegex(self, self.build('cxx'), r'(?m)^\s*hello from c\+\+!$')
 
     def test_java(self):
-        assertRegex(self, self.build('java'),
-                    re.compile(r'^\s*hello from java!$', re.MULTILINE))
+        assertRegex(self, self.build('java'), r'(?m)^\s*hello from java!$')
 
     def test_java_classlist(self):
         assertRegex(self, self.build('java-classlist'),
-                    re.compile(r'^\s*hello from java!$', re.MULTILINE))
+                    r'(?m)^\s*hello from java!$')
 
     def test_python(self):
-        assertRegex(self, self.build('python'),
-                    re.compile(r'^\s*hello from python!$', re.MULTILINE))
+        assertRegex(self, self.build('python'), r'(?m)^\s*hello from python!$')
