@@ -1082,12 +1082,75 @@ source files and not have to worry about manually rerunning bfg9000.</p>
 <h3 id="info">info(<em>message</em>, [<em>show_stack</em>])<a class="headerlink" href="#info" title="Permanent link">§</a></h3>
 <p>Log an informational message with the value <em>message</em>. If <em>show_stack</em> is true,
 show the stack trace where the message was logged from.</p>
+<h3 id="installroot">InstallRoot<a class="headerlink" href="#installroot" title="Permanent link">§</a></h3>
+<p>An enumeration of root directories for <a href="#Path"><em>Path</em></a> objects, to be used
+during installation. Possible values are:</p>
+<ul>
+<li><em>prefix</em>: A path relative to the prefix where the build will be installed</li>
+<li><em>exec_prefix</em>: A path relative to the prefix where executable code (binaries
+  and libraries) will be installed</li>
+<li><em>bindir</em>: A path relative to where binaries will be installed</li>
+<li><em>libdir</em>: A path relative to where libraries will be installed</li>
+<li><em>includedir</em>: A path relative to where header files will be installed</li>
+</ul>
+<h3 id="Path">Path(<em>path</em>, [<em>root</em>], [<em>destdir</em>])<a class="headerlink" href="#Path" title="Permanent link">§</a></h3>
+<p>Create a new path object for a given <em>path</em>. <em>root</em> may be a value in the
+<a href="#Root"><em>Root</em></a> or <a href="#InstallRoot"><em>InstallRoot</em></a> enumerations. When the root is
+a value in <em>InstallRoot</em>, you can also specify <em>destdir</em>; if true, this path
+will be prepended with <a href="../environment-vars/#destdir"><code>$DESTDIR</code></a> on platforms
+that support destdirs.</p>
+<h4 id="Path-addext"><em>Path</em>.addext(<em>ext</em>)<a class="headerlink" href="#Path-addext" title="Permanent link">§</a></h4>
+<p>Append the extension <em>ext</em> to this path and return the new path. Note that <em>ext</em>
+should include the leading dot, e.g. <code>'.txt'</code>.</p>
+<h4 id="Path-append"><em>Path</em>.append(<em>path</em>)<a class="headerlink" href="#Path-append" title="Permanent link">§</a></h4>
+<p>Append a new path component to this path and return the result.</p>
+<h4 id="Path-basename"><em>Path</em>.basename()<a class="headerlink" href="#Path-basename" title="Permanent link">§</a></h4>
+<p>Return the basename (the last path component) of this path.</p>
+<h4 id="Path-ext"><em>Path</em>.ext()<a class="headerlink" href="#Path-ext" title="Permanent link">§</a></h4>
+<p>Return the extension of this path, if any; otherwise, return <code>''</code>.</p>
+<h4 id="Path-parent"><em>Path</em>.parent()<a class="headerlink" href="#Path-parent" title="Permanent link">§</a></h4>
+<p>Return the parent of this path as a new <em>Path</em> object.</p>
+<h4 id="Path-relpath"><em>Path</em>.relpath(<em>start</em>, [<em>prefix</em>])<a class="headerlink" href="#Path-relpath" title="Permanent link">§</a></h4>
+<p>Return a string representing this path's location relative to a starting path
+<em>start</em>. Both paths should have the same <a href="#Root"><em>Root</em></a></p>
+<h4 id="Path-reroot"><em>Path</em>.reroot(<em>root</em>)<a class="headerlink" href="#Path-reroot" title="Permanent link">§</a></h4>
+<p>Return a new <em>Path</em> object with the same path suffix as this path, but with the
+path root set to <em>root</em>.</p>
+<h4 id="Path-root"><em>Path</em>.root<a class="headerlink" href="#Path-root" title="Permanent link">§</a></h4>
+<p>Return the <a href="#Root"><em>Root</em></a> of this path.</p>
+<h4 id="Path-split"><em>Path</em>.split()<a class="headerlink" href="#Path-split" title="Permanent link">§</a></h4>
+<p>Split this path's <a href="#Path-suffix">suffix</a> into a list of its components.</p>
+<h4 id="pathsplitleaf"><em>Path</em>.splitleaf()<a class="headerlink" href="#pathsplitleaf" title="Permanent link">§</a></h4>
+<p>Split the leaf component of this path and return the parent and leaf. Equivalent
+to <code>(path.parent(), path.basename())</code>.</p>
+<h4 id="Path-suffix"><em>Path</em>.suffix<a class="headerlink" href="#Path-suffix" title="Permanent link">§</a></h4>
+<p>Return the suffix of this path (the portion that would be appended to the path's
+<a href="#Path-root">root</a>.</p>
+<h4 id="Path-stripext"><em>Path</em>.stripext([<em>replace</em>])<a class="headerlink" href="#Path-stripext" title="Permanent link">§</a></h4>
+<p>Remove the extension from this path and replace it with an optional new
+extension specified in <em>replace</em>, returning the newly-created <em>Path</em> object.</p>
 <h3 id="project">project(<em>name</em>, [<em>version</em>])<a class="headerlink" href="#project" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Set the name (and optionally the version) of the project. If you don't call
 this function to specify a project name, it defaults to the name of the
 project's source directory. This is primarily useful for creating <a href="../writing/#distributing-your-source">source
 distributions</a>.</p>
+<h3 id="root">Root<a class="headerlink" href="#root" title="Permanent link">§</a></h3>
+<p>An enumeration of root directories for <a href="#Path"><em>Path</em></a> objects. Possible values
+are:</p>
+<ul>
+<li><em>srcdir</em>: A path relative to the project's source directory</li>
+<li><em>builddir</em>: A path relative to the build directory</li>
+<li><em>absolute</em>: An absolute path</li>
+</ul>
+<h3 id="safe_format">safe_format(<em>fmt</em>, ...)<a class="headerlink" href="#safe_format" title="Permanent link">§</a></h3>
+<p>Safely format a string <em>fmt</em>, as with <a href="https://docs.python.org/library/stdtypes.html#str.format"><em>str.format</em></a>. Unlike
+<em>str.format</em> however, this converts placeholders to string via
+<a href="#safe_str"><em>safe_str</em></a>, ensuring that the result is correctly-escaped when
+used in a build script.</p>
+<h3 id="safe_str">safe_str(<em>s</em>)<a class="headerlink" href="#safe_str" title="Permanent link">§</a></h3>
+<p>Convert an object <em>s</em> into a "safe" string, if possible. Safe strings are used
+by the build backends to correctly handle escaping special characters as needed.</p>
 <h3 id="warning">warning(<em>message</em>)<a class="headerlink" href="#warning" title="Permanent link">§</a></h3>
 <p>Log a warning with the value <em>message</em> and the stack trace where the warning was
 emitted.</p>
