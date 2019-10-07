@@ -49,11 +49,11 @@ class BaseCompile(Edge):
 
 
 class Compile(BaseCompile):
-    def __init__(self, build, name, includes, header_files, pch, libs,
+    def __init__(self, build, name, includes, include_deps, pch, libs,
                  packages, options, lang=None, extra_deps=None,
                  description=None):
         self.includes = includes
-        self.header_files = header_files
+        self.include_deps = include_deps
         self.packages = packages
         self.user_options = options
 
@@ -84,8 +84,10 @@ class Compile(BaseCompile):
             return builtins['precompiled_header'](file, file, **kwargs)
 
         includes = kwargs.get('includes')
-        kwargs['header_files'] = [i for i in iterate(includes)
-                                  if isinstance(i, SourceCodeFile)]
+        kwargs['include_deps'] = [
+            i for i in iterate(includes)
+            if isinstance(i, SourceCodeFile) or getattr(i, 'creator', None)
+        ]
         convert_each(kwargs, 'includes', builtins['header_directory'])
 
         convert_each(kwargs, 'libs', builtins['library'], lang=src_lang)
@@ -293,7 +295,7 @@ def make_compile(rule, build_inputs, buildfile, env):
     deps.append(rule.file)
     if getattr(rule, 'pch', None):
         deps.append(rule.pch)
-    deps.extend(getattr(rule, 'header_files', []))
+    deps.extend(getattr(rule, 'include_deps', []))
     if compiler.needs_libs:
         deps.extend(rule.libs)
 
@@ -349,7 +351,7 @@ def ninja_compile(rule, build_inputs, buildfile, env):
     if getattr(rule, 'pch_source', None):
         inputs = [rule.pch_source]
         implicit_deps.append(rule.file)
-    implicit_deps.extend(getattr(rule, 'header_files', []))
+    implicit_deps.extend(getattr(rule, 'include_deps', []))
     if compiler.needs_libs:
         implicit_deps.extend(rule.libs)
 

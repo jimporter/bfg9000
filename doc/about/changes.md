@@ -29,6 +29,8 @@ in progress
 - Fix escaping of `~` in Makefiles
 - Symbolic links (e.g. from versioned shared libraries) are now properly
   installed as symlinks
+- Generated header directories are now included as dependencies of compilation
+  steps
 
 ---
 

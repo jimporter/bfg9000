@@ -86,12 +86,20 @@ class TestObjectFile(CompileTest):
         self.assertEqual(result.creator.includes, [
             file_types.HeaderDirectory(Path('include', Root.srcdir))
         ])
+        self.assertEqual(result.creator.include_deps, [])
 
         hdr = self.builtin_dict['header_file']('include/main.hpp')
         result = object_file(file='main.cpp', includes=hdr)
         self.assertEqual(result.creator.includes, [
             file_types.HeaderDirectory(Path('include', Root.srcdir))
         ])
+        self.assertEqual(result.creator.include_deps, [hdr])
+
+        inc = self.builtin_dict['header_directory']('include')
+        inc.creator = 'foo'
+        result = object_file(file='main.cpp', includes=inc)
+        self.assertEqual(result.creator.includes, [inc])
+        self.assertEqual(result.creator.include_deps, [inc])
 
     def test_libs(self):
         self.env.library_mode = LibraryMode(True, False)

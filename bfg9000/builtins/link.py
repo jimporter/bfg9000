@@ -566,7 +566,7 @@ try:
 
         deps = chain(
             (i.creator.file for i in rule.files),
-            chain.from_iterable(i.creator.header_files for i in rule.files),
+            chain.from_iterable(i.creator.include_deps for i in rule.files),
             chain.from_iterable(i.creator.extra_deps for i in rule.files),
             ifilter(None, (getattr(i.creator, 'pch_source', None)
                            for i in rule.files)),
