@@ -125,6 +125,9 @@ class ModuleDefFile(File):
 
 
 class Binary(File):
+    install_kind = 'data'
+    install_root = _InstallRoot.libdir
+
     def __init__(self, path, format, lang=None, external=False):
         File.__init__(self, path, external)
         self.format = format
@@ -147,9 +150,6 @@ class ObjectFileList(ObjectFile):
 # similar process applied to it) so that it can be used by a linker/loader,
 # installed to the system, etc.
 class LinkedBinary(Binary):
-    install_kind = 'program'
-    install_root = _InstallRoot.libdir
-
     def __init__(self, *args, **kwargs):
         Binary.__init__(self, *args, **kwargs)
         self.runtime_deps = []
@@ -162,6 +162,7 @@ class LinkedBinary(Binary):
 
 
 class Executable(LinkedBinary):
+    install_kind = 'program'
     install_root = _InstallRoot.bindir
 
 
@@ -175,10 +176,13 @@ class Library(LinkedBinary):
 # Multiple inheritance is a sign that we should perhaps switch to a trait-based
 # system though...
 class ExecutableLibrary(Executable, Library):
+    install_kind = 'program'
     install_root = _InstallRoot.libdir
 
 
 class SharedLibrary(Library):
+    install_kind = 'program'
+
     @property
     def runtime_file(self):
         return self
