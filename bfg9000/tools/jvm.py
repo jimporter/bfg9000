@@ -312,14 +312,12 @@ class JvmPackageResolver(object):
             fullpath = os.path.join(base, jarname)
             if os.path.exists(fullpath):
                 return Library(Path(fullpath, Root.absolute),
-                               self.builder.object_format,
-                               external=True)
+                               self.builder.object_format)
 
         for path in self.classpath:
             if os.path.basename(path) == jarname and os.path.exists(path):
                 return Library(Path(path, Root.absolute),
-                               self.builder.object_format,
-                               external=True)
+                               self.builder.object_format)
 
         raise PackageResolutionError("unable to find library '{}'"
                                      .format(name))

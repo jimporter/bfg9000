@@ -22,7 +22,7 @@ class InstallOutputs(object):
         for i in item.all:
             if not isinstance(i, File):
                 raise TypeError('expected a file or directory')
-            if i.external:
+            if i.path.root not in (path.Root.srcdir, path.Root.builddir):
                 raise ValueError('external files are not installable')
 
             if explicit:

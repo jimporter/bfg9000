@@ -211,10 +211,9 @@ class TestMsvcCompiler(CrossPlatformTestCase):
 
     def test_flags_include_pch(self):
         p = self.Path('/path/to/header.hpp')
-        self.assertEqual(self.compiler.flags(opts.option_list(
-            opts.pch(file_types.MsvcPrecompiledHeader(p, None, 'header',
-                                                      'native'))
-        )), ['/Yuheader'])
+        self.assertEqual(self.compiler.flags(opts.option_list(opts.pch(
+            file_types.MsvcPrecompiledHeader(p, p, 'header', 'native', 'c++')
+        ))), ['/Yuheader'])
 
     def test_flags_sanitize(self):
         self.assertEqual(self.compiler.flags(opts.option_list(

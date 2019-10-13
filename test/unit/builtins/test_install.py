@@ -23,6 +23,5 @@ class TestInstall(BuiltinTest):
         phony = file_types.Phony('name')
         self.assertRaises(TypeError, self.builtin_dict['install'], phony)
 
-        exe = file_types.Executable(Path('exe', Root.srcdir), None,
-                                    external=True)
+        exe = file_types.Executable(Path('/path/to/exe', Root.absolute), None)
         self.assertRaises(ValueError, self.builtin_dict['install'], exe)

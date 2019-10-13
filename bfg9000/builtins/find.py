@@ -103,7 +103,7 @@ def _find_files(paths, filter, flat, as_object):
     filetype = File if isinstance(as_object, bool) else as_object
 
     def do_filter(files, type):
-        cls = filetype if type == 'f' else lambda p: Directory(p, None)
+        cls = filetype if type == 'f' else Directory
         for name, path in files:
             fileobj = cls(Path(path, Root.srcdir))
             matched = filter(name, path, type)

@@ -783,7 +783,7 @@ class CcPackageResolver(object):
         for base in search_dirs:
             if os.path.exists(os.path.join(base, name)):
                 return HeaderDirectory(Path(base, Root.absolute), None,
-                                       system=True, external=True)
+                                       system=True)
 
         raise PackageResolutionError("unable to find header '{}'".format(name))
 
@@ -815,7 +815,7 @@ class CcPackageResolver(object):
                 if os.path.exists(fullpath):
                     return libkind(Path(fullpath, Root.absolute),
                                    format=self.builder.object_format,
-                                   external=True, **extra_kwargs)
+                                   **extra_kwargs)
 
         raise PackageResolutionError("unable to find library '{}'"
                                      .format(name))

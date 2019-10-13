@@ -9,7 +9,7 @@ from ..file_types import Directory, Executable
 from ..iterutils import default_sentinel, iterate
 from ..objutils import objectify
 from ..packages import CommonPackage, Framework, Package, PackageKind
-from ..path import Path, Root
+from ..path import abspath, Path, Root
 from ..shell import which
 from ..versioning import check_version, SpecifierSet, Version
 
@@ -36,7 +36,7 @@ def package(env, name, version=None, lang='c', kind=PackageKind.any.name,
 def system_executable(env, name, format=None):
     return Executable(
         Path(which([[name]], env.variables, resolve=True)[0], Root.absolute),
-        format or env.target_platform.object_format, external=True
+        format or env.target_platform.object_format
     )
 
 
@@ -100,7 +100,7 @@ def boost_package(env, name=None, version=None):
         compile_options = opts.option_list(opts.include_dir(header))
         link_options = opts.option_list()
         if libdir:
-            link_options.append(opts.lib_dir(Directory(Path(libdir))))
+            link_options.append(opts.lib_dir( Directory(abspath(libdir)) ))
     else:
         header = pkg.header(version_hpp, [incdir] if incdir else None)
 
