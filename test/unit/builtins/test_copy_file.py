@@ -29,9 +29,9 @@ class TestCopyFile(BuiltinTest):
 
 class TestCopyFiles(BuiltinTest):
     def make_file_list(self):
-        files = [file_types.File(Path(i, Root.builddir), None)
+        files = [file_types.File(Path(i, Root.builddir))
                  for i in ['file1', 'file2']]
-        src_files = [file_types.File(Path(i, Root.srcdir), None)
+        src_files = [file_types.File(Path(i, Root.srcdir))
                      for i in ['file1', 'file2']]
 
         file_list = self.builtin_dict['copy_files'](src_files)
