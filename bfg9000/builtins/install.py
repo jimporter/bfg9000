@@ -1,5 +1,4 @@
 import warnings
-from itertools import chain
 from six import itervalues
 
 from . import builtin
@@ -18,33 +17,33 @@ class InstallOutputs(object):
         self.explicit = []
         self.implicit = []
 
-    def add(self, item, explicit=True):
+    def add(self, item):
+        if item not in self.explicit:
+            self.explicit.append(item)
+
         for i in item.all:
-            if not isinstance(i, File):
-                raise TypeError('expected a file or directory')
-            if i.path.root not in (path.Root.srcdir, path.Root.builddir):
-                raise ValueError('external files are not installable')
+            self._add_implicit(i)
 
-            if explicit:
-                if i in self.implicit:
-                    self.implicit.remove(i)
-                if i not in self.explicit:
-                    self.explicit.append(i)
-            else:
-                if i not in self.explicit and i not in self.implicit:
-                    self.implicit.append(i)
+    def _add_implicit(self, item):
+        if not isinstance(item, File):
+            raise TypeError('expected a file or directory')
+        if item.path.root not in (path.Root.srcdir, path.Root.builddir):
+            raise ValueError('external files are not installable')
 
-            for j in i.install_deps:
-                self.add(j, explicit=False)
+        if item not in self.implicit:
+            self.implicit.append(item)
+
+        for i in item.install_deps:
+            self._add_implicit(i)
 
     def __nonzero__(self):
         return self.__bool__()
 
     def __bool__(self):
-        return bool(self.explicit) or bool(self.implicit)
+        return bool(self.implicit)
 
     def __iter__(self):
-        return chain(self.explicit, self.implicit)
+        return iter(self.implicit)
 
 
 def can_install(env):

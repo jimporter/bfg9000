@@ -367,12 +367,12 @@ def finalize_pkg_config(builtins, build, env):
     defaults = {
         'name': build['project'].name,
         'version': build['project'].version or '0.0',
-        'includes': [i for i in install
+
+        # Get all the explicitly-installed headers/libraries.
+        'includes': [i for i in install.explicit
                      if isinstance(i, (HeaderFile, HeaderDirectory))],
-        # Get all the explicitly-installed libraries, fetching the
-        # DualUseLibrary (i.e. the `parent`) if applicable.
-        'libs': uniques(getattr(i, 'parent', i) for i in install.explicit
-                        if isinstance(i, Library)),
+        'libs': [i for i in install.explicit
+                 if isinstance(i, (Library, DualUseLibrary))],
     }
 
     for info in build['pkg_config']:

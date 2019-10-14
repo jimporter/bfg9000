@@ -16,6 +16,14 @@ def pkg_config(args, path='pkgconfig'):
                          env=env).rstrip()
 
 
+def readPcFile(filename, field):
+    with open(filename) as f:
+        for line in f:
+            if line.startswith(field + ':'):
+                return line[len(field) + 1:].strip()
+    raise ValueError('unable to find {!r} field'.format(field))
+
+
 @skip_if_backend('msbuild')
 @skip_if(is_mingw, 'no libogg on mingw (yet)')
 class TestPkgConfig(IntegrationTest):
@@ -43,7 +51,10 @@ class TestPkgConfig(IntegrationTest):
     @skip_if(is_msvc, hide=True)
     def test_configure_dual(self):
         self.configure(extra_args=['--enable-shared', '--enable-static'])
-        self.assertExists(os.path.join('pkgconfig', 'hello.pc'))
+
+        hello = os.path.join('pkgconfig', 'hello.pc')
+        self.assertExists(hello)
+        self.assertEqual(readPcFile(hello, 'Libs'), "-L'${libdir}' -lhello")
 
         if env.host_platform.genus == 'linux':
             self.assertEqual(pkg_config(['hello', '--print-requires']), '')
@@ -130,7 +141,10 @@ class TestPkgConfigAuto(IntegrationTest):
     @skip_if(is_msvc, hide=True)
     def test_configure_dual(self):
         self.configure(extra_args=['--enable-shared', '--enable-static'])
-        self.assertExists(os.path.join('pkgconfig', 'hello.pc'))
+
+        hello = os.path.join('pkgconfig', 'hello.pc')
+        self.assertExists(hello)
+        self.assertEqual(readPcFile(hello, 'Libs'), "-L'${libdir}' -lhello")
 
         self.assertEqual(pkg_config(['hello', '--libs-only-l']), '-lhello')
         self.assertEqual(pkg_config(['hello', '--libs-only-l', '--static']),
