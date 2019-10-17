@@ -38,6 +38,7 @@ class TestSubdirs(IntegrationTest):
         with tarfile.open(self.target_path(dist)) as t:
             self.assertEqual(set(t.getnames()), {
                 '05_subdirs/build.bfg',
+                '05_subdirs/include',
                 '05_subdirs/include/library.hpp',
                 '05_subdirs/include/detail/export.hpp',
                 '05_subdirs/src/library.cpp',

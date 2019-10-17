@@ -24,25 +24,32 @@ class TestStaticFile(BuiltinTest):
         self.assertSameFile(static_file(self.build, File, p), expected)
         self.assertEqual(list(self.build.sources()), [self.bfgfile])
 
+    def test_no_dist(self):
+        p = Path('file.txt', Root.srcdir)
+        expected = File(p)
+        self.assertSameFile(static_file(self.build, File, p, dist=False),
+                            expected)
+        self.assertEqual(list(self.build.sources()), [self.bfgfile])
+
     def test_params_default(self):
         expected = SourceFile(Path('file.txt', Root.srcdir), 'c')
         self.assertSameFile(static_file(
-            self.build, SourceFile, 'file.txt', [('lang', 'c')]
+            self.build, SourceFile, 'file.txt', params=[('lang', 'c')]
         ), expected)
         self.assertEqual(list(self.build.sources()), [self.bfgfile, expected])
 
     def test_params_custom(self):
         expected = SourceFile(Path('file.txt', Root.srcdir), 'c++')
         self.assertSameFile(static_file(
-            self.build, SourceFile, 'file.txt', [('lang', 'c')],
-            {'lang': 'c++'}
+            self.build, SourceFile, 'file.txt', params=[('lang', 'c')],
+            kwargs={'lang': 'c++'}
         ), expected)
         self.assertEqual(list(self.build.sources()), [self.bfgfile, expected])
 
     def test_extra_kwargs(self):
         self.assertRaises(TypeError, static_file, self.build,
-                          SourceFile, 'file.txt', [('lang', 'c')],
-                          {'lang': 'c++', 'extra': 'value'})
+                          SourceFile, 'file.txt', params=[('lang', 'c')],
+                          kwargs={'lang': 'c++', 'extra': 'value'})
         self.assertEqual(list(self.build.sources()), [self.bfgfile])
 
 
@@ -91,28 +98,49 @@ class TestAutoFile(BuiltinTest):
         self.assertEqual(list(self.build.sources()), [self.bfgfile, expected])
 
 
-class TestSourceFile(BuiltinTest):
-    type = SourceFile
-    fn = 'source_file'
-    filename = 'file.cpp'
-    lang = 'c++'
+class TestGenericFile(BuiltinTest):
+    type = File
+    args = ()
+    fn = 'generic_file'
+    filename = 'file.txt'
 
     def test_identity(self):
-        expected = self.type(Path(self.filename, Root.srcdir), self.lang)
+        expected = self.type(Path(self.filename, Root.srcdir), *self.args)
         self.assertIs(self.builtin_dict[self.fn](expected), expected)
         self.assertEqual(list(self.build.sources()), [self.bfgfile])
 
     def test_basic(self):
-        expected = self.type(Path(self.filename, Root.srcdir), self.lang)
+        expected = self.type(Path(self.filename, Root.srcdir), *self.args)
         self.assertSameFile(self.builtin_dict[self.fn](self.filename),
                             expected)
         self.assertEqual(list(self.build.sources()), [self.bfgfile, expected])
 
+    def test_no_dist(self):
+        expected = self.type(Path(self.filename, Root.srcdir), *self.args)
+        self.assertSameFile(
+            self.builtin_dict[self.fn](self.filename, dist=False), expected
+        )
+        self.assertEqual(list(self.build.sources()), [self.bfgfile])
+
     def test_path(self):
         path = Path(self.filename, Root.srcdir)
-        expected = self.type(path, self.lang)
+        expected = self.type(path, *self.args)
         self.assertSameFile(self.builtin_dict[self.fn](path), expected)
         self.assertEqual(list(self.build.sources()), [self.bfgfile, expected])
+
+
+class TestModuleDefFile(TestGenericFile):
+    type = ModuleDefFile
+    fn = 'module_def_file'
+    filename = 'file.def'
+
+
+class TestSourceFile(TestGenericFile):
+    type = SourceFile
+    args = ('c++',)
+    fn = 'source_file'
+    filename = 'file.cpp'
+    lang = 'c++'
 
     def test_lang(self):
         expected = self.type(Path('file.goofy', Root.srcdir), self.lang)
@@ -126,11 +154,23 @@ class TestHeaderFile(TestSourceFile):
     type = HeaderFile
     fn = 'header_file'
     filename = 'file.hpp'
-    lang = 'c++'
 
 
 class TestReourceFile(TestSourceFile):
     type = ResourceFile
+    args = ('qrc',)
     fn = 'resource_file'
     filename = 'file.qrc'
     lang = 'qrc'
+
+
+class TestDirectory(TestGenericFile):
+    type = Directory
+    fn = 'directory'
+    filename = 'dir'
+
+
+class TestHeaderDirectory(TestDirectory):
+    type = HeaderDirectory
+    fn = 'header_directory'
+    filename = 'include'

@@ -15,7 +15,7 @@ _kind_to_file_type = {
 }
 
 
-def static_file(build, file_type, name, params=[], kwargs={}):
+def static_file(build, file_type, name, dist=True, params=[], kwargs={}):
     extra_args = []
     for key, default in params:
         extra_args.append(kwargs.pop(key, default))
@@ -26,7 +26,7 @@ def static_file(build, file_type, name, params=[], kwargs={}):
 
     path = Path.ensure(name, Root.srcdir)
     file = file_type(path, *extra_args)
-    if path.root == Root.srcdir:
+    if dist and path.root == Root.srcdir:
         build.add_source(file)
     return file
 
@@ -45,7 +45,7 @@ class FileList(list):
             for i in self:
                 if i.creator and i.creator.file.path == key:
                     return i
-            raise IndexError("{!r} not found".format(key))
+            raise IndexError('{!r} not found'.format(key))
         else:
             return list.__getitem__(self, key)
 
@@ -61,43 +61,43 @@ def make_immediate_file(build, env, file, mode='w', makedirs=True):
 
 @builtin.function('build_inputs')
 @builtin.type(File)
-def generic_file(build, name):
-    return static_file(build, File, name)
+def generic_file(build, name, dist=True):
+    return static_file(build, File, name, dist)
 
 
 @builtin.function('build_inputs')
 @builtin.type(SourceFile)
-def source_file(build, name, lang=None):
+def source_file(build, name, lang=None, dist=True):
     path = Path.ensure(name, Root.srcdir)
     lang = lang or known_langs.fromext(path.ext(), 'source')
-    return static_file(build, SourceFile, path, [('lang', lang)])
+    return static_file(build, SourceFile, path, dist, [('lang', lang)])
 
 
 @builtin.function('build_inputs')
 @builtin.type(ResourceFile)
-def resource_file(build, name, lang=None):
+def resource_file(build, name, lang=None, dist=True):
     path = Path.ensure(name, Root.srcdir)
     lang = lang or known_langs.fromext(path.ext(), 'resource')
-    return static_file(build, ResourceFile, path, [('lang', lang)])
+    return static_file(build, ResourceFile, path, dist, [('lang', lang)])
 
 
 @builtin.function('build_inputs')
 @builtin.type(HeaderFile)
-def header_file(build, name, lang=None):
+def header_file(build, name, lang=None, dist=True):
     path = Path.ensure(name, Root.srcdir)
     lang = lang or known_langs.fromext(path.ext(), 'header')
-    return static_file(build, HeaderFile, path, [('lang', lang)])
+    return static_file(build, HeaderFile, path, dist, [('lang', lang)])
 
 
 @builtin.function('build_inputs')
 @builtin.type(ModuleDefFile)
-def module_def_file(build, name):
-    return static_file(build, ModuleDefFile, name)
+def module_def_file(build, name, dist=True):
+    return static_file(build, ModuleDefFile, name, dist)
 
 
 @builtin.function('build_inputs')
 @builtin.type(File)
-def auto_file(build, name, lang=None):
+def auto_file(build, name, lang=None, dist=True):
     path = Path.ensure(name, Root.srcdir)
     if lang:
         kind = None
@@ -108,8 +108,8 @@ def auto_file(build, name, lang=None):
 
     if lang:
         return static_file(build, _kind_to_file_type[kind or 'source'], path,
-                           [('lang', lang)])
-    return static_file(build, File, path)
+                           dist, [('lang', lang)])
+    return static_file(build, File, path, dist)
 
 
 # These builtins will find all the files in a directory so that they can be
@@ -118,39 +118,42 @@ def auto_file(build, name, lang=None):
 # files.
 
 
-def _find(builtins, name, include, type, exclude, filter, as_object=True):
+def _find(builtins, name, include, type, exclude, filter, dist,
+          as_object=True):
     if not include:
         return None
     return builtins['find_files'](name, include, type, None, exclude, filter,
-                                  as_object=as_object)
+                                  dist=dist, as_object=as_object)
 
 
 @builtin.function('builtins', 'build_inputs')
 @builtin.type(Directory, extra_in_type=File)
 def directory(builtins, build, name, include=None, exclude=exclude_globs,
-              filter=filter_by_platform):
+              filter=filter_by_platform, dist=True):
     if isinstance(name, File):
         path = name.path.parent()
     else:
         path = Path.ensure(name, Root.srcdir)
 
-    files = _find(builtins, name, include, '*', exclude, filter)
-    return Directory(path, files)
+    files = _find(builtins, name, include, '*', exclude, filter, dist)
+    return static_file(build, Directory, path, dist, [('files', files)])
 
 
 @builtin.function('builtins', 'build_inputs')
 @builtin.type(HeaderDirectory, extra_in_type=SourceCodeFile)
 def header_directory(builtins, build, name, include=None,
                      exclude=exclude_globs, filter=filter_by_platform,
-                     system=False, lang=None):
+                     system=False, lang=None, dist=True):
     if isinstance(name, SourceCodeFile):
         path = name.path.parent()
         lang = name.lang
     else:
         path = Path.ensure(name, Root.srcdir)
 
-    files = _find(builtins, name, include, 'f', exclude, filter,
+    files = _find(builtins, name, include, 'f', exclude, filter, dist,
                   lambda p: HeaderFile(p, lang))
     langs = (uniques(i.lang for i in files if i.lang)
              if files else iterate(lang))
-    return HeaderDirectory(path, files, system, langs)
+
+    params = [('files', files), ('system', system), ('langs', langs)]
+    return static_file(build, HeaderDirectory, path, dist, params)

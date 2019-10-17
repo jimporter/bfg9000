@@ -51,7 +51,13 @@ In addition to the functions listed in this section below,
 [build steps](#build_step) which generate a file can also be used to produce
 source files of that type (see each step's documentation for details).
 
-### auto_file(*name*, [*lang*]) { #auto_file }
+!!! note
+    By default, when creating a file object in the source directory, it will
+    automatically be added to the project's [source
+    distribution](writing.md#distributing-your-source). To disable this, you can
+    specify `dist=False` when creating the file object.
+
+### auto_file(*name*, [*lang*], [*dist*]) { #auto_file }
 
 Create a reference to an existing file named *name*. This function will try to
 automatically determine the file's kind based on its extension:
@@ -65,7 +71,7 @@ unrecognized extension will always be treated as [*source_file*](#source_file)s.
     multiple kinds of files; when creating a reference to a specific, *known*
     file, the concrete function listed above should be used instead.
 
-### directory(*name*, [*include*], [*exclude*], [*filter*]) { #directory }
+### directory(*name*, [*include*], [*exclude*], [*filter*], [*dist*]) { #directory }
 Availability: `build.bfg`
 {: .subtitle}
 
@@ -83,13 +89,13 @@ Add extra *files* and *dirs* to the list of recognized source files. This lets
 you reference files that are part of the source distribution but which have no
 impact on the build proper (e.g. READMEs).
 
-### generic_file(*name*) { #generic_file }
+### generic_file(*name*, [*dist*]) { #generic_file }
 Availability: `build.bfg`
 {: .subtitle}
 
 Create a reference to an existing file named *name*.
 
-### header_directory(*name*, [*include*], [*exclude*], [*filter*], [*system*]) { #header_directory }
+### header_directory(*name*, [*include*], [*exclude*], [*filter*], [*system*], [*dist*]) { #header_directory }
 Availability: `build.bfg`
 {: .subtitle}
 
@@ -103,14 +109,15 @@ distribution](writing.md#distributing-your-source).
 If *system* is *True*, this directory will be treated as a [system
 directory][system-directory] for compilers that support this.
 
-### header_file(*name*) { #header_file }
+### header_file(*name*, [*lang*], [*dist*]) { #header_file }
 Availability: `build.bfg`
 {: .subtitle}
 
 Create a reference to an existing header named *name*. This is useful if you'd
-like to [install](#install) a single header file for your project.
+like to [install](#install) a single header file for your project. If *lang* is
+not specified, the language of the file is inferred from its extension.
 
-### module_def_file(*name*) { #module_def_file }
+### module_def_file(*name*, [*dist*]) { #module_def_file }
 Availability: `build.bfg`
 {: .subtitle}
 
@@ -118,14 +125,14 @@ Create a reference to an existing module-definition file named *name*.
 [Module-definition files][def-file] are sometimes used when building libraries
 on Windows.
 
-### resource_file(*name*, [*lang*]) { #resource_file }
+### resource_file(*name*, [*lang*], [*dist*]) { #resource_file }
 Availability: `build.bfg`
 {: .subtitle}
 
 Create a reference to an existing resource file named *name*. If *lang* is not
 specified, the language of the file is inferred from its extension.
 
-### source_file(*name*, [*lang*]) { #source_file }
+### source_file(*name*, [*lang*], [*dist*]) { #source_file }
 Availability: `build.bfg`
 {: .subtitle}
 

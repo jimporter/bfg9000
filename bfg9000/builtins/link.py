@@ -266,8 +266,9 @@ class StaticLink(Link):
 @builtin.type(Executable)
 def executable(builtins, build, env, name, files=None, **kwargs):
     if files is None and 'libs' not in kwargs:
+        dist = kwargs.pop('dist', True)
         params = [('format', env.target_platform.object_format), ('lang', 'c')]
-        return static_file(build, Executable, name, params, kwargs)
+        return static_file(build, Executable, name, dist, params, kwargs)
     files, kwargs = DynamicLink.convert_args(builtins, files, kwargs)
     return DynamicLink(build, env, name, files, **kwargs).public_output
 
@@ -283,8 +284,9 @@ def shared_library(builtins, build, env, name, files=None, **kwargs):
     if files is None and 'libs' not in kwargs:
         # XXX: What to do for pre-built shared libraries for Windows, which has
         # a separate DLL file?
+        dist = kwargs.pop('dist', True)
         params = [('format', env.target_platform.object_format), ('lang', 'c')]
-        return static_file(build, SharedLibrary, name, params, kwargs)
+        return static_file(build, SharedLibrary, name, dist, params, kwargs)
     files, kwargs = SharedLink.convert_args(builtins, files, kwargs)
     return SharedLink(build, env, name, files, **kwargs).public_output
 
@@ -298,8 +300,9 @@ def static_library(builtins, build, env, name, files=None, **kwargs):
         return name.static
 
     if files is None and 'libs' not in kwargs:
+        dist = kwargs.pop('dist', True)
         params = [('format', env.target_platform.object_format), ('lang', 'c')]
-        return static_file(build, StaticLibrary, name, params, kwargs)
+        return static_file(build, StaticLibrary, name, dist, params, kwargs)
     files, kwargs = StaticLink.convert_args(builtins, files, kwargs)
     return StaticLink(build, env, name, files, **kwargs).public_output
 
@@ -328,21 +331,19 @@ def library(builtins, build, env, name, files=None, **kwargs):
         return name if kind == 'dual' else getattr(name, kind)
 
     if files is None and 'libs' not in kwargs:
+        dist = kwargs.pop('dist', True)
         params = [('format', env.target_platform.object_format), ('lang', 'c')]
         file_type = StaticLibrary
 
         if explicit_kind:
             if kind == 'shared':
                 file_type = SharedLibrary
-                # Ignore the lang argument for shared libraries.
-                params = params[:1]
-                kwargs.pop('lang', None)
             elif kind == 'dual':
                 raise ValueError("can't create dual-use libraries from an " +
                                  "existing file")
 
         # XXX: Try to detect if a string refers to a shared lib?
-        return static_file(build, file_type, name, params, kwargs)
+        return static_file(build, file_type, name, dist, params, kwargs)
 
     shared_kwargs = slice_dict(kwargs, SharedLink.extra_kwargs)
     static_kwargs = slice_dict(kwargs, StaticLink.extra_kwargs)

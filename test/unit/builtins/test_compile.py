@@ -49,6 +49,17 @@ class TestObjectFile(CompileTest):
         )
         self.assertSameFile(self.builtin_dict['object_file']('object'),
                             expected)
+        self.assertEqual(list(self.build.sources()), [self.bfgfile, expected])
+
+    def test_no_dist(self):
+        expected = file_types.ObjectFile(
+            Path('object', Root.srcdir),
+            self.env.target_platform.object_format, 'c'
+        )
+        self.assertSameFile(
+            self.builtin_dict['object_file']('object', dist=False), expected
+        )
+        self.assertEqual(list(self.build.sources()), [self.bfgfile])
 
     def test_make_simple(self):
         result = self.builtin_dict['object_file'](file='main.cpp')
@@ -148,6 +159,17 @@ class TestPrecompiledHeader(CompileTest):
         )
         self.assertSameFile(self.builtin_dict['precompiled_header']('header'),
                             expected)
+        self.assertEqual(list(self.build.sources()), [self.bfgfile, expected])
+
+    def test_no_dist(self):
+        expected = file_types.PrecompiledHeader(
+            Path('header', Root.srcdir), 'c'
+        )
+        self.assertSameFile(
+            self.builtin_dict['precompiled_header']('header', dist=False),
+            expected
+        )
+        self.assertEqual(list(self.build.sources()), [self.bfgfile])
 
     def test_make_simple(self):
         with mock.patch('bfg9000.builtins.file_types.make_immediate_file',

@@ -40,6 +40,16 @@ class TestExecutable(LinkTest):
             self.env.target_platform.object_format, 'c'
         )
         self.assertSameFile(self.builtin_dict['executable']('exe'), expected)
+        self.assertEqual(list(self.build.sources()), [self.bfgfile, expected])
+
+    def test_no_dist(self):
+        expected = file_types.Executable(
+            Path('exe', Root.srcdir),
+            self.env.target_platform.object_format, 'c'
+        )
+        self.assertSameFile(self.builtin_dict['executable']('exe', dist=False),
+                            expected)
+        self.assertEqual(list(self.build.sources()), [self.bfgfile])
 
     def test_make_simple(self):
         result = self.builtin_dict['executable']('exe', ['main.cpp'])
@@ -114,6 +124,17 @@ class TestSharedLibrary(LinkTest):
         )
         self.assertSameFile(self.builtin_dict['shared_library']('shared'),
                             expected)
+        self.assertEqual(list(self.build.sources()), [self.bfgfile, expected])
+
+    def test_no_dist(self):
+        expected = file_types.SharedLibrary(
+            Path('shared', Root.srcdir),
+            self.env.target_platform.object_format, 'c'
+        )
+        self.assertSameFile(
+            self.builtin_dict['shared_library']('shared', dist=False), expected
+        )
+        self.assertEqual(list(self.build.sources()), [self.bfgfile])
 
     def test_convert_from_dual(self):
         lib = file_types.DualUseLibrary(
@@ -230,6 +251,17 @@ class TestStaticLibrary(LinkTest):
         )
         self.assertSameFile(self.builtin_dict['static_library']('static'),
                             expected)
+        self.assertEqual(list(self.build.sources()), [self.bfgfile, expected])
+
+    def test_no_dist(self):
+        expected = file_types.StaticLibrary(
+            Path('static', Root.srcdir),
+            self.env.target_platform.object_format, 'c'
+        )
+        self.assertSameFile(
+            self.builtin_dict['static_library']('static', dist=False), expected
+        )
+        self.assertEqual(list(self.build.sources()), [self.bfgfile])
 
     def test_convert_from_dual(self):
         lib = file_types.DualUseLibrary(
@@ -354,6 +386,7 @@ class TestLibrary(LinkTest):
             self.env.target_platform.object_format, 'c'
         )
         self.assertSameFile(self.builtin_dict['library']('library'), expected)
+        self.assertEqual(list(self.build.sources()), [self.bfgfile, expected])
 
     def test_src_file_explicit_static(self):
         expected = file_types.StaticLibrary(
@@ -363,19 +396,32 @@ class TestLibrary(LinkTest):
         self.assertSameFile(self.builtin_dict['library'](
             'library', kind='static'
         ), expected)
+        self.assertEqual(list(self.build.sources()), [self.bfgfile, expected])
 
     def test_src_file_explicit_shared(self):
         expected = file_types.SharedLibrary(
             Path('library', Root.srcdir),
-            self.env.target_platform.object_format
+            self.env.target_platform.object_format, 'c'
         )
         self.assertSameFile(self.builtin_dict['library'](
             'library', kind='shared'
         ), expected)
+        self.assertEqual(list(self.build.sources()), [self.bfgfile, expected])
 
     def test_src_file_explicit_dual(self):
         self.assertRaises(ValueError, self.builtin_dict['library'], 'library',
                           kind='dual')
+
+    def test_no_dist(self):
+        expected = file_types.SharedLibrary(
+            Path('shared', Root.srcdir),
+            self.env.target_platform.object_format, 'c'
+        )
+        self.assertSameFile(
+            self.builtin_dict['library']('shared', kind='shared', dist=False),
+            expected
+        )
+        self.assertEqual(list(self.build.sources()), [self.bfgfile])
 
     def test_make_simple_shared(self):
         expected = self.output_file('library', mode='shared_library')
