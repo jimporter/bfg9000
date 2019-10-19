@@ -52,6 +52,7 @@ def _wrap_ospath(fn):
 exists = _wrap_ospath(os.path.exists)
 isdir = _wrap_ospath(os.path.isdir)
 isfile = _wrap_ospath(os.path.isfile)
+islink = _wrap_ospath(os.path.islink)
 
 
 def samefile(path1, path2, variables=None):

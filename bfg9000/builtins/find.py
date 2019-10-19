@@ -1,17 +1,16 @@
 import fnmatch
 import os
-import posixpath
 import re
 from enum import IntEnum
 
 from . import builtin
-from ..file_types import File, Directory
-from ..iterutils import iterate, listify
+from ..file_types import File
+from ..iterutils import iterate
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..backends.make.syntax import Writer, Syntax
 from ..build_inputs import build_input
-from ..path import Path, Root
+from ..path import exists, isdir, islink, Path, Root
 from ..platforms import known_platforms
 
 build_input('find_dirs')(lambda build_inputs, env: set())
@@ -46,44 +45,44 @@ def write_depfile(env, path, output, seen_dirs, makeify=False):
                 out.write_literal(':\n')
 
 
-def _listdir(path):
+def _listdir(path, variables=None):
     dirs, nondirs = [], []
     try:
-        names = os.listdir(path)
+        names = os.listdir(path.string(variables))
         for name in names:
-            # Use POSIX paths so that the result is platform-agnostic.
-            curpath = posixpath.join(path, name)
-            if os.path.isdir(curpath):
-                dirs.append((name, curpath))
+            curpath = path.append(name)
+            if isdir(curpath, variables):
+                dirs.append(curpath)
             else:
-                nondirs.append((name, curpath))
-    except Exception:
+                nondirs.append(curpath)
+    except OSError:
         pass
     return dirs, nondirs
 
 
-def _walk_flat(top):
-    if os.path.exists(top):
-        yield (top,) + _listdir(top)
+def _walk_flat(top, variables=None):
+    if exists(top, variables):
+        yield (top,) + _listdir(top, variables)
 
 
-def _walk_recursive(top):
-    if not os.path.exists(top):
+def _walk_recursive(top, variables=None):
+    if not exists(top, variables):
         return
-    dirs, nondirs = _listdir(top)
+    dirs, nondirs = _listdir(top, variables)
     yield top, dirs, nondirs
-    for name, path in dirs:
-        if not os.path.islink(path):
-            for i in _walk_recursive(path):
+    for d in dirs:
+        if not islink(d, variables):
+            for i in _walk_recursive(d, variables):
                 yield i
 
 
-def _filter_from_glob(match_type, matches, extra, exclude):
+def _make_filter_from_glob(match_type, matches, extra, exclude):
     matches = [re.compile(fnmatch.translate(i)) for i in iterate(matches)]
     extra = [re.compile(fnmatch.translate(i)) for i in iterate(extra)]
     exclude = [re.compile(fnmatch.translate(i)) for i in iterate(exclude)]
 
-    def fn(name, path, type):
+    def fn(path, type):
+        name = path.basename()
         if match_type in {type, '*'}:
             if any(ex.match(name) for ex in exclude):
                 return FindResult.exclude
@@ -95,74 +94,80 @@ def _filter_from_glob(match_type, matches, extra, exclude):
     return fn
 
 
-def _find_files(paths, filter, flat, as_object):
+@builtin.function('env')
+def filter_by_platform(env, path, type):
+    my_plat = {env.target_platform.genus, env.target_platform.family}
+    sub = '|'.join(re.escape(i) for i in known_platforms if i not in my_plat)
+    ex = r'(^|/|_)(' + sub + r')(\.[^\.]+$|$|/)'
+    return (FindResult.not_now if re.search(ex, path.suffix)
+            else FindResult.include)
+
+
+def _combine_filters(*args):
+    return lambda path, type: max(f(path, type) for f in args)
+
+
+def _find_files(env, paths, filter, flat, seen_dirs=None):
     # "Does the walker choose the path, or the path the walker?" - Garth Nix
     walker = _walk_flat if flat else _walk_recursive
 
-    results, dist_results, seen_dirs = [], [], []
-    filetype = File if isinstance(as_object, bool) else as_object
-
-    def do_filter(files, type):
-        cls = filetype if type == 'f' else Directory
-        for name, path in files:
-            fileobj = cls(Path(path, Root.srcdir))
-            matched = filter(name, path, type)
-            if matched == FindResult.include:
-                dist_results.append(fileobj)
-                results.append(fileobj if as_object else path)
-            elif matched == FindResult.not_now:
-                dist_results.append(fileobj)
-
-    do_filter(( (os.path.basename(p), p) for p in paths ), 'd')
     for p in paths:
-        for base, dirs, files in walker(p):
-            seen_dirs.append(Path(base, Root.srcdir))
+        yield p, 'd', filter(p, 'd')
+    for p in paths:
+        for base, dirs, files in walker(p, env.base_dirs):
+            if seen_dirs is not None:
+                seen_dirs.append(base)
 
-            do_filter(dirs, 'd')
-            do_filter(files, 'f')
+            for p in dirs:
+                yield p, 'd', filter(p, 'd')
+            for p in files:
+                yield p, 'f', filter(p, 'f')
 
-    return results, dist_results, seen_dirs
 
-
-def find(path='.', name='*', type='*', extra=None, exclude=exclude_globs,
+def find(env, path='.', name='*', type='*', extra=None, exclude=exclude_globs,
          flat=False):
-    glob_filter = _filter_from_glob(type, name, extra, exclude)
-    return _find_files(listify(path), glob_filter, flat, False)[0]
+    glob_filter = _make_filter_from_glob(type, name, extra, exclude)
+    paths = [Path.ensure(i, Root.srcdir) for i in iterate(path)]
 
-
-@builtin.function('env')
-def filter_by_platform(env, name, path, type):
-    my_plat = {env.target_platform.genus, env.target_platform.family}
-    sub = '|'.join(re.escape(i) for i in known_platforms if i not in my_plat)
-    ex = r'(^|/|_)(' + sub + r')(\.[^\.]$|$|/)'
-    return FindResult.not_now if re.search(ex, path) else FindResult.include
+    results = []
+    for path, type, matched in _find_files(env, paths, glob_filter, flat):
+        if matched == FindResult.include:
+            results.append(path)
+    return results
 
 
 @builtin.function('builtins', 'build_inputs', 'env')
 def find_files(builtins, build_inputs, env, path='.', name='*', type='*',
-               extra=None, exclude=exclude_globs, filter=filter_by_platform,
-               flat=False, cache=True, dist=True, as_object=False):
-    glob_filter = _filter_from_glob(type, name, extra, exclude)
+               extra=None, exclude=exclude_globs, filter=None, flat=False,
+               file_type=None, dir_type=None, dist=True, cache=True):
+    final_filter = _make_filter_from_glob(type, name, extra, exclude)
     if filter:
-        if filter == filter_by_platform:
-            filter = builtins['filter_by_platform']
+        final_filter = _combine_filters(final_filter, filter)
 
-        def final_filter(name, path, type):
-            return max(filter(name, path, type), glob_filter(name, path, type))
-    else:
-        final_filter = glob_filter
+    types = {'f': file_type or builtins['auto_file'],
+             'd': dir_type or builtins['directory']}
+    extra_types = {'f': builtins['generic_file'], 'd': builtins['directory']}
 
-    paths = [i.path.string(env.base_dirs) if isinstance(i, File) else i
+    paths = [i.path if isinstance(i, File) else Path.ensure(i, Root.srcdir)
              for i in iterate(path)]
-    found, dist, seen_dirs = _find_files(paths, final_filter, flat, as_object)
+
+    found, seen_dirs = [], []
+    for path, type, matched in _find_files(env, paths, final_filter, flat,
+                                           seen_dirs):
+        if matched == FindResult.include:
+            found.append(types[type](path, dist=dist))
+        elif matched == FindResult.not_now and dist:
+            extra_types[type](path, dist=dist)
 
     if cache:
         build_inputs['find_dirs'].update(seen_dirs)
         build_inputs['regenerate'].depfile = depfile_name
-    if dist:
-        for i in dist:
-            build_inputs.add_source(i)
     return found
+
+
+@builtin.function('builtins')
+def find_paths(builtins, *args, **kwargs):
+    return [i.path for i in builtins['find_files'](*args, **kwargs)]
 
 
 @make.post_rule

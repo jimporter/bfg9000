@@ -2,6 +2,7 @@ import re
 
 from .. import shell
 from ..versioning import detect_version
+from ..path import abspath
 
 
 class LdLinker(object):
@@ -42,7 +43,7 @@ class LdLinker(object):
             search_dirs = [i.group(1) for i in re.finditer(
                 r'SEARCH_DIR\("((?:[^"\\]|\\.)*)"\)', output)
             ]
-            return [sysroot.rstrip('/') + i[1:] if i[0] == '=' else i
+            return [abspath(sysroot.rstrip('/') + i[1:] if i[0] == '=' else i)
                     for i in search_dirs]
         except (OSError, shell.CalledProcessError):
             if strict:

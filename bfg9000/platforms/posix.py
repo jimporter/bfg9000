@@ -38,11 +38,14 @@ class PosixPlatform(Platform):
 class PosixHostPlatform(HostPlatform, PosixPlatform):
     @property
     def include_dirs(self):
-        return ['/usr/local/include', '/usr/include']
+        return [PosixPath('/usr/local/include', Root.absolute),
+                PosixPath('/usr/include', Root.absolute)]
 
     @property
     def lib_dirs(self):
-        return ['/usr/local/lib', '/lib', '/usr/lib']
+        return [PosixPath('/usr/local/lib', Root.absolute),
+                PosixPath('/lib', Root.absolute),
+                PosixPath('/usr/lib', Root.absolute)]
 
     @property
     def destdir(self):

@@ -2,7 +2,7 @@ from contextlib import contextmanager
 from six import string_types
 
 from . import builtin
-from .find import exclude_globs, filter_by_platform
+from .find import exclude_globs
 from ..file_types import *
 from ..iterutils import iterate, uniques
 from ..languages import known_langs
@@ -118,42 +118,44 @@ def auto_file(build, name, lang=None, dist=True):
 # files.
 
 
-def _find(builtins, name, include, type, exclude, filter, dist,
-          as_object=True):
-    if not include:
+def _find(builtins, path, include, type, extra, *args, **kwargs):
+    if not include and not extra:
         return None
-    return builtins['find_files'](name, include, type, None, exclude, filter,
-                                  dist=dist, as_object=as_object)
+    return builtins['find_files'](path, include, type, extra, *args, **kwargs)
+
+
+def _directory_path(thing):
+    if isinstance(thing, File):
+        return thing.path.parent()
+    else:
+        return Path.ensure(thing, Root.srcdir)
 
 
 @builtin.function('builtins', 'build_inputs')
 @builtin.type(Directory, extra_in_type=File)
-def directory(builtins, build, name, include=None, exclude=exclude_globs,
-              filter=filter_by_platform, dist=True):
-    if isinstance(name, File):
-        path = name.path.parent()
-    else:
-        path = Path.ensure(name, Root.srcdir)
-
-    files = _find(builtins, name, include, '*', exclude, filter, dist)
+def directory(builtins, build, name, include=None, extra=None,
+              exclude=exclude_globs, filter=None, dist=True, cache=True):
+    path = _directory_path(name)
+    files = _find(builtins, path, include, '*', extra, exclude, filter,
+                  dist=dist, cache=cache)
     return static_file(build, Directory, path, dist, [('files', files)])
 
 
 @builtin.function('builtins', 'build_inputs')
 @builtin.type(HeaderDirectory, extra_in_type=SourceCodeFile)
-def header_directory(builtins, build, name, include=None,
-                     exclude=exclude_globs, filter=filter_by_platform,
-                     system=False, lang=None, dist=True):
-    if isinstance(name, SourceCodeFile):
-        path = name.path.parent()
-        lang = name.lang
-    else:
-        path = Path.ensure(name, Root.srcdir)
+def header_directory(builtins, build, name, include=None, extra=None,
+                     exclude=exclude_globs, filter=None, system=False,
+                     lang=None, dist=True, cache=True):
+    def header_file(*args, **kwargs):
+        return builtins['header_file'](*args, lang=lang, **kwargs)
 
-    files = _find(builtins, name, include, 'f', exclude, filter, dist,
-                  lambda p: HeaderFile(p, lang))
-    langs = (uniques(i.lang for i in files if i.lang)
-             if files else iterate(lang))
+    if isinstance(name, SourceCodeFile):
+        lang = name.lang
+
+    path = _directory_path(name)
+    files = _find(builtins, path, include, 'f', extra, exclude, filter,
+                  file_type=header_file, dist=dist, cache=cache)
+    langs = uniques(i.lang for i in files if i.lang) if files else lang
 
     params = [('files', files), ('system', system), ('langs', langs)]
     return static_file(build, HeaderDirectory, path, dist, params)

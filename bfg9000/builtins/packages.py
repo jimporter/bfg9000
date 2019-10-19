@@ -9,7 +9,7 @@ from ..file_types import Directory, Executable
 from ..iterutils import default_sentinel, iterate
 from ..objutils import objectify
 from ..packages import CommonPackage, Framework, Package, PackageKind
-from ..path import abspath, Path, Root
+from ..path import Path, Root
 from ..shell import which
 from ..versioning import check_version, SpecifierSet, Version
 
@@ -67,15 +67,17 @@ def _boost_version(header, required_version):
 
 @builtin.function('env')
 def boost_package(env, name=None, version=None):
+    def getdir(name, root, default):
+        d = env.getvar(name, os.path.join(root, default) if root else None)
+        return Path(d, Root.absolute) if d else None
+
     version = objectify(version or '', SpecifierSet)
     pkg = env.builder('c++').packages
     version_hpp = 'boost/version.hpp'
 
     root = env.getvar('BOOST_ROOT')
-    incdir = env.getvar('BOOST_INCLUDEDIR', os.path.join(root, 'include')
-                        if root else None)
-    libdir = env.getvar('BOOST_LIBRARYDIR', os.path.join(root, 'lib')
-                        if root else None)
+    incdir = getdir('BOOST_INCLUDEDIR', root, 'include')
+    libdir = getdir('BOOST_LIBRARYDIR', root, 'lib')
     header = None
 
     if env.target_platform.family == 'windows':
@@ -86,11 +88,12 @@ def boost_package(env, name=None, version=None):
         # On Windows, check the default install location, which is structured
         # differently from other install locations.
         if not incdir and env.host_platform.family == 'windows':
-            dirs = find(r'C:\Boost\include', 'boost-*', type='d', flat=True)
+            dirs = find(env, r'C:\Boost\include', 'boost-*', type='d',
+                        flat=True)
             if dirs:
                 try:
                     header = pkg.header(version_hpp, [max(dirs)])
-                    libdir = r'C:\Boost\lib'
+                    libdir = Path(r'C:\Boost\lib', Root.absolute)
                 except PackageResolutionError:
                     pass
 
@@ -100,7 +103,7 @@ def boost_package(env, name=None, version=None):
         compile_options = opts.option_list(opts.include_dir(header))
         link_options = opts.option_list()
         if libdir:
-            link_options.append(opts.lib_dir( Directory(abspath(libdir)) ))
+            link_options.append(opts.lib_dir( Directory(libdir) ))
     else:
         header = pkg.header(version_hpp, [incdir] if incdir else None)
 

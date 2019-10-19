@@ -14,7 +14,7 @@ from ..iterutils import (default_sentinel, iterate, listify, merge_into_dict,
 from ..languages import known_langs, known_formats
 from ..objutils import memoize
 from ..packages import CommonPackage, Framework, PackageKind
-from ..path import Path, Root
+from ..path import abspath, exists, Path, Root
 from ..versioning import detect_version, SpecifierSet
 
 _warning_flags = {
@@ -140,9 +140,9 @@ class MsvcBaseCompiler(BuildCommand):
         return False
 
     def search_dirs(self, strict=False):
-        cpath = [os.path.abspath(i) for i in
+        cpath = [abspath(i) for i in
                  self.env.getvar('CPATH', '').split(os.pathsep)]
-        include = [os.path.abspath(i) for i in
+        include = [abspath(i) for i in
                    self.env.getvar('INCLUDE', '').split(os.pathsep)]
         return cpath + include
 
@@ -326,9 +326,9 @@ class MsvcLinker(BuildCommand):
         return True
 
     def search_dirs(self, strict=False):
-        lib_path = [os.path.abspath(i) for i in
+        lib_path = [abspath(i) for i in
                     self.env.getvar('LIBRARY_PATH', '').split(os.pathsep)]
-        lib = [os.path.abspath(i) for i in
+        lib = [abspath(i) for i in
                self.env.getvar('LIB', '').split(os.pathsep)]
         return lib_path + lib
 
@@ -532,12 +532,12 @@ class MsvcPackageResolver(object):
         self.include_dirs = [i for i in uniques(chain(
             self.builder.compiler.search_dirs(),
             self.env.host_platform.include_dirs
-        )) if os.path.exists(i)]
+        )) if exists(i)]
 
         self.lib_dirs = [i for i in uniques(chain(
             self.builder.linker('executable').search_dirs(),
             self.env.host_platform.lib_dirs
-        )) if os.path.exists(i)]
+        )) if exists(i)]
 
     @property
     def lang(self):
@@ -548,9 +548,10 @@ class MsvcPackageResolver(object):
             search_dirs = self.include_dirs
 
         for base in search_dirs:
-            if os.path.exists(os.path.join(base, name)):
-                return HeaderDirectory(Path(base, Root.absolute), None,
-                                       system=True)
+            if base.root != Root.absolute:
+                raise ValueError('expected an absolute path')
+            if exists(base.append(name)):
+                return HeaderDirectory(base, None, system=True)
 
         raise PackageResolutionError("unable to find header '{}'".format(name))
 
@@ -560,13 +561,14 @@ class MsvcPackageResolver(object):
         libname = name + '.lib'
 
         for base in search_dirs:
-            fullpath = os.path.join(base, libname)
-            if os.path.exists(fullpath):
+            if base.root != Root.absolute:
+                raise ValueError('expected an absolute path')
+            fullpath = base.append(libname)
+            if exists(fullpath):
                 # We don't actually know what kind of library this is. It could
                 # be a static library or an import library (which we classify
                 # as a kind of shared lib).
-                return Library(Path(fullpath, Root.absolute),
-                               self.builder.object_format)
+                return Library(fullpath, self.builder.object_format)
         raise PackageResolutionError("unable to find library '{}'"
                                      .format(name))
 

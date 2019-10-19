@@ -1,5 +1,4 @@
 import mock
-import ntpath
 import os
 import re
 
@@ -137,17 +136,16 @@ class TestBoostPackage(TestCase):
         env = make_env('linux', clear_variables=True)
 
         def mock_exists(x):
-            if ( re.search(r'[/\\]boost[/\\]version.hpp$', x) or
-                 re.search(r'[/\\]libboost_thread', x) or
-                 x in ['/usr/include', '/usr/lib']):
-                return True
-            return False
+            x = x.string()
+            return bool(re.search(r'[/\\]boost[/\\]version.hpp$', x) or
+                        re.search(r'[/\\]libboost_thread', x) or
+                        x in ['/usr/include', '/usr/lib'])
 
         with mock.patch('bfg9000.builtins.packages._boost_version',
                         return_value=Version('1.23')), \
              mock.patch('bfg9000.shell.which', return_value=['command']), \
              mock.patch('bfg9000.shell.execute', mock_execute), \
-             mock.patch('os.path.exists', mock_exists):  # noqa
+             mock.patch('bfg9000.tools.cc.exists', mock_exists):  # noqa
             pkg = packages.boost_package(env, 'thread')
             self.assertEqual(pkg.name, 'boost(thread)')
             self.assertEqual(pkg.version, Version('1.23'))
@@ -156,9 +154,9 @@ class TestBoostPackage(TestCase):
         env = make_env('winnt', clear_variables=True)
         boost_incdir = r'C:\Boost\include\boost-1.23'
 
-        def mock_walk(top):
+        def mock_walk(top, variables=None):
             yield (top,) + (
-                [('boost-1.23', ntpath.join(top, 'boost-1.23'))],
+                [top.append('boost-1.23')],
                 []
             )
 
@@ -168,16 +166,14 @@ class TestBoostPackage(TestCase):
             raise ValueError()
 
         def mock_exists(x):
-            if re.search(r'[/\\]boost[/\\]version.hpp$', x):
-                return True
-            return False
+            return bool(re.search(r'[/\\]boost[/\\]version.hpp$', x.string()))
 
         with mock.patch('bfg9000.builtins.find._walk_flat', mock_walk), \
              mock.patch('bfg9000.builtins.packages._boost_version',
                         return_value=Version('1.23')), \
              mock.patch('bfg9000.shell.which', return_value=['command']), \
              mock.patch('bfg9000.shell.execute', mock_execute), \
-             mock.patch('os.path.exists', mock_exists):  # noqa
+             mock.patch('bfg9000.tools.msvc.exists', mock_exists):  # noqa
             pkg = packages.boost_package(env, 'thread')
             self.assertEqual(pkg.name, 'boost(thread)')
             self.assertEqual(pkg.version, Version('1.23'))

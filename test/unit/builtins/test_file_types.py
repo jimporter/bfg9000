@@ -1,3 +1,5 @@
+import mock
+
 from .common import BuiltinTest
 
 from bfg9000.builtins.file_types import static_file
@@ -5,15 +7,19 @@ from bfg9000.file_types import *
 from bfg9000.path import Path, Root
 
 
+def srcpath(p):
+    return Path(p, Root.srcdir)
+
+
 class TestStaticFile(BuiltinTest):
     def test_basic(self):
-        expected = File(Path('file.txt', Root.srcdir))
+        expected = File(srcpath('file.txt'))
         self.assertSameFile(static_file(self.build, File, 'file.txt'),
                             expected)
         self.assertEqual(list(self.build.sources()), [self.bfgfile, expected])
 
     def test_path(self):
-        p = Path('file.txt', Root.srcdir)
+        p = srcpath('file.txt')
         expected = File(p)
         self.assertSameFile(static_file(self.build, File, p), expected)
         self.assertEqual(list(self.build.sources()), [self.bfgfile, expected])
@@ -25,21 +31,21 @@ class TestStaticFile(BuiltinTest):
         self.assertEqual(list(self.build.sources()), [self.bfgfile])
 
     def test_no_dist(self):
-        p = Path('file.txt', Root.srcdir)
+        p = srcpath('file.txt')
         expected = File(p)
         self.assertSameFile(static_file(self.build, File, p, dist=False),
                             expected)
         self.assertEqual(list(self.build.sources()), [self.bfgfile])
 
     def test_params_default(self):
-        expected = SourceFile(Path('file.txt', Root.srcdir), 'c')
+        expected = SourceFile(srcpath('file.txt'), 'c')
         self.assertSameFile(static_file(
             self.build, SourceFile, 'file.txt', params=[('lang', 'c')]
         ), expected)
         self.assertEqual(list(self.build.sources()), [self.bfgfile, expected])
 
     def test_params_custom(self):
-        expected = SourceFile(Path('file.txt', Root.srcdir), 'c++')
+        expected = SourceFile(srcpath('file.txt'), 'c++')
         self.assertSameFile(static_file(
             self.build, SourceFile, 'file.txt', params=[('lang', 'c')],
             kwargs={'lang': 'c++'}
@@ -55,43 +61,43 @@ class TestStaticFile(BuiltinTest):
 
 class TestAutoFile(BuiltinTest):
     def test_identity(self):
-        expected = File(Path('file.txt', Root.srcdir))
+        expected = File(srcpath('file.txt'))
         self.assertIs(self.builtin_dict['auto_file'](expected), expected)
         self.assertEqual(list(self.build.sources()), [self.bfgfile])
 
     def test_source_file(self):
-        expected = SourceFile(Path('file.cpp', Root.srcdir), 'c++')
+        expected = SourceFile(srcpath('file.cpp'), 'c++')
         self.assertSameFile(self.builtin_dict['auto_file']('file.cpp'),
                             expected)
         self.assertEqual(list(self.build.sources()), [self.bfgfile, expected])
 
     def test_header_file(self):
-        expected = HeaderFile(Path('file.hpp', Root.srcdir), 'c++')
+        expected = HeaderFile(srcpath('file.hpp'), 'c++')
         self.assertSameFile(self.builtin_dict['auto_file']('file.hpp'),
                             expected)
         self.assertEqual(list(self.build.sources()), [self.bfgfile, expected])
 
     def test_other_file(self):
-        expected = File(Path('file.txt', Root.srcdir))
+        expected = File(srcpath('file.txt'))
         self.assertSameFile(self.builtin_dict['auto_file']('file.txt'),
                             expected)
         self.assertEqual(list(self.build.sources()), [self.bfgfile, expected])
 
     def test_auxext(self):
-        expected = HeaderFile(Path('file.h', Root.srcdir), 'c++')
+        expected = HeaderFile(srcpath('file.h'), 'c++')
         self.assertSameFile(self.builtin_dict['auto_file']('file.h', 'c++'),
                             expected)
         self.assertEqual(list(self.build.sources()), [self.bfgfile, expected])
 
     def test_unknown_ext(self):
-        expected = SourceFile(Path('file.goofy', Root.srcdir), 'c++')
+        expected = SourceFile(srcpath('file.goofy'), 'c++')
         self.assertSameFile(self.builtin_dict['auto_file'](
             'file.goofy', 'c++'
         ), expected)
         self.assertEqual(list(self.build.sources()), [self.bfgfile, expected])
 
     def test_unknown_lang(self):
-        expected = SourceFile(Path('file.goofy', Root.srcdir), 'goofy')
+        expected = SourceFile(srcpath('file.goofy'), 'goofy')
         self.assertSameFile(self.builtin_dict['auto_file'](
             'file.goofy', 'goofy'
         ), expected)
@@ -105,25 +111,25 @@ class TestGenericFile(BuiltinTest):
     filename = 'file.txt'
 
     def test_identity(self):
-        expected = self.type(Path(self.filename, Root.srcdir), *self.args)
+        expected = self.type(srcpath(self.filename), *self.args)
         self.assertIs(self.builtin_dict[self.fn](expected), expected)
         self.assertEqual(list(self.build.sources()), [self.bfgfile])
 
     def test_basic(self):
-        expected = self.type(Path(self.filename, Root.srcdir), *self.args)
+        expected = self.type(srcpath(self.filename), *self.args)
         self.assertSameFile(self.builtin_dict[self.fn](self.filename),
                             expected)
         self.assertEqual(list(self.build.sources()), [self.bfgfile, expected])
 
     def test_no_dist(self):
-        expected = self.type(Path(self.filename, Root.srcdir), *self.args)
+        expected = self.type(srcpath(self.filename), *self.args)
         self.assertSameFile(
             self.builtin_dict[self.fn](self.filename, dist=False), expected
         )
         self.assertEqual(list(self.build.sources()), [self.bfgfile])
 
     def test_path(self):
-        path = Path(self.filename, Root.srcdir)
+        path = srcpath(self.filename)
         expected = self.type(path, *self.args)
         self.assertSameFile(self.builtin_dict[self.fn](path), expected)
         self.assertEqual(list(self.build.sources()), [self.bfgfile, expected])
@@ -143,7 +149,7 @@ class TestSourceFile(TestGenericFile):
     lang = 'c++'
 
     def test_lang(self):
-        expected = self.type(Path('file.goofy', Root.srcdir), self.lang)
+        expected = self.type(srcpath('file.goofy'), self.lang)
         self.assertSameFile(self.builtin_dict[self.fn](
             'file.goofy', lang=self.lang
         ), expected)
@@ -169,8 +175,48 @@ class TestDirectory(TestGenericFile):
     fn = 'directory'
     filename = 'dir'
 
+    def test_include(self):
+        def mock_walk(path, variables=None):
+            p = srcpath
+            return [
+                (p('dir'), [p('dir/sub')], [p('dir/file.txt')]),
+                (p('dir/sub'), [], [p('dir/sub/file2.txt')]),
+            ]
+
+        expected = self.type(srcpath(self.filename), [
+            File(srcpath('dir/file.txt')),
+            File(srcpath('dir/sub/file2.txt')),
+        ])
+        with mock.patch('bfg9000.builtins.find._walk_recursive', mock_walk):
+            self.assertSameFile(
+                self.builtin_dict[self.fn](self.filename, include='*.txt'),
+                expected
+            )
+            self.assertEqual(list(self.build.sources()),
+                             [self.bfgfile] + expected.files + [expected])
+
 
 class TestHeaderDirectory(TestDirectory):
     type = HeaderDirectory
     fn = 'header_directory'
     filename = 'include'
+
+    def test_include(self):
+        def mock_walk(path, variables=None):
+            p = srcpath
+            return [
+                (p('include'), [p('include/sub')], [p('include/file.hpp')]),
+                (p('include/sub'), [], [p('include/sub/file2.hpp')]),
+            ]
+
+        expected = self.type(srcpath(self.filename), [
+            HeaderFile(srcpath('include/file.hpp'), 'c++'),
+            HeaderFile(srcpath('include/sub/file2.hpp'), 'c++'),
+        ], langs=['c++'])
+        with mock.patch('bfg9000.builtins.find._walk_recursive', mock_walk):
+            self.assertSameFile(
+                self.builtin_dict[self.fn](self.filename, include='*.hpp'),
+                expected
+            )
+            self.assertEqual(list(self.build.sources()),
+                             [self.bfgfile] + expected.files + [expected])

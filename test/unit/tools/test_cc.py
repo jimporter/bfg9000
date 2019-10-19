@@ -4,6 +4,7 @@ import os
 from .. import *
 
 from bfg9000 import options as opts, platforms
+from bfg9000.exceptions import PackageResolutionError
 from bfg9000.file_types import *
 from bfg9000.languages import Languages
 from bfg9000.packages import Framework
@@ -727,3 +728,34 @@ class TestCcSharedLinker(TestCcLinker):
         else:
             self.assertEqual(self.linker.output_file('foo', None),
                              SharedLibrary(Path('libfoo' + ext), fmt, 'c++'))
+
+
+class TestCcPackageResolver(CrossPlatformTestCase):
+    def __init__(self, *args, **kwargs):
+        CrossPlatformTestCase.__init__(self, clear_variables=True, *args,
+                                       **kwargs)
+
+    def setUp(self):
+        with mock.patch('bfg9000.shell.which', mock_which), \
+             mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
+            self.packages = CcBuilder(self.env, known_langs['c++'], ['c++'],
+                                      'version').packages
+
+    def test_header_not_found(self):
+        with mock.patch('bfg9000.tools.cc.exists', return_value=False):
+            with self.assertRaises(PackageResolutionError):
+                self.packages.header('foo.hpp')
+
+    def test_header_relpath(self):
+        with self.assertRaises(ValueError):
+            self.packages.header('foo.hpp', [Path('dir', Root.srcdir)])
+
+    def test_library_not_found(self):
+        with mock.patch('bfg9000.tools.cc.exists', return_value=False):
+            with self.assertRaises(PackageResolutionError):
+                self.packages.library('foo')
+
+    def test_library_relpath(self):
+        with self.assertRaises(ValueError):
+            p = Path('dir', Root.srcdir)
+            self.packages.library('foo', search_dirs=[p])

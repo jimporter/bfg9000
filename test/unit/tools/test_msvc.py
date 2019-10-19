@@ -3,6 +3,7 @@ import mock
 from .. import *
 
 from bfg9000 import file_types, options as opts
+from bfg9000.exceptions import PackageResolutionError
 from bfg9000.iterutils import merge_dicts
 from bfg9000.languages import Languages
 from bfg9000.packages import Framework
@@ -541,3 +542,33 @@ class TestMsvcStaticLinker(CrossPlatformTestCase):
         self.assertEqual(self.linker.parse_flags([]), {'extra': []})
         self.assertEqual(self.linker.parse_flags(['/foo', 'bar']),
                          {'extra': ['/foo', 'bar']})
+
+
+class TestMsvcPackageResolver(CrossPlatformTestCase):
+    def __init__(self, *args, **kwargs):
+        CrossPlatformTestCase.__init__(self, clear_variables=True, *args,
+                                       **kwargs)
+
+    def setUp(self):
+        with mock.patch('bfg9000.shell.which', mock_which):
+            self.packages = MsvcBuilder(self.env, known_langs['c++'], ['cl'],
+                                        'version').packages
+
+    def test_header_not_found(self):
+        with mock.patch('bfg9000.tools.msvc.exists', return_value=False):
+            with self.assertRaises(PackageResolutionError):
+                self.packages.header('foo.hpp')
+
+    def test_header_relpath(self):
+        with self.assertRaises(ValueError):
+            self.packages.header('foo.hpp', [Path('dir', Root.srcdir)])
+
+    def test_library_not_found(self):
+        with mock.patch('bfg9000.tools.msvc.exists', return_value=False):
+            with self.assertRaises(PackageResolutionError):
+                self.packages.library('foo')
+
+    def test_library_relpath(self):
+        with self.assertRaises(ValueError):
+            p = Path('dir', Root.srcdir)
+            self.packages.library('foo', search_dirs=[p])

@@ -16,7 +16,7 @@ from ..iterutils import (default_sentinel, first, iterate, listify, uniques,
                          recursive_walk)
 from ..languages import known_formats
 from ..packages import CommonPackage, Framework, PackageKind
-from ..path import BasePath, InstallRoot, Path, Root
+from ..path import abspath, exists, BasePath, InstallRoot, Path, Root
 from ..platforms import parse_triplet
 from ..versioning import detect_version, SpecifierSet
 
@@ -186,7 +186,7 @@ class CcBaseCompiler(BuildCommand):
         return False
 
     def search_dirs(self, strict=False):
-        return [os.path.abspath(i) for i in
+        return [abspath(i) for i in
                 self.env.getvar('CPATH', '').split(os.pathsep)]
 
     def _call(self, cmd, input, output, deps=None, flags=None):
@@ -213,8 +213,7 @@ class CcBaseCompiler(BuildCommand):
         return flags
 
     def _include_dir(self, directory):
-        is_default = ( directory.path.string(self.env.base_dirs) in
-                       self.env.host_platform.include_dirs )
+        is_default = directory.path in self.env.host_platform.include_dirs
 
         # Don't include default directories as system dirs (e.g. /usr/include).
         # Doing so would break GCC 6 when #including stdlib.h:
@@ -400,7 +399,7 @@ class CcLinker(BuildCommand):
             if strict:
                 raise
             search_dirs = self.env.getvar('LIBRARY_PATH', '').split(os.pathsep)
-        return [os.path.abspath(i) for i in search_dirs]
+        return [abspath(i) for i in search_dirs]
 
     def _call(self, cmd, input, output, libs=None, flags=None):
         return list(chain(
@@ -759,7 +758,7 @@ class CcPackageResolver(object):
         self.include_dirs = [i for i in uniques(chain(
             self.builder.compiler.search_dirs(),
             self.env.host_platform.include_dirs
-        )) if os.path.exists(i)]
+        )) if exists(i)]
 
         cc_lib_dirs = self.builder.linker('executable').search_dirs()
         try:
@@ -770,7 +769,7 @@ class CcPackageResolver(object):
 
         self.lib_dirs = [i for i in uniques(chain(
             cc_lib_dirs, ld_lib_dirs, self.env.host_platform.lib_dirs
-        )) if os.path.exists(i)]
+        )) if exists(i)]
 
     @property
     def lang(self):
@@ -781,9 +780,10 @@ class CcPackageResolver(object):
             search_dirs = self.include_dirs
 
         for base in search_dirs:
-            if os.path.exists(os.path.join(base, name)):
-                return HeaderDirectory(Path(base, Root.absolute), None,
-                                       system=True)
+            if base.root != Root.absolute:
+                raise ValueError('expected an absolute path')
+            if exists(base.append(name)):
+                return HeaderDirectory(base, None, system=True)
 
         raise PackageResolutionError("unable to find header '{}'".format(name))
 
@@ -810,11 +810,12 @@ class CcPackageResolver(object):
             libnames.append((name + '.lib', Library, {}))
 
         for base in search_dirs:
+            if base.root != Root.absolute:
+                raise ValueError('expected an absolute path')
             for libname, libkind, extra_kwargs in libnames:
-                fullpath = os.path.join(base, libname)
-                if os.path.exists(fullpath):
-                    return libkind(Path(fullpath, Root.absolute),
-                                   format=self.builder.object_format,
+                fullpath = base.append(libname)
+                if exists(fullpath):
+                    return libkind(fullpath, format=self.builder.object_format,
                                    **extra_kwargs)
 
         raise PackageResolutionError("unable to find library '{}'"

@@ -71,15 +71,15 @@ unrecognized extension will always be treated as [*source_file*](#source_file)s.
     multiple kinds of files; when creating a reference to a specific, *known*
     file, the concrete function listed above should be used instead.
 
-### directory(*name*, [*include*], [*exclude*], [*filter*], [*dist*]) { #directory }
+### directory(*name*, [*include*], [*extra*], [*exclude*], [*filter*], [*dist*], [*cache*]) { #directory }
 Availability: `build.bfg`
 {: .subtitle}
 
 Create a reference to an existing directory named *name*. This allows you to
 refer to an arbitrary subfolder of your source directory. The arguments
-*include*, *exclude*, and *filter* are as per [*find_files*](#find_files). Any
-matching files will be added to the project's [source
-distribution](writing.md#distributing-your-source).
+*include*, *extra*, *exclude*, *filter*, *dist*, and *cache* are forwarded to
+[*find_files*](#find_files). Any matching files will be added to the project's
+[source distribution](writing.md#distributing-your-source).
 
 ### extra_dist([*files*], [*dirs*]) { #extra_dist }
 Availability: `build.bfg`
@@ -95,16 +95,16 @@ Availability: `build.bfg`
 
 Create a reference to an existing file named *name*.
 
-### header_directory(*name*, [*include*], [*exclude*], [*filter*], [*system*], [*dist*]) { #header_directory }
+### header_directory(*name*, [*include*], [*extra*], [*exclude*], [*filter*], [*system*], [*dist*], [*cache*]) { #header_directory }
 Availability: `build.bfg`
 {: .subtitle}
 
 Create a reference to a directory named *name* containing header files for the
 project. This can then be used in the *include* argument when
-[compiling](#object_file) a source file. The arguments *include*, *exclude*, and
-*filter* are as per [*find_files*](#find_files). Any matching files will be
-added to the project's [source
-distribution](writing.md#distributing-your-source).
+[compiling](#object_file) a source file. The arguments
+*include*, *extra*, *exclude*, *filter*, *dist*, and *cache* are forwarded to
+[*find_files*](#find_files). Any matching files will be added to the project's
+[source distribution](writing.md#distributing-your-source).
 
 If *system* is *True*, this directory will be treated as a [system
 directory][system-directory] for compilers that support this.
@@ -1150,15 +1150,16 @@ An enum to be used as the result of a filter function for
 * *not_now*: Don't include this file in the results, but do include it in the
   [source distribution](writing.md#distributing-your-source)
 
-### find_files([*path*], [*name*], [*type*], [*extra*], [*exclude*], [*flat*], [*filter*], [*cache*], [*dist*], [*as_object*]) { #find_files }
+### find_files([*path*], [*name*], [*type*], [*extra*], [*exclude*], [*flat*], [*filter*], [*file_type*], [*dir_type*], [*dist*], [*cache*]) { #find_files }
 Availability: `build.bfg`
 {: .subtitle}
 
-Find files in *path* whose name matches the glob (or list of globs) *name*. The
-following arguments may be specified:
+Find files in *path* whose name matches the glob (or list of globs) *name*,
+returning them as [file objects](#file-objects). The following arguments may be
+specified:
 
 * *path*: A path (or list of paths) to start the search in; if omitted, search
-  in the root of the source directory (`'.'`)
+  in the root of the source directory
 * *name*: A glob (or list of globs) to match files; if omitted, all files match
   (equivalent to `'*'`)
 * *type*: A filter for the type of file: `'f'` to find only files, `'d'` to find
@@ -1170,18 +1171,28 @@ following arguments may be specified:
   default, `.#*`, `*~`, and `#*#` are exluded
 * *flat*: If true, *find_files* will not recurse into subdirectories; otherwise,
   (the default) it will
-* *filter*: A predicate taking a filename, relative path, and file type, and
-  returning a [*FindResult*](#FindResult) which will filter the results; by
-  default, this is [*filter_by_platform*](#filter_by_platform)
-* *cache*: If true (the default), cache the results so that any changes to will
-  regenerate the build scripts for the project
+* *filter*: A predicate taking a path object file type, and returning a
+  [*FindResult*](#FindResult) which will filter the results
+* *file_type*: The type of object to return for matching files; if specified,
+  this should be a function taking a path object and a boolean (the *dist*
+  argument below), otherwise an [*auto_file*](#auto_file) will be returned
+* *dir_type*: The type of object to return for matching directories, as with
+  *file_type*; the default type is a [*directory*](#directory)
 * *dist*: If true (the default), all files found by this function will
   automatically be added to the source distribution
-* *as_object*: If true, results will be returned as file or directory objects;
-  otherwise (the default), return path strings
+* *cache*: If true (the default), cache the results so that any changes to will
+  regenerate the build scripts for the project
 
 The *cache* argument is particularly important. It allows you to add or remove
 source files and not have to worry about manually rerunning bfg9000.
+
+### find_paths([*path*], [*name*], [*type*], [*extra*], [*exclude*], [*flat*], [*filter*], [*file_type*], [*dir_type*], [*dist*], [*cache*]) { #find_paths }
+Availability: `build.bfg`
+{: .subtitle}
+
+Find files in *path* whose name matches the glob (or list of globs) *name*,
+returning them as [path objects](#Path). The arguments to this function are the
+same as for [*find_files*](#find_files).
 
 ### info(*message*, [*show_stack*]) { #info }
 
