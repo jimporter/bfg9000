@@ -184,6 +184,8 @@
   input files when determining the builder</li>
 <li><code>args</code> and <code>kwargs</code> no longer supported for <code>build_step()</code>; use a lambda
   instead</li>
+<li>Options specified on the command line (e.g. install locations) now override
+  settings in toolchain files</li>
 </ul>
 <h3 id="bug-fixes">Bug fixes<a class="headerlink" href="#bug-fixes" title="Permanent link">§</a></h3>
 <ul>
@@ -193,6 +195,8 @@
   installed as symlinks</li>
 <li>Generated header directories are now included as dependencies of compilation
   steps</li>
+<li>Default install locations are now based on the <em>target</em> platform instead of
+  the host platform</li>
 </ul>
 <hr />
 <h2 id="v041">v0.4.1<a class="headerlink" href="#v041" title="Permanent link">§</a></h2>
