@@ -207,7 +207,14 @@ part of a <a href="#command"><em>command</em></a> step.</p>
 <p>In addition to the functions listed in this section below,
 <a href="#build_step">build steps</a> which generate a file can also be used to produce
 source files of that type (see each step's documentation for details).</p>
-<h3 id="auto_file">auto_file(<em>name</em>, [<em>lang</em>])<a class="headerlink" href="#auto_file" title="Permanent link">§</a></h3>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>By default, when creating a file object in the source directory, it will
+automatically be added to the project's <a href="../writing/#distributing-your-source">source
+distribution</a>. To disable this, you can
+specify <code>dist=False</code> when creating the file object.</p>
+</div>
+<h3 id="auto_file">auto_file(<em>name</em>, [<em>lang</em>], [<em>dist</em>])<a class="headerlink" href="#auto_file" title="Permanent link">§</a></h3>
 <p>Create a reference to an existing file named <em>name</em>. This function will try to
 automatically determine the file's kind based on its extension:
 <a href="#source_file"><em>source_file</em></a>; <a href="#header_file"><em>header_file</em></a>;
@@ -220,45 +227,46 @@ unrecognized extension will always be treated as <a href="#source_file"><em>sour
 multiple kinds of files; when creating a reference to a specific, <em>known</em>
 file, the concrete function listed above should be used instead.</p>
 </div>
-<h3 id="directory">directory(<em>name</em>, [<em>include</em>], [<em>exclude</em>], [<em>filter</em>])<a class="headerlink" href="#directory" title="Permanent link">§</a></h3>
+<h3 id="directory">directory(<em>name</em>, [<em>include</em>], [<em>extra</em>], [<em>exclude</em>], [<em>filter</em>], [<em>dist</em>], [<em>cache</em>])<a class="headerlink" href="#directory" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Create a reference to an existing directory named <em>name</em>. This allows you to
 refer to an arbitrary subfolder of your source directory. The arguments
-<em>include</em>, <em>exclude</em>, and <em>filter</em> are as per <a href="#find_files"><em>find_files</em></a>. Any
-matching files will be added to the project's <a href="../writing/#distributing-your-source">source
-distribution</a>.</p>
+<em>include</em>, <em>extra</em>, <em>exclude</em>, <em>filter</em>, <em>dist</em>, and <em>cache</em> are forwarded to
+<a href="#find_files"><em>find_files</em></a>. Any matching files will be added to the project's
+<a href="../writing/#distributing-your-source">source distribution</a>.</p>
 <h3 id="extra_dist">extra_dist([<em>files</em>], [<em>dirs</em>])<a class="headerlink" href="#extra_dist" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Add extra <em>files</em> and <em>dirs</em> to the list of recognized source files. This lets
 you reference files that are part of the source distribution but which have no
 impact on the build proper (e.g. READMEs).</p>
-<h3 id="generic_file">generic_file(<em>name</em>)<a class="headerlink" href="#generic_file" title="Permanent link">§</a></h3>
+<h3 id="generic_file">generic_file(<em>name</em>, [<em>dist</em>])<a class="headerlink" href="#generic_file" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Create a reference to an existing file named <em>name</em>.</p>
-<h3 id="header_directory">header_directory(<em>name</em>, [<em>include</em>], [<em>exclude</em>], [<em>filter</em>], [<em>system</em>])<a class="headerlink" href="#header_directory" title="Permanent link">§</a></h3>
+<h3 id="header_directory">header_directory(<em>name</em>, [<em>include</em>], [<em>extra</em>], [<em>exclude</em>], [<em>filter</em>], [<em>system</em>], [<em>dist</em>], [<em>cache</em>])<a class="headerlink" href="#header_directory" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Create a reference to a directory named <em>name</em> containing header files for the
 project. This can then be used in the <em>include</em> argument when
-<a href="#object_file">compiling</a> a source file. The arguments <em>include</em>, <em>exclude</em>, and
-<em>filter</em> are as per <a href="#find_files"><em>find_files</em></a>. Any matching files will be
-added to the project's <a href="../writing/#distributing-your-source">source
-distribution</a>.</p>
+<a href="#object_file">compiling</a> a source file. The arguments
+<em>include</em>, <em>extra</em>, <em>exclude</em>, <em>filter</em>, <em>dist</em>, and <em>cache</em> are forwarded to
+<a href="#find_files"><em>find_files</em></a>. Any matching files will be added to the project's
+<a href="../writing/#distributing-your-source">source distribution</a>.</p>
 <p>If <em>system</em> is <em>True</em>, this directory will be treated as a <a href="https://gcc.gnu.org/onlinedocs/cpp/System-Headers.html">system
 directory</a> for compilers that support this.</p>
-<h3 id="header_file">header_file(<em>name</em>)<a class="headerlink" href="#header_file" title="Permanent link">§</a></h3>
+<h3 id="header_file">header_file(<em>name</em>, [<em>lang</em>], [<em>dist</em>])<a class="headerlink" href="#header_file" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Create a reference to an existing header named <em>name</em>. This is useful if you'd
-like to <a href="#install">install</a> a single header file for your project.</p>
-<h3 id="module_def_file">module_def_file(<em>name</em>)<a class="headerlink" href="#module_def_file" title="Permanent link">§</a></h3>
+like to <a href="#install">install</a> a single header file for your project. If <em>lang</em> is
+not specified, the language of the file is inferred from its extension.</p>
+<h3 id="module_def_file">module_def_file(<em>name</em>, [<em>dist</em>])<a class="headerlink" href="#module_def_file" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Create a reference to an existing module-definition file named <em>name</em>.
 <a href="https://docs.microsoft.com/en-us/cpp/build/reference/module-definition-dot-def-files">Module-definition files</a> are sometimes used when building libraries
 on Windows.</p>
-<h3 id="resource_file">resource_file(<em>name</em>, [<em>lang</em>])<a class="headerlink" href="#resource_file" title="Permanent link">§</a></h3>
+<h3 id="resource_file">resource_file(<em>name</em>, [<em>lang</em>], [<em>dist</em>])<a class="headerlink" href="#resource_file" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Create a reference to an existing resource file named <em>name</em>. If <em>lang</em> is not
 specified, the language of the file is inferred from its extension.</p>
-<h3 id="source_file">source_file(<em>name</em>, [<em>lang</em>])<a class="headerlink" href="#source_file" title="Permanent link">§</a></h3>
+<h3 id="source_file">source_file(<em>name</em>, [<em>lang</em>], [<em>dist</em>])<a class="headerlink" href="#source_file" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Create a reference to an existing source file named <em>name</em>. If <em>lang</em> is not
 specified, the language of the file is inferred from its extension.</p>
@@ -1049,13 +1057,14 @@ names are: <code>'posix'</code>,<code>'linux'</code>, <code>'darwin'</code>, <co
 <li><em>not_now</em>: Don't include this file in the results, but do include it in the
   <a href="../writing/#distributing-your-source">source distribution</a></li>
 </ul>
-<h3 id="find_files">find_files([<em>path</em>], [<em>name</em>], [<em>type</em>], [<em>extra</em>], [<em>exclude</em>], [<em>flat</em>], [<em>filter</em>], [<em>cache</em>], [<em>dist</em>], [<em>as_object</em>])<a class="headerlink" href="#find_files" title="Permanent link">§</a></h3>
+<h3 id="find_files">find_files([<em>path</em>], [<em>name</em>], [<em>type</em>], [<em>extra</em>], [<em>exclude</em>], [<em>flat</em>], [<em>filter</em>], [<em>file_type</em>], [<em>dir_type</em>], [<em>dist</em>], [<em>cache</em>])<a class="headerlink" href="#find_files" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
-<p>Find files in <em>path</em> whose name matches the glob (or list of globs) <em>name</em>. The
-following arguments may be specified:</p>
+<p>Find files in <em>path</em> whose name matches the glob (or list of globs) <em>name</em>,
+returning them as <a href="#file-objects">file objects</a>. The following arguments may be
+specified:</p>
 <ul>
 <li><em>path</em>: A path (or list of paths) to start the search in; if omitted, search
-  in the root of the source directory (<code>'.'</code>)</li>
+  in the root of the source directory</li>
 <li><em>name</em>: A glob (or list of globs) to match files; if omitted, all files match
   (equivalent to <code>'*'</code>)</li>
 <li><em>type</em>: A filter for the type of file: <code>'f'</code> to find only files, <code>'d'</code> to find
@@ -1067,18 +1076,25 @@ following arguments may be specified:</p>
   default, <code>.#*</code>, <code>*~</code>, and <code>#*#</code> are exluded</li>
 <li><em>flat</em>: If true, <em>find_files</em> will not recurse into subdirectories; otherwise,
   (the default) it will</li>
-<li><em>filter</em>: A predicate taking a filename, relative path, and file type, and
-  returning a <a href="#FindResult"><em>FindResult</em></a> which will filter the results; by
-  default, this is <a href="#filter_by_platform"><em>filter_by_platform</em></a></li>
-<li><em>cache</em>: If true (the default), cache the results so that any changes to will
-  regenerate the build scripts for the project</li>
+<li><em>filter</em>: A predicate taking a path object file type, and returning a
+  <a href="#FindResult"><em>FindResult</em></a> which will filter the results</li>
+<li><em>file_type</em>: The type of object to return for matching files; if specified,
+  this should be a function taking a path object and a boolean (the <em>dist</em>
+  argument below), otherwise an <a href="#auto_file"><em>auto_file</em></a> will be returned</li>
+<li><em>dir_type</em>: The type of object to return for matching directories, as with
+  <em>file_type</em>; the default type is a <a href="#directory"><em>directory</em></a></li>
 <li><em>dist</em>: If true (the default), all files found by this function will
   automatically be added to the source distribution</li>
-<li><em>as_object</em>: If true, results will be returned as file or directory objects;
-  otherwise (the default), return path strings</li>
+<li><em>cache</em>: If true (the default), cache the results so that any changes to will
+  regenerate the build scripts for the project</li>
 </ul>
 <p>The <em>cache</em> argument is particularly important. It allows you to add or remove
 source files and not have to worry about manually rerunning bfg9000.</p>
+<h3 id="find_paths">find_paths([<em>path</em>], [<em>name</em>], [<em>type</em>], [<em>extra</em>], [<em>exclude</em>], [<em>flat</em>], [<em>filter</em>], [<em>file_type</em>], [<em>dir_type</em>], [<em>dist</em>], [<em>cache</em>])<a class="headerlink" href="#find_paths" title="Permanent link">§</a></h3>
+<p class="subtitle">Availability: <code>build.bfg</code></p>
+<p>Find files in <em>path</em> whose name matches the glob (or list of globs) <em>name</em>,
+returning them as <a href="#Path">path objects</a>. The arguments to this function are the
+same as for <a href="#find_files"><em>find_files</em></a>.</p>
 <h3 id="info">info(<em>message</em>, [<em>show_stack</em>])<a class="headerlink" href="#info" title="Permanent link">§</a></h3>
 <p>Log an informational message with the value <em>message</em>. If <em>show_stack</em> is true,
 show the stack trace where the message was logged from.</p>
