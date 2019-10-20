@@ -67,8 +67,7 @@ class Environment(object):
         env.__tools = {}
         return env
 
-    def __init__(self, bfgdir, backend, backend_version, srcdir, builddir,
-                 install_dirs, library_mode, extra_args=None):
+    def __init__(self, bfgdir, backend, backend_version, srcdir, builddir):
         self.bfgdir = bfgdir
         self.backend = backend
         self.backend_version = backend_version
@@ -78,14 +77,28 @@ class Environment(object):
 
         self.srcdir = srcdir
         self.builddir = builddir
-        self.install_dirs = install_dirs
+        self.install_dirs = {}
         self.toolchain = Toolchain()
-
-        self.library_mode = LibraryMode(*library_mode)
-        self.extra_args = extra_args
 
         self.initial_variables = dict(os.environ)
         self.init_variables()
+
+    def finalize(self, install_dirs, library_mode, extra_args=None):
+        # Fill in any install dirs that aren't already set (e.g. by a
+        # toolchain file) with defaults from the target platform, but skip
+        # absolute paths if this is a cross-compilation build.
+        for k, v in iteritems(self.target_platform.install_dirs):
+            if ( (self.is_cross and v and v.root == Root.absolute) or
+                 self.install_dirs.get(k) ):
+                continue
+            self.install_dirs[k] = v
+
+        for k, v in iteritems(install_dirs):
+            if v:
+                self.install_dirs[k] = v
+
+        self.library_mode = LibraryMode(*library_mode)
+        self.extra_args = extra_args
 
     def init_variables(self):
         self.variables = EnvVarDict(self.initial_variables)

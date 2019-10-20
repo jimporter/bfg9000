@@ -25,6 +25,8 @@ in progress
   input files when determining the builder
 - `args` and `kwargs` no longer supported for `build_step()`; use a lambda
   instead
+- Options specified on the command line (e.g. install locations) now override
+  settings in toolchain files
 
 ### Bug fixes
 - Include `options.bfg` in dist tarballs
@@ -33,6 +35,8 @@ in progress
   installed as symlinks
 - Generated header directories are now included as dependencies of compilation
   steps
+- Default install locations are now based on the *target* platform instead of
+  the host platform
 
 ---
 

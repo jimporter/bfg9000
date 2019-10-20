@@ -35,7 +35,7 @@ def load_toolchain(env, filename, reload=False):
     if reload:
         env.init_variables()
 
-    builtin_dict = builtin.toolchain.bind(env=env)
+    builtin_dict = builtin.toolchain.bind(env=env, reload=reload)
     with open(filename.string(), 'r') as f:
         _execute_file(f, f.name, builtin_dict)
 

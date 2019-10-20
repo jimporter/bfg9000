@@ -57,7 +57,7 @@ def handle_reload_exception(e, suggest_rerun=False):
     return 1
 
 
-def environment_from_args(args, extra_args=None):
+def environment_from_args(args):
     # Get the bin directory holding bfg's executables.
     bfgdir = path.abspath(sys.argv[0]).parent()
 
@@ -68,12 +68,17 @@ def environment_from_args(args, extra_args=None):
         backend_version=backend.version(),
         srcdir=args.srcdir,
         builddir=args.builddir,
+    )
+
+    return env, backend
+
+
+def finalize_environment(env, args, extra_args=None):
+    env.finalize(
         install_dirs={i: getattr(args, i.name) for i in path.InstallRoot},
         library_mode=(args.shared, args.static),
         extra_args=extra_args,
     )
-
-    return env, backend
 
 
 def directory_pair(srcname, buildname):
@@ -151,23 +156,23 @@ def add_configure_args(parser):
     build.add_argument('--static', action='enable', default=False,
                        help='build static libraries (default: disabled)')
 
-    install_dirs = platform_info().install_dirs
-    common_path_help = 'installation path for {} (default: %(default)r)'
+    common_path_help = 'installation path for {} (default: {{}})'
     path_help = {
-        'prefix': 'installation prefix (default: %(default)r)',
+        'prefix': 'installation prefix (default: {})',
         'exec_prefix': ('installation prefix for architecture-dependent ' +
-                        'files (default: %(default)r)'),
+                        'files (default: {})'),
         'bindir': common_path_help.format('executables'),
         'libdir': common_path_help.format('libraries'),
         'includedir': common_path_help.format('headers'),
     }
 
+    install_dirs = platform_info().install_dirs
     install = parser.add_argument_group('installation arguments')
     for root in path.InstallRoot:
         name = '--' + root.name.replace('_', '-')
+        help = path_help[root.name].format(repr(install_dirs[root]))
         install.add_argument(name, type=argparse.Directory(), metavar='PATH',
-                             default=install_dirs[root],
-                             help=path_help[root.name])
+                             help=help)
 
 
 def configure(parser, subparser, args, extra):
@@ -185,9 +190,10 @@ def configure(parser, subparser, args, extra):
         os.mkdir(args.builddir.string())
 
     try:
-        env, backend = environment_from_args(args, extra)
+        env, backend = environment_from_args(args)
         if args.toolchain:
             build.load_toolchain(env, args.toolchain)
+        finalize_environment(env, args, extra)
         env.save(args.builddir.string())
 
         build_inputs = build.configure_build(env)

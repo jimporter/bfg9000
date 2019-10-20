@@ -33,13 +33,15 @@ class TestEnvironmentFromArgs(TestCase):
         self.assertEqual(env.srcdir, path.abspath('.'))
         self.assertTrue('make' in backend.__name__)
 
+        driver.finalize_environment(env, self.args)
+        self.assertEqual(env.install_dirs, {
+            k: getattr(self.args, k.name) for k in path.InstallRoot
+        })
+
     def test_extra_args(self):
-        env, backend = driver.environment_from_args(
-            self.args, extra_args=['--foo']
-        )
-        self.assertEqual(env.srcdir, path.abspath('.'))
+        env, backend = driver.environment_from_args(self.args)
+        driver.finalize_environment(env, self.args, ['--foo'])
         self.assertEqual(env.extra_args, ['--foo'])
-        self.assertTrue('make' in backend.__name__)
 
 
 class TestDirectoryPair(TestCase):

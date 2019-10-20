@@ -4,7 +4,7 @@ from .. import *
 
 from bfg9000 import tools
 from bfg9000.builtins import builtin, toolchain
-from bfg9000.path import abspath, InstallRoot
+from bfg9000.path import InstallRoot
 
 tools.init()
 
@@ -21,7 +21,7 @@ class TestToolchain(TestCase):
     def setUp(self):
         self.env = make_env(clear_variables=True)
         self.builtin_dict = builtin.toolchain.bind(
-            env=self.env
+            env=self.env, reload=False
         )
 
     def test_builtins(self):
@@ -202,6 +202,18 @@ class TestToolchain(TestCase):
         self.builtin_dict['install_dirs'](prefix='/prefix', bindir='/bin/dir')
 
         self.assertEqual(self.env.install_dirs[InstallRoot.prefix],
-                         abspath('/prefix'))
+                         Path('/prefix'))
         self.assertEqual(self.env.install_dirs[InstallRoot.bindir],
-                         abspath('/bin/dir'))
+                         Path('/bin/dir'))
+
+    def test_install_dirs_reload(self):
+        self.builtin_dict = builtin.toolchain.bind(
+            env=self.env, reload=True
+        )
+
+        prefix = self.env.install_dirs[InstallRoot.prefix]
+        bindir = self.env.install_dirs[InstallRoot.bindir]
+        self.builtin_dict['install_dirs'](prefix='/bad', bindir='/bad/bin')
+
+        self.assertEqual(self.env.install_dirs[InstallRoot.prefix], prefix)
+        self.assertEqual(self.env.install_dirs[InstallRoot.bindir], bindir)

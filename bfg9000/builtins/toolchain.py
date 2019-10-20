@@ -1,9 +1,10 @@
 from six import iteritems
 
 from . import builtin
-from .. import path, platforms, shell
+from .. import platforms, shell
 from ..iterutils import first, isiterable
 from ..languages import known_formats, known_langs
+from ..path import Path, Root, InstallRoot
 from ..shell import posix as pshell
 
 _unsafe_builtins = ['file', '__import__', 'input', 'open', 'raw_input',
@@ -85,7 +86,9 @@ def lib_options(env, options, format='native', mode='dynamic'):
     env.variables[known_formats[format, mode].var('libs')] = options
 
 
-@builtin.function('env', context='toolchain')
-def install_dirs(env, **kwargs):
+@builtin.function('env', 'reload', context='toolchain')
+def install_dirs(env, reload, **kwargs):
+    if reload:
+        return
     for k, v in iteritems(kwargs):
-        env.install_dirs[path.InstallRoot[k]] = path.abspath(v)
+        env.install_dirs[InstallRoot[k]] = Path.ensure(v, Root.absolute)

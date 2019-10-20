@@ -23,13 +23,13 @@ class TestEnvironment(TestCase):
             os.path.join(test_data_dir, 'environment', 'v4')
         )
 
-        self.assertEqual(env.bfgdir, Path('/path/to', Root.absolute))
+        self.assertEqual(env.bfgdir, Path('/path/to'))
         self.assertEqual(env.backend, 'make')
 
-        self.assertEqual(env.srcdir, Path('/root/srcdir', Root.absolute))
-        self.assertEqual(env.builddir, Path('/root/builddir', Root.absolute))
+        self.assertEqual(env.srcdir, Path('/root/srcdir'))
+        self.assertEqual(env.builddir, Path('/root/builddir'))
         self.assertDictsEqual(env.install_dirs, {
-            InstallRoot.prefix: Path('/root/prefix', Root.absolute),
+            InstallRoot.prefix: Path('/root/prefix'),
             InstallRoot.exec_prefix: Path('', InstallRoot.prefix),
             InstallRoot.bindir: Path('bin', InstallRoot.exec_prefix),
             InstallRoot.libdir: Path('lib', InstallRoot.exec_prefix),
@@ -46,3 +46,27 @@ class TestEnvironment(TestCase):
 
         self.assertEqual(env.host_platform.name, 'linux')
         self.assertEqual(env.target_platform.name, 'linux')
+
+    def test_finalize(self):
+        def make_env():
+            env = Environment(Path('bfgdir', Root.srcdir), None, None,
+                              Path('/srcdir'), Path('/builddir'))
+            env.install_dirs[InstallRoot.prefix] = Path('/prefix')
+            env.install_dirs[InstallRoot.exec_prefix] = Path('/exec-prefix')
+            return env
+
+        env = make_env()
+        env.finalize({}, (True, False))
+        self.assertEqual(env.library_mode, LibraryMode(True, False))
+        self.assertEqual(env.install_dirs[InstallRoot.prefix], Path('/prefix'))
+        self.assertEqual(env.install_dirs[InstallRoot.exec_prefix],
+                         Path('/exec-prefix'))
+
+        env = make_env()
+        env.finalize({
+            InstallRoot.prefix: Path('/foo'),
+            InstallRoot.exec_prefix: None,
+        }, (True, False))
+        self.assertEqual(env.install_dirs[InstallRoot.prefix], Path('/foo'))
+        self.assertEqual(env.install_dirs[InstallRoot.exec_prefix],
+                         Path('/exec-prefix'))
