@@ -19,7 +19,7 @@ class TestFilesWithSpaces(IntegrationTest):
     @only_if_backend('make', hide=True)
     def test_dir_sentinels(self):
         self.build(executable('another file'))
-        self.assertTrue(os.path.isfile('sub dir/.dir'))
+        self.assertTrue(os.path.isfile('another file.int/sub dir/.dir'))
 
     @skip_if_backend('msbuild')
     def test_script(self):

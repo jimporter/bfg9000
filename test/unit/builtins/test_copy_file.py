@@ -1,6 +1,6 @@
 from .common import BuiltinTest
 from bfg9000 import file_types
-from bfg9000.builtins import copy_file  # noqa
+from bfg9000.builtins import copy_file as copy_file_  # noqa
 from bfg9000.path import Path, Root
 
 
@@ -10,11 +10,45 @@ class TestCopyFile(BuiltinTest):
         result = self.builtin_dict['copy_file'](file='file.txt')
         self.assertSameFile(result, expected)
 
+        result = self.builtin_dict['copy_file']('file.txt', 'src.txt')
+        self.assertSameFile(result, expected)
+
         result = self.builtin_dict['copy_file']('file.txt')
+        self.assertSameFile(result, expected)
+
+        src = self.builtin_dict['generic_file']('file.txt')
+        result = self.builtin_dict['copy_file'](src)
         self.assertSameFile(result, expected)
 
     def test_make_no_name_or_file(self):
         self.assertRaises(TypeError, self.builtin_dict['copy_file'])
+
+    def test_make_directory(self):
+        expected = file_types.File(Path('dir/file.txt'))
+        copy_file = self.builtin_dict['copy_file']
+
+        result = copy_file('file.txt', directory='dir')
+        self.assertSameFile(result, expected)
+
+        src = self.builtin_dict['generic_file']('file.txt')
+        result = copy_file(src, directory='dir')
+        self.assertSameFile(result, expected)
+
+        result = copy_file('file.txt', directory='dir/')
+        self.assertSameFile(result, expected)
+
+        result = copy_file('file.txt', directory=Path('dir'))
+        self.assertSameFile(result, expected)
+
+        result = copy_file('dir1/file.txt', directory='dir2')
+        self.assertSameFile(result,
+                            file_types.File(Path('dir2/dir1/file.txt')))
+
+        result = copy_file('copied.txt', 'file.txt', directory='dir')
+        self.assertSameFile(result, file_types.File(Path('copied.txt')))
+
+        self.assertRaises(ValueError, copy_file, file='file.txt',
+                          directory=Path('dir', Root.srcdir))
 
     def test_invalid_mode(self):
         self.assertRaises(ValueError, self.builtin_dict['copy_file'],

@@ -158,7 +158,7 @@ def type(out_type, in_type=string_or_path_types, extra_in_type=(),
 
         @functools.wraps(fn)
         def wrapper(*args, **kwargs):
-            bound = wrapper._builtin_bound
+            bound = getattr(wrapper, '_builtin_bound', 0)
             if first_optional and len(args) < 2 + bound:
                 args = args[:bound] + (None, ) + args[bound:]
 
@@ -166,7 +166,7 @@ def type(out_type, in_type=string_or_path_types, extra_in_type=(),
             # output type, just return it immediately; otherwise, check if it's
             # a valid input type and then call the function.
             try:
-                thing = _get_value(spec, wrapper._builtin_bound, args, kwargs)
+                thing = _get_value(spec, bound, args, kwargs)
                 if short_circuit:
                     if isinstance(thing, wrapper.type):
                         return thing

@@ -95,7 +95,7 @@ class Link(Edge):
         build['defaults'].add(primary)
 
     @classmethod
-    def convert_args(cls, builtins, files, kwargs):
+    def convert_args(cls, builtins, name, files, kwargs):
         lang = kwargs.get('lang')
         src_lang = known_langs[lang].src_lang if lang else None
         kwargs['lang'] = src_lang
@@ -107,11 +107,14 @@ class Link(Edge):
         kwargs['link_options'] = pshell.listify(kwargs.get('link_options'),
                                                 type=opts.option_list)
 
+        intdir = kwargs.pop('intermediate_dir',
+                            '{}.int/'.format(cls.__name(name)))
         files = builtins['object_files'](
             files, includes=kwargs.pop('includes', None),
             pch=kwargs.pop('pch', None),
             options=kwargs.pop('compile_options', None),
-            libs=kwargs['libs'], packages=kwargs['packages'], lang=lang
+            libs=kwargs['libs'], packages=kwargs['packages'], lang=lang,
+            directory=intdir
         )
 
         return files, kwargs
@@ -157,9 +160,10 @@ class DynamicLink(Link):
         Link.__init__(self, *args, **kwargs)
 
     @classmethod
-    def convert_args(cls, builtins, files, kwargs):
+    def convert_args(cls, builtins, name, files, kwargs):
         convert_one(kwargs, 'module_defs', builtins['module_def_file'])
-        return super(DynamicLink, cls).convert_args(builtins, files, kwargs)
+        return super(DynamicLink, cls).convert_args(builtins, name, files,
+                                                    kwargs)
 
     @property
     def options(self):
@@ -225,11 +229,12 @@ class StaticLink(Link):
         Link.__init__(self, *args, **kwargs)
 
     @classmethod
-    def convert_args(cls, builtins, files, kwargs):
+    def convert_args(cls, builtins, name, files, kwargs):
         kwargs['static_link_options'] = pshell.listify(
             kwargs.get('static_link_options'), type=opts.option_list
         )
-        return super(StaticLink, cls).convert_args(builtins, files, kwargs)
+        return super(StaticLink, cls).convert_args(builtins, name, files,
+                                                   kwargs)
 
     @property
     def options(self):
@@ -269,7 +274,7 @@ def executable(builtins, build, env, name, files=None, **kwargs):
         dist = kwargs.pop('dist', True)
         params = [('format', env.target_platform.object_format), ('lang', 'c')]
         return static_file(build, Executable, name, dist, params, kwargs)
-    files, kwargs = DynamicLink.convert_args(builtins, files, kwargs)
+    files, kwargs = DynamicLink.convert_args(builtins, name, files, kwargs)
     return DynamicLink(build, env, name, files, **kwargs).public_output
 
 
@@ -287,7 +292,7 @@ def shared_library(builtins, build, env, name, files=None, **kwargs):
         dist = kwargs.pop('dist', True)
         params = [('format', env.target_platform.object_format), ('lang', 'c')]
         return static_file(build, SharedLibrary, name, dist, params, kwargs)
-    files, kwargs = SharedLink.convert_args(builtins, files, kwargs)
+    files, kwargs = SharedLink.convert_args(builtins, name, files, kwargs)
     return SharedLink(build, env, name, files, **kwargs).public_output
 
 
@@ -303,7 +308,7 @@ def static_library(builtins, build, env, name, files=None, **kwargs):
         dist = kwargs.pop('dist', True)
         params = [('format', env.target_platform.object_format), ('lang', 'c')]
         return static_file(build, StaticLibrary, name, dist, params, kwargs)
-    files, kwargs = StaticLink.convert_args(builtins, files, kwargs)
+    files, kwargs = StaticLink.convert_args(builtins, name, files, kwargs)
     return StaticLink(build, env, name, files, **kwargs).public_output
 
 
@@ -352,7 +357,7 @@ def library(builtins, build, env, name, files=None, **kwargs):
 
     if kind == 'dual':
         shared_files, shared_kwargs = SharedLink.convert_args(
-            builtins, files, shared_kwargs
+            builtins, name, files, shared_kwargs
         )
         shared = SharedLink(build, env, name, shared_files, **shared_kwargs)
         if not shared.linker.builder.can_dual_link:
@@ -361,15 +366,17 @@ def library(builtins, build, env, name, files=None, **kwargs):
             return shared.public_output
 
         static_files, static_kwargs = StaticLink.convert_args(
-            builtins, shared_files, static_kwargs
+            builtins, name, shared_files, static_kwargs
         )
         static = StaticLink(build, env, name, static_files, **static_kwargs)
         return DualUseLibrary(shared.public_output, static.public_output)
     elif kind == 'shared':
-        files, kw = SharedLink.convert_args(builtins, files, shared_kwargs)
+        files, kw = SharedLink.convert_args(builtins, name, files,
+                                            shared_kwargs)
         return SharedLink(build, env, name, files, **kw).public_output
     else:  # kind == 'static'
-        files, kw = StaticLink.convert_args(builtins, files, static_kwargs)
+        files, kw = StaticLink.convert_args(builtins, name, files,
+                                            static_kwargs)
         return StaticLink(build, env, name, files, **kw).public_output
 
 

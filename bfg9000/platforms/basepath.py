@@ -52,8 +52,13 @@ class BasePath(safe_str.safe_string):
         return cls(drive + path, Root.absolute)
 
     @classmethod
-    def ensure(cls, path, root=Root.builddir, destdir=False, base=None):
-        return objectify(path, base or cls, cls, root=root, destdir=destdir)
+    def ensure(cls, path, root=Root.builddir, destdir=False, base=None,
+               strict=False):
+        result = objectify(path, base or cls, cls, root=root, destdir=destdir)
+        if strict and result.root != root:
+            raise ValueError('expected root of {!r}, but got {!r}'
+                             .format(root.name, result.root.name))
+        return result
 
     @staticmethod
     def __normalize(path, expand_user=False):

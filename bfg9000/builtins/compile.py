@@ -10,6 +10,7 @@ from ..file_types import *
 from ..iterutils import first, iterate
 from ..languages import known_langs
 from ..objutils import convert_each, convert_one
+from ..path import Path
 from ..shell import posix as pshell
 
 build_input('compile_options')(lambda build_inputs, env: defaultdict(list))
@@ -18,10 +19,12 @@ build_input('compile_options')(lambda build_inputs, env: defaultdict(list))
 class BaseCompile(Edge):
     desc_verb = 'compile'
 
-    def __init__(self, build, name, internal_options, extra_deps=None,
-                 description=None):
+    def __init__(self, build, name, internal_options, directory=None,
+                 extra_deps=None, description=None):
         if name is None:
             name = self.compiler.default_name(self.file, self)
+            if directory:
+                name = directory.append(name).suffix
 
         extra_options = self.compiler.pre_build(build, name, self)
         output = self.compiler.output_file(name, self)
@@ -47,10 +50,21 @@ class BaseCompile(Edge):
     def flags(self):
         return self.compiler.flags(self.options, self.raw_output)
 
+    @staticmethod
+    def _convert_args_lang(kwargs):
+        lang = kwargs.get('lang')
+        src_lang = known_langs[lang].src_lang if lang else None
+        return lang, src_lang
+
+    @staticmethod
+    def convert_args(kwargs):
+        convert_one(kwargs, 'directory', Path.ensure, strict=True)
+        return kwargs
+
 
 class Compile(BaseCompile):
     def __init__(self, build, name, includes, include_deps, pch, libs,
-                 packages, options, lang=None, extra_deps=None,
+                 packages, options, lang=None, directory=None, extra_deps=None,
                  description=None):
         self.includes = includes
         self.include_deps = include_deps
@@ -75,8 +89,8 @@ class Compile(BaseCompile):
             self.libs = libs
             internal_options.extend(opts.lib(i) for i in self.libs)
 
-        BaseCompile.__init__(self, build, name, internal_options, extra_deps,
-                             description)
+        BaseCompile.__init__(self, build, name, internal_options, directory,
+                             extra_deps, description)
 
     @staticmethod
     def convert_args(builtins, lang, src_lang, kwargs):
@@ -100,6 +114,7 @@ class Compile(BaseCompile):
                     packages=kwargs['packages'], options=kwargs['options'],
                     lang=lang)
 
+        kwargs = BaseCompile.convert_args(kwargs)
         return kwargs
 
     def add_extra_options(self, options):
@@ -120,10 +135,9 @@ class CompileSource(Compile):
         self.compiler = env.builder(lang or self.file.lang).compiler
         Compile.__init__(self, build, name, **kwargs)
 
-    @staticmethod
-    def convert_args(builtins, file, kwargs):
-        lang = kwargs.get('lang')
-        src_lang = known_langs[lang].src_lang if lang else None
+    @classmethod
+    def convert_args(cls, builtins, file, kwargs):
+        lang, src_lang = cls._convert_args_lang(kwargs)
         file = builtins['source_file'](file, lang=src_lang)
         return file, Compile.convert_args(builtins, lang, src_lang, kwargs)
 
@@ -142,10 +156,9 @@ class CompileHeader(Compile):
         self.compiler = env.builder(lang or self.file.lang).pch_compiler
         Compile.__init__(self, build, name, **kwargs)
 
-    @staticmethod
-    def convert_args(builtins, file, kwargs):
-        lang = kwargs.get('lang')
-        src_lang = known_langs[lang].src_lang if lang else None
+    @classmethod
+    def convert_args(cls, builtins, file, kwargs):
+        lang, src_lang = cls._convert_args_lang(kwargs)
         file = builtins['header_file'](file, lang=src_lang)
         convert_one(kwargs, 'source', builtins['source_file'], lang=file.lang)
         return file, Compile.convert_args(builtins, lang, src_lang, kwargs)
@@ -155,7 +168,7 @@ class GenerateSource(BaseCompile):
     desc_verb = 'generate'
 
     def __init__(self, build, env, name, file, options, lang=None,
-                 extra_deps=None, description=None):
+                 directory=None, extra_deps=None, description=None):
         self.file = file
         if not isinstance(self.file, CodeFile):
             raise ValueError('unable to determine language for file {!r}'
@@ -164,17 +177,17 @@ class GenerateSource(BaseCompile):
         self.user_options = options
 
         self.compiler = env.builder(lang or self.file.lang).transpiler
-        BaseCompile.__init__(self, build, name, None, extra_deps, description)
+        BaseCompile.__init__(self, build, name, None, directory, extra_deps,
+                             description)
 
-    @staticmethod
-    def convert_args(builtins, file, kwargs):
-        lang = kwargs.get('lang')
-        src_lang = known_langs[lang].src_lang if lang else None
-
+    @classmethod
+    def convert_args(cls, builtins, file, kwargs):
+        lang, src_lang = cls._convert_args_lang(kwargs)
         file = builtins['auto_file'](file, lang=src_lang)
 
         kwargs['options'] = pshell.listify(kwargs.get('options'),
                                            type=opts.option_list)
+        kwargs = BaseCompile.convert_args(kwargs)
         return file, kwargs
 
 
@@ -192,16 +205,14 @@ def object_file(builtins, build, env, name=None, file=None, **kwargs):
 
 
 @builtin.function('builtins', 'build_inputs', 'env')
-@builtin.type(ObjectFile, extra_in_type=SourceFile)
-def _make_object_file(builtins, build, env, file, **kwargs):
-    file, kwargs = CompileSource.convert_args(builtins, file, kwargs)
-    return CompileSource(build, env, None, file, **kwargs).public_output
-
-
-@builtin.function('builtins')
 @builtin.type(FileList, in_type=object)
-def object_files(builtins, files, **kwargs):
-    return FileList(builtins['_make_object_file'], files, **kwargs)
+def object_files(builtins, build, env, files, **kwargs):
+    @builtin.type(ObjectFile, extra_in_type=SourceFile)
+    def make_object_file(file, **kwargs):
+        file, kwargs = CompileSource.convert_args(builtins, file, kwargs)
+        return CompileSource(build, env, None, file, **kwargs).public_output
+
+    return FileList(make_object_file, files, **kwargs)
 
 
 @builtin.function('builtins', 'build_inputs', 'env')

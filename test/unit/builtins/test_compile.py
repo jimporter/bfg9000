@@ -90,6 +90,31 @@ class TestObjectFile(CompileTest):
         self.assertSameFile(result, self.output_file('object'))
         self.assertEqual(result.creator.compiler.lang, 'c++')
 
+    def test_make_directory(self):
+        object_file = self.builtin_dict['object_file']
+
+        result = object_file(file='main.cpp', directory='dir')
+        self.assertSameFile(result, self.output_file('dir/main'))
+
+        src = self.builtin_dict['source_file']('main.cpp')
+        result = object_file(file=src, directory='dir')
+        self.assertSameFile(result, self.output_file('dir/main'))
+
+        result = object_file(file='main.cpp', directory='dir/')
+        self.assertSameFile(result, self.output_file('dir/main'))
+
+        result = object_file(file='main.cpp', directory=Path('dir'))
+        self.assertSameFile(result, self.output_file('dir/main'))
+
+        result = object_file(file='dir1/main.cpp', directory='dir2')
+        self.assertSameFile(result, self.output_file('dir2/dir1/main'))
+
+        result = object_file('object', 'main.cpp', directory='dir')
+        self.assertSameFile(result, self.output_file('object'))
+
+        self.assertRaises(ValueError, object_file, file='main.cpp',
+                          directory=Path('dir', Root.srcdir))
+
     def test_includes(self):
         object_file = self.builtin_dict['object_file']
 
@@ -146,8 +171,9 @@ class TestPrecompiledHeader(CompileTest):
             pass
 
     mode = 'pch_compiler'
-    context = {'pch_source':
-               file_types.SourceFile(Path('main.cpp', Root.srcdir), 'c++')}
+    context = {'pch_source': file_types.SourceFile(
+        Path('main.cpp', Root.srcdir), 'c++'
+    )}
 
     def test_identity(self):
         ex = file_types.PrecompiledHeader(Path('header', Root.srcdir), None)
@@ -218,6 +244,48 @@ class TestPrecompiledHeader(CompileTest):
             ))
             self.assertEqual(result.creator.compiler.lang, 'c++')
 
+    def test_make_directory(self):
+        with mock.patch('bfg9000.builtins.file_types.make_immediate_file',
+                        return_value=self.MockFile()):
+            pch = self.builtin_dict['precompiled_header']
+
+            result = pch(file='main.hpp', directory='dir')
+            self.assertSameFile(result, self.output_file(
+                'dir/main.hpp', self.context
+            ))
+
+            src = self.builtin_dict['header_file']('main.hpp')
+            result = pch(file=src, directory='dir')
+            self.assertSameFile(result, self.output_file(
+                'dir/main.hpp', self.context
+            ))
+
+            result = pch(file='main.hpp', directory='dir/')
+            self.assertSameFile(result, self.output_file(
+                'dir/main.hpp', self.context
+            ))
+
+            result = pch(file='main.hpp', directory=Path('dir'))
+            self.assertSameFile(result, self.output_file(
+                'dir/main.hpp', self.context
+            ))
+
+            result = pch(file='dir1/main.hpp', directory='dir2')
+            context = {'pch_source': file_types.SourceFile(
+                Path('dir1/main.cpp', Root.srcdir), 'c++'
+            )}
+            self.assertSameFile(result, self.output_file(
+                'dir2/dir1/main.hpp', context
+            ))
+
+            result = pch('object', 'main.hpp', directory='dir')
+            self.assertSameFile(result, self.output_file(
+                'object', self.context
+            ))
+
+            self.assertRaises(ValueError, pch, file='main.hpp',
+                              directory=Path('dir', Root.srcdir))
+
     def test_make_no_name_or_file(self):
         self.assertRaises(TypeError, self.builtin_dict['precompiled_header'])
 
@@ -267,6 +335,32 @@ class TestGeneratedSource(CompileTest):
                                                        lang='qrc')
         self.assertSameFile(result, self.output_file('main.cpp', lang='qrc'))
         self.assertEqual(result.creator.compiler.lang, 'qrc')
+
+    def test_make_directory(self):
+        gen_src = self.builtin_dict['generated_source']
+
+        res = gen_src(file='main.qrc', directory='dir')
+        self.assertSameFile(res, self.output_file('dir/main.cpp', lang='qrc'))
+
+        src = self.builtin_dict['resource_file']('main.qrc')
+        res = gen_src(file=src, directory='dir')
+        self.assertSameFile(res, self.output_file('dir/main.cpp', lang='qrc'))
+
+        res = gen_src(file='main.qrc', directory='dir/')
+        self.assertSameFile(res, self.output_file('dir/main.cpp', lang='qrc'))
+
+        res = gen_src(file='main.qrc', directory=Path('dir'))
+        self.assertSameFile(res, self.output_file('dir/main.cpp', lang='qrc'))
+
+        res = gen_src(file='dir1/main.qrc', directory='dir2')
+        self.assertSameFile(res, self.output_file('dir2/dir1/main.cpp',
+                                                  lang='qrc'))
+
+        res = gen_src('name.cpp', 'main.qrc', directory='dir')
+        self.assertSameFile(res, self.output_file('name.cpp', lang='qrc'))
+
+        self.assertRaises(ValueError, gen_src, file='main.qrc',
+                          directory=Path('dir', Root.srcdir))
 
     def test_description(self):
         result = self.builtin_dict['generated_source'](

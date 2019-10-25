@@ -171,7 +171,7 @@ vendor). This is described in more detail for each step below.
     platform you're running on. For instance, when building an executable file
     named "foo" on Windows, the resulting file will be `foo.exe`.
 
-### copy_file([*name*], *file*, [*mode*], [*extra_deps*], [*description*]) { #copy_file }
+### copy_file([*name*], *file*, [*mode*], [*directory*], [*extra_deps*], [*description*]) { #copy_file }
 Availability: `build.bfg`
 {: .subtitle}
 
@@ -180,6 +180,9 @@ Create a build step that copies a file named *file* to a destination named
 *file* as a base (this is primarily useful for copying a file from the source
 directory to the build directory). *mode* specifies how the file should be
 copied: `'copy'` (the default), `'symlink'`, or `'hardlink'`.
+
+You can also specify *directory* as an optional subdirectory to place the copied
+file into if *name* is unspecified, as with [*object_file*](#object_file).
 
 This build step recognizes the [environment
 variables](environment-vars.md#command-variables) for the relevant copy mode.
@@ -217,6 +220,8 @@ The following arguments may also be specified:
 * *module_defs*: A [*module_def_file*](#module_def_file) specifying information
   about exports and other program info, sometimes used on Windows
 * *lang*: Forwarded on to [*object_file*](#object_file)
+* *intermediate_dir*: Fowarded on to [*object_file*](#object_file) as
+  *directory*, defaulting to `<name>.int`
 
 If neither *files* nor *libs* is specified, this function merely references an
 *existing* executable file (a precompiled binary, a shell script, etc) somewhere
@@ -255,6 +260,8 @@ The following arguments may also be specified:
 * *options*: Command-line options to pass to the compiler
 * *lang*: The language of the source file; useful if the source file's extension
   isn't recognized by bfg9000
+* *directory*: An optional subdirectory to place the source file into if *name*
+  is unspecified
 
 !!! note
     When building files via `yacc`, this step will automatically generate both
@@ -337,6 +344,9 @@ The following arguments may also be specified:
 * *options*: Command-line options to pass to the compiler
 * *lang*: The language of the source file; useful if the source file's extension
   isn't recognized by bfg9000
+* *directory*: An optional subdirectory to place the object file into if *name*
+  is unspecified (this is used by [*executable*](#executable) and friends to
+  place implicitly-defined object files in an intermediate directory)
 
 If *file* isn't specified, this function merely references an *existing*
 object file somewhere on the filesystem. In this case, *name* must be specified

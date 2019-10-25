@@ -6,7 +6,7 @@ from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..build_inputs import Edge
 from ..file_types import clone_file, File
-from ..path import Path, Root
+from ..path import Path
 from ..versioning import SpecifierSet
 
 
@@ -25,12 +25,19 @@ class CopyFile(Edge):
         Edge.__init__(self, build, output, None, extra_deps, description)
 
     @staticmethod
-    def convert_args(builtins, name, file):
+    def convert_args(builtins, name, file, kwargs):
+        directory = kwargs.pop('directory', None)
         file = builtins['auto_file'](file)
-        path = (Path.ensure(name, Root.builddir) if name is not None else
-                file.path.reroot())
+        if name is None:
+            path = file.path.reroot()
+            if directory:
+                directory = Path.ensure(directory, strict=True)
+                path = directory.append(path.suffix)
+        else:
+            path = Path(name)
+
         output = clone_file(file, path)
-        return output, file
+        return output, file, kwargs
 
 
 @builtin.function('builtins', 'build_inputs', 'env')
@@ -40,7 +47,7 @@ def copy_file(builtins, build, env, name, file, **kwargs):
     # related files (e.g. a DLL and its import library) will only copy the
     # primary file. In practice, this shouldn't matter, as this function is
     # mostly useful for copying data files to the build directory.
-    output, file = CopyFile.convert_args(builtins, name, file)
+    output, file, kwargs = CopyFile.convert_args(builtins, name, file, kwargs)
     return CopyFile(build, env, output, file, **kwargs).public_output
 
 

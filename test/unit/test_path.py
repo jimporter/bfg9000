@@ -94,6 +94,22 @@ class TestPath(PathTestCase):
         self.assertRaises(ValueError, self.Path, 'foo/bar', path.Root.srcdir,
                           True)
 
+    def test_ensure(self):
+        self.assertEqual(self.Path.ensure('foo'), self.Path('foo'))
+        self.assertEqual(self.Path.ensure('foo', path.Root.srcdir),
+                         self.Path('foo', path.Root.srcdir))
+        self.assertEqual(
+            self.Path.ensure('foo', path.InstallRoot.bindir, True),
+            self.Path('foo', path.InstallRoot.bindir, True)
+        )
+
+        p = self.Path('foo')
+        self.assertIs(self.Path.ensure(p), p)
+        self.assertIs(self.Path.ensure(p, path.Root.srcdir), p)
+        self.assertIs(self.Path.ensure(p, path.InstallRoot.bindir, True), p)
+        self.assertRaises(ValueError, self.Path.ensure, p, path.Root.srcdir,
+                          strict=True)
+
     def test_equality(self):
         self.assertTrue(self.Path('a', path.Root.srcdir) ==
                         self.Path('a', path.Root.srcdir))
@@ -397,10 +413,20 @@ class TestPath(PathTestCase):
 
 class TestAbsPath(TestCase):
     def test_abspath(self):
-        self.assertEqual(
-            path.abspath('/foo/bar'),
-            path.Path(os.path.abspath('/foo/bar'), path.Root.absolute)
-        )
+        with mock.patch('os.getcwd', return_value=r'/base'):
+            self.assertEqual(path.abspath('foo'),
+                             path.Path('/base/foo', path.Root.absolute))
+            self.assertEqual(path.abspath('/foo/bar'),
+                             path.Path('/foo/bar', path.Root.absolute))
+
+    def test_drive(self):
+        with mock.patch('os.getcwd', return_value=r'C:\base'):
+            self.assertEqual(path.abspath('foo'),
+                             path.Path('C:/base/foo', path.Root.absolute))
+            self.assertEqual(path.abspath('/foo/bar'),
+                             path.Path('C:/foo/bar', path.Root.absolute))
+            self.assertEqual(path.abspath('D:/foo/bar'),
+                             path.Path('D:/foo/bar', path.Root.absolute))
 
 
 class TestInstallPath(TestCase):
