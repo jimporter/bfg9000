@@ -1,3 +1,4 @@
+import json
 import os
 import re
 import subprocess
@@ -84,9 +85,18 @@ try:
             alias = 'dev' if v.is_devrelease else 'latest'
             title = '{} ({})'.format(v.base_version, alias)
             short_version = '{}.{}'.format(*v.release[:2])
-            subprocess.check_call(
-                ['mike', 'deploy', '-t', title, short_version, alias]
-            )
+
+            info = json.loads(subprocess.check_output(
+                ['mike', 'list', '-j', alias],
+                universal_newlines=True
+            ))
+            if info['version'] != short_version:
+                t = re.sub(r' \({}\)$'.format(re.escape(alias)), '',
+                           info['title'])
+                subprocess.check_call(['mike', 'retitle', info['version'], t])
+
+            subprocess.check_call(['mike', 'deploy', '-ut', title,
+                                   short_version, alias])
 
     custom_cmds['doc_serve'] = DocServe
     custom_cmds['doc_deploy'] = DocDeploy
