@@ -2,7 +2,7 @@ import mock
 from six import iteritems
 
 from .common import AttrDict, BuiltinTest
-from bfg9000.builtins import compile, default, link, packages  # noqa
+from bfg9000.builtins import compile, default, link, packages, project  # noqa
 from bfg9000 import file_types
 from bfg9000.environment import LibraryMode
 from bfg9000.iterutils import listify, unlistify
@@ -73,6 +73,11 @@ class TestExecutable(LinkTest):
         result = self.builtin_dict['executable']('exe', [obj])
         self.assertSameFile(result, self.output_file('exe'))
 
+        self.builtin_dict['project'](intermediate_dirs=False)
+        result = self.builtin_dict['executable']('exe', ['main.cpp'])
+        self.assertSameFile(result, self.output_file('exe'))
+        self.assertSameFile(result.creator.files[0], self.object_file('main'))
+
     def test_make_override_lang(self):
         expected = self.output_file('exe')
 
@@ -94,6 +99,12 @@ class TestExecutable(LinkTest):
         self.assertSameFile(result, self.output_file('exe'))
         self.assertSameFile(result.creator.files[0], self.object_file('main'))
 
+        result = executable('exe', ['main.cpp'], intermediate_dir='dir')
+        self.assertSameFile(result, self.output_file('exe'))
+        self.assertSameFile(result.creator.files[0],
+                            self.object_file('dir/main'))
+
+        self.builtin_dict['project'](intermediate_dirs=False)
         result = executable('exe', ['main.cpp'], intermediate_dir='dir')
         self.assertSameFile(result, self.output_file('exe'))
         self.assertSameFile(result.creator.files[0],
@@ -188,6 +199,11 @@ class TestSharedLibrary(LinkTest):
         result = self.builtin_dict['shared_library']('shared', [obj])
         self.assertSameFile(result, expected, exclude={'post_install'})
 
+        self.builtin_dict['project'](intermediate_dirs=False)
+        result = self.builtin_dict['shared_library']('shared', ['main.cpp'])
+        self.assertSameFile(result, expected, exclude={'post_install'})
+        self.assertSameFile(result.creator.files[0], self.object_file('main'))
+
     def test_make_soversion(self):
         src = self.builtin_dict['source_file']('main.cpp')
         result = self.builtin_dict['shared_library'](
@@ -235,6 +251,12 @@ class TestSharedLibrary(LinkTest):
         self.assertSameFile(result, expected, exclude={'post_install'})
         self.assertSameFile(result.creator.files[0], self.object_file('main'))
 
+        result = shared_library('shared', ['main.cpp'], intermediate_dir='dir')
+        self.assertSameFile(result, expected, exclude={'post_install'})
+        self.assertSameFile(result.creator.files[0],
+                            self.object_file('dir/main'))
+
+        self.builtin_dict['project'](intermediate_dirs=False)
         result = shared_library('shared', ['main.cpp'], intermediate_dir='dir')
         self.assertSameFile(result, expected, exclude={'post_install'})
         self.assertSameFile(result.creator.files[0],
@@ -330,6 +352,11 @@ class TestStaticLibrary(LinkTest):
         result = self.builtin_dict['static_library']('static', [obj])
         self.assertSameFile(result, expected)
 
+        self.builtin_dict['project'](intermediate_dirs=False)
+        result = self.builtin_dict['static_library']('static', ['main.cpp'])
+        self.assertSameFile(result, expected)
+        self.assertSameFile(result.creator.files[0], self.object_file('main'))
+
     def test_make_override_lang(self):
         static_library = self.builtin_dict['static_library']
 
@@ -367,6 +394,12 @@ class TestStaticLibrary(LinkTest):
         self.assertSameFile(result, expected)
         self.assertSameFile(result.creator.files[0], self.object_file('main'))
 
+        result = static_library('static', ['main.cpp'], intermediate_dir='dir')
+        self.assertSameFile(result, expected)
+        self.assertSameFile(result.creator.files[0],
+                            self.object_file('dir/main'))
+
+        self.builtin_dict['project'](intermediate_dirs=False)
         result = static_library('static', ['main.cpp'], intermediate_dir='dir')
         self.assertSameFile(result, expected)
         self.assertSameFile(result.creator.files[0],
@@ -535,6 +568,13 @@ class TestLibrary(LinkTest):
         self.assertSameFile(result, expected, exclude={'post_install'})
         self.assertSameFile(result.creator.files[0], self.object_file('main'))
 
+        result = library('library', ['main.cpp'], kind='shared',
+                         intermediate_dir='dir')
+        self.assertSameFile(result, expected, exclude={'post_install'})
+        self.assertSameFile(result.creator.files[0],
+                            self.object_file('dir/main'))
+
+        self.builtin_dict['project'](intermediate_dirs=False)
         result = library('library', ['main.cpp'], kind='shared',
                          intermediate_dir='dir')
         self.assertSameFile(result, expected, exclude={'post_install'})

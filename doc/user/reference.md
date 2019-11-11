@@ -1283,14 +1283,19 @@ Return the suffix of this path (the portion that would be appended to the path's
 Remove the extension from this path and replace it with an optional new
 extension specified in *replace*, returning the newly-created *Path* object.
 
-### project(*name*, [*version*]) { #project }
+### project([*name*], [*version*], ...) { #project }
 Availability: `build.bfg`
 {: .subtitle}
 
-Set the name (and optionally the version) of the project. If you don't call
-this function to specify a project name, it defaults to the name of the
-project's source directory. This is primarily useful for creating [source
+Set the name and/or version of the project. If you don't call this function to
+specify a project name, it defaults to the name of the project's source
+directory. This is primarily useful for creating [source
 distributions](writing.md#distributing-your-source).
+
+In addition, you can set a number of project-wide options with this function:
+
+* *intermediate_dirs*: (Default `True`) Automatically place implicitly-generated
+  intermediate files into separate directories
 
 ### Root
 
