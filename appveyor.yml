@@ -90,7 +90,7 @@ for:
       - xcopy /i /q /s /h C:\projects\bfg9000 C:\cygwin64\home\appveyor\bfg9000
       - C:\cygwin64\bin\bash -lc "cd bfg9000 && pip2 install codecov coverage mock ."
     test_script:
-      - C:\cygwin64\bin\bash -lc "cd bfg9000 && python setup.py coverage -s test.integration.test_executable"
+      - C:\cygwin64\bin\bash -lc "cd bfg9000 && python2.7 setup.py coverage -s test.integration.test_executable"
     on_success:
       - C:\cygwin64\bin\bash -lc "cd bfg9000 && codecov"
 
