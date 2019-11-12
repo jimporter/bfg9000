@@ -1,6 +1,7 @@
 import mock
 import os
 import re
+from contextlib import contextmanager
 
 from .common import BuiltinTest
 from .. import *
@@ -104,6 +105,42 @@ class TestPackage(BuiltinTest):
             self.assertEqual(pkg.version, Version('1.2.3'))
             self.assertEqual(pkg.specifier, SpecifierSet())
             self.assertEqual(pkg.static, True)
+
+    def test_headers_lang(self):
+        @contextmanager
+        def mock_context():
+            mock_obj = mock.patch.object
+            with mock_obj(self.env, 'builder', wraps=self.env.builder) as m, \
+                 mock.patch('bfg9000.shell.execute', mock_execute), \
+                 mock.patch('bfg9000.shell.which', mock_which):  # noqa
+                yield m
+
+        with mock_context() as m:
+            pkg = packages.package(self.env, 'name')
+            self.assertEqual(pkg.name, 'name')
+            m.assert_called_once_with('c')
+
+        with mock_context() as m:
+            pkg = packages.package(self.env, 'name', headers='foo.hpp')
+            self.assertEqual(pkg.name, 'name')
+            m.assert_called_once_with('c++')
+
+        with mock_context() as m:
+            pkg = packages.package(self.env, 'name', headers='foo.goofy')
+            self.assertEqual(pkg.name, 'name')
+            m.assert_called_once_with('c')
+
+        with mock_context() as m:
+            pkg = packages.package(self.env, 'name',
+                                   headers=['foo.hpp', 'foo.goofy'])
+            self.assertEqual(pkg.name, 'name')
+            m.assert_called_once_with('c')
+
+        with mock_context() as m:
+            pkg = packages.package(self.env, 'name', lang='c',
+                                   headers='foo.hpp')
+            self.assertEqual(pkg.name, 'name')
+            m.assert_called_once_with('c')
 
     def test_invalid_kind(self):
         with self.assertRaises(ValueError):

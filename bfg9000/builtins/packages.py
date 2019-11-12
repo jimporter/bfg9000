@@ -6,7 +6,8 @@ from .find import find
 from .. import options as opts
 from ..exceptions import PackageResolutionError, PackageVersionError
 from ..file_types import Directory, Executable
-from ..iterutils import default_sentinel, iterate
+from ..iterutils import default_sentinel, iterate, uniques
+from ..languages import known_langs
 from ..objutils import objectify
 from ..packages import CommonPackage, Framework, Package, PackageKind
 from ..path import Path, Root
@@ -23,10 +24,21 @@ class BoostPackage(CommonPackage):
 
 @builtin.function('env')
 @builtin.type(Package)
-def package(env, name, version=None, lang='c', kind=PackageKind.any.name,
-            headers=None, libs=default_sentinel):
+def package(env, name, version=None, lang=default_sentinel,
+            kind=PackageKind.any.name, headers=None, libs=default_sentinel):
     version = objectify(version or '', SpecifierSet)
     kind = PackageKind[kind]
+
+    if lang is default_sentinel:
+        guessed_langs = uniques(
+            known_langs.fromext(os.path.splitext(i)[1], 'header')
+            for i in iterate(headers)
+        )
+        if len(guessed_langs) == 1 and guessed_langs[0] is not None:
+            lang = guessed_langs[0]
+        else:
+            lang = 'c'
+
     return env.builder(lang).packages.resolve(name, version, kind, headers,
                                               libs)
 

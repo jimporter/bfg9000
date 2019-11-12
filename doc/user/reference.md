@@ -782,12 +782,13 @@ Availability: `build.bfg`
 {: .subtitle}
 
 Search for a package named *name*. *lang* is the source language of the library
-(`'c'` by default); this will affect how the package is resolved. For native
-libraries (C, C++, Fortran, etc), this will use [`pkg-config`][pkg-config] to
-resolve the package if it's installed. Otherwise (or if pkg-config can't find
-the package), this will check the system's default library locations. If this
-function is unable to find the package, it will raise a
-[*PackageResolutionError*](#packageresolutionerror).
+(if not specified, this will guess the language based on the extensions in
+*headers*, or use `'c'` as a fallback); this will affect how the package is
+resolved. For native libraries (C, C++, Fortran, etc), this will use
+[`pkg-config`][pkg-config] to resolve the package if it's installed. Otherwise
+(or if pkg-config can't find the package), this will check the system's default
+library locations. If this function is unable to find the package, it will raise
+a [*PackageResolutionError*](#packageresolutionerror).
 
 You can also specify *kind* to one of `'any'` (the default), `'shared'`, or
 `'static'`. This allows you to restrict the search to find only static versions
