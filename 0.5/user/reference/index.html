@@ -297,13 +297,15 @@ vendor). This is described in more detail for each step below.</p>
 platform you're running on. For instance, when building an executable file
 named "foo" on Windows, the resulting file will be <code>foo.exe</code>.</p>
 </div>
-<h3 id="copy_file">copy_file([<em>name</em>], <em>file</em>, [<em>mode</em>], [<em>extra_deps</em>], [<em>description</em>])<a class="headerlink" href="#copy_file" title="Permanent link">§</a></h3>
+<h3 id="copy_file">copy_file([<em>name</em>], <em>file</em>, [<em>mode</em>], [<em>directory</em>], [<em>extra_deps</em>], [<em>description</em>])<a class="headerlink" href="#copy_file" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Create a build step that copies a file named <em>file</em> to a destination named
 <em>name</em>; if <em>name</em> is not specified, this function will use the filename in
 <em>file</em> as a base (this is primarily useful for copying a file from the source
 directory to the build directory). <em>mode</em> specifies how the file should be
 copied: <code>'copy'</code> (the default), <code>'symlink'</code>, or <code>'hardlink'</code>.</p>
+<p>You can also specify <em>directory</em> as an optional subdirectory to place the copied
+file into if <em>name</em> is unspecified, as with <a href="#object_file"><em>object_file</em></a>.</p>
 <p>This build step recognizes the <a href="../environment-vars/#command-variables">environment
 variables</a> for the relevant copy mode.</p>
 <h3 id="copy_files">copy_files(<em>files</em>, [<em>mode</em>], [<em>extra_deps</em>], [<em>description</em>])<a class="headerlink" href="#copy_files" title="Permanent link">§</a></h3>
@@ -332,6 +334,8 @@ file (or a plain string), this function will implicitly call
 <li><em>module_defs</em>: A <a href="#module_def_file"><em>module_def_file</em></a> specifying information
   about exports and other program info, sometimes used on Windows</li>
 <li><em>lang</em>: Forwarded on to <a href="#object_file"><em>object_file</em></a></li>
+<li><em>intermediate_dir</em>: Fowarded on to <a href="#object_file"><em>object_file</em></a> as
+  <em>directory</em>, defaulting to <code>&lt;name&gt;.int</code></li>
 </ul>
 <p>If neither <em>files</em> nor <em>libs</em> is specified, this function merely references an
 <em>existing</em> executable file (a precompiled binary, a shell script, etc) somewhere
@@ -367,6 +371,8 @@ extension isn't added automatically).</p>
 <li><em>options</em>: Command-line options to pass to the compiler</li>
 <li><em>lang</em>: The language of the source file; useful if the source file's extension
   isn't recognized by bfg9000</li>
+<li><em>directory</em>: An optional subdirectory to place the source file into if <em>name</em>
+  is unspecified</li>
 </ul>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -438,6 +444,9 @@ in <em>file</em> as a base (typically the filename without the extension).</p>
 <li><em>options</em>: Command-line options to pass to the compiler</li>
 <li><em>lang</em>: The language of the source file; useful if the source file's extension
   isn't recognized by bfg9000</li>
+<li><em>directory</em>: An optional subdirectory to place the object file into if <em>name</em>
+  is unspecified (this is used by <a href="#executable"><em>executable</em></a> and friends to
+  place implicitly-defined object files in an intermediate directory)</li>
 </ul>
 <p>If <em>file</em> isn't specified, this function merely references an <em>existing</em>
 object file somewhere on the filesystem. In this case, <em>name</em> must be specified
@@ -1145,12 +1154,17 @@ to <code>(path.parent(), path.basename())</code>.</p>
 <h4 id="Path-stripext"><em>Path</em>.stripext([<em>replace</em>])<a class="headerlink" href="#Path-stripext" title="Permanent link">§</a></h4>
 <p>Remove the extension from this path and replace it with an optional new
 extension specified in <em>replace</em>, returning the newly-created <em>Path</em> object.</p>
-<h3 id="project">project(<em>name</em>, [<em>version</em>])<a class="headerlink" href="#project" title="Permanent link">§</a></h3>
+<h3 id="project">project([<em>name</em>], [<em>version</em>], ...)<a class="headerlink" href="#project" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
-<p>Set the name (and optionally the version) of the project. If you don't call
-this function to specify a project name, it defaults to the name of the
-project's source directory. This is primarily useful for creating <a href="../writing/#distributing-your-source">source
+<p>Set the name and/or version of the project. If you don't call this function to
+specify a project name, it defaults to the name of the project's source
+directory. This is primarily useful for creating <a href="../writing/#distributing-your-source">source
 distributions</a>.</p>
+<p>In addition, you can set a number of project-wide options with this function:</p>
+<ul>
+<li><em>intermediate_dirs</em>: (Default <code>True</code>) Automatically place implicitly-generated
+  intermediate files into separate directories</li>
+</ul>
 <h3 id="root">Root<a class="headerlink" href="#root" title="Permanent link">§</a></h3>
 <p>An enumeration of root directories for <a href="#Path"><em>Path</em></a> objects. Possible values
 are:</p>
