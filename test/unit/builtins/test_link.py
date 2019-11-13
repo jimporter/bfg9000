@@ -46,6 +46,10 @@ class TestExecutable(LinkTest):
         self.assertSameFile(self.builtin_dict['executable']('exe'), expected)
         self.assertEqual(list(self.build.sources()), [self.bfgfile, expected])
 
+        self.builtin_dict['project'](lang='c++')
+        expected.lang = 'c++'
+        self.assertSameFile(self.builtin_dict['executable']('exe'), expected)
+
     def test_no_dist(self):
         expected = file_types.Executable(
             Path('exe', Root.srcdir),
@@ -153,6 +157,11 @@ class TestSharedLibrary(LinkTest):
         self.assertSameFile(self.builtin_dict['shared_library']('shared'),
                             expected)
         self.assertEqual(list(self.build.sources()), [self.bfgfile, expected])
+
+        self.builtin_dict['project'](lang='c++')
+        expected.lang = 'c++'
+        self.assertSameFile(self.builtin_dict['shared_library']('shared'),
+                            expected)
 
     def test_no_dist(self):
         expected = file_types.SharedLibrary(
@@ -306,6 +315,11 @@ class TestStaticLibrary(LinkTest):
         self.assertSameFile(self.builtin_dict['static_library']('static'),
                             expected)
         self.assertEqual(list(self.build.sources()), [self.bfgfile, expected])
+
+        self.builtin_dict['project'](lang='c++')
+        expected.lang = 'c++'
+        self.assertSameFile(self.builtin_dict['static_library']('static'),
+                            expected)
 
     def test_no_dist(self):
         expected = file_types.StaticLibrary(
@@ -468,6 +482,10 @@ class TestLibrary(LinkTest):
         self.assertSameFile(self.builtin_dict['library']('library'), expected)
         self.assertEqual(list(self.build.sources()), [self.bfgfile, expected])
 
+        self.builtin_dict['project'](lang='c++')
+        expected.lang = 'c++'
+        self.assertSameFile(self.builtin_dict['library']('library'), expected)
+
     def test_src_file_explicit_static(self):
         expected = file_types.StaticLibrary(
             Path('library', Root.srcdir),
@@ -478,6 +496,12 @@ class TestLibrary(LinkTest):
         ), expected)
         self.assertEqual(list(self.build.sources()), [self.bfgfile, expected])
 
+        self.builtin_dict['project'](lang='c++')
+        expected.lang = 'c++'
+        self.assertSameFile(self.builtin_dict['library'](
+            'library', kind='static'
+        ), expected)
+
     def test_src_file_explicit_shared(self):
         expected = file_types.SharedLibrary(
             Path('library', Root.srcdir),
@@ -487,6 +511,12 @@ class TestLibrary(LinkTest):
             'library', kind='shared'
         ), expected)
         self.assertEqual(list(self.build.sources()), [self.bfgfile, expected])
+
+        self.builtin_dict['project'](lang='c++')
+        expected.lang = 'c++'
+        self.assertSameFile(self.builtin_dict['library'](
+            'library', kind='shared'
+        ), expected)
 
     def test_src_file_explicit_dual(self):
         self.assertRaises(ValueError, self.builtin_dict['library'], 'library',

@@ -12,6 +12,7 @@ class ProjectInfo(object):
         self.version = None
         self._options = {
             'intermediate_dirs': True,
+            'lang': 'c',
         }
 
     def __getitem__(self, key):

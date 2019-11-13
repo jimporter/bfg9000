@@ -16,6 +16,8 @@
 - Expose `Path` object to bfg scripts
 - Add `directory` as an option for `object_file()`, `generated_source()`,
   `copy_file()`, and their list-variants
+- Add `lang` and `intermediate_dirs` arguments to `project()` for modifying
+  project-wide settings
 
 ### Breaking changes
 - `find_files()` redesigned and split into `find_files()` and `find_paths()`;

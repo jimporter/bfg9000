@@ -22,9 +22,9 @@ class BoostPackage(CommonPackage):
         self.version = version
 
 
-@builtin.function('env')
+@builtin.function('build_inputs', 'env')
 @builtin.type(Package)
-def package(env, name, version=None, lang=default_sentinel,
+def package(build, env, name, version=None, lang=default_sentinel,
             kind=PackageKind.any.name, headers=None, libs=default_sentinel):
     version = objectify(version or '', SpecifierSet)
     kind = PackageKind[kind]
@@ -37,7 +37,7 @@ def package(env, name, version=None, lang=default_sentinel,
         if len(guessed_langs) == 1 and guessed_langs[0] is not None:
             lang = guessed_langs[0]
         else:
-            lang = 'c'
+            lang = build['project']['lang']
 
     return env.builder(lang).packages.resolve(name, version, kind, headers,
                                               libs)

@@ -152,11 +152,11 @@ class PkgConfigInfo(object):
         def __set__(self, obj, value):
             setattr(obj, '_' + self.fn.__name__, self.fn(obj, value))
 
-    def __init__(self, builtins, name=None, desc_name=None, desc=None,
+    def __init__(self, builtins, build, name=None, desc_name=None, desc=None,
                  url=None, version=None, requires=None, requires_private=None,
                  conflicts=None, includes=None, libs=None, libs_private=None,
                  options=None, link_options=None, link_options_private=None,
-                 lang='c', auto_fill=True):
+                 lang=None, auto_fill=True):
         self._builtins = builtins
         self.auto_fill = auto_fill
 
@@ -165,7 +165,7 @@ class PkgConfigInfo(object):
         self.desc = desc
         self.url = url
         self.version = version
-        self.lang = lang
+        self.lang = lang or build['project']['lang']
 
         self.requires = requires
         self.requires_private = requires_private
@@ -358,7 +358,9 @@ class PkgConfigInfo(object):
 @builtin.function('builtins', 'build_inputs', 'env')
 def pkg_config(builtins, build, env, name=None, **kwargs):
     if can_install(env):
-        build['pkg_config'].append(PkgConfigInfo(builtins, name, **kwargs))
+        build['pkg_config'].append(
+            PkgConfigInfo(builtins, build, name, **kwargs)
+        )
 
 
 @builtin.post('builtins', 'build_inputs', 'env')

@@ -1297,6 +1297,9 @@ In addition, you can set a number of project-wide options with this function:
 
 * *intermediate_dirs*: (Default `True`) Automatically place implicitly-generated
   intermediate files into separate directories
+* *lang*: (Default `'c'`) The default language to use for objects that can't
+  infer their language from a file extension (e.g. [packages](#package),
+  [object files](#object_file), [libraries](#library))
 
 ### Root
 

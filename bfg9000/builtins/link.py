@@ -274,7 +274,8 @@ class StaticLink(Link):
 def executable(builtins, build, env, name, files=None, **kwargs):
     if files is None and 'libs' not in kwargs:
         dist = kwargs.pop('dist', True)
-        params = [('format', env.target_platform.object_format), ('lang', 'c')]
+        params = [('format', env.target_platform.object_format),
+                  ('lang', build['project']['lang'])]
         return static_file(build, Executable, name, dist, params, kwargs)
     files, kwargs = DynamicLink.convert_args(builtins, build, name, files,
                                              kwargs)
@@ -293,7 +294,8 @@ def shared_library(builtins, build, env, name, files=None, **kwargs):
         # XXX: What to do for pre-built shared libraries for Windows, which has
         # a separate DLL file?
         dist = kwargs.pop('dist', True)
-        params = [('format', env.target_platform.object_format), ('lang', 'c')]
+        params = [('format', env.target_platform.object_format),
+                  ('lang', build['project']['lang'])]
         return static_file(build, SharedLibrary, name, dist, params, kwargs)
     files, kwargs = SharedLink.convert_args(builtins, build, name, files,
                                             kwargs)
@@ -310,7 +312,8 @@ def static_library(builtins, build, env, name, files=None, **kwargs):
 
     if files is None and 'libs' not in kwargs:
         dist = kwargs.pop('dist', True)
-        params = [('format', env.target_platform.object_format), ('lang', 'c')]
+        params = [('format', env.target_platform.object_format),
+                  ('lang', build['project']['lang'])]
         return static_file(build, StaticLibrary, name, dist, params, kwargs)
     files, kwargs = StaticLink.convert_args(builtins, build, name, files,
                                             kwargs)
@@ -342,7 +345,8 @@ def library(builtins, build, env, name, files=None, **kwargs):
 
     if files is None and 'libs' not in kwargs:
         dist = kwargs.pop('dist', True)
-        params = [('format', env.target_platform.object_format), ('lang', 'c')]
+        params = [('format', env.target_platform.object_format),
+                  ('lang', build['project']['lang'])]
         file_type = StaticLibrary
 
         if explicit_kind:

@@ -7,7 +7,7 @@ from .common import BuiltinTest
 from .. import *
 
 from bfg9000 import file_types, options as opts
-from bfg9000.builtins import packages
+from bfg9000.builtins import packages, project  # noqa
 from bfg9000.exceptions import PackageResolutionError, PackageVersionError
 from bfg9000.file_types import Directory, HeaderDirectory
 from bfg9000.packages import CommonPackage, Framework
@@ -73,7 +73,7 @@ class TestPackage(BuiltinTest):
     def test_name(self):
         with mock.patch('bfg9000.shell.execute', mock_execute), \
              mock.patch('bfg9000.shell.which', mock_which):  # noqa
-            pkg = packages.package(self.env, 'name')
+            pkg = self.builtin_dict['package']('name')
             self.assertEqual(pkg.name, 'name')
             self.assertEqual(pkg.version, Version('1.2.3'))
             self.assertEqual(pkg.specifier, SpecifierSet())
@@ -82,7 +82,7 @@ class TestPackage(BuiltinTest):
     def test_version(self):
         with mock.patch('bfg9000.shell.execute', mock_execute), \
              mock.patch('bfg9000.shell.which', mock_which):  # noqa
-            pkg = packages.package(self.env, 'name', version='>1.0')
+            pkg = self.builtin_dict['package']('name', version='>1.0')
             self.assertEqual(pkg.name, 'name')
             self.assertEqual(pkg.version, Version('1.2.3'))
             self.assertEqual(pkg.specifier, SpecifierSet('>1.0'))
@@ -91,7 +91,7 @@ class TestPackage(BuiltinTest):
     def test_lang(self):
         with mock.patch('bfg9000.shell.execute', mock_execute), \
              mock.patch('bfg9000.shell.which', mock_which):  # noqa
-            pkg = packages.package(self.env, 'name', lang='c++')
+            pkg = self.builtin_dict['package']('name', lang='c++')
             self.assertEqual(pkg.name, 'name')
             self.assertEqual(pkg.version, Version('1.2.3'))
             self.assertEqual(pkg.specifier, SpecifierSet())
@@ -100,7 +100,7 @@ class TestPackage(BuiltinTest):
     def test_kind(self):
         with mock.patch('bfg9000.shell.execute', mock_execute), \
              mock.patch('bfg9000.shell.which', mock_which):  # noqa
-            pkg = packages.package(self.env, 'name', kind='static')
+            pkg = self.builtin_dict['package']('name', kind='static')
             self.assertEqual(pkg.name, 'name')
             self.assertEqual(pkg.version, Version('1.2.3'))
             self.assertEqual(pkg.specifier, SpecifierSet())
@@ -115,36 +115,42 @@ class TestPackage(BuiltinTest):
                  mock.patch('bfg9000.shell.which', mock_which):  # noqa
                 yield m
 
+        package = self.builtin_dict['package']
+
         with mock_context() as m:
-            pkg = packages.package(self.env, 'name')
+            pkg = package('name')
             self.assertEqual(pkg.name, 'name')
             m.assert_called_once_with('c')
 
         with mock_context() as m:
-            pkg = packages.package(self.env, 'name', headers='foo.hpp')
+            pkg = package('name', headers='foo.hpp')
             self.assertEqual(pkg.name, 'name')
             m.assert_called_once_with('c++')
 
         with mock_context() as m:
-            pkg = packages.package(self.env, 'name', headers='foo.goofy')
+            pkg = package('name', headers='foo.goofy')
             self.assertEqual(pkg.name, 'name')
             m.assert_called_once_with('c')
 
         with mock_context() as m:
-            pkg = packages.package(self.env, 'name',
-                                   headers=['foo.hpp', 'foo.goofy'])
+            pkg = package('name', headers=['foo.hpp', 'foo.goofy'])
             self.assertEqual(pkg.name, 'name')
             m.assert_called_once_with('c')
 
         with mock_context() as m:
-            pkg = packages.package(self.env, 'name', lang='c',
-                                   headers='foo.hpp')
+            pkg = package('name', lang='c', headers='foo.hpp')
             self.assertEqual(pkg.name, 'name')
             m.assert_called_once_with('c')
+
+        self.builtin_dict['project'](lang='c++')
+        with mock_context() as m:
+            pkg = package('name')
+            self.assertEqual(pkg.name, 'name')
+            m.assert_called_once_with('c++')
 
     def test_invalid_kind(self):
         with self.assertRaises(ValueError):
-            packages.package(self.env, 'name', kind='bad')
+            self.builtin_dict['package']('name', kind='bad')
 
 
 class TestBoostPackage(TestCase):

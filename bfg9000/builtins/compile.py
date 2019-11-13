@@ -198,7 +198,8 @@ def object_file(builtins, build, env, name=None, file=None, **kwargs):
         if name is None:
             raise TypeError('expected name')
         dist = kwargs.pop('dist', True)
-        params = [('format', env.target_platform.object_format), ('lang', 'c')]
+        params = [('format', env.target_platform.object_format),
+                  ('lang', build['project']['lang'])]
         return static_file(build, ObjectFile, name, dist, params, kwargs)
     file, kwargs = CompileSource.convert_args(builtins, file, kwargs)
     return CompileSource(build, env, name, file, **kwargs).public_output
@@ -222,7 +223,7 @@ def precompiled_header(builtins, build, env, name=None, file=None, **kwargs):
         if name is None:
             raise TypeError('expected name')
         dist = kwargs.pop('dist', True)
-        params = [('lang', 'c')]
+        params = [('lang', build['project']['lang'])]
         return static_file(build, PrecompiledHeader, name, dist, params,
                            kwargs)
     file, kwargs = CompileHeader.convert_args(builtins, file, kwargs)
