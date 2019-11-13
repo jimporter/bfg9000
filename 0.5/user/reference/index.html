@@ -790,12 +790,13 @@ accepted.</p>
 <h3 id="package">package(<em>name</em>, [<em>version</em>], [<em>lang</em>], [<em>kind</em>], [<em>headers</em>], [<em>libs</em>])<a class="headerlink" href="#package" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Search for a package named <em>name</em>. <em>lang</em> is the source language of the library
-(<code>'c'</code> by default); this will affect how the package is resolved. For native
-libraries (C, C++, Fortran, etc), this will use <a href="https://www.freedesktop.org/wiki/Software/pkg-config/"><code>pkg-config</code></a> to
-resolve the package if it's installed. Otherwise (or if pkg-config can't find
-the package), this will check the system's default library locations. If this
-function is unable to find the package, it will raise a
-<a href="#packageresolutionerror"><em>PackageResolutionError</em></a>.</p>
+(if not specified, this will guess the language based on the extensions in
+<em>headers</em>, or use <code>'c'</code> as a fallback); this will affect how the package is
+resolved. For native libraries (C, C++, Fortran, etc), this will use
+<a href="https://www.freedesktop.org/wiki/Software/pkg-config/"><code>pkg-config</code></a> to resolve the package if it's installed. Otherwise
+(or if pkg-config can't find the package), this will check the system's default
+library locations. If this function is unable to find the package, it will raise
+a <a href="#packageresolutionerror"><em>PackageResolutionError</em></a>.</p>
 <p>You can also specify <em>kind</em> to one of <code>'any'</code> (the default), <code>'shared'</code>, or
 <code>'static'</code>. This allows you to restrict the search to find only static versions
 of a library, for example.</p>
@@ -1164,6 +1165,9 @@ distributions</a>.</p>
 <ul>
 <li><em>intermediate_dirs</em>: (Default <code>True</code>) Automatically place implicitly-generated
   intermediate files into separate directories</li>
+<li><em>lang</em>: (Default <code>'c'</code>) The default language to use for objects that can't
+  infer their language from a file extension (e.g. <a href="#package">packages</a>,
+  <a href="#object_file">object files</a>, <a href="#library">libraries</a>)</li>
 </ul>
 <h3 id="root">Root<a class="headerlink" href="#root" title="Permanent link">§</a></h3>
 <p>An enumeration of root directories for <a href="#Path"><em>Path</em></a> objects. Possible values
