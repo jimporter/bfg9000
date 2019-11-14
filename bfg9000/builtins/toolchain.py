@@ -22,6 +22,12 @@ def environ(env):
     return env.variables
 
 
+@builtin.getter('env', context='toolchain')
+def srcdir(env):
+    # Make a copy of the srcdir object, since it should be read-only.
+    return env.srcdir.reroot(env.srcdir.root)
+
+
 @builtin.function('env', context='toolchain')
 def target_platform(env, platform=None, arch=None):
     env.target_platform = platforms.target.platform_info(platform, arch)

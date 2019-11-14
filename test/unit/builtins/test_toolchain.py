@@ -39,6 +39,10 @@ class TestToolchain(TestCase):
         self.builtin_dict['environ']['NAME'] = 'value'
         self.assertEqual(self.builtin_dict['environ'], {'NAME': 'value'})
 
+    def test_srcdir(self):
+        self.assertEqual(self.builtin_dict['srcdir'], self.env.srcdir)
+        self.assertIsNot(self.builtin_dict['srcdir'], self.env.srcdir)
+
     def test_target_platform(self):
         self.builtin_dict['target_platform']('winnt')
         self.assertEqual(self.env.target_platform.name, 'winnt')

@@ -20,6 +20,7 @@ in progress
   `copy_file()`, and their list-variants
 - Add `lang` and `intermediate_dirs` arguments to `project()` for modifying
   project-wide settings
+- Add `srcdir` builtin to toolchain files
 
 ### Breaking changes
 - `find_files()` redesigned and split into `find_files()` and `find_paths()`;

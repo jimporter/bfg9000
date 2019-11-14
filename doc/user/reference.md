@@ -1408,6 +1408,12 @@ possible paths (as strings or lists or strings). If *strict* is true,
 *compiler* will raise an `IOError` if an executable cannot be found; if false,
 it will use the first candidate.
 
+### srcdir { #srcdir }
+Availability: `<toolchain>.bfg`
+{: .subtitle}
+
+Return the source directory of this project as a [*Path*](#Path) object.
+
 ### target_platform([*platform*], [*arch*]) { #target_platform }
 Availability: `<toolchain>.bfg`
 {: .subtitle}
