@@ -9,6 +9,9 @@ _ArgumentParser = ArgumentParser
 class ToggleAction(Action):
     def __init__(self, option_strings, dest, default=False, required=False,
                  help=None):
+        if len(option_strings) == 0:
+            raise ValueError('option string must begin with "--"')
+
         self.true_strings = [self._prefix(i, self._true_prefix)
                              for i in option_strings]
         self.false_strings = [self._prefix(i, self._false_prefix)
