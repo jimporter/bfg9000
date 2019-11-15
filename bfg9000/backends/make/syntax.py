@@ -145,7 +145,7 @@ class NamedEntity(Entity):
 
 class Pattern(Entity):
     def __init__(self, path):
-        if len(re.findall(r'([^\\]|^)(\\\\)*%', path)) != 1:
+        if len(re.findall(r'((?<=[^\\])|^)(\\\\)*%', path)) != 1:
             raise ValueError('exactly one % required')
         self.path = path
 

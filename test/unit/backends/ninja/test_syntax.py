@@ -15,6 +15,10 @@ def quoted(s):
     return quote_char + s + quote_char
 
 
+class my_safe_str(safe_str.safe_string):
+    pass
+
+
 class TestVariable(TestCase):
     def test_equality(self):
         self.assertTrue(Variable('foo') == Variable('foo'))
@@ -43,6 +47,9 @@ class TestVariable(TestCase):
         self.assertEqual(Variable('foo') + Variable('bar'), safe_str.jbos(
             safe_str.literal('${foo}'), safe_str.literal('${bar}')
         ))
+
+    def test_hash(self):
+        self.assertEqual(hash(Variable('foo')), hash(Variable('foo')))
 
 
 class TestWriteString(TestCase):
@@ -165,6 +172,18 @@ class TestWritePath(PathTestCase):
         out.write(self.Path('foo', path.Root.srcdir), Syntax.clean)
         self.assertEqual(out.stream.getvalue(),
                          self.ospath.join('${srcdir}', 'foo'))
+
+
+class TestWriteInvalid(TestCase):
+    def test_invalid_type(self):
+        out = Writer(StringIO())
+        with self.assertRaises(TypeError):
+            out.write(my_safe_str(), Syntax.output)
+
+    def test_invalid_escape(self):
+        out = Writer(StringIO())
+        with self.assertRaises(ValueError):
+            out.write('foo\nbar', Syntax.output)
 
 
 class TestNinjaFile(TestCase):

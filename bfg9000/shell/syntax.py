@@ -32,7 +32,7 @@ class Writer(object):
         elif isinstance(thing, safe_str.jbos):
             for i in thing.bits:
                 escaped |= self.write(i, syntax, shell_quote)
-        elif isinstance(thing, path.Path):
+        elif isinstance(thing, path.BasePath):
             out = Writer(StringIO())
             thing = thing.realize(path_vars, shelly)
             escaped = out.write(thing, syntax, pshell.inner_quote_info)

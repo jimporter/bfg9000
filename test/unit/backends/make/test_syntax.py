@@ -15,6 +15,10 @@ def quoted(s):
     return "'" + s + "'"
 
 
+class my_safe_str(safe_str.safe_string):
+    pass
+
+
 class TestPattern(TestCase):
     def test_equality(self):
         self.assertTrue(Pattern('%.c') == Pattern('%.c'))
@@ -22,6 +26,9 @@ class TestPattern(TestCase):
 
         self.assertFalse(Pattern('%.c') == Pattern('%.h'))
         self.assertTrue(Pattern('%.c') != Pattern('%.h'))
+
+        self.assertTrue(Pattern('%\\%.c') == Pattern('%\\%.c'))
+        self.assertFalse(Pattern('%\\%.c') != Pattern('%\\%.c'))
 
     def test_concat_str(self):
         self.assertEqual(Pattern('%.c') + 'bar', safe_str.jbos(
@@ -43,6 +50,14 @@ class TestPattern(TestCase):
         self.assertEqual(Pattern('%.c') + Pattern('%.h'), safe_str.jbos(
             safe_str.literal('%'), '.c', safe_str.literal('%'), '.h'
         ))
+
+    def test_hash(self):
+        self.assertEqual(hash(Pattern('%.c')), hash(Pattern('%.c')))
+
+    def test_invalid(self):
+        self.assertRaises(ValueError, Pattern, '.c')
+        self.assertRaises(ValueError, Pattern, '%%.c')
+        self.assertRaises(ValueError, Pattern, '%\\\\%.c')
 
 
 class TestVariable(TestCase):
@@ -73,6 +88,9 @@ class TestVariable(TestCase):
         self.assertEqual(Variable('foo') + Variable('bar'), safe_str.jbos(
             safe_str.literal('$(foo)'), safe_str.literal('$(bar)')
         ))
+
+    def test_hash(self):
+        self.assertEqual(hash(Variable('foo')), hash(Variable('foo')))
 
 
 class TestWriteString(TestCase):
@@ -265,6 +283,18 @@ class TestWritePath(PathTestCase):
         out.write(self.Path('foo', path.Root.srcdir), Syntax.clean)
         self.assertEqual(out.stream.getvalue(),
                          self.ospath.join('$(srcdir)', 'foo'))
+
+
+class TestWriteInvalid(TestCase):
+    def test_invalid_type(self):
+        out = Writer(StringIO())
+        with self.assertRaises(TypeError):
+            out.write(my_safe_str(), Syntax.target)
+
+    def test_invalid_escape(self):
+        out = Writer(StringIO())
+        with self.assertRaises(ValueError):
+            out.write('foo\nbar', Syntax.target)
 
 
 class TestMakefile(TestCase):
