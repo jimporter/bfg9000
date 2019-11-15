@@ -71,6 +71,9 @@ matrix:
     - python: 2.7
       os: linux
       env: JOB=bdist_wheel
+      addons:
+        apt:
+          packages: []
       install: true
       script:
         - export VENV_BIN=`dirname \`which python\``
@@ -91,6 +94,9 @@ matrix:
       os: linux
       dist: xenial
       env: JOB=bdist_wheel
+      addons:
+        apt:
+          packages: []
       install: true
       script:
         - export VENV_BIN=`dirname \`which python\``
@@ -114,6 +120,9 @@ matrix:
       os: linux
       dist: xenial
       env: JOB=lint
+      addons:
+        apt:
+          packages: []
       script: ${PYTHON} setup.py lint
       after_success: false
 
