@@ -16,7 +16,7 @@ def init():
 
 
 def builder(*args):
-    if len(args) == 0:
+    if len(args) == 0:  # pragma: no cover
         raise TypeError('must provide at least one language')
     multi = len(args) > 1
 

@@ -12,7 +12,7 @@ _build_inputs = {}
 
 def build_input(name):
     def wrapper(fn):
-        if name in _build_inputs:
+        if name in _build_inputs:  # pragma: no cover
             raise ValueError("'{}' already registered".format(name))
         _build_inputs[name] = fn
         return fn

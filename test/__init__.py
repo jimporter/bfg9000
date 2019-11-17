@@ -5,7 +5,7 @@ import unittest
 from six import assertRegex, assertRaisesRegex
 
 from bfg9000.environment import Environment
-from bfg9000.path import abspath, Path, Root, InstallRoot
+from bfg9000.path import abspath, InstallRoot
 
 __all__ = ['assertNotRegex', 'assertRaisesRegex', 'assertRegex', 'load_tests',
            'make_env', 'parameterize_tests', 'skip_if', 'skip_pred',
@@ -13,7 +13,7 @@ __all__ = ['assertNotRegex', 'assertRaisesRegex', 'assertRegex', 'load_tests',
 
 
 def make_env(platform=None, clear_variables=False, variables={}):
-    args = (Path('bfgdir', Root.srcdir), None, None, abspath('srcdir'),
+    args = (abspath('bfgdir'), None, None, abspath('srcdir'),
             abspath('builddir'))
     if platform:
         with mock.patch('bfg9000.platforms.core.platform_name',
