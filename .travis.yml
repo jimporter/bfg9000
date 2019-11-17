@@ -148,7 +148,7 @@ addons:
       - qtdeclarative5-dev
       - scala
 cache:
-  - apt
+  apt: true
 
 before_install:
   - set -e
