@@ -1,3 +1,5 @@
+import mock
+
 from .common import BuiltinTest
 
 from bfg9000.builtins import default, install  # noqa
@@ -25,3 +27,11 @@ class TestInstall(BuiltinTest):
 
         exe = file_types.Executable(Path('/path/to/exe', Root.absolute), None)
         self.assertRaises(ValueError, self.builtin_dict['install'], exe)
+
+    def test_cant_install(self):
+        with mock.patch('bfg9000.builtins.install.can_install',
+                        return_value=False), \
+             mock.patch('warnings.warn') as m:  # noqa
+            exe = file_types.Executable(Path('exe', Root.srcdir), None)
+            self.assertEqual(self.builtin_dict['install'](exe), exe)
+            m.assert_called_once()
