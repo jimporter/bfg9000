@@ -1,6 +1,12 @@
-from .. import *
+from six.moves import cStringIO as StringIO
 
+from .. import assertRegex
+from .common import BuiltinTest, TestCase
+
+from bfg9000.builtins import project  # noqa
 from bfg9000.builtins.pkg_config import *
+from bfg9000.file_types import PkgConfigPcFile
+from bfg9000.path import Path
 from bfg9000.safe_str import safe_str, shell_literal
 
 
@@ -121,3 +127,51 @@ class TestPkgConfigRequirementSet(TestCase):
         self.assertEqual(set(s.split()), {SimpleRequirement('bar', '>=3.0'),
                                           SimpleRequirement('foo', '>=1.0'),
                                           SimpleRequirement('foo', '<=2.0')})
+
+
+class TestPkgConfig(BuiltinTest):
+    def test_minimal(self):
+        pkg = PkgConfigInfo(self.builtin_dict, self.build, name='package',
+                            version='1.0')
+        self.assertEqual(pkg.output, PkgConfigPcFile(Path(
+            'pkgconfig/package.pc'
+        )))
+
+        out = StringIO()
+        pkg.write(out, self.env)
+        assertRegex(self, out.getvalue(),
+                    '\n\nName: package\n' +
+                    'Description: package library\n' +
+                    'Version: 1.0\n$')
+
+    def test_metadata(self):
+        pkg = PkgConfigInfo(
+            self.builtin_dict, self.build, name='package',
+            desc_name='my-package', desc='a cool package',
+            url='http://www.example.com/', version='1.0'
+        )
+        self.assertEqual(pkg.output, PkgConfigPcFile(Path(
+            'pkgconfig/package.pc'
+        )))
+
+        out = StringIO()
+        pkg.write(out, self.env)
+        assertRegex(self, out.getvalue(),
+                    '\n\nName: my-package\n' +
+                    'Description: a cool package\n' +
+                    'URL: http://www.example.com/\n' +
+                    'Version: 1.0\n$')
+
+    def test_requires(self):
+        pkg = PkgConfigInfo(
+            self.builtin_dict, self.build, name='package', version='1.0',
+            requires=['req', ('vreq', '>=1.0')]
+        )
+
+        out = StringIO()
+        pkg.write(out, self.env)
+        assertRegex(self, out.getvalue(),
+                    '\nRequires: req, vreq >= 1.0\n')
+
+        with self.assertRaises(TypeError):
+            pkg = PkgConfigInfo(self.builtin_dict, self.build, requires=[1])

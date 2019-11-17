@@ -85,6 +85,8 @@ class JvmBuilder(Builder):
             if 'EPFL' in version_output:
                 brand = 'epfl'
                 version = detect_version(version_output)
+        else:  # pragma: no cover
+            raise ValueError('unrecognized language {!r}'.format(lang))
 
         return brand, version
 
