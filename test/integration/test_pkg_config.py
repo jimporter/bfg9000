@@ -163,22 +163,32 @@ class TestPkgConfigAuto(IntegrationTest):
         self.assertEqual(pkg_config(['hello', '--libs-only-other']), '')
 
     def test_install(self):
+        pjoin = os.path.join
         self.configure()
         self.build('install')
 
         extra = []
         if env.target_platform.has_import_library:
-            extra = [os.path.join(self.libdir, import_library('hello').path)]
+            extra.append(pjoin(self.libdir, import_library('hello').path))
+
+        if env.target_platform.has_versioned_library:
+            extra.extend([
+                pjoin(self.libdir, shared_library('hello', '1.2.3').path),
+                pjoin(self.libdir, shared_library('hello', '1').path),
+                pjoin(self.libdir, shared_library('inner', '1.2.3').path),
+                pjoin(self.libdir, shared_library('inner', '1').path),
+            ])
+        else:
+            extra.append(pjoin(self.libdir, shared_library('inner').path))
 
         self.assertDirectory(self.installdir, [
-            os.path.join(self.includedir, 'hello.hpp'),
-            os.path.join(self.libdir, shared_library('hello').path),
-            os.path.join(self.libdir, shared_library('inner').path),
-            os.path.join(self.libdir, 'pkgconfig', 'hello.pc'),
+            pjoin(self.includedir, 'hello.hpp'),
+            pjoin(self.libdir, shared_library('hello').path),
+            pjoin(self.libdir, 'pkgconfig', 'hello.pc'),
         ] + extra)
 
         self.configure(srcdir='pkg_config_use', installdir=None, env={
-            'PKG_CONFIG_PATH': os.path.join(self.libdir, 'pkgconfig')
+            'PKG_CONFIG_PATH': pjoin(self.libdir, 'pkgconfig')
         })
         self.build()
 

@@ -44,6 +44,7 @@
 - Default install locations are now based on the *target* platform instead of
   the host platform, with cross-platform builds defaulting to installation
   disabled
+- Shared libraries with `soversion`s can now be used with `pkg_config()`
 
 ---
 

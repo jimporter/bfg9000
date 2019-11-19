@@ -4,9 +4,14 @@ opts = ['-s'] if env.target_platform.genus == 'linux' else []
 ogg = package('ogg')
 
 hdr = header_file('hello.hpp')
-inner = library('inner', files=['inner.cpp'], packages=[ogg],
-                link_options=opts)
-lib = library('hello', files=['hello.cpp'], libs=[inner])
+inner = library(
+    'inner', files=['inner.cpp'], packages=[ogg], link_options=opts,
+    version='1.2.3', soversion='1'
+)
+lib = library(
+    'hello', files=['hello.cpp'], libs=[inner],
+    version='1.2.3', soversion='1'
+)
 
 install(lib, hdr)
 pkg_config('hello')

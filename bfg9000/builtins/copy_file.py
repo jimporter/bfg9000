@@ -5,7 +5,7 @@ from .file_types import FileList
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..build_inputs import Edge
-from ..file_types import clone_file, File
+from ..file_types import File
 from ..path import Path
 from ..versioning import SpecifierSet
 
@@ -27,16 +27,19 @@ class CopyFile(Edge):
     @staticmethod
     def convert_args(builtins, name, file, kwargs):
         directory = kwargs.pop('directory', None)
+        if directory:
+            directory = Path.ensure(directory, strict=True)
         file = builtins['auto_file'](file)
-        if name is None:
-            path = file.path.reroot()
-            if directory:
-                directory = Path.ensure(directory, strict=True)
-                path = directory.append(path.suffix)
-        else:
-            path = Path(name)
 
-        output = clone_file(file, path)
+        def pathfn(file):
+            if name is None:
+                path = file.path.reroot()
+                if directory:
+                    return directory.append(path.suffix)
+                return path
+            return Path(name)
+
+        output = file.clone(pathfn)
         return output, file, kwargs
 
 

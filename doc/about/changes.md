@@ -45,6 +45,7 @@ in progress
   steps
 - Default install locations are now based on the *target* platform instead of
   the host platform
+- Shared libraries with `soversion`s can now be used with `pkg_config()`
 
 ---
 
