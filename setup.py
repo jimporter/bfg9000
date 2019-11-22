@@ -116,10 +116,14 @@ except ImportError:
 
 more_requires = []
 
-if os.getenv('NO_DOPPEL') not in ['1', 'true']:
-    more_requires.append('doppel >= 0.4.0')
-if os.getenv('NO_PATCHELF') not in ['1', 'true']:
-    more_requires.append('patchelf-wrapper;platform_system=="Linux"')
+if os.getenv('STDEB_BUILD') not in ['1', 'true']:
+    more_requires.extend([
+        'enum34;python_version<"3.4"',
+        'doppel >= 0.4.0',
+        'pysetenv;platform_system=="Windows"'
+    ])
+    if os.getenv('NO_PATCHELF') not in ['1', 'true']:
+        more_requires.append('patchelf-wrapper;platform_system=="Linux"')
 
 with open(os.path.join(root_dir, 'README.md'), 'r') as f:
     # Read from the file and strip out the badges.
@@ -163,9 +167,7 @@ setup(
     packages=find_packages(exclude=['test', 'test.*']),
 
     install_requires=(
-        ['colorama', 'packaging >= 17.0', 'setuptools', 'six',
-         'enum34;python_version<"3.4"',
-         'pysetenv;platform_system=="Windows"'] +
+        ['colorama', 'packaging >= 17.0', 'setuptools', 'six'] +
         more_requires
     ),
     extras_require={
