@@ -19,7 +19,8 @@ __all__ = ['bfg_version', 'check_version', 'detect_version', 'python_version',
            'VersionError']
 
 bfg_version = PythonVersion(bfg_version)
-python_version = PythonVersion(platform.python_version())
+# Strip trailing "+" from Python version. Some versions in distros have this...
+python_version = PythonVersion(re.sub(r'\+$', '', platform.python_version()))
 
 
 # Use a LegacySpecifierSet instead once packaging.specifiers has it. See
