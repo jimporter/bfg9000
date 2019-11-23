@@ -236,7 +236,7 @@ class NinjaFile(object):
         return name in self._build_outputs
 
     def default(self, paths):
-        self._defaults.extend(paths)
+        self._defaults.extend(iterutils.iterate(paths))
 
     def _convert_args(self, args):
         if iterutils.isiterable(args):

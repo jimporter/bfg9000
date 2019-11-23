@@ -190,6 +190,16 @@ class TestNinjaFile(TestCase):
     def setUp(self):
         self.ninjafile = NinjaFile('build.bfg')
 
+    def test_min_version(self):
+        self.assertIs(self.ninjafile._min_version, None)
+
+        self.ninjafile.min_version('1.0')
+        self.assertEqual(str(self.ninjafile._min_version), '1.0')
+        self.ninjafile.min_version('1.1')
+        self.assertEqual(str(self.ninjafile._min_version), '1.1')
+        self.ninjafile.min_version('1.0')
+        self.assertEqual(str(self.ninjafile._min_version), '1.1')
+
     def test_variable(self):
         var = self.ninjafile.variable('name', 'value')
         self.assertEqual(var, Variable('name'))
@@ -203,6 +213,17 @@ class TestNinjaFile(TestCase):
 
         self.assertRaises(ValueError, self.ninjafile.variable, 'name', 'value')
 
+    def test_cmd_var(self):
+        class MockCommand(object):
+            command_var = 'cmd'
+            command = ['command']
+
+        var = self.ninjafile.cmd_var(MockCommand())
+        self.assertEqual(var, Variable('cmd'))
+        out = Writer(StringIO())
+        self.ninjafile._write_variable(out, var, ['command'])
+        self.assertEqual(out.stream.getvalue(), 'cmd = command\n')
+
     def test_rule(self):
         self.ninjafile.rule('my_rule', ['cmd'])
         out = Writer(StringIO())
@@ -212,16 +233,58 @@ class TestNinjaFile(TestCase):
                          'rule my_rule\n'
                          '  command = cmd\n')
 
+        self.ninjafile.rule('deps_rule', ['cmd'], depfile='out.d', deps='gcc')
+        out = Writer(StringIO())
+        self.ninjafile._write_rule(out, 'deps_rule',
+                                   self.ninjafile._rules['deps_rule'])
+        self.assertEqual(out.stream.getvalue(),
+                         'rule deps_rule\n'
+                         '  command = cmd\n'
+                         '  depfile = out.d\n'
+                         '  deps = gcc\n')
+
+        self.ninjafile.rule('misc_rule', ['cmd'], description='desc',
+                            generator=True, pool='console', restat=True)
+        out = Writer(StringIO())
+        self.ninjafile._write_rule(out, 'misc_rule',
+                                   self.ninjafile._rules['misc_rule'])
+        self.assertEqual(out.stream.getvalue(),
+                         'rule misc_rule\n'
+                         '  command = cmd\n'
+                         '  description = desc\n'
+                         '  generator = 1\n'
+                         '  pool = console\n'
+                         '  restat = 1\n')
+
         # Test duplicate rules.
         self.assertRaises(ValueError, self.ninjafile.rule, 'my_rule', ['cmd'])
 
+        # Test invalid args.
+        self.assertRaises(ValueError, self.ninjafile.rule, 'my_rule!', ['cmd'])
+        self.assertRaises(ValueError, self.ninjafile.rule, 'pool_rule',
+                          ['cmd'], pool='pool')
+
     def test_build(self):
         self.ninjafile.rule('my_rule', ['cmd'])
-        self.ninjafile.build('output', 'my_rule')
 
+        self.ninjafile.build('output', 'my_rule')
         out = Writer(StringIO())
-        self.ninjafile._write_build(out, self.ninjafile._builds[0])
+        self.ninjafile._write_build(out, self.ninjafile._builds[-1])
         self.assertEqual(out.stream.getvalue(), 'build output: my_rule\n')
+
+        self.ninjafile.build('doutput', 'my_rule', inputs='input',
+                             implicit='implicit', order_only='order')
+        out = Writer(StringIO())
+        self.ninjafile._write_build(out, self.ninjafile._builds[-1])
+        self.assertEqual(out.stream.getvalue(),
+                         'build doutput: my_rule input | implicit || order\n')
+
+        self.ninjafile.build('voutput', 'my_rule', variables={'var': 'value'})
+        out = Writer(StringIO())
+        self.ninjafile._write_build(out, self.ninjafile._builds[-1])
+        self.assertEqual(out.stream.getvalue(),
+                         'build voutput: my_rule\n'
+                         '  var = value\n')
 
         # Test duplicate targets.
         self.assertRaises(ValueError, self.ninjafile.build, 'output',
@@ -231,3 +294,31 @@ class TestNinjaFile(TestCase):
         self.assertRaises(ValueError, self.ninjafile.build,
                           File(path.Path('output', path.Root.builddir)),
                           'my_rule')
+
+        # Test unknown rule.
+        self.assertRaises(ValueError, self.ninjafile.build, 'output2',
+                          'unknown_rule')
+
+    def test_write(self):
+        out = StringIO()
+        self.ninjafile.write(out)
+        base_ninjafile = out.getvalue()
+
+        out = StringIO()
+        self.ninjafile.variable('var', 'foo')
+        self.ninjafile.rule('my_rule', ['cmd'], pool='console')
+        self.ninjafile.build('output', 'my_rule')
+        self.ninjafile.default('output')
+        self.ninjafile.write(out)
+
+        self.assertEqual(
+            out.getvalue(),
+            base_ninjafile +
+            'ninja_required_version = 1.5\n\n'
+            'var = foo\n\n'
+            'rule my_rule\n'
+            '  command = cmd\n'
+            '  pool = console\n\n'
+            'build output: my_rule\n\n'
+            'default output\n'
+        )
