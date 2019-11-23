@@ -9,7 +9,7 @@ __all__ = ['SlnBuilder', 'SlnElement', 'SlnVariable', 'Solution', 'UuidMap']
 
 class SlnElement(object):
     def __init__(self, name, arg=None, value=None):
-        if arg is not None and value is None:
+        if (arg is None) != (value is None):
             raise TypeError('if arg is passed, value must be too')
         self.name = name
         self.arg = arg
@@ -95,7 +95,7 @@ class Solution(object):
 
             dep_output = dep.creator.output[0]
             if dep_output not in self:
-                raise ValueError('unknown dependency for {!r}'.format(dep))
+                raise RuntimeError('unknown dependency for {!r}'.format(dep))
             dependencies.append(self[dep_output])
         return dependencies
 

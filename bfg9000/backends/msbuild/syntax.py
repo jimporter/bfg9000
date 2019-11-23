@@ -91,7 +91,7 @@ class Project(object):
         ))
 
     def set_uuid(self, uuids):
-        if not self.uuid:
+        if not self.uuid:  # pragma: no branch
             self.uuid = uuids[self.name]
 
     @property
@@ -213,7 +213,7 @@ class VcxProject(Project):
             if prefix:
                 # If this prefix is shared with another file, strip it out to
                 # create a unique directory to store this object file.
-                suffix = path.Path(name.path.relpath(prefix))
+                suffix = path.Path(name.path.relpath(prefix)).stripext('.obj')
                 c.append(E.ObjectFileName(textify(
                     suffix, builddir=BuildDir.intermediate
                 )))
