@@ -38,19 +38,20 @@ def tokenize(s):
             return
 
         if c == ':':
-            c = next(s)
-            if c in ' \t\n':
+            c = next(s, None)
+            if c is None or c in ' \t\n':
                 yield (Token.colon, None)
-                if c == '\n':
-                    yield (Token.newline, None)
-                continue
+                if c is None:
+                    return
             else:
                 yield (Token.char, ':')
 
         if c == '\\':
-            c = next(s)
+            c = next(s, None)
             if c != '\n':  # Swallow escaped newlines.
                 yield (Token.char, '\\')
+                if c is None:
+                    return
                 yield (Token.char, c)
         elif c in ' \t':
             yield (Token.space, None)
