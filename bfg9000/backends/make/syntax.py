@@ -187,7 +187,10 @@ class Function(NamedEntity):
     def __init__(self, name, *args, **kwargs):
         NamedEntity.__init__(self, name)
         self.args = args
-        self.quoted = kwargs.get('quoted', False)
+        self.quoted = kwargs.pop('quoted', False)
+        if kwargs:
+            raise TypeError('{}() got an unexpected keyword argument {!r}'
+                            .format(Function.__init__.__name__, next(kwargs)))
 
     def use(self):
         lit = safe_str.literal
@@ -203,10 +206,12 @@ class Function(NamedEntity):
             result = pshell.wrap_quotes(result)
         return safe_str.literal(result)
 
+    def __eq__(self, rhs):
+        return NamedEntity.__eq__(self, rhs) and self.args == rhs.args
 
-class Call(Function):
-    def __init__(self, func, *args):
-        Function.__init__(self, 'call', var(func).name, *args)
+
+def Call(func, *args, **kwargs):
+    return Function('call', var(func).name, *args)
 
 
 class Silent(object):

@@ -76,6 +76,13 @@ class TestVariable(TestCase):
             'foo', safe_str.literal('$(bar)')
         ))
 
+        self.assertEqual(Variable('foo', True) + 'bar', safe_str.jbos(
+            safe_str.literal("'$(foo)'"), 'bar'
+        ))
+        self.assertEqual('foo' + Variable('bar', True), safe_str.jbos(
+            'foo', safe_str.literal("'$(bar)'")
+        ))
+
     def test_concat_path(self):
         self.assertEqual(Variable('foo') + path.Path('bar'), safe_str.jbos(
             safe_str.literal('$(foo)'), path.Path('bar')
@@ -84,13 +91,116 @@ class TestVariable(TestCase):
             path.Path('foo'), safe_str.literal('$(bar)')
         ))
 
+        self.assertEqual(
+            Variable('foo', True) + path.Path('bar'),
+            safe_str.jbos(safe_str.literal("'$(foo)'"), path.Path('bar'))
+        )
+        self.assertEqual(
+            path.Path('foo') + Variable('bar', True),
+            safe_str.jbos(path.Path('foo'), safe_str.literal("'$(bar)'"))
+        )
+
     def test_concat_var(self):
         self.assertEqual(Variable('foo') + Variable('bar'), safe_str.jbos(
             safe_str.literal('$(foo)'), safe_str.literal('$(bar)')
         ))
+        self.assertEqual(
+            Variable('foo', True) + Variable('bar'),
+            safe_str.jbos(safe_str.literal("'$(foo)'"),
+                          safe_str.literal('$(bar)'))
+        )
 
     def test_hash(self):
         self.assertEqual(hash(Variable('foo')), hash(Variable('foo')))
+
+    def test_var(self):
+        self.assertFalse(var('foo').quoted)
+        self.assertEqual(Variable('foo'), var('foo'))
+        self.assertEqual(Variable('foo'), var(Variable('foo')))
+
+    def test_qvar(self):
+        self.assertTrue(qvar('foo').quoted)
+        self.assertEqual(Variable('foo'), qvar('foo'))
+        self.assertEqual(Variable('foo'), qvar(Variable('foo')))
+
+
+class TestFunction(TestCase):
+    def test_equality(self):
+        self.assertTrue(Function('fn') == Function('fn'))
+        self.assertFalse(Function('fn') != Function('fn'))
+        self.assertTrue(Function('fn', '1', '2') == Function('fn', '1', '2'))
+        self.assertFalse(Function('fn', '1', '2') != Function('fn', '1', '2'))
+
+        self.assertFalse(Function('fn') == Function('fn2'))
+        self.assertTrue(Function('fn') != Function('fn2'))
+        self.assertFalse(Function('fn', '1', '2') == Function('fn2', '1', '2'))
+        self.assertTrue(Function('fn', '1', '2') != Function('fn2', '1', '2'))
+        self.assertFalse(Function('fn', '1', '2') == Function('fn', '1', '3'))
+        self.assertTrue(Function('fn', '1', '2') != Function('fn', '1', '3'))
+        self.assertFalse(Function('fn', '1', '2') == Function('fn', '1'))
+        self.assertTrue(Function('fn', '1', '2') != Function('fn', '1'))
+
+    def test_call(self):
+        self.assertEqual(Call('fn', '1', '2'),
+                         Function('call', 'fn', '1', '2'))
+
+    def test_concat_str(self):
+        self.assertEqual(Function('fn', '1', '2') + 'foo', safe_str.jbos(
+            safe_str.literal('$(fn 1,2)'), 'foo'
+        ))
+        self.assertEqual('foo' + Function('fn', '1', '2'), safe_str.jbos(
+            'foo', safe_str.literal('$(fn 1,2)')
+        ))
+
+        self.assertEqual(
+            Function('fn', '1', '2', quoted=True) + 'foo',
+            safe_str.jbos(safe_str.literal("'$(fn 1,2)'"), 'foo')
+        )
+        self.assertEqual(
+            'foo' + Function('fn', '1', '2', quoted=True),
+            safe_str.jbos('foo', safe_str.literal("'$(fn 1,2)'")
+        ))
+
+    def test_concat_path(self):
+        self.assertEqual(
+            Function('fn', '1', '2') + path.Path('foo'),
+            safe_str.jbos(safe_str.literal('$(fn 1,2)'), path.Path('foo'))
+        )
+        self.assertEqual(
+            path.Path('foo') + Function('fn', '1', '2'),
+            safe_str.jbos(path.Path('foo'), safe_str.literal('$(fn 1,2)'))
+        )
+
+        self.assertEqual(
+            Function('fn', '1', '2', quoted=True) + path.Path('foo'),
+            safe_str.jbos(safe_str.literal("'$(fn 1,2)'"), path.Path('foo'))
+        )
+        self.assertEqual(
+            path.Path('foo') + Function('fn', '1', '2', quoted=True),
+            safe_str.jbos(path.Path('foo'), safe_str.literal("'$(fn 1,2)'"))
+        )
+
+    def test_concat_var(self):
+        self.assertEqual(
+            Function('foo', '1', '2') + Function('bar', '3', '4'),
+            safe_str.jbos(safe_str.literal('$(foo 1,2)'),
+                          safe_str.literal('$(bar 3,4)')
+        ))
+        self.assertEqual(
+            Function('foo', '1', '2', quoted=True) + Function('bar', '3', '4'),
+            safe_str.jbos(safe_str.literal("'$(foo 1,2)'"),
+                          safe_str.literal('$(bar 3,4)')
+        ))
+
+    def test_invalid(self):
+        with self.assertRaises(TypeError):
+            Function('fn', kwarg=True)
+
+
+class TestSilent(TestCase):
+    def test_silent(self):
+        v = Variable('foo')
+        self.assertIs(Silent(v).data, v)
 
 
 class TestWriteString(TestCase):
@@ -357,15 +467,46 @@ class TestMakefile(TestCase):
                           'value')
         self.assertRaises(ValueError, self.makefile.define, 'name', 'value')
 
+    def test_cmd_var(self):
+        class MockCommand(object):
+            command_var = 'cmd'
+            command = ['command']
+
+        var = self.makefile.cmd_var(MockCommand())
+        self.assertEqual(var, Variable('CMD'))
+        out = Writer(StringIO())
+        self.makefile._write_variable(out, var, ['command'])
+        self.assertEqual(out.stream.getvalue(), 'CMD := command\n')
+
     def test_rule(self):
         self.makefile.rule('target', variables={'name': 'value'},
                            recipe=['cmd'])
         out = Writer(StringIO())
-        self.makefile._write_rule(out, self.makefile._rules[0])
+        self.makefile._write_rule(out, self.makefile._rules[-1])
         self.assertEqual(out.stream.getvalue(),
                          'target: name := value\n'
                          'target:\n'
                          '\tcmd\n\n')
+
+        self.makefile.rule('silent-target', recipe=[Silent('cmd')], phony=True)
+        out = Writer(StringIO())
+        self.makefile._write_rule(out, self.makefile._rules[-1])
+        self.assertEqual(out.stream.getvalue(),
+                         '.PHONY: silent-target\n'
+                         'silent-target:\n'
+                         '\t@cmd\n\n')
+
+        self.makefile.rule('call-target', recipe=Call('fn', '1', '2'))
+        out = Writer(StringIO())
+        self.makefile._write_rule(out, self.makefile._rules[-1])
+        self.assertEqual(out.stream.getvalue(),
+                         'call-target: ; $(call fn,1,2)\n\n')
+
+        self.makefile.rule('empty-target')
+        out = Writer(StringIO())
+        self.makefile._write_rule(out, self.makefile._rules[-1])
+        self.assertEqual(out.stream.getvalue(),
+                         'empty-target:\n\n')
 
         # Test duplicate targets.
         self.assertRaises(ValueError, self.makefile.rule, 'target')
@@ -373,3 +514,34 @@ class TestMakefile(TestCase):
                           ['target', 'target2'])
         self.assertRaises(ValueError, self.makefile.rule,
                           File(path.Path('target', path.Root.builddir)))
+
+        # Test no targets.
+        self.assertRaises(ValueError, self.makefile.rule, [])
+
+    def test_write(self):
+        out = StringIO()
+        self.makefile.write(out)
+        base_makefile = out.getvalue()
+
+        out = StringIO()
+        self.makefile.variable('var', 'foo')
+        self.makefile.target_variable('tvar', 'bar')
+        self.makefile.define('dvar', 'baz')
+        self.makefile.rule('target', recipe=['cmd'])
+        self.makefile.include('inc1')
+        self.makefile.include('inc2', optional=True)
+        self.makefile.write(out)
+
+        self.assertEqual(
+            out.getvalue(),
+            base_makefile +
+            'var := foo\n\n'
+            '%: tvar := bar\n\n'
+            'define dvar\n'
+            'baz\n'
+            'endef\n\n'
+            'target:\n'
+            '\tcmd\n\n'
+            'include inc1\n'
+            '-include inc2\n'
+        )
