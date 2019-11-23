@@ -1,0 +1,6 @@
+# -*- python -*-
+
+def fn():
+    object_file()
+
+fn()

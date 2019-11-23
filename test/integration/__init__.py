@@ -203,7 +203,7 @@ class BasicIntegrationTest(SubprocessTestCase):
 
     def configure(self, srcdir=None, builddir=None, installdir=_unset,
                   orig_srcdir=_unset, extra_args=_unset, env=_unset,
-                  backend=_unset):
+                  backend=_unset, returncode=0):
         if srcdir:
             srcdir = os.path.join(test_data_dir, srcdir)
         else:
@@ -236,7 +236,7 @@ class BasicIntegrationTest(SubprocessTestCase):
         self.assertPopen(
             ['bfg9000', '--debug', 'configure', builddir,
              '--backend', backend] + install_args + extra_args,
-            env=env, env_update=True
+            env=env, env_update=True, returncode=returncode
         )
         os.chdir(builddir)
 
