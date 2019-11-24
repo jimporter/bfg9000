@@ -1,6 +1,6 @@
 from . import *
 
-from bfg9000.languages import Languages
+from bfg9000.languages import Formats, Languages
 
 
 class TestLanguages(TestCase):
@@ -73,6 +73,17 @@ class TestLanguages(TestCase):
             with self.known_langs.make('c++') as x:
                 x.exts(source=['.c', '.cpp'])
 
+    def test_make_invalid_attr(self):
+        with self.known_langs.make('c++') as x:
+            with self.assertRaises(AttributeError):
+                x.unknown()
+
+    def test_in(self):
+        self.assertTrue('c' in self.known_langs)
+        self.assertFalse('c' not in self.known_langs)
+        self.assertFalse('c++' in self.known_langs)
+        self.assertTrue('c++' not in self.known_langs)
+
     def test_get_unrecognized_lang(self):
         msg = r"^unrecognized language 'c\+\+'$"
         with assertRaisesRegex(self, ValueError, msg):
@@ -93,3 +104,38 @@ class TestLanguages(TestCase):
         self.assertEqual(self.known_langs.fromext('.c', 'header'), None)
         self.assertEqual(self.known_langs.fromext('.c', 'goofy'), None)
         self.assertEqual(self.known_langs.fromext('.foo', 'source'), None)
+
+
+class TestFormats(TestCase):
+    def setUp(self):
+        self.known_formats = Formats()
+        with self.known_formats.make('native', 'static') as x:
+            x.vars(linker='AR')
+        with self.known_formats.make('native', 'dynamic') as x:
+            x.vars(linker='LD')
+
+    def test_make(self):
+        with self.known_formats.make('goofy', 'dynamic') as x:
+            x.vars(linker='GOOFY')
+
+        native = self.known_formats['native', 'static']
+        self.assertEqual(native.name, ('native', 'static'))
+        self.assertEqual(native.var('linker'), 'AR')
+
+        native = self.known_formats['native', 'dynamic']
+        self.assertEqual(native.name, ('native', 'dynamic'))
+        self.assertEqual(native.var('linker'), 'LD')
+
+        goofy = self.known_formats['goofy', 'dynamic']
+        self.assertEqual(goofy.name, ('goofy', 'dynamic'))
+        self.assertEqual(goofy.var('linker'), 'GOOFY')
+
+    def test_make_invalid_attr(self):
+        with self.known_formats.make('goofy', 'dynamic') as x:
+            with self.assertRaises(AttributeError):
+                x.unknown()
+
+    def test_get_unrecognized_format(self):
+        msg = r"^unrecognized format 'goofy \(dynamic\)'$"
+        with assertRaisesRegex(self, ValueError, msg):
+            self.known_formats['goofy', 'dynamic']

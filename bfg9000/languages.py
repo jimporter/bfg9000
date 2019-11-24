@@ -134,7 +134,8 @@ class Formats(object):
         try:
             return self._formats[name[0]][name[1]]
         except KeyError:
-            raise ValueError('unrecognized format {!r}'.format(name))
+            raise ValueError("unrecognized format '{} ({})'"
+                             .format(name[0], name[1]))
 
     def _add(self, info):
         name, mode = info.name
