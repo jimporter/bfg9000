@@ -79,7 +79,12 @@ class File(Node):
             try:
                 dest = self._clone_subfiles[k]
                 orig = getattr(self, k)
-                args[dest] = pathfn(orig) if recursive else orig.path
+                if orig is None:
+                    args[dest] = None
+                elif recursive:
+                    args[dest] = pathfn(orig)
+                else:
+                    args[dest] = orig.path
             except KeyError:
                 args[k] = v
         return args
@@ -330,6 +335,10 @@ class DualUseLibrary(object):
     @property
     def forward_opts(self):
         return self.static.forward_opts
+
+    def clone(self, *args, **kwargs):
+        return DualUseLibrary(self.shared.clone(*args, **kwargs),
+                              self.static.clone(*args, **kwargs))
 
 
 class PkgConfigPcFile(File):

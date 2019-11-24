@@ -13,7 +13,8 @@ in progress
   extension; `build_step()` now uses this by default for outputs
 - Add `always_outdated` argument to `build_step()`
 - Add `copy_file()` and `copy_files()` functions
-- `default()` and `install()` now return the files passed into them
+- `default()` now returns the files passed into it
+- `install()` now returns the installed forms of the files passed into it
 - Add `safe_str()` and `safe_format()` to help safely build command string
 - Expose `Path` object to bfg scripts
 - Add `directory` as an option for `object_file()`, `generated_source()`,

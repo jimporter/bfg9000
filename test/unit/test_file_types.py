@@ -18,7 +18,7 @@ class FileTest(TestCase):
 
         self.assertEqual(type(a), type(b))
         keys = ((set(iterkeys(a.__dict__)) | set(iterkeys(b.__dict__))) -
-                a._clone_exclude) | {'path'} | extra
+                getattr(a, '_clone_exclude', set())) | {'path'} | extra
 
         for i in keys:
             ai, bi = getattr(a, i, None), getattr(b, i, None)
@@ -244,30 +244,33 @@ class TestExportFile(FileTest):
 class TestDllBinary(FileTest):
     def test_clone(self):
         self.assertClone(
-            DllBinary(
-                Path('a.dll', Root.srcdir), 'elf', 'c',
-                Path('a.lib', Root.srcdir), Path('a.exp', Root.srcdir)
-            ),
-            DllBinary(
-                Path('a.dll'), 'elf', 'c', Path('a.lib', Root.srcdir),
-                Path('a.exp', Root.srcdir)
-            )
+            DllBinary(Path('a.dll', Root.srcdir), 'elf', 'c',
+                      Path('a.lib', Root.srcdir)),
+            DllBinary(Path('a.dll'), 'elf', 'c', Path('a.lib', Root.srcdir))
+        )
+        self.assertClone(
+            DllBinary(Path('a.dll', Root.srcdir), 'elf', 'c',
+                      Path('a.lib', Root.srcdir), Path('a.exp', Root.srcdir)),
+            DllBinary(Path('a.dll'), 'elf', 'c', Path('a.lib', Root.srcdir),
+                      Path('a.exp', Root.srcdir))
         )
 
     def test_clone_recursive(self):
         self.assertClone(
-            DllBinary(
-                Path('a.dll', Root.srcdir), 'elf', 'c',
-                Path('a.lib', Root.srcdir), Path('a.exp', Root.srcdir)
-            ),
-            DllBinary(
-                Path('a.dll'), 'elf', 'c', Path('a.lib'), Path('a.exp')
-            ),
+            DllBinary(Path('a.dll', Root.srcdir), 'elf', 'c',
+                      Path('a.lib', Root.srcdir)),
+            DllBinary(Path('a.dll'), 'elf', 'c', Path('a.lib')),
+            recursive=True
+        )
+        self.assertClone(
+            DllBinary(Path('a.dll', Root.srcdir), 'elf', 'c',
+                      Path('a.lib', Root.srcdir), Path('a.exp', Root.srcdir)),
+            DllBinary(Path('a.dll'), 'elf', 'c', Path('a.lib'), Path('a.exp')),
             recursive=True
         )
 
 
-class TestDualUseLibrary(TestCase):
+class TestDualUseLibrary(FileTest):
     def test_equality(self):
         shared_a = SharedLibrary(Path('shared_a'), 'elf')
         shared_b = SharedLibrary(Path('shared_b'), 'elf')
@@ -281,6 +284,14 @@ class TestDualUseLibrary(TestCase):
 
         self.assertFalse(Dual(shared_a, static_a) == Dual(shared_b, static_b))
         self.assertTrue(Dual(shared_a, static_a) != Dual(shared_b, static_b))
+
+    def test_clone(self):
+        shared = SharedLibrary(Path('shared', Root.srcdir), 'elf', 'c')
+        static = StaticLibrary(Path('static', Root.srcdir), 'elf', 'c')
+        shared_install = SharedLibrary(Path('shared'), 'elf', 'c')
+        static_install = StaticLibrary(Path('static'), 'elf', 'c')
+        self.assertClone(DualUseLibrary(shared, static),
+                         DualUseLibrary(shared_install, static_install))
 
 
 class TestPkgConfigPcFile(FileTest):

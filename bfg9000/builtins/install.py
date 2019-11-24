@@ -7,7 +7,7 @@ from .. import shell
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..build_inputs import build_input
-from ..file_types import Directory, File, file_install_path
+from ..file_types import Directory, File, file_install_path, installify
 from ..iterutils import flatten, iterate, unlistify
 
 
@@ -65,7 +65,7 @@ def install(builtins, build, env, *args):
             build['install'].add(i)
         builtins['default'](i)
 
-    return unlistify(args)
+    return unlistify(tuple(installify(i, env) for i in args))
 
 
 def _doppel_cmd(env, buildfile):
