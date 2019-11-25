@@ -286,7 +286,7 @@ class ExportFile(File):
 
 # This refers specifically to DLL files that have an import library, not just
 # anything with a .dll extension (for instance, .NET DLLs are just regular
-# shared libraries. While this is a "library" in some senses, since you can't
+# shared libraries). While this is a "library" in some senses, since you can't
 # link to it during building, we just consider it a LinkedBinary.
 @_clone_traits(subfiles={'import_lib': 'import_name',
                          'export_file': 'export_name'})
