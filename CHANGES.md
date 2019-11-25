@@ -1,6 +1,6 @@
 # Changes
 
-## v0.5.0 (in progress)
+## v0.5.0 (2019-11-25)
 
 ### New features
 - Add `generated_source()` to allow generating source code from domain-specific
