@@ -147,12 +147,14 @@
     <ul class="nav bs-sidenav">
         <li class="main active"><a href="#reference">Reference</a></li>
             <li><a href="#general">General</a></li>
-            <li><a href="#file-types">File types</a></li>
+            <li><a href="#file-objects">File objects</a></li>
             <li><a href="#build-steps">Build steps</a></li>
-            <li><a href="#grouping-rules">Grouping rules</a></li>
+            <li><a href="#file-steps">File steps</a></li>
+            <li><a href="#test-steps">Test steps</a></li>
+            <li><a href="#grouping-steps">Grouping steps</a></li>
+            <li><a href="#user-defined-steps">User-defined steps</a></li>
             <li><a href="#semantic-options">Semantic options</a></li>
             <li><a href="#global-options">Global options</a></li>
-            <li><a href="#test-rules">Test rules</a></li>
             <li><a href="#package-resolvers">Package resolvers</a></li>
             <li><a href="#environment">Environment</a></li>
             <li><a href="#utilities">Utilities</a></li>
@@ -185,104 +187,135 @@ absolute paths will refer to that (absolute) path on the <em>current</em> drive,
 Windows-style paths with a drive letter and a <em>relative</em> path (e.g. <code>C:foo</code>)
 are unsupported by bfg9000.</p>
 </div>
-<h2 id="file-types">File types<a class="headerlink" href="#file-types" title="Permanent link">§</a></h2>
+<h2 id="file-objects">File objects<a class="headerlink" href="#file-objects" title="Permanent link">§</a></h2>
 <p>Files used in a <code>build.bfg</code> script are divided by their types (e.g. source
 code, header files, etc). All files from the source directory which are
 referenced in the <code>build.bfg</code> script will automatically be added to the source
 distribution when it's built.</p>
-<p>In most cases, you can simply pass a string to functions expecting a file type;
-the string will automatically be converted to a file object of the appropriate
-type. However, in some cases, you may wish to explicitly create a file object.
-This can be useful, for instance, when running commands that take a source file
-as an argument, e.g. in the following snippet:</p>
-<pre><code class="python">command('script', cmd=['python', source_file('script.py')])
+<p>In most cases, you can simply pass a string to functions expecting a file
+object; the string will automatically be converted to a file object of the
+appropriate type. However, in some cases, you may wish to explicitly create a
+file object. This can be useful, for instance, when running commands that take a
+source file as an argument, e.g. in the following snippet:</p>
+<pre><code class="python">command('script', cmd=[source_file('script.py')])
 </code></pre>
 
-<p>Using <a href="#source_filename-lang"><em>source_file</em></a> here allows you to specify that the
-file is found in the <em>source directory</em>, rather than the build directory.</p>
-<h3 id="directory">directory(<em>name</em>, [<em>include</em>], [<em>exclude</em>], [<em>filter</em>])<a class="headerlink" href="#directory" title="Permanent link">§</a></h3>
+<p>Using <a href="#source_file"><em>source_file</em></a> here allows you to specify that the file is
+a source code file found in the <em>source directory</em>, rather than the build
+directory. Further, since the file is a Python script, it can be executed as
+part of a <a href="#command"><em>command</em></a> step.</p>
+<p>In addition to the functions listed in this section below,
+<a href="#build_step">build steps</a> which generate a file can also be used to produce
+source files of that type (see each step's documentation for details).</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>By default, when creating a file object in the source directory, it will
+automatically be added to the project's <a href="../writing/#distributing-your-source">source
+distribution</a>. To disable this, you can
+specify <code>dist=False</code> when creating the file object.</p>
+</div>
+<h3 id="auto_file">auto_file(<em>name</em>, [<em>lang</em>], [<em>dist</em>])<a class="headerlink" href="#auto_file" title="Permanent link">§</a></h3>
+<p>Create a reference to an existing file named <em>name</em>. This function will try to
+automatically determine the file's kind based on its extension:
+<a href="#source_file"><em>source_file</em></a>; <a href="#header_file"><em>header_file</em></a>;
+<a href="#resource_file"><em>resource_file</em></a>; or, if the extension is not recognized,
+<a href="#generic_file"><em>generic_file</em></a>. If <em>lang</em> is specified, files with an
+unrecognized extension will always be treated as <a href="#source_file"><em>source_file</em></a>s.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This function is primarily useful for writing generic code that works with
+multiple kinds of files; when creating a reference to a specific, <em>known</em>
+file, the concrete function listed above should be used instead.</p>
+</div>
+<h3 id="directory">directory(<em>name</em>, [<em>include</em>], [<em>extra</em>], [<em>exclude</em>], [<em>filter</em>], [<em>dist</em>], [<em>cache</em>])<a class="headerlink" href="#directory" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Create a reference to an existing directory named <em>name</em>. This allows you to
 refer to an arbitrary subfolder of your source directory. The arguments
-<em>include</em>, <em>exclude</em>, and <em>filter</em> are as per <a href="#find_files"><em>find_files</em></a>. Any
-matching files will be added to the project's <a href="../writing/#distributing-your-source">source
-distribution</a>.</p>
+<em>include</em>, <em>extra</em>, <em>exclude</em>, <em>filter</em>, <em>dist</em>, and <em>cache</em> are forwarded to
+<a href="#find_files"><em>find_files</em></a>. Any matching files will be added to the project's
+<a href="../writing/#distributing-your-source">source distribution</a>.</p>
 <h3 id="extra_dist">extra_dist([<em>files</em>], [<em>dirs</em>])<a class="headerlink" href="#extra_dist" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Add extra <em>files</em> and <em>dirs</em> to the list of recognized source files. This lets
 you reference files that are part of the source distribution but which have no
 impact on the build proper (e.g. READMEs).</p>
-<h3 id="generic_file">generic_file(<em>name</em>)<a class="headerlink" href="#generic_file" title="Permanent link">§</a></h3>
+<h3 id="generic_file">generic_file(<em>name</em>, [<em>dist</em>])<a class="headerlink" href="#generic_file" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Create a reference to an existing file named <em>name</em>.</p>
-<h3 id="header_directory">header_directory(<em>name</em>, [<em>include</em>], [<em>exclude</em>], [<em>filter</em>], [<em>system</em>])<a class="headerlink" href="#header_directory" title="Permanent link">§</a></h3>
+<h3 id="header_directory">header_directory(<em>name</em>, [<em>include</em>], [<em>extra</em>], [<em>exclude</em>], [<em>filter</em>], [<em>system</em>], [<em>dist</em>], [<em>cache</em>])<a class="headerlink" href="#header_directory" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Create a reference to a directory named <em>name</em> containing header files for the
 project. This can then be used in the <em>include</em> argument when
-<a href="#object_file">compiling</a> a source file. The arguments <em>include</em>, <em>exclude</em>, and
-<em>filter</em> are as per <a href="#find_files"><em>find_files</em></a>. Any matching files will be
-added to the project's <a href="../writing/#distributing-your-source">source
-distribution</a>.</p>
+<a href="#object_file">compiling</a> a source file. The arguments
+<em>include</em>, <em>extra</em>, <em>exclude</em>, <em>filter</em>, <em>dist</em>, and <em>cache</em> are forwarded to
+<a href="#find_files"><em>find_files</em></a>. Any matching files will be added to the project's
+<a href="../writing/#distributing-your-source">source distribution</a>.</p>
 <p>If <em>system</em> is <em>True</em>, this directory will be treated as a <a href="https://gcc.gnu.org/onlinedocs/cpp/System-Headers.html">system
 directory</a> for compilers that support this.</p>
-<h3 id="header_file">header_file(<em>name</em>)<a class="headerlink" href="#header_file" title="Permanent link">§</a></h3>
+<h3 id="header_file">header_file(<em>name</em>, [<em>lang</em>], [<em>dist</em>])<a class="headerlink" href="#header_file" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Create a reference to an existing header named <em>name</em>. This is useful if you'd
-like to <a href="#install">install</a> a single header file for your project.</p>
-<h3 id="module_def_file">module_def_file(<em>name</em>)<a class="headerlink" href="#module_def_file" title="Permanent link">§</a></h3>
+like to <a href="#install">install</a> a single header file for your project. If <em>lang</em> is
+not specified, the language of the file is inferred from its extension.</p>
+<h3 id="module_def_file">module_def_file(<em>name</em>, [<em>dist</em>])<a class="headerlink" href="#module_def_file" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Create a reference to an existing module-definition file named <em>name</em>.
 <a href="https://docs.microsoft.com/en-us/cpp/build/reference/module-definition-dot-def-files">Module-definition files</a> are sometimes used when building libraries
 on Windows.</p>
-<h3 id="source_file">source_file(<em>name</em>, [<em>lang</em>])<a class="headerlink" href="#source_file" title="Permanent link">§</a></h3>
+<h3 id="resource_file">resource_file(<em>name</em>, [<em>lang</em>], [<em>dist</em>])<a class="headerlink" href="#resource_file" title="Permanent link">§</a></h3>
+<p class="subtitle">Availability: <code>build.bfg</code></p>
+<p>Create a reference to an existing resource file named <em>name</em>. If <em>lang</em> is not
+specified, the language of the file is inferred from its extension.</p>
+<h3 id="source_file">source_file(<em>name</em>, [<em>lang</em>], [<em>dist</em>])<a class="headerlink" href="#source_file" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Create a reference to an existing source file named <em>name</em>. If <em>lang</em> is not
 specified, the language of the file is inferred from its extension.</p>
 <h2 id="build-steps">Build steps<a class="headerlink" href="#build-steps" title="Permanent link">§</a></h2>
-<p class="subtitle">Availability: <code>build.bfg</code></p>
-<p>Build steps define rules to create an output (usually a file) from zero or more
-inputs (also usually files). As you may expect, if the output doesn't exist, the
-step is run to generate it. Each input is a dependency on the output, and any
-changes to an input will result in a rebuild. This includes headers <code>#include</code>d
-by any of the source files, but does <em>not</em> include files external to the project
-(i.e. <a href="#package-resolvers">packages</a>).</p>
-<p>In addition, all build steps have the ability to define extra dependencies via
-the <em>extra_deps</em> argument. These can be files or other build steps, and changes
-to them will trigger a rebuild as with the build's inputs.</p>
-<p>Build steps also allow setting a custom description. This can be used to provide
-a friendlier message for the Ninja backend to show when building that step.</p>
-<p>Finally, build steps which produce a file can also be used like the
-<a href="#file-types">file types</a> described above to refer to prebuilt files already in
-the source tree (e.g. static libraries provided in binary form by a
+<p>Build steps describe how to create a target output (usually a file) from zero or
+more inputs (usually files or other build steps). As you may expect, if the
+output is a file and it's either out of date or doesn't exist, the step is run
+to generate it. Each input is a dependency on the output, and any changes to an
+input will result in a rebuild. This includes headers <code>#include</code>d by any of the
+source files, but does <em>not</em> include files external to the project (i.e.
+<a href="#package-resolvers">packages</a>).</p>
+<p>Most build steps also have the ability to define additional dependencies via the
+<em>extra_deps</em> argument. These can be files or other build steps, and changes to
+them will trigger a rebuild as with the build's inputs.</p>
+<p>Further, many build steps also allow setting a custom <em>description</em>. This can be
+used to provide a friendlier message for the Ninja backend to show when building
+that step.</p>
+<h2 id="file-steps">File steps<a class="headerlink" href="#file-steps" title="Permanent link">§</a></h2>
+<p>Naturally, the most common type of build step is one that generates a file.
+These are responsible for compiling object files, linking executables and
+libraries, and so on. In addition, all of these steps can be used like the <a href="#file-objects">file
+object</a> functions described above to refer to prebuilt files
+already in the source tree (e.g. static libraries provided in binary form by a
 vendor). This is described in more detail for each step below.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>For build steps which produce a file, the exact name of the output file is
-determined by the platform you're running on. For instance, when building an
-executable file named "foo" on Windows, the resulting file will be
-<code>foo.exe</code>.</p>
+<p>For file steps, the exact name of the output file is determined by the
+platform you're running on. For instance, when building an executable file
+named "foo" on Windows, the resulting file will be <code>foo.exe</code>.</p>
 </div>
-<h3 id="build_step">build_step(<em>name</em>, <em>cmd</em>|<em>cmds</em>, [<em>environment</em>], [<em>type</em>], [<em>args</em>], [<em>kwargs</em>], [<em>extra_deps</em>], [<em>description</em>])<a class="headerlink" href="#build_step" title="Permanent link">§</a></h3>
+<h3 id="copy_file">copy_file([<em>name</em>], <em>file</em>, [<em>mode</em>], [<em>directory</em>], [<em>extra_deps</em>], [<em>description</em>])<a class="headerlink" href="#copy_file" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
-<p>Create a custom build step that produces a file named <em>name</em> by running an
-arbitrary command (<em>cmd</em> or <em>cmds</em>). <em>name</em> may either be a single file name or
-a list of file names. For a description of the arguments <em>cmd</em>, <em>cmds</em>, and
-<em>environment</em>, see <a href="#command"><em>command</em></a> below.</p>
-<p>By default, this function return a <a href="#source_file"><em>source_file</em></a>; you can adjust
-this with the <em>type</em> argument. This should be either 1) a function returning a
-file object, or 2) an object with a <code>.type</code> attribute that meets the criteria of
-(1). You can also pass <em>args</em> and <em>kwargs</em> to forward arguments along to this
-function.</p>
-<h3 id="command">command(<em>name</em>, <em>cmd</em>|<em>cmds</em>, [<em>environment</em>], [<em>extra_deps</em>], [<em>description</em>])<a class="headerlink" href="#command" title="Permanent link">§</a></h3>
+<p>Create a build step that copies a file named <em>file</em> to a destination named
+<em>name</em>; if <em>name</em> is not specified, this function will use the filename in
+<em>file</em> as a base (this is primarily useful for copying a file from the source
+directory to the build directory). <em>mode</em> specifies how the file should be
+copied: <code>'copy'</code> (the default), <code>'symlink'</code>, or <code>'hardlink'</code>.</p>
+<p>You can also specify <em>directory</em> as an optional subdirectory to place the copied
+file into if <em>name</em> is unspecified, as with <a href="#object_file"><em>object_file</em></a>.</p>
+<p>This build step recognizes the <a href="../environment-vars/#command-variables">environment
+variables</a> for the relevant copy mode.</p>
+<h3 id="copy_files">copy_files(<em>files</em>, [<em>mode</em>], [<em>extra_deps</em>], [<em>description</em>])<a class="headerlink" href="#copy_files" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
-<p>Create a build step named <em>name</em> that runs a list of arbitrary commands,
-specified in either <em>cmd</em> or <em>cmds</em>; <em>cmd</em> takes a single command, whereas
-<em>cmds</em> takes a list of commands. Each command may be a string to be
-parsed according to shell rules, a file object (such as an
-<a href="#executable"><em>executable</em></a>), or a list of arguments to be passed directly to
-the process.</p>
-<p>You may also pass a dict to <em>environment</em> to set environment variables for the
-commands. These override any environment variables set on the command line.</p>
+<p>Create a build step to copy each of the files in <em>files</em> using the specified
+<em>mode</em>; this is equivalent to calling <a href="#copy_file"><em>copy_file</em></a> for each element
+in <em>files</em>.</p>
+<p>Like <a href="#object_files"><em>object_files</em></a>, <em>copy_files</em> returns a special list that
+allows you to index into it using the filename of one of the source files listed
+in <em>files</em>.</p>
 <h3 id="executable">executable(<em>name</em>, [<em>files</em>, ..., [<em>extra_deps</em>], [<em>description</em>]])<a class="headerlink" href="#executable" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Create a build step that builds an executable file named <em>name</em>. <em>files</em> is the
@@ -301,6 +334,8 @@ file (or a plain string), this function will implicitly call
 <li><em>module_defs</em>: A <a href="#module_def_file"><em>module_def_file</em></a> specifying information
   about exports and other program info, sometimes used on Windows</li>
 <li><em>lang</em>: Forwarded on to <a href="#object_file"><em>object_file</em></a></li>
+<li><em>intermediate_dir</em>: Fowarded on to <a href="#object_file"><em>object_file</em></a> as
+  <em>directory</em>, defaulting to <code>&lt;name&gt;.int</code></li>
 </ul>
 <p>If neither <em>files</em> nor <em>libs</em> is specified, this function merely references an
 <em>existing</em> executable file (a precompiled binary, a shell script, etc) somewhere
@@ -323,6 +358,40 @@ source language; in particular, this means that when using a tool like GCC
 to build your project, any linker options that need to be forwarded on to
 <code>ld</code> should be prepended with <code>'-Wl,'</code>.</p>
 </div>
+<h3 id="generated_source">generated_source([<em>name</em>], <em>file</em>, ..., [<em>extra_deps</em>], [<em>description</em>])<a class="headerlink" href="#generated_source" title="Permanent link">§</a></h3>
+<p class="subtitle">Availability: <code>build.bfg</code></p>
+<p>Create a build step that generates a source file named <em>name</em> from an input
+(typically another source file) named <em>file</em>; if <em>name</em> is not specified, this
+function will use the filename in <em>file</em> as a base (typically the filename with
+a different extension). Note that unlike with other file steps, <em>name</em>
+represents the exact file name to be used for the output file (i.e. the file
+extension isn't added automatically).</p>
+<p>The following arguments may also be specified:</p>
+<ul>
+<li><em>options</em>: Command-line options to pass to the compiler</li>
+<li><em>lang</em>: The language of the source file; useful if the source file's extension
+  isn't recognized by bfg9000</li>
+<li><em>directory</em>: An optional subdirectory to place the source file into if <em>name</em>
+  is unspecified</li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>When building files via <code>yacc</code>, this step will automatically generate both
+source and header files named <code>&lt;name&gt;.tab.c</code> and <code>&lt;name&gt;.tab.h</code>. You can
+force this step to build only the source file by passing a single filename
+to the <em>name</em> argument; you can also customize the names by passing a pair
+of filenames: <code>generated_source(['foo.c', 'foo.h'], 'bar.y')</code></p>
+</div>
+<p>This build step recognizes the <a href="../environment-vars/#compilation-variables">compilation environment
+variables</a> for the relevant language.</p>
+<h3 id="generated_sources">generated_sources(<em>files</em>, ..., [<em>extra_deps</em>], [<em>description</em>])<a class="headerlink" href="#generated_sources" title="Permanent link">§</a></h3>
+<p class="subtitle">Availability: <code>build.bfg</code></p>
+<p>Create a source-generation build step for each of the files in <em>files</em>; this is
+equivalent to calling <a href="#generated_source"><em>generated_source</em></a> for each element
+in <em>files</em>.</p>
+<p>Like <a href="#object_files"><em>object_files</em></a>, <em>generated_sources</em> returns a special list
+that allows you to index into it using the filename of one of the source files
+listed in <em>files</em>.</p>
 <h3 id="library">library(<em>name</em>, [<em>files</em>, ..., [<em>extra_deps</em>], [<em>description</em>]])<a class="headerlink" href="#library" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Create a build step that builds a shared library named <em>name</em>. Its arguments are
@@ -360,8 +429,8 @@ only the shared library.</p>
 <h3 id="object_file">object_file([<em>name</em>], [<em>file</em>, ..., [<em>extra_deps</em>], [<em>description</em>]])<a class="headerlink" href="#object_file" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Create a build step that compiles a source file named <em>file</em> to an object file
-named <em>name</em>; if <em>name</em> is not specified, it takes the file name in <em>file</em>
-without the extension.</p>
+named <em>name</em>; if <em>name</em> is not specified, this function will use the filename
+in <em>file</em> as a base (typically the filename without the extension).</p>
 <p>The following arguments may also be specified:</p>
 <ul>
 <li><em>includes</em>: A list of <a href="#header_directory">directories</a> to search for header
@@ -375,6 +444,9 @@ without the extension.</p>
 <li><em>options</em>: Command-line options to pass to the compiler</li>
 <li><em>lang</em>: The language of the source file; useful if the source file's extension
   isn't recognized by bfg9000</li>
+<li><em>directory</em>: An optional subdirectory to place the object file into if <em>name</em>
+  is unspecified (this is used by <a href="#executable"><em>executable</em></a> and friends to
+  place implicitly-defined object files in an intermediate directory)</li>
 </ul>
 <p>If <em>file</em> isn't specified, this function merely references an <em>existing</em>
 object file somewhere on the filesystem. In this case, <em>name</em> must be specified
@@ -507,7 +579,35 @@ to turn a static library into a shared library.</p>
 <p><em>whole_archive</em>'s arguments are the same as for
 <a href="#static_library"><em>static_library</em></a>. In addition, you can pass an existing
 static library to <em>whole_archive</em> to convert it into a whole archive.</p>
-<h2 id="grouping-rules">Grouping rules<a class="headerlink" href="#grouping-rules" title="Permanent link">§</a></h2>
+<h2 id="test-steps">Test steps<a class="headerlink" href="#test-steps" title="Permanent link">§</a></h2>
+<p>These steps help you define automated tests that can all be run via the <code>test</code>
+target. For simple cases, you should only need the <a href="#test"><em>test</em></a> function, but
+you can also wrap your tests with a separate driver using
+<a href="#test_driver"><em>test_driver</em></a>.</p>
+<p>For cases where you only want to <em>build</em> the tests, not run them, you can use
+the <code>tests</code> target.</p>
+<h3 id="test">test(<em>test</em>, [<em>environment</em>|<em>driver</em>])<a class="headerlink" href="#test" title="Permanent link">§</a></h3>
+<p class="subtitle">Availability: <code>build.bfg</code></p>
+<p>Create a single test. <em>cmd</em> is the base command (possibly with arguments)
+to run; this works much like the <em>cmd</em> argument in the <a href="#command"><em>command</em></a>
+built-in. You can also pass temporary environment variables as a dict via
+<em>environment</em>, or specify a test driver to add this test file to via <em>driver</em>.</p>
+<h3 id="test_driver">test_driver(<em>cmd</em>, [<em>environment</em>|<em>parent</em>], [<em>wrap_children</em>])<a class="headerlink" href="#test_driver" title="Permanent link">§</a></h3>
+<p class="subtitle">Availability: <code>build.bfg</code></p>
+<p>Create a test driver which can run a series of tests, specified as command-line
+arguments to the driver. <em>cmd</em> is the base command (possibly with arguments)
+to run; this works much like the <em>cmd</em> argument in the <a href="#command"><em>command</em></a>
+built-in. You can also pass temporary environment variables as a dict with
+<em>environment</em>, or specify a parent test driver to wrap this driver via <em>parent</em>.</p>
+<p>Finally, you can specify <em>wrap_children</em> to determine how tests using this
+driver are run. If true, each test will be wrapped by
+<a href="#env-run_arguments"><em>env.run_arguments</em></a>; if false (the default), tests will be
+used as-is.</p>
+<h3 id="test_deps">test_deps(<em>...</em>)<a class="headerlink" href="#test_deps" title="Permanent link">§</a></h3>
+<p class="subtitle">Availability: <code>build.bfg</code></p>
+<p>Specify a list of extra dependencies which must be satisfied when building the
+tests via the <code>tests</code> target.</p>
+<h2 id="grouping-steps">Grouping steps<a class="headerlink" href="#grouping-steps" title="Permanent link">§</a></h2>
 <h3 id="alias">alias(<em>name</em>, [<em>deps</em>])<a class="headerlink" href="#alias" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Create a build step named <em>name</em> that performs no actions on its own. Instead,
@@ -515,10 +615,13 @@ it just runs its dependencies listed in <em>deps</em> as necessary. This build s
 useful for grouping common steps together.</p>
 <h3 id="default">default(<em>...</em>)<a class="headerlink" href="#default" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
-<p>Specify a list of build steps that should be run by default when building. These
-are all accumulated into the <code>all</code> target. If <em>default</em> is never called, all
-executables and libraries <em>not</em> passed to <a href="#test"><em>test</em></a> will be built by
+<p>Specify a list of build outputs that should be run by default when building.
+These are all accumulated into the <code>all</code> target. If <em>default</em> is never called,
+all executables and libraries <em>not</em> passed to <a href="#test"><em>test</em></a> will be built by
 default.</p>
+<p>To allow this to be chained with other functions, <em>default</em> will return the
+arguments passed into it: as a single object if one argument is passed, or a
+tuple if multiple are passed.</p>
 <h3 id="install">install(<em>...</em>)<a class="headerlink" href="#install" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Specify a list of files that need to be installed for the project to work. Each
@@ -527,18 +630,75 @@ files will go in <code>$PREFIX/include</code> by default on POSIX systems. These
 accumulated into the <code>install</code> target. If there are any runtime dependencies for
 a file (such as shared libraries you just built), they will be installed as
 well.</p>
+<p>To allow referencing the installed copies of the files passed to it, <em>install</em>
+will return file objects representing the installed files: as a single object if
+one argument is passed, or a tuple if multiple are passed.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>When explicitly listing a target, <em>all</em> the files for that target will be
 installed. For instance, on Windows, this means that passing in a shared
 library will install the DLL <em>and</em> the import library.</p>
 </div>
-<p>This rule recognizes the following environment variables:
+<p>This step recognizes the following environment variables:
 <a href="../environment-vars/#destdir"><code>DESTDIR</code></a>,
 <a href="../environment-vars/#install"><code>INSTALL</code></a>,
 <a href="../environment-vars/#install_name_tool"><code>INSTALL_NAME_TOOL</code></a>,
 <a href="../environment-vars/#mkdir_p"><code>MKDIR_P</code></a>,
 <a href="../environment-vars/#patchelf"><code>PATCHELF</code></a>.</p>
+<h2 id="user-defined-steps">User-defined steps<a class="headerlink" href="#user-defined-steps" title="Permanent link">§</a></h2>
+<p>While the standard build steps cover the most common tasks in a build, many
+projects need to run more-specialized commands. A build script can define custom
+steps via the <a href="#build_step"><em>build_step</em></a> and <a href="#command"><em>command</em></a> functions:
+<em>build_step</em> defines a step which outputs one or more files that can be used in
+other steps, while <em>command</em> defines a more general step that should always be
+run when it's a target (similar to the <code>test</code> or <code>install</code> targets).</p>
+<p>Both <em>build_step</em> and <em>command</em> allow you to specify an arbitrary command <em>cmd</em>
+or <em>cmds</em>; <em>cmd</em> takes a single command, whereas <em>cmds</em> takes a list of
+commands. Each command will be passed through
+<a href="#env-run_arguments"><em>env.run_arguments()</em></a> and may be a string (to be parsed
+according to shell rules), a file object (such as an
+<a href="#executable"><em>executable</em></a>), or a list of arguments to be passed directly to
+the process. Any file objects specified in the command will automatically be
+added as dependencies to this step. In addition, commands can include
+<a href="#placeholder">placeholders</a>, which will automatically be expanded to the files
+corresponding to that placeholder.</p>
+<p>You may also pass a dict to <em>environment</em> to set environment variables for the
+commands. These override any environment variables set on the command line.</p>
+<h3 id="build_step">build_step(<em>name</em>, <em>cmd</em>|<em>cmds</em>, [<em>files</em>], [<em>environment</em>], [<em>type</em>], [<em>always_outdated</em>], [<em>extra_deps</em>], [<em>description</em>])<a class="headerlink" href="#build_step" title="Permanent link">§</a></h3>
+<p class="subtitle">Availability: <code>build.bfg</code></p>
+<p>Create a custom build step that produces one or more files named <em>name</em> by
+running an arbitrary command (<em>cmd</em> or <em>cmds</em>). <em>name</em> may either be a single
+file name or a list of file names. If <em>always_outdated</em> is true, this build step
+will be considered out-of-date no matter the status of the output.</p>
+<p>The command argument can use the <a href="#placeholder">placeholders</a>
+<code>build_step.output</code> to refer to the output files (defined by <em>name</em>) and
+<code>build_step.input</code> to refer to the input files (defined by <em>files</em>).</p>
+<p>By default, the output of this step is one or more <a href="#auto_file"><em>auto_file</em></a>s;
+you can adjust this with the <em>type</em> argument: this should be a function (or a
+list thereof) taking a path and returning a file object. If <em>type</em> is a single
+function, it will be applied to every output of <em>build_step</em>; if it's a list of
+functions, they will be applied element-wise to each output.</p>
+<h3 id="command">command(<em>name</em>, <em>cmd</em>|<em>cmds</em>, [<em>files</em>], [<em>environment</em>], [<em>extra_deps</em>], [<em>description</em>])<a class="headerlink" href="#command" title="Permanent link">§</a></h3>
+<p class="subtitle">Availability: <code>build.bfg</code></p>
+<p>Create a build step named <em>name</em> that runs an arbitrary command, specified in
+either <em>cmd</em> or <em>cmds</em>. This build step is always considered out-of-date (as
+with a "phony" Makefile target, such as <code>test</code> or <code>install</code>).</p>
+<p>The command argument can use the <a href="#placeholder">placeholder</a> <code>command.input</code> to
+refer to the input files (defined by <em>files</em>).</p>
+<h3 id="placeholder"><em>placeholder</em><a class="headerlink" href="#placeholder" title="Permanent link">§</a></h3>
+<p class="subtitle">Availability: <code>build.bfg</code></p>
+<p>When used in the <em>cmd</em> or <em>cmds</em> argument of <a href="#build_step"><em>build_step</em></a> or
+<a href="#command"><em>command</em></a>, this will create a reference to the inputs or outputs of
+the step. Placeholders can be indexed or sliced just like ordinary Python lists,
+and can also be combined with strings to add prefixes and suffixes:</p>
+<pre><code class="python">script = source_file('script.py')
+
+# Roughly equivalent to `python script.py -ifoo.txt -sbar.txt -squux.txt`
+command('foo', cmd=[
+    script, '-i' + command.input[0], '-s' + command.input[1:]
+], files=['foo.txt', 'bar.txt', 'quux.txt'])
+</code></pre>
+
 <h2 id="semantic-options">Semantic options<a class="headerlink" href="#semantic-options" title="Permanent link">§</a></h2>
 <p>Semantic options are a collection of objects that allow a build to define
 options in a tool-agnostic way. These options will automatically be converted to
@@ -605,34 +765,6 @@ language; in particular, this means that when using a tool like GCC to build
 your project, any linker options that need to be forwarded on to <code>ld</code> should
 be prepended with <code>'-Wl,'</code>.</p>
 </div>
-<h2 id="test-rules">Test rules<a class="headerlink" href="#test-rules" title="Permanent link">§</a></h2>
-<p>These rules help you define automated tests that can all be run via the <code>test</code>
-target. For simple cases, you should only need the <a href="#test"><em>test</em></a> rule, but you
-can also wrap your tests with a separate driver using
-<a href="#test_driver"><em>test_driver</em></a>.</p>
-<p>For cases where you only want to <em>build</em> the tests, not run them, you can use
-the <code>tests</code> target.</p>
-<h3 id="test">test(<em>test</em>, [<em>environment</em>|<em>driver</em>])<a class="headerlink" href="#test" title="Permanent link">§</a></h3>
-<p class="subtitle">Availability: <code>build.bfg</code></p>
-<p>Create a single test. <em>cmd</em> is the base command (possibly with arguments)
-to run; this works much like the <em>cmd</em> argument in the <a href="#command"><em>command</em></a>
-built-in. You can also pass temporary environment variables as a dict via
-<em>environment</em>, or specify a test driver to add this test file to via <em>driver</em>.</p>
-<h3 id="test_driver">test_driver(<em>cmd</em>, [<em>environment</em>|<em>parent</em>], [<em>wrap_children</em>])<a class="headerlink" href="#test_driver" title="Permanent link">§</a></h3>
-<p class="subtitle">Availability: <code>build.bfg</code></p>
-<p>Create a test driver which can run a series of tests, specified as command-line
-arguments to the driver. <em>cmd</em> is the base command (possibly with arguments)
-to run; this works much like the <em>cmd</em> argument in the <a href="#command"><em>command</em></a>
-built-in. You can also pass temporary environment variables as a dict with
-<em>environment</em>, or specify a parent test driver to wrap this driver via <em>parent</em>.</p>
-<p>Finally, you can specify <em>wrap_children</em> to determine how tests using this
-driver are run. If true, each test will be wrapped by
-<a href="#env-run_arguments"><em>env.run_arguments</em></a>; if false (the default), tests will be
-used as-is.</p>
-<h3 id="test_deps">test_deps(<em>...</em>)<a class="headerlink" href="#test_deps" title="Permanent link">§</a></h3>
-<p class="subtitle">Availability: <code>build.bfg</code></p>
-<p>Specify a list of extra dependencies which must be satisfied when building the
-tests via the <code>tests</code> target.</p>
 <h2 id="package-resolvers">Package resolvers<a class="headerlink" href="#package-resolvers" title="Permanent link">§</a></h2>
 <h3 id="boost_package">boost_package([<em>name</em>], [<em>version</em>])<a class="headerlink" href="#boost_package" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
@@ -646,7 +778,7 @@ specifier</a>.</p>
 <a href="#packageresolutionerror"><em>PackageResolutionError</em></a>. If the library is found but
 doesn't match the required version, a
 <a href="#packageversionerror"><em>PackageVersionError</em></a> will be raised instead.</p>
-<p>This rule recognizes the following environment variables:
+<p>This function recognizes the following environment variables:
 <a href="../environment-vars/#boost_root"><code>BOOST_ROOT</code></a>,
 <a href="../environment-vars/#boost_includedir"><code>BOOST_INCLUDEDIR</code></a>,
 <a href="../environment-vars/#boost_librarydir"><code>BOOST_LIBRARYDIR</code></a>,
@@ -661,12 +793,13 @@ accepted.</p>
 <h3 id="package">package(<em>name</em>, [<em>version</em>], [<em>lang</em>], [<em>kind</em>], [<em>headers</em>], [<em>libs</em>])<a class="headerlink" href="#package" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Search for a package named <em>name</em>. <em>lang</em> is the source language of the library
-(<code>'c'</code> by default); this will affect how the package is resolved. For native
-libraries (C, C++, Fortran, etc), this will use <a href="https://www.freedesktop.org/wiki/Software/pkg-config/"><code>pkg-config</code></a> to
-resolve the package if it's installed. Otherwise (or if pkg-config can't find
-the package), this will check the system's default library locations. If this
-function is unable to find the package, it will raise a
-<a href="#packageresolutionerror"><em>PackageResolutionError</em></a>.</p>
+(if not specified, this will guess the language based on the extensions in
+<em>headers</em>, or use <code>'c'</code> as a fallback); this will affect how the package is
+resolved. For native libraries (C, C++, Fortran, etc), this will use
+<a href="https://www.freedesktop.org/wiki/Software/pkg-config/"><code>pkg-config</code></a> to resolve the package if it's installed. Otherwise
+(or if pkg-config can't find the package), this will check the system's default
+library locations. If this function is unable to find the package, it will raise
+a <a href="#packageresolutionerror"><em>PackageResolutionError</em></a>.</p>
 <p>You can also specify <em>kind</em> to one of <code>'any'</code> (the default), <code>'shared'</code>, or
 <code>'static'</code>. This allows you to restrict the search to find only static versions
 of a library, for example.</p>
@@ -682,7 +815,7 @@ configuration. <em>libs</em> lets you list any library names that are part of th
 package; by default, this is set to the package's <em>name</em>. You can also pass
 <em>None</em> to <em>libs</em> in order to explicitly indicate that the library is
 header-only.</p>
-<p>This rule recognizes the following environment variables:
+<p>This function recognizes the following environment variables:
 <a href="../environment-vars/#classpath"><code>CLASSPATH</code></a>,
 <a href="../environment-vars/#cpath"><code>CPATH</code></a>,
 <a href="../environment-vars/#include"><code>INCLUDE</code></a>,
@@ -747,7 +880,7 @@ default values for the following fields:</p>
 <h3 id="system_executable">system_executable(<em>name</em>)<a class="headerlink" href="#system_executable" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Search for an executable named <em>name</em> somewhere in the system's PATH.</p>
-<p>This rule recognizes the following environment variables:
+<p>This function recognizes the following environment variables:
 <a href="../environment-vars/#path"><code>PATH</code></a>, <a href="../environment-vars/#pathext"><code>PATHEXT</code></a>.</p>
 <h2 id="environment">Environment<a class="headerlink" href="#environment" title="Permanent link">§</a></h2>
 <p>Occasionally, build scripts need to directly query aspects of the environment.
@@ -937,13 +1070,14 @@ names are: <code>'posix'</code>,<code>'linux'</code>, <code>'darwin'</code>, <co
 <li><em>not_now</em>: Don't include this file in the results, but do include it in the
   <a href="../writing/#distributing-your-source">source distribution</a></li>
 </ul>
-<h3 id="find_files">find_files([<em>path</em>], [<em>name</em>], [<em>type</em>], [<em>extra</em>], [<em>exclude</em>], [<em>flat</em>], [<em>filter</em>], [<em>cache</em>], [<em>dist</em>], [<em>as_object</em>])<a class="headerlink" href="#find_files" title="Permanent link">§</a></h3>
+<h3 id="find_files">find_files([<em>path</em>], [<em>name</em>], [<em>type</em>], [<em>extra</em>], [<em>exclude</em>], [<em>flat</em>], [<em>filter</em>], [<em>file_type</em>], [<em>dir_type</em>], [<em>dist</em>], [<em>cache</em>])<a class="headerlink" href="#find_files" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
-<p>Find files in <em>path</em> whose name matches the glob (or list of globs) <em>name</em>. The
-following arguments may be specified:</p>
+<p>Find files in <em>path</em> whose name matches the glob (or list of globs) <em>name</em>,
+returning them as <a href="#file-objects">file objects</a>. The following arguments may be
+specified:</p>
 <ul>
 <li><em>path</em>: A path (or list of paths) to start the search in; if omitted, search
-  in the root of the source directory (<code>'.'</code>)</li>
+  in the root of the source directory</li>
 <li><em>name</em>: A glob (or list of globs) to match files; if omitted, all files match
   (equivalent to <code>'*'</code>)</li>
 <li><em>type</em>: A filter for the type of file: <code>'f'</code> to find only files, <code>'d'</code> to find
@@ -955,27 +1089,105 @@ following arguments may be specified:</p>
   default, <code>.#*</code>, <code>*~</code>, and <code>#*#</code> are exluded</li>
 <li><em>flat</em>: If true, <em>find_files</em> will not recurse into subdirectories; otherwise,
   (the default) it will</li>
-<li><em>filter</em>: A predicate taking a filename, relative path, and file type, and
-  returning a <a href="#FindResult"><em>FindResult</em></a> which will filter the results; by
-  default, this is <a href="#filter_by_platform"><em>filter_by_platform</em></a></li>
-<li><em>cache</em>: If true (the default), cache the results so that any changes to will
-  regenerate the build scripts for the project</li>
+<li><em>filter</em>: A predicate taking a path object file type, and returning a
+  <a href="#FindResult"><em>FindResult</em></a> which will filter the results</li>
+<li><em>file_type</em>: The type of object to return for matching files; if specified,
+  this should be a function taking a path object and a boolean (the <em>dist</em>
+  argument below), otherwise an <a href="#auto_file"><em>auto_file</em></a> will be returned</li>
+<li><em>dir_type</em>: The type of object to return for matching directories, as with
+  <em>file_type</em>; the default type is a <a href="#directory"><em>directory</em></a></li>
 <li><em>dist</em>: If true (the default), all files found by this function will
   automatically be added to the source distribution</li>
-<li><em>as_object</em>: If true, results will be returned as file or directory objects;
-  otherwise (the default), return path strings</li>
+<li><em>cache</em>: If true (the default), cache the results so that any changes to will
+  regenerate the build scripts for the project</li>
 </ul>
 <p>The <em>cache</em> argument is particularly important. It allows you to add or remove
 source files and not have to worry about manually rerunning bfg9000.</p>
+<h3 id="find_paths">find_paths([<em>path</em>], [<em>name</em>], [<em>type</em>], [<em>extra</em>], [<em>exclude</em>], [<em>flat</em>], [<em>filter</em>], [<em>file_type</em>], [<em>dir_type</em>], [<em>dist</em>], [<em>cache</em>])<a class="headerlink" href="#find_paths" title="Permanent link">§</a></h3>
+<p class="subtitle">Availability: <code>build.bfg</code></p>
+<p>Find files in <em>path</em> whose name matches the glob (or list of globs) <em>name</em>,
+returning them as <a href="#Path">path objects</a>. The arguments to this function are the
+same as for <a href="#find_files"><em>find_files</em></a>.</p>
 <h3 id="info">info(<em>message</em>, [<em>show_stack</em>])<a class="headerlink" href="#info" title="Permanent link">§</a></h3>
 <p>Log an informational message with the value <em>message</em>. If <em>show_stack</em> is true,
 show the stack trace where the message was logged from.</p>
-<h3 id="project">project(<em>name</em>, [<em>version</em>])<a class="headerlink" href="#project" title="Permanent link">§</a></h3>
+<h3 id="installroot">InstallRoot<a class="headerlink" href="#installroot" title="Permanent link">§</a></h3>
+<p>An enumeration of root directories for <a href="#Path"><em>Path</em></a> objects, to be used
+during installation. Possible values are:</p>
+<ul>
+<li><em>prefix</em>: A path relative to the prefix where the build will be installed</li>
+<li><em>exec_prefix</em>: A path relative to the prefix where executable code (binaries
+  and libraries) will be installed</li>
+<li><em>bindir</em>: A path relative to where binaries will be installed</li>
+<li><em>libdir</em>: A path relative to where libraries will be installed</li>
+<li><em>includedir</em>: A path relative to where header files will be installed</li>
+</ul>
+<h3 id="Path">Path(<em>path</em>, [<em>root</em>], [<em>destdir</em>])<a class="headerlink" href="#Path" title="Permanent link">§</a></h3>
+<p>Create a new path object for a given <em>path</em>. <em>root</em> may be a value in the
+<a href="#Root"><em>Root</em></a> or <a href="#InstallRoot"><em>InstallRoot</em></a> enumerations. When the root is
+a value in <em>InstallRoot</em>, you can also specify <em>destdir</em>; if true, this path
+will be prepended with <a href="../environment-vars/#destdir"><code>$DESTDIR</code></a> on platforms
+that support destdirs.</p>
+<h4 id="Path-addext"><em>Path</em>.addext(<em>ext</em>)<a class="headerlink" href="#Path-addext" title="Permanent link">§</a></h4>
+<p>Append the extension <em>ext</em> to this path and return the new path. Note that <em>ext</em>
+should include the leading dot, e.g. <code>'.txt'</code>.</p>
+<h4 id="Path-append"><em>Path</em>.append(<em>path</em>)<a class="headerlink" href="#Path-append" title="Permanent link">§</a></h4>
+<p>Append a new path component to this path and return the result.</p>
+<h4 id="Path-basename"><em>Path</em>.basename()<a class="headerlink" href="#Path-basename" title="Permanent link">§</a></h4>
+<p>Return the basename (the last path component) of this path.</p>
+<h4 id="Path-ext"><em>Path</em>.ext()<a class="headerlink" href="#Path-ext" title="Permanent link">§</a></h4>
+<p>Return the extension of this path, if any; otherwise, return <code>''</code>.</p>
+<h4 id="Path-parent"><em>Path</em>.parent()<a class="headerlink" href="#Path-parent" title="Permanent link">§</a></h4>
+<p>Return the parent of this path as a new <em>Path</em> object.</p>
+<h4 id="Path-relpath"><em>Path</em>.relpath(<em>start</em>, [<em>prefix</em>])<a class="headerlink" href="#Path-relpath" title="Permanent link">§</a></h4>
+<p>Return a string representing this path's location relative to a starting path
+<em>start</em>. Both paths should have the same <a href="#Root"><em>Root</em></a></p>
+<h4 id="Path-reroot"><em>Path</em>.reroot(<em>root</em>)<a class="headerlink" href="#Path-reroot" title="Permanent link">§</a></h4>
+<p>Return a new <em>Path</em> object with the same path suffix as this path, but with the
+path root set to <em>root</em>.</p>
+<h4 id="Path-root"><em>Path</em>.root<a class="headerlink" href="#Path-root" title="Permanent link">§</a></h4>
+<p>Return the <a href="#Root"><em>Root</em></a> of this path.</p>
+<h4 id="Path-split"><em>Path</em>.split()<a class="headerlink" href="#Path-split" title="Permanent link">§</a></h4>
+<p>Split this path's <a href="#Path-suffix">suffix</a> into a list of its components.</p>
+<h4 id="pathsplitleaf"><em>Path</em>.splitleaf()<a class="headerlink" href="#pathsplitleaf" title="Permanent link">§</a></h4>
+<p>Split the leaf component of this path and return the parent and leaf. Equivalent
+to <code>(path.parent(), path.basename())</code>.</p>
+<h4 id="Path-suffix"><em>Path</em>.suffix<a class="headerlink" href="#Path-suffix" title="Permanent link">§</a></h4>
+<p>Return the suffix of this path (the portion that would be appended to the path's
+<a href="#Path-root">root</a>.</p>
+<h4 id="Path-stripext"><em>Path</em>.stripext([<em>replace</em>])<a class="headerlink" href="#Path-stripext" title="Permanent link">§</a></h4>
+<p>Remove the extension from this path and replace it with an optional new
+extension specified in <em>replace</em>, returning the newly-created <em>Path</em> object.</p>
+<h3 id="project">project([<em>name</em>], [<em>version</em>], ...)<a class="headerlink" href="#project" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
-<p>Set the name (and optionally the version) of the project. If you don't call
-this function to specify a project name, it defaults to the name of the
-project's source directory. This is primarily useful for creating <a href="../writing/#distributing-your-source">source
+<p>Set the name and/or version of the project. If you don't call this function to
+specify a project name, it defaults to the name of the project's source
+directory. This is primarily useful for creating <a href="../writing/#distributing-your-source">source
 distributions</a>.</p>
+<p>In addition, you can set a number of project-wide options with this function:</p>
+<ul>
+<li><em>intermediate_dirs</em>: (Default <code>True</code>) Automatically place implicitly-generated
+  intermediate files into separate directories</li>
+<li><em>lang</em>: (Default <code>'c'</code>) The default language to use for objects that can't
+  infer their language from a file extension (e.g. <a href="#package">packages</a>,
+  <a href="#object_file">object files</a>, <a href="#library">libraries</a>)</li>
+</ul>
+<h3 id="root">Root<a class="headerlink" href="#root" title="Permanent link">§</a></h3>
+<p>An enumeration of root directories for <a href="#Path"><em>Path</em></a> objects. Possible values
+are:</p>
+<ul>
+<li><em>srcdir</em>: A path relative to the project's source directory</li>
+<li><em>builddir</em>: A path relative to the build directory</li>
+<li><em>absolute</em>: An absolute path</li>
+</ul>
+<h3 id="safe_format">safe_format(<em>fmt</em>, ...)<a class="headerlink" href="#safe_format" title="Permanent link">§</a></h3>
+<p>Safely format a string <em>fmt</em>, as with <a href="https://docs.python.org/library/stdtypes.html#str.format"><em>str.format</em></a>. Unlike
+<em>str.format</em> however, this converts placeholders to string via
+<a href="#safe_str"><em>safe_str</em></a>, ensuring that the result is correctly-escaped when
+used in a build script.</p>
+<h3 id="safe_str">safe_str(<em>s</em>)<a class="headerlink" href="#safe_str" title="Permanent link">§</a></h3>
+<p>Convert an object <em>s</em> into a "safe" string, if possible. Safe strings are used
+by the build backends to correctly handle escaping special characters as needed.</p>
 <h3 id="warning">warning(<em>message</em>)<a class="headerlink" href="#warning" title="Permanent link">§</a></h3>
 <p>Log a warning with the value <em>message</em> and the stack trace where the warning was
 emitted.</p>
@@ -1037,6 +1249,9 @@ the path to the compiler (resolved as with <a href="#which"><em>which</em></a>) 
 possible paths (as strings or lists or strings). If <em>strict</em> is true,
 <em>compiler</em> will raise an <code>IOError</code> if an executable cannot be found; if false,
 it will use the first candidate.</p>
+<h3 id="srcdir">srcdir<a class="headerlink" href="#srcdir" title="Permanent link">§</a></h3>
+<p class="subtitle">Availability: <code>&lt;toolchain&gt;.bfg</code></p>
+<p>Return the source directory of this project as a <a href="#Path"><em>Path</em></a> object.</p>
 <h3 id="target_platform">target_platform([<em>platform</em>], [<em>arch</em>])<a class="headerlink" href="#target_platform" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>&lt;toolchain&gt;.bfg</code></p>
 <p>Set the target platform of this build to <em>platform</em> and the architecture to

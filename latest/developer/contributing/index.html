@@ -146,16 +146,28 @@
                 <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
         <li class="main active"><a href="#contributing">Contributing</a></li>
-            <li><a href="#running-tests">Running tests</a></li>
-            <li><a href="#linting-code">Linting code</a></li>
+            <li><a href="#filing-an-issue">Filing an issue</a></li>
+            <li><a href="#setting-up-a-development-environment">Setting up a development environment</a></li>
     </ul>
 </div></div>
                 <div class="col-md-9" role="main">
 
 <h1 id="contributing">Contributing<a class="headerlink" href="#contributing" title="Permanent link">§</a></h1>
-<p>So, you'd like to help improve bfg9000 by writing a patch? Great! This page will
-provide you with some useful information to help you get started.</p>
-<h2 id="running-tests">Running tests<a class="headerlink" href="#running-tests" title="Permanent link">§</a></h2>
+<p>So, you've found an issue with bfg9000 or have an idea to improve it? Great!
+This page will provide you with some useful information to help you get started.</p>
+<h2 id="filing-an-issue">Filing an issue<a class="headerlink" href="#filing-an-issue" title="Permanent link">§</a></h2>
+<p>Before contributing a patch, it's best to <a href="https://github.com/jimporter/bfg9000/issues/new">file an issue</a> to discuss
+your plan. This will help ensure that you've got a good idea of the best way to
+go about things and don't go down the wrong path to start.</p>
+<h2 id="setting-up-a-development-environment">Setting up a development environment<a class="headerlink" href="#setting-up-a-development-environment" title="Permanent link">§</a></h2>
+<p>Like most other Python-based projects, the easiest way to set up a development
+environment for bfg9000 is to use <code>pip</code> to install an editable version of the
+package. You'll probably also want all the testing dependencies, which you can
+install with the <code>test</code> extra:</p>
+<pre><code class="sh">$ pip install -e '.[test]'
+</code></pre>
+
+<h3 id="running-tests">Running tests<a class="headerlink" href="#running-tests" title="Permanent link">§</a></h3>
 <p>bfg9000 has a suite of tests to ensure that everything works properly. (Well,
 everything that has tests!) As you may expect, you can run these via:</p>
 <pre><code class="sh">$ python setup.py test
@@ -167,11 +179,14 @@ to run only the tests in <code>test/integration/test_simple.py</code>, you can t
 <pre><code class="sh">$ python setup.py test -s test.integration.test_simple
 </code></pre>
 
-<h2 id="linting-code">Linting code<a class="headerlink" href="#linting-code" title="Permanent link">§</a></h2>
-<p>bfg9000 uses <a href="https://flake8.readthedocs.org/en/latest/">flake8</a> for linting. Since users generally don't need to
-worry about linting the codebase, this isn't automatically installed by
-setup.py. You'll need to install it yourself. Once installed, you can use the
-<code>lint</code> command like so:</p>
+<p>To generate a coverage report, simply replace <code>test</code> with <code>coverage</code>, and build
+the report in the format you want, e.g.:</p>
+<pre><code class="sh">$ python setup.py coverage &amp;&amp; coverage html
+</code></pre>
+
+<h3 id="linting-code">Linting code<a class="headerlink" href="#linting-code" title="Permanent link">§</a></h3>
+<p>bfg9000 uses <a href="https://flake8.readthedocs.org/en/latest/">flake8</a> for linting. You can check this with the <code>lint</code>
+command like so:</p>
 <pre><code class="sh">$ python setup.py lint
 </code></pre></div>
         </div>

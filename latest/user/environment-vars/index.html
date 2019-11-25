@@ -206,6 +206,15 @@ file.</p>
 <p class="subtitle">Default: <em>none</em></p>
 <p>Command line arguments to pass to the compiler when compiling any Java source
 file.</p>
+<h3 id="lex">Lex<a class="headerlink" href="#lex" title="Permanent link">§</a></h3>
+<hr />
+<h4 id="lex_1"><em>LEX</em><a class="headerlink" href="#lex_1" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <code>lex</code></p>
+<p>The command to use when building Lex source files.</p>
+<h4 id="lflags"><em>LFLAGS</em><a class="headerlink" href="#lflags" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <em>none</em></p>
+<p>Command line arguments to pass to the compiler when building any Lex source
+file.</p>
 <h3 id="objective-c">Objective C<a class="headerlink" href="#objective-c" title="Permanent link">§</a></h3>
 <hr />
 <h4 id="objc"><em>OBJC</em><a class="headerlink" href="#objc" title="Permanent link">§</a></h4>
@@ -228,6 +237,32 @@ Objective C++.</p>
 <p class="subtitle">Default: <em>none</em></p>
 <p>Command line arguments to pass to the compiler when compiling any Objective C++
 source file.</p>
+<h3 id="qt-moc">Qt MOC<a class="headerlink" href="#qt-moc" title="Permanent link">§</a></h3>
+<hr />
+<h4 id="moc"><em>MOC</em><a class="headerlink" href="#moc" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <code>moc</code></p>
+<p>The command to use when processing Qt meta-object macros.</p>
+<h4 id="mocflags"><em>MOCFLAGS</em><a class="headerlink" href="#mocflags" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <em>none</em></p>
+<p>Command line arguments to pass to the compiler when processing Qt meta-object
+macros.</p>
+<h3 id="qt-qrc">Qt QRC<a class="headerlink" href="#qt-qrc" title="Permanent link">§</a></h3>
+<hr />
+<h4 id="rcc"><em>RCC</em><a class="headerlink" href="#rcc" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <code>rcc</code></p>
+<p>The command to use when building Qt <code>.qrc</code> files.</p>
+<h4 id="rccflags"><em>RCCFLAGS</em><a class="headerlink" href="#rccflags" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <em>none</em></p>
+<p>Command line arguments to pass to the compiler when building Qt <code>.qrc</code> files.</p>
+<h3 id="qt-ui">Qt UI<a class="headerlink" href="#qt-ui" title="Permanent link">§</a></h3>
+<hr />
+<h4 id="uic"><em>UIC</em><a class="headerlink" href="#uic" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <code>uic</code></p>
+<p>The command to use when building Qt <code>.ui</code> files.</p>
+<h4 id="uicflags"><em>UICFLAGS</em><a class="headerlink" href="#uicflags" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <em>none</em></p>
+<p>Command line arguments to pass to the compiler when building Qt <code>.ui</code> files.
+macros.</p>
 <h3 id="scala">Scala<a class="headerlink" href="#scala" title="Permanent link">§</a></h3>
 <hr />
 <h4 id="scalac"><em>SCALAC</em><a class="headerlink" href="#scalac" title="Permanent link">§</a></h4>
@@ -236,6 +271,15 @@ source file.</p>
 <h4 id="scalaflags"><em>SCALAFLAGS</em><a class="headerlink" href="#scalaflags" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <em>none</em></p>
 <p>Command line arguments to pass to the compiler when compiling any Scala source
+file.</p>
+<h3 id="yacc">Yacc<a class="headerlink" href="#yacc" title="Permanent link">§</a></h3>
+<hr />
+<h4 id="yacc_1"><em>YACC</em><a class="headerlink" href="#yacc_1" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <code>yacc</code></p>
+<p>The command to use when building Yacc source files.</p>
+<h4 id="yflags"><em>YFLAGS</em><a class="headerlink" href="#yflags" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <em>none</em></p>
+<p>Command line arguments to pass to the compiler when building any Yacc source
 file.</p>
 <h2 id="linking-variables">Linking variables<a class="headerlink" href="#linking-variables" title="Permanent link">§</a></h2>
 <h3 id="static-linking">Static linking<a class="headerlink" href="#static-linking" title="Permanent link">§</a></h3>
@@ -335,7 +379,7 @@ delimited by <code>:</code>; on Windows, by <code>;</code>.</p>
 <p><em>Windows-only</em>. A list of valid extensions for executable files under Windows,
 separated by <code>;</code>.</p>
 <h4 id="pkg_config"><em>PKG_CONFIG</em><a class="headerlink" href="#pkg_config" title="Permanent link">§</a></h4>
-<p class="subtitle">Default: <code>pkg_config</code></p>
+<p class="subtitle">Default: <code>pkg-config</code></p>
 <p>The command to use when fetching pkg-config package information.</p>
 <h2 id="command-variables">Command variables<a class="headerlink" href="#command-variables" title="Permanent link">§</a></h2>
 <hr />
@@ -344,6 +388,9 @@ separated by <code>;</code>.</p>
 <p>The command to use when executing bfg9000 (e.g. when regenerating the build
 scripts because the list of source files has changed). This should only be
 necessary if you run bfg9000 from a wrapper script.</p>
+<h4 id="cp"><em>CP</em><a class="headerlink" href="#cp" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <code>cp -f</code> (POSIX), <code>cmd /c copy</code> (Windows)</p>
+<p>The command to use when creating symlinks.</p>
 <h4 id="depfixer"><em>DEPFIXER</em><a class="headerlink" href="#depfixer" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <code>/path/to/bfg9000-depfixer</code></p>
 <p>The command to use when fixing up depfiles generated by your compiler for the
@@ -352,6 +399,9 @@ Make backend. In general, you shouldn't need to touch this.</p>
 <p class="subtitle">Default: <code>doppel</code></p>
 <p>The command to use when installing files and building source distributions. For
 more information about doppel, see its <a href="https://github.com/jimporter/doppel">documentation</a>.</p>
+<h4 id="hardlink"><em>HARDLINK</em><a class="headerlink" href="#hardlink" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <code>ln -f</code> (POSIX), <code>cmd /c mklink /H</code> (Windows)</p>
+<p>The command to use when creating hard links.</p>
 <h4 id="install_name_tool"><em>INSTALL_NAME_TOOL</em><a class="headerlink" href="#install_name_tool" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <code>install_name_tool</code></p>
 <p><em>Darwin-only</em>. The command to use when modifying the paths of the shared
@@ -365,11 +415,18 @@ the Make backend.</p>
 <p class="subtitle">Default: <code>patchelf</code></p>
 <p><em>Linux-only</em>. The command to use when patching an ELF file's rpath for
 installation.</p>
+<h4 id="rccdep"><em>RCCDEP</em><a class="headerlink" href="#rccdep" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <code>/path/to/bfg9000-rccdep</code></p>
+<p>The command to use when generating depfiles for Qt's <code>rcc</code> tool. In general, you
+shouldn't need to touch this.</p>
 <h4 id="setenv"><em>SETENV</em><a class="headerlink" href="#setenv" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <code>/path/to/bfg9000-setenv</code></p>
 <p><em>Windows-only</em>. The command to use when setting temporary environment variables,
 similar to the POSIX <code>env</code> command. This is used when setting environment
 variables for tests.</p>
+<h4 id="symlink"><em>SYMLINK</em><a class="headerlink" href="#symlink" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <code>ln -sf</code> (POSIX), <code>cmd /c mklink</code> (Windows)</p>
+<p>The command to use when creating symlinks.</p>
 <h2 id="system-variables">System variables<a class="headerlink" href="#system-variables" title="Permanent link">§</a></h2>
 <hr />
 <h4 id="destdir"><em>DESTDIR</em><a class="headerlink" href="#destdir" title="Permanent link">§</a></h4>

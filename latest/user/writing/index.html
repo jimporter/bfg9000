@@ -153,9 +153,9 @@
             <li><a href="#default-targets">Default targets</a></li>
             <li><a href="#external-packages">External packages</a></li>
             <li><a href="#installation">Installation</a></li>
-            <li><a href="#commands">Commands</a></li>
-            <li><a href="#aliases">Aliases</a></li>
             <li><a href="#tests">Tests</a></li>
+            <li><a href="#aliases">Aliases</a></li>
+            <li><a href="#commands">Commands</a></li>
             <li><a href="#custom-build-steps">Custom build steps</a></li>
             <li><a href="#user-defined-arguments">User-defined arguments</a></li>
             <li><a href="#generating-pkg-config-data">Generating pkg-config data</a></li>
@@ -166,7 +166,7 @@
 <h1 id="writing-a-build-file">Writing a Build File<a class="headerlink" href="#writing-a-build-file" title="Permanent link">§</a></h1>
 <p>bfg9000's build script is called <code>build.bfg</code> and is (usually) placed in the root
 of your source tree. <code>build.bfg</code> files are just Python scripts with a handful of
-extra built-in functions to define all the rules for building your software.
+extra built-in functions to define all the steps for building your software.
 While bfg9000's goal is to make writing build scripts easy, sometimes complexity
 is unavoidable. By using a general-purpose language, this complexity can
 (hopefully!) be managed.</p>
@@ -322,7 +322,7 @@ For instance, you can search only for files or only for directories by passing
 what gets built by default, i.e. when calling <code>make</code> (or <code>ninja</code>) with no
 arguments. Normally, every executable and library (except those passed to
 <a href="../reference/#test"><em>test()</em></a>) will get built. However, you can pass any build
-rule(s) to <a href="../reference/#default"><em>default()</em></a>, and they'll be set as the
+steps to <a href="../reference/#default"><em>default()</em></a>, and they'll be set as the
 default, overriding the normal behavior. This makes it easy to provide your
 users with a standard build that gets them all the bits they need, and none they
 don't.</p>
@@ -345,46 +345,17 @@ building binaries by passing them in the <em>packages</em> argument:</p>
 <p>After building, you might want to allow your project to be installed onto the
 user's system somewhere. Most files (headers, executables, libraries) can be
 added to the list of installed files via the
-<a href="../reference/#install"><em>install()</em></a> rule. You can also install entire
+<a href="../reference/#install"><em>install()</em></a> function. You can also install entire
 directories of headers:</p>
 <pre><code class="python">include_dir = header_directory('include')
 lib = static_library('program', files=['src/prog.cpp'], includes=[include_dir])
 install(lib, include_dir)
 </code></pre>
 
-<h2 id="commands">Commands<a class="headerlink" href="#commands" title="Permanent link">§</a></h2>
-<p>In addition to ordinary build rules, it can be useful to provide other common
-commands that apply to a project's source, such as linting the code or building
-documentation. Normally, you should pass the command to be run as an array of
-arguments. This will automatically handle escaping any quotes in each argument.
-This is especially important for cross-platform compatibility, since different
-shells have different quoting rules:</p>
-<pre><code class="python">command('hello', cmd=['python', '-c', 'print(&quot;hello&quot;)'])
-</code></pre>
-
-<p>Of course, if you need to use your shell's special characters (like <code>&amp;&amp;</code>), you
-can simply pass a string to the <em>cmd</em> argument. In addition, you can supply
-multiple commands to this function via the <em>cmds</em> argument:</p>
-<pre><code class="python">command('script', cmds=[
-    'touch file',
-    ['python', 'script.py']
-])
-</code></pre>
-
-<h2 id="aliases">Aliases<a class="headerlink" href="#aliases" title="Permanent link">§</a></h2>
-<p>Sometimes, you just want to group a set of targets together to make it easier to
-build all of them at once. This automatically happens for <a href="#default-targets">default
-targets</a> by creating an <code>all</code> alias, but you can do this
-yourself for any collection of targets:</p>
-<pre><code class="python">foo = executable('foo', files=['foo.cpp'])
-bar = executable('bar', files=['bar.cpp'])
-alias('foobar', [foo, bar])
-</code></pre>
-
 <h2 id="tests">Tests<a class="headerlink" href="#tests" title="Permanent link">§</a></h2>
 <p>All good projects should have tests. Since your project is good (isn't it?),
 yours has tests too, and you should have a good way to execute those tests from
-your build system. bfg9000 provides a <a href="../reference/#test-rules">set of
+your build system. bfg9000 provides a <a href="../reference/#test-steps">set of
 functions</a> for running tests. The most important of
 these is aptly named <a href="../reference/#test"><em>test()</em></a>. Any executable can be passed
 to this function, and it will be executed as a test; an exit status of 0 marks
@@ -402,6 +373,35 @@ test( executable('test_foo', files=['test_foo.cpp']), driver=mettle )
 test( executable('test_bar', files=['test_bar.cpp']), driver=mettle )
 </code></pre>
 
+<h2 id="aliases">Aliases<a class="headerlink" href="#aliases" title="Permanent link">§</a></h2>
+<p>Sometimes, you just want to group a set of targets together to make it easier to
+build all of them at once. This automatically happens for <a href="#default-targets">default
+targets</a> by creating an <code>all</code> alias, but you can do this
+yourself for any collection of targets:</p>
+<pre><code class="python">foo = executable('foo', files=['foo.cpp'])
+bar = executable('bar', files=['bar.cpp'])
+alias('foobar', [foo, bar])
+</code></pre>
+
+<h2 id="commands">Commands<a class="headerlink" href="#commands" title="Permanent link">§</a></h2>
+<p>In addition to ordinary build steps, it can be useful to provide other common
+commands that apply to a project's source, such as linting the code or building
+documentation. Normally, you should pass the command to be run as an array of
+arguments. This will automatically handle escaping any quotes in each argument.
+This is especially important for cross-platform compatibility, since different
+shells have different quoting rules:</p>
+<pre><code class="python">command('hello', cmd=['python', '-c', 'print(&quot;hello&quot;)'])
+</code></pre>
+
+<p>Of course, if you need to use your shell's special characters (like <code>&amp;&amp;</code>), you
+can simply pass a string to the <em>cmd</em> argument. In addition, you can supply
+multiple commands to this function via the <em>cmds</em> argument:</p>
+<pre><code class="python">command('script', cmds=[
+    'touch file',
+    ['python', 'script.py']
+])
+</code></pre>
+
 <h2 id="custom-build-steps">Custom build steps<a class="headerlink" href="#custom-build-steps" title="Permanent link">§</a></h2>
 <p>Sometimes, the built-in build steps don't support the things you want to do
 (e.g. if you're generating source files via Flex/Bison). In these cases, you
@@ -410,15 +410,35 @@ a file by running an arbitrary command:</p>
 <pre><code class="python">lex = build_step('lex.yy.c', cmd=[ 'flex', source_file('hello.lex') ])
 </code></pre>
 
-<p>You can also define steps that produce <em>multiple</em> files. When doing this, you'll
-generally want to specify the <em>type</em> argument as well, which lets you indicate
-the type of file object to return. In addition, you can pass <em>args</em> and <em>kwargs</em>
-to forward arguments along to <em>type</em>:</p>
-<pre><code class="python">hdr, src = build_step(['hello.tab.h', 'hello.tab.c'], cmd=[
-    'bison', 'hello.y'
-], type=[header_file, source_file])
+<p>To reduce repetition, you can also use the <code>build_step.input</code> and
+<code>build_step.output</code> placeholders in your command.</p>
+<pre><code class="python">lex = build_step('hello-lex.c', cmd=[
+    'flex', build_step.input, '-o' build_step.output
+], files=['hello.lex'])
 </code></pre>
 
+<p>By default, the output of a custom build step is passed through
+<a href="../reference/#auto_file"><em>auto_file</em></a>, which produces a source file, header
+file, or a generic file based on the path's extension. When this doesn't produce
+the expected results, you can supply the <em>type</em> argument, which lets you pass a
+function taking a path and returning a file object to represent the output:</p>
+<pre><code class="python">libfoo = shared_library(...)
+stripped = build_step('libfoo.so', cmd=[
+    'strip', '-o', build_step.output, libfoo
+], type=shared_library)
+</code></pre>
+
+<p>Finally, you can define steps that produce <em>multiple</em> files by passing a list of
+names as the outputs of the step. This will then return a file object for each
+of the outputs:</p>
+<pre><code class="python">hdr, src = build_step(['hello.tab.h', 'hello.tab.c'], cmd=[
+    'bison', source_file('hello.y')
+])
+</code></pre>
+
+<p>When producing multiple files via <em>build_step</em>, the <em>type</em> argument can be
+passed as either a single function (which will be applied to every output) or as
+a list of function (which will be applied element-wise to each output).</p>
 <h2 id="user-defined-arguments">User-defined arguments<a class="headerlink" href="#user-defined-arguments" title="Permanent link">§</a></h2>
 <p>Many projects benefit from letting the user configure project-specific elements
 of their builds, e.g. by enabling certain optional features or by using
@@ -429,7 +449,7 @@ options to configure your build by creating a <code>options.bfg</code> file alon
 <a href="../reference/#argument"><em>argument()</em></a> function:</p>
 <pre><code class="python"># Adds --name/--x-name to the list of available command-line options, e.g.:
 #   9k build/ --name=foobar
-argument('name', default='unnamed', help='set the program's name')
+argument('name', default='unnamed', help=&quot;set the program's name&quot;)
 </code></pre>
 
 <p>It works much like <a href="https://docs.python.org/library/argparse.html">argparse</a>'s <a href="https://docs.python.org/library/argparse.html#the-add-argument-method"><em>add_argument()</em></a>
