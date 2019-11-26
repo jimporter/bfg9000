@@ -1,4 +1,3 @@
-import warnings
 from itertools import chain, repeat
 from six.moves import filter as ifilter
 
@@ -120,35 +119,20 @@ class BuildStep(BaseCommand):
     console = False
     msbuild_output = True
 
-    def __init__(self, build, env, name, type=None, args=None, kwargs=None,
-                 always_outdated=False, **fwd_kwargs):
+    def __init__(self, build, env, name, type=None, always_outdated=False,
+                 **kwargs):
         name = listify(name)
         project_name = name[0]
 
         if not isiterable(type):
             type = repeat(type, len(name))
 
-        if args is None:
-            args = repeat([], len(name))
-        else:  # pragma: no cover
-            # TODO: remove this after 0.5 is released.
-            warnings.warn('"args" is deprecated; use "type" instead ' +
-                          '(e.g. with a lambda)')
+        outputs = [self._make_outputs(*i) for i in zip(name, type)]
 
-        if kwargs is None:
-            kwargs = repeat({}, len(name))
-        else:  # pragma: no cover
-            # TODO: remove this after 0.5 is released.
-            warnings.warn('"kwargs" is deprecated; use "type" instead ' +
-                          '(e.g. with a lambda)')
-
-        outputs = [self._make_outputs(*i) for i in
-                   zip(name, type, args, kwargs)]
-
-        desc = fwd_kwargs.pop('description', 'build => ' + ' '.join(name))
+        desc = kwargs.pop('description', 'build => ' + ' '.join(name))
         BaseCommand.__init__(self, build, env, project_name, outputs,
                              phony=always_outdated, description=desc,
-                             **fwd_kwargs)
+                             **kwargs)
 
     @staticmethod
     def convert_args(builtins, kwargs):
@@ -157,8 +141,8 @@ class BuildStep(BaseCommand):
         return BaseCommand.convert_args(builtins, kwargs)
 
     @staticmethod
-    def _make_outputs(name, type, args, kwargs):
-        result = type(Path(name, Root.builddir), *args, **kwargs)
+    def _make_outputs(name, type):
+        result = type(Path(name, Root.builddir))
         if not isinstance(result, File):
             raise ValueError('expected a function returning a file')
         return result
