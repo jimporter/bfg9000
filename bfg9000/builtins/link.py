@@ -182,8 +182,7 @@ class DynamicLink(Link):
     def _fill_options(self, env, extra_options, forward_opts, output):
         linkers = (env.builder(i).linker(self.mode) for i in self.langs)
         self._internal_options = opts.option_list(
-            opts.module_def(self.module_defs) if self.module_defs else None,
-            (i.link_options(self.linker) for i in self.packages)
+            opts.module_def(self.module_defs) if self.module_defs else None
         )
 
         if self.linker.needs_libs:
@@ -192,8 +191,10 @@ class DynamicLink(Link):
                 (opts.lib(i) for i in self.libs)
             )
 
-        self._internal_options.extend(extra_options)
-        self._internal_options.extend(forward_opts.get('link_options', []))
+        self._internal_options.collect(
+            (i.link_options(self.linker) for i in self.packages),
+            extra_options, forward_opts.get('link_options', [])
+        )
 
         first(output).runtime_deps.extend(
             i.runtime_file for i in self.libs if i.runtime_file
@@ -324,6 +325,7 @@ def static_library(builtins, build, env, name, files=None, **kwargs):
 @builtin.type(Library, extra_in_type=DualUseLibrary)
 def library(builtins, build, env, name, files=None, **kwargs):
     explicit_kind = False
+    kind = None
 
     if 'kind' in kwargs:
         explicit_kind = True
@@ -334,9 +336,6 @@ def library(builtins, build, env, name, files=None, **kwargs):
         kind = 'shared'
     elif env.library_mode.static:
         kind = 'static'
-    else:
-        raise ValueError('unable to create library: both shared and static ' +
-                         'modes disabled')
 
     if isinstance(name, DualUseLibrary):
         if files is not None or not set(kwargs.keys()) <= {'format', 'lang'}:
@@ -358,6 +357,10 @@ def library(builtins, build, env, name, files=None, **kwargs):
 
         # XXX: Try to detect if a string refers to a shared lib?
         return static_file(build, file_type, name, dist, params, kwargs)
+
+    if kind is None:
+        raise ValueError('unable to create library: both shared and static ' +
+                         'modes disabled')
 
     shared_kwargs = slice_dict(kwargs, SharedLink.extra_kwargs)
     static_kwargs = slice_dict(kwargs, StaticLink.extra_kwargs)

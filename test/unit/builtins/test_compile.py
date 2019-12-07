@@ -3,10 +3,11 @@ from collections import namedtuple
 from six import iteritems
 
 from .common import AttrDict, BuiltinTest
-from bfg9000 import file_types
+from bfg9000 import file_types, options as opts
 from bfg9000.builtins import compile, link, packages, project  # noqa
 from bfg9000.environment import LibraryMode
 from bfg9000.iterutils import listify, unlistify
+from bfg9000.packages import CommonPackage
 from bfg9000.path import Path, Root
 
 MockCompile = namedtuple('MockCompile', ['file'])
@@ -141,6 +142,21 @@ class TestObjectFile(CompileTest):
         result = object_file(file='main.cpp', includes=inc)
         self.assertEqual(result.creator.includes, [inc])
         self.assertEqual(result.creator.include_deps, [inc])
+
+    def test_include_order(self):
+        incdir = opts.include_dir(file_types.HeaderDirectory(
+            Path('include', Root.srcdir)
+        ))
+        pkg_incdir = opts.include_dir(file_types.HeaderDirectory(
+            Path('/usr/include', Root.absolute)
+        ))
+        pkg = CommonPackage('pkg', None, opts.option_list(pkg_incdir))
+
+        result = self.builtin_dict['object_file'](
+            file='main.cpp', includes='include', packages=pkg
+        )
+        self.assertEqual(result.creator.options,
+                         opts.option_list(incdir, pkg_incdir))
 
     def test_libs(self):
         self.env.library_mode = LibraryMode(True, False)

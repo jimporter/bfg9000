@@ -3,10 +3,10 @@ from six import iteritems
 
 from .common import AttrDict, BuiltinTest
 from bfg9000.builtins import compile, default, link, packages, project  # noqa
-from bfg9000 import file_types
+from bfg9000 import file_types, options as opts
 from bfg9000.environment import LibraryMode
 from bfg9000.iterutils import listify, unlistify
-from bfg9000.options import option_list
+from bfg9000.packages import CommonPackage
 from bfg9000.path import Path, Root
 
 
@@ -113,6 +113,21 @@ class TestExecutable(LinkTest):
         self.assertSameFile(result, self.output_file('exe'))
         self.assertSameFile(result.creator.files[0],
                             self.object_file('dir/main'))
+
+    def test_lib_order(self):
+        fmt = self.env.target_platform.object_format
+        lib = opts.lib(file_types.SharedLibrary(Path('libfoo', Root.srcdir),
+                                                fmt))
+        pkg_libdir = opts.lib_dir(file_types.Directory(
+            Path('/usr/lib', Root.absolute)
+        ))
+        pkg = CommonPackage('pkg', fmt, None, opts.option_list(pkg_libdir))
+
+        result = self.builtin_dict['executable'](
+            'exe', ['main.cpp'], libs='libfoo', packages=pkg
+        )
+        self.assertEqual(result.creator.options,
+                         opts.option_list(lib, pkg_libdir))
 
     def test_invalid_type(self):
         src = self.builtin_dict['source_file']('main.cpp')
@@ -271,6 +286,21 @@ class TestSharedLibrary(LinkTest):
         self.assertSameFile(result.creator.files[0],
                             self.object_file('dir/main'))
 
+    def test_lib_order(self):
+        fmt = self.env.target_platform.object_format
+        lib = opts.lib(file_types.SharedLibrary(Path('libfoo', Root.srcdir),
+                                                fmt))
+        pkg_libdir = opts.lib_dir(file_types.Directory(
+            Path('/usr/lib', Root.absolute)
+        ))
+        pkg = CommonPackage('pkg', fmt, None, opts.option_list(pkg_libdir))
+
+        result = self.builtin_dict['shared_library'](
+            'shared', ['main.cpp'], libs='libfoo', packages=pkg
+        )
+        self.assertEqual(result.creator.options,
+                         opts.option_list(lib, pkg_libdir))
+
     def test_invalid_type(self):
         src = self.builtin_dict['source_file']('main.cpp')
         self.assertRaises(TypeError, self.builtin_dict['shared_library'],
@@ -296,7 +326,7 @@ class TestStaticLibrary(LinkTest):
             'compile_options': linker.forwarded_compile_options(
                 AttrDict(name='libstatic')
             ),
-            'link_options': option_list(),
+            'link_options': opts.option_list(),
             'libs': libs,
             'packages': [],
         }}
@@ -471,7 +501,8 @@ class TestLibrary(LinkTest):
 
     def test_no_library(self):
         self.env.library_mode = LibraryMode(False, False)
-        self.assertRaises(ValueError, self.builtin_dict['library'], 'library')
+        self.assertRaises(ValueError, self.builtin_dict['library'], 'library',
+                          files=['foo.cpp'])
 
     def test_src_file(self):
         self.env.library_mode = LibraryMode(True, True)
@@ -563,7 +594,7 @@ class TestLibrary(LinkTest):
             'compile_options': linker.forwarded_compile_options(
                 AttrDict(name='liblibrary')
             ),
-            'link_options': option_list(),
+            'link_options': opts.option_list(),
             'libs': [],
             'packages': [],
         }}
