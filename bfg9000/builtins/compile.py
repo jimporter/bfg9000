@@ -72,8 +72,8 @@ class Compile(BaseCompile):
         self.user_options = options
 
         internal_options = opts.option_list(
-            (i.compile_options(self.compiler) for i in self.packages),
-            (opts.include_dir(i) for i in self.includes)
+            (opts.include_dir(i) for i in self.includes),
+            (i.compile_options(self.compiler) for i in self.packages)
         )
 
         self.pch = pch
@@ -296,10 +296,6 @@ def make_compile(rule, build_inputs, buildfile, env):
             cmd_kwargs['deps'] = deps = first(output_vars) + '.d'
             recipe_extra = [make.Silent(depfixer(deps))]
 
-            depfile = rule.output[0].path.addext('.d')
-            build_inputs.add_target(File(depfile))
-            buildfile.include(depfile, optional=True)
-
         buildfile.define(recipename, [compiler(
             make.qvar('<'), output_vars, **cmd_kwargs
         )] + recipe_extra)
@@ -313,6 +309,11 @@ def make_compile(rule, build_inputs, buildfile, env):
     deps.extend(getattr(rule, 'include_deps', []))
     if compiler.needs_libs:
         deps.extend(rule.libs)
+
+    if compiler.deps_flavor == 'gcc':
+        depfile = rule.output[0].path.addext('.d')
+        build_inputs.add_target(File(depfile))
+        buildfile.include(depfile, optional=True)
 
     make.multitarget_rule(
         buildfile,
