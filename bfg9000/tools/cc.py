@@ -428,7 +428,10 @@ class CcLinker(BuildCommand):
             if path.root != Root.absolute and path.root not in InstallRoot:
                 if not output:
                     raise ValueError('unable to construct rpath')
-                path = path.relpath(output.path.parent(), prefix='$ORIGIN')
+                # This should almost always be true, except for when linking to
+                # a shared library stored in the srcdir.
+                if path.root == output.path.root:
+                    path = path.relpath(output.path.parent(), prefix='$ORIGIN')
             rpath = [path]
 
             # Prior to binutils 2.28, GNU's BFD-based ld doesn't correctly

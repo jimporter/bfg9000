@@ -394,6 +394,8 @@ class TestCcLinker(CrossPlatformTestCase):
     def test_flags_lib_dir(self):
         libdir = self.Path('/path/to/lib')
         lib = self.Path('/path/to/lib/libfoo.a')
+        srclibdir = self.Path('.', Root.srcdir)
+        srclib = self.Path('libfoo.a', Root.srcdir)
 
         if self.shared:
             output = SharedLibrary(self.Path('out'), 'native')
@@ -407,11 +409,12 @@ class TestCcLinker(CrossPlatformTestCase):
 
         if self.env.target_platform.genus == 'linux':
             rpath = rpath_with_output = ['-Wl,-rpath,' + libdir]
+            srcdir_rpath = ['-Wl,-rpath,' + srclibdir]
         elif self.env.target_platform.genus == 'darwin':
             rpath = []
-            rpath_with_output = ['-Wl,-rpath,@loader_path']
+            rpath_with_output = srcdir_rpath = ['-Wl,-rpath,@loader_path']
         else:
-            rpath = rpath_with_output = []
+            rpath = rpath_with_output = srcdir_rpath = []
 
         # Lib dir
         self.assertEqual(self.linker.flags(opts.option_list(
@@ -425,6 +428,9 @@ class TestCcLinker(CrossPlatformTestCase):
         self.assertEqual(self.linker.flags(opts.option_list(
             opts.lib(SharedLibrary(lib, 'native'))
         ), output), ['-L' + libdir] + rpath_with_output + soname)
+        self.assertEqual(self.linker.flags(opts.option_list(
+            opts.lib(SharedLibrary(srclib, 'native'))
+        ), output), ['-L' + srclibdir] + srcdir_rpath + soname)
 
         if self.env.target_platform.genus == 'linux':
             libdir2 = self.Path('foo')
