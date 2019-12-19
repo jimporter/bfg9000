@@ -179,6 +179,9 @@ directory, and bfg9000 will look for a build.bfg file in the current directory.<
 <p>The kind of build files to generate; one of <code>ninja</code>, <code>make</code>, or <code>msbuild</code>. The
 default value depends on what build backends you have installed, but if <code>ninja</code>
 is present on your system, it will be the default.</p>
+<h4 id="configure-toolchain">--toolchain <em>FILE</em><a class="headerlink" href="#configure-toolchain" title="Permanent link">§</a></h4>
+<p>An optional <a href="../building/#using-toolchain-files">toolchain file</a> that can be used
+to easily set all the options required for a certain build.</p>
 <h4 id="configure-enable-shared">--enable-shared, --disable-shared<a class="headerlink" href="#configure-enable-shared" title="Permanent link">§</a></h4>
 <p>Enable/disable building shared libraries when using
 <a href="../reference/#library"><em>library</em>()</a> in your build.bfg files. Defaults to enabled.</p>
