@@ -40,6 +40,11 @@ The kind of build files to generate; one of `ninja`, `make`, or `msbuild`. The
 default value depends on what build backends you have installed, but if `ninja`
 is present on your system, it will be the default.
 
+#### --toolchain *FILE* { #configure-toolchain }
+
+An optional [toolchain file](building.md#using-toolchain-files) that can be used
+to easily set all the options required for a certain build.
+
 #### --enable-shared, --disable-shared { #configure-enable-shared }
 
 Enable/disable building shared libraries when using
