@@ -182,10 +182,10 @@ def variadic_option(name, type=None):
 
 # Compilation options
 include_dir = option('include_dir', [('directory', HeaderDirectory)])
-std = option('std', [('value', str)])
-pic = option('pic')
 pch = option('pch', [('header', PrecompiledHeader)])
+pic = option('pic')
 sanitize = option('sanitize')
+std = option('std', [('value', str)])
 
 WarningValue = OptionEnum('WarningValue', ['disable', 'all', 'extra', 'error'])
 warning = variadic_option('warning', WarningValue)
@@ -200,13 +200,13 @@ class define(Option):
 
 
 # Link options
-lib_dir = option('lib_dir', [('directory', Directory)])
+entry_point = option('entry_point', [('value', str)])
 lib = option('lib', [('library', (Library, Framework, str))])
-rpath_dir = option('rpath_dir', [('path', path.BasePath)])
-rpath_link_dir = option('rpath_link_dir', [('path', path.BasePath)])
+lib_dir = option('lib_dir', [('directory', Directory)])
 lib_literal = option('lib_literal', [('value', safe_str.stringy_types)])
 module_def = option('module_def', [('value', ModuleDefFile)])
-entry_point = option('entry_point', [('value', str)])
+rpath_dir = option('rpath_dir', [('path', path.BasePath)])
+rpath_link_dir = option('rpath_link_dir', [('path', path.BasePath)])
 
 # General options
 debug = option('debug')
