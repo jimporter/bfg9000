@@ -86,8 +86,8 @@ class ArgumentParser(object):
                 continue
 
             if info:
-                info.fill_value(result, key, value)
-                continue
+                if info.fill_value(result, key, value):
+                    continue
             extra.append(i)
 
         return result, extra
@@ -109,6 +109,7 @@ class ArgumentInfo(object):
 class KeyArgumentInfo(ArgumentInfo):
     def fill_value(self, results, key, value):
         results[self.name] = key
+        return True
 
 
 @ArgumentParser.handler('alias')
@@ -124,6 +125,7 @@ class AliasArgumentInfo(ArgumentInfo):
         if self.value is not None:
             value = self.value
         self.base.fill_value(results, key, value)
+        return True
 
     @property
     def takes_value(self):
@@ -138,6 +140,7 @@ class BoolArgumentInfo(ArgumentInfo):
 
     def fill_value(self, results, key, value):
         results[self.name] = self.value
+        return True
 
     @property
     def takes_value(self):
@@ -151,6 +154,7 @@ class StrArgumentInfo(ArgumentInfo):
 
     def fill_value(self, results, key, value):
         results[self.name] = value
+        return True
 
 
 @ArgumentParser.handler(list)
@@ -163,15 +167,17 @@ class ListArgumentInfo(ArgumentInfo):
 
     def fill_value(self, results, key, value):
         results[self.name].append(value)
+        return True
 
 
 @ArgumentParser.handler(dict)
 class DictArgumentInfo(ArgumentInfo):
-    def __init__(self, name):
+    def __init__(self, name, strict=False):
         ArgumentInfo.__init__(self, name)
         self._short_names = {}
         self._long_names = {}
         self._options = []
+        self._strict = strict
 
     def add(self, *args, **kwargs):
         dest = kwargs.pop('dest', args[0])
@@ -198,8 +204,12 @@ class DictArgumentInfo(ArgumentInfo):
         if subkey in self._short_names:
             info = self._short_names[subkey]
             info.fill_value(results[self.name], subkey, subvalue)
+            return True
         elif value in self._long_names:
             info = self._long_names[value]
             info.fill_value(results[self.name], value, None)
-        else:
+            return True
+        elif self._strict:
             raise ValueError('unexpected value for option')
+
+        return False

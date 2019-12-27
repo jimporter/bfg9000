@@ -139,9 +139,13 @@ class TestWindowsArgParse(TestCase):
         self.assertEqual(parser.parse_known(['/Wv17']), ({
             'warn': {'level': None, 'error': None, 'version': '17'}
         }, []))
+        self.assertEqual(parser.parse_known(['/Wfoo']), ({
+            'warn': {'level': None, 'error': None, 'version': None}
+        }, ['/Wfoo']))
         self.assertEqual(parser.parse_known(
-            ['/WX', '/W2', '/WX-', '/Wall', '/Wv17']
-        ), ({'warn': {'level': 'all', 'error': False, 'version': '17'}}, []))
+            ['/WX', '/W2', '/WX-', '/Wall', '/Wv17', '/Wfoo']
+        ), ({'warn': {'level': 'all', 'error': False, 'version': '17'}},
+            ['/Wfoo']))
 
     def test_long_dict(self):
         parser = ArgumentParser()
@@ -166,9 +170,14 @@ class TestWindowsArgParse(TestCase):
         self.assertEqual(parser.parse_known(['/Warn:v17']), ({
             'warn': {'level': None, 'error': None, 'version': '17'}
         }, []))
+        self.assertEqual(parser.parse_known(['/Warn:foo']), ({
+            'warn': {'level': None, 'error': None, 'version': None}
+        }, ['/Warn:foo']))
         self.assertEqual(parser.parse_known(
-            ['/Warn:X', '/Warn:2', '/Warn:X-', '/Warn:all', '/Warn:v17']
-        ), ({'warn': {'level': 'all', 'error': False, 'version': '17'}}, []))
+            ['/Warn:X', '/Warn:2', '/Warn:X-', '/Warn:all', '/Warn:v17',
+             '/Warn:foo']
+        ), ({'warn': {'level': 'all', 'error': False, 'version': '17'}},
+            ['/Warn:foo']))
 
     def test_alias(self):
         parser = ArgumentParser()
@@ -245,7 +254,7 @@ class TestWindowsArgParse(TestCase):
 
     def test_unexpected_dict_value(self):
         parser = ArgumentParser()
-        warn = parser.add('/W', type=dict, dest='warn')
+        warn = parser.add('/W', type=dict, dest='warn', strict=True)
         warn.add('1', '2', '3', '4', 'all', dest='level')
 
         with self.assertRaises(ValueError):
