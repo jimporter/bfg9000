@@ -706,7 +706,8 @@ options in a tool-agnostic way. These options will automatically be converted to
 the appropriate string form for the tool when generating the build file.</p>
 <h3 id="opts-debug">opts.debug()<a class="headerlink" href="#opts-debug" title="Permanent link">§</a></h3>
 <p>Produce debugging information for the built object in the default debugging
-format.</p>
+format. When using MSVC, this also determines whether to link to debug or
+release variants of the runtime.</p>
 <h3 id="opts-define">opts.define(<em>name</em>, [<em>value</em>])<a class="headerlink" href="#opts-define" title="Permanent link">§</a></h3>
 <p>Create a preprocessor macro named <em>name</em> and with an optional value <em>value</em>.
 Note that if you'd like the value to be a string literal, you need to escape the
@@ -728,6 +729,8 @@ values are:</p>
 <p>Enable run-time sanitization checks when compiling a particular source file;
 this is equivalent to <code>-fsanitize=address</code> on GCC-like compilers and <code>/RTC1</code> on
 MSVC.</p>
+<h3 id="opts-static">opts.static()<a class="headerlink" href="#opts-static" title="Permanent link">§</a></h3>
+<p>When linking to libraries, only link statically.</p>
 <h3 id="opts-std">opts.std(<em>value</em>)<a class="headerlink" href="#opts-std" title="Permanent link">§</a></h3>
 <p>Specify the version of the language's standard (e.g. <code>"c++14"</code>) to use when
 building.</p>
