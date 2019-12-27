@@ -42,8 +42,10 @@ class TestExecutable(IntegrationTest):
             'ninja': {'.bfg_environ', '.ninja_deps', '.ninja_log',
                       'build.ninja'},
             'make': {'.bfg_environ', 'Makefile', pjoin('simple.int', '.dir')},
-            'msbuild': {'.bfg_environ', '.bfg_uuid', 'simple.sln',
-                        pjoin('simple', 'simple.vcxproj'),
-                        pjoin('simple', 'Debug', 'simple.Build.CppClean.log')},
+            'msbuild': {
+                '.bfg_environ', '.bfg_uuid', 'simple.sln',
+                pjoin('simple', 'simple.vcxproj'),
+                pjoin('simple', 'Default', 'simple.Build.CppClean.log')
+            },
         }
         self.assertDirectory('.', files[self.backend])

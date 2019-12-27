@@ -71,7 +71,7 @@ class Project(object):
     def __init__(self, env, name, configuration=None, dependencies=None):
         self.name = name
         self.uuid = None
-        self.configuration = configuration or 'Debug'
+        self.configuration = configuration or 'Default'
         self.dependencies = dependencies or []
 
         self.version = env.getvar('VISUALSTUDIOVERSION', '14.0')
@@ -192,8 +192,7 @@ class VcxProject(Project):
             E.Import(Project=r'$(VCTargetsPath)\Microsoft.Cpp.default.props'),
             E.PropertyGroup({'Label': 'Configuration'},
                 E.ConfigurationType(self.mode),
-                E.PlatformToolset(self.toolset),
-                E.CharacterSet('Multibyte')
+                E.PlatformToolset(self.toolset)
             ),
             E.Import(Project=r'$(VCTargetsPath)\Microsoft.Cpp.props'),
             override_props,
