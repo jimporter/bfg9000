@@ -2,7 +2,10 @@
 
 ## v0.6.0 (in progress)
 
-No changes yet!
+### New features
+- Added `opts.static` to request static linking of libraries
+- MSVC's runtime can now be selected by using a combination of `opts.static`
+  and `opts.debug`
 
 ---
 

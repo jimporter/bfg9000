@@ -146,6 +146,19 @@ class VcxProject(Project):
         'all': 'EnableAllWarnings',
     }
 
+    _debug_modes = {
+        'old': 'OldStyle',
+        'pdb': 'ProgramDatabase',
+        'edit': 'EditAndContinue',
+    }
+
+    _runtimes = {
+        'static': 'MultiThreaded',
+        'static-debug': 'MultiThreadedDebug',
+        'dynamic': 'MultiThreadedDLL',
+        'dynamic-debug': 'MultiThreadedDebugDLL',
+    }
+
     def __init__(self, env, name, mode='Application', configuration=None,
                  output_file=None, files=None, compile_options=None,
                  link_options=None, dependencies=None):
@@ -179,7 +192,6 @@ class VcxProject(Project):
             E.Import(Project=r'$(VCTargetsPath)\Microsoft.Cpp.default.props'),
             E.PropertyGroup({'Label': 'Configuration'},
                 E.ConfigurationType(self.mode),
-                E.UseDebugLibraries('true'),
                 E.PlatformToolset(self.toolset),
                 E.CharacterSet('Multibyte')
             ),
@@ -231,6 +243,11 @@ class VcxProject(Project):
                 'true' if warnings['as_error'] else 'false'
             ))
 
+        if options.get('debug'):
+            element.append(E.DebugInformationFormat(
+                self._debug_modes[options['debug']]
+            ))
+
         if options.get('includes'):
             element.append(E.AdditionalIncludeDirectories( ';'.join(chain(
                 textify_each(options['includes']),
@@ -251,6 +268,11 @@ class VcxProject(Project):
             element.append(E.PrecompiledHeader('Use'))
             element.append(E.PrecompiledHeaderFile(pch['use']))
 
+        if options.get('runtime'):
+            element.append(E.RuntimeLibrary(
+                self._runtimes[options['runtime']]
+            ))
+
         if options.get('extra'):
             element.append(E.AdditionalOptions( ' '.join(chain(
                 textify_each(options['extra'], quoted=True),
@@ -259,6 +281,9 @@ class VcxProject(Project):
 
     def _write_link_options(self, element, options):
         element.append(E.OutputFile('$(TargetPath)'))
+
+        if options.get('debug'):
+            element.append(E.GenerateDebugInformation('true'))
 
         if options.get('import_lib'):
             element.append(E.ImportLibrary(

@@ -159,6 +159,7 @@ class MsvcBaseCompiler(BuildCommand):
 
     def flags(self, options, output=None, mode='normal'):
         syntax = 'cc' if mode == 'pkg-config' else 'msvc'
+        debug = static = False
         flags = []
         for i in options:
             if isinstance(i, opts.include_dir):
@@ -176,7 +177,10 @@ class MsvcBaseCompiler(BuildCommand):
                 for j in i.value:
                     flags.append(_warning_flags[j])
             elif isinstance(i, opts.debug):
+                debug = True
                 flags.append('/Zi')
+            elif isinstance(i, opts.static):
+                static = True
             elif isinstance(i, opts.optimize):
                 for j in i.value:
                     flags.append(_optimize_flags[j])
@@ -188,6 +192,10 @@ class MsvcBaseCompiler(BuildCommand):
                 flags.append(i)
             else:
                 raise TypeError('unknown option type {!r}'.format(type(i)))
+
+        if mode != 'pkg-config':
+            flags.append('/M{link}{debug}'.format(link='T' if static else 'D',
+                                                  debug='d' if debug else ''))
         return flags
 
     @staticmethod
@@ -207,6 +215,15 @@ class MsvcBaseCompiler(BuildCommand):
         pch = parser.add('/Y', type=dict, dest='pch')
         pch.add('u', type=str, dest='use')
         pch.add('c', type=str, dest='create')
+
+        parser.add('/Z7', value='old', dest='debug')
+        parser.add('/Zi', value='pdb', dest='debug')
+        parser.add('/ZI', value='edit', dest='debug')
+
+        parser.add('/MT', value='static', dest='runtime')
+        parser.add('/MTd', value='static-debug', dest='runtime')
+        parser.add('/MD', value='dynamic', dest='runtime')
+        parser.add('/MDd', value='dynamic-debug', dest='runtime')
 
         return parser
 
@@ -382,6 +399,8 @@ class MsvcLinker(BuildCommand):
                 flags.append('/DEF:' + i.value.path)
             elif isinstance(i, opts.debug):
                 flags.append('/DEBUG')
+            elif isinstance(i, opts.static):
+                pass
             elif isinstance(i, opts.optimize):
                 if opts.OptimizeValue.linktime in i.value:
                     flags.append('/LTCG')
@@ -411,6 +430,7 @@ class MsvcLinker(BuildCommand):
     def __parser():
         parser = ArgumentParser()
         parser.add('/nologo')
+        parser.add('/DEBUG', dest='debug')
         return parser
 
     @staticmethod

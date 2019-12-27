@@ -122,6 +122,11 @@ class TestVcxProject(ProjectTest):
         self.assertXPath(root, './TreatWarningAsError/text()', ['true'])
 
         root = E.Element()
+        proj._write_compile_options(root, {'debug': 'pdb'})
+        self.assertXPath(root, './DebugInformationFormat/text()',
+                         ['ProgramDatabase'])
+
+        root = E.Element()
         proj._write_compile_options(root, {'includes': ['foo', 'bar']})
         self.assertXPath(root, './AdditionalIncludeDirectories/text()',
                          ['foo;bar;%(AdditionalIncludeDirectories)'])
@@ -142,6 +147,11 @@ class TestVcxProject(ProjectTest):
         self.assertXPath(root, './PrecompiledHeaderFile/text()', ['foo'])
 
         root = E.Element()
+        proj._write_compile_options(root, {'runtime': 'dynamic-debug'})
+        self.assertXPath(root, './RuntimeLibrary/text()',
+                         ['MultiThreadedDebugDLL'])
+
+        root = E.Element()
         proj._write_compile_options(root, {'extra': ['foo', 'bar']})
         self.assertXPath(root, './AdditionalOptions/text()',
                          ['foo bar %(AdditionalOptions)'])
@@ -152,6 +162,10 @@ class TestVcxProject(ProjectTest):
         root = E.Element()
         proj._write_link_options(root, {})
         self.assertXPath(root, './OutputFile/text()', ['$(TargetPath)'])
+
+        root = E.Element()
+        proj._write_link_options(root, {'debug': True})
+        self.assertXPath(root, './GenerateDebugInformation/text()', ['true'])
 
         root = E.Element()
         proj._write_link_options(root, {'import_lib': 'foo'})

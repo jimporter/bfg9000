@@ -212,6 +212,7 @@ rpath_link_dir = option('rpath_link_dir', [('path', path.BasePath)])
 debug = option('debug')
 lang = option('lang', [('value', str)])
 pthread = option('pthread')
+static = option('static')
 
 OptimizeValue = OptionEnum('OptimizeValue', ['disable', 'size', 'speed',
                                              'linktime'])

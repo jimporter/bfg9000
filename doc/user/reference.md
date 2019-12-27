@@ -672,7 +672,8 @@ the appropriate string form for the tool when generating the build file.
 ### opts.debug() { #opts-debug }
 
 Produce debugging information for the built object in the default debugging
-format.
+format. When using MSVC, this also determines whether to link to debug or
+release variants of the runtime.
 
 ### opts.define(*name*, [*value*]) { #opts-define }
 
@@ -700,6 +701,10 @@ values are:
 Enable run-time sanitization checks when compiling a particular source file;
 this is equivalent to `-fsanitize=address` on GCC-like compilers and `/RTC1` on
 MSVC.
+
+### opts.static() { #opts-static }
+
+When linking to libraries, only link statically.
 
 ### opts.std(*value*) { #opts-std }
 

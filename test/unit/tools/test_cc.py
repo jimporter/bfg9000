@@ -288,6 +288,11 @@ class TestCcCompiler(CrossPlatformTestCase):
             opts.debug()
         )), ['-g'])
 
+    def test_flags_static(self):
+        self.assertEqual(self.compiler.flags(opts.option_list(
+            opts.static()
+        )), [])
+
     def test_flags_optimize(self):
         self.assertEqual(self.compiler.flags(opts.option_list(
             opts.optimize('disable')
@@ -550,6 +555,11 @@ class TestCcLinker(CrossPlatformTestCase):
         self.assertEqual(self.linker.flags(opts.option_list(
             opts.debug()
         )), ['-g'])
+
+    def test_flags_static(self):
+        self.assertEqual(self.linker.flags(opts.option_list(
+            opts.static()
+        )), ['-static'])
 
     def test_flags_pthread(self):
         self.assertEqual(

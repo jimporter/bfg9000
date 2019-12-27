@@ -135,13 +135,13 @@ class TestMsvcCompiler(CrossPlatformTestCase):
                          file_types.ObjectFile(Path('file.obj'), fmt, 'c++'))
 
     def test_flags_empty(self):
-        self.assertEqual(self.compiler.flags(opts.option_list()), [])
+        self.assertEqual(self.compiler.flags(opts.option_list()), ['/MD'])
 
     def test_flags_include_dir(self):
         p = self.Path('/path/to/include')
         self.assertEqual(self.compiler.flags(opts.option_list(
             opts.include_dir(file_types.HeaderDirectory(p))
-        )), ['/I' + p])
+        )), ['/I' + p, '/MD'])
         self.assertEqual(self.compiler.flags(opts.option_list(
             opts.include_dir(file_types.HeaderDirectory(p))
         ), mode='pkg-config'), ['-I' + p])
@@ -149,14 +149,14 @@ class TestMsvcCompiler(CrossPlatformTestCase):
     def test_flags_define(self):
         self.assertEqual(self.compiler.flags(opts.option_list(
             opts.define('NAME')
-        )), ['/DNAME'])
+        )), ['/DNAME', '/MD'])
         self.assertEqual(self.compiler.flags(opts.option_list(
             opts.define('NAME')
         ), mode='pkg-config'), ['-DNAME'])
 
         self.assertEqual(self.compiler.flags(opts.option_list(
             opts.define('NAME', 'value')
-        )), ['/DNAME=value'])
+        )), ['/DNAME=value', '/MD'])
         self.assertEqual(self.compiler.flags(opts.option_list(
             opts.define('NAME', 'value')
         ), mode='pkg-config'), ['-DNAME=value'])
@@ -164,30 +164,38 @@ class TestMsvcCompiler(CrossPlatformTestCase):
     def test_flags_std(self):
         self.assertEqual(self.compiler.flags(opts.option_list(
             opts.std('c++14')
-        )), ['/std:c++14'])
+        )), ['/std:c++14', '/MD'])
+
+    def test_flags_static(self):
+        self.assertEqual(self.compiler.flags(opts.option_list(
+            opts.static()
+        )), ['/MT'])
 
     def test_flags_debug(self):
         self.assertEqual(self.compiler.flags(opts.option_list(
             opts.debug()
-        )), ['/Zi'])
+        )), ['/Zi', '/MDd'])
+        self.assertEqual(self.compiler.flags(opts.option_list(
+            opts.debug(), opts.static()
+        )), ['/Zi', '/MTd'])
 
     def test_flags_warning(self):
         self.assertEqual(self.compiler.flags(opts.option_list(
             opts.warning('disable')
-        )), ['/w'])
+        )), ['/w', '/MD'])
         self.assertEqual(self.compiler.flags(opts.option_list(
             opts.warning('all')
-        )), ['/W3'])
+        )), ['/W3', '/MD'])
         self.assertEqual(self.compiler.flags(opts.option_list(
             opts.warning('extra')
-        )), ['/W4'])
+        )), ['/W4', '/MD'])
         self.assertEqual(self.compiler.flags(opts.option_list(
             opts.warning('error')
-        )), ['/WX'])
+        )), ['/WX', '/MD'])
 
         self.assertEqual(self.compiler.flags(opts.option_list(
             opts.warning('all', 'extra', 'error')
-        )), ['/W3', '/W4', '/WX'])
+        )), ['/W3', '/W4', '/WX', '/MD'])
 
         with self.assertRaises(ValueError):
             self.compiler.flags(opts.option_list(opts.warning('unknown')))
@@ -195,34 +203,35 @@ class TestMsvcCompiler(CrossPlatformTestCase):
     def test_flags_optimize(self):
         self.assertEqual(self.compiler.flags(opts.option_list(
             opts.optimize('disable')
-        )), ['/Od'])
+        )), ['/Od', '/MD'])
         self.assertEqual(self.compiler.flags(opts.option_list(
             opts.optimize('size')
-        )), ['/O1'])
+        )), ['/O1', '/MD'])
         self.assertEqual(self.compiler.flags(opts.option_list(
             opts.optimize('speed')
-        )), ['/O2'])
+        )), ['/O2', '/MD'])
         self.assertEqual(self.compiler.flags(opts.option_list(
             opts.optimize('linktime')
-        )), ['/GL'])
+        )), ['/GL', '/MD'])
 
         self.assertEqual(self.compiler.flags(opts.option_list(
             opts.optimize('speed', 'linktime')
-        )), ['/O2', '/GL'])
+        )), ['/O2', '/GL', '/MD'])
 
     def test_flags_include_pch(self):
         p = self.Path('/path/to/header.hpp')
         self.assertEqual(self.compiler.flags(opts.option_list(opts.pch(
             file_types.MsvcPrecompiledHeader(p, p, 'header', 'native', 'c++')
-        ))), ['/Yuheader'])
+        ))), ['/Yuheader', '/MD'])
 
     def test_flags_sanitize(self):
         self.assertEqual(self.compiler.flags(opts.option_list(
             opts.sanitize()
-        )), ['/RTC1'])
+        )), ['/RTC1', '/MD'])
 
     def test_flags_string(self):
-        self.assertEqual(self.compiler.flags(opts.option_list('-v')), ['-v'])
+        self.assertEqual(self.compiler.flags(opts.option_list('-v')),
+                         ['-v', '/MD'])
 
     def test_flags_invalid(self):
         with self.assertRaises(TypeError):
@@ -230,11 +239,13 @@ class TestMsvcCompiler(CrossPlatformTestCase):
 
     def test_parse_flags(self):
         default = {
+            'debug': None,
             'defines': [],
             'extra': [],
             'includes': [],
             'nologo': None,
             'pch': {'create': None, 'use': None},
+            'runtime': None,
             'warnings': {'as_error': None, 'level': None}
         }
 
@@ -247,6 +258,10 @@ class TestMsvcCompiler(CrossPlatformTestCase):
         assertFlags(['/nologo'], {'nologo': True})
         assertFlags(['/Dfoo'], {'defines': ['foo']})
         assertFlags(['/Idir'], {'includes': ['dir']})
+
+        assertFlags(['/Z7'], {'debug': 'old'})
+        assertFlags(['/Zi'], {'debug': 'pdb'})
+        assertFlags(['/ZI'], {'debug': 'edit'})
 
         assertFlags(['/W0'], {'warnings': {'level': '0'}})
         assertFlags(['/Wall'], {'warnings': {'level': 'all'}})
@@ -371,6 +386,11 @@ class TestMsvcLinker(CrossPlatformTestCase):
             )), ['/DEF:' + path]
         )
 
+    def test_flags_static(self):
+        self.assertEqual(self.linker.flags(opts.option_list(
+            opts.static()
+        )), [])
+
     def test_flags_debug(self):
         self.assertEqual(self.linker.flags(opts.option_list(
             opts.debug()
@@ -452,6 +472,7 @@ class TestMsvcLinker(CrossPlatformTestCase):
 
     def test_parse_flags(self):
         default = {
+            'debug': None,
             'extra': [],
             'libs': [],
             'nologo': None,
@@ -467,6 +488,7 @@ class TestMsvcLinker(CrossPlatformTestCase):
         assertFlags(['/nologo'], [], {'nologo': True})
         assertFlags([], ['/nologo'], {'nologo': True})
         assertFlags(['/nologo'], ['/nologo'], {'nologo': True})
+        assertFlags(['/DEBUG'], [], {'debug': True})
 
 
 class TestMsvcSharedLinker(TestMsvcLinker):

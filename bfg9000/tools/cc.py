@@ -243,6 +243,8 @@ class CcBaseCompiler(BuildCommand):
                         flags.append('-W' + j.name)
             elif isinstance(i, opts.debug):
                 flags.append('-g')
+            elif isinstance(i, opts.static):
+                pass
             elif isinstance(i, opts.optimize):
                 for j in i.value:
                     flags.append(_optimize_flags[j])
@@ -596,6 +598,8 @@ class CcLinker(BuildCommand):
                     flags.append(i.value.path)
             elif isinstance(i, opts.debug):
                 flags.append('-g')
+            elif isinstance(i, opts.static):
+                flags.append('-static')
             elif isinstance(i, opts.optimize):
                 for j in i.value:
                     flags.append(_optimize_flags[j])
