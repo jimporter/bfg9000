@@ -193,7 +193,7 @@ class MsvcBaseCompiler(BuildCommand):
             else:
                 raise TypeError('unknown option type {!r}'.format(type(i)))
 
-        if mode != 'pkg-config':
+        if mode != 'pkg-config' and (static or debug):
             flags.append('/M{link}{debug}'.format(link='T' if static else 'D',
                                                   debug='d' if debug else ''))
         return flags
