@@ -36,7 +36,7 @@ class EnvVarDict(dict):
         dict.__setitem__(self, key, value)
 
 
-class Toolchain(object):
+class Toolchain:
     def __init__(self, path=None):
         self.path = path
 
@@ -52,7 +52,7 @@ class Toolchain(object):
         )
 
 
-class Environment(object):
+class Environment:
     version = 14
     envfile = '.bfg_environ'
 

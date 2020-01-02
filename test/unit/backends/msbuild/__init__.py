@@ -3,7 +3,7 @@ from ... import *  # noqa
 from bfg9000.path import Path, Root
 
 
-class FakeEnv(object):
+class FakeEnv:
     def getvar(self, name, default=''):
         return default
 

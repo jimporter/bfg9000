@@ -29,7 +29,7 @@ _comment_tmpl = """
 """.strip()
 
 
-class Writer(object):
+class Writer:
     def __init__(self, stream, shell=shell):
         self.stream = stream
         self.shell = shell
@@ -144,7 +144,7 @@ if platform_info().destdir:
     path_vars[path.DestDir.destdir] = Variable('DESTDIR')
 
 
-class NinjaFile(object):
+class NinjaFile:
     Section = Section
 
     def __init__(self, bfgfile):

@@ -48,7 +48,7 @@ class TestTextify(TestCase):
                          r'$(SourceDir)\foo')
 
     def test_file(self):
-        class MockCreator(object):
+        class MockCreator:
             def __init__(self, msbuild_output=False):
                 self.msbuild_output = msbuild_output
 

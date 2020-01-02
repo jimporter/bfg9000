@@ -7,7 +7,7 @@ from .file_types import *
 from .platforms.framework import Framework
 
 
-class option_list(object):
+class option_list:
     def __init__(self, *args):
         self._options = []
         self.collect(*args)

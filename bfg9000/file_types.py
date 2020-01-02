@@ -300,7 +300,7 @@ class DllBinary(LinkedBinary):
         self.export_file = ExportFile(export_name) if export_name else None
 
 
-class DualUseLibrary(object):
+class DualUseLibrary:
     def __init__(self, shared, static):
         self.shared = shared
         self.static = static

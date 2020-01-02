@@ -6,7 +6,7 @@ from ..path import Path
 
 
 @build_input('regenerate')
-class Regenerate(object):
+class Regenerate:
     def __init__(self, build_inputs, env):
         self.outputs = []
         self.depfile = None

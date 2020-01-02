@@ -58,7 +58,7 @@ class ArgumentParser(_ArgumentParser):
         return _ArgumentParser._get_option_tuples(self, option_string)
 
 
-class BaseFile(object):
+class BaseFile:
     def __init__(self, check_type, kind, must_exist=False):
         self._check_type = check_type
         self._kind = kind

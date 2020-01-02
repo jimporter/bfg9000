@@ -18,7 +18,7 @@ def build_input(name):
     return wrapper
 
 
-class Edge(object):
+class Edge:
     def __init__(self, build, output, final_output=None, extra_deps=None,
                  description=None):
         self.description = description
@@ -38,7 +38,7 @@ class Edge(object):
         build.add_edge(self)
 
 
-class BuildInputs(object):
+class BuildInputs:
     def __init__(self, env, bfgpath, extra_bootstrap=[]):
         self._sources = OrderedDict()
         self.bootstrap_paths = []

@@ -6,7 +6,7 @@ from ... import path
 __all__ = ['SlnBuilder', 'SlnElement', 'SlnVariable', 'Solution', 'UuidMap']
 
 
-class SlnElement(object):
+class SlnElement:
     def __init__(self, name, arg=None, value=None):
         if (arg is None) != (value is None):
             raise TypeError('if arg is passed, value must be too')
@@ -39,7 +39,7 @@ class SlnElement(object):
         out.write('\t' * depth + 'End' + self.name + '\n')
 
 
-class SlnVariable(object):
+class SlnVariable:
     def __init__(self, name, value):
         self.name = name
         self.value = value
@@ -48,7 +48,7 @@ class SlnVariable(object):
         out.write('\t' * depth + '{} = {}\n'.format(self.name, self.value))
 
 
-class SlnBuilder(object):
+class SlnBuilder:
     def __init__(self):
         pass
 
@@ -61,7 +61,7 @@ class SlnBuilder(object):
         return closure
 
 
-class Solution(object):
+class Solution:
     def __init__(self, uuids):
         self.uuid = uuids['']
         self._uuids = uuids
@@ -155,7 +155,7 @@ def uuid_str(uuid):
     return '{{{}}}'.format(str(uuid).upper())
 
 
-class UuidMap(object):
+class UuidMap:
     version = 1
 
     def __init__(self, path):

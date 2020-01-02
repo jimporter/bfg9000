@@ -19,7 +19,7 @@ from ..versioning import simplify_specifiers, Specifier, SpecifierSet
 build_input('pkg_config')(lambda build_inputs, env: [])
 
 
-class Requirement(object):
+class Requirement:
     def __init__(self, name, version=None):
         self.name = name
         self.version = objectify(version or '', SpecifierSet)
@@ -63,7 +63,7 @@ class Requirement(object):
         return self.name + str(self.version)
 
 
-class SimpleRequirement(object):
+class SimpleRequirement:
     def __init__(self, name, version=None):
         self.name = name
         self.version = (None if version is None else
@@ -96,7 +96,7 @@ class SimpleRequirement(object):
         return self.name + str(self.version)
 
 
-class RequirementSet(object):
+class RequirementSet:
     def __init__(self, iterable=None):
         self._reqs = {}
         if iterable:
@@ -136,10 +136,10 @@ class RequirementSet(object):
         )
 
 
-class PkgConfigInfo(object):
+class PkgConfigInfo:
     directory = path.Path('pkgconfig')
 
-    class _simple_property(object):
+    class _simple_property:
         def __init__(self, fn):
             self.fn = fn
 

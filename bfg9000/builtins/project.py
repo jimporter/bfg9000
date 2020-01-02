@@ -4,7 +4,7 @@ from ..iterutils import default_sentinel
 
 
 @build_input('project')
-class ProjectInfo(object):
+class ProjectInfo:
     def __init__(self, build_inputs, env):
         self.name = env.srcdir.basename()
         self.version = None

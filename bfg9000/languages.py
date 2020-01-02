@@ -13,7 +13,7 @@ def _get_prop(attr, desc):
     return inner
 
 
-class _Info(object):
+class _Info:
     _fields = ('vars',)
 
     def __init__(self, name, vars):
@@ -62,7 +62,7 @@ class _FormatInfo(_Info):
     _kind = 'format'
 
 
-class _Definer(object):
+class _Definer:
     def __init__(self, parent, type, name, **kwargs):
         self._parent = parent
         self._type = type
@@ -90,7 +90,7 @@ class _Definer(object):
         return inner
 
 
-class Languages(object):
+class Languages:
     def __init__(self):
         self._langs = {}
         self._ext2lang = {}
@@ -125,7 +125,7 @@ class Languages(object):
         return _Definer(self, _LanguageInfo, name, base=base)
 
 
-class Formats(object):
+class Formats:
     def __init__(self):
         self._formats = {}
 

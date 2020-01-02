@@ -273,7 +273,7 @@ class JvmPackage(Package):
         return opts.option_list()
 
 
-class JvmPackageResolver(object):
+class JvmPackageResolver:
     def __init__(self, builder, env, command):
         self.builder = builder
 

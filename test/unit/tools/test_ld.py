@@ -21,14 +21,14 @@ class TestLdLinker(CrossPlatformTestCase):
         self.assertEqual(ld.flavor, 'ld')
 
     def test_lang(self):
-        class MockBuilder(object):
+        class MockBuilder:
             lang = 'c++'
 
         ld = LdLinker(MockBuilder(), self.env, ['ld'], 'version')
         self.assertEqual(ld.lang, 'c++')
 
     def test_family(self):
-        class MockBuilder(object):
+        class MockBuilder:
             family = 'native'
 
         ld = LdLinker(MockBuilder(), self.env, ['ld'], 'version')

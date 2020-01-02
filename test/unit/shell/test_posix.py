@@ -105,7 +105,7 @@ class TestWrapQuotes(TestCase):
 
 
 class TestEscapeLine(TestCase):
-    class FakePlatform(object):
+    class FakePlatform:
         def __init__(self, family):
             self.family = family
 

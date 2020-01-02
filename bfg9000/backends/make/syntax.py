@@ -30,7 +30,7 @@ _comment_tmpl = """
 """.strip()
 
 
-class Writer(object):
+class Writer:
     # For targets and deps, we want to backslash-escape glob characters,
     # whitespace, '#' (comments), and '%' (patterns), plus '~' if it's at the
     # *beginning* of a path. On non-Windows systems, also backslash-escape ':'
@@ -213,7 +213,7 @@ def Call(func, *args, **kwargs):
     return Function('call', var(func).name, *args)
 
 
-class Silent(object):
+class Silent:
     def __init__(self, data):
         self.data = data
 
@@ -229,7 +229,7 @@ if platform_info().destdir:
     path_vars[path.DestDir.destdir] = Variable('DESTDIR')
 
 
-class Makefile(object):
+class Makefile:
     Section = Section
 
     def __init__(self, bfgfile, gnu=False):

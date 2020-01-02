@@ -11,7 +11,7 @@ from ..iterutils import flatten, iterate, unlistify
 
 
 @build_input('install')
-class InstallOutputs(object):
+class InstallOutputs:
     def __init__(self, build_inputs, env):
         self.explicit = []
         self.implicit = []

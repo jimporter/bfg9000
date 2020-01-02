@@ -756,7 +756,7 @@ class CcSharedLibraryLinker(CcLinker):
         return flags
 
 
-class CcPackageResolver(object):
+class CcPackageResolver:
     def __init__(self, builder, env, command, ldflags):
         self.builder = builder
         self.env = env

@@ -104,8 +104,8 @@ class TestSolution(TestCase):
         self.assertEqual(list(iter(self.sln)), [proj])
 
     def test_dependencies(self):
-        class MockOutput(object):
-            class MockCreator(object):
+        class MockOutput:
+            class MockCreator:
                 def __init__(self, output):
                     self.output = output
 
@@ -124,7 +124,7 @@ class TestSolution(TestCase):
             self.sln.dependencies([ MockOutput([Phony('wrong')]) ])
 
     def test_write(self):
-        class MockDependency(object):
+        class MockDependency:
             uuid_str = '{00000000-0000-0000-0000-000000000001}'
 
         foo_proj = Project(FakeEnv(), 'foo_proj')

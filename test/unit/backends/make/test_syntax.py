@@ -468,7 +468,7 @@ class TestMakefile(TestCase):
         self.assertRaises(ValueError, self.makefile.define, 'name', 'value')
 
     def test_cmd_var(self):
-        class MockCommand(object):
+        class MockCommand:
             command_var = 'cmd'
             command = ['command']
 

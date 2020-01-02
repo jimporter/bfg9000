@@ -62,7 +62,7 @@ def textify_each(thing, *args, **kwargs):
     return (textify(i, *args, **kwargs) for i in thing)
 
 
-class Project(object):
+class Project:
     _XMLNS = 'http://schemas.microsoft.com/developer/msbuild/2003'
     _DOCTYPE = '<?xml version="1.0" encoding="utf-8"?>'
     _extension = '.proj'

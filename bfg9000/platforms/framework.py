@@ -2,7 +2,7 @@
 # within a Package.
 
 
-class Framework(object):
+class Framework:
     def __init__(self, name, suffix=None):
         self.name = name
         self.suffix = suffix

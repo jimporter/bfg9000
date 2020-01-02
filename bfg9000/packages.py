@@ -24,7 +24,7 @@ class PackageKind(_Flag, metaclass=_PackageKindMeta):
     any = static | shared
 
 
-class Package(object):
+class Package:
     is_package = True
 
     def __init__(self, name, format):

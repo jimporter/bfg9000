@@ -186,7 +186,7 @@ class TestObjectFile(CompileTest):
 
 
 class TestPrecompiledHeader(CompileTest):
-    class MockFile(object):
+    class MockFile:
         def write(self, data):
             pass
 

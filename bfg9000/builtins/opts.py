@@ -3,7 +3,7 @@ from .. import options
 from ..objutils import memoize
 
 
-class Options(object):
+class Options:
     def __init__(self, options):
         self._options = options
 

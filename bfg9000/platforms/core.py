@@ -93,7 +93,7 @@ def platform_tuple(name=None):
     return _platform_genus.get(name, str(name)), name
 
 
-class Platform(object):
+class Platform:
     def __init__(self, genus, species, arch):
         self.genus = genus
         self.species = species

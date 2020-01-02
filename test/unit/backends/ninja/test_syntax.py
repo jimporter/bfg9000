@@ -214,7 +214,7 @@ class TestNinjaFile(TestCase):
         self.assertRaises(ValueError, self.ninjafile.variable, 'name', 'value')
 
     def test_cmd_var(self):
-        class MockCommand(object):
+        class MockCommand:
             command_var = 'cmd'
             command = ['command']
 

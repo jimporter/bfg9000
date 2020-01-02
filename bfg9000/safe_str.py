@@ -3,7 +3,7 @@ import string as _string
 from . import iterutils
 
 
-class safe_string(object):
+class safe_string:
     def _safe_format(self, format_spec):
         return self
 
@@ -14,7 +14,7 @@ class safe_string(object):
         return jbos(safe_str(lhs), self)
 
 
-class safe_string_ops(object):
+class safe_string_ops:
     def __add__(self, rhs):
         return jbos(safe_str(self), safe_str(rhs))
 

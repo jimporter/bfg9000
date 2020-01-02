@@ -31,7 +31,7 @@ def not_buildroot(thing):
     return thing is not None
 
 
-class Builder(object):
+class Builder:
     def __init__(self, lang, brand, version):
         self.lang = lang
         self.brand = brand
@@ -41,7 +41,7 @@ class Builder(object):
         return '<{}({!r})>'.format(type(self).__name__, self.brand)
 
 
-class Command(object):
+class Command:
     def __init__(self, env, rule_name, command_var, command):
         self.env = env
         self.rule_name = rule_name

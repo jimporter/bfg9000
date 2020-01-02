@@ -7,12 +7,12 @@ literal = safe_str.literal
 shell_literal = safe_str.shell_literal
 
 
-class MyString(object):
+class MyString:
     def _safe_str(self):
         return 'foo'
 
 
-class MyLiteral(object):
+class MyLiteral:
     def _safe_str(self):
         return literal('foo')
 

@@ -9,7 +9,7 @@ from ..shell import posix as pshell
 Syntax = Enum('Syntax', ['variable', 'shell'])
 
 
-class Writer(object):
+class Writer:
     def __init__(self, stream):
         self.stream = stream
 

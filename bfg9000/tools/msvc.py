@@ -544,7 +544,7 @@ class MsvcStaticLinker(BuildCommand):
         return {'extra': flags}
 
 
-class MsvcPackageResolver(object):
+class MsvcPackageResolver:
     def __init__(self, builder, env):
         self.builder = builder
         self.env = env

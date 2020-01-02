@@ -44,7 +44,7 @@ def _format_stack(stack):
     return '\n' + ''.join(traceback.format_list(stack)).rstrip()
 
 
-class StackFilter(object):
+class StackFilter:
     def __init__(self, has_stack=True):
         self.has_stack = has_stack
 

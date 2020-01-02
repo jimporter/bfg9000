@@ -8,7 +8,7 @@ from ..platforms.basepath import BasePath
 string_or_path_types = (str, BasePath)
 
 
-class Builtins(object):
+class Builtins:
     def __init__(self):
         self._default = {}
         self._post = {}
@@ -47,7 +47,7 @@ def _add_builtin(context, kind, name, value):
         _allbuiltins[i].add(kind, name, value)
 
 
-class _Binder(object):
+class _Binder:
     def __init__(self, fn):
         self._fn = fn
 
@@ -84,7 +84,7 @@ class _GetterBinder(_Binder):
         return self._fn(*[kwargs[i] for i in self._args])
 
 
-class _PostWrapper(object):
+class _PostWrapper:
     def __init__(self, fn, *args):
         self._fn = fn
         self._args = args
@@ -94,7 +94,7 @@ class _PostWrapper(object):
         return self._fn(*args)
 
 
-class _Decorator(object):
+class _Decorator:
     def __init__(self, kind, binder):
         self.__kind = kind
         self.__binder = binder

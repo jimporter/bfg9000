@@ -12,7 +12,7 @@ from ..shell import posix as pshell
 
 
 @build_input('tests')
-class TestInputs(object):
+class TestInputs:
     def __init__(self, build_inputs, env):
         self.tests = []
         self.extra_deps = []
@@ -24,7 +24,7 @@ class TestInputs(object):
         return bool(self.tests)
 
 
-class Test(object):
+class Test:
     def __init__(self, build, env, cmd, environment, driver):
         # Ensure that bare Node objects are treated as a list of args instead
         # of a literal command line (the former has shell-characters escaped).

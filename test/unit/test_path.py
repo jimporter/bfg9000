@@ -544,7 +544,7 @@ class TestSamefile(TestCase):
                                            path.Path('/foo/bar')), True)
 
     def test_polyfill(self):
-        class OsPath(object):
+        class OsPath:
             def __init__(self):
                 for i in ('isabs', 'normpath', 'realpath', 'expanduser'):
                     setattr(self, i, getattr(os.path, i))

@@ -5,7 +5,7 @@ from ..versioning import detect_version
 from ..path import abspath
 
 
-class LdLinker(object):
+class LdLinker:
     def __init__(self, builder, env, command, version_output):
         self.builder = builder
         self.env = env

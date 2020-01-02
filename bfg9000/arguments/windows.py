@@ -3,7 +3,7 @@
 # arguments so they can be correctly inserted into MSBuild files.
 
 
-class ArgumentParser(object):
+class ArgumentParser:
     _argument_info = {}
 
     def __init__(self, prefix_chars='/-', value_delim=':'):
@@ -93,7 +93,7 @@ class ArgumentParser(object):
         return result, extra
 
 
-class ArgumentInfo(object):
+class ArgumentInfo:
     def __init__(self, name):
         self.name = name
 
