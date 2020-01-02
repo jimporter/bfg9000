@@ -1,10 +1,7 @@
-from __future__ import division
-
 import itertools
 import re
 from collections import MutableSequence
 from enum import Enum
-from six import iteritems, string_types
 
 from .list import shell_list
 from .. import iterutils
@@ -41,7 +38,7 @@ def _tokenize(s):
 
 
 def split(s, type=list):
-    if not isinstance(s, string_types):
+    if not isinstance(s, str):
         raise TypeError('expected a string')
 
     mutable = isinstance(type, MutableSequence)
@@ -77,7 +74,7 @@ def join(args):
 
 
 def listify(thing, type=list):
-    if isinstance(thing, string_types):
+    if isinstance(thing, str):
         return split(thing, type)
     return iterutils.listify(thing, type=type)
 
@@ -123,10 +120,10 @@ def escape_line(line, listify=False):
         return iterutils.listify(line) if listify else line
 
     line = safe_str(line)
-    if isinstance(line, string_types):
+    if isinstance(line, str):
         line = shell_literal(line)
     elif isinstance(line, jbos):
-        line = jbos(*(shell_literal(i) if isinstance(i, string_types) else i
+        line = jbos(*(shell_literal(i) if isinstance(i, str) else i
                       for i in line.bits))
     return shell_list([line])
 
@@ -142,5 +139,5 @@ def join_lines(lines):
 def global_env(env, lines=[]):
     # Join the name and value so they get quoted together, if necessary.
     env_vars = (shell_list(['set', safe_str(name) + '=' + safe_str(value)])
-                for name, value in iteritems(env))
+                for name, value in env.items())
     return join_lines(itertools.chain(env_vars, lines))

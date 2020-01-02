@@ -1,5 +1,4 @@
 import os.path
-import re
 
 from . import *
 
@@ -23,5 +22,4 @@ class TestFilesWithSpaces(IntegrationTest):
 
     @skip_if_backend('msbuild')
     def test_script(self):
-        assertRegex(self, self.build('script'),
-                    re.compile('^hello, world!$', re.MULTILINE))
+        self.assertRegex(self.build('script'), '(?m)^hello, world!$')

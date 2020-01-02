@@ -1,8 +1,7 @@
 import re
 from collections import namedtuple
 from enum import Enum
-from six import iteritems, string_types
-from six.moves import cStringIO as StringIO
+from io import StringIO
 
 from ... import path
 from ... import safe_str
@@ -81,7 +80,7 @@ class Writer(object):
         elif isinstance(thing, safe_str.shell_literal):
             escaped = True
             self.write_literal(self.escape_str(thing.string, syntax))
-        elif isinstance(thing, string_types):
+        elif isinstance(thing, str):
             if shelly and shell_quote:
                 thing, escaped = shell_quote(thing)
             self.write_literal(self.escape_str(thing, syntax))
@@ -306,7 +305,7 @@ class Makefile(object):
         if iterutils.isiterable(recipe):
             recipe = [self._convert_args(i) for i in recipe]
 
-        variables = {var(k): v for k, v in iteritems(variables or {})}
+        variables = {var(k): v for k, v in (variables or {}).items()}
 
         self._rules.append(Rule(
             targets, iterutils.listify(deps), iterutils.listify(order_only),
@@ -345,7 +344,7 @@ class Makefile(object):
     def _write_rule(self, out, rule):
         if rule.variables:
             for target in rule.targets:
-                for name, value in iteritems(rule.variables):
+                for name, value in rule.variables.items():
                     self._write_variable(out, name, value, target=target)
 
         if rule.phony:

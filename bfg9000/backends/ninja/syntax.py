@@ -1,8 +1,7 @@
 import re
 from collections import namedtuple, OrderedDict
 from enum import Enum
-from six import iteritems, string_types
-from six.moves import cStringIO as StringIO
+from io import StringIO
 
 from ... import path
 from ... import safe_str
@@ -67,7 +66,7 @@ class Writer(object):
         elif isinstance(thing, safe_str.shell_literal):
             escaped = True
             self.write_literal(self.escape_str(thing.string, syntax))
-        elif isinstance(thing, string_types):
+        elif isinstance(thing, str):
             if shelly and shell_quote:
                 thing, escaped = shell_quote(thing)
             self.write_literal(self.escape_str(thing, syntax))
@@ -218,7 +217,7 @@ class NinjaFile(object):
             raise ValueError('unknown rule {!r}'.format(rule))
 
         variables = {var(k): self._convert_args(v) for k, v in
-                     iteritems(variables or {})}
+                     (variables or {}).items()}
 
         outputs = iterutils.listify(output)
         for i in outputs:
@@ -281,7 +280,7 @@ class NinjaFile(object):
 
         if build.variables:
             desc_var = var('description')
-            for k, v in iteritems(build.variables):
+            for k, v in build.variables.items():
                 syntax = Syntax.clean if k == desc_var else Syntax.shell
                 self._write_variable(out, k, v, indent=1, syntax=syntax)
 
@@ -304,7 +303,7 @@ class NinjaFile(object):
             if self._variables[section]:
                 out.write_literal('\n')
 
-        for name, rule in iteritems(self._rules):
+        for name, rule in self._rules.items():
             self._write_rule(out, name, rule)
             out.write_literal('\n')
 

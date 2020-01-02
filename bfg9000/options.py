@@ -1,7 +1,5 @@
 import enum
 from collections import namedtuple
-from six import add_metaclass, string_types
-from six.moves import zip
 
 from . import path, safe_str
 from .iterutils import isiterable, iterate
@@ -123,13 +121,12 @@ class OptionMeta(type):
         type.__init__(cls, name, bases, attrs)
 
 
-@add_metaclass(OptionMeta)
-class Option(object):
+class Option(metaclass=OptionMeta):
     def _init(self, *args):
         def check_type(v, t):
             if not t or isinstance(v, t):
                 return v
-            elif isinstance(v, string_types) and issubclass(t, enum.Enum):
+            elif isinstance(v, str) and issubclass(t, enum.Enum):
                 try:
                     return t[v]
                 except Exception:

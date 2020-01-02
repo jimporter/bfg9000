@@ -1,5 +1,4 @@
 from contextlib import contextmanager
-from six import string_types
 
 from . import builtin
 from .find import exclude_globs
@@ -36,7 +35,7 @@ class FileList(list):
         list.__init__(self, (fn(i, **kwargs) for i in iterate(files)))
 
     def __getitem__(self, key):
-        if isinstance(key, string_types):
+        if isinstance(key, str):
             key = Path(key, Root.srcdir)
         elif isinstance(key, File):
             key = key.path

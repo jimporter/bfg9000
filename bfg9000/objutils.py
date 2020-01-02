@@ -1,14 +1,12 @@
 import functools
 from itertools import chain
-from six import iteritems, string_types
 
 from .iterutils import isiterable, iterate
 
 __all__ = ['objectify', 'hashify', 'memoize']
 
 
-def objectify(thing, valid_type, creator=None, in_type=string_types,
-              **kwargs):
+def objectify(thing, valid_type, creator=None, in_type=str, **kwargs):
     if creator is None:
         creator = valid_type
 
@@ -36,7 +34,7 @@ def convert_each(kwargs, key, fn, **fn_kwargs):
 
 def hashify(thing):
     if isinstance(thing, dict):
-        return frozenset((hashify(k), hashify(v)) for k, v in iteritems(thing))
+        return frozenset((hashify(k), hashify(v)) for k, v in thing.items())
     elif isiterable(thing):
         return tuple(hashify(i) for i in thing)
     return thing

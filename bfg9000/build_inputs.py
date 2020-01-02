@@ -1,6 +1,5 @@
 from collections import OrderedDict
 from itertools import chain
-from six import iteritems, itervalues
 
 from .path import Path, Root
 from .file_types import File, Node
@@ -52,7 +51,7 @@ class BuildInputs(object):
             self.bootstrap_paths.append(i)
             self.add_source(File(i))
 
-        for name, fn in iteritems(_build_inputs):
+        for name, fn in _build_inputs.items():
             self._extra_inputs[name] = fn(self, env)
 
     def add_source(self, source):
@@ -68,7 +67,7 @@ class BuildInputs(object):
         return target
 
     def sources(self):
-        return itervalues(self._sources)
+        return self._sources.values()
 
     def targets(self):
         return chain(

@@ -2,7 +2,6 @@ import os.path
 import warnings
 from collections import defaultdict
 from itertools import chain
-from six.moves import filter as ifilter
 
 from . import builtin
 from .. import options as opts
@@ -588,8 +587,8 @@ try:
             (i.creator.file for i in rule.files),
             chain.from_iterable(i.creator.include_deps for i in rule.files),
             chain.from_iterable(i.creator.extra_deps for i in rule.files),
-            ifilter(None, (getattr(i.creator, 'pch_source', None)
-                           for i in rule.files)),
+            filter(None, (getattr(i.creator, 'pch_source', None)
+                          for i in rule.files)),
             rule.libs, rule.extra_deps
         )
 

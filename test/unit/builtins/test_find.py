@@ -1,6 +1,6 @@
-import mock
 import os
 from contextlib import contextmanager
+from unittest import mock
 
 from .. import *
 from .common import BuiltinTest

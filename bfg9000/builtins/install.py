@@ -1,5 +1,4 @@
 import warnings
-from six import itervalues
 
 from . import builtin
 from .. import path
@@ -47,7 +46,7 @@ class InstallOutputs(object):
 
 
 def can_install(env):
-    return all(i is not None for i in itervalues(env.install_dirs))
+    return all(i is not None for i in env.install_dirs.values())
 
 
 @builtin.function('builtins', 'build_inputs', 'env')

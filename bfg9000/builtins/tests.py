@@ -1,4 +1,4 @@
-from six.moves import cStringIO as StringIO
+from io import StringIO
 
 from . import builtin
 from .. import safe_str

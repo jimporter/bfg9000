@@ -1,5 +1,4 @@
-import mock
-from six import iteritems
+from unittest import mock
 
 from .common import AttrDict, BuiltinTest
 from bfg9000.builtins import compile, default, link, packages, project  # noqa
@@ -22,7 +21,7 @@ class LinkTest(BuiltinTest):
 
         result = [i for i in listify(public_output or output) if not i.private]
         for i in result:
-            for k, v in iteritems(extra):
+            for k, v in extra.items():
                 setattr(i, k, v)
         return unlistify(result)
 

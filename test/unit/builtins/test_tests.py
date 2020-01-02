@@ -1,6 +1,5 @@
 import ntpath
 import posixpath
-from six import iteritems
 
 from .common import BuiltinTest
 
@@ -344,7 +343,7 @@ class TestBuildCommandsWindows(TestBuildCommandsBase):
             if env:
                 eq = shell_literal('=')
                 env_vars = [jbos(safe_str(name), eq, safe_str(value))
-                            for name, value in iteritems(env)]
+                            for name, value in env.items()]
             else:
                 env_vars = []
             return env_vars + wshell.escape_line(line, listify=True)

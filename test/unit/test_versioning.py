@@ -94,8 +94,7 @@ class TestCheckVersion(TestCase):
         check_version(Version('1.0'), SpecifierSet('>=1.0'), 'compiler')
 
     def test_failure(self):
-        assertRaisesRegex(
-            self,
+        self.assertRaisesRegex(
             VersionError,
             "^compiler version 1.0 doesn't meet requirement >=2.0$",
             check_version, Version('1.0'), SpecifierSet('>=2.0'), 'compiler'

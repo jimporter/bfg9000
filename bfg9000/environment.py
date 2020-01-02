@@ -1,9 +1,7 @@
 import json
 import os
 import platform
-import sys
 from collections import namedtuple
-from six import string_types, iteritems
 
 from . import platforms
 from . import tools
@@ -32,8 +30,8 @@ class EnvVersionError(RuntimeError):
 
 class EnvVarDict(dict):
     def __setitem__(self, key, value):
-        if ( not isinstance(key, string_types) or
-             not isinstance(value, string_types) ):  # pragma: no cover
+        if ( not isinstance(key, str) or
+             not isinstance(value, str) ):  # pragma: no cover
             raise TypeError('expected a string')
         dict.__setitem__(self, key, value)
 
@@ -87,13 +85,13 @@ class Environment(object):
         # Fill in any install dirs that aren't already set (e.g. by a
         # toolchain file) with defaults from the target platform, but skip
         # absolute paths if this is a cross-compilation build.
-        for k, v in iteritems(self.target_platform.install_dirs):
+        for k, v in self.target_platform.install_dirs.items():
             if ( (self.is_cross and v and v.root == Root.absolute) or
                  self.install_dirs.get(k) ):
                 continue
             self.install_dirs[k] = v
 
-        for k, v in iteritems(install_dirs):
+        for k, v in install_dirs.items():
             if v:
                 self.install_dirs[k] = v
 
@@ -194,7 +192,7 @@ class Environment(object):
                     'builddir': self.builddir.to_json(),
                     'install_dirs': {
                         k.name: try_to_json(v)
-                        for k, v in iteritems(self.install_dirs)
+                        for k, v in self.install_dirs.items()
                     },
                     'toolchain': self.toolchain.to_json(),
 
@@ -281,12 +279,6 @@ class Environment(object):
             data['target_platform']
         )
 
-        # With Python 2.x on Windows, the environment variables must all be
-        # non-Unicode strings.
-        if env.host_platform.family == 'windows' and sys.version_info[0] == 2:
-            for key in ('initial_variables', 'variables'):
-                data[key] = {str(k): str(v) for k, v in iteritems(data[key])}
-
         for i in ('backend', 'extra_args', 'initial_variables', 'variables'):
             setattr(env, i, data[i])
 
@@ -296,7 +288,7 @@ class Environment(object):
         env.backend_version = Version(data['backend_version'])
         env.install_dirs = {
             InstallRoot[k]: Path.from_json(v) if v else None
-            for k, v in iteritems(data['install_dirs'])
+            for k, v in data['install_dirs'].items()
         }
         env.toolchain = Toolchain.from_json(data['toolchain'])
         env.library_mode = LibraryMode(*data['library_mode'])

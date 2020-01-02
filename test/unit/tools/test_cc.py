@@ -1,5 +1,5 @@
-import mock
 import os
+from unittest import mock
 
 from .. import *
 

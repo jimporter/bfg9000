@@ -1,5 +1,3 @@
-from six import iteritems
-
 from . import builtin
 from ..build_inputs import build_input
 from ..iterutils import default_sentinel
@@ -32,5 +30,5 @@ def project(build, name=default_sentinel, version=default_sentinel, **kwargs):
     if version is not default_sentinel:
         info.version = version
 
-    for k, v in iteritems(kwargs):
+    for k, v in kwargs.items():
         info[k] = v

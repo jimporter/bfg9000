@@ -1,7 +1,4 @@
 import string as _string
-from six.moves import filter as ifilter
-from six import string_types
-from six.moves import zip
 
 from . import iterutils
 
@@ -25,7 +22,7 @@ class safe_string_ops(object):
         return jbos(safe_str(lhs), safe_str(self))
 
 
-stringy_types = string_types + (safe_string,)
+stringy_types = (str, safe_string)
 
 
 def safe_str(s):
@@ -39,7 +36,7 @@ def safe_str(s):
 
 class literal_types(safe_string):
     def __init__(self, string):
-        if not isinstance(string, string_types):
+        if not isinstance(string, str):
             raise TypeError('expected a string')
         self.string = string
 
@@ -86,7 +83,7 @@ class jbos(safe_string):  # Just a Bunch of Strings
                 else:
                     raise TypeError(type(i))
 
-        bits = ifilter(None, flatten_bits(value))
+        bits = filter(None, flatten_bits(value))
         try:
             last = next(bits)
         except StopIteration:
@@ -94,7 +91,7 @@ class jbos(safe_string):  # Just a Bunch of Strings
 
         for i in bits:
             same_type = type(i) == type(last)
-            if same_type and isinstance(i, string_types):
+            if same_type and isinstance(i, str):
                 last += i
             elif same_type and isinstance(i, literal_types):
                 last = type(i)(last.string + i.string)

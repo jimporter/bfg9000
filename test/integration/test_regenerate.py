@@ -24,7 +24,9 @@ class TestRegenerate(IntegrationTest):
         self.assertExists(pjoin(self.builddir, 'bar'))
 
 
-@skip_if_backend('msbuild')
+@skip_pred(lambda x: x.backend == 'msbuild' or
+           (x.backend in 'make' and env.host_platform.family == 'windows'),
+           'xfail on msbuild, windows + make')
 class TestRegenerateGlob(IntegrationTest):
     def __init__(self, *args, **kwargs):
         self.extradir = pjoin(test_data_dir, 'regenerate_glob')
@@ -37,9 +39,6 @@ class TestRegenerateGlob(IntegrationTest):
         shutil.copy(pjoin(self.extradir, src),
                     pjoin(self.srcdir, dest))
 
-    @skip_pred(lambda x: x.backend == 'make' and
-               env.host_platform.family == 'windows',
-               'xfail on windows + make')
     def test_add_file(self):
         self.wait()
         self.copyfile(pjoin('src', 'hello', 'bonjour.hpp'))
@@ -62,9 +61,6 @@ class TestRegenerateGlob(IntegrationTest):
         self.assertOutput([executable('goodbye')],
                           'Goodbye!\nAuf Wiedersehen!\nAu revoir!\n')
 
-    @skip_pred(lambda x: x.backend == 'make' and
-               env.host_platform.family == 'windows',
-               'xfail on windows + make')
     def test_remove_file(self):
         self.wait()
         os.unlink(pjoin(self.srcdir, 'src', 'hello', 'hello.cpp'))

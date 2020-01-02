@@ -5,7 +5,6 @@ from enum import Enum
 from itertools import chain
 from lxml import etree
 from lxml.builder import E
-from six import iteritems, string_types
 
 from .solution import uuid_str
 from ... import path
@@ -49,7 +48,7 @@ def textify(thing, quoted=False, builddir=BuildDir.output):
     thing = safe_str.safe_str(thing)
     if isinstance(thing, safe_str.literal_types):
         return thing.string
-    elif isinstance(thing, string_types):
+    elif isinstance(thing, str):
         return wshell.quote(thing, escape_percent=True) if quoted else thing
     elif isinstance(thing, safe_str.jbos):
         return ''.join(textify(i, quoted, builddir) for i in thing.bits)
@@ -212,7 +211,7 @@ class VcxProject(Project):
             p = i['name'].path
             names[basename(p)].append(p.parent())
         prefixes = {k: path.commonprefix(v) if len(v) > 1 else None
-                    for k, v in iteritems(names)}
+                    for k, v in names.items()}
 
         compiles = E.ItemGroup()
         for i in self.files:
@@ -329,7 +328,7 @@ class CommandProject(Project):
     @classmethod
     def task(cls, task, **kwargs):
         return E(task, **{k: cls.convert_attr(v)
-                          for k, v in iteritems(kwargs)})
+                          for k, v in kwargs.items()})
 
     def write(self, out):
         target = E.Target(Name='Build')

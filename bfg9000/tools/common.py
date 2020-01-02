@@ -1,7 +1,6 @@
 import os
 import re
 import warnings
-from six import iteritems
 
 from .. import options as opts
 from .. import path, shell
@@ -96,7 +95,7 @@ class BuildCommand(Command):
 
         # Fill in the names and values of the various flags needed for this
         # command, e.g. `flags` ('cflags', 'ldflags'), `libs` ('ldlibs'), etc.
-        for k, v in iteritems(kwargs):
+        for k, v in kwargs.items():
             setattr(self, '{}_var'.format(k), v[0])
             setattr(self, 'global_{}'.format(k), v[1])
 

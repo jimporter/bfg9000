@@ -1,5 +1,3 @@
-from six import iteritems
-
 from . import tool
 from .common import SimpleCommand
 from ..platforms.host import platform_info
@@ -18,7 +16,7 @@ if platform_info().family == 'windows':
             if env:
                 eq = shell_literal('=')
                 env_vars = cmd + [jbos(safe_str(name), eq, safe_str(value))
-                                  for name, value in iteritems(env)] + ['--']
+                                  for name, value in env.items()] + ['--']
             else:
                 env_vars = []
             return env_vars + escape_line(line, listify=True)

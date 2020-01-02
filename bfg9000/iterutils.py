@@ -1,5 +1,4 @@
 from collections import Iterable
-from six import iteritems, string_types
 
 __all__ = ['default_sentinel', 'first', 'flatten', 'isiterable', 'iterate',
            'listify', 'merge_dicts', 'merge_into_dict', 'recursive_walk',
@@ -10,7 +9,7 @@ default_sentinel = object()
 
 
 def isiterable(thing):
-    return isinstance(thing, Iterable) and not isinstance(thing, string_types)
+    return isinstance(thing, Iterable) and not isinstance(thing, str)
 
 
 def iterate(thing):
@@ -101,7 +100,7 @@ def recursive_walk(thing, attr, children_attr=None):
 
 def merge_into_dict(dst, *args):
     for d in args:
-        for k, v in iteritems(d):
+        for k, v in d.items():
             curr = dst.get(k)
             if isinstance(v, dict):
                 if curr is None:

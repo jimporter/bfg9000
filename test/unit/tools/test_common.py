@@ -1,4 +1,4 @@
-import mock
+from unittest import mock
 
 from .. import *
 
@@ -101,6 +101,6 @@ class TestChooseBuilder(CrossPlatformTestCase):
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', bad_execute):  # noqa
             msg = "^no working c compiler found; tried 'cc'$"
-            with assertRaisesRegex(self, IOError, msg):
+            with self.assertRaisesRegex(IOError, msg):
                 common.choose_builder(self.env, known_langs['c'], 'cc',
                                       (cc.CcBuilder, ))

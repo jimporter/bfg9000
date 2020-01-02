@@ -1,6 +1,5 @@
 from collections import Counter
 from itertools import chain
-from six import iteritems, itervalues, string_types
 
 from . import builtin
 from .file_types import make_immediate_file
@@ -129,7 +128,7 @@ class RequirementSet(object):
                       key=lambda x: x.name)
 
     def __iter__(self):
-        return itervalues(self._reqs)
+        return iter(self._reqs.values())
 
     def __repr__(self):
         return '<RequirementSet({!r})>'.format(
@@ -342,7 +341,7 @@ class PkgConfigInfo(object):
         pkg_config = RequirementSet()
         system = []
         for i in packages:
-            if isinstance(i, string_types):
+            if isinstance(i, str):
                 pkg_config.add(Requirement(i))
             elif isinstance(i, (tuple, list)):
                 pkg_config.add(Requirement(*i))
@@ -380,13 +379,13 @@ def finalize_pkg_config(builtins, build, env):
     for info in build['pkg_config']:
         if not info.auto_fill:
             continue
-        for key, value in iteritems(defaults):
+        for key, value in defaults.items():
             if getattr(info, key) is None:
                 setattr(info, key, value)
 
     # Make sure we don't have any duplicate pkg-config packages.
     dupes = Counter(i.name for i in build['pkg_config'])
-    for name, count in iteritems(dupes):
+    for name, count in dupes.items():
         if count > 1:
             raise ValueError("duplicate pkg-config package '{}'".format(name))
 

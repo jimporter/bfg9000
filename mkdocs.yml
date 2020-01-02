@@ -2,7 +2,7 @@ site_name: bfg9000
 docs_dir: doc
 repo_url: https://github.com/jimporter/bfg9000/
 edit_uri: ""
-copyright: Copyright &copy; 2015-2019 Jim Porter
+copyright: Copyright &copy; 2015-2020 Jim Porter
 
 theme: yeti
 extra_css:

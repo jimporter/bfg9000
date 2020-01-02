@@ -1,6 +1,5 @@
 import os
 import sys
-from six import iteritems
 
 from . import build
 from . import log
@@ -235,7 +234,7 @@ def env(parser, subparser, args, extra):
     try:
         env = Environment.load(args.builddir.string())
 
-        for k, v in sorted(iteritems(env.variables)):
+        for k, v in sorted(env.variables.items()):
             if not args.unique or os.getenv(k) != v:
                 print('{}={}'.format(k, v))
     except Exception as e:

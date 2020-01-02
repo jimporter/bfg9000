@@ -3,7 +3,6 @@ import os
 import posixpath
 from enum import Enum
 from itertools import chain
-from six import string_types
 
 from .. import safe_str
 from ..objutils import objectify
@@ -75,7 +74,7 @@ class BasePath(safe_str.safe_string):
         return drive, path
 
     def __localize(self, thing):
-        if isinstance(thing, string_types):
+        if isinstance(thing, str):
             return self._localize_path(thing)
         return thing
 

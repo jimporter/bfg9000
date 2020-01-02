@@ -25,8 +25,8 @@ class TestUserArgs(IntegrationTest):
         output = self.assertPopen(
             ['bfg9000', 'help', 'configure']
         )
-        assertRegex(self, output, r'(?m)^project-defined arguments:$')
-        assertRegex(self, output,
+        self.assertRegex(output, r'(?m)^project-defined arguments:$')
+        self.assertRegex(output,
                     r'(?m)^\s+--name NAME\s+set the name to greet$')
 
     def test_help_explicit_srcdir(self):
@@ -34,8 +34,8 @@ class TestUserArgs(IntegrationTest):
         output = self.assertPopen(
             ['bfg9000', 'help', 'configure', self.srcdir]
         )
-        assertRegex(self, output, r'(?m)^project-defined arguments:$')
-        assertRegex(self, output,
+        self.assertRegex(output, r'(?m)^project-defined arguments:$')
+        self.assertRegex(output,
                     r'(?m)^\s+--name NAME\s+set the name to greet$')
 
     @skip_if_backend('msbuild')

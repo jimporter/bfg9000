@@ -1,5 +1,3 @@
-from six import iterkeys
-
 from . import *
 
 from bfg9000.file_types import *
@@ -17,7 +15,7 @@ class FileTest(TestCase):
         seen.add(id(a))
 
         self.assertEqual(type(a), type(b))
-        keys = ((set(iterkeys(a.__dict__)) | set(iterkeys(b.__dict__))) -
+        keys = ((set(a.__dict__.keys()) | set(b.__dict__.keys())) -
                 getattr(a, '_clone_exclude', set())) | {'path'} | extra
 
         for i in keys:

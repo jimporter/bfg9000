@@ -1,6 +1,5 @@
 import json
 import uuid
-from six import iteritems
 
 from ... import path
 
@@ -182,12 +181,12 @@ class UuidMap(object):
             state = json.load(inp)
         if state['version'] > cls.version:
             raise ValueError('saved version exceeds expected version')
-        return { k: uuid.UUID(hex=v) for k, v in iteritems(state['map']) }
+        return { k: uuid.UUID(hex=v) for k, v in state['map'].items() }
 
     def save(self, path=None):
         with open(path or self._path, 'w') as out:
             # Only save the UUIDs we saw this time. Skip ones we didn't see.
-            seenmap = { k: v.hex for k, v in iteritems(self._map)
+            seenmap = { k: v.hex for k, v in self._map.items()
                         if k in self._seen }
             json.dump({
                 'version': self.version,

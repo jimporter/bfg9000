@@ -10,19 +10,19 @@ class TestCommand(IntegrationTest):
         )
 
     def test_hello(self):
-        assertRegex(self, self.build('hello'), r'(?m)^\s*hello$')
+        self.assertRegex(self.build('hello'), r'(?m)^\s*hello$')
 
     def test_world(self):
-        assertRegex(self, self.build('world'), r'(?m)^\s*world$')
+        self.assertRegex(self.build('world'), r'(?m)^\s*world$')
 
     def test_script(self):
-        assertRegex(self, self.build('script'), r'(?m)^\s*hello, world!$')
+        self.assertRegex(self.build('script'), r'(?m)^\s*hello, world!$')
         self.assertExists(output_file('file'))
 
     def test_alias(self):
         output = self.build('hello-world')
-        assertRegex(self, output, r'(?m)^\s*hello$')
-        assertRegex(self, output, r'(?m)^\s*world$')
+        self.assertRegex(output, r'(?m)^\s*hello$')
+        self.assertRegex(output, r'(?m)^\s*world$')
 
 
 @skip_if_backend('msbuild')
@@ -34,14 +34,14 @@ class TestRunExecutable(IntegrationTest):
         self.assertExists(output_file('file.txt'))
 
     def test_cxx(self):
-        assertRegex(self, self.build('cxx'), r'(?m)^\s*hello from c\+\+!$')
+        self.assertRegex(self.build('cxx'), r'(?m)^\s*hello from c\+\+!$')
 
     def test_java(self):
-        assertRegex(self, self.build('java'), r'(?m)^\s*hello from java!$')
+        self.assertRegex(self.build('java'), r'(?m)^\s*hello from java!$')
 
     def test_java_classlist(self):
-        assertRegex(self, self.build('java-classlist'),
+        self.assertRegex(self.build('java-classlist'),
                     r'(?m)^\s*hello from java!$')
 
     def test_python(self):
-        assertRegex(self, self.build('python'), r'(?m)^\s*hello from python!$')
+        self.assertRegex(self.build('python'), r'(?m)^\s*hello from python!$')

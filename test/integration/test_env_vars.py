@@ -12,6 +12,6 @@ class TestEnvVars(IntegrationTest):
         self.build('test')
 
     def test_command(self):
-        assertRegex(self, self.build('script'),
-                    re.compile(r'^\s*hello script$', re.MULTILINE))
+        self.assertRegex(self.build('script'),
+                         re.compile(r'^\s*hello script$', re.MULTILINE))
         self.assertExists(output_file('file'))

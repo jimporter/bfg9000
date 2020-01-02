@@ -1,7 +1,7 @@
 import errno
-import mock
 import os
 from collections import namedtuple
+from unittest import mock
 
 from . import *
 

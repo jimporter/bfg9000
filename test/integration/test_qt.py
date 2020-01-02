@@ -7,8 +7,8 @@ class TestQt(IntegrationTest):
         if env.host_platform.genus == 'linux':
             output = self.assertPopen([exe], env={'DISPLAY': ''},
                                       returncode='fail')
-            assertRegex(self, output,
-                        r'QXcbConnection: Could not connect to display')
+            self.assertRegex(output,
+                             r'QXcbConnection: Could not connect to display')
 
     def __init__(self, *args, **kwargs):
         IntegrationTest.__init__(

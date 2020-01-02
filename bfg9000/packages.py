@@ -1,5 +1,3 @@
-from six import with_metaclass as _with_metaclass
-
 try:
     from enum import EnumMeta as _EnumMeta, Flag as _Flag
 except ImportError:
@@ -20,7 +18,7 @@ class _PackageKindMeta(_EnumMeta):
         )))
 
 
-class PackageKind(_with_metaclass(_PackageKindMeta, _Flag)):
+class PackageKind(_Flag, metaclass=_PackageKindMeta):
     static = 1
     shared = 2
     any = static | shared

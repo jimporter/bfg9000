@@ -1,6 +1,5 @@
-from six.moves import cStringIO as StringIO
+from io import StringIO
 
-from .. import assertRegex
 from .common import BuiltinTest, TestCase
 
 from bfg9000.builtins import project  # noqa
@@ -139,10 +138,10 @@ class TestPkgConfig(BuiltinTest):
 
         out = StringIO()
         pkg.write(out, self.env)
-        assertRegex(self, out.getvalue(),
-                    '\n\nName: package\n' +
-                    'Description: package library\n' +
-                    'Version: 1.0\n$')
+        self.assertRegex(out.getvalue(),
+                         '\n\nName: package\n' +
+                         'Description: package library\n' +
+                         'Version: 1.0\n$')
 
     def test_metadata(self):
         pkg = PkgConfigInfo(
@@ -156,11 +155,11 @@ class TestPkgConfig(BuiltinTest):
 
         out = StringIO()
         pkg.write(out, self.env)
-        assertRegex(self, out.getvalue(),
-                    '\n\nName: my-package\n' +
-                    'Description: a cool package\n' +
-                    'URL: http://www.example.com/\n' +
-                    'Version: 1.0\n$')
+        self.assertRegex(out.getvalue(),
+                         '\n\nName: my-package\n' +
+                         'Description: a cool package\n' +
+                         'URL: http://www.example.com/\n' +
+                         'Version: 1.0\n$')
 
     def test_requires(self):
         pkg = PkgConfigInfo(
@@ -170,8 +169,8 @@ class TestPkgConfig(BuiltinTest):
 
         out = StringIO()
         pkg.write(out, self.env)
-        assertRegex(self, out.getvalue(),
-                    '\nRequires: req, vreq >= 1.0\n')
+        self.assertRegex(out.getvalue(),
+                         '\nRequires: req, vreq >= 1.0\n')
 
         with self.assertRaises(TypeError):
             pkg = PkgConfigInfo(self.builtin_dict, self.build, requires=[1])

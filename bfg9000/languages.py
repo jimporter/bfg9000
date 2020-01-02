@@ -1,5 +1,4 @@
 from itertools import chain
-from six import iteritems, iterkeys
 
 from .iterutils import listify
 
@@ -32,7 +31,7 @@ class _LanguageInfo(_Info):
         _Info.__init__(self, name, vars)
         self._base = base
 
-        allkeys = set(iterkeys(exts)) | set(iterkeys(auxexts))
+        allkeys = set(exts.keys()) | set(auxexts.keys())
         self._exts = {i: listify(exts.get(i)) for i in allkeys}
         self._auxexts = {i: listify(auxexts.get(i)) for i in allkeys}
 
@@ -53,7 +52,7 @@ class _LanguageInfo(_Info):
         return self.auxexts(key)[0]
 
     def extkind(self, ext):
-        for k, v in chain(iteritems(self._exts), iteritems(self._auxexts)):
+        for k, v in chain(self._exts.items(), self._auxexts.items()):
             if ext in v:
                 return k
         return None
@@ -71,7 +70,7 @@ class _Definer(object):
         self._fields = set(type._fields)
 
         self._data = {i: {} for i in type._fields}
-        for k, v in iteritems(kwargs):
+        for k, v in kwargs.items():
             assert k not in self._fields
             self._data[k] = v
 
@@ -107,7 +106,7 @@ class Languages(object):
 
     def _add(self, info):
         self._langs[info.name] = info
-        for kind, exts in iteritems(info._exts):
+        for kind, exts in info._exts.items():
             for ext in exts:
                 if ext in self._ext2lang:
                     raise ValueError('{ext!r} already used by {lang!r}'.format(

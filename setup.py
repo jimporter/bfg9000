@@ -118,7 +118,6 @@ more_requires = []
 
 if os.getenv('STDEB_BUILD') not in ['1', 'true']:
     more_requires.extend([
-        'enum34;python_version<"3.4"',
         'doppel >= 0.4.0',
         'pysetenv;platform_system=="Windows"'
     ])
@@ -156,8 +155,6 @@ setup(
         'Topic :: Software Development :: Build Tools',
         'License :: OSI Approved :: BSD License',
 
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
@@ -167,13 +164,12 @@ setup(
     packages=find_packages(exclude=['test', 'test.*']),
 
     install_requires=(
-        ['colorama', 'packaging >= 17.0', 'setuptools', 'six'] +
-        more_requires
+        ['colorama', 'packaging >= 17.0', 'setuptools'] + more_requires
     ),
     extras_require={
         'dev': ['coverage', 'flake8 >= 3.0', 'lxml', 'mike >= 0.3.1',
-                'mkdocs-bootswatch', 'mock', 'pypandoc', 'stdeb'],
-        'test': ['coverage', 'flake8 >= 3.0', 'lxml', 'mock'],
+                'mkdocs-bootswatch', 'pypandoc', 'stdeb'],
+        'test': ['coverage', 'flake8 >= 3.0', 'lxml'],
         'msbuild': ['lxml'],
     },
 

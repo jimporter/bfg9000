@@ -1,7 +1,6 @@
 import os
 import re
 from itertools import chain
-from six import string_types
 
 from . import pkg_config
 from .. import log, options as opts, safe_str, shell
@@ -521,7 +520,7 @@ class CcLinker(BuildCommand):
             if not self.env.target_platform.has_frameworks:
                 raise TypeError('frameworks not supported on this platform')
             return ['-framework', library.full_name]
-        elif isinstance(library, string_types):
+        elif isinstance(library, str):
             return ['-l' + library]
         elif isinstance(library, SharedLibrary):
             # If we created this library, we know its soname is set, so passing

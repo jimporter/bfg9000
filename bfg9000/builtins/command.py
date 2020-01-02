@@ -1,5 +1,4 @@
 from itertools import chain, repeat
-from six.moves import filter as ifilter
 
 from . import builtin
 from .. import shell
@@ -37,8 +36,8 @@ class Placeholder(safe_string):
         if isinstance(word, cls):
             return word.expand(rule)
         elif isinstance(word, jbos):
-            placeholders = list(ifilter(lambda i: isinstance(i[1], cls),
-                                        enumerate(word.bits)))
+            placeholders = list(filter(lambda i: isinstance(i[1], cls),
+                                       enumerate(word.bits)))
             if len(placeholders) > 1:
                 raise ValueError('only one placeholder per word permitted')
             elif len(placeholders) == 1:

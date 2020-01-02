@@ -1,23 +1,20 @@
 import functools
 import itertools
-import mock
 import unittest
-from six import assertRegex, assertRaisesRegex
 
 from bfg9000.environment import Environment
 from bfg9000.path import abspath, InstallRoot
 
-__all__ = ['assertNotRegex', 'assertRaisesRegex', 'assertRegex', 'load_tests',
-           'make_env', 'parameterize_tests', 'skip_if', 'skip_pred',
-           'TestCase', 'xfail_if']
+__all__ = ['load_tests', 'make_env', 'parameterize_tests', 'skip_if',
+           'skip_pred', 'TestCase', 'xfail_if']
 
 
 def make_env(platform=None, clear_variables=False, variables={}):
     args = (abspath('bfgdir'), None, None, abspath('srcdir'),
             abspath('builddir'))
     if platform:
-        with mock.patch('bfg9000.platforms.core.platform_name',
-                        return_value=platform):
+        with unittest.mock.patch('bfg9000.platforms.core.platform_name',
+                                 return_value=platform):
             env = Environment(*args)
     else:
         env = Environment(*args)
@@ -55,8 +52,9 @@ def skip_pred(predicate, msg='skipped', hide=False):
             return fn
 
         if isinstance(fn, type):
-            @functools.wraps(fn, assigned=['__name__', '__module__'],
-                             updated=[])
+            @functools.wraps(fn, assigned=[
+                '__name__', '__qualname__', '__module__'
+            ], updated=[])
             class Wrap(fn):
                 def setUp(self):
                     if predicate(self):
@@ -80,14 +78,6 @@ def xfail_if(xfail):
         else:
             return fn
     return wrap
-
-
-# For some reason, six doesn't have this wrapper...
-def assertNotRegex(self, *args, **kwargs):
-    if hasattr(self, 'assertNotRegex'):
-        return self.assertNotRegex(*args, **kwargs)
-    else:
-        return self.assertNotRegexpMatches(*args, **kwargs)
 
 
 class TestCase(unittest.TestCase):

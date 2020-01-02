@@ -1,8 +1,8 @@
 import argparse
 import logging
-import mock
 import re
-from six.moves import cStringIO as StringIO
+from io import StringIO
+from unittest import mock
 
 from . import *
 
@@ -82,8 +82,8 @@ class TestReloadException(TestCase):
         except ValueError as e:
             driver.handle_reload_exception(e)
 
-        assertRegex(self, self.stream.getvalue(),
-                    'Unable to reload environment: message\n')
+        self.assertRegex(self.stream.getvalue(),
+                         'Unable to reload environment: message\n')
 
     def test_no_message(self):
         try:
@@ -91,8 +91,8 @@ class TestReloadException(TestCase):
         except ValueError as e:
             driver.handle_reload_exception(e)
 
-        assertRegex(self, self.stream.getvalue(),
-                    'Unable to reload environment\n')
+        self.assertRegex(self.stream.getvalue(),
+                         'Unable to reload environment\n')
 
     def test_message_rerun(self):
         try:
@@ -100,10 +100,10 @@ class TestReloadException(TestCase):
         except EnvVersionError as e:
             driver.handle_reload_exception(e, True)
 
-        assertRegex(self, self.stream.getvalue(),
-                    'Unable to reload environment: message\n' +
-                    '  Please re-run bfg9000 manually\n',
-                    re.MULTILINE)
+        self.assertRegex(self.stream.getvalue(),
+                         'Unable to reload environment: message\n' +
+                         '  Please re-run bfg9000 manually\n',
+                         re.MULTILINE)
 
     def test_no_message_rerun(self):
         try:
@@ -111,6 +111,6 @@ class TestReloadException(TestCase):
         except EnvVersionError as e:
             driver.handle_reload_exception(e, True)
 
-        assertRegex(self, self.stream.getvalue(),
-                    'Unable to reload environment\n' +
-                    '  Please re-run bfg9000 manually\n')
+        self.assertRegex(self.stream.getvalue(),
+                         'Unable to reload environment\n' +
+                         '  Please re-run bfg9000 manually\n')

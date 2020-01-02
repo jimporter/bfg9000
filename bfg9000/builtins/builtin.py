@@ -1,13 +1,11 @@
 import functools
 import inspect
-import sys
 from itertools import chain
-from six import iteritems, iterkeys, itervalues, string_types
 
 from ..iterutils import iterate, listify
 from ..platforms.basepath import BasePath
 
-string_or_path_types = string_types + (BasePath,)
+string_or_path_types = (str, BasePath)
 
 
 class Builtins(object):
@@ -21,14 +19,14 @@ class Builtins(object):
 
     def bind(self, **kwargs):
         builtins = {}
-        for k, v in iteritems(self._default):
+        for k, v in self._default.items():
             builtins[k] = v.bind(builtins=builtins, **kwargs)
 
         builtins['__bfg9000__'] = builtins
         return builtins
 
     def run_post(self, builtins, **kwargs):
-        for v in itervalues(self._post):
+        for v in self._post.values():
             v(builtins=builtins, **kwargs)
 
 
@@ -44,7 +42,7 @@ _allbuiltins = {
 
 def _add_builtin(context, kind, name, value):
     if context == '*':
-        context = iterkeys(_allbuiltins)
+        context = _allbuiltins.keys()
     for i in iterate(context):
         _allbuiltins[i].add(kind, name, value)
 
@@ -71,10 +69,9 @@ class _PartialFunctionBinder(_Binder):
         def wrapper(*args, **kwargs):
             return self._fn(*(pre_args + args), **kwargs)
 
-        if sys.version_info >= (3, 3):
-            sig = inspect.signature(wrapper)
-            params = list(sig.parameters.values())[len(kwargs):]
-            wrapper.__signature__ = inspect.Signature(params)
+        sig = inspect.signature(wrapper)
+        params = list(sig.parameters.values())[len(kwargs):]
+        wrapper.__signature__ = inspect.Signature(params)
         return wrapper
 
 
@@ -120,9 +117,7 @@ post = _Decorator('post', _PostWrapper)
 
 
 def _get_argspec(fn):
-    if sys.version_info >= (3, 3):
-        return list(inspect.signature(fn).parameters.keys())
-    return inspect.getargspec(fn).args
+    return list(inspect.signature(fn).parameters.keys())
 
 
 def _get_value(argspec, index, args, kwargs):

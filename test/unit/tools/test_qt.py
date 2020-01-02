@@ -1,3 +1,5 @@
+from unittest import mock
+
 from .. import *
 
 from bfg9000 import options as opts

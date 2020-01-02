@@ -1,6 +1,6 @@
-import mock
 import sys
 from collections import namedtuple
+from unittest import mock
 
 from .. import *
 

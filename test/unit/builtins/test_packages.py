@@ -1,7 +1,7 @@
-import mock
 import os
 import re
 from contextlib import contextmanager
+from unittest import mock
 
 from .common import BuiltinTest
 from .. import *
@@ -156,21 +156,21 @@ class TestPackage(BuiltinTest):
 class TestBoostPackage(TestCase):
     def test_boost_version(self):
         data = '#define BOOST_LIB_VERSION "1_23_4"\n'
-        with mock.patch(mock_open_name, mock_open(read_data=data)):
+        with mock.patch('builtins.open', mock_open(read_data=data)):
             hdr = HeaderDirectory(abspath('path'))
             self.assertEqual(packages._boost_version(hdr, SpecifierSet('')),
                              Version('1.23.4'))
 
     def test_boost_version_too_old(self):
         data = '#define BOOST_LIB_VERSION "1_23_4"\n'
-        with mock.patch(mock_open_name, mock_open(read_data=data)):
+        with mock.patch('builtins.open', mock_open(read_data=data)):
             hdr = HeaderDirectory(abspath('path'))
             with self.assertRaises(PackageVersionError):
                 packages._boost_version(hdr, SpecifierSet('>=1.30'))
 
     def test_boost_version_cant_parse(self):
         data = 'foobar\n'
-        with mock.patch(mock_open_name, mock_open(read_data=data)):
+        with mock.patch('builtins.open', mock_open(read_data=data)):
             hdr = HeaderDirectory(abspath('path'))
             with self.assertRaises(PackageVersionError):
                 packages._boost_version(hdr, SpecifierSet(''))

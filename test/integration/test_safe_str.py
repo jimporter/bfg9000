@@ -16,7 +16,7 @@ class TestSafeStr(IntegrationTest):
         )))
         if env.host_platform.family == 'windows':
             f = '"?' + f + '"?'
-        assertRegex(self, self.build('foo'), r"(?m)^\s*{}$".format(f))
+        self.assertRegex(self.build('foo'), r"(?m)^\s*{}$".format(f))
 
     def test_bar(self):
         f = re.escape(os.path.normpath(os.path.join(
@@ -24,4 +24,4 @@ class TestSafeStr(IntegrationTest):
         )))
         if env.host_platform.family == 'windows':
             f = '"?' + f + '"?'
-        assertRegex(self, self.build('bar'), r"(?m)^\s*{}$".format(f))
+        self.assertRegex(self.build('bar'), r"(?m)^\s*{}$".format(f))

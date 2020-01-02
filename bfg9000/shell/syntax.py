@@ -1,6 +1,5 @@
 from enum import Enum
-from six import string_types
-from six.moves import cStringIO as StringIO
+from io import StringIO
 
 from .. import iterutils
 from .. import path
@@ -25,7 +24,7 @@ class Writer(object):
         if isinstance(thing, safe_str.literal_types):
             escaped = True
             self.write_literal(thing.string)
-        elif isinstance(thing, string_types):
+        elif isinstance(thing, str):
             if shelly and shell_quote:
                 thing, escaped = shell_quote(thing)
             self.write_literal(thing)

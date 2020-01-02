@@ -9,6 +9,9 @@ in progress
 - MSVC's runtime can now be selected by using a combination of `opts.static`
   and `opts.debug`
 
+### Breaking changes
+- Dropped support for Python 2
+
 ---
 
 ## v0.5.1

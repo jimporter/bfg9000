@@ -4,7 +4,6 @@ import subprocess
 import time
 import unittest
 from collections import namedtuple
-from six import iteritems
 
 from .. import *
 
@@ -24,7 +23,7 @@ Target = namedtuple('Target', ['name', 'path'])
 if os.getenv('BACKENDS', '').strip():
     backends = os.getenv('BACKENDS').split(' ')
 else:
-    backends = [k for k, v in iteritems(list_backends()) if v.priority > 0]
+    backends = [k for k, v in list_backends().items() if v.priority > 0]
     # Only test with MSBuild by default on Windows.
     if env.host_platform.family != 'windows' and 'msbuild' in backends:
         backends.remove('msbuild')
@@ -65,7 +64,7 @@ def only_if_backend(backend, hide=False):
 class SubprocessError(unittest.TestCase.failureException):
     def __init__(self, returncode, env, message):
         envstr = ''.join('  {} = {}\n'.format(k, v)
-                         for k, v in iteritems(env or {}))
+                         for k, v in (env or {}).items())
         unittest.TestCase.failureException.__init__(
             self, 'returned {returncode}\n{env}{line}\n{msg}\n{line}'.format(
                 returncode=returncode, env=envstr, line='-' * 60, msg=message

@@ -1,7 +1,6 @@
 import itertools
 import re
 from shlex import shlex
-from six import iteritems, string_types
 
 from .. import iterutils
 from .list import shell_list
@@ -17,7 +16,7 @@ _ends_unescaped_quote = re.compile(r"(^|[^\\])(\\\\)*'$")
 
 
 def split(s, type=list, escapes=False):
-    if not isinstance(s, string_types):
+    if not isinstance(s, str):
         raise TypeError('expected a string')
     lexer = shlex(s, posix=True)
     lexer.commenters = ''
@@ -32,7 +31,7 @@ def join(args):
 
 
 def listify(thing, type=list):
-    if isinstance(thing, string_types):
+    if isinstance(thing, str):
         return split(thing, type)
     return iterutils.listify(thing, type=type)
 
@@ -87,10 +86,10 @@ def escape_line(line, listify=False):
         return iterutils.listify(line) if listify else line
 
     line = safe_str(line)
-    if isinstance(line, string_types):
+    if isinstance(line, str):
         line = _escape_word(line)
     elif isinstance(line, jbos):
-        line = jbos(*(_escape_word(i) if isinstance(i, string_types) else i
+        line = jbos(*(_escape_word(i) if isinstance(i, str) else i
                       for i in line.bits))
     return shell_list([line])
 
@@ -107,7 +106,7 @@ def local_env(env, line):
     if env:
         eq = shell_literal('=')
         env_vars = shell_list(jbos(safe_str(name), eq, safe_str(value))
-                              for name, value in iteritems(env))
+                              for name, value in env.items())
     else:
         env_vars = []
     return env_vars + escape_line(line, listify=True)
@@ -117,5 +116,5 @@ def global_env(env, lines=None):
     eq = shell_literal('=')
     env_vars = (shell_list([
         'export', jbos(safe_str(name), eq, safe_str(value))
-    ]) for name, value in iteritems(env))
+    ]) for name, value in env.items())
     return join_lines(itertools.chain(env_vars, lines or []))

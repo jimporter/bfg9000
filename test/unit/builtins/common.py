@@ -1,5 +1,3 @@
-from six import iterkeys
-
 from .. import AttrDict, make_env, TestCase  # noqa
 
 from bfg9000 import file_types
@@ -26,7 +24,7 @@ class BuiltinTest(TestCase):
         seen.add(id(a))
 
         self.assertEqual(type(a), type(b))
-        keys = ((set(iterkeys(a.__dict__)) | set(iterkeys(b.__dict__))) -
+        keys = ((set(a.__dict__.keys()) | set(b.__dict__.keys())) -
                 exclude - {'creator'})
 
         for i in keys:

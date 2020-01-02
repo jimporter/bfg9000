@@ -1,6 +1,6 @@
+from io import BytesIO
 from lxml import etree
 from lxml.builder import E
-from six import BytesIO
 
 from . import *
 

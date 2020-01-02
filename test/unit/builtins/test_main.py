@@ -1,5 +1,5 @@
 import logging
-import mock
+from unittest import mock
 
 from .common import BuiltinTest
 from bfg9000 import builtins

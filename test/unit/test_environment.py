@@ -1,13 +1,10 @@
 import os
-import sys
-from six import iteritems
 
 from . import *
 
 from bfg9000.environment import Environment, LibraryMode
 from bfg9000.file_types import SourceFile
 from bfg9000.path import Path, Root, InstallRoot
-from bfg9000.platforms.host import platform_info
 from bfg9000.tools import rm, lex, scripts  # noqa
 
 this_dir = os.path.abspath(os.path.dirname(__file__))
@@ -68,8 +65,6 @@ class TestEnvironment(TestCase):
         self.assertEqual(env.extra_args, [])
 
         variables = {u'HOME': u'/home/user'}
-        if platform_info().family == 'windows' and sys.version_info[0] == 2:
-            variables = {str(k): str(v) for k, v in iteritems(variables)}
         self.assertEqual(env.variables, variables)
 
         self.assertEqual(env.host_platform.name, 'linux')

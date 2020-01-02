@@ -69,7 +69,7 @@ class TestLanguages(TestCase):
 
     def test_make_duplicate_ext(self):
         msg = r"^'\.c' already used by 'c'$"
-        with assertRaisesRegex(self, ValueError, msg):
+        with self.assertRaisesRegex(ValueError, msg):
             with self.known_langs.make('c++') as x:
                 x.exts(source=['.c', '.cpp'])
 
@@ -86,17 +86,17 @@ class TestLanguages(TestCase):
 
     def test_get_unrecognized_lang(self):
         msg = r"^unrecognized language 'c\+\+'$"
-        with assertRaisesRegex(self, ValueError, msg):
+        with self.assertRaisesRegex(ValueError, msg):
             self.known_langs['c++']
 
     def test_get_unrecognized_var(self):
         msg = r"^language 'c' does not support var 'goofy'$"
-        with assertRaisesRegex(self, ValueError, msg):
+        with self.assertRaisesRegex(ValueError, msg):
             self.known_langs['c'].var('goofy')
 
     def test_get_unrecognized_exts(self):
         msg = r"^language 'c' does not support file type 'goofy'$"
-        with assertRaisesRegex(self, ValueError, msg):
+        with self.assertRaisesRegex(ValueError, msg):
             self.known_langs['c'].exts('goofy')
 
     def test_fromext(self):
@@ -137,5 +137,5 @@ class TestFormats(TestCase):
 
     def test_get_unrecognized_format(self):
         msg = r"^unrecognized format 'goofy \(dynamic\)'$"
-        with assertRaisesRegex(self, ValueError, msg):
+        with self.assertRaisesRegex(ValueError, msg):
             self.known_formats['goofy', 'dynamic']

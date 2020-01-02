@@ -1,5 +1,5 @@
-import mock
-from six.moves import cStringIO as StringIO
+from unittest import mock
+from io import StringIO
 
 from . import *
 
@@ -16,10 +16,10 @@ class TestUuidMap(TestCase):
     _uuid_ex = r'[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}'
 
     def test_new(self):
-        with mock.patch(mock_open_name, bad_open):
+        with mock.patch('builtins.open', bad_open):
             u = UuidMap('.bfg_uuid')
         foo = u['foo']
-        assertRegex(self, str(foo), self._uuid_ex)
+        self.assertRegex(str(foo), self._uuid_ex)
         self.assertEqual(u['foo'], foo)
 
     def test_existing(self):
@@ -27,15 +27,15 @@ class TestUuidMap(TestCase):
                   '"foo": "00000000000000000000000000000001", ' +
                   '"bar": "00000000000000000000000000000002"' +
                 '}}')  # noqa
-        with mock.patch(mock_open_name, mock_open(read_data=data)):
+        with mock.patch('builtins.open', mock_open(read_data=data)):
             u = UuidMap('.bfg_uuid')
 
         self.assertEqual(str(u['foo']), '00000000-0000-0000-0000-000000000001')
         quux = u['quux']
-        assertRegex(self, str(quux), self._uuid_ex)
+        self.assertRegex(str(quux), self._uuid_ex)
         self.assertEqual(u['quux'], quux)
 
-        with mock.patch(mock_open_name, mock_open()), \
+        with mock.patch('builtins.open', mock_open()), \
              mock.patch('json.dump') as m:  # noqa
             u.save()
             self.assertEqual(m.mock_calls[0][1][0], {
@@ -46,7 +46,7 @@ class TestUuidMap(TestCase):
 
         # Bad version
         data = '{"version": 2, "map": {}}'
-        with mock.patch(mock_open_name, mock_open(read_data=data)):
+        with mock.patch('builtins.open', mock_open(read_data=data)):
             self.assertRaises(ValueError, UuidMap, '.bfg_uuid')
 
 
@@ -89,7 +89,7 @@ class TestSlnBuilder(TestCase):
 
 class TestSolution(TestCase):
     def setUp(self):
-        with mock.patch(mock_open_name, bad_open):
+        with mock.patch('builtins.open', bad_open):
             u = UuidMap('.bfg_uuid')
         self.sln = Solution(u)
 
@@ -135,11 +135,11 @@ class TestSolution(TestCase):
         out = StringIO()
         self.sln.write(out)
         guid_ex = '{[A-Z0-9-]+}'
-        assertRegex(self, out.getvalue(), (
+        self.assertRegex(out.getvalue(), (
             r'(?m)^Project\("{0}"\) = "{1}", "{1}.{1}\.proj", "{0}"\n'
             r'EndProject$'
         ).format(guid_ex, 'foo_proj'))
-        assertRegex(self, out.getvalue(), (
+        self.assertRegex(out.getvalue(), (
             r'(?m)^Project\("{0}"\) = "{1}", "{1}.{1}\.proj", "{0}"\n'
             r'\tProjectSection\(ProjectDependencies\) = postProject\n'
             r'\t\t{0} = {0}\n'

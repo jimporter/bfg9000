@@ -1,4 +1,4 @@
-import mock
+from unittest import mock
 
 from .common import BuiltinTest
 
@@ -38,4 +38,4 @@ class TestInstall(BuiltinTest):
             exe = Executable(Path('exe', Root.srcdir), None)
             installed = Executable(Path('exe', InstallRoot.bindir), None)
             self.assertEqual(self.builtin_dict['install'](exe), installed)
-            m.assert_called_once()
+            self.assertEqual(m.call_count, 1)
