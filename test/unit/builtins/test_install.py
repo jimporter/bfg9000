@@ -10,11 +10,15 @@ from bfg9000.path import Path, Root, InstallRoot
 class TestInstall(BuiltinTest):
     def test_install_none(self):
         self.assertEqual(self.builtin_dict['install'](), None)
+        self.assertEqual(self.build['install'].explicit, [])
+        self.assertEqual(self.build['install'].implicit, [])
 
     def test_install_single(self):
         exe = Executable(Path('exe', Root.srcdir), None)
         installed = Executable(Path('exe', InstallRoot.bindir), None)
         self.assertEqual(self.builtin_dict['install'](exe), installed)
+        self.assertEqual(self.build['install'].explicit, [exe])
+        self.assertEqual(self.build['install'].implicit, [exe])
 
     def test_install_multiple(self):
         exe1 = Executable(Path('exe1', Root.srcdir), None)
@@ -23,6 +27,27 @@ class TestInstall(BuiltinTest):
         installed2 = Executable(Path('exe2', InstallRoot.bindir), None)
         self.assertEqual(self.builtin_dict['install'](exe1, exe2),
                          (installed1, installed2))
+        self.assertEqual(self.build['install'].explicit, [exe1, exe2])
+        self.assertEqual(self.build['install'].implicit, [exe1, exe2])
+
+    def test_install_nested_multiple(self):
+        exe1 = Executable(Path('exe1', Root.srcdir), None)
+        exe2 = Executable(Path('exe2', Root.srcdir), None)
+        installed1 = Executable(Path('exe1', InstallRoot.bindir), None)
+        installed2 = Executable(Path('exe2', InstallRoot.bindir), None)
+        self.assertEqual(self.builtin_dict['install'](exe1, [exe2], None),
+                         (installed1, [installed2], None))
+        self.assertEqual(self.build['install'].explicit, [exe1, exe2])
+        self.assertEqual(self.build['install'].implicit, [exe1, exe2])
+
+    def test_install_add_to_default(self):
+        exe = Executable(Path('exe', Root.srcdir), None)
+        exe.creator = 'creator'
+        installed = Executable(Path('exe', InstallRoot.bindir), None)
+        self.assertEqual(self.builtin_dict['install'](exe), installed)
+        self.assertEqual(self.build['install'].explicit, [exe])
+        self.assertEqual(self.build['install'].implicit, [exe])
+        self.assertEqual(self.build['defaults'].outputs, [exe])
 
     def test_invalid(self):
         phony = Phony('name')

@@ -6,6 +6,8 @@
 - Added `opts.static` to request static linking of libraries
 - MSVC's runtime can now be selected by using a combination of `opts.static`
   and `opts.debug`
+- Iterables passed to `default` or `install` will include each element of the
+  iterable in the appropriate build target
 
 ### Breaking changes
 - Dropped support for Python 2

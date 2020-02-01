@@ -2,7 +2,7 @@ from . import builtin
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..build_inputs import build_input
-from ..iterutils import unlistify
+from ..iterutils import iterate_each, unlistify
 
 
 @build_input('defaults')
@@ -30,7 +30,7 @@ class DefaultOutputs:
 
 @builtin.function('build_inputs')
 def default(build, *args):
-    for i in args:
+    for i in iterate_each(args):
         build['defaults'].add(i, explicit=True)
     return unlistify(args)
 

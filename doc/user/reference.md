@@ -556,9 +556,10 @@ Availability: `build.bfg`
 {: .subtitle}
 
 Specify a list of build outputs that should be run by default when building.
-These are all accumulated into the `all` target. If *default* is never called,
-all executables and libraries *not* passed to [*test*](#test) will be built by
-default.
+These are all accumulated into the `all` target. If an iterable object is passed
+as an argument to *default*, each element of the iterable will be added. If
+*default* is never called, all executables and libraries *not* passed to
+[*test*](#test) will be built by default.
 
 To allow this to be chained with other functions, *default* will return the
 arguments passed into it: as a single object if one argument is passed, or a
@@ -571,9 +572,10 @@ Availability: `build.bfg`
 Specify a list of files that need to be installed for the project to work. Each
 will be installed to the appropriate location based on its type, e.g. header
 files will go in `$PREFIX/include` by default on POSIX systems. These are all
-accumulated into the `install` target. If there are any runtime dependencies for
-a file (such as shared libraries you just built), they will be installed as
-well.
+accumulated into the `install` target. If an iterable object is passed as an
+argument to *install*, each element of the iterable will be added. If there are
+any runtime dependencies for a file (such as shared libraries you just built),
+they will be installed as well.
 
 To allow referencing the installed copies of the files passed to it, *install*
 will return file objects representing the installed files: as a single object if

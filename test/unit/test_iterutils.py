@@ -36,6 +36,37 @@ class TestIterate(TestCase):
                          ['foo', 'bar'])
 
 
+class TestIterateEach(TestCase):
+    def test_empty(self):
+        self.assertEqual(list(iterutils.iterate_each([])), [])
+
+    def test_one(self):
+        self.assertEqual(list(iterutils.iterate_each([None])), [])
+        self.assertEqual(list(iterutils.iterate_each(['foo'])), ['foo'])
+        self.assertEqual(list(iterutils.iterate_each([['foo', 'bar']])),
+                         ['foo', 'bar'])
+
+    def test_many(self):
+        self.assertEqual(
+            list(iterutils.iterate_each([None, 'foo', ['bar', 'baz']])),
+            ['foo', 'bar', 'baz']
+        )
+
+
+class TestMapIterable(TestCase):
+    def test_none(self):
+        self.assertEqual(iterutils.map_iterable(len, None), None)
+
+    def test_one(self):
+        self.assertEqual(iterutils.map_iterable(len, 'foo'), 3)
+
+    def test_many(self):
+        self.assertEqual(iterutils.map_iterable(len, ['foo', 'bars']), [3, 4])
+        self.assertEqual(iterutils.map_iterable(len, ('foo', 'bars')), (3, 4))
+        self.assertEqual(iterutils.map_iterable(len, iter(('foo', 'bars'))),
+                         [3, 4])
+
+
 class TestListify(TestCase):
     def test_none(self):
         self.assertEqual(iterutils.listify(None), [])

@@ -7,7 +7,7 @@ from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..build_inputs import build_input
 from ..file_types import Directory, File, file_install_path, installify
-from ..iterutils import flatten, iterate, unlistify
+from ..iterutils import flatten, iterate, iterate_each, map_iterable, unlistify
 
 
 @build_input('install')
@@ -59,12 +59,14 @@ def install(builtins, build, env, *args):
         warnings.warn('unset installation directories; installation of this ' +
                       'build disabled')
 
-    for i in args:
+    builtins['default'](*args)
+    for i in iterate_each(args):
         if can_inst:
             build['install'].add(i)
-        builtins['default'](i)
 
-    return unlistify(tuple(installify(i, env) for i in args))
+    return unlistify(tuple(
+        map_iterable(lambda x: installify(x, env), i) for i in args
+    ))
 
 
 def _doppel_cmd(env, buildfile):

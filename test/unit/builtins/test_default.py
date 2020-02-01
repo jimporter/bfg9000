@@ -1,6 +1,6 @@
 from .common import BuiltinTest
 
-from bfg9000.builtins import compile, default  # noqa
+from bfg9000.builtins import compile, default, link, packages, project  # noqa
 
 
 class TestDefaultOutputs(BuiltinTest):
@@ -41,9 +41,18 @@ class TestDefault(BuiltinTest):
     def test_single_result(self):
         obj = self.builtin_dict['object_file'](file='src.cpp')
         self.assertEqual(self.builtin_dict['default'](obj), obj)
+        self.assertEqual(self.build['defaults'].outputs, [obj])
 
     def test_multiple_results(self):
         obj1 = self.builtin_dict['object_file'](file='src1.cpp')
         obj2 = self.builtin_dict['object_file'](file='src2.cpp')
         self.assertEqual(self.builtin_dict['default'](obj1, obj2),
                          (obj1, obj2))
+        self.assertEqual(self.build['defaults'].outputs, [obj1, obj2])
+
+    def test_nested_results(self):
+        obj1 = self.builtin_dict['object_file'](file='src1.cpp')
+        obj2 = self.builtin_dict['object_file'](file='src2.cpp')
+        self.assertEqual(self.builtin_dict['default'](obj1, [obj2], None),
+                         (obj1, [obj2], None))
+        self.assertEqual(self.build['defaults'].outputs, [obj1, obj2])

@@ -1,8 +1,9 @@
 from collections import Iterable
 
 __all__ = ['default_sentinel', 'first', 'flatten', 'isiterable', 'iterate',
-           'listify', 'merge_dicts', 'merge_into_dict', 'recursive_walk',
-           'slice_dict', 'tween', 'uniques', 'unlistify']
+           'iterate_each', 'map_iterable', 'listify', 'merge_dicts',
+           'merge_into_dict', 'recursive_walk', 'slice_dict', 'tween',
+           'uniques', 'unlistify']
 
 # This could go in a funcutils module if we ever create one...
 default_sentinel = object()
@@ -25,6 +26,22 @@ def iterate(thing):
         return iter(thing)
     else:
         return generate_one(thing)
+
+
+def iterate_each(things):
+    for i in things:
+        for j in iterate(i):
+            yield j
+
+
+def map_iterable(func, thing):
+    if thing is None:
+        return None
+    elif isiterable(thing):
+        t = type(thing) if isinstance(thing, (list, tuple)) else list
+        return t(func(i) for i in thing)
+    else:
+        return func(thing)
 
 
 def listify(thing, always_copy=False, scalar_ok=True, type=list):
