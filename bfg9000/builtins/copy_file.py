@@ -78,6 +78,7 @@ def make_copy_file(rule, build_inputs, buildfile, env):
     buildfile.rule(
         target=rule.output,
         deps=rule.file,
+        order_only=make.directory_deps(rule.output),
         recipe=make.Call(recipename, *args)
     )
 

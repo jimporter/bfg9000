@@ -25,10 +25,10 @@ class TestCopyFile(IntegrationTest):
         os.chdir(path)
 
         self.assertOutput([exe], 'Hello from a file!\n')
-        self.assertTrue(os.path.isfile('data.txt'))
+        self.assertTrue(os.path.isfile(pjoin('dir', 'data.txt')))
         if hasattr(os.path, 'samefile'):
             self.assertFalse(os.path.samefile(
-                'data.txt', pjoin(self.srcdir, 'data.txt')
+                pjoin('dir', 'data.txt'), pjoin(self.srcdir, 'dir', 'data.txt')
             ))
 
     def test_symlink(self):
@@ -44,7 +44,7 @@ class TestCopyFile(IntegrationTest):
         ))
         if ( env.host_platform.family == 'windows' and sys.version[0] == 2 and
              supports_symlink ):
-            self.assertTrue(os.path.islink('data.txt'))
+            self.assertTrue(os.path.islink(pjoin('dir', 'data.txt')))
 
     def test_hardlink(self):
         self.configure(extra_args=['--mode=hardlink'])
@@ -54,8 +54,8 @@ class TestCopyFile(IntegrationTest):
         os.chdir(path)
 
         self.assertOutput([exe], 'Hello from a file!\n')
-        self.assertTrue(os.path.isfile('data.txt'))
+        self.assertTrue(os.path.isfile(pjoin('dir', 'data.txt')))
         if hasattr(os.path, 'samefile'):
             self.assertTrue(os.path.samefile(
-                'data.txt', pjoin(self.srcdir, 'data.txt')
+                pjoin('dir', 'data.txt'), pjoin(self.srcdir, 'dir', 'data.txt')
             ))

@@ -12,6 +12,10 @@
 ### Breaking changes
 - Drop support for Python 2
 
+### Bug fixes
+- `copy_file()` now works correctly when copying into a subdirectory on the
+  Make backend
+
 ---
 
 ## v0.5.1 (2019-12-07)
