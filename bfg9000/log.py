@@ -6,6 +6,9 @@ import traceback
 import warnings
 from logging import getLogger, CRITICAL, ERROR, WARNING, INFO, DEBUG  # noqa
 
+from .safe_str import safe_string
+from .iterutils import tween
+
 
 class UserDeprecationWarning(DeprecationWarning):
     pass
@@ -137,21 +140,42 @@ def init(color='auto', debug=False, warn_once=False, stream=None):
     logging.root.addHandler(stackful)
 
 
-def log_stack(level, message, *args, **kwargs):
-    stacklevel = kwargs.pop('stacklevel', 0)
+def log_stack(level, message, *args, stacklevel=0, show_stack=True, **kwargs):
     extra = {
         'full_stack': traceback.extract_stack()[1:-1 - stacklevel],
-        'show_stack': kwargs.pop('show_stack', True)
+        'show_stack': show_stack
     }
     logging.log(level, message, *args, extra=extra, **kwargs)
 
 
-def info(msg, show_stack=False):
-    log_stack(INFO, msg, show_stack=show_stack, stacklevel=1)
+def format_message(*args):
+    def str_implemented(s):
+        try:
+            str(s)
+            return True
+        except NotImplementedError:
+            return False
+
+    message = ''
+    for i in tween(args, ' '):
+        if isinstance(i, safe_string) and not str_implemented(i):
+            message += repr(i)
+        else:
+            message += str(i)
+    return message
 
 
-def debug(msg, show_stack=True):
-    log_stack(DEBUG, msg, show_stack=show_stack, stacklevel=1)
+def log_message(level, *args, stacklevel=0, **kwargs):
+    stacklevel += 1
+    log_stack(level, format_message(*args), stacklevel=stacklevel, **kwargs)
+
+
+def info(*args, show_stack=False):
+    log_message(INFO, *args, show_stack=show_stack, stacklevel=1)
+
+
+def debug(*args, show_stack=True):
+    log_message(DEBUG, *args, show_stack=show_stack, stacklevel=1)
 
 
 def _showwarning(message, category, filename, lineno, file=None, line=None):

@@ -1139,10 +1139,11 @@ Availability: `build.bfg`, `options.bfg`, and `<toolchain>.bfg`
 Return the current version of bfg9000. This can be useful if you want to
 optionally support a feature only available in certain versions of bfg.
 
-### debug(*message*, [*show_stack*]) { #debug }
+### debug(*...*, [*show_stack*]) { #debug }
 
-Log a debug message with the value *message*. If *show_stack* is true (the
-default), show the stack trace where the message was logged from.
+Log a debug message with the specified arguments separated by spaces (as with
+`print()`). If *show_stack* is true (the default), show the stack trace where
+the message was logged from.
 
 !!! note
     Debug messages are hidden by default; pass `--debug` on the command line to
@@ -1219,8 +1220,9 @@ same as for [*find_files*](#find_files).
 
 ### info(*message*, [*show_stack*]) { #info }
 
-Log an informational message with the value *message*. If *show_stack* is true,
-show the stack trace where the message was logged from.
+Log an informational message with the specified arguments separated by spaces
+(as with `print()`). If *show_stack* is true, show the stack trace where the
+message was logged from.
 
 ### InstallRoot
 
@@ -1334,10 +1336,10 @@ used in a build script.
 Convert an object *s* into a "safe" string, if possible. Safe strings are used
 by the build backends to correctly handle escaping special characters as needed.
 
-### warning(*message*) { #warning }
+### warning(*...*) { #warning }
 
-Log a warning with the value *message* and the stack trace where the warning was
-emitted.
+Log a warning with the specified arguments separated by spaces (as with
+`print()`) and the stack trace where the warning was emitted.
 
 ## Toolchain
 

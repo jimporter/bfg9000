@@ -10,9 +10,13 @@ in progress
   and `opts.debug`
 - Iterables passed to `default` or `install` will include each element of the
   iterable in the appropriate build target
+- `info()`, `debug()`, and `warning()` now take a variable number of arguments
+  to print
 
 ### Breaking changes
 - Drop support for Python 2
+- `show_stack` for `info()` and `debug()` must now be specified as a keyword
+  argument
 
 ### Bug fixes
 - `copy_file()` now works correctly when copying into a subdirectory on the

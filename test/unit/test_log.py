@@ -8,6 +8,7 @@ from unittest import mock
 from . import *
 
 from bfg9000 import log, iterutils
+from bfg9000.path import Path
 
 # Make sure we're referring to the .py file, not the .pyc file.
 this_file = __file__.rstrip('c')
@@ -160,16 +161,43 @@ class TestStackfulStreamHandler(TestCase):
         self.assertEqual(record.user_lineno, lineno)
 
 
+class TestFormatMessage(TestCase):
+    def test_str(self):
+        self.assertEqual(log.format_message('foo'), 'foo')
+
+    def test_int(self):
+        self.assertEqual(log.format_message(1), '1')
+
+    def test_path(self):
+        self.assertEqual(log.format_message(Path('path')),
+                         repr(Path('path')))
+
+    def test_many(self):
+        self.assertEqual(log.format_message('foo', 1, Path('path'), 'bar'),
+                         'foo 1 ' + repr(Path('path')) + ' bar')
+
+
 class TestLogStack(TestCase):
     def test_default(self):
         with mock.patch('logging.log') as mocklog:
             log.log_stack(log.INFO, 'message')
-
             tb = traceback.extract_stack()[1:]
-            tb[-1] = mocklog.call_args[1]['extra']['full_stack'][-1]
+            tb[-1].lineno -= 1
+
             mocklog.assert_called_once_with(log.INFO, 'message', extra={
                 'full_stack': tb, 'show_stack': True
             })
+
+        with mock.patch('logging.log') as mocklog:
+            log.log_message(log.INFO, 'foo', 1, Path('path'), 'bar')
+            tb = traceback.extract_stack()[1:]
+            tb[-1].lineno -= 1
+
+            mocklog.assert_called_once_with(
+                log.INFO, 'foo 1 ' + repr(Path('path')) + ' bar', extra={
+                    'full_stack': tb, 'show_stack': True
+                }
+            )
 
     def test_stacklevel(self):
         with mock.patch('logging.log') as mocklog:
@@ -179,34 +207,96 @@ class TestLogStack(TestCase):
                 'full_stack': tb, 'show_stack': True
             })
 
+        with mock.patch('logging.log') as mocklog:
+            log.log_message(log.INFO, 'foo', 1, Path('path'), 'bar',
+                            stacklevel=1)
+            tb = traceback.extract_stack()[1:-1]
+            mocklog.assert_called_once_with(
+                log.INFO, 'foo 1 ' + repr(Path('path')) + ' bar', extra={
+                    'full_stack': tb, 'show_stack': True
+                }
+            )
+
     def test_hide_stack(self):
         with mock.patch('logging.log') as mocklog:
             log.log_stack(log.INFO, 'message', show_stack=False)
-
             tb = traceback.extract_stack()[1:]
-            tb[-1] = mocklog.call_args[1]['extra']['full_stack'][-1]
+            tb[-1].lineno -= 1
+
             mocklog.assert_called_once_with(log.INFO, 'message', extra={
                 'full_stack': tb, 'show_stack': False
             })
 
+        with mock.patch('logging.log') as mocklog:
+            log.log_message(log.INFO, 'foo', 1, Path('path'), 'bar',
+                            show_stack=False)
+            tb = traceback.extract_stack()[1:]
+            tb[-1].lineno -= 1
+
+            mocklog.assert_called_once_with(
+                log.INFO, 'foo 1 ' + repr(Path('path')) + ' bar', extra={
+                    'full_stack': tb, 'show_stack': False
+                }
+            )
+
     def test_info(self):
+        with mock.patch('logging.log') as mocklog:
+            log.info('message')
+            tb = traceback.extract_stack()[1:]
+            tb[-1].lineno -= 1
+
+            mocklog.assert_called_once_with(log.INFO, 'message', extra={
+                'full_stack': tb, 'show_stack': False
+            })
+
+        with mock.patch('logging.log') as mocklog:
+            log.info('foo', 1, Path('path'), 'bar')
+            tb = traceback.extract_stack()[1:]
+            tb[-1].lineno -= 1
+
+            mocklog.assert_called_once_with(
+                log.INFO, 'foo 1 ' + repr(Path('path')) + ' bar', extra={
+                    'full_stack': tb, 'show_stack': False
+                }
+            )
+
         for show_stack in (False, True):
             with mock.patch('logging.log') as mocklog:
-                log.info('message', show_stack)
-
+                log.info('message', show_stack=show_stack)
                 tb = traceback.extract_stack()[1:]
-                tb[-1] = mocklog.call_args[1]['extra']['full_stack'][-1]
+                tb[-1].lineno -= 1
+
                 mocklog.assert_called_once_with(log.INFO, 'message', extra={
                     'full_stack': tb, 'show_stack': show_stack
                 })
 
     def test_debug(self):
+        with mock.patch('logging.log') as mocklog:
+            log.debug('message')
+            tb = traceback.extract_stack()[1:]
+            tb[-1].lineno -= 1
+
+            mocklog.assert_called_once_with(log.DEBUG, 'message', extra={
+                'full_stack': tb, 'show_stack': True
+            })
+
+        with mock.patch('logging.log') as mocklog:
+            log.debug('foo', 1, Path('path'), 'bar')
+            tb = traceback.extract_stack()[1:]
+            tb[-1].lineno -= 1
+
+            mocklog.assert_called_once_with(
+                log.DEBUG, 'foo 1 ' + repr(Path('path')) + ' bar', extra={
+                    'full_stack': tb, 'show_stack': True
+                }
+            )
+
         for show_stack in (False, True):
             with mock.patch('logging.log') as mocklog:
-                log.debug('message', show_stack)
-
+                log.debug('message', show_stack=show_stack)
                 tb = traceback.extract_stack()[1:]
-                tb[-1] = mocklog.call_args[1]['extra']['full_stack'][-1]
+                tb[-1].lineno -= 1
+
                 mocklog.assert_called_once_with(log.DEBUG, 'message', extra={
                     'full_stack': tb, 'show_stack': show_stack
                 })
