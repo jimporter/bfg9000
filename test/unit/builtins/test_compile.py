@@ -1,7 +1,7 @@
 from collections import namedtuple
 from unittest import mock
 
-from .common import AttrDict, BuiltinTest
+from .common import AlwaysEqual, AttrDict, BuiltinTest
 from bfg9000 import file_types, options as opts
 from bfg9000.builtins import compile, link, packages, project  # noqa
 from bfg9000.environment import LibraryMode
@@ -175,6 +175,13 @@ class TestObjectFile(CompileTest):
         self.assertRaises(TypeError, self.builtin_dict['object_file'],
                           file='main.java', pch=pch)
 
+    def test_extra_deps(self):
+        dep = self.builtin_dict['generic_file']('dep.txt')
+        result = self.builtin_dict['object_file'](file='main.cpp',
+                                                  extra_deps=[dep])
+        self.assertSameFile(result, self.output_file('main'))
+        self.assertEqual(result.creator.extra_deps, [dep])
+
     def test_make_no_name_or_file(self):
         self.assertRaises(TypeError, self.builtin_dict['object_file'])
 
@@ -311,6 +318,18 @@ class TestPrecompiledHeader(CompileTest):
             self.assertRaises(ValueError, pch, file='main.hpp',
                               directory=Path('dir', Root.srcdir))
 
+    def test_extra_deps(self):
+        dep = self.builtin_dict['generic_file']('dep.txt')
+        with mock.patch('bfg9000.builtins.file_types.make_immediate_file',
+                        return_value=self.MockFile()):
+            pch = self.builtin_dict['precompiled_header']
+
+            result = pch(file='main.hpp', extra_deps=[dep])
+            self.assertSameFile(result, self.output_file(
+                'main.hpp', self.context
+            ))
+            self.assertEqual(result.creator.extra_deps, [dep])
+
     def test_make_no_name_or_file(self):
         self.assertRaises(TypeError, self.builtin_dict['precompiled_header'])
 
@@ -393,6 +412,13 @@ class TestGeneratedSource(CompileTest):
         )
         self.assertEqual(result.creator.description, 'my description')
 
+    def test_extra_deps(self):
+        dep = self.builtin_dict['generic_file']('dep.txt')
+        result = self.builtin_dict['generated_source'](file='file.qrc',
+                                                       extra_deps=[dep])
+        self.assertSameFile(result, self.output_file('file.cpp', lang='qrc'))
+        self.assertEqual(result.creator.extra_deps, [dep])
+
 
 class TestObjectFiles(BuiltinTest):
     def make_file_list(self, make_src=False):
@@ -457,3 +483,66 @@ class TestGeneratedSources(TestObjectFiles):
         if return_src:
             return file_list, files, src_files
         return file_list, files
+
+
+class TestMakeBackend(BuiltinTest):
+    def test_simple(self):
+        makefile = mock.Mock()
+        src = self.builtin_dict['source_file']('main.cpp')
+
+        result = self.builtin_dict['object_file'](file=src)
+        compile.make_compile(result.creator, self.build, makefile,
+                             self.env)
+        makefile.rule.assert_called_once_with(
+            result, [src], [], AlwaysEqual(), {}, None
+        )
+
+    def test_dir_sentinel(self):
+        makefile = mock.Mock()
+        src = self.builtin_dict['source_file']('dir/main.cpp')
+
+        result = self.builtin_dict['object_file'](file=src)
+        compile.make_compile(result.creator, self.build, makefile,
+                             self.env)
+        makefile.rule.assert_called_once_with(
+            result, [src], [Path('dir/.dir')], AlwaysEqual(), {}, None
+        )
+
+    def test_extra_deps(self):
+        makefile = mock.Mock()
+        dep = self.builtin_dict['generic_file']('dep.txt')
+        src = self.builtin_dict['source_file']('main.cpp')
+
+        result = self.builtin_dict['object_file'](file=src, extra_deps=dep)
+        compile.make_compile(result.creator, self.build, makefile,
+                             self.env)
+        makefile.rule.assert_called_once_with(
+            result, [src, dep], [], AlwaysEqual(), {}, None
+        )
+
+
+class TestNinjaBackend(BuiltinTest):
+    def test_simple(self):
+        ninjafile = mock.Mock()
+        src = self.builtin_dict['source_file']('main.cpp')
+
+        result = self.builtin_dict['object_file'](file=src)
+        compile.ninja_compile(result.creator, self.build, ninjafile,
+                             self.env)
+        ninjafile.build.assert_called_once_with(
+            output=[result], rule='cxx', inputs=[src], implicit=[],
+            variables={}
+        )
+
+    def test_extra_deps(self):
+        ninjafile = mock.Mock()
+        dep = self.builtin_dict['generic_file']('dep.txt')
+        src = self.builtin_dict['source_file']('main.cpp')
+
+        result = self.builtin_dict['object_file'](file=src, extra_deps=dep)
+        compile.ninja_compile(result.creator, self.build, ninjafile,
+                             self.env)
+        ninjafile.build.assert_called_once_with(
+            output=[result], rule='cxx', inputs=[src], implicit=[dep],
+            variables={}
+        )

@@ -77,7 +77,7 @@ def make_copy_file(rule, build_inputs, buildfile, env):
 
     buildfile.rule(
         target=rule.output,
-        deps=rule.file,
+        deps=[rule.file] + rule.extra_deps,
         order_only=make.directory_deps(rule.output),
         recipe=make.Call(recipename, *args)
     )
@@ -111,6 +111,7 @@ def ninja_copy_file(rule, build_inputs, buildfile, env):
         output=rule.output,
         rule=copier.rule_name,
         inputs=rule.file,
+        implicit=rule.extra_deps,
         variables=variables
     )
 

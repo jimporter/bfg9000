@@ -6,6 +6,11 @@ from bfg9000.build_inputs import BuildInputs
 from bfg9000.path import Path, Root
 
 
+class AlwaysEqual:
+    def __eq__(self, rhs):
+        return True
+
+
 class BuiltinTest(TestCase):
     def setUp(self):
         self.env = make_env()

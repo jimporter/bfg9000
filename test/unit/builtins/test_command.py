@@ -131,6 +131,23 @@ class TestCommand(TestBaseCommand):
         self.assertCommand(result.creator, [['echo', 'foo']],
                            env={'NAME': 'value'})
 
+    def test_extra_deps(self):
+        dep = self.builtin_dict['generic_file']('dep.txt')
+        result = self.builtin_dict['command']('foo', cmd=['echo', 'foo'],
+                                              extra_deps=dep)
+        self.assertSameFile(result, file_types.Phony('foo'))
+        self.assertCommand(result.creator, [['echo', 'foo']], extra_deps=[dep])
+
+        script = self.builtin_dict['source_file']('script.py')
+        script.creator = 'foo'
+
+        result = self.builtin_dict['command']('foo', cmd=script,
+                                              extra_deps=dep)
+        self.assertSameFile(result, file_types.Phony('foo'))
+        self.assertCommand(result.creator, [
+            self.env.tool('python')(script)
+        ], extra_deps=[script, dep])
+
     def test_cmd_and_cmds(self):
         self.assertRaises(ValueError, self.builtin_dict['command'], 'foo',
                           cmd='echo foo', cmds=['echo bar'])
@@ -291,6 +308,25 @@ class TestBuildStep(TestBaseCommand):
         for i, j in zip(result, expected):
             self.assertSameFile(i, j)
             self.assertCommand(i.creator, [['bison', 'hello.y']], phony=False)
+
+    def test_extra_deps(self):
+        dep = self.builtin_dict['generic_file']('dep.txt')
+        result = self.builtin_dict['build_step']('lex.yy.c', cmd=[
+            'lex', 'foo.lex'
+        ], extra_deps=[dep])
+        expected = file_types.SourceFile(Path('lex.yy.c', Root.builddir), 'c')
+        self.assertSameFile(result, expected)
+        self.assertCommand(result.creator, [['lex', 'foo.lex']],
+                           extra_deps=[dep], phony=False)
+
+        foolex = self.builtin_dict['source_file']('foo.lex')
+        result = self.builtin_dict['build_step']('lex.yy.c', cmd=[
+            'lex', foolex
+        ], extra_deps=[dep])
+        expected = file_types.SourceFile(Path('lex.yy.c', Root.builddir), 'c')
+        self.assertSameFile(result, expected)
+        self.assertCommand(result.creator, [['lex', foolex]],
+                           extra_deps=[foolex, dep], phony=False)
 
     def test_invalid_type(self):
         self.assertRaises(ValueError, self.builtin_dict['build_step'],

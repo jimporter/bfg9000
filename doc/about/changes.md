@@ -21,6 +21,7 @@ in progress
 ### Bug fixes
 - `copy_file()` now works correctly when copying into a subdirectory on the
   Make backend
+- `extra_deps` now works with `copy_file()`
 
 ---
 

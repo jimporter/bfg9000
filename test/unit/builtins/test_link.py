@@ -1,6 +1,6 @@
 from unittest import mock
 
-from .common import AttrDict, BuiltinTest
+from .common import AlwaysEqual, AttrDict, BuiltinTest
 from bfg9000.builtins import compile, default, link, packages, project  # noqa
 from bfg9000 import file_types, options as opts
 from bfg9000.environment import LibraryMode
@@ -148,6 +148,15 @@ class TestExecutable(LinkTest):
         obj2 = file_types.ObjectFile(Path('obj2.o', Root.srcdir), 'elf')
         self.assertRaises(ValueError, self.builtin_dict['executable'],
                           'exe', [obj1, obj2])
+
+    def test_extra_deps(self):
+        dep = self.builtin_dict['generic_file']('dep.txt')
+        result = self.builtin_dict['executable']('exe', ['main.cpp'],
+                                                 extra_deps=[dep])
+        self.assertSameFile(result, self.output_file('exe'))
+        self.assertSameFile(result.creator.files[0],
+                            self.object_file('exe.int/main'))
+        self.assertEqual(result.creator.extra_deps, [dep])
 
     def test_description(self):
         result = self.builtin_dict['executable'](
@@ -315,6 +324,17 @@ class TestSharedLibrary(LinkTest):
         )
         self.assertEqual(result.creator.description, 'my description')
 
+    def test_extra_deps(self):
+        dep = self.builtin_dict['generic_file']('dep.txt')
+        expected = self.output_file('shared')
+
+        result = self.builtin_dict['shared_library']('shared', ['main.cpp'],
+                                                     extra_deps=[dep])
+        self.assertSameFile(result, expected, exclude={'post_install'})
+        self.assertSameFile(result.creator.files[0],
+                            self.object_file('libshared.int/main'))
+        self.assertEqual(result.creator.extra_deps, [dep])
+
 
 class TestStaticLibrary(LinkTest):
     mode = 'static_library'
@@ -462,6 +482,17 @@ class TestStaticLibrary(LinkTest):
             'executable', ['main.cpp'], description='my description'
         )
         self.assertEqual(result.creator.description, 'my description')
+
+    def test_extra_deps(self):
+        dep = self.builtin_dict['generic_file']('dep.txt')
+        expected = self.output_file('static', extra=self.extra())
+
+        result = self.builtin_dict['static_library']('static', ['main.cpp'],
+                                                     extra_deps=[dep])
+        self.assertSameFile(result, expected)
+        self.assertSameFile(result.creator.files[0],
+                            self.object_file('libstatic.int/main'))
+        self.assertEqual(result.creator.extra_deps, [dep])
 
 
 class TestLibrary(LinkTest):
@@ -641,6 +672,38 @@ class TestLibrary(LinkTest):
         self.assertSameFile(result.creator.files[0],
                             self.object_file('dir/main'))
 
+    def test_extra_deps(self):
+        # Shared
+        dep = self.builtin_dict['generic_file']('dep.txt')
+        expected = self.output_file('library', mode='shared_library')
+        result = self.builtin_dict['library']('library', ['main.cpp'],
+                                              kind='shared', extra_deps=[dep])
+        self.assertSameFile(result, expected, exclude={'post_install'})
+        self.assertSameFile(result.creator.files[0],
+                            self.object_file('liblibrary.int/main'))
+        self.assertEqual(result.creator.extra_deps, [dep])
+
+        # Static
+        expected = self.output_file('library', mode='static_library')
+        result = self.builtin_dict['library']('library', ['main.cpp'],
+                                              kind='static', extra_deps=[dep])
+        self.assertSameFile(result, expected, exclude={'forward_opts'})
+        self.assertSameFile(result.creator.files[0],
+                            self.object_file('liblibrary.int/main'))
+        self.assertEqual(result.creator.extra_deps, [dep])
+
+        # Dual
+        with mock.patch('warnings.warn', lambda s: None):
+            result = self.builtin_dict['library'](
+                'library', ['main.cpp'], kind='dual', extra_deps=[dep]
+            )
+
+        if self.env.builder('c++').can_dual_link:
+            for i in result.all:
+                self.assertEqual(i.creator.extra_deps, [dep])
+        else:
+            self.assertEqual(result.creator.extra_deps, [dep])
+
 
 class TestWholeArchive(BuiltinTest):
     def test_identity(self):
@@ -668,3 +731,61 @@ class TestWholeArchive(BuiltinTest):
         lib = file_types.StaticLibrary(Path('static', Root.srcdir), None)
         self.assertRaises(TypeError, self.builtin_dict['whole_archive'], lib,
                           files=['foo.cpp'])
+
+
+class TestMakeBackend(BuiltinTest):
+    def test_simple(self):
+        makefile = mock.Mock()
+        obj = self.builtin_dict['object_file']('main.o')
+
+        result = self.builtin_dict['executable']('exe', obj)
+        link.make_link(result.creator, self.build, makefile, self.env)
+        makefile.rule.assert_called_once_with(
+            result, [obj], [], AlwaysEqual(), {}, None
+        )
+
+    def test_dir_sentinel(self):
+        makefile = mock.Mock()
+        obj = self.builtin_dict['object_file']('main.o')
+
+        result = self.builtin_dict['executable']('dir/exe', obj)
+        link.make_link(result.creator, self.build, makefile, self.env)
+        makefile.rule.assert_called_once_with(
+            result, [obj], [Path('dir/.dir')], AlwaysEqual(), {}, None
+        )
+
+    def test_extra_deps(self):
+        makefile = mock.Mock()
+        dep = self.builtin_dict['generic_file']('dep.txt')
+        obj = self.builtin_dict['object_file']('main.o')
+
+        result = self.builtin_dict['executable']('exe', obj, extra_deps=dep)
+        link.make_link(result.creator, self.build, makefile, self.env)
+        makefile.rule.assert_called_once_with(
+            result, [obj, dep], [], AlwaysEqual(), {}, None
+        )
+
+
+class TestNinjaBackend(BuiltinTest):
+    def test_simple(self):
+        ninjafile = mock.Mock()
+        obj = self.builtin_dict['object_file']('main.o')
+
+        result = self.builtin_dict['executable']('exe', obj)
+        link.ninja_link(result.creator, self.build, ninjafile, self.env)
+        ninjafile.build.assert_called_once_with(
+            output=[result], rule='cc_link', inputs=[obj], implicit=[],
+            variables={}
+        )
+
+    def test_extra_deps(self):
+        ninjafile = mock.Mock()
+        dep = self.builtin_dict['generic_file']('dep.txt')
+        obj = self.builtin_dict['object_file']('main.o')
+
+        result = self.builtin_dict['executable']('exe', obj, extra_deps=dep)
+        link.ninja_link(result.creator, self.build, ninjafile, self.env)
+        ninjafile.build.assert_called_once_with(
+            output=[result], rule='cc_link', inputs=[obj], implicit=[dep],
+            variables={}
+        )

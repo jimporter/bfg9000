@@ -1,6 +1,8 @@
-from .common import BuiltinTest
+from unittest import mock
+
+from .common import AlwaysEqual, BuiltinTest
 from bfg9000 import file_types
-from bfg9000.builtins import copy_file as copy_file_  # noqa
+from bfg9000.builtins import copy_file as _copy_file  # noqa
 from bfg9000.path import Path, Root
 
 
@@ -50,6 +52,14 @@ class TestCopyFile(BuiltinTest):
         self.assertRaises(ValueError, copy_file, file='file.txt',
                           directory=Path('dir', Root.srcdir))
 
+    def test_extra_deps(self):
+        dep = self.builtin_dict['generic_file']('dep.txt')
+        expected = file_types.File(Path('file.txt'))
+        result = self.builtin_dict['copy_file'](file='file.txt',
+                                                extra_deps=[dep])
+        self.assertSameFile(result, expected)
+        self.assertEqual(result.creator.extra_deps, [dep])
+
     def test_invalid_mode(self):
         self.assertRaises(ValueError, self.builtin_dict['copy_file'],
                           file='file.txt', mode='unknown')
@@ -98,3 +108,68 @@ class TestCopyFiles(BuiltinTest):
         self.assertRaises(IndexError, lambda: file_list[Path(
             'file3', Root.srcdir
         )])
+
+
+class TestMakeBackend(BuiltinTest):
+    def test_simple(self):
+        makefile = mock.Mock()
+        src = self.builtin_dict['generic_file']('file.txt')
+
+        result = self.builtin_dict['copy_file'](file=src)
+        _copy_file.make_copy_file(result.creator, self.build, makefile,
+                                  self.env)
+        makefile.rule.assert_called_once_with(
+            target=[result], deps=[src], order_only=[], recipe=AlwaysEqual()
+        )
+
+    def test_dir_sentinel(self):
+        makefile = mock.Mock()
+        src = self.builtin_dict['generic_file']('dir/file.txt')
+
+        result = self.builtin_dict['copy_file'](file=src)
+        _copy_file.make_copy_file(result.creator, self.build, makefile,
+                                  self.env)
+        makefile.rule.assert_called_once_with(
+            target=[result], deps=[src], order_only=[Path('dir/.dir')],
+            recipe=AlwaysEqual()
+        )
+
+    def test_extra_deps(self):
+        makefile = mock.Mock()
+        dep = self.builtin_dict['generic_file']('dep.txt')
+        src = self.builtin_dict['generic_file']('file.txt')
+
+        result = self.builtin_dict['copy_file'](file=src, extra_deps=dep)
+        _copy_file.make_copy_file(result.creator, self.build, makefile,
+                                  self.env)
+        makefile.rule.assert_called_once_with(
+            target=[result], deps=[src, dep], order_only=[],
+            recipe=AlwaysEqual()
+        )
+
+
+class TestNinjaBackend(BuiltinTest):
+    def test_simple(self):
+        ninjafile = mock.Mock()
+        src = self.builtin_dict['generic_file']('file.txt')
+
+        result = self.builtin_dict['copy_file'](file=src)
+        _copy_file.ninja_copy_file(result.creator, self.build, ninjafile,
+                             self.env)
+        ninjafile.build.assert_called_once_with(
+            output=[result], rule='cp', inputs=src, implicit=[],
+            variables={}
+        )
+
+    def test_extra_deps(self):
+        ninjafile = mock.Mock()
+        dep = self.builtin_dict['generic_file']('dep.txt')
+        src = self.builtin_dict['generic_file']('file.txt')
+
+        result = self.builtin_dict['copy_file'](file=src, extra_deps=dep)
+        _copy_file.ninja_copy_file(result.creator, self.build, ninjafile,
+                             self.env)
+        ninjafile.build.assert_called_once_with(
+            output=[result], rule='cp', inputs=src, implicit=[dep],
+            variables={}
+        )
