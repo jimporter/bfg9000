@@ -32,8 +32,12 @@ class Edge:
         ])
 
         def make(name):
-            return build.add_source(File(Path(name, Root.srcdir)))
-        self.extra_deps = [objectify(i, Node, make)
+            f = File(Path.ensure(name, Root.srcdir))
+            if f.path.root == Root.srcdir:
+                return build.add_source(f)
+            return f
+
+        self.extra_deps = [objectify(i, Node, make, (str, Path))
                            for i in iterate(extra_deps)]
         build.add_edge(self)
 
