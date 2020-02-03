@@ -21,9 +21,8 @@ class ArgumentParser:
             return thing
         return wrapper
 
-    def add(self, *args, **kwargs):
-        dest = kwargs.pop('dest', args[0][1:])
-        type = kwargs.pop('type', bool)
+    def add(self, *args, dest=None, type=bool, **kwargs):
+        dest = dest or args[0][1:]
         info = self._argument_info[type](dest, **kwargs)
 
         for i in args:
@@ -179,9 +178,8 @@ class DictArgumentInfo(ArgumentInfo):
         self._options = []
         self._strict = strict
 
-    def add(self, *args, **kwargs):
-        dest = kwargs.pop('dest', args[0])
-        type = kwargs.pop('type', 'key')
+    def add(self, *args, dest=None, type='key', **kwargs):
+        dest = dest or args[0]
         info = ArgumentParser._argument_info[type](dest, **kwargs)
 
         if type in (bool, 'key'):

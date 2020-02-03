@@ -60,13 +60,13 @@ def make_immediate_file(build, env, file, mode='w', makedirs=True):
 
 @builtin.function('build_inputs')
 @builtin.type(File)
-def generic_file(build, name, dist=True):
+def generic_file(build, name, *, dist=True):
     return static_file(build, File, name, dist)
 
 
 @builtin.function('build_inputs')
 @builtin.type(SourceFile)
-def source_file(build, name, lang=None, dist=True):
+def source_file(build, name, lang=None, *, dist=True):
     path = Path.ensure(name, Root.srcdir)
     lang = lang or known_langs.fromext(path.ext(), 'source')
     return static_file(build, SourceFile, path, dist, [('lang', lang)])
@@ -74,7 +74,7 @@ def source_file(build, name, lang=None, dist=True):
 
 @builtin.function('build_inputs')
 @builtin.type(ResourceFile)
-def resource_file(build, name, lang=None, dist=True):
+def resource_file(build, name, lang=None, *, dist=True):
     path = Path.ensure(name, Root.srcdir)
     lang = lang or known_langs.fromext(path.ext(), 'resource')
     return static_file(build, ResourceFile, path, dist, [('lang', lang)])
@@ -82,7 +82,7 @@ def resource_file(build, name, lang=None, dist=True):
 
 @builtin.function('build_inputs')
 @builtin.type(HeaderFile)
-def header_file(build, name, lang=None, dist=True):
+def header_file(build, name, lang=None, *, dist=True):
     path = Path.ensure(name, Root.srcdir)
     lang = lang or known_langs.fromext(path.ext(), 'header')
     return static_file(build, HeaderFile, path, dist, [('lang', lang)])
@@ -90,13 +90,13 @@ def header_file(build, name, lang=None, dist=True):
 
 @builtin.function('build_inputs')
 @builtin.type(ModuleDefFile)
-def module_def_file(build, name, dist=True):
+def module_def_file(build, name, *, dist=True):
     return static_file(build, ModuleDefFile, name, dist)
 
 
 @builtin.function('build_inputs')
 @builtin.type(File)
-def auto_file(build, name, lang=None, dist=True):
+def auto_file(build, name, lang=None, *, dist=True):
     path = Path.ensure(name, Root.srcdir)
     if lang:
         kind = None
@@ -133,7 +133,7 @@ def _directory_path(thing):
 @builtin.function('builtins', 'build_inputs')
 @builtin.type(Directory, extra_in_type=File)
 def directory(builtins, build, name, include=None, extra=None,
-              exclude=exclude_globs, filter=None, dist=True, cache=True):
+              exclude=exclude_globs, filter=None, *, dist=True, cache=True):
     path = _directory_path(name)
     files = _find(builtins, path, include, '*', extra, exclude, filter,
                   dist=dist, cache=cache)
@@ -144,7 +144,7 @@ def directory(builtins, build, name, include=None, extra=None,
 @builtin.type(HeaderDirectory, extra_in_type=SourceCodeFile)
 def header_directory(builtins, build, name, include=None, extra=None,
                      exclude=exclude_globs, filter=None, system=False,
-                     lang=None, dist=True, cache=True):
+                     lang=None, *, dist=True, cache=True):
     def header_file(*args, **kwargs):
         return builtins['header_file'](*args, lang=lang, **kwargs)
 

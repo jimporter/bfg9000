@@ -183,13 +183,10 @@ def qvar(v):
 
 
 class Function(NamedEntity):
-    def __init__(self, name, *args, **kwargs):
+    def __init__(self, name, *args, quoted=False):
         NamedEntity.__init__(self, name)
         self.args = args
-        self.quoted = kwargs.pop('quoted', False)
-        if kwargs:
-            raise TypeError('{}() got an unexpected keyword argument {!r}'
-                            .format(Function.__init__.__name__, next(kwargs)))
+        self.quoted = quoted
 
     def use(self):
         lit = safe_str.literal
@@ -209,7 +206,7 @@ class Function(NamedEntity):
         return NamedEntity.__eq__(self, rhs) and self.args == rhs.args
 
 
-def Call(func, *args, **kwargs):
+def Call(func, *args):
     return Function('call', var(func).name, *args)
 
 

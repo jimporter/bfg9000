@@ -99,10 +99,7 @@ class _Decorator:
         self.__kind = kind
         self.__binder = binder
 
-    def __call__(self, *args, **kwargs):
-        context = kwargs.pop('context', 'build')
-        name = kwargs.pop('name', None)
-
+    def __call__(self, *args, context='build', name=None):
         def decorator(fn):
             _add_builtin(context, self.__kind, name or fn.__name__,
                          self.__binder(fn, *args))

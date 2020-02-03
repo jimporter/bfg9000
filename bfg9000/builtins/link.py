@@ -322,13 +322,11 @@ def static_library(builtins, build, env, name, files=None, **kwargs):
 
 @builtin.function('builtins', 'build_inputs', 'env')
 @builtin.type(Library, extra_in_type=DualUseLibrary)
-def library(builtins, build, env, name, files=None, **kwargs):
+def library(builtins, build, env, name, files=None, *, kind=None, **kwargs):
     explicit_kind = False
-    kind = None
 
-    if 'kind' in kwargs:
+    if kind is not None:
         explicit_kind = True
-        kind = kwargs.pop('kind')
     elif env.library_mode.shared and env.library_mode.static:
         kind = 'dual'
     elif env.library_mode.shared:

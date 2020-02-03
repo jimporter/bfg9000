@@ -38,10 +38,9 @@ class AttrDict:
 class CrossPlatformTestCase(TestCase):
     _platforms = ['linux', 'winnt', 'macos']
 
-    def __init__(self, *args, **kwargs):
-        clear_variables = kwargs.pop('clear_variables', False)
-        variables = kwargs.pop('variables', {})
-        self.platform_name = kwargs.pop('platform_name', None)
+    def __init__(self, *args, clear_variables=False, variables={},
+                 platform_name=None, **kwargs):
+        self.platform_name = platform_name
 
         TestCase.__init__(self, *args, **kwargs)
         if self.platform_name is None:
@@ -69,13 +68,12 @@ class PathTestCase(TestCase):
         (WindowsPath, ntpath, 'windows'),
     ]
 
-    def __init__(self, *args, **kwargs):
-        info = kwargs.pop('path_info', None)
+    def __init__(self, *args, path_info=None, **kwargs):
 
         TestCase.__init__(self, *args, **kwargs)
-        if info is None:
+        if path_info is None:
             return
-        self.Path, self.ospath, self._desc = info
+        self.Path, self.ospath, self._desc = path_info
 
     def shortDescription(self):
         return self._desc

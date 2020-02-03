@@ -58,8 +58,8 @@ class StackFilter:
 
 
 class StackfulStreamHandler(logging.StreamHandler):
-    def __init__(self, *args, **kwargs):
-        self.debug = kwargs.pop('debug', False)
+    def __init__(self, *args, debug=False, **kwargs):
+        self.debug = debug
         logging.StreamHandler.__init__(self, *args, **kwargs)
 
     def emit(self, record):

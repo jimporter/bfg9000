@@ -16,7 +16,7 @@ examples_dir = os.path.join(this_dir, '..', '..', 'examples')
 test_data_dir = os.path.join(this_dir, '..', 'data')
 test_stage_dir = os.path.join(this_dir, '..', 'stage')
 
-env = make_env()
+default_env = env = make_env()
 
 Target = namedtuple('Target', ['name', 'path'])
 
@@ -144,15 +144,13 @@ class SubprocessTestCase(TestCase):
 
 
 class BasicIntegrationTest(SubprocessTestCase):
-    def __init__(self, srcdir, *args, **kwargs):
-        install = kwargs.pop('install', False)
-        self._configure = kwargs.pop('configure', True)
-
-        stage_src = kwargs.pop('stage_src', False)
-        self.backend = kwargs.pop('backend', None)
-        self.env = kwargs.pop('env', None)
-
-        self.extra_args = kwargs.pop('extra_args', [])
+    def __init__(self, srcdir, *args, install=False, configure=True,
+                 stage_src=False, backend=None, env=None, extra_args=None,
+                 **kwargs):
+        self._configure = configure
+        self.backend = backend
+        self.env = env
+        self.extra_args = extra_args or []
 
         SubprocessTestCase.__init__(self, *args, **kwargs)
         if self.backend is None:
@@ -171,7 +169,7 @@ class BasicIntegrationTest(SubprocessTestCase):
             self.installdir = os.path.join(test_stage_dir,
                                            srcname + '-install')
 
-            install_dirs = env.target_platform.install_dirs.copy()
+            install_dirs = default_env.target_platform.install_dirs.copy()
             install_dirs[InstallRoot.prefix] = Path(
                 self.installdir, Root.absolute
             )

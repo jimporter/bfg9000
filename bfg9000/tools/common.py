@@ -62,8 +62,8 @@ class Command:
                 result.append(i)
         return result
 
-    def __call__(self, *args, **kwargs):
-        cmd = listify(kwargs.pop('cmd', self))
+    def __call__(self, *args, cmd=None, **kwargs):
+        cmd = listify(cmd or self)
         return self._call(cmd, *args, **kwargs)
 
     def run(self, *args, **kwargs):
