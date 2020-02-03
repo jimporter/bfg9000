@@ -171,15 +171,20 @@
   and <code>opts.debug</code></li>
 <li>Iterables passed to <code>default</code> or <code>install</code> will include each element of the
   iterable in the appropriate build target</li>
+<li><code>info()</code>, <code>debug()</code>, and <code>warning()</code> now take a variable number of arguments
+  to print</li>
 </ul>
 <h3 id="breaking-changes">Breaking changes<a class="headerlink" href="#breaking-changes" title="Permanent link">§</a></h3>
 <ul>
 <li>Drop support for Python 2</li>
+<li><code>show_stack</code> for <code>info()</code> and <code>debug()</code> must now be specified as a keyword
+  argument</li>
 </ul>
 <h3 id="bug-fixes">Bug fixes<a class="headerlink" href="#bug-fixes" title="Permanent link">§</a></h3>
 <ul>
 <li><code>copy_file()</code> now works correctly when copying into a subdirectory on the
   Make backend</li>
+<li><code>extra_deps</code> now works with <code>copy_file()</code></li>
 </ul>
 <hr />
 <h2 id="v051">v0.5.1<a class="headerlink" href="#v051" title="Permanent link">§</a></h2>

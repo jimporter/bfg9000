@@ -1049,9 +1049,10 @@ the actual versions don't match the specifiers, a
 <p class="subtitle">Availability: <code>build.bfg</code>, <code>options.bfg</code>, and <code>&lt;toolchain&gt;.bfg</code></p>
 <p>Return the current version of bfg9000. This can be useful if you want to
 optionally support a feature only available in certain versions of bfg.</p>
-<h3 id="debug">debug(<em>message</em>, [<em>show_stack</em>])<a class="headerlink" href="#debug" title="Permanent link">§</a></h3>
-<p>Log a debug message with the value <em>message</em>. If <em>show_stack</em> is true (the
-default), show the stack trace where the message was logged from.</p>
+<h3 id="debug">debug(<em>...</em>, [<em>show_stack</em>])<a class="headerlink" href="#debug" title="Permanent link">§</a></h3>
+<p>Log a debug message with the specified arguments separated by spaces (as with
+<code>print()</code>). If <em>show_stack</em> is true (the default), show the stack trace where
+the message was logged from.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Debug messages are hidden by default; pass <code>--debug</code> on the command line to
@@ -1115,8 +1116,9 @@ source files and not have to worry about manually rerunning bfg9000.</p>
 returning them as <a href="#Path">path objects</a>. The arguments to this function are the
 same as for <a href="#find_files"><em>find_files</em></a>.</p>
 <h3 id="info">info(<em>message</em>, [<em>show_stack</em>])<a class="headerlink" href="#info" title="Permanent link">§</a></h3>
-<p>Log an informational message with the value <em>message</em>. If <em>show_stack</em> is true,
-show the stack trace where the message was logged from.</p>
+<p>Log an informational message with the specified arguments separated by spaces
+(as with <code>print()</code>). If <em>show_stack</em> is true, show the stack trace where the
+message was logged from.</p>
 <h3 id="installroot">InstallRoot<a class="headerlink" href="#installroot" title="Permanent link">§</a></h3>
 <p>An enumeration of root directories for <a href="#Path"><em>Path</em></a> objects, to be used
 during installation. Possible values are:</p>
@@ -1194,9 +1196,9 @@ used in a build script.</p>
 <h3 id="safe_str">safe_str(<em>s</em>)<a class="headerlink" href="#safe_str" title="Permanent link">§</a></h3>
 <p>Convert an object <em>s</em> into a "safe" string, if possible. Safe strings are used
 by the build backends to correctly handle escaping special characters as needed.</p>
-<h3 id="warning">warning(<em>message</em>)<a class="headerlink" href="#warning" title="Permanent link">§</a></h3>
-<p>Log a warning with the value <em>message</em> and the stack trace where the warning was
-emitted.</p>
+<h3 id="warning">warning(<em>...</em>)<a class="headerlink" href="#warning" title="Permanent link">§</a></h3>
+<p>Log a warning with the specified arguments separated by spaces (as with
+<code>print()</code>) and the stack trace where the warning was emitted.</p>
 <h2 id="toolchain">Toolchain<a class="headerlink" href="#toolchain" title="Permanent link">§</a></h2>
 <h3 id="compiler">compiler(<em>names</em>, <em>lang</em>)<a class="headerlink" href="#compiler" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>&lt;toolchain&gt;.bfg</code></p>
