@@ -77,7 +77,8 @@ matrix:
           pip show patchelf-wrapper
           ! pip show pysetenv
           deactivate
-      after_success: false
+      after_success:
+        - true
 
     # Linting
 
@@ -89,7 +90,8 @@ matrix:
         apt:
           packages: []
       script: ${PYTHON} setup.py lint
-      after_success: false
+      after_success:
+        - true
 
 addons:
   apt:
