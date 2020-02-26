@@ -65,18 +65,10 @@ matrix:
           packages: []
       install: true
       script:
-        - export VENV_BIN=`dirname \`which python\``
-        - |
-          virtualenv py2 --python=/usr/bin/python
-          . py2/bin/activate
-          python setup.py bdist_wheel
-          deactivate
-        - |
-          . ${VENV_BIN}/activate
-          pip install dist/*.whl
-          pip show patchelf-wrapper
-          ! pip show pysetenv
-          deactivate
+        - python setup.py bdist_wheel
+        - pip install dist/*.whl
+        - "! pip show pysetenv"
+        - pip show patchelf-wrapper
       after_success:
         - true
 
