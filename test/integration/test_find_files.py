@@ -5,9 +5,8 @@ from . import *
 
 class TestFindFiles(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        IntegrationTest.__init__(
-            self, os.path.join(examples_dir, '06_find_files'), *args, **kwargs
-        )
+        super().__init__(os.path.join(examples_dir, '06_find_files'), *args,
+                         **kwargs)
 
     def test_hello(self):
         self.build(executable('hello'))

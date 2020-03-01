@@ -3,10 +3,8 @@ from . import *
 
 class TestCustomSteps(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        IntegrationTest.__init__(
-            self, os.path.join(examples_dir, '09_custom_steps'), *args,
-            **kwargs
-        )
+        super().__init__(os.path.join(examples_dir, '09_custom_steps'), *args,
+                         **kwargs)
 
     def test_hello(self):
         self.build(executable('hello'))

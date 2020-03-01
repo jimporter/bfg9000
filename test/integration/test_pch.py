@@ -3,7 +3,7 @@ from . import *
 
 class TestPch(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        IntegrationTest.__init__(self, 'pch', *args, **kwargs)
+        super().__init__('pch', *args, **kwargs)
 
     def test_build(self):
         self.build(executable('program'))
@@ -12,7 +12,7 @@ class TestPch(IntegrationTest):
 
 class TestPchNoSource(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        IntegrationTest.__init__(self, 'pch_no_source', *args, **kwargs)
+        super().__init__('pch_no_source', *args, **kwargs)
 
     def test_build(self):
         self.build(executable('program'))

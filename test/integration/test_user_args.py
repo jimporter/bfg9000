@@ -5,10 +5,8 @@ from . import *
 
 class TestUserArgs(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        IntegrationTest.__init__(
-            self, os.path.join(examples_dir, '10_custom_args'),
-            configure=False, *args, **kwargs
-        )
+        super().__init__(os.path.join(examples_dir, '10_custom_args'),
+                         configure=False, *args, **kwargs)
 
     def test_build_default(self):
         self.configure()

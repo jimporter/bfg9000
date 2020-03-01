@@ -6,9 +6,7 @@ from . import *
 
 class TestSafeStr(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        IntegrationTest.__init__(
-            self, 'safe_str', *args, **kwargs
-        )
+        super().__init__('safe_str', *args, **kwargs)
 
     def test_foo(self):
         f = re.escape(os.path.normpath(os.path.join(

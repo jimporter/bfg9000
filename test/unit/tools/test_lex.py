@@ -13,8 +13,7 @@ with known_langs.make('lex') as x:
 
 class TestLexBuilder(CrossPlatformTestCase):
     def __init__(self, *args, **kwargs):
-        CrossPlatformTestCase.__init__(self, clear_variables=True, *args,
-                                       **kwargs)
+        super().__init__(clear_variables=True, *args, **kwargs)
 
     def setUp(self):
         self.lex = LexBuilder(self.env, known_langs['lex'], ['lex'],

@@ -60,7 +60,7 @@ class StackFilter:
 class StackfulStreamHandler(logging.StreamHandler):
     def __init__(self, *args, debug=False, **kwargs):
         self.debug = debug
-        logging.StreamHandler.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def emit(self, record):
         if record.exc_info:
@@ -93,7 +93,7 @@ class StackfulStreamHandler(logging.StreamHandler):
             record.user_lineno = record.lineno
 
         if len(stack) or self.debug:
-            return logging.StreamHandler.emit(self, record)
+            return super().emit(record)
         logging.root.handle(record)
 
 

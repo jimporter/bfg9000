@@ -88,8 +88,7 @@ class Link(Edge):
         public_output = self.linker.post_build(build, options, output, self)
         primary.post_install = self.linker.post_install(options, output, self)
 
-        Edge.__init__(self, build, output, public_output, extra_deps,
-                      description)
+        super().__init__(build, output, public_output, extra_deps, description)
 
         build['defaults'].add(primary)
 
@@ -158,7 +157,7 @@ class DynamicLink(Link):
 
     def __init__(self, *args, **kwargs):
         self.module_defs = kwargs.pop('module_defs', None)
-        Link.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     @classmethod
     def convert_args(cls, builtins, build, name, files, kwargs):
@@ -213,7 +212,7 @@ class SharedLink(DynamicLink):
         self.soversion = kwargs.pop('soversion', None)
         if (self.version is None) != (self.soversion is None):
             raise ValueError('specify both version and soversion or neither')
-        DynamicLink.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
 
 
 class StaticLink(Link):
@@ -228,7 +227,7 @@ class StaticLink(Link):
 
     def __init__(self, *args, **kwargs):
         self.user_static_options = kwargs.pop('static_link_options', None)
-        Link.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     @classmethod
     def convert_args(cls, builtins, build, name, files, kwargs):

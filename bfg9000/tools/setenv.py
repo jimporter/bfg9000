@@ -9,8 +9,8 @@ if platform_info().family == 'windows':
     @tool('setenv')
     class SetEnv(SimpleCommand):
         def __init__(self, env):
-            SimpleCommand.__init__(self, env, name='setenv', env_var='SETENV',
-                                   default=env.bfgdir.append('pysetenv'))
+            super().__init__(env, name='setenv', env_var='SETENV',
+                             default=env.bfgdir.append('pysetenv'))
 
         def _call(self, cmd, env, line):
             if env:

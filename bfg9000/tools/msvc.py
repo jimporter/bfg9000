@@ -34,8 +34,7 @@ _optimize_flags = {
 
 class MsvcBuilder(Builder):
     def __init__(self, env, langinfo, command, version_output):
-        Builder.__init__(self, langinfo.name,
-                         *self._parse_brand(version_output))
+        super().__init__(langinfo.name, *self._parse_brand(version_output))
         self.object_format = env.target_platform.object_format
 
         name = langinfo.var('compiler').lower()
@@ -128,8 +127,8 @@ class MsvcBuilder(Builder):
 class MsvcBaseCompiler(BuildCommand):
     def __init__(self, builder, env, rule_name, command_var, command,
                  cflags_name, cflags):
-        BuildCommand.__init__(self, builder, env, rule_name, command_var,
-                              command, flags=(cflags_name, cflags))
+        super().__init__(builder, env, rule_name, command_var, command,
+                         flags=(cflags_name, cflags))
 
     @property
     def deps_flavor(self):
@@ -235,8 +234,8 @@ class MsvcBaseCompiler(BuildCommand):
 
 class MsvcCompiler(MsvcBaseCompiler):
     def __init__(self, builder, env, name, command, cflags_name, cflags):
-        MsvcBaseCompiler.__init__(self, builder, env, name, name, command,
-                                  cflags_name, cflags)
+        super().__init__(builder, env, name, name, command, cflags_name,
+                         cflags)
 
     @property
     def accepts_pch(self):
@@ -256,8 +255,8 @@ class MsvcCompiler(MsvcBaseCompiler):
 
 class MsvcPchCompiler(MsvcBaseCompiler):
     def __init__(self, builder, env, name, command, cflags_name, cflags):
-        MsvcBaseCompiler.__init__(self, builder, env, name + '_pch', name,
-                                  command, cflags_name, cflags)
+        super().__init__(builder, env, name + '_pch', name, command,
+                         cflags_name, cflags)
 
     @property
     def num_outputs(self):
@@ -270,8 +269,7 @@ class MsvcPchCompiler(MsvcBaseCompiler):
 
     def _call(self, cmd, input, output, deps=None, flags=None):
         output = listify(output)
-        result = MsvcBaseCompiler._call(self, cmd, input, output[1], deps,
-                                        flags)
+        result = super()._call(cmd, input, output[1], deps, flags)
         result.append('/Fp' + output[0])
         return result
 
@@ -317,8 +315,8 @@ class MsvcLinker(BuildCommand):
 
     def __init__(self, builder, env, rule_name, name, command, ldflags_name,
                  ldflags, ldlibs_name, ldlibs):
-        BuildCommand.__init__(
-            self, builder, env, rule_name, name, command,
+        super().__init__(
+            builder, env, rule_name, name, command,
             flags=(ldflags_name, ldflags), libs=(ldlibs_name, ldlibs)
         )
 
@@ -453,9 +451,8 @@ class MsvcLinker(BuildCommand):
 class MsvcExecutableLinker(MsvcLinker):
     def __init__(self, builder, env, name, command_var, command, ldflags_name,
                  ldflags, ldlibs_name, ldlibs):
-        MsvcLinker.__init__(self, builder, env, name + '_link', command_var,
-                            command, ldflags_name, ldflags, ldlibs_name,
-                            ldlibs)
+        super().__init__(builder, env, name + '_link', command_var, command,
+                         ldflags_name, ldflags, ldlibs_name, ldlibs)
 
     def output_file(self, name, context):
         path = Path(name + self.env.target_platform.executable_ext)
@@ -465,22 +462,21 @@ class MsvcExecutableLinker(MsvcLinker):
 class MsvcSharedLibraryLinker(MsvcLinker):
     def __init__(self, builder, env, name, command_var, command, ldflags_name,
                  ldflags, ldlibs_name, ldlibs):
-        MsvcLinker.__init__(self, builder, env, name + '_linklib', command_var,
-                            command, ldflags_name, ldflags, ldlibs_name,
-                            ldlibs)
+        super().__init__(builder, env, name + '_linklib', command_var, command,
+                         ldflags_name, ldflags, ldlibs_name, ldlibs)
 
     @property
     def num_outputs(self):
         return 2
 
     def _call(self, cmd, input, output, libs=None, flags=None):
-        result = MsvcLinker._call(self, cmd, input, output[0], libs, flags)
+        result = super()._call(cmd, input, output[0], libs, flags)
         result.append('/IMPLIB:' + output[1])
         return result
 
     @property
     def _always_flags(self):
-        return MsvcLinker._always_flags.fget(self) + ['/DLL']
+        return super()._always_flags + ['/DLL']
 
     def compile_options(self, context):
         options = opts.option_list()
@@ -501,8 +497,8 @@ class MsvcSharedLibraryLinker(MsvcLinker):
 
 class MsvcStaticLinker(BuildCommand):
     def __init__(self, builder, env, name, command, arflags_name, arflags):
-        BuildCommand.__init__(self, builder, env, name, name,
-                              command, flags=(arflags_name, arflags))
+        super().__init__(builder, env, name, name, command,
+                         flags=(arflags_name, arflags))
 
     def can_link(self, format, langs):
         return format == self.builder.object_format

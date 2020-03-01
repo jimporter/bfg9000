@@ -4,7 +4,7 @@ from . import *
 @skip_if_backend('msbuild')
 class TestLexYacc(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        IntegrationTest.__init__(self, 'lex_yacc', *args, **kwargs)
+        super().__init__('lex_yacc', *args, **kwargs)
 
     def test_build(self):
         self.build()

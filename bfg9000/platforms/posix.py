@@ -15,7 +15,7 @@ class PosixPlatform(Platform):
     def _triplet_vendor(self):
         if self.genus == 'darwin':
             return 'apple'
-        return Platform._triplet_vendor.fget(self)
+        return super()._triplet_vendor
 
     @property
     def _triplet_sys_abi(self):

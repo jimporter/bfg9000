@@ -39,8 +39,7 @@ class BaseCompile(Edge):
         primary.post_install = self.compiler.post_install(options, output,
                                                           self)
 
-        Edge.__init__(self, build, output, public_output, extra_deps,
-                      description)
+        super().__init__(build, output, public_output, extra_deps, description)
 
     @property
     def options(self):
@@ -89,8 +88,8 @@ class Compile(BaseCompile):
             self.libs = libs
             internal_options.extend(opts.lib(i) for i in self.libs)
 
-        BaseCompile.__init__(self, build, name, internal_options, directory,
-                             extra_deps, description)
+        super().__init__(build, name, internal_options, directory, extra_deps,
+                         description)
 
     @staticmethod
     def convert_args(builtins, lang, src_lang, kwargs):
@@ -133,7 +132,7 @@ class CompileSource(Compile):
                              .format(self.file.path))
 
         self.compiler = env.builder(lang or self.file.lang).compiler
-        Compile.__init__(self, build, name, **kwargs)
+        super().__init__(build, name, **kwargs)
 
     @classmethod
     def convert_args(cls, builtins, file, kwargs):
@@ -154,7 +153,7 @@ class CompileHeader(Compile):
         self.pch_source = source
 
         self.compiler = env.builder(lang or self.file.lang).pch_compiler
-        Compile.__init__(self, build, name, **kwargs)
+        super().__init__(build, name, **kwargs)
 
     @classmethod
     def convert_args(cls, builtins, file, kwargs):
@@ -177,8 +176,7 @@ class GenerateSource(BaseCompile):
         self.user_options = options
 
         self.compiler = env.builder(lang or self.file.lang).transpiler
-        BaseCompile.__init__(self, build, name, None, directory, extra_deps,
-                             description)
+        super().__init__(build, name, None, directory, extra_deps, description)
 
     @classmethod
     def convert_args(cls, builtins, file, kwargs):

@@ -6,8 +6,7 @@ from . import *
 
 class TestDepfile(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        IntegrationTest.__init__(self, 'depfile', stage_src=True,
-                                 *args, **kwargs)
+        super().__init__('depfile', stage_src=True, *args, **kwargs)
 
     @skip_pred(lambda x: x.backend == 'make' and
                env.host_platform.family == 'windows',

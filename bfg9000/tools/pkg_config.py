@@ -22,8 +22,8 @@ class PkgConfig(SimpleCommand):
     }
 
     def __init__(self, env):
-        SimpleCommand.__init__(self, env, name='pkg_config',
-                               env_var='PKG_CONFIG', default='pkg-config')
+        super().__init__(env, name='pkg_config', env_var='PKG_CONFIG',
+                         default='pkg-config')
 
     def _call(self, cmd, name, type, static=False, msvc_syntax=False):
         result = cmd + [name] + self._options[type]
@@ -48,7 +48,7 @@ class PkgConfigPackage(Package):
         self.version = version
         self.specifier = specifier
         self.static = kind == PackageKind.static
-        Package.__init__(self, name, format)
+        super().__init__(name, format)
 
     @memoize
     def _call(self, *args, **kwargs):

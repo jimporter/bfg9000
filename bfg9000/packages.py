@@ -49,7 +49,7 @@ class Package:
 
 class CommonPackage(Package):
     def __init__(self, name, format, compile_options=None, link_options=None):
-        Package.__init__(self, name, format)
+        super().__init__(name, format)
         self._compile_options = compile_options or _option_list()
         self._link_options = link_options or _option_list()
 

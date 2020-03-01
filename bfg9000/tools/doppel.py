@@ -7,8 +7,8 @@ from ..iterutils import iterate
 @tool('doppel')
 class Doppel(SimpleCommand):
     def __init__(self, env):
-        SimpleCommand.__init__(self, env, name='doppel', env_var='DOPPEL',
-                               default='doppel')
+        super().__init__(env, name='doppel', env_var='DOPPEL',
+                         default='doppel')
 
     @property
     def data_args(self):

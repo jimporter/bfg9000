@@ -344,7 +344,7 @@ class TestGeneratedSource(CompileTest):
     mode = 'transpiler'
 
     def setUp(self):
-        CompileTest.setUp(self)
+        super().setUp()
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
             self.env.builder('qrc')
@@ -467,7 +467,7 @@ class TestObjectFiles(BuiltinTest):
 
 class TestGeneratedSources(TestObjectFiles):
     def setUp(self):
-        TestObjectFiles.setUp(self)
+        super().setUp()
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
             self.env.builder('qrc')

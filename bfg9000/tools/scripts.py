@@ -35,9 +35,9 @@ def make_script_tool(lang, default_command):
     @tool(lang, lang=lang)
     class ScriptTool(ScriptCommand):
         def __init__(self, env):
-            ScriptCommand.__init__(self, env, name=lang,
-                                   env_var=known_langs[lang].var('runner'),
-                                   default=default_command)
+            env_var = known_langs[lang].var('runner')
+            super().__init__(env, name=lang, env_var=env_var,
+                             default=default_command)
 
         def _call(self, cmd, file):
             return cmd + [file]

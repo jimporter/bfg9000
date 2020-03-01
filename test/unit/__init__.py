@@ -42,7 +42,7 @@ class CrossPlatformTestCase(TestCase):
                  platform_name=None, **kwargs):
         self.platform_name = platform_name
 
-        TestCase.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
         if self.platform_name is None:
             return
 
@@ -69,8 +69,7 @@ class PathTestCase(TestCase):
     ]
 
     def __init__(self, *args, path_info=None, **kwargs):
-
-        TestCase.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
         if path_info is None:
             return
         self.Path, self.ospath, self._desc = path_info

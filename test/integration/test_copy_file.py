@@ -8,8 +8,7 @@ from bfg9000.versioning import SpecifierSet
 
 class TestCopyFile(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        IntegrationTest.__init__(self, 'copy_file', configure=False,
-                                 *args, **kwargs)
+        super().__init__('copy_file', configure=False, *args, **kwargs)
 
     def split_path(self, target):
         path, name = os.path.split(self.target_path(target))

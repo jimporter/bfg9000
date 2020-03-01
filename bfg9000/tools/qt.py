@@ -28,8 +28,7 @@ def moc_builder(env):
 
 class MocBuilder(Builder):
     def __init__(self, env, langinfo, command, version_output):
-        Builder.__init__(self, langinfo.name,
-                         *self._parse_brand(version_output))
+        super().__init__(langinfo.name, *self._parse_brand(version_output))
 
         name = langinfo.var('compiler').lower()
         mocflags_name = langinfo.var('flags').lower()
@@ -106,8 +105,7 @@ def qrc_builder(env):
 
 class RccBuilder(Builder):
     def __init__(self, env, langinfo, command, version_output):
-        Builder.__init__(self, langinfo.name,
-                         *self._parse_brand(version_output))
+        super().__init__(langinfo.name, *self._parse_brand(version_output))
 
         name = langinfo.var('compiler').lower()
         rccflags_name = langinfo.var('flags').lower()
@@ -130,8 +128,8 @@ class RccBuilder(Builder):
 
 class RccCompiler(BuildCommand):
     def __init__(self, builder, env, name, command, rccflags_name, rccflags):
-        BuildCommand.__init__(self, builder, env, name, name, command,
-                              flags=(rccflags_name, rccflags))
+        super().__init__(builder, env, name, name, command,
+                         flags=(rccflags_name, rccflags))
 
     @property
     def deps_flavor(self):
@@ -172,8 +170,7 @@ def qtui_builder(env):
 
 class UicBuilder(Builder):
     def __init__(self, env, langinfo, command, version_output):
-        Builder.__init__(self, langinfo.name,
-                         *self._parse_brand(version_output))
+        super().__init__(langinfo.name, *self._parse_brand(version_output))
 
         name = langinfo.var('compiler').lower()
         uicflags_name = langinfo.var('flags').lower()
@@ -196,8 +193,8 @@ class UicBuilder(Builder):
 
 class UicCompiler(BuildCommand):
     def __init__(self, builder, env, name, command, uicflags_name, uicflags):
-        BuildCommand.__init__(self, builder, env, name, name, command,
-                              flags=(uicflags_name, uicflags))
+        super().__init__(builder, env, name, name, command,
+                         flags=(uicflags_name, uicflags))
 
     @property
     def deps_flavor(self):

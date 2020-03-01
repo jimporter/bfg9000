@@ -7,8 +7,8 @@ from .. import *
 @skip_if('scala' in skipped_tests, 'skipping scala tests')
 class TestScala(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        IntegrationTest.__init__(self, os.path.join('languages', 'scala'),
-                                 install=True, *args, **kwargs)
+        super().__init__(os.path.join('languages', 'scala'), install=True,
+                         *args, **kwargs)
 
     def test_build(self):
         self.build('program.jar')

@@ -4,7 +4,7 @@ from . import *
 @skip_if_backend('msbuild')
 class TestExplicitDefaults(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        IntegrationTest.__init__(self, 'explicit_defaults', *args, **kwargs)
+        super().__init__('explicit_defaults', *args, **kwargs)
 
     def test_default(self):
         self.build()
@@ -15,7 +15,7 @@ class TestExplicitDefaults(IntegrationTest):
 @skip_if_backend('msbuild')
 class TestImplicitDefaults(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        IntegrationTest.__init__(self, 'implicit_defaults', *args, **kwargs)
+        super().__init__('implicit_defaults', *args, **kwargs)
 
     def test_default(self):
         self.build()

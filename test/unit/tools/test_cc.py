@@ -36,8 +36,7 @@ def mock_execute(args, **kwargs):
 
 class TestCcBuilder(CrossPlatformTestCase):
     def __init__(self, *args, **kwargs):
-        CrossPlatformTestCase.__init__(self, clear_variables=True, *args,
-                                       **kwargs)
+        super().__init__(clear_variables=True, *args, **kwargs)
 
     def test_properties(self):
         with mock.patch('bfg9000.shell.which', mock_which), \
@@ -192,8 +191,7 @@ class TestCcBuilder(CrossPlatformTestCase):
 
 class TestCcCompiler(CrossPlatformTestCase):
     def __init__(self, *args, **kwargs):
-        CrossPlatformTestCase.__init__(self, clear_variables=True, *args,
-                                       **kwargs)
+        super().__init__(clear_variables=True, *args, **kwargs)
 
     def setUp(self):
         with mock.patch('bfg9000.shell.which', mock_which), \
@@ -361,8 +359,7 @@ class TestCcLinker(CrossPlatformTestCase):
     shared = False
 
     def __init__(self, *args, **kwargs):
-        CrossPlatformTestCase.__init__(self, clear_variables=True, *args,
-                                       **kwargs)
+        super().__init__(clear_variables=True, *args, **kwargs)
 
     def _get_linker(self, lang):
         with mock.patch('bfg9000.shell.which', mock_which), \
@@ -709,7 +706,7 @@ class TestCcSharedLinker(TestCcLinker):
 
     def test_call(self):
         if not self.env.target_platform.has_import_library:
-            return TestCcLinker.test_call(self)
+            return super().test_call()
 
         extra = self.linker._always_flags
         self.assertEqual(
@@ -748,8 +745,7 @@ class TestCcSharedLinker(TestCcLinker):
 
 class TestCcPackageResolver(CrossPlatformTestCase):
     def __init__(self, *args, **kwargs):
-        CrossPlatformTestCase.__init__(self, clear_variables=True, *args,
-                                       **kwargs)
+        super().__init__(clear_variables=True, *args, **kwargs)
 
     def setUp(self):
         with mock.patch('bfg9000.shell.which', mock_which), \

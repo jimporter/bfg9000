@@ -70,8 +70,7 @@ class TestNotBuildroot(CrossPlatformTestCase):
 
 class TestChooseBuilder(CrossPlatformTestCase):
     def __init__(self, *args, **kwargs):
-        CrossPlatformTestCase.__init__(self, clear_variables=True, *args,
-                                       **kwargs)
+        super().__init__(clear_variables=True, *args, **kwargs)
 
     def test_choose(self):
         with mock.patch('bfg9000.shell.which', mock_which), \

@@ -6,7 +6,7 @@ cxx = env.builder('c++')
 
 class TestWholeArchive(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        IntegrationTest.__init__(self, 'whole_archive', *args, **kwargs)
+        super().__init__('whole_archive', *args, **kwargs)
 
     @skip_if(cxx.flavor == 'msvc' and cxx.version and
              cxx.version in SpecifierSet('<19'),

@@ -33,7 +33,7 @@ class EnvVarDict(dict):
         if ( not isinstance(key, str) or
              not isinstance(value, str) ):  # pragma: no cover
             raise TypeError('expected a string')
-        dict.__setitem__(self, key, value)
+        super().__setitem__(key, value)
 
 
 class Toolchain:

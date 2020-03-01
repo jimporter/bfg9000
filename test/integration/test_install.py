@@ -8,8 +8,7 @@ pjoin = os.path.join
 
 class TestInstall(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        IntegrationTest.__init__(self, 'install', install=True, *args,
-                                 **kwargs)
+        super().__init__('install', install=True, *args, **kwargs)
 
     def test_default(self):
         self.build()
@@ -77,8 +76,8 @@ class TestInstall(IntegrationTest):
 @skip_if(env.host_platform.family == 'windows', hide=True)
 class TestDestDir(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        IntegrationTest.__init__(self, 'install', install=True,
-                                 configure=False, *args, **kwargs)
+        super().__init__('install', install=True, configure=False, *args,
+                         **kwargs)
 
     def setUp(self):
         self.destdir = tempfile.mkdtemp(prefix='destdir-')

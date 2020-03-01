@@ -57,12 +57,12 @@ class _Binder:
 
 class _PartialFunctionBinder(_Binder):
     def __init__(self, fn, *args):
-        _Binder.__init__(self, fn)
+        super().__init__(fn)
         self._args = args
 
     def bind(self, **kwargs):
         if not self._args:
-            return _Binder.bind(self, **kwargs)
+            return super().bind(**kwargs)
         pre_args = tuple(kwargs[i] for i in self._args)
 
         @functools.wraps(self._fn)
@@ -77,7 +77,7 @@ class _PartialFunctionBinder(_Binder):
 
 class _GetterBinder(_Binder):
     def __init__(self, fn, *args):
-        _Binder.__init__(self, fn)
+        super().__init__(fn)
         self._args = args
 
     def bind(self, **kwargs):

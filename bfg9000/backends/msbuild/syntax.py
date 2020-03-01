@@ -161,7 +161,7 @@ class VcxProject(Project):
     def __init__(self, env, name, mode='Application', configuration=None,
                  output_file=None, files=None, compile_options=None,
                  link_options=None, dependencies=None):
-        Project.__init__(self, env, name, configuration, dependencies)
+        super().__init__(env, name, configuration, dependencies)
         self.mode = mode
         self.output_file = output_file
         self.files = files or []
@@ -309,7 +309,7 @@ class NoopProject(Project):
 class CommandProject(Project):
     def __init__(self, env, name, configuration=None, commands=None,
                  dependencies=None, makedir='$(OutDir)'):
-        Project.__init__(self, env, name, configuration, dependencies)
+        super().__init__(env, name, configuration, dependencies)
         self.commands = commands or []
         self.makedir = makedir
 

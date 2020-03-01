@@ -37,7 +37,7 @@ class JvmBuilder(Builder):
             kind='{} runner'.format(langinfo.name)
         )
 
-        Builder.__init__(self, langinfo.name, *self._parse_brand(
+        super().__init__(langinfo.name, *self._parse_brand(
             env, langinfo.name, version_output, run_command
         ))
         self.object_format = 'jvm'
@@ -119,8 +119,8 @@ class JvmBuilder(Builder):
 
 class JvmCompiler(BuildCommand):
     def __init__(self, builder, env, name, command, flags_name, flags):
-        BuildCommand.__init__(self, builder, env, name, name, command,
-                              flags=(flags_name, flags))
+        super().__init__(builder, env, name, name, command,
+                         flags=(flags_name, flags))
 
     @property
     def deps_flavor(self):
@@ -184,8 +184,8 @@ class JvmCompiler(BuildCommand):
 
 class JarMaker(BuildCommand):
     def __init__(self, builder, env, name, command, jarflags_name, jarflags):
-        BuildCommand.__init__(self, builder, env, 'jar', 'jar', command,
-                              flags=(jarflags_name, jarflags))
+        super().__init__(builder, env, 'jar', 'jar', command,
+                         flags=(jarflags_name, jarflags))
 
     @property
     def flavor(self):
@@ -263,7 +263,7 @@ class JarMaker(BuildCommand):
 
 class JvmPackage(Package):
     def __init__(self, name, format, libs=None):
-        Package.__init__(self, name, format)
+        super().__init__(name, format)
         self.libs = libs or []
 
     def compile_options(self, compiler):
@@ -331,7 +331,7 @@ class JvmPackageResolver:
 
 class JvmRunner(BuildCommand):
     def __init__(self, builder, env, name, command):
-        BuildCommand.__init__(self, builder, env, name, name, command)
+        super().__init__(builder, env, name, name, command)
 
     def _call(self, cmd, file, cp=None, jar=False):
         result = list(cmd)

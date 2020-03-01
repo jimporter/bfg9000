@@ -11,11 +11,9 @@ class TestQt(IntegrationTest):
                              r'QXcbConnection: Could not connect to display')
 
     def __init__(self, *args, **kwargs):
-        IntegrationTest.__init__(
-            self, os.path.join(examples_dir, '12_qt'),
-            env={'CPPFLAGS': '-Wno-inconsistent-missing-override'},
-            *args, **kwargs
-        )
+        super().__init__(os.path.join(examples_dir, '12_qt'), env={
+            'CPPFLAGS': '-Wno-inconsistent-missing-override',
+        }, *args, **kwargs)
 
     def test_designer(self):
         self.build('qt-designer')

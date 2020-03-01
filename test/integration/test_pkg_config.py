@@ -28,10 +28,8 @@ def readPcFile(filename, field):
 @skip_if(is_mingw, 'no libogg on mingw (yet)')
 class TestPkgConfig(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        IntegrationTest.__init__(
-            self, os.path.join(examples_dir, '11_pkg_config'), configure=False,
-            install=True, *args, **kwargs
-        )
+        super().__init__(os.path.join(examples_dir, '11_pkg_config'),
+                         configure=False, install=True, *args, **kwargs)
 
     def test_configure_default(self):
         self.configure()
@@ -124,8 +122,8 @@ class TestPkgConfig(IntegrationTest):
 @skip_if(is_mingw, 'no libogg on mingw (yet)')
 class TestPkgConfigAuto(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        IntegrationTest.__init__(self, 'pkg_config_auto', configure=False,
-                                 install=True, *args, **kwargs)
+        super().__init__('pkg_config_auto', configure=False, install=True,
+                         *args, **kwargs)
 
     def test_configure_default(self):
         self.configure()

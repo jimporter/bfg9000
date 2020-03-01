@@ -144,7 +144,7 @@ class TestFlatten(TestCase):
     def test_custom_type(self):
         class custom_list(list):
             def __eq__(self, rhs):
-                return type(self) == type(rhs) and list.__eq__(self, rhs)
+                return type(self) == type(rhs) and super().__eq__(rhs)
 
         self.assertEqual(iterutils.flatten([[0, 1]] * 3, custom_list),
                          custom_list([0, 1, 0, 1, 0, 1]))

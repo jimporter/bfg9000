@@ -31,7 +31,7 @@ class CcBuilder(Builder):
     def __init__(self, env, langinfo, command, version_output):
         brand, version, target_flags = self._parse_brand(env, command,
                                                          version_output)
-        Builder.__init__(self, langinfo.name, brand, version)
+        super().__init__(langinfo.name, brand, version)
         self.object_format = env.target_platform.object_format
 
         name = langinfo.var('compiler').lower()
@@ -173,8 +173,8 @@ class CcBuilder(Builder):
 class CcBaseCompiler(BuildCommand):
     def __init__(self, builder, env, rule_name, command_var, command,
                  cflags_name, cflags):
-        BuildCommand.__init__(self, builder, env, rule_name, command_var,
-                              command, flags=(cflags_name, cflags))
+        super().__init__(builder, env, rule_name, command_var, command,
+                         flags=(cflags_name, cflags))
 
     @property
     def deps_flavor(self):
@@ -274,8 +274,8 @@ class CcCompiler(CcBaseCompiler):
     }
 
     def __init__(self, builder, env, name, command, cflags_name, cflags):
-        CcBaseCompiler.__init__(self, builder, env, name, name, command,
-                                cflags_name, cflags)
+        super().__init__(builder, env, name, name, command, cflags_name,
+                         cflags)
 
     @property
     def accepts_pch(self):
@@ -290,7 +290,7 @@ class CcCompiler(CcBaseCompiler):
                           self.lang)
 
 
-class CcPchCompiler(CcCompiler):
+class CcPchCompiler(CcBaseCompiler):
     _langs = {
         'c'     : 'c-header',
         'c++'   : 'c++-header',
@@ -302,8 +302,8 @@ class CcPchCompiler(CcCompiler):
         if builder.lang not in self._langs:
             raise ValueError('{} has no precompiled headers'
                              .format(builder.lang))
-        CcBaseCompiler.__init__(self, builder, env, name + '_pch', name,
-                                command, cflags_name, cflags)
+        super().__init__(builder, env, name + '_pch', name, command,
+                         cflags_name, cflags)
 
     @property
     def accepts_pch(self):
@@ -331,8 +331,8 @@ class CcLinker(BuildCommand):
 
     def __init__(self, builder, env, rule_name, command_var, command,
                  ldflags_name, ldflags, ldlibs_name, ldlibs):
-        BuildCommand.__init__(
-            self, builder, env, rule_name, command_var, command,
+        super().__init__(
+            builder, env, rule_name, command_var, command,
             flags=(ldflags_name, ldflags), libs=(ldlibs_name, ldlibs)
         )
 
@@ -658,8 +658,8 @@ class CcExecutableLinker(CcLinker):
 
     def __init__(self, builder, env, name, command, ldflags_name, ldflags,
                  ldlibs_name, ldlibs):
-        CcLinker.__init__(self, builder, env, name + '_link', name, command,
-                          ldflags_name, ldflags, ldlibs_name, ldlibs)
+        super().__init__(builder, env, name + '_link', name, command,
+                         ldflags_name, ldflags, ldlibs_name, ldlibs)
 
     def output_file(self, name, context):
         path = Path(name + self.env.target_platform.executable_ext)
@@ -671,8 +671,8 @@ class CcSharedLibraryLinker(CcLinker):
 
     def __init__(self, builder, env, name, command, ldflags_name, ldflags,
                  ldlibs_name, ldlibs):
-        CcLinker.__init__(self, builder, env, name + '_linklib', name, command,
-                          ldflags_name, ldflags, ldlibs_name, ldlibs)
+        super().__init__(builder, env, name + '_linklib', name, command,
+                         ldflags_name, ldflags, ldlibs_name, ldlibs)
 
     @property
     def num_outputs(self):
@@ -680,7 +680,7 @@ class CcSharedLibraryLinker(CcLinker):
 
     def _call(self, cmd, input, output, libs=None, flags=None):
         output = listify(output)
-        result = CcLinker._call(self, cmd, input, output[0], libs, flags)
+        result = super()._call(cmd, input, output[0], libs, flags)
         if self.env.target_platform.has_import_library:
             result.append('-Wl,--out-implib=' + output[1])
         return result
@@ -726,7 +726,7 @@ class CcSharedLibraryLinker(CcLinker):
     def _always_flags(self):
         shared = ('-dynamiclib' if self.env.target_platform.genus == 'darwin'
                   else '-shared')
-        return CcLinker._always_flags.fget(self) + [shared, '-fPIC']
+        return super()._always_flags + [shared, '-fPIC']
 
     def _soname(self, library):
         if isinstance(library, VersionedSharedLibrary):
@@ -750,7 +750,7 @@ class CcSharedLibraryLinker(CcLinker):
         return options
 
     def flags(self, options, output=None, mode='normal'):
-        flags = CcLinker.flags(self, options, output, mode)
+        flags = super().flags(options, output, mode)
         if output:
             flags.extend(self._soname(first(output)))
         return flags

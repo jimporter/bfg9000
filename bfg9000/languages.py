@@ -28,7 +28,7 @@ class _LanguageInfo(_Info):
     _fields = _Info._fields + ('exts', 'auxexts')
 
     def __init__(self, name, base, vars, exts, auxexts):
-        _Info.__init__(self, name, vars)
+        super().__init__(name, vars)
         self._base = base
 
         allkeys = set(exts.keys()) | set(auxexts.keys())

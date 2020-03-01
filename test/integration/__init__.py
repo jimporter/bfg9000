@@ -65,11 +65,10 @@ class SubprocessError(unittest.TestCase.failureException):
     def __init__(self, returncode, env, message):
         envstr = ''.join('  {} = {}\n'.format(k, v)
                          for k, v in (env or {}).items())
-        unittest.TestCase.failureException.__init__(
-            self, 'returned {returncode}\n{env}{line}\n{msg}\n{line}'.format(
-                returncode=returncode, env=envstr, line='-' * 60, msg=message
-            )
+        msg = 'returned {returncode}\n{env}{line}\n{msg}\n{line}'.format(
+            returncode=returncode, env=envstr, line='-' * 60, msg=message
         )
+        super().__init__(msg)
 
 
 class SubprocessTestCase(TestCase):
@@ -152,7 +151,7 @@ class BasicIntegrationTest(SubprocessTestCase):
         self.env = env
         self.extra_args = extra_args or []
 
-        SubprocessTestCase.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
         if self.backend is None:
             return
 

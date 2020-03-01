@@ -8,10 +8,8 @@ is_msvc = env.builder('c++').flavor == 'msvc'
 
 class TestLibrary(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        IntegrationTest.__init__(
-            self, pjoin(examples_dir, '02_library'),
-            configure=False, *args, **kwargs
-        )
+        super().__init__(pjoin(examples_dir, '02_library'),
+                         configure=False, *args, **kwargs)
 
     def test_default(self):
         self.configure()
@@ -42,8 +40,7 @@ class TestLibrary(IntegrationTest):
 
 class TestSharedLibrary(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        IntegrationTest.__init__(self, 'shared_library', install=True, *args,
-                                 **kwargs)
+        super().__init__('shared_library', install=True, *args, **kwargs)
 
     def test_build(self):
         self.build()
@@ -84,8 +81,7 @@ class TestSharedLibrary(IntegrationTest):
 
 class TestStaticLibrary(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        IntegrationTest.__init__(self, 'static_library', install=True, *args,
-                                 **kwargs)
+        super().__init__('static_library', install=True, *args, **kwargs)
 
     def test_build(self):
         self.build()
@@ -112,10 +108,8 @@ class TestDualUseLibrary(IntegrationTest):
     lib_names = ['inner', 'middle', 'outer']
 
     def __init__(self, *args, **kwargs):
-        IntegrationTest.__init__(
-            self, 'dual_use_library', configure=False, install=True, *args,
-            **kwargs
-        )
+        super().__init__('dual_use_library', configure=False, install=True,
+                         *args, **kwargs)
 
     def test_default(self):
         self.configure()
@@ -206,7 +200,7 @@ class TestDualUseLibrary(IntegrationTest):
 
 class TestLibraryDefs(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        IntegrationTest.__init__(self, 'library_defs', *args, **kwargs)
+        super().__init__('library_defs', *args, **kwargs)
 
     def test_build(self):
         self.build()
@@ -217,9 +211,7 @@ class TestLibraryDefs(IntegrationTest):
 @skip_if(env.target_platform.family == 'windows', hide=True)
 class TestVersionedLibrary(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        IntegrationTest.__init__(
-            self, 'versioned_library', install=True, *args, **kwargs
-        )
+        super().__init__('versioned_library', install=True, *args, **kwargs)
 
     def test_build(self):
         self.build()
@@ -247,9 +239,8 @@ class TestVersionedLibrary(IntegrationTest):
 @skip_if(env.target_platform.family == 'windows', hide=True)
 class TestInstallVersionedLibrary(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        IntegrationTest.__init__(
-            self, 'install_versioned_library', install=True, *args, **kwargs
-        )
+        super().__init__('install_versioned_library', install=True, *args,
+                         **kwargs)
 
     def test_install(self):
         self.build('install')

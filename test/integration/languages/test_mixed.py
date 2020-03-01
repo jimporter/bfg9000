@@ -5,9 +5,7 @@ from .. import *
 
 class TestMixed(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        IntegrationTest.__init__(
-            self, os.path.join('languages', 'mixed'), *args, **kwargs
-        )
+        super().__init__(os.path.join('languages', 'mixed'), *args, **kwargs)
 
     def test_build(self):
         self.build(executable('program'))
@@ -16,9 +14,8 @@ class TestMixed(IntegrationTest):
 
 class TestMixedLibrary(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        IntegrationTest.__init__(
-            self, os.path.join('languages', 'mixed_library'), *args, **kwargs
-        )
+        super().__init__(os.path.join('languages', 'mixed_library'), *args,
+                         **kwargs)
 
     def test_build(self):
         self.build(executable('program'))
@@ -30,9 +27,8 @@ class TestMixedLibrary(IntegrationTest):
 @skip_if(env.host_platform.genus == 'darwin', 'fortran on os x is weird')
 class TestMixedFortran(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        IntegrationTest.__init__(
-            self, os.path.join('languages', 'mixed_fortran'), *args, **kwargs
-        )
+        super().__init__(os.path.join('languages', 'mixed_fortran'), *args,
+                         **kwargs)
 
     def test_build(self):
         self.build(executable('program'))

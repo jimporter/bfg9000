@@ -5,7 +5,7 @@ from . import *
 
 class TestFilesWithSpaces(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        IntegrationTest.__init__(self, 'files_with_spaces', *args, **kwargs)
+        super().__init__('files_with_spaces', *args, **kwargs)
 
     def test_build(self):
         self.build(executable('quad damage'))

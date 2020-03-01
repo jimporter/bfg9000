@@ -5,9 +5,8 @@ from . import *
 
 class TestCommand(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        IntegrationTest.__init__(
-            self, os.path.join(examples_dir, '08_commands'), *args, **kwargs
-        )
+        super().__init__(os.path.join(examples_dir, '08_commands'), *args,
+                         **kwargs)
 
     def test_hello(self):
         self.assertRegex(self.build('hello'), r'(?m)^\s*hello$')
@@ -28,7 +27,7 @@ class TestCommand(IntegrationTest):
 @skip_if_backend('msbuild')
 class TestRunExecutable(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        IntegrationTest.__init__(self, 'run_executable', *args, **kwargs)
+        super().__init__('run_executable', *args, **kwargs)
 
     def test_env_run(self):
         self.assertExists(output_file('file.txt'))

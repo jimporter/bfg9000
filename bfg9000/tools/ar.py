@@ -12,8 +12,8 @@ from ..versioning import detect_version
 
 class ArLinker(BuildCommand):
     def __init__(self, builder, env, name, command, arflags_name, arflags):
-        BuildCommand.__init__(self, builder, env, name, name, command,
-                              flags=(arflags_name, arflags))
+        super().__init__(builder, env, name, name, command,
+                         flags=(arflags_name, arflags))
 
     @memoize
     def _check_version(self):

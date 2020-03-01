@@ -64,7 +64,7 @@ class File(Node):
     install_root = None
 
     def __init__(self, path):
-        Node.__init__(self, path)
+        super().__init__(path)
         self.post_install = None
 
     @property
@@ -102,11 +102,11 @@ class File(Node):
 @_clone_traits(exclude={'files'})
 class Directory(File):
     def __init__(self, path, files=None):
-        File.__init__(self, path)
+        super().__init__(path)
         self.files = files
 
     def _clone_args(self, pathfn, recursive):
-        args = File._clone_args(self, pathfn, recursive)
+        args = super()._clone_args(pathfn, recursive)
         if self.files is None:
             args['files'] = None
         elif recursive:
@@ -118,7 +118,7 @@ class Directory(File):
 
 class CodeFile(File):
     def __init__(self, path, lang):
-        File.__init__(self, path)
+        super().__init__(path)
         self.lang = lang
 
 
@@ -146,13 +146,13 @@ class PrecompiledHeader(HeaderFile):
 @_clone_traits(subfiles={'object_file': 'object_path'})
 class MsvcPrecompiledHeader(PrecompiledHeader):
     def __init__(self, path, object_path, header_name, format, lang):
-        PrecompiledHeader.__init__(self, path, lang)
+        super().__init__(path, lang)
         self.object_file = ObjectFile(object_path, format, self.lang)
         self.object_file.private = True
         self.header_name = header_name
 
     def _clone_args(self, pathfn, recursive):
-        args = PrecompiledHeader._clone_args(self, pathfn, recursive)
+        args = super()._clone_args(pathfn, recursive)
         args['format'] = self.object_file.format
         return args
 
@@ -162,7 +162,7 @@ class HeaderDirectory(Directory):
     install_root = _InstallRoot.includedir
 
     def __init__(self, path, files=None, system=False, langs=None):
-        Directory.__init__(self, path, files)
+        super().__init__(path, files)
         self.system = system
         self.langs = _listify(langs)
 
@@ -176,7 +176,7 @@ class Binary(File):
     install_root = _InstallRoot.libdir
 
     def __init__(self, path, format, lang=None):
-        File.__init__(self, path)
+        super().__init__(path)
         self.format = format
         self.lang = lang
 
@@ -191,7 +191,7 @@ class ObjectFileList(ObjectFile):
     install_kind = None
 
     def __init__(self, path, object_name, format, lang=None):
-        ObjectFile.__init__(self, path, format, lang)
+        super().__init__(path, format, lang)
         self.object_file = ObjectFile(object_name, format, lang)
 
 
@@ -201,7 +201,7 @@ class ObjectFileList(ObjectFile):
 @_clone_traits(exclude={'runtime_deps', 'linktime_deps', 'package_deps'})
 class LinkedBinary(Binary):
     def __init__(self, *args, **kwargs):
-        Binary.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.runtime_deps = []
         self.linktime_deps = []
         self.package_deps = []
@@ -242,7 +242,7 @@ class SharedLibrary(Library):
 @_clone_traits(exclude={'format', 'lang'})
 class LinkLibrary(SharedLibrary):
     def __init__(self, path, library):
-        SharedLibrary.__init__(self, path, library.format, library.lang)
+        super().__init__(path, library.format, library.lang)
         self.library = library
         self.linktime_deps = [library]
 
@@ -253,20 +253,20 @@ class LinkLibrary(SharedLibrary):
     def clone(self, path, recursive=False, inner=None):
         if recursive:
             return self.library.clone(path, True, inner or self)
-        return SharedLibrary.clone(self, path, False, inner)
+        return super().clone(path, False, inner)
 
 
 @_clone_traits(subfiles={'soname': 'soname', 'link': 'linkname'})
 class VersionedSharedLibrary(SharedLibrary):
     def __init__(self, path, format, lang, soname, linkname):
-        SharedLibrary.__init__(self, path, format, lang)
+        super().__init__(path, format, lang)
         self.soname = LinkLibrary(soname, self)
         self.link = LinkLibrary(linkname, self.soname)
 
 
 class StaticLibrary(Library):
     def __init__(self, path, format, lang=None, forward_opts=None):
-        Library.__init__(self, path, format, lang)
+        super().__init__(path, format, lang)
         self.forward_opts = forward_opts or {}
 
 
@@ -295,7 +295,7 @@ class DllBinary(LinkedBinary):
     private = True
 
     def __init__(self, path, format, lang, import_name, export_name=None):
-        LinkedBinary.__init__(self, path, format, lang)
+        super().__init__(path, format, lang)
         self.import_lib = LinkLibrary(import_name, self)
         self.export_file = ExportFile(export_name) if export_name else None
 

@@ -164,7 +164,7 @@ class Pattern(Entity):
 
 class Variable(NamedEntity):
     def __init__(self, name, quoted=False):
-        NamedEntity.__init__(self, re.sub(r'[\s:#=]', '_', name))
+        super().__init__(re.sub(r'[\s:#=]', '_', name))
         self.quoted = quoted
 
     def use(self):
@@ -184,7 +184,7 @@ def qvar(v):
 
 class Function(NamedEntity):
     def __init__(self, name, *args, quoted=False):
-        NamedEntity.__init__(self, name)
+        super().__init__(name)
         self.args = args
         self.quoted = quoted
 
@@ -203,7 +203,7 @@ class Function(NamedEntity):
         return safe_str.literal(result)
 
     def __eq__(self, rhs):
-        return NamedEntity.__eq__(self, rhs) and self.args == rhs.args
+        return super().__eq__(rhs) and self.args == rhs.args
 
 
 def Call(func, *args):

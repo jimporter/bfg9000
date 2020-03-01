@@ -4,7 +4,7 @@ from .common import SimpleCommand
 
 class LinkCommand(SimpleCommand):
     def __init__(self, *args, **kwargs):
-        SimpleCommand.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
         lower_cmd = [i.lower() for i in self.command]
         self.flavor = 'mklink' if 'mklink' in lower_cmd else 'ln'
 
@@ -19,8 +19,8 @@ class Symlink(LinkCommand):
     def __init__(self, env):
         default = ('cmd /c mklink' if env.host_platform.family == 'windows'
                    else 'ln -sf')
-        LinkCommand.__init__(self, env, name='symlink', env_var='SYMLINK',
-                             default=default)
+        super().__init__(env, name='symlink', env_var='SYMLINK',
+                         default=default)
 
     def transform_input(self, input, output):
         try:
@@ -34,8 +34,8 @@ class Hardlink(LinkCommand):
     def __init__(self, env):
         default = ('cmd /c mklink /H' if env.host_platform.family == 'windows'
                    else 'ln -f')
-        LinkCommand.__init__(self, env, name='hardlink', env_var='HARDLINK',
-                             default=default)
+        super().__init__(env, name='hardlink', env_var='HARDLINK',
+                         default=default)
 
 
 @tool('copy')
@@ -43,8 +43,7 @@ class Copy(SimpleCommand):
     def __init__(self, env):
         default = ('cmd /c copy' if env.host_platform.family == 'windows'
                    else 'cp -f')
-        SimpleCommand.__init__(self, env, name='cp', env_var='CP',
-                               default=default)
+        super().__init__(env, name='cp', env_var='CP', default=default)
 
     def _call(self, cmd, input, output):
         return cmd + [input, output]

@@ -84,7 +84,7 @@ class TestCase(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         self._args = args
         self._kwargs = kwargs
-        unittest.TestCase.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def _hideTest(self):
         test_method = getattr(self, self._testMethodName)

@@ -20,7 +20,7 @@ class ParseError(ValueError):
 
 class UnexpectedTokenError(ParseError):
     def __init__(self, tok):
-        ParseError.__init__(self, "unexpected token '{}'".format(tok))
+        super().__init__("unexpected token '{}'".format(tok))
 
 
 def tokenize(s):

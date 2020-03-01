@@ -7,10 +7,8 @@ from . import *
          'cross-compilation tests only run on linux')
 class TestCrossCompile(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        IntegrationTest.__init__(
-            self, os.path.join(examples_dir, '01_executable'), configure=False,
-            *args, **kwargs
-        )
+        super().__init__(os.path.join(examples_dir, '01_executable'),
+                         configure=False, *args, **kwargs)
 
     def test_gcc_linux(self):
         self.configure(extra_args=['--toolchain', os.path.join(
@@ -41,10 +39,8 @@ class TestCrossCompile(IntegrationTest):
          'cross-compilation tests only run on linux')
 class TestCrossCompileArch(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        IntegrationTest.__init__(
-            self, os.path.join('languages', 'c'), configure=False,
-            *args, **kwargs
-        )
+        super().__init__(os.path.join('languages', 'c'), configure=False,
+                         *args, **kwargs)
 
     def test_i686(self):
         self.configure(extra_args=['--toolchain', os.path.join(

@@ -3,7 +3,7 @@ from . import *
 
 class TestEarlyExit(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        IntegrationTest.__init__(self, 'early_exit', *args, **kwargs)
+        super().__init__('early_exit', *args, **kwargs)
 
     def test_build(self):
         self.build(executable('program'))

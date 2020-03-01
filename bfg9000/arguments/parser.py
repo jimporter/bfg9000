@@ -18,8 +18,8 @@ class ToggleAction(Action):
                               for i in option_strings]
 
         option_strings = self.true_strings + self.false_strings
-        Action.__init__(self, option_strings, dest=dest, nargs=0,
-                        default=default, required=required, help=help)
+        super().__init__(option_strings, dest=dest, nargs=0, default=default,
+                         required=required, help=help)
 
     def __call__(self, parser, namespace, values, option_string=None):
         value = option_string in self.true_strings
@@ -44,7 +44,7 @@ class WithAction(ToggleAction):
 
 class ArgumentParser(_ArgumentParser):
     def __init__(self, *args, **kwargs):
-        _ArgumentParser.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.register('action', 'enable', EnableAction)
         self.register('action', 'with', WithAction)
 
@@ -55,7 +55,7 @@ class ArgumentParser(_ArgumentParser):
         if option_string[:2] == self.prefix_chars * 2:
             return []
 
-        return _ArgumentParser._get_option_tuples(self, option_string)
+        return super()._get_option_tuples(option_string)
 
 
 class BaseFile:
@@ -78,12 +78,12 @@ class BaseFile:
 
 class Directory(BaseFile):
     def __init__(self, *args, **kwargs):
-        BaseFile.__init__(self, _path.isdir, 'directory', *args, **kwargs)
+        super().__init__(_path.isdir, 'directory', *args, **kwargs)
 
 
 class File(BaseFile):
     def __init__(self, *args, **kwargs):
-        BaseFile.__init__(self, _path.isfile, 'file', *args, **kwargs)
+        super().__init__(_path.isfile, 'file', *args, **kwargs)
 
 
 # It'd be nice to just have a UserArgumentParser class with this method but it

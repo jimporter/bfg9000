@@ -48,7 +48,7 @@ class TestCase(Test):
         if driver and environment:
             raise TypeError("only one of 'driver' and 'environment' may be " +
                             "specified")
-        Test.__init__(self, build, env, cmd, environment, driver)
+        super().__init__(build, env, cmd, environment, driver)
 
 
 class TestDriver(Test):
@@ -58,7 +58,7 @@ class TestDriver(Test):
             raise TypeError("only one of 'parent' and 'environment' may be " +
                             "specified")
 
-        Test.__init__(self, build, env, cmd, environment, parent)
+        super().__init__(build, env, cmd, environment, parent)
         self.tests = []
         self.wrap_children = wrap_children
 

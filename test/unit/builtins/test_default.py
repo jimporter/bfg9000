@@ -5,7 +5,7 @@ from bfg9000.builtins import compile, default, link, packages, project  # noqa
 
 class TestDefaultOutputs(BuiltinTest):
     def setUp(self):
-        BuiltinTest.setUp(self)
+        super().setUp()
         self.default = default.DefaultOutputs(self.build, self.env)
 
     def test_add_remove(self):

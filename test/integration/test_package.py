@@ -8,10 +8,8 @@ is_mingw = (env.host_platform.family == 'windows' and
 
 class TestPackage(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        IntegrationTest.__init__(
-            self, os.path.join(examples_dir, '04_package'),
-            *args, **kwargs
-        )
+        super().__init__(os.path.join(examples_dir, '04_package'), *args,
+                         **kwargs)
 
     def test_build(self):
         self.build()
@@ -22,10 +20,8 @@ class TestPackage(IntegrationTest):
 
 class TestSystemPackage(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        IntegrationTest.__init__(
-            self, os.path.join(examples_dir, '04_package'),
-            env={'PKG_CONFIG': 'nonexist'}, *args, **kwargs
-        )
+        super().__init__(os.path.join(examples_dir, '04_package'),
+                         env={'PKG_CONFIG': 'nonexist'}, *args, **kwargs)
 
     def test_build(self):
         self.build()
@@ -37,7 +33,7 @@ class TestSystemPackage(IntegrationTest):
 @skip_if(is_mingw, 'xfail on mingw')
 class TestBoostPackage(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        IntegrationTest.__init__(self, 'boost', *args, **kwargs)
+        super().__init__('boost', *args, **kwargs)
 
     def test_build(self):
         self.build()
@@ -47,7 +43,7 @@ class TestBoostPackage(IntegrationTest):
 
 class TestOpenGLPackage(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        IntegrationTest.__init__(self, 'opengl', *args, **kwargs)
+        super().__init__('opengl', *args, **kwargs)
 
     def test_build(self):
         self.build()
@@ -56,9 +52,8 @@ class TestOpenGLPackage(IntegrationTest):
 
 class TestOpenGLSystemPackage(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        IntegrationTest.__init__(
-            self, 'opengl', env={'PKG_CONFIG': 'nonexist'}, *args, **kwargs
-        )
+        super().__init__('opengl', env={'PKG_CONFIG': 'nonexist'}, *args,
+                         **kwargs)
 
     def test_build(self):
         self.build()

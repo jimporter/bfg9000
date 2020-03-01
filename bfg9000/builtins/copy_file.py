@@ -22,7 +22,7 @@ class CopyFile(Edge):
         self.mode = mode
         self.copier = env.tool(mode)
         self.file = file
-        Edge.__init__(self, build, output, None, extra_deps, description)
+        super().__init__(build, output, None, extra_deps, description)
 
     @staticmethod
     def convert_args(builtins, name, file, kwargs):

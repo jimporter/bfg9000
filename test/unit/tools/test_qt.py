@@ -23,8 +23,7 @@ def mock_which(*args, **kwargs):
 
 class TestMocBuilder(CrossPlatformTestCase):
     def __init__(self, *args, **kwargs):
-        CrossPlatformTestCase.__init__(self, clear_variables=True, *args,
-                                       **kwargs)
+        super().__init__(clear_variables=True, *args, **kwargs)
 
     def setUp(self):
         self.moc = MocBuilder(self.env, known_langs['qtmoc'], ['moc'],
@@ -88,10 +87,8 @@ class TestMocBuilder(CrossPlatformTestCase):
 
 class TestRccBuilder(CrossPlatformTestCase):
     def __init__(self, *args, **kwargs):
-        CrossPlatformTestCase.__init__(
-            self, clear_variables=True, variables={'RCCDEP': 'rccdep'}, *args,
-            **kwargs
-        )
+        super().__init__(clear_variables=True, variables={'RCCDEP': 'rccdep'},
+                         *args, **kwargs)
 
     def setUp(self):
         self.rcc = RccBuilder(self.env, known_langs['qrc'], ['rcc'], 'version')
@@ -141,8 +138,7 @@ class TestRccBuilder(CrossPlatformTestCase):
 
 class TestUicBuilder(CrossPlatformTestCase):
     def __init__(self, *args, **kwargs):
-        CrossPlatformTestCase.__init__(self, clear_variables=True, *args,
-                                       **kwargs)
+        super().__init__(clear_variables=True, *args, **kwargs)
 
     def setUp(self):
         self.uic = UicBuilder(self.env, known_langs['qtui'], ['uic'],

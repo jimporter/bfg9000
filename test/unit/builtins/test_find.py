@@ -141,7 +141,7 @@ class TestMakeFilterFromGlob(TestCase):
 
 class TestFilterByPlatform(BuiltinTest):
     def setUp(self):
-        BuiltinTest.setUp(self)
+        super().setUp()
         self.filter = self.builtin_dict['filter_by_platform']
 
     def test_normal(self):
@@ -201,7 +201,7 @@ class TestFind(BuiltinTest):
 
 class TestFindFiles(BuiltinTest):
     def setUp(self):
-        BuiltinTest.setUp(self)
+        super().setUp()
         self.find = self.builtin_dict['find_files']
 
     def assertFound(self, result, expected, dist=None):
@@ -348,7 +348,7 @@ class TestFindFiles(BuiltinTest):
 
 class TestFindPaths(TestFindFiles):
     def setUp(self):
-        BuiltinTest.setUp(self)
+        super().setUp()
         self.find = self.builtin_dict['find_paths']
 
     def assertFound(self, result, expected, dist=None):

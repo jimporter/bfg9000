@@ -84,13 +84,13 @@ class SimpleCommand(Command):
     def __init__(self, env, name, env_var, default, kind='executable'):
         cmd = check_which(env.getvar(env_var, default), env.variables,
                           kind=kind)
-        Command.__init__(self, env, name, name, cmd)
+        super().__init__(env, name, name, cmd)
 
 
 class BuildCommand(Command):
     def __init__(self, builder, env, rule_name, command_var, command,
                  **kwargs):
-        Command.__init__(self, env, rule_name, command_var, command)
+        super().__init__(env, rule_name, command_var, command)
         self.builder = builder
 
         # Fill in the names and values of the various flags needed for this

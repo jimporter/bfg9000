@@ -32,7 +32,7 @@ def static_file(build, file_type, name, dist=True, params=[], kwargs={}):
 
 class FileList(list):
     def __init__(self, fn, files, **kwargs):
-        list.__init__(self, (fn(i, **kwargs) for i in iterate(files)))
+        super().__init__(fn(i, **kwargs) for i in iterate(files))
 
     def __getitem__(self, key):
         if isinstance(key, str):
@@ -46,7 +46,7 @@ class FileList(list):
                     return i
             raise IndexError('{!r} not found'.format(key))
         else:
-            return list.__getitem__(self, key)
+            return super().__getitem__(key)
 
 
 @contextmanager

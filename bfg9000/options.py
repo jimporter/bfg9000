@@ -193,7 +193,7 @@ class define(Option):
                 ('value', (str, type(None))) ]
 
     def __init__(self, name, value=None):
-        Option._init(self, name, value)
+        super()._init(name, value)
 
 
 # Link options

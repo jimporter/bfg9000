@@ -13,8 +13,7 @@ def mock_which(*args, **kwargs):
 
 class TestArLinker(CrossPlatformTestCase):
     def __init__(self, *args, **kwargs):
-        CrossPlatformTestCase.__init__(self, clear_variables=True, *args,
-                                       **kwargs)
+        super().__init__(clear_variables=True, *args, **kwargs)
 
     def setUp(self):
         with mock.patch('bfg9000.shell.which', mock_which):

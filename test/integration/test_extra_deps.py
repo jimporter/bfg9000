@@ -3,7 +3,7 @@ from . import *
 
 class TestExtraDeps(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        IntegrationTest.__init__(self, 'extra_deps', *args, **kwargs)
+        super().__init__('extra_deps', *args, **kwargs)
 
     def test_build(self):
         self.build(executable('program'))

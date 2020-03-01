@@ -22,8 +22,7 @@ def mock_which(*args, **kwargs):
 
 class TestMsvcBuilder(CrossPlatformTestCase):
     def __init__(self, *args, **kwargs):
-        CrossPlatformTestCase.__init__(self, clear_variables=True, *args,
-                                       **kwargs)
+        super().__init__(clear_variables=True, *args, **kwargs)
 
     def test_properties(self):
         with mock.patch('bfg9000.shell.which', mock_which):
@@ -98,8 +97,7 @@ class TestMsvcBuilder(CrossPlatformTestCase):
 
 class TestMsvcCompiler(CrossPlatformTestCase):
     def __init__(self, *args, **kwargs):
-        CrossPlatformTestCase.__init__(self, clear_variables=True, *args,
-                                       **kwargs)
+        super().__init__(clear_variables=True, *args, **kwargs)
 
     def setUp(self):
         with mock.patch('bfg9000.shell.which', mock_which):
@@ -316,8 +314,7 @@ class TestMsvcPchCompiler(TestMsvcCompiler):
 
 class TestMsvcLinker(CrossPlatformTestCase):
     def __init__(self, *args, **kwargs):
-        CrossPlatformTestCase.__init__(self, clear_variables=True, *args,
-                                       **kwargs)
+        super().__init__(clear_variables=True, *args, **kwargs)
 
     def setUp(self):
         version = ('Microsoft (R) C/C++ Optimizing Compiler Version ' +
@@ -528,8 +525,7 @@ class TestMsvcSharedLinker(TestMsvcLinker):
 
 class TestMsvcStaticLinker(CrossPlatformTestCase):
     def __init__(self, *args, **kwargs):
-        CrossPlatformTestCase.__init__(self, clear_variables=True, *args,
-                                       **kwargs)
+        super().__init__(clear_variables=True, *args, **kwargs)
 
     def setUp(self):
         with mock.patch('bfg9000.shell.which', mock_which):
@@ -567,8 +563,7 @@ class TestMsvcStaticLinker(CrossPlatformTestCase):
 
 class TestMsvcPackageResolver(CrossPlatformTestCase):
     def __init__(self, *args, **kwargs):
-        CrossPlatformTestCase.__init__(self, clear_variables=True, *args,
-                                       **kwargs)
+        super().__init__(clear_variables=True, *args, **kwargs)
 
     def setUp(self):
         with mock.patch('bfg9000.shell.which', mock_which):

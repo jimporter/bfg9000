@@ -114,7 +114,7 @@ class KeyArgumentInfo(ArgumentInfo):
 @ArgumentParser.handler('alias')
 class AliasArgumentInfo(ArgumentInfo):
     def __init__(self, name, base, value=None):
-        ArgumentInfo.__init__(self, None)
+        super().__init__(None)
         self.base = base
         self.value = value
         if self.value is not None and not self.base.takes_value:
@@ -134,7 +134,7 @@ class AliasArgumentInfo(ArgumentInfo):
 @ArgumentParser.handler(bool)
 class BoolArgumentInfo(ArgumentInfo):
     def __init__(self, name, value=True):
-        ArgumentInfo.__init__(self, name)
+        super().__init__(name)
         self.value = value
 
     def fill_value(self, results, key, value):
@@ -149,7 +149,7 @@ class BoolArgumentInfo(ArgumentInfo):
 @ArgumentParser.handler(str)
 class StrArgumentInfo(ArgumentInfo):
     def __init__(self, name):
-        ArgumentInfo.__init__(self, name)
+        super().__init__(name)
 
     def fill_value(self, results, key, value):
         results[self.name] = value
@@ -159,7 +159,7 @@ class StrArgumentInfo(ArgumentInfo):
 @ArgumentParser.handler(list)
 class ListArgumentInfo(ArgumentInfo):
     def __init__(self, name):
-        ArgumentInfo.__init__(self, name)
+        super().__init__(name)
 
     def default(self):
         return []
@@ -172,7 +172,7 @@ class ListArgumentInfo(ArgumentInfo):
 @ArgumentParser.handler(dict)
 class DictArgumentInfo(ArgumentInfo):
     def __init__(self, name, strict=False):
-        ArgumentInfo.__init__(self, name)
+        super().__init__(name)
         self._short_names = {}
         self._long_names = {}
         self._options = []

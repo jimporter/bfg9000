@@ -26,8 +26,7 @@ def yacc_builder(env):
 
 class YaccBuilder(Builder):
     def __init__(self, env, langinfo, command, version_output):
-        Builder.__init__(self, langinfo.name,
-                         *self._parse_brand(version_output))
+        super().__init__(langinfo.name, *self._parse_brand(version_output))
 
         name = langinfo.var('compiler').lower()
         lflags_name = langinfo.var('flags').lower()

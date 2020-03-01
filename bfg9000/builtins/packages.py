@@ -18,7 +18,7 @@ from ..versioning import check_version, SpecifierSet, Version
 class BoostPackage(CommonPackage):
     def __init__(self, name, format, version, *args, **kwargs):
         name = 'boost({})'.format(','.join(iterate(name)))
-        CommonPackage.__init__(self, name, format, *args, **kwargs)
+        super().__init__(name, format, *args, **kwargs)
         self.version = version
 
 

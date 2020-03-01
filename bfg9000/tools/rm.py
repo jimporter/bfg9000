@@ -11,8 +11,7 @@ class Rm(SimpleCommand):
         default = ['rm -f']
         if env.host_platform.family == 'windows':
             default.append('cmd /c del')
-        SimpleCommand.__init__(self, env, name='rm', env_var='RM',
-                               default=default)
+        super().__init__(env, name='rm', env_var='RM', default=default)
 
     def _call(self, cmd, files):
         return list(chain(cmd, iterate(files)))

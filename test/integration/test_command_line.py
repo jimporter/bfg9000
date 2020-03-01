@@ -3,10 +3,8 @@ from . import *
 
 class TestConfigure(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        IntegrationTest.__init__(
-            self, os.path.join(examples_dir, '01_executable'), configure=False,
-            *args, **kwargs
-        )
+        super().__init__(os.path.join(examples_dir, '01_executable'),
+                         configure=False, *args, **kwargs)
 
     def setUp(self):
         os.chdir(this_dir)
@@ -51,10 +49,8 @@ class TestConfigure(IntegrationTest):
 
 class TestConfigureErrors(BasicIntegrationTest):
     def __init__(self, *args, **kwargs):
-        BasicIntegrationTest.__init__(
-            self, os.path.join(examples_dir, '01_executable'),
-            configure=False, *args, **kwargs
-        )
+        super().__init__(os.path.join(examples_dir, '01_executable'),
+                         configure=False, *args, **kwargs)
 
     def test_configure_not_srcdir(self):
         output = self.assertPopen(
@@ -99,10 +95,8 @@ class TestConfigureErrors(BasicIntegrationTest):
 
 class TestHelp(BasicIntegrationTest):
     def __init__(self, *args, **kwargs):
-        BasicIntegrationTest.__init__(
-            self, os.path.join(examples_dir, '01_executable'), configure=False,
-            *args, **kwargs
-        )
+        super().__init__(os.path.join(examples_dir, '01_executable'),
+                         configure=False, *args, **kwargs)
 
     def test_help_configure(self):
         os.chdir(self.srcdir)
@@ -124,10 +118,8 @@ class TestHelp(BasicIntegrationTest):
 
 class TestRefresh(BasicIntegrationTest):
     def __init__(self, *args, **kwargs):
-        BasicIntegrationTest.__init__(
-            self, os.path.join(examples_dir, '01_executable'),
-            configure=False, *args, **kwargs
-        )
+        super().__init__(os.path.join(examples_dir, '01_executable'),
+                         configure=False, *args, **kwargs)
 
     def test_refresh_extra_args(self):
         output = self.assertPopen(['bfg9000', 'refresh', '--foo'],
@@ -143,10 +135,8 @@ class TestRefresh(BasicIntegrationTest):
 
 class TestEnv(BasicIntegrationTest):
     def __init__(self, *args, **kwargs):
-        BasicIntegrationTest.__init__(
-            self, os.path.join(examples_dir, '01_executable'), configure=False,
-            *args, **kwargs
-        )
+        super().__init__(os.path.join(examples_dir, '01_executable'),
+                         configure=False, *args, **kwargs)
 
     def test_env(self):
         self.configure(env={'MY_ENV_VAR': 'value'}, backend=backends[0])

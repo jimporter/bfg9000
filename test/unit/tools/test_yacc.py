@@ -13,8 +13,7 @@ with known_langs.make('yacc') as x:
 
 class TestYaccBuilder(CrossPlatformTestCase):
     def __init__(self, *args, **kwargs):
-        CrossPlatformTestCase.__init__(self, clear_variables=True, *args,
-                                       **kwargs)
+        super().__init__(clear_variables=True, *args, **kwargs)
 
     def setUp(self):
         self.yacc = YaccBuilder(self.env, known_langs['yacc'], ['yacc'],

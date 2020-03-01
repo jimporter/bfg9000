@@ -7,8 +7,8 @@ from .. import *
 @skip_if_backend('msbuild')
 class TestJava(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        IntegrationTest.__init__(self, os.path.join('languages', 'java'),
-                                 install=True, *args, **kwargs)
+        super().__init__(os.path.join('languages', 'java'), install=True,
+                         *args, **kwargs)
 
     def test_build(self):
         self.build('program.jar')
@@ -35,8 +35,8 @@ class TestJava(IntegrationTest):
 @skip_if('gcj' not in extra_tests, 'skipping gcj tests')
 class TestGcj(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        IntegrationTest.__init__(self, os.path.join('languages', 'java'),
-                                 env={'JAVAC': 'gcj'}, *args, **kwargs)
+        super().__init__(os.path.join('languages', 'java'),
+                         env={'JAVAC': 'gcj'}, *args, **kwargs)
 
     def test_build(self):
         self.build('program')
@@ -46,10 +46,8 @@ class TestGcj(IntegrationTest):
 @skip_if_backend('msbuild')
 class TestJavaLibrary(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        IntegrationTest.__init__(
-            self, os.path.join('languages', 'java_library'), install=True,
-            *args, **kwargs
-        )
+        super().__init__(os.path.join('languages', 'java_library'),
+                         install=True, *args, **kwargs)
 
     def test_build(self):
         self.build('program.jar')

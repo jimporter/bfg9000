@@ -64,8 +64,8 @@ class BaseCommand(Edge):
                     if isinstance(i, Node) and (i.creator or not phony)]
         implicit.extend(iterate(extra_deps))
 
-        Edge.__init__(self, build, outputs, extra_deps=implicit,
-                      description=description)
+        super().__init__(build, outputs, extra_deps=implicit,
+                         description=description)
 
         # Do this after Edge.__init__ so that self.output is set for our
         # placeholders.
@@ -101,8 +101,7 @@ class Command(BaseCommand):
     console = True
 
     def __init__(self, build, env, name, **kwargs):
-        BaseCommand.__init__(self, build, env, name, Phony(name), phony=True,
-                             **kwargs)
+        super().__init__(build, env, name, Phony(name), phony=True, **kwargs)
 
 
 @builtin.function('build_inputs', 'builtins', 'env')
@@ -129,9 +128,8 @@ class BuildStep(BaseCommand):
         outputs = [self._make_outputs(*i) for i in zip(name, type)]
 
         desc = kwargs.pop('description', 'build => ' + ' '.join(name))
-        BaseCommand.__init__(self, build, env, project_name, outputs,
-                             phony=always_outdated, description=desc,
-                             **kwargs)
+        super().__init__(build, env, project_name, outputs,
+                         phony=always_outdated, description=desc, **kwargs)
 
     @staticmethod
     def convert_args(builtins, kwargs):

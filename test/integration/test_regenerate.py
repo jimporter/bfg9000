@@ -8,8 +8,7 @@ pjoin = os.path.join
 @skip_if_backend('msbuild')
 class TestRegenerate(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        IntegrationTest.__init__(self, 'regenerate', stage_src=True,
-                                 *args, **kwargs)
+        super().__init__('regenerate', stage_src=True, *args, **kwargs)
 
     def test_build(self):
         self.build('foo')
@@ -30,8 +29,8 @@ class TestRegenerate(IntegrationTest):
 class TestRegenerateGlob(IntegrationTest):
     def __init__(self, *args, **kwargs):
         self.extradir = pjoin(test_data_dir, 'regenerate_glob')
-        IntegrationTest.__init__(self, pjoin(examples_dir, '06_find_files'),
-                                 stage_src=True, *args, **kwargs)
+        super().__init__(pjoin(examples_dir, '06_find_files'), stage_src=True,
+                         *args, **kwargs)
 
     def copyfile(self, src, dest=None):
         if dest is None:

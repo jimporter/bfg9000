@@ -8,8 +8,8 @@ class InstallNameTool(SimpleCommand):
     rule_name = command_var = 'install_name_tool'
 
     def __init__(self, env):
-        SimpleCommand.__init__(
-            self, env, name='install_name_tool', env_var='INSTALL_NAME_TOOL',
+        super().__init__(
+            env, name='install_name_tool', env_var='INSTALL_NAME_TOOL',
             default='install_name_tool'
         )
 

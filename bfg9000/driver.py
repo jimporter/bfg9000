@@ -99,10 +99,8 @@ def directory_pair(srcname, buildname):
 class ConfigureHelp(argparse.Action):
     def __init__(self, option_strings, dest=argparse.SUPPRESS,
                  default=argparse.SUPPRESS, help=None):
-        argparse.Action.__init__(
-            self, option_strings=option_strings, dest=dest, default=default,
-            nargs=0, help=help
-        )
+        super().__init__(option_strings=option_strings, dest=dest,
+                         default=default, nargs=0, help=help)
 
     def __call__(self, parser, namespace, values, option_string=None):
         cwd = path.abspath('.')
