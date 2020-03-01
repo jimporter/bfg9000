@@ -838,6 +838,7 @@ class CcPackageResolver:
             compile_options.extend(opts.include_dir(self.header(i))
                                    for i in iterate(headers))
 
+            lib_path = None
             if lib_names is default_sentinel:
                 lib_names = self.env.target_platform.transform_package(name)
             for i in iterate(lib_names):
@@ -847,6 +848,12 @@ class CcPackageResolver:
                     compile_options.append(opts.pthread())
                     link_options.append(opts.pthread())
                 else:
-                    link_options.append(opts.lib(self.library(i, kind)))
+                    lib = self.library(i, kind)
+                    if not lib_path:
+                        lib_path = lib.path.parent().string()
+                    link_options.append(opts.lib(lib))
 
+            path_note = ' in {!r}'.format(lib_path) if lib_path else ''
+            log.info('found package {!r} via path-search{}'
+                     .format(name, path_note))
             return CommonPackage(name, format, compile_options, link_options)

@@ -36,6 +36,8 @@ def mock_execute(args, **kwargs):
                 '19.12.25831 for x86')
     elif args[-1] == '--modversion':
         return '1.2.3\n'
+    elif args[-1] == '--variable=pcfiledir':
+        return '/path/to/pkg-config'
 
 
 class TestFramework(TestCase):
@@ -72,7 +74,8 @@ class TestFramework(TestCase):
 class TestPackage(BuiltinTest):
     def test_name(self):
         with mock.patch('bfg9000.shell.execute', mock_execute), \
-             mock.patch('bfg9000.shell.which', mock_which):  # noqa
+             mock.patch('bfg9000.shell.which', mock_which), \
+             mock.patch('logging.log'):  # noqa
             pkg = self.builtin_dict['package']('name')
             self.assertEqual(pkg.name, 'name')
             self.assertEqual(pkg.version, Version('1.2.3'))
@@ -81,7 +84,8 @@ class TestPackage(BuiltinTest):
 
     def test_version(self):
         with mock.patch('bfg9000.shell.execute', mock_execute), \
-             mock.patch('bfg9000.shell.which', mock_which):  # noqa
+             mock.patch('bfg9000.shell.which', mock_which), \
+             mock.patch('logging.log'):  # noqa
             pkg = self.builtin_dict['package']('name', version='>1.0')
             self.assertEqual(pkg.name, 'name')
             self.assertEqual(pkg.version, Version('1.2.3'))
@@ -90,7 +94,8 @@ class TestPackage(BuiltinTest):
 
     def test_lang(self):
         with mock.patch('bfg9000.shell.execute', mock_execute), \
-             mock.patch('bfg9000.shell.which', mock_which):  # noqa
+             mock.patch('bfg9000.shell.which', mock_which), \
+             mock.patch('logging.log'):  # noqa
             pkg = self.builtin_dict['package']('name', lang='c++')
             self.assertEqual(pkg.name, 'name')
             self.assertEqual(pkg.version, Version('1.2.3'))
@@ -99,7 +104,8 @@ class TestPackage(BuiltinTest):
 
     def test_kind(self):
         with mock.patch('bfg9000.shell.execute', mock_execute), \
-             mock.patch('bfg9000.shell.which', mock_which):  # noqa
+             mock.patch('bfg9000.shell.which', mock_which), \
+             mock.patch('logging.log'):  # noqa
             pkg = self.builtin_dict['package']('name', kind='static')
             self.assertEqual(pkg.name, 'name')
             self.assertEqual(pkg.version, Version('1.2.3'))

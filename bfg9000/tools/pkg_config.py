@@ -3,7 +3,7 @@ import subprocess
 
 from . import tool
 from .common import SimpleCommand
-from .. import options as opts, shell
+from .. import log, options as opts, shell
 from ..exceptions import PackageResolutionError, PackageVersionError
 from ..objutils import memoize
 from ..packages import Package, PackageKind
@@ -19,6 +19,7 @@ class PkgConfig(SimpleCommand):
         'lib_dirs': ['--libs-only-L'],
         'ldflags': ['--libs-only-L', '--libs-only-other'],
         'ldlibs': ['--libs-only-l'],
+        'path': ['--variable=pcfiledir'],
     }
 
     def __init__(self, env):
@@ -86,6 +87,9 @@ class PkgConfigPackage(Package):
 
         return flags + libs + rpaths
 
+    def path(self):
+        return self._pkg_config.run(self.name, 'path').strip()
+
     def __repr__(self):
         return '<PkgConfigPackage({!r}, {!r})>'.format(
             self.name, str(self.version)
@@ -93,5 +97,8 @@ class PkgConfigPackage(Package):
 
 
 def resolve(env, name, format, version=None, kind=PackageKind.any):
-    return PkgConfigPackage(name, format, version, kind,
-                            env.tool('pkg_config'))
+    package = PkgConfigPackage(name, format, version, kind,
+                               env.tool('pkg_config'))
+    log.info('found package {!r} version {} via pkg-config in {!r}'
+             .format(name, package.version, package.path()))
+    return package

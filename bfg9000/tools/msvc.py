@@ -4,7 +4,7 @@ from itertools import chain
 
 from . import pkg_config
 from .common import BuildCommand, Builder, check_which, library_macro
-from .. import options as opts, safe_str, shell
+from .. import log, options as opts, safe_str, shell
 from ..arguments.windows import ArgumentParser
 from ..builtins.file_types import make_immediate_file
 from ..exceptions import PackageResolutionError
@@ -602,4 +602,10 @@ class MsvcPackageResolver:
             link_options = opts.option_list(
                 opts.lib(self.library(i, kind)) for i in iterate(lib_names)
             )
+
+            path_note = ' in {!r}'.format(
+                link_options[0].library.path.parent().string()
+            ) if link_options else ''
+            log.info('found package {!r} via path-search{}'
+                     .format(name, path_note))
             return CommonPackage(name, format, compile_options, link_options)

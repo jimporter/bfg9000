@@ -3,7 +3,7 @@ import re
 from itertools import chain
 
 from .common import BuildCommand, Builder, check_which, not_buildroot
-from .. import options as opts, safe_str, shell
+from .. import log, options as opts, safe_str, shell
 from ..builtins.file_types import make_immediate_file
 from ..exceptions import PackageResolutionError
 from ..file_types import *
@@ -325,8 +325,10 @@ class JvmPackageResolver:
                                      .format(name))
 
     def resolve(self, name, version, kind, headers, libs):
-        return JvmPackage(name, self.builder.object_format,
-                          libs=[self._library(name)])
+        lib = self._library(name)
+        log.info('found package {!r} via path-search in {!r}'
+                 .format(name, lib.path.parent().string()))
+        return JvmPackage(name, self.builder.object_format, libs=[lib])
 
 
 class JvmRunner(BuildCommand):
