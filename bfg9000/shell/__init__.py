@@ -62,31 +62,24 @@ def execute(args, shell=False, env=None, base_dirs=None, stdout=Mode.normal,
     if not shell:
         args = [stringify(i) for i in args]
 
-    devnull = (open(os.devnull, 'wb') if Mode.devnull in (stdout, stderr)
-               else None)
-
     def conv(mode):
         return ({Mode.normal : None,
                  Mode.pipe   : subprocess.PIPE,
                  Mode.stdout : subprocess.STDOUT,
-                 Mode.devnull: devnull}).get(mode, mode)
+                 Mode.devnull: subprocess.DEVNULL}).get(mode, mode)
 
-    try:
-        proc = subprocess.Popen(
-            args, universal_newlines=True, shell=shell, env=env,
-            stdout=conv(stdout), stderr=conv(stderr)
-        )
-        output = proc.communicate()
-        if not (returncode == 'any' or
-                (returncode == 'fail' and proc.returncode != 0) or
-                proc.returncode in listify(returncode)):
-            raise CalledProcessError(proc.returncode, args)
+    proc = subprocess.Popen(
+        args, universal_newlines=True, shell=shell, env=env,
+        stdout=conv(stdout), stderr=conv(stderr)
+    )
+    output = proc.communicate()
+    if not (returncode == 'any' or
+            (returncode == 'fail' and proc.returncode != 0) or
+            proc.returncode in listify(returncode)):
+        raise CalledProcessError(proc.returncode, args)
 
-        if stdout == Mode.pipe:
-            if stderr == Mode.pipe:
-                return output
-            return output[0]
-        return output[1]
-    finally:
-        if devnull:
-            devnull.close()
+    if stdout == Mode.pipe:
+        if stderr == Mode.pipe:
+            return output
+        return output[0]
+    return output[1]
