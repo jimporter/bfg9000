@@ -14,7 +14,7 @@ environment:
   LIBOGG_PLAT: Win32
   LIBRARY_PATH: C:\projects\bfg9000\lib
   PYTHON_PATH: C:\Python37
-  BFG_SKIPPED_TESTS: scala
+  BFG_SKIPPED_TESTS: fortran objc scala
   BACKENDS: ninja make msbuild
   CPPFLAGS: /IC:\projects\bfg9000\include /WX
 

@@ -4,7 +4,7 @@ import os
 from .. import *
 
 
-@skip_if('scala' in skipped_tests, 'skipping scala tests')
+@skip_if('scala' not in test_features, 'skipping scala tests')
 class TestScala(IntegrationTest):
     def __init__(self, *args, **kwargs):
         super().__init__(os.path.join('languages', 'scala'), install=True,

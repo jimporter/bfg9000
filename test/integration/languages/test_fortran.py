@@ -3,7 +3,7 @@ import os.path
 from .. import *
 
 
-@skip_if(env.host_platform.family == 'windows', 'no fortran on windows')
+@skip_if('fortran' not in test_features, 'skipping fortran tests')
 class TestF77(IntegrationTest):
     def __init__(self, *args, **kwargs):
         super().__init__(os.path.join('languages', 'f77'), *args, **kwargs)
@@ -13,7 +13,7 @@ class TestF77(IntegrationTest):
         self.assertOutput([executable('program')], ' hello from f77!\n')
 
 
-@skip_if(env.host_platform.family == 'windows', 'no fortran on windows')
+@skip_if('fortran' not in test_features, 'skipping fortran tests')
 class TestF95(IntegrationTest):
     def __init__(self, *args, **kwargs):
         super().__init__(os.path.join('languages', 'f95'), *args, **kwargs)

@@ -28,8 +28,14 @@ else:
     if env.host_platform.family != 'windows' and 'msbuild' in backends:
         backends.remove('msbuild')
 
-extra_tests = os.getenv('BFG_EXTRA_TESTS', '').split(' ')
-skipped_tests = os.getenv('BFG_SKIPPED_TESTS', '').split(' ')
+# Also supported: 'gcj', 'mingw-cross'
+test_features = {'fortran', 'java', 'objc', 'scala'}
+for i in os.getenv('BFG_EXTRA_TESTS', '').split(' '):
+    if i:
+        test_features.add(i)
+for i in os.getenv('BFG_SKIPPED_TESTS', '').split(' '):
+    if i:
+        test_features.remove(i)
 
 _unset = object()
 

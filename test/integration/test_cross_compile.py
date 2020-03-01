@@ -25,7 +25,7 @@ class TestCrossCompile(IntegrationTest):
         self.build('simple')
         self.assertOutput([executable('simple')], 'hello, world!\n')
 
-    @skip_if('mingw-cross' not in extra_tests, 'skipping mingw cross test')
+    @skip_if('mingw-cross' not in test_features, 'skipping mingw cross test')
     def test_mingw_windows(self):
         self.configure(extra_args=['--toolchain', os.path.join(
             test_data_dir, 'mingw-windows-toolchain.bfg'

@@ -4,6 +4,7 @@ import os
 from .. import *
 
 
+@skip_if('java' not in test_features, 'skipping java tests')
 @skip_if_backend('msbuild')
 class TestJava(IntegrationTest):
     def __init__(self, *args, **kwargs):
@@ -32,7 +33,7 @@ class TestJava(IntegrationTest):
         )
 
 
-@skip_if('gcj' not in extra_tests, 'skipping gcj tests')
+@skip_if('gcj' not in test_features, 'skipping gcj tests')
 class TestGcj(IntegrationTest):
     def __init__(self, *args, **kwargs):
         super().__init__(os.path.join('languages', 'java'),
@@ -43,6 +44,7 @@ class TestGcj(IntegrationTest):
         self.assertOutput([executable('program')], 'hello from java!\n')
 
 
+@skip_if('java' not in test_features, 'skipping java tests')
 @skip_if_backend('msbuild')
 class TestJavaLibrary(IntegrationTest):
     def __init__(self, *args, **kwargs):

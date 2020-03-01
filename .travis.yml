@@ -43,7 +43,7 @@ matrix:
       os: osx
       env: >
         CC=clang CXX=clang++ YACC=/usr/local/opt/bison/bin/bison
-        BFG_SKIPPED_TESTS=scala BFG_EXTRA_TESTS=
+        BFG_SKIPPED_TESTS=scala BFG_EXTRA_TESTS=nil
       before_install:
         - set -e
         - shell_session_update() { :; }
