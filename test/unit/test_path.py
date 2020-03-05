@@ -46,6 +46,11 @@ class TestPath(PathTestCase):
         self.assertEqual(p.root, path.Root.srcdir)
         self.assertEqual(p.destdir, False)
 
+        self.assertRaises(ValueError, self.Path, '..', path.Root.srcdir)
+        self.assertRaises(ValueError, self.Path, 'foo/../..', path.Root.srcdir)
+        self.assertRaises(ValueError, self.Path, 'foo/../../bar',
+                          path.Root.srcdir)
+
     def test_construct_absolute(self):
         p = self.Path('/foo/bar', path.Root.absolute)
         self.assertEqual(p.suffix, '/foo/bar')
@@ -112,6 +117,9 @@ class TestPath(PathTestCase):
             self.assertEqual(p.suffix, '/bar')
             self.assertEqual(p.root, path.Root.absolute)
             self.assertEqual(p.destdir, False)
+
+            if base.root != path.Root.absolute:
+                self.assertRaises(ValueError, self.Path, '../..', base)
 
     def test_ensure(self):
         self.assertEqual(self.Path.ensure('foo'), self.Path('foo'))
@@ -210,6 +218,7 @@ class TestPath(PathTestCase):
                          self.Path('foo/bar', path.InstallRoot.bindir, True))
 
         p = self.Path('foo', Root.srcdir)
+        self.assertRaises(ValueError, p.append, '../..')
 
     def test_ext(self):
         p = self.Path('foo.txt', path.Root.srcdir)

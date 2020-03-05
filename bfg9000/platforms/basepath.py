@@ -40,6 +40,9 @@ class BasePath(safe_str.safe_string):
             destdir = root.destdir
             root = root.root
 
+        if path == self.pardir or path.startswith(self.pardir + self.sep):
+            raise ValueError("too many '..': path cannot escape root")
+
         self.suffix = drive + path
         self.root = root
         self.destdir = destdir
