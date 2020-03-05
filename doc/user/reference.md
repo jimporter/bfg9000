@@ -1239,10 +1239,12 @@ during installation. Possible values are:
 ### Path(*path*, [*root*], [*destdir*]) { #Path }
 
 Create a new path object for a given *path*. *root* may be a value in the
-[*Root*](#Root) or [*InstallRoot*](#InstallRoot) enumerations. When the root is
-a value in *InstallRoot*, you can also specify *destdir*; if true, this path
-will be prepended with [`$DESTDIR`](environment-vars.md#destdir) on platforms
-that support destdirs.
+[*Root*](#Root) or [*InstallRoot*](#InstallRoot) enumerations, or another *Path*
+object. When the root is a value in *InstallRoot*, you can also specify
+*destdir*; if true, this path will be prepended with
+[`$DESTDIR`](environment-vars.md#destdir) on platforms that support destdirs.
+When the root is another path, this constructor will return the same value as
+[`root.append(path)`](#Path-append).
 
 #### *Path*.addext(*ext*) { #Path-addext }
 

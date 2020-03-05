@@ -94,6 +94,25 @@ class TestPath(PathTestCase):
         self.assertRaises(ValueError, self.Path, 'foo/bar', path.Root.srcdir,
                           True)
 
+    def test_construct_relative(self):
+        for base in (self.Path('foo', path.Root.srcdir),
+                     self.Path('/foo', path.Root.absolute),
+                     self.Path('foo', path.InstallRoot.bindir, True)):
+            p = self.Path('bar', base)
+            self.assertEqual(p.suffix, base.suffix + '/bar')
+            self.assertEqual(p.root, base.root)
+            self.assertEqual(p.destdir, base.destdir)
+
+            p = self.Path('bar', base, True)
+            self.assertEqual(p.suffix, base.suffix + '/bar')
+            self.assertEqual(p.root, base.root)
+            self.assertEqual(p.destdir, base.destdir)
+
+            p = self.Path('/bar', base)
+            self.assertEqual(p.suffix, '/bar')
+            self.assertEqual(p.root, path.Root.absolute)
+            self.assertEqual(p.destdir, False)
+
     def test_ensure(self):
         self.assertEqual(self.Path.ensure('foo'), self.Path('foo'))
         self.assertEqual(self.Path.ensure('foo', path.Root.srcdir),

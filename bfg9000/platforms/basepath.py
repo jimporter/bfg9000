@@ -26,19 +26,23 @@ class BasePath(safe_str.safe_string):
     )
 
     def __init__(self, path, root=Root.builddir, destdir=False):
-        if destdir and root not in InstallRoot:
+        if destdir and root in Root:
             raise ValueError('destdir only applies to install paths')
-        self.destdir = destdir
-
         drive, path = self.__normalize(path, expand_user=True)
-        self.suffix = drive + path
 
         if posixpath.isabs(path):
-            self.root = Root.absolute
+            root = Root.absolute
+            destdir = False
         elif root == Root.absolute:
             raise ValueError("'{}' is not absolute".format(path))
-        else:
-            self.root = root
+        elif isinstance(root, BasePath):
+            path = posixpath.normpath(posixpath.join(root.suffix, path))
+            destdir = root.destdir
+            root = root.root
+
+        self.suffix = drive + path
+        self.root = root
+        self.destdir = destdir
 
     @classmethod
     def abspath(cls, path):
@@ -89,7 +93,7 @@ class BasePath(safe_str.safe_string):
                           self.destdir)
 
     def append(self, path):
-        drive, path = self.__normalize(path)
+        drive, path = self.__normalize(path, expand_user=True)
         if not posixpath.isabs(path):
             path = posixpath.normpath(posixpath.join(self.suffix, path))
         return type(self)(drive + path, self.root, self.destdir)
