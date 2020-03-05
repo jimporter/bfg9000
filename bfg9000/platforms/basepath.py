@@ -36,11 +36,12 @@ class BasePath(safe_str.safe_string):
         elif root == Root.absolute:
             raise ValueError("'{}' is not absolute".format(path))
         elif isinstance(root, BasePath):
-            path = posixpath.normpath(posixpath.join(root.suffix, path))
+            path = self.__join(root.suffix, path)
             destdir = root.destdir
             root = root.root
 
-        if path == self.pardir or path.startswith(self.pardir + self.sep):
+        if ( path == posixpath.pardir or
+             path.startswith(posixpath.pardir + posixpath.sep) ):
             raise ValueError("too many '..': path cannot escape root")
 
         self.suffix = drive + path
@@ -54,7 +55,7 @@ class BasePath(safe_str.safe_string):
 
         if not drive:
             drive = cwddrive
-        path = posixpath.normpath(posixpath.join(cwdpath, path))
+        path = cls.__join(cwdpath, path)
         return cls(drive + path, Root.absolute)
 
     @classmethod
@@ -76,9 +77,14 @@ class BasePath(safe_str.safe_string):
 
         drive = drive.replace('\\', '/')
         path = posixpath.normpath(path.replace('\\', '/'))
-        if path == '.':
+        if path == posixpath.curdir:
             path = ''
         return drive, path
+
+    @staticmethod
+    def __join(path1, path2):
+        path = posixpath.normpath(posixpath.join(path1, path2))
+        return '' if path == posixpath.curdir else path
 
     def __localize(self, thing):
         if isinstance(thing, str):
@@ -98,7 +104,7 @@ class BasePath(safe_str.safe_string):
     def append(self, path):
         drive, path = self.__normalize(path, expand_user=True)
         if not posixpath.isabs(path):
-            path = posixpath.normpath(posixpath.join(self.suffix, path))
+            path = self.__join(self.suffix, path)
         return type(self)(drive + path, self.root, self.destdir)
 
     def ext(self):

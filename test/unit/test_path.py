@@ -108,6 +108,11 @@ class TestPath(PathTestCase):
             self.assertEqual(p.root, base.root)
             self.assertEqual(p.destdir, base.destdir)
 
+            p = self.Path('..', base)
+            self.assertEqual(p.suffix, base.suffix.replace('foo', ''))
+            self.assertEqual(p.root, base.root)
+            self.assertEqual(p.destdir, base.destdir)
+
             p = self.Path('bar', base, True)
             self.assertEqual(p.suffix, base.suffix + '/bar')
             self.assertEqual(p.root, base.root)
