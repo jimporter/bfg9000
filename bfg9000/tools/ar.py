@@ -51,18 +51,18 @@ class ArLinker(BuildCommand):
         # and only define the macros if it does.
         return self.env.target_platform.has_import_library
 
-    def compile_options(self, context):
+    def compile_options(self, step):
         options = opts.option_list()
         if self.builder.object_format != 'coff':
             options.append(opts.pic())
-        options.extend(self.forwarded_compile_options(context))
+        options.extend(self.forwarded_compile_options(step))
         return options
 
-    def forwarded_compile_options(self, context):
+    def forwarded_compile_options(self, step):
         options = opts.option_list()
         if self.has_link_macros:
             options.append(opts.define(library_macro(
-                context.name, 'static_library'
+                step.name, 'static_library'
             )))
         return options
 
@@ -80,8 +80,8 @@ class ArLinker(BuildCommand):
             cmd, iterate(flags), [output], iterate(input)
         ))
 
-    def output_file(self, name, context):
+    def output_file(self, name, step):
         head, tail = os.path.split(name)
         path = os.path.join(head, 'lib' + tail + '.a')
         return StaticLibrary(Path(path), self.builder.object_format,
-                             context.langs)
+                             step.langs)

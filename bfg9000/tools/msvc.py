@@ -241,11 +241,11 @@ class MsvcCompiler(MsvcBaseCompiler):
     def accepts_pch(self):
         return True
 
-    def default_name(self, input, context):
+    def default_name(self, input, step):
         return input.path.stripext().suffix
 
-    def output_file(self, name, context):
-        pch = getattr(context, 'pch', None)
+    def output_file(self, name, step):
+        pch = getattr(step, 'pch', None)
         output = ObjectFile(Path(name + '.obj'),
                             self.builder.object_format, self.lang)
         if pch:
@@ -273,16 +273,15 @@ class MsvcPchCompiler(MsvcBaseCompiler):
         result.append('/Fp' + output[0])
         return result
 
-    def pre_build(self, build, name, context):
-        header = getattr(context, 'file')
+    def pre_build(self, build, name, step):
+        header = getattr(step, 'file')
         options = opts.option_list()
 
-        if context.pch_source is None:
+        if step.pch_source is None:
             ext = known_langs[self.lang].default_ext('source')
-            context.pch_source = SourceFile(header.path.stripext(ext).reroot(),
-                                            header.lang)
-            with make_immediate_file(build, self.env, context.pch_source) \
-                 as out:  # noqa
+            step.pch_source = SourceFile(header.path.stripext(ext).reroot(),
+                                         header.lang)
+            with make_immediate_file(build, self.env, step.pch_source) as out:
                 out.write('#include "{}"\n'.format(header.path.basename()))
 
             # Add the include path for the header to ensure the PCH source
@@ -294,12 +293,12 @@ class MsvcPchCompiler(MsvcBaseCompiler):
         options.append('/Yc' + header.path.suffix)
         return options
 
-    def default_name(self, input, context):
+    def default_name(self, input, step):
         return input.path.suffix
 
-    def output_file(self, name, context):
+    def output_file(self, name, step):
         pchpath = Path(name).stripext('.pch')
-        objpath = context.pch_source.path.stripext('.obj').reroot()
+        objpath = step.pch_source.path.stripext('.obj').reroot()
         output = MsvcPrecompiledHeader(
             pchpath, objpath, name, self.builder.object_format, self.lang
         )
@@ -454,7 +453,7 @@ class MsvcExecutableLinker(MsvcLinker):
         super().__init__(builder, env, name + '_link', command_var, command,
                          ldflags_name, ldflags, ldlibs_name, ldlibs)
 
-    def output_file(self, name, context):
+    def output_file(self, name, step):
         path = Path(name + self.env.target_platform.executable_ext)
         return Executable(path, self.builder.object_format, self.lang)
 
@@ -478,15 +477,15 @@ class MsvcSharedLibraryLinker(MsvcLinker):
     def _always_flags(self):
         return super()._always_flags + ['/DLL']
 
-    def compile_options(self, context):
+    def compile_options(self, step):
         options = opts.option_list()
         if self.has_link_macros:
             options.append(opts.define(library_macro(
-                context.name, 'shared_library'
+                step.name, 'shared_library'
             )))
         return options
 
-    def output_file(self, name, context):
+    def output_file(self, name, step):
         dllname = Path(name + self.env.target_platform.shared_library_ext)
         impname = Path(name + '.lib')
         expname = Path(name + '.exp')
@@ -512,14 +511,14 @@ class MsvcStaticLinker(BuildCommand):
             cmd, iterate(flags), iterate(input), ['/OUT:' + output]
         ))
 
-    def compile_options(self, context):
-        return self.forwarded_compile_options(context)
+    def compile_options(self, step):
+        return self.forwarded_compile_options(step)
 
-    def forwarded_compile_options(self, context):
+    def forwarded_compile_options(self, step):
         options = opts.option_list()
         if self.has_link_macros:
             options.append(opts.define(library_macro(
-                context.name, 'static_library'
+                step.name, 'static_library'
             )))
         return options
 
@@ -532,9 +531,9 @@ class MsvcStaticLinker(BuildCommand):
                 raise TypeError('unknown option type {!r}'.format(type(i)))
         return flags
 
-    def output_file(self, name, context):
+    def output_file(self, name, step):
         return StaticLibrary(Path(name + '.lib'),
-                             self.builder.object_format, context.langs)
+                             self.builder.object_format, step.langs)
 
     def parse_flags(self, flags):
         return {'extra': flags}

@@ -70,13 +70,13 @@ class LexCompiler(BuildCommand):
             return lang
         return 'c'
 
-    def default_name(self, input, context):
-        options = getattr(context, 'user_options', None)
+    def default_name(self, input, step):
+        options = getattr(step, 'user_options', None)
         lang = known_langs[self._output_lang(options)]
         return input.path.stripext('.yy' + lang.default_ext('source')).suffix
 
-    def output_file(self, name, context):
-        options = getattr(context, 'user_options', None)
+    def output_file(self, name, step):
+        options = getattr(step, 'user_options', None)
         lang = self._output_lang(options)
         return SourceFile(Path(name), lang)
 

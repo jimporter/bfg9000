@@ -281,10 +281,10 @@ class CcCompiler(CcBaseCompiler):
     def accepts_pch(self):
         return True
 
-    def default_name(self, input, context):
+    def default_name(self, input, step):
         return input.path.stripext().suffix
 
-    def output_file(self, name, context):
+    def output_file(self, name, step):
         # XXX: MinGW's object format doesn't appear to be COFF...
         return ObjectFile(Path(name + '.o'), self.builder.object_format,
                           self.lang)
@@ -310,10 +310,10 @@ class CcPchCompiler(CcBaseCompiler):
         # You can't pass a PCH to a PCH compiler!
         return False
 
-    def default_name(self, input, context):
+    def default_name(self, input, step):
         return input.path.suffix
 
-    def output_file(self, name, context):
+    def output_file(self, name, step):
         ext = '.gch' if self.brand == 'gcc' else '.pch'
         return PrecompiledHeader(Path(name + ext), self.lang)
 
@@ -408,8 +408,8 @@ class CcLinker(BuildCommand):
             iterate(libs), ['-o', output]
         ))
 
-    def pre_build(self, build, name, context):
-        entry_point = getattr(context, 'entry_point', None)
+    def pre_build(self, build, name, step):
+        entry_point = getattr(step, 'entry_point', None)
         return opts.option_list(opts.entry_point(entry_point) if entry_point
                                 else None)
 
@@ -634,7 +634,7 @@ class CcLinker(BuildCommand):
                 flags.append(i.value)
         return flags
 
-    def post_install(self, options, output, context):
+    def post_install(self, options, output, step):
         if self.builder.object_format not in ['elf', 'mach-o']:
             return None
 
@@ -661,7 +661,7 @@ class CcExecutableLinker(CcLinker):
         super().__init__(builder, env, name + '_link', name, command,
                          ldflags_name, ldflags, ldlibs_name, ldlibs)
 
-    def output_file(self, name, context):
+    def output_file(self, name, step):
         path = Path(name + self.env.target_platform.executable_ext)
         return Executable(path, self.builder.object_format, self.lang)
 
@@ -690,7 +690,7 @@ class CcSharedLibraryLinker(CcLinker):
         ext = self.env.target_platform.shared_library_ext
         return head.append(prefix + tail + ext + suffix)
 
-    def post_build(self, build, options, output, context):
+    def post_build(self, build, options, output, step):
         if isinstance(output, VersionedSharedLibrary):
             # Make symlinks for the various versions of the shared lib.
             CopyFile(build, self.env, output.soname, output, mode='symlink')
@@ -698,9 +698,9 @@ class CcSharedLibraryLinker(CcLinker):
                      mode='symlink')
             return output.link
 
-    def output_file(self, name, context):
-        version = getattr(context, 'version', None)
-        soversion = getattr(context, 'soversion', None)
+    def output_file(self, name, step):
+        version = getattr(step, 'version', None)
+        soversion = getattr(step, 'soversion', None)
         fmt = self.builder.object_format
 
         if version and self.env.target_platform.has_versioned_library:
@@ -739,13 +739,13 @@ class CcSharedLibraryLinker(CcLinker):
         else:
             return ['-Wl,-soname,' + soname.path.basename()]
 
-    def compile_options(self, context):
+    def compile_options(self, step):
         options = opts.option_list()
         if self.builder.object_format != 'coff':
             options.append(opts.pic())
         if self.has_link_macros:
             options.append(opts.define(library_macro(
-                context.name, 'shared_library'
+                step.name, 'shared_library'
             )))
         return options
 

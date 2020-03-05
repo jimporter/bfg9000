@@ -174,10 +174,10 @@ class JvmCompiler(BuildCommand):
                                                os.pathsep)])
         return flags
 
-    def default_name(self, input, context):
+    def default_name(self, input, step):
         return input.path.stripext().suffix
 
-    def output_file(self, name, context):
+    def output_file(self, name, step):
         return ObjectFileList(Path(name + '.classlist'), Path(name + '.class'),
                               self.builder.object_format, self.lang)
 
@@ -202,7 +202,7 @@ class JarMaker(BuildCommand):
     def has_link_macros(self):
         return False
 
-    def pre_build(self, build, name, context):
+    def pre_build(self, build, name, step):
         # Fix up paths for the Class-Path field: escape spaces, use forward
         # slashes on Windows, and prefix Windows drive letters with '/' to
         # disambiguate them from URLs.
@@ -213,20 +213,20 @@ class JarMaker(BuildCommand):
                 p = p.replace('\\', '/')
             return p.replace(' ', '%20')
 
-        libs = getattr(context, 'libs', []) + flatten(
-            i.libs for i in getattr(context, 'packages', [])
+        libs = getattr(step, 'libs', []) + flatten(
+            i.libs for i in getattr(step, 'packages', [])
         )
         dirs = uniques(i.path for i in libs)
         base = Path(name).parent()
 
-        context.manifest = File(Path(name + '-manifest.txt'))
-        with make_immediate_file(build, self.env, context.manifest) as out:
+        step.manifest = File(Path(name + '-manifest.txt'))
+        with make_immediate_file(build, self.env, step.manifest) as out:
             classpath = ' '.join(fix_path(i.relpath(base)) for i in dirs)
             if classpath:
                 out.write('Class-Path: {}\n'.format(classpath))
 
-            if getattr(context, 'entry_point', None):
-                out.write('Main-Class: {}\n'.format(context.entry_point))
+            if getattr(step, 'entry_point', None):
+                out.write('Main-Class: {}\n'.format(step.entry_point))
 
         return opts.option_list()
 
@@ -252,8 +252,8 @@ class JarMaker(BuildCommand):
                 raise TypeError('unknown option type {!r}'.format(type(i)))
         return flags
 
-    def output_file(self, name, context):
-        if getattr(context, 'entry_point', None):
+    def output_file(self, name, step):
+        if getattr(step, 'entry_point', None):
             filetype = ExecutableLibrary
         else:
             filetype = Library

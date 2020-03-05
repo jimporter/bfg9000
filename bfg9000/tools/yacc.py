@@ -65,7 +65,7 @@ class YaccCompiler(BuildCommand):
             cmd, iterate(flags), [input, '-o', first(output)]
         ))
 
-    def pre_build(self, build, name, context):
+    def pre_build(self, build, name, step):
         name = listify(name)
         return opts.option_list(['--defines=' + name[1]]
                                 if len(name) > 1 else [])
@@ -76,17 +76,17 @@ class YaccCompiler(BuildCommand):
             return filtered[-1].value
         return 'c'
 
-    def default_name(self, input, context):
-        options = getattr(context, 'user_options', None)
+    def default_name(self, input, step):
+        options = getattr(step, 'user_options', None)
         lang = known_langs[self._output_lang(options)]
         return [
             input.path.stripext('.tab' + lang.default_ext('source')).suffix,
             input.path.stripext('.tab' + lang.default_ext('header')).suffix
         ]
 
-    def output_file(self, name, context):
+    def output_file(self, name, step):
         name = listify(name)
-        options = getattr(context, 'user_options', None)
+        options = getattr(step, 'user_options', None)
         lang = self._output_lang(options)
         src = SourceFile(Path(name[0]), lang)
 

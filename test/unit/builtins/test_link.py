@@ -10,14 +10,14 @@ from bfg9000.path import Path, Root
 
 
 class LinkTest(BuiltinTest):
-    def output_file(self, name, context={}, lang='c++', mode=None, extra={}):
+    def output_file(self, name, step={}, lang='c++', mode=None, extra={}):
         linker = self.env.builder(lang).linker(mode or self.mode)
-        context_args = {'langs': [lang]}
-        context_args.update(context)
-        context = AttrDict(**context_args)
+        step_args = {'langs': [lang]}
+        step_args.update(step)
+        step = AttrDict(**step_args)
 
-        output = linker.output_file(name, context)
-        public_output = linker.post_build(self.build, [], output, context)
+        output = linker.output_file(name, step)
+        public_output = linker.post_build(self.build, [], output, step)
 
         result = [i for i in listify(public_output or output) if not i.private]
         for i in result:
@@ -242,7 +242,7 @@ class TestSharedLibrary(LinkTest):
             'shared', [src], version='1', soversion='1'
         )
         self.assertSameFile(result, self.output_file(
-            'shared', context={'version': '1', 'soversion': '1'}
+            'shared', step={'version': '1', 'soversion': '1'}
         ), exclude={'post_install'})
 
         self.assertRaises(ValueError, self.builtin_dict['shared_library'],

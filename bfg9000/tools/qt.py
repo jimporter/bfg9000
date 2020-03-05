@@ -63,7 +63,7 @@ class MocCompiler(BuildCommand):
             cmd, iterate(flags), [input, '-o', output]
         ))
 
-    def default_name(self, input, context):
+    def default_name(self, input, step):
         if isinstance(input, SourceFile):
             return input.path.stripext('.moc').suffix
         base, leaf = input.path.stripext(
@@ -71,7 +71,7 @@ class MocCompiler(BuildCommand):
         ).splitleaf()
         return base.append('moc_' + leaf).suffix
 
-    def output_file(self, name, context):
+    def output_file(self, name, step):
         return SourceFile(Path(name), 'c++')
 
     def flags(self, options, output=None, mode='normal'):
@@ -145,12 +145,12 @@ class RccCompiler(BuildCommand):
             return self.env.tool('rccdep')(result, deps)
         return result
 
-    def default_name(self, input, context):
+    def default_name(self, input, step):
         return input.path.stripext(
             known_langs['c++'].default_ext('source')
         ).suffix
 
-    def output_file(self, name, context):
+    def output_file(self, name, step):
         return SourceFile(Path(name), 'c++')
 
     def flags(self, options, output=None, mode='normal'):
@@ -209,11 +209,11 @@ class UicCompiler(BuildCommand):
             cmd, iterate(flags), [input, '-o', output]
         ))
 
-    def default_name(self, input, context):
+    def default_name(self, input, step):
         base, leaf = input.path.stripext('.h').splitleaf()
         return base.append('ui_' + leaf).suffix
 
-    def output_file(self, name, context):
+    def output_file(self, name, step):
         return HeaderFile(Path(name), 'c++')
 
     def flags(self, options, output=None, mode='normal'):

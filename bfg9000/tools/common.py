@@ -123,13 +123,13 @@ class BuildCommand(Command):
     def num_outputs(self):
         return 'all'
 
-    def pre_build(self, build, name, context):
+    def pre_build(self, build, name, step):
         return opts.option_list()
 
-    def post_build(self, build, options, output, context):
+    def post_build(self, build, options, output, step):
         return None
 
-    def post_install(self, options, output, context):
+    def post_install(self, options, output, step):
         return None
 
 

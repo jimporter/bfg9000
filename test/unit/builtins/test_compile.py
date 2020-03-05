@@ -21,12 +21,12 @@ def mock_execute(*args, **kwargs):
 
 
 class CompileTest(BuiltinTest):
-    def output_file(self, name, context={}, lang='c++', mode=None, extra={}):
+    def output_file(self, name, step={}, lang='c++', mode=None, extra={}):
         compiler = getattr(self.env.builder(lang), mode or self.mode)
-        context = AttrDict(**context)
+        step = AttrDict(**step)
 
-        output = compiler.output_file(name, context)
-        public_output = compiler.post_build(self.build, [], output, context)
+        output = compiler.output_file(name, step)
+        public_output = compiler.post_build(self.build, [], output, step)
 
         result = [i for i in listify(public_output or output) if not i.private]
         for i in result:
@@ -198,7 +198,7 @@ class TestPrecompiledHeader(CompileTest):
             pass
 
     mode = 'pch_compiler'
-    context = {'pch_source': file_types.SourceFile(
+    step = {'pch_source': file_types.SourceFile(
         Path('main.cpp', Root.srcdir), 'c++'
     )}
 
@@ -236,18 +236,18 @@ class TestPrecompiledHeader(CompileTest):
 
             result = pch(file='main.hpp')
             self.assertSameFile(result, self.output_file(
-                'main.hpp', self.context
+                'main.hpp', self.step
             ))
 
             result = pch('object', 'main.hpp')
             self.assertSameFile(result, self.output_file(
-                'object', self.context
+                'object', self.step
             ))
 
             src = self.builtin_dict['header_file']('main.hpp')
             result = pch('object', src)
             self.assertSameFile(result, self.output_file(
-                'object', self.context
+                'object', self.step
             ))
 
     def test_make_no_lang(self):
@@ -257,7 +257,7 @@ class TestPrecompiledHeader(CompileTest):
 
             result = pch('object', 'main.goofy', lang='c++')
             self.assertSameFile(result, self.output_file(
-                'object', self.context
+                'object', self.step
             ))
             self.assertRaises(ValueError, pch, 'object', 'main.goofy')
 
@@ -272,7 +272,7 @@ class TestPrecompiledHeader(CompileTest):
             src = self.builtin_dict['header_file']('main.h', 'c')
             result = pch('object', src, lang='c++')
             self.assertSameFile(result, self.output_file(
-                'object', self.context
+                'object', self.step
             ))
             self.assertEqual(result.creator.compiler.lang, 'c++')
 
@@ -283,36 +283,36 @@ class TestPrecompiledHeader(CompileTest):
 
             result = pch(file='main.hpp', directory='dir')
             self.assertSameFile(result, self.output_file(
-                'dir/main.hpp', self.context
+                'dir/main.hpp', self.step
             ))
 
             src = self.builtin_dict['header_file']('main.hpp')
             result = pch(file=src, directory='dir')
             self.assertSameFile(result, self.output_file(
-                'dir/main.hpp', self.context
+                'dir/main.hpp', self.step
             ))
 
             result = pch(file='main.hpp', directory='dir/')
             self.assertSameFile(result, self.output_file(
-                'dir/main.hpp', self.context
+                'dir/main.hpp', self.step
             ))
 
             result = pch(file='main.hpp', directory=Path('dir'))
             self.assertSameFile(result, self.output_file(
-                'dir/main.hpp', self.context
+                'dir/main.hpp', self.step
             ))
 
             result = pch(file='dir1/main.hpp', directory='dir2')
-            context = {'pch_source': file_types.SourceFile(
+            step = {'pch_source': file_types.SourceFile(
                 Path('dir1/main.cpp', Root.srcdir), 'c++'
             )}
             self.assertSameFile(result, self.output_file(
-                'dir2/dir1/main.hpp', context
+                'dir2/dir1/main.hpp', step
             ))
 
             result = pch('object', 'main.hpp', directory='dir')
             self.assertSameFile(result, self.output_file(
-                'object', self.context
+                'object', self.step
             ))
 
             self.assertRaises(ValueError, pch, file='main.hpp',
@@ -326,7 +326,7 @@ class TestPrecompiledHeader(CompileTest):
 
             result = pch(file='main.hpp', extra_deps=[dep])
             self.assertSameFile(result, self.output_file(
-                'main.hpp', self.context
+                'main.hpp', self.step
             ))
             self.assertEqual(result.creator.extra_deps, [dep])
 
