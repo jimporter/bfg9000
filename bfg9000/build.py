@@ -35,9 +35,10 @@ def load_toolchain(env, filename, reload=False):
     if reload:
         env.init_variables()
 
-    builtin_dict = builtin.toolchain.bind(env=env, reload=reload)
+    context = builtin.ToolchainContext(env, reload)
     with open(filename.string(), 'r') as f:
-        _execute_file(f, f.name, builtin_dict)
+        _execute_file(f, f.name, context.builtins)
+        context.run_post()
 
     if not reload:
         env.toolchain.path = filename
@@ -56,9 +57,9 @@ def _execute_options(env, optspath, parent=None, usage='parse'):
                                               description=user_description)
             group.usage = usage
 
-            builtin_dict = builtin.options.bind(env=env, parser=group)
-            _execute_file(f, optspath.basename(), builtin_dict)
-            builtin.options.run_post(builtin_dict, env=env, parser=group)
+            context = builtin.OptionsContext(env, group)
+            _execute_file(f, optspath.basename(), context.builtins)
+            context.run_post()
         executed = True
     except IOError as e:
         if e.errno != errno.ENOENT:
@@ -69,13 +70,12 @@ def _execute_options(env, optspath, parent=None, usage='parse'):
 
 def _execute_configure(env, argv, bfgpath, extra_bootstrap=[]):
     build = BuildInputs(env, bfgpath, extra_bootstrap)
-    builtin_dict = builtin.build.bind(build_inputs=build, argv=argv, env=env)
+    context = builtin.BuildContext(env, build, argv)
 
     with open(bfgpath.string(env.base_dirs), 'r') as f, \
          pushd(env.srcdir.string()):  # noqa
-        _execute_file(f, bfgpath.basename(), builtin_dict)
-        builtin.build.run_post(builtin_dict, build_inputs=build, argv=argv,
-                               env=env)
+        _execute_file(f, bfgpath.basename(), context.builtins)
+        context.run_post()
     return build
 
 

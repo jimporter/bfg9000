@@ -6,13 +6,13 @@ from ..file_types import Phony
 
 
 class Alias(Edge):
-    def __init__(self, build, name, deps=None):
-        super().__init__(build, Phony(name), extra_deps=deps)
+    def __init__(self, context, name, deps=None):
+        super().__init__(context.build, Phony(name), extra_deps=deps)
 
 
-@builtin.function('build_inputs')
-def alias(build, *args, **kwargs):
-    return Alias(build, *args, **kwargs).public_output
+@builtin.function()
+def alias(context, *args, **kwargs):
+    return Alias(context, *args, **kwargs).public_output
 
 
 @make.rule_handler(Alias)

@@ -25,9 +25,10 @@ class Link(Edge):
     msbuild_output = True
     extra_kwargs = ()
 
-    def __init__(self, build, env, name, files, libs, packages, link_options,
+    def __init__(self, context, name, files, libs, packages, link_options,
                  entry_point=None, lang=None, extra_deps=None,
                  description=None):
+        build = context.build
         self.name = self.__name(name)
 
         self.user_libs = libs
@@ -63,7 +64,7 @@ class Link(Edge):
             raise ValueError('unable to determine language')
 
         search_langs = [lang] if lang else self.langs
-        self.linker = self.__find_linker(env, formats[0], search_langs)
+        self.linker = self.__find_linker(context.env, formats[0], search_langs)
 
         # Forward any necessary options to the compile step.
         if hasattr(self.linker, 'compile_options'):
@@ -75,17 +76,17 @@ class Link(Edge):
             if hasattr(i.creator, 'add_extra_options'):
                 i.creator.add_extra_options(compile_opts)
 
-        extra_options = self.linker.pre_build(build, name, self)
+        extra_options = self.linker.pre_build(context, name, self)
 
         output = self.linker.output_file(name, self)
         primary = first(output)
 
         primary.package_deps.extend(self.packages)
 
-        self._fill_options(env, extra_options, forward_opts, output)
+        self._fill_options(context.env, extra_options, forward_opts, output)
 
         options = self.options
-        public_output = self.linker.post_build(build, options, output, self)
+        public_output = self.linker.post_build(context, options, output, self)
         primary.post_install = self.linker.post_install(options, output, self)
 
         super().__init__(build, output, public_output, extra_deps, description)
@@ -93,23 +94,23 @@ class Link(Edge):
         build['defaults'].add(primary)
 
     @classmethod
-    def convert_args(cls, builtins, build, name, files, kwargs):
+    def convert_args(cls, context, name, files, kwargs):
         lang = kwargs.get('lang')
         src_lang = known_langs[lang].src_lang if lang else None
         kwargs['lang'] = src_lang
 
-        convert_each(kwargs, 'libs', builtins['library'],
+        convert_each(kwargs, 'libs', context['library'],
                      kind=cls._preferred_lib, lang=src_lang)
-        convert_each(kwargs, 'packages', builtins['package'], lang=src_lang)
+        convert_each(kwargs, 'packages', context['package'], lang=src_lang)
 
         kwargs['link_options'] = pshell.listify(kwargs.get('link_options'),
                                                 type=opts.option_list)
 
         intdir = ('{}.int/'.format(cls.__name(name))
-                  if build['project']['intermediate_dirs'] else None)
+                  if context.build['project']['intermediate_dirs'] else None)
         intdir = kwargs.pop('intermediate_dir', intdir)
 
-        files = builtins['object_files'](
+        files = context['object_files'](
             files, includes=kwargs.pop('includes', None),
             pch=kwargs.pop('pch', None),
             options=kwargs.pop('compile_options', None),
@@ -160,10 +161,9 @@ class DynamicLink(Link):
         super().__init__(*args, **kwargs)
 
     @classmethod
-    def convert_args(cls, builtins, build, name, files, kwargs):
-        convert_one(kwargs, 'module_defs', builtins['module_def_file'])
-        return super(DynamicLink, cls).convert_args(builtins, build, name,
-                                                    files, kwargs)
+    def convert_args(cls, context, name, files, kwargs):
+        convert_one(kwargs, 'module_defs', context['module_def_file'])
+        return super().convert_args(context, name, files, kwargs)
 
     @property
     def options(self):
@@ -230,12 +230,11 @@ class StaticLink(Link):
         super().__init__(*args, **kwargs)
 
     @classmethod
-    def convert_args(cls, builtins, build, name, files, kwargs):
+    def convert_args(cls, context, name, files, kwargs):
         kwargs['static_link_options'] = pshell.listify(
             kwargs.get('static_link_options'), type=opts.option_list
         )
-        return super(StaticLink, cls).convert_args(builtins, build, name,
-                                                   files, kwargs)
+        return super().convert_args(context, name, files, kwargs)
 
     @property
     def options(self):
@@ -268,22 +267,21 @@ class StaticLink(Link):
         primary.linktime_deps.extend(self.user_libs)
 
 
-@builtin.function('builtins', 'build_inputs', 'env')
+@builtin.function()
 @builtin.type(Executable)
-def executable(builtins, build, env, name, files=None, **kwargs):
+def executable(context, name, files=None, **kwargs):
     if files is None and 'libs' not in kwargs:
         dist = kwargs.pop('dist', True)
-        params = [('format', env.target_platform.object_format),
-                  ('lang', build['project']['lang'])]
-        return static_file(build, Executable, name, dist, params, kwargs)
-    files, kwargs = DynamicLink.convert_args(builtins, build, name, files,
-                                             kwargs)
-    return DynamicLink(build, env, name, files, **kwargs).public_output
+        params = [('format', context.env.target_platform.object_format),
+                  ('lang', context.build['project']['lang'])]
+        return static_file(context, Executable, name, dist, params, kwargs)
+    files, kwargs = DynamicLink.convert_args(context, name, files, kwargs)
+    return DynamicLink(context, name, files, **kwargs).public_output
 
 
-@builtin.function('builtins', 'build_inputs', 'env')
+@builtin.function()
 @builtin.type(SharedLibrary, extra_in_type=DualUseLibrary)
-def shared_library(builtins, build, env, name, files=None, **kwargs):
+def shared_library(context, name, files=None, **kwargs):
     if isinstance(name, DualUseLibrary):
         if files is not None or not set(kwargs.keys()) <= {'format', 'lang'}:
             raise TypeError('unexpected arguments')
@@ -293,17 +291,16 @@ def shared_library(builtins, build, env, name, files=None, **kwargs):
         # XXX: What to do for pre-built shared libraries for Windows, which has
         # a separate DLL file?
         dist = kwargs.pop('dist', True)
-        params = [('format', env.target_platform.object_format),
-                  ('lang', build['project']['lang'])]
-        return static_file(build, SharedLibrary, name, dist, params, kwargs)
-    files, kwargs = SharedLink.convert_args(builtins, build, name, files,
-                                            kwargs)
-    return SharedLink(build, env, name, files, **kwargs).public_output
+        params = [('format', context.env.target_platform.object_format),
+                  ('lang', context.build['project']['lang'])]
+        return static_file(context, SharedLibrary, name, dist, params, kwargs)
+    files, kwargs = SharedLink.convert_args(context, name, files, kwargs)
+    return SharedLink(context, name, files, **kwargs).public_output
 
 
-@builtin.function('builtins', 'build_inputs', 'env')
+@builtin.function()
 @builtin.type(StaticLibrary, extra_in_type=DualUseLibrary)
-def static_library(builtins, build, env, name, files=None, **kwargs):
+def static_library(context, name, files=None, **kwargs):
     if isinstance(name, DualUseLibrary):
         if files is not None or not set(kwargs.keys()) <= {'format', 'lang'}:
             raise TypeError('unexpected arguments')
@@ -311,26 +308,25 @@ def static_library(builtins, build, env, name, files=None, **kwargs):
 
     if files is None and 'libs' not in kwargs:
         dist = kwargs.pop('dist', True)
-        params = [('format', env.target_platform.object_format),
-                  ('lang', build['project']['lang'])]
-        return static_file(build, StaticLibrary, name, dist, params, kwargs)
-    files, kwargs = StaticLink.convert_args(builtins, build, name, files,
-                                            kwargs)
-    return StaticLink(build, env, name, files, **kwargs).public_output
+        params = [('format', context.env.target_platform.object_format),
+                  ('lang', context.build['project']['lang'])]
+        return static_file(context, StaticLibrary, name, dist, params, kwargs)
+    files, kwargs = StaticLink.convert_args(context, name, files, kwargs)
+    return StaticLink(context, name, files, **kwargs).public_output
 
 
-@builtin.function('builtins', 'build_inputs', 'env')
+@builtin.function()
 @builtin.type(Library, extra_in_type=DualUseLibrary)
-def library(builtins, build, env, name, files=None, *, kind=None, **kwargs):
+def library(context, name, files=None, *, kind=None, **kwargs):
     explicit_kind = False
 
     if kind is not None:
         explicit_kind = True
-    elif env.library_mode.shared and env.library_mode.static:
+    elif context.env.library_mode.shared and context.env.library_mode.static:
         kind = 'dual'
-    elif env.library_mode.shared:
+    elif context.env.library_mode.shared:
         kind = 'shared'
-    elif env.library_mode.static:
+    elif context.env.library_mode.static:
         kind = 'static'
 
     if isinstance(name, DualUseLibrary):
@@ -340,8 +336,8 @@ def library(builtins, build, env, name, files=None, *, kind=None, **kwargs):
 
     if files is None and 'libs' not in kwargs:
         dist = kwargs.pop('dist', True)
-        params = [('format', env.target_platform.object_format),
-                  ('lang', build['project']['lang'])]
+        params = [('format', context.env.target_platform.object_format),
+                  ('lang', context.build['project']['lang'])]
         file_type = StaticLibrary
 
         if explicit_kind:
@@ -352,7 +348,7 @@ def library(builtins, build, env, name, files=None, *, kind=None, **kwargs):
                                  "existing file")
 
         # XXX: Try to detect if a string refers to a shared lib?
-        return static_file(build, file_type, name, dist, params, kwargs)
+        return static_file(context, file_type, name, dist, params, kwargs)
 
     if kind is None:
         raise ValueError('unable to create library: both shared and static ' +
@@ -365,44 +361,44 @@ def library(builtins, build, env, name, files=None, *, kind=None, **kwargs):
 
     if kind == 'dual':
         shared_files, shared_kwargs = SharedLink.convert_args(
-            builtins, build, name, files, shared_kwargs
+            context, name, files, shared_kwargs
         )
-        shared = SharedLink(build, env, name, shared_files, **shared_kwargs)
+        shared = SharedLink(context, name, shared_files, **shared_kwargs)
         if not shared.linker.builder.can_dual_link:
             warnings.warn("dual linking not supported with {}"
                           .format(shared.linker.brand))
             return shared.public_output
 
         static_files, static_kwargs = StaticLink.convert_args(
-            builtins, build, name, shared_files, static_kwargs
+            context, name, shared_files, static_kwargs
         )
-        static = StaticLink(build, env, name, static_files, **static_kwargs)
+        static = StaticLink(context, name, static_files, **static_kwargs)
         return DualUseLibrary(shared.public_output, static.public_output)
     elif kind == 'shared':
-        files, kw = SharedLink.convert_args(builtins, build, name, files,
+        files, kw = SharedLink.convert_args(context, name, files,
                                             shared_kwargs)
-        return SharedLink(build, env, name, files, **kw).public_output
+        return SharedLink(context, name, files, **kw).public_output
     else:  # kind == 'static'
-        files, kw = StaticLink.convert_args(builtins, build, name, files,
+        files, kw = StaticLink.convert_args(context, name, files,
                                             static_kwargs)
-        return StaticLink(build, env, name, files, **kw).public_output
+        return StaticLink(context, name, files, **kw).public_output
 
 
-@builtin.function('builtins')
+@builtin.function()
 @builtin.type(WholeArchive, extra_in_type=StaticLibrary)
-def whole_archive(builtins, name, *args, **kwargs):
+def whole_archive(context, name, *args, **kwargs):
     if isinstance(name, StaticLibrary):
         if len(args) or len(kwargs):
             raise TypeError('unexpected arguments')
         return WholeArchive(name)
     else:
-        return WholeArchive(builtins['static_library'](name, *args, **kwargs))
+        return WholeArchive(context['static_library'](name, *args, **kwargs))
 
 
-@builtin.function('build_inputs')
-def global_link_options(build, options, family='native', mode='dynamic'):
+@builtin.function()
+def global_link_options(context, options, family='native', mode='dynamic'):
     for i in iterate(family):
-        build['link_options'][mode][i].extend(pshell.listify(options))
+        context.build['link_options'][mode][i].extend(pshell.listify(options))
 
 
 def _get_flags(backend, rule, build_inputs, buildfile):

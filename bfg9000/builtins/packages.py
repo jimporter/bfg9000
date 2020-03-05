@@ -22,9 +22,9 @@ class BoostPackage(CommonPackage):
         self.version = version
 
 
-@builtin.function('build_inputs', 'env')
+@builtin.function()
 @builtin.type(Package)
-def package(build, env, name, version=None, lang=default_sentinel,
+def package(context, name, version=None, lang=default_sentinel,
             kind=PackageKind.any.name, headers=None, libs=default_sentinel):
     version = objectify(version or '', SpecifierSet)
     kind = PackageKind[kind]
@@ -37,23 +37,26 @@ def package(build, env, name, version=None, lang=default_sentinel,
         if len(guessed_langs) == 1 and guessed_langs[0] is not None:
             lang = guessed_langs[0]
         else:
-            lang = build['project']['lang']
+            lang = context.build['project']['lang']
 
-    return env.builder(lang).packages.resolve(name, version, kind, headers,
-                                              libs)
+    return context.env.builder(lang).packages.resolve(
+        name, version, kind, headers, libs
+    )
 
 
-@builtin.function('env')
+@builtin.function()
 @builtin.type(Executable)
-def system_executable(env, name, format=None):
+def system_executable(context, name, format=None):
+    env = context.env
     return Executable(
         Path(which([[name]], env.variables, resolve=True)[0], Root.absolute),
         format or env.target_platform.object_format
     )
 
 
-@builtin.function('env')
-def framework(env, name, suffix=None):
+@builtin.function()
+def framework(context, name, suffix=None):
+    env = context.env
     if not env.target_platform.has_frameworks:
         raise PackageResolutionError("{} platform doesn't support frameworks"
                                      .format(env.target_platform.name))
@@ -77,12 +80,13 @@ def _boost_version(header, required_version):
     raise PackageVersionError('unable to parse "boost/version.hpp"')
 
 
-@builtin.function('env')
-def boost_package(env, name=None, version=None):
+@builtin.function()
+def boost_package(context, name=None, version=None):
     def getdir(name, root, default):
         d = env.getvar(name, os.path.join(root, default) if root else None)
         return Path(d, Root.absolute) if d else None
 
+    env = context.env
     version = objectify(version or '', SpecifierSet)
     pkg = env.builder('c++').packages
     version_hpp = 'boost/version.hpp'

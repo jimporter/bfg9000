@@ -142,7 +142,7 @@ class TestMakeFilterFromGlob(TestCase):
 class TestFilterByPlatform(BuiltinTest):
     def setUp(self):
         super().setUp()
-        self.filter = self.builtin_dict['filter_by_platform']
+        self.filter = self.context['filter_by_platform']
 
     def test_normal(self):
         self.assertEqual(self.filter(Path('file.txt'), 'f'),
@@ -202,7 +202,7 @@ class TestFind(BuiltinTest):
 class TestFindFiles(BuiltinTest):
     def setUp(self):
         super().setUp()
-        self.find = self.builtin_dict['find_files']
+        self.find = self.context['find_files']
 
     def assertFound(self, result, expected, dist=None):
         if dist is None:
@@ -316,8 +316,8 @@ class TestFindFiles(BuiltinTest):
             File(srcpath('file.cpp')),
             File(srcpath('dir/file2.txt'))
         ]
-        f = self.builtin_dict['generic_file']
-        d = self.builtin_dict['header_directory']
+        f = self.context['generic_file']
+        d = self.context['header_directory']
         with mock_context():
             self.assertFound(self.find(file_type=f, dir_type=d), expected)
             self.assertEqual(self.build['find_dirs'], {
@@ -349,7 +349,7 @@ class TestFindFiles(BuiltinTest):
 class TestFindPaths(TestFindFiles):
     def setUp(self):
         super().setUp()
-        self.find = self.builtin_dict['find_paths']
+        self.find = self.context['find_paths']
 
     def assertFound(self, result, expected, dist=None):
         if dist is None:

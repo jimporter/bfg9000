@@ -18,45 +18,45 @@ class TestBaseCommand(BuiltinTest):
 
 class TestCommand(TestBaseCommand):
     def test_single_cmd(self):
-        result = self.builtin_dict['command']('foo', cmd=['echo', 'foo'])
+        result = self.context['command']('foo', cmd=['echo', 'foo'])
         self.assertSameFile(result, file_types.Phony('foo'))
         self.assertCommand(result.creator, [['echo', 'foo']])
 
     def test_string_cmd(self):
-        result = self.builtin_dict['command']('foo', cmd='echo foo')
+        result = self.context['command']('foo', cmd='echo foo')
         self.assertSameFile(result, file_types.Phony('foo'))
         self.assertCommand(result.creator, ['echo foo'])
 
     def test_file_cmd(self):
-        script = self.builtin_dict['source_file']('script.py')
-        result = self.builtin_dict['command']('foo', cmd=script)
+        script = self.context['source_file']('script.py')
+        result = self.context['command']('foo', cmd=script)
         self.assertSameFile(result, file_types.Phony('foo'))
         self.assertCommand(result.creator, [
             self.env.tool('python')(script)
         ], [])
 
     def test_file_cmd_list(self):
-        script = self.builtin_dict['source_file']('script.py')
-        result = self.builtin_dict['command']('foo', cmd=[script, '--foo'])
+        script = self.context['source_file']('script.py')
+        result = self.context['command']('foo', cmd=[script, '--foo'])
         self.assertSameFile(result, file_types.Phony('foo'))
         self.assertCommand(result.creator, [
             self.env.tool('python')(script) + ['--foo']
         ], [])
 
     def test_file_cmd_deps(self):
-        script = self.builtin_dict['source_file']('script.py')
+        script = self.context['source_file']('script.py')
         script.creator = 'foo'
 
-        result = self.builtin_dict['command']('foo', cmd=script)
+        result = self.context['command']('foo', cmd=script)
         self.assertSameFile(result, file_types.Phony('foo'))
         self.assertCommand(result.creator, [
             self.env.tool('python')(script)
         ], extra_deps=[script])
 
     def test_input(self):
-        script = self.builtin_dict['source_file']('script.py')
+        script = self.context['source_file']('script.py')
 
-        command = self.builtin_dict['command']
+        command = self.context['command']
         result = command('foo', cmd=[command.input], files=script)
         self.assertSameFile(result, file_types.Phony('foo'))
         self.assertCommand(result.creator, [
@@ -79,9 +79,9 @@ class TestCommand(TestBaseCommand):
             command('foo', cmd=[command.input[1]], files=script)
 
     def test_input_line(self):
-        script = self.builtin_dict['source_file']('script.py')
+        script = self.context['source_file']('script.py')
 
-        command = self.builtin_dict['command']
+        command = self.context['command']
         result = command('foo', cmd=command.input, files=script)
         self.assertSameFile(result, file_types.Phony('foo'))
         self.assertCommand(result.creator, [
@@ -106,10 +106,10 @@ class TestCommand(TestBaseCommand):
             command('foo', cmd=command.input, files=[script, script])
 
     def test_input_deps(self):
-        script = self.builtin_dict['source_file']('script.py')
+        script = self.context['source_file']('script.py')
         script.creator = 'foo'
 
-        command = self.builtin_dict['command']
+        command = self.context['command']
         result = command('foo', cmd=[command.input], files=script)
         self.assertSameFile(result, file_types.Phony('foo'))
         self.assertCommand(result.creator, [
@@ -117,7 +117,7 @@ class TestCommand(TestBaseCommand):
         ], [script])
 
     def test_multiple_cmds(self):
-        result = self.builtin_dict['command']('foo', cmds=[
+        result = self.context['command']('foo', cmds=[
             ['echo', 'foo'],
             ['touch', 'bar']
         ])
@@ -125,37 +125,37 @@ class TestCommand(TestBaseCommand):
         self.assertCommand(result.creator, [['echo', 'foo'], ['touch', 'bar']])
 
     def test_env(self):
-        result = self.builtin_dict['command']('foo', cmd=['echo', 'foo'],
-                                              environment={'NAME': 'value'})
+        result = self.context['command']('foo', cmd=['echo', 'foo'],
+                                         environment={'NAME': 'value'})
         self.assertSameFile(result, file_types.Phony('foo'))
         self.assertCommand(result.creator, [['echo', 'foo']],
                            env={'NAME': 'value'})
 
     def test_extra_deps(self):
-        dep = self.builtin_dict['generic_file']('dep.txt')
-        result = self.builtin_dict['command']('foo', cmd=['echo', 'foo'],
-                                              extra_deps=dep)
+        dep = self.context['generic_file']('dep.txt')
+        result = self.context['command']('foo', cmd=['echo', 'foo'],
+                                         extra_deps=dep)
         self.assertSameFile(result, file_types.Phony('foo'))
         self.assertCommand(result.creator, [['echo', 'foo']], extra_deps=[dep])
 
-        script = self.builtin_dict['source_file']('script.py')
+        script = self.context['source_file']('script.py')
         script.creator = 'foo'
 
-        result = self.builtin_dict['command']('foo', cmd=script,
-                                              extra_deps=dep)
+        result = self.context['command']('foo', cmd=script,
+                                         extra_deps=dep)
         self.assertSameFile(result, file_types.Phony('foo'))
         self.assertCommand(result.creator, [
             self.env.tool('python')(script)
         ], extra_deps=[script, dep])
 
     def test_cmd_and_cmds(self):
-        self.assertRaises(ValueError, self.builtin_dict['command'], 'foo',
+        self.assertRaises(ValueError, self.context['command'], 'foo',
                           cmd='echo foo', cmds=['echo bar'])
 
 
 class TestBuildStep(TestBaseCommand):
     def test_single_output(self):
-        result = self.builtin_dict['build_step']('lex.yy.c', cmd=[
+        result = self.context['build_step']('lex.yy.c', cmd=[
             'lex', 'foo.lex'
         ])
         expected = file_types.SourceFile(Path('lex.yy.c', Root.builddir), 'c')
@@ -163,7 +163,7 @@ class TestBuildStep(TestBaseCommand):
         self.assertCommand(result.creator, [['lex', 'foo.lex']], phony=False)
 
     def test_multiple_outputs(self):
-        result = self.builtin_dict['build_step'](
+        result = self.context['build_step'](
             ['hello.tab.h', 'hello.tab.c'], cmd=['bison', 'hello.y']
         )
         expected = [
@@ -175,8 +175,8 @@ class TestBuildStep(TestBaseCommand):
             self.assertCommand(i.creator, [['bison', 'hello.y']], phony=False)
 
     def test_file_cmd(self):
-        foolex = self.builtin_dict['source_file']('foo.lex')
-        result = self.builtin_dict['build_step']('lex.yy.c', cmd=[
+        foolex = self.context['source_file']('foo.lex')
+        result = self.context['build_step']('lex.yy.c', cmd=[
             'lex', foolex
         ])
         expected = file_types.SourceFile(Path('lex.yy.c', Root.builddir), 'c')
@@ -185,8 +185,8 @@ class TestBuildStep(TestBaseCommand):
                            extra_deps=[foolex], phony=False)
 
     def test_input(self):
-        foolex = self.builtin_dict['source_file']('foo.lex')
-        build_step = self.builtin_dict['build_step']
+        foolex = self.context['source_file']('foo.lex')
+        build_step = self.context['build_step']
         expected = file_types.SourceFile(Path('lex.yy.c', Root.builddir), 'c')
 
         result = build_step('lex.yy.c', cmd=['lex', build_step.input],
@@ -211,8 +211,8 @@ class TestBuildStep(TestBaseCommand):
             build_step('foo', cmd=[build_step.input[1]], files=foolex)
 
     def test_input_line(self):
-        foopy = self.builtin_dict['source_file']('foo.py')
-        build_step = self.builtin_dict['build_step']
+        foopy = self.context['source_file']('foo.py')
+        build_step = self.context['build_step']
         expected = file_types.SourceFile(Path('foo.c', Root.builddir), 'c')
 
         result = build_step('foo.c', cmd=build_step.input, files=foopy)
@@ -236,7 +236,7 @@ class TestBuildStep(TestBaseCommand):
             build_step('foo.c', cmd=build_step.input, files=[foopy, foopy])
 
     def test_output(self):
-        build_step = self.builtin_dict['build_step']
+        build_step = self.context['build_step']
         expected = file_types.SourceFile(Path('foo-lex.c', Root.builddir), 'c')
 
         result = build_step('foo-lex.c', cmd=[
@@ -267,7 +267,7 @@ class TestBuildStep(TestBaseCommand):
             build_step('foo', cmd=[build_step.output[1]])
 
     def test_always_outdated(self):
-        result = self.builtin_dict['build_step']('lex.yy.c', cmd=[
+        result = self.context['build_step']('lex.yy.c', cmd=[
             'lex', 'foo.lex'
         ], always_outdated=True)
         expected = file_types.SourceFile(Path('lex.yy.c', Root.builddir), 'c')
@@ -275,17 +275,17 @@ class TestBuildStep(TestBaseCommand):
         self.assertCommand(result.creator, [['lex', 'foo.lex']], phony=True)
 
     def test_type(self):
-        result = self.builtin_dict['build_step']('lex.yy.c', cmd=[
+        result = self.context['build_step']('lex.yy.c', cmd=[
             'lex', 'foo.lex'
-        ], type=self.builtin_dict['generic_file'])
+        ], type=self.context['generic_file'])
         expected = file_types.File(Path('lex.yy.c', Root.builddir))
         self.assertSameFile(result, expected)
         self.assertCommand(result.creator, [['lex', 'foo.lex']], phony=False)
 
     def test_type_multiple_files(self):
-        result = self.builtin_dict['build_step'](
+        result = self.context['build_step'](
             ['hello.tab.h', 'hello.tab.c'], cmd=['bison', 'hello.y'],
-            type=self.builtin_dict['generic_file']
+            type=self.context['generic_file']
         )
         expected = [
             file_types.File(Path('hello.tab.h', Root.builddir)),
@@ -296,10 +296,10 @@ class TestBuildStep(TestBaseCommand):
             self.assertCommand(i.creator, [['bison', 'hello.y']], phony=False)
 
     def test_multiple_types(self):
-        result = self.builtin_dict['build_step'](
+        result = self.context['build_step'](
             ['hello.tab.h', 'hello.tab.c'], cmd=['bison', 'hello.y'],
-            type=[self.builtin_dict['generic_file'],
-                  self.builtin_dict['header_file']]
+            type=[self.context['generic_file'],
+                  self.context['header_file']]
         )
         expected = [
             file_types.File(Path('hello.tab.h', Root.builddir)),
@@ -310,8 +310,8 @@ class TestBuildStep(TestBaseCommand):
             self.assertCommand(i.creator, [['bison', 'hello.y']], phony=False)
 
     def test_extra_deps(self):
-        dep = self.builtin_dict['generic_file']('dep.txt')
-        result = self.builtin_dict['build_step']('lex.yy.c', cmd=[
+        dep = self.context['generic_file']('dep.txt')
+        result = self.context['build_step']('lex.yy.c', cmd=[
             'lex', 'foo.lex'
         ], extra_deps=[dep])
         expected = file_types.SourceFile(Path('lex.yy.c', Root.builddir), 'c')
@@ -319,8 +319,8 @@ class TestBuildStep(TestBaseCommand):
         self.assertCommand(result.creator, [['lex', 'foo.lex']],
                            extra_deps=[dep], phony=False)
 
-        foolex = self.builtin_dict['source_file']('foo.lex')
-        result = self.builtin_dict['build_step']('lex.yy.c', cmd=[
+        foolex = self.context['source_file']('foo.lex')
+        result = self.context['build_step']('lex.yy.c', cmd=[
             'lex', foolex
         ], extra_deps=[dep])
         expected = file_types.SourceFile(Path('lex.yy.c', Root.builddir), 'c')
@@ -329,11 +329,11 @@ class TestBuildStep(TestBaseCommand):
                            extra_deps=[foolex, dep], phony=False)
 
     def test_invalid_type(self):
-        self.assertRaises(ValueError, self.builtin_dict['build_step'],
+        self.assertRaises(ValueError, self.context['build_step'],
                           'lex.yy.c', cmd=['lex', 'foo.lex'], type=lambda x: x)
 
     def test_cmd_and_cmds(self):
-        self.assertRaises(ValueError, self.builtin_dict['build_step'], 'foo',
+        self.assertRaises(ValueError, self.context['build_step'], 'foo',
                           cmd='echo foo', cmds=['echo bar'])
 
 

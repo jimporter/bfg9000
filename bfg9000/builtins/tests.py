@@ -25,13 +25,13 @@ class TestInputs:
 
 
 class Test:
-    def __init__(self, build, env, cmd, environment, driver):
+    def __init__(self, context, cmd, environment, driver):
         # Ensure that bare Node objects are treated as a list of args instead
         # of a literal command line (the former has shell-characters escaped).
         if isinstance(cmd, Node):
             cmd = [cmd]
         wrap = not driver or driver.wrap_children
-        self.cmd = env.run_arguments(cmd) if wrap else cmd
+        self.cmd = context.env.run_arguments(cmd) if wrap else cmd
 
         self.inputs = [i for i in iterate(cmd)
                        if isinstance(i, Node) and i.creator]
@@ -39,45 +39,45 @@ class Test:
 
         primary = first(cmd)
         if isinstance(primary, Node) and primary.creator:
-            build['defaults'].remove(primary)
-        (driver or build['tests']).tests.append(self)
+            context.build['defaults'].remove(primary)
+        (driver or context.build['tests']).tests.append(self)
 
 
 class TestCase(Test):
-    def __init__(self, build, env, cmd, environment={}, driver=None):
+    def __init__(self, context, cmd, environment={}, driver=None):
         if driver and environment:
             raise TypeError("only one of 'driver' and 'environment' may be " +
                             "specified")
-        super().__init__(build, env, cmd, environment, driver)
+        super().__init__(context, cmd, environment, driver)
 
 
 class TestDriver(Test):
-    def __init__(self, build, env, cmd, environment={}, parent=None,
+    def __init__(self, context, cmd, environment={}, parent=None,
                  wrap_children=False):
         if parent and environment:
             raise TypeError("only one of 'parent' and 'environment' may be " +
                             "specified")
 
-        super().__init__(build, env, cmd, environment, parent)
+        super().__init__(context, cmd, environment, parent)
         self.tests = []
         self.wrap_children = wrap_children
 
 
-@builtin.function('build_inputs', 'env')
-def test(build, env, cmd, **kwargs):
-    return TestCase(build, env, cmd, **kwargs)
+@builtin.function()
+def test(context, cmd, **kwargs):
+    return TestCase(context, cmd, **kwargs)
 
 
-@builtin.function('build_inputs', 'env')
-def test_driver(build, env, cmd, **kwargs):
-    return TestDriver(build, env, cmd, **kwargs)
+@builtin.function()
+def test_driver(context, cmd, **kwargs):
+    return TestDriver(context, cmd, **kwargs)
 
 
-@builtin.function('build_inputs')
-def test_deps(build, *args):
+@builtin.function()
+def test_deps(context, *args):
     if len(args) == 0:
         raise ValueError('expected at least one argument')
-    build['tests'].extra_deps.extend(args)
+    context.build['tests'].extra_deps.extend(args)
 
 
 def _build_commands(tests, writer, shell, local_env, collapse=False):

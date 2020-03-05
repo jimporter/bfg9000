@@ -49,23 +49,23 @@ def can_install(env):
     return all(i is not None for i in env.install_dirs.values())
 
 
-@builtin.function('builtins', 'build_inputs', 'env')
-def install(builtins, build, env, *args):
+@builtin.function()
+def install(context, *args):
     if len(args) == 0:
         return
 
-    can_inst = can_install(env)
+    can_inst = can_install(context.env)
     if not can_inst:
         warnings.warn('unset installation directories; installation of this ' +
                       'build disabled')
 
-    builtins['default'](*args)
+    context['default'](*args)
     for i in iterate_each(args):
         if can_inst:
-            build['install'].add(i)
+            context.build['install'].add(i)
 
     return unlistify(tuple(
-        map_iterable(lambda x: installify(x, env), i) for i in args
+        map_iterable(lambda x: installify(x, context.env), i) for i in args
     ))
 
 

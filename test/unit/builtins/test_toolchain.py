@@ -3,7 +3,7 @@ from unittest import mock
 from .. import *
 
 from bfg9000 import tools
-from bfg9000.builtins import builtin, toolchain
+from bfg9000.builtins import builtin, toolchain  # noqa
 from bfg9000.path import InstallRoot
 
 tools.init()
@@ -20,12 +20,10 @@ def mock_bad_which(*args, **kwargs):
 class TestToolchain(TestCase):
     def setUp(self):
         self.env = make_env(clear_variables=True)
-        self.builtin_dict = builtin.toolchain.bind(
-            env=self.env, reload=False
-        )
+        self.context = builtin.ToolchainContext(self.env, reload=False)
 
     def test_builtins(self):
-        builtins = toolchain.builtins()
+        builtins = self.context['__builtins__']
         safe = ['abs', 'int', 'str']
         unsafe = ['file', '__import__', 'input', 'open', 'raw_input',
                   'reload']
@@ -36,19 +34,19 @@ class TestToolchain(TestCase):
             self.assertFalse(i in builtins)
 
     def test_environ(self):
-        self.builtin_dict['environ']['NAME'] = 'value'
-        self.assertEqual(self.builtin_dict['environ'], {'NAME': 'value'})
+        self.context['environ']['NAME'] = 'value'
+        self.assertEqual(self.context['environ'], {'NAME': 'value'})
 
     def test_srcdir(self):
-        self.assertEqual(self.builtin_dict['srcdir'], self.env.srcdir)
-        self.assertIsNot(self.builtin_dict['srcdir'], self.env.srcdir)
+        self.assertEqual(self.context['srcdir'], self.env.srcdir)
+        self.assertIsNot(self.context['srcdir'], self.env.srcdir)
 
     def test_target_platform(self):
-        self.builtin_dict['target_platform']('winnt')
+        self.context['target_platform']('winnt')
         self.assertEqual(self.env.target_platform.name, 'winnt')
 
     def test_which(self):
-        which = self.builtin_dict['which']
+        which = self.context['which']
         with mock.patch('bfg9000.shell.which', mock_which):
             self.assertEqual(which('foo'), 'command')
             self.assertEqual(which(['foo', 'bar']), 'command')
@@ -62,7 +60,7 @@ class TestToolchain(TestCase):
             self.assertEqual(which([['foo', 'bar']], strict=False), 'foo bar')
 
     def test_compiler(self):
-        compiler = self.builtin_dict['compiler']
+        compiler = self.context['compiler']
         with mock.patch('bfg9000.shell.which', mock_which):
             compiler('foo', 'c++')
             self.assertEqual(self.env.variables, {'CXX': 'command'})
@@ -85,7 +83,7 @@ class TestToolchain(TestCase):
                               strict=True)
 
     def test_compile_options(self):
-        compile_options = self.builtin_dict['compile_options']
+        compile_options = self.context['compile_options']
         compile_options('foo', 'c++')
         self.assertEqual(self.env.variables, {'CXXFLAGS': 'foo'})
 
@@ -93,7 +91,7 @@ class TestToolchain(TestCase):
         self.assertEqual(self.env.variables, {'CXXFLAGS': 'foo bar'})
 
     def test_runner(self):
-        runner = self.builtin_dict['runner']
+        runner = self.context['runner']
         with mock.patch('bfg9000.shell.which', mock_which):
             runner('foo', 'java')
             self.assertEqual(self.env.variables, {'JAVACMD': 'command'})
@@ -116,7 +114,7 @@ class TestToolchain(TestCase):
                               strict=True)
 
     def test_dynamic_linker(self):
-        linker = self.builtin_dict['linker']
+        linker = self.context['linker']
         with mock.patch('bfg9000.shell.which', mock_which):
             linker('foo')
             self.assertEqual(self.env.variables, {'LD': 'command'})
@@ -144,7 +142,7 @@ class TestToolchain(TestCase):
                               strict=True)
 
     def test_static_linker(self):
-        linker = self.builtin_dict['linker']
+        linker = self.context['linker']
         with mock.patch('bfg9000.shell.which', mock_which):
             linker('foo', mode='static')
             self.assertEqual(self.env.variables, {'AR': 'command'})
@@ -173,7 +171,7 @@ class TestToolchain(TestCase):
                               'static', strict=True)
 
     def test_link_options(self):
-        link_options = self.builtin_dict['link_options']
+        link_options = self.context['link_options']
 
         link_options('foo')
         self.assertEqual(self.env.variables, {'LDFLAGS': 'foo'})
@@ -188,7 +186,7 @@ class TestToolchain(TestCase):
         self.assertEqual(self.env.variables, {'LDFLAGS': 'foo bar'})
 
     def test_lib_options(self):
-        lib_options = self.builtin_dict['lib_options']
+        lib_options = self.context['lib_options']
 
         lib_options('foo')
         self.assertEqual(self.env.variables, {'LDLIBS': 'foo'})
@@ -203,7 +201,7 @@ class TestToolchain(TestCase):
         self.assertEqual(self.env.variables, {'LDLIBS': 'foo bar'})
 
     def test_install_dirs(self):
-        self.builtin_dict['install_dirs'](prefix='/prefix', bindir='/bin/dir')
+        self.context['install_dirs'](prefix='/prefix', bindir='/bin/dir')
 
         self.assertEqual(self.env.install_dirs[InstallRoot.prefix],
                          Path('/prefix'))
@@ -211,13 +209,11 @@ class TestToolchain(TestCase):
                          Path('/bin/dir'))
 
     def test_install_dirs_reload(self):
-        self.builtin_dict = builtin.toolchain.bind(
-            env=self.env, reload=True
-        )
+        self.context = builtin.ToolchainContext(self.env, reload=True)
 
         prefix = self.env.install_dirs[InstallRoot.prefix]
         bindir = self.env.install_dirs[InstallRoot.bindir]
-        self.builtin_dict['install_dirs'](prefix='/bad', bindir='/bad/bin')
+        self.context['install_dirs'](prefix='/bad', bindir='/bad/bin')
 
         self.assertEqual(self.env.install_dirs[InstallRoot.prefix], prefix)
         self.assertEqual(self.env.install_dirs[InstallRoot.bindir], bindir)

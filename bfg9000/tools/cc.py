@@ -408,7 +408,7 @@ class CcLinker(BuildCommand):
             iterate(libs), ['-o', output]
         ))
 
-    def pre_build(self, build, name, step):
+    def pre_build(self, context, name, step):
         entry_point = getattr(step, 'entry_point', None)
         return opts.option_list(opts.entry_point(entry_point) if entry_point
                                 else None)
@@ -690,12 +690,11 @@ class CcSharedLibraryLinker(CcLinker):
         ext = self.env.target_platform.shared_library_ext
         return head.append(prefix + tail + ext + suffix)
 
-    def post_build(self, build, options, output, step):
+    def post_build(self, context, options, output, step):
         if isinstance(output, VersionedSharedLibrary):
             # Make symlinks for the various versions of the shared lib.
-            CopyFile(build, self.env, output.soname, output, mode='symlink')
-            CopyFile(build, self.env, output.link, output.soname,
-                     mode='symlink')
+            CopyFile(context, output.soname, output, mode='symlink')
+            CopyFile(context, output.link, output.soname, mode='symlink')
             return output.link
 
     def output_file(self, name, step):

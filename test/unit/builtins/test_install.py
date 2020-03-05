@@ -9,14 +9,14 @@ from bfg9000.path import Path, Root, InstallRoot
 
 class TestInstall(BuiltinTest):
     def test_install_none(self):
-        self.assertEqual(self.builtin_dict['install'](), None)
+        self.assertEqual(self.context['install'](), None)
         self.assertEqual(self.build['install'].explicit, [])
         self.assertEqual(self.build['install'].implicit, [])
 
     def test_install_single(self):
         exe = Executable(Path('exe', Root.srcdir), None)
         installed = Executable(Path('exe', InstallRoot.bindir), None)
-        self.assertEqual(self.builtin_dict['install'](exe), installed)
+        self.assertEqual(self.context['install'](exe), installed)
         self.assertEqual(self.build['install'].explicit, [exe])
         self.assertEqual(self.build['install'].implicit, [exe])
 
@@ -25,7 +25,7 @@ class TestInstall(BuiltinTest):
         exe2 = Executable(Path('exe2', Root.srcdir), None)
         installed1 = Executable(Path('exe1', InstallRoot.bindir), None)
         installed2 = Executable(Path('exe2', InstallRoot.bindir), None)
-        self.assertEqual(self.builtin_dict['install'](exe1, exe2),
+        self.assertEqual(self.context['install'](exe1, exe2),
                          (installed1, installed2))
         self.assertEqual(self.build['install'].explicit, [exe1, exe2])
         self.assertEqual(self.build['install'].implicit, [exe1, exe2])
@@ -35,7 +35,7 @@ class TestInstall(BuiltinTest):
         exe2 = Executable(Path('exe2', Root.srcdir), None)
         installed1 = Executable(Path('exe1', InstallRoot.bindir), None)
         installed2 = Executable(Path('exe2', InstallRoot.bindir), None)
-        self.assertEqual(self.builtin_dict['install'](exe1, [exe2], None),
+        self.assertEqual(self.context['install'](exe1, [exe2], None),
                          (installed1, [installed2], None))
         self.assertEqual(self.build['install'].explicit, [exe1, exe2])
         self.assertEqual(self.build['install'].implicit, [exe1, exe2])
@@ -44,17 +44,17 @@ class TestInstall(BuiltinTest):
         exe = Executable(Path('exe', Root.srcdir), None)
         exe.creator = 'creator'
         installed = Executable(Path('exe', InstallRoot.bindir), None)
-        self.assertEqual(self.builtin_dict['install'](exe), installed)
+        self.assertEqual(self.context['install'](exe), installed)
         self.assertEqual(self.build['install'].explicit, [exe])
         self.assertEqual(self.build['install'].implicit, [exe])
         self.assertEqual(self.build['defaults'].outputs, [exe])
 
     def test_invalid(self):
         phony = Phony('name')
-        self.assertRaises(TypeError, self.builtin_dict['install'], phony)
+        self.assertRaises(TypeError, self.context['install'], phony)
 
         exe = Executable(Path('/path/to/exe', Root.absolute), None)
-        self.assertRaises(ValueError, self.builtin_dict['install'], exe)
+        self.assertRaises(ValueError, self.context['install'], exe)
 
     def test_cant_install(self):
         with mock.patch('bfg9000.builtins.install.can_install',
@@ -62,5 +62,5 @@ class TestInstall(BuiltinTest):
              mock.patch('warnings.warn') as m:  # noqa
             exe = Executable(Path('exe', Root.srcdir), None)
             installed = Executable(Path('exe', InstallRoot.bindir), None)
-            self.assertEqual(self.builtin_dict['install'](exe), installed)
+            self.assertEqual(self.context['install'](exe), installed)
             self.assertEqual(m.call_count, 1)

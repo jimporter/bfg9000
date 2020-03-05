@@ -18,7 +18,7 @@ depfile_name = '.bfg_find_deps'
 exclude_globs = ['.*#', '*~', '#*#']
 
 
-@builtin.function()
+@builtin.default()
 class FindResult(IntEnum):
     include = 0
     not_now = 1
@@ -94,9 +94,11 @@ def _make_filter_from_glob(match_type, matches, extra, exclude):
     return fn
 
 
-@builtin.function('env')
-def filter_by_platform(env, path, type):
+@builtin.function()
+def filter_by_platform(context, path, type):
+    env = context.env
     my_plat = {env.target_platform.genus, env.target_platform.family}
+
     sub = '|'.join(re.escape(i) for i in known_platforms if i not in my_plat)
     ex = r'(^|/|_)(' + sub + r')(\.[^\.]+$|$|/)'
     return (FindResult.not_now if re.search(ex, path.suffix)
@@ -136,38 +138,38 @@ def find(env, path='.', name='*', type='*', extra=None, exclude=exclude_globs,
     return results
 
 
-@builtin.function('builtins', 'build_inputs', 'env')
-def find_files(builtins, build_inputs, env, path='.', name='*', type='*',
-               extra=None, exclude=exclude_globs, filter=None, flat=False,
-               file_type=None, dir_type=None, *, dist=True, cache=True):
+@builtin.function()
+def find_files(context, path='.', name='*', type='*', extra=None,
+               exclude=exclude_globs, filter=None, flat=False, file_type=None,
+               dir_type=None, *, dist=True, cache=True):
     final_filter = _make_filter_from_glob(type, name, extra, exclude)
     if filter:
         final_filter = _combine_filters(final_filter, filter)
 
-    types = {'f': file_type or builtins['auto_file'],
-             'd': dir_type or builtins['directory']}
-    extra_types = {'f': builtins['generic_file'], 'd': builtins['directory']}
+    types = {'f': file_type or context['auto_file'],
+             'd': dir_type or context['directory']}
+    extra_types = {'f': context['generic_file'], 'd': context['directory']}
 
     paths = [i.path if isinstance(i, File) else Path.ensure(i, Root.srcdir)
              for i in iterate(path)]
 
     found, seen_dirs = [], []
-    for path, type, matched in _find_files(env, paths, final_filter, flat,
-                                           seen_dirs):
+    for path, type, matched in _find_files(context.env, paths, final_filter,
+                                           flat, seen_dirs):
         if matched == FindResult.include:
             found.append(types[type](path, dist=dist))
         elif matched == FindResult.not_now and dist:
             extra_types[type](path, dist=dist)
 
     if cache:
-        build_inputs['find_dirs'].update(seen_dirs)
-        build_inputs['regenerate'].depfile = depfile_name
+        context.build['find_dirs'].update(seen_dirs)
+        context.build['regenerate'].depfile = depfile_name
     return found
 
 
-@builtin.function('builtins')
-def find_paths(builtins, *args, **kwargs):
-    return [i.path for i in builtins['find_files'](*args, **kwargs)]
+@builtin.function()
+def find_paths(context, *args, **kwargs):
+    return [i.path for i in context['find_files'](*args, **kwargs)]
 
 
 @make.post_rule

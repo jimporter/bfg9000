@@ -14,22 +14,22 @@ class CopyFile(Edge):
     __modes = {'copy', 'symlink', 'hardlink'}
     msbuild_output = True
 
-    def __init__(self, build, env, output, file, mode='copy', extra_deps=None,
+    def __init__(self, context, output, file, mode='copy', extra_deps=None,
                  description=None):
         if mode not in self.__modes:
             raise ValueError('unrecognized copy mode {!r}'.format(mode))
 
         self.mode = mode
-        self.copier = env.tool(mode)
+        self.copier = context.env.tool(mode)
         self.file = file
-        super().__init__(build, output, None, extra_deps, description)
+        super().__init__(context.build, output, None, extra_deps, description)
 
     @staticmethod
-    def convert_args(builtins, name, file, kwargs):
+    def convert_args(context, name, file, kwargs):
         directory = kwargs.pop('directory', None)
         if directory:
             directory = Path.ensure(directory, strict=True)
-        file = builtins['auto_file'](file)
+        file = context['auto_file'](file)
 
         def pathfn(file):
             if name is None:
@@ -43,21 +43,21 @@ class CopyFile(Edge):
         return output, file, kwargs
 
 
-@builtin.function('builtins', 'build_inputs', 'env')
+@builtin.function()
 @builtin.type(File, short_circuit=False, first_optional=True)
-def copy_file(builtins, build, env, name, file, **kwargs):
+def copy_file(context, name, file, **kwargs):
     # Note: this only handles single files. File objects with multiple
     # related files (e.g. a DLL and its import library) will only copy the
     # primary file. In practice, this shouldn't matter, as this function is
     # mostly useful for copying data files to the build directory.
-    output, file, kwargs = CopyFile.convert_args(builtins, name, file, kwargs)
-    return CopyFile(build, env, output, file, **kwargs).public_output
+    output, file, kwargs = CopyFile.convert_args(context, name, file, kwargs)
+    return CopyFile(context, output, file, **kwargs).public_output
 
 
-@builtin.function('builtins')
+@builtin.function()
 @builtin.type(FileList, in_type=object)
-def copy_files(builtins, files, **kwargs):
-    return FileList(builtins['copy_file'], files, **kwargs)
+def copy_files(context, files, **kwargs):
+    return FileList(context['copy_file'], files, **kwargs)
 
 
 @make.rule_handler(CopyFile)

@@ -273,7 +273,7 @@ class MsvcPchCompiler(MsvcBaseCompiler):
         result.append('/Fp' + output[0])
         return result
 
-    def pre_build(self, build, name, step):
+    def pre_build(self, context, name, step):
         header = getattr(step, 'file')
         options = opts.option_list()
 
@@ -281,7 +281,7 @@ class MsvcPchCompiler(MsvcBaseCompiler):
             ext = known_langs[self.lang].default_ext('source')
             step.pch_source = SourceFile(header.path.stripext(ext).reroot(),
                                          header.lang)
-            with make_immediate_file(build, self.env, step.pch_source) as out:
+            with make_immediate_file(context, step.pch_source) as out:
                 out.write('#include "{}"\n'.format(header.path.basename()))
 
             # Add the include path for the header to ensure the PCH source

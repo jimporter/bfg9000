@@ -9,30 +9,30 @@ from bfg9000.path import Path, Root
 class TestCopyFile(BuiltinTest):
     def test_make_simple(self):
         expected = file_types.File(Path('file.txt'))
-        result = self.builtin_dict['copy_file'](file='file.txt')
+        result = self.context['copy_file'](file='file.txt')
         self.assertSameFile(result, expected)
 
-        result = self.builtin_dict['copy_file']('file.txt', 'src.txt')
+        result = self.context['copy_file']('file.txt', 'src.txt')
         self.assertSameFile(result, expected)
 
-        result = self.builtin_dict['copy_file']('file.txt')
+        result = self.context['copy_file']('file.txt')
         self.assertSameFile(result, expected)
 
-        src = self.builtin_dict['generic_file']('file.txt')
-        result = self.builtin_dict['copy_file'](src)
+        src = self.context['generic_file']('file.txt')
+        result = self.context['copy_file'](src)
         self.assertSameFile(result, expected)
 
     def test_make_no_name_or_file(self):
-        self.assertRaises(TypeError, self.builtin_dict['copy_file'])
+        self.assertRaises(TypeError, self.context['copy_file'])
 
     def test_make_directory(self):
         expected = file_types.File(Path('dir/file.txt'))
-        copy_file = self.builtin_dict['copy_file']
+        copy_file = self.context['copy_file']
 
         result = copy_file('file.txt', directory='dir')
         self.assertSameFile(result, expected)
 
-        src = self.builtin_dict['generic_file']('file.txt')
+        src = self.context['generic_file']('file.txt')
         result = copy_file(src, directory='dir')
         self.assertSameFile(result, expected)
 
@@ -53,19 +53,18 @@ class TestCopyFile(BuiltinTest):
                           directory=Path('dir', Root.srcdir))
 
     def test_extra_deps(self):
-        dep = self.builtin_dict['generic_file']('dep.txt')
+        dep = self.context['generic_file']('dep.txt')
         expected = file_types.File(Path('file.txt'))
-        result = self.builtin_dict['copy_file'](file='file.txt',
-                                                extra_deps=[dep])
+        result = self.context['copy_file'](file='file.txt', extra_deps=[dep])
         self.assertSameFile(result, expected)
         self.assertEqual(result.creator.extra_deps, [dep])
 
     def test_invalid_mode(self):
-        self.assertRaises(ValueError, self.builtin_dict['copy_file'],
+        self.assertRaises(ValueError, self.context['copy_file'],
                           file='file.txt', mode='unknown')
 
     def test_description(self):
-        result = self.builtin_dict['copy_file'](
+        result = self.context['copy_file'](
             file='file.txt', description='my description'
         )
         self.assertEqual(result.creator.description, 'my description')
@@ -78,7 +77,7 @@ class TestCopyFiles(BuiltinTest):
         src_files = [file_types.File(Path(i, Root.srcdir))
                      for i in ['file1', 'file2']]
 
-        file_list = self.builtin_dict['copy_files'](src_files)
+        file_list = self.context['copy_files'](src_files)
         return file_list, files, src_files
 
     def test_initialize(self):
@@ -113,9 +112,9 @@ class TestCopyFiles(BuiltinTest):
 class TestMakeBackend(BuiltinTest):
     def test_simple(self):
         makefile = mock.Mock()
-        src = self.builtin_dict['generic_file']('file.txt')
+        src = self.context['generic_file']('file.txt')
 
-        result = self.builtin_dict['copy_file'](file=src)
+        result = self.context['copy_file'](file=src)
         _copy_file.make_copy_file(result.creator, self.build, makefile,
                                   self.env)
         makefile.rule.assert_called_once_with(
@@ -124,9 +123,9 @@ class TestMakeBackend(BuiltinTest):
 
     def test_dir_sentinel(self):
         makefile = mock.Mock()
-        src = self.builtin_dict['generic_file']('dir/file.txt')
+        src = self.context['generic_file']('dir/file.txt')
 
-        result = self.builtin_dict['copy_file'](file=src)
+        result = self.context['copy_file'](file=src)
         _copy_file.make_copy_file(result.creator, self.build, makefile,
                                   self.env)
         makefile.rule.assert_called_once_with(
@@ -136,10 +135,10 @@ class TestMakeBackend(BuiltinTest):
 
     def test_extra_deps(self):
         makefile = mock.Mock()
-        dep = self.builtin_dict['generic_file']('dep.txt')
-        src = self.builtin_dict['generic_file']('file.txt')
+        dep = self.context['generic_file']('dep.txt')
+        src = self.context['generic_file']('file.txt')
 
-        result = self.builtin_dict['copy_file'](file=src, extra_deps=dep)
+        result = self.context['copy_file'](file=src, extra_deps=dep)
         _copy_file.make_copy_file(result.creator, self.build, makefile,
                                   self.env)
         makefile.rule.assert_called_once_with(
@@ -151,9 +150,9 @@ class TestMakeBackend(BuiltinTest):
 class TestNinjaBackend(BuiltinTest):
     def test_simple(self):
         ninjafile = mock.Mock()
-        src = self.builtin_dict['generic_file']('file.txt')
+        src = self.context['generic_file']('file.txt')
 
-        result = self.builtin_dict['copy_file'](file=src)
+        result = self.context['copy_file'](file=src)
         _copy_file.ninja_copy_file(result.creator, self.build, ninjafile,
                              self.env)
         ninjafile.build.assert_called_once_with(
@@ -163,10 +162,10 @@ class TestNinjaBackend(BuiltinTest):
 
     def test_extra_deps(self):
         ninjafile = mock.Mock()
-        dep = self.builtin_dict['generic_file']('dep.txt')
-        src = self.builtin_dict['generic_file']('file.txt')
+        dep = self.context['generic_file']('dep.txt')
+        src = self.context['generic_file']('file.txt')
 
-        result = self.builtin_dict['copy_file'](file=src, extra_deps=dep)
+        result = self.context['copy_file'](file=src, extra_deps=dep)
         _copy_file.ninja_copy_file(result.creator, self.build, ninjafile,
                              self.env)
         ninjafile.build.assert_called_once_with(

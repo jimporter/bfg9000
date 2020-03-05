@@ -7,14 +7,14 @@ from bfg9000.file_types import File, Directory
 
 class TestExtraDist(BuiltinTest):
     def test_file(self):
-        dist.extra_dist(self.builtin_dict, files='file')
+        self.context['extra_dist'](files='file')
         self.assertEqual(list(self.build.sources()), [
             File(Path('build.bfg', Root.srcdir)),
             File(Path('file', Root.srcdir)),
         ])
 
     def test_multiple_files(self):
-        dist.extra_dist(self.builtin_dict, files=['file1', 'file2'])
+        self.context['extra_dist'](files=['file1', 'file2'])
         self.assertEqual(list(self.build.sources()), [
             File(Path('build.bfg', Root.srcdir)),
             File(Path('file1', Root.srcdir)),
@@ -22,14 +22,14 @@ class TestExtraDist(BuiltinTest):
         ])
 
     def test_dir(self):
-        dist.extra_dist(self.builtin_dict, dirs='dir')
+        self.context['extra_dist'](dirs='dir')
         self.assertEqual(list(self.build.sources()), [
             File(Path('build.bfg', Root.srcdir)),
             Directory(Path('dir', Root.srcdir)),
         ])
 
     def test_multiple_dirs(self):
-        dist.extra_dist(self.builtin_dict, dirs=['dir1', 'dir2'])
+        self.context['extra_dist'](dirs=['dir1', 'dir2'])
         self.assertEqual(list(self.build.sources()), [
             File(Path('build.bfg', Root.srcdir)),
             Directory(Path('dir1', Root.srcdir)),
@@ -37,7 +37,7 @@ class TestExtraDist(BuiltinTest):
         ])
 
     def test_both(self):
-        dist.extra_dist(self.builtin_dict, 'file', 'dir')
+        self.context['extra_dist']('file', 'dir')
         self.assertEqual(list(self.build.sources()), [
             File(Path('build.bfg', Root.srcdir)),
             File(Path('file', Root.srcdir)),

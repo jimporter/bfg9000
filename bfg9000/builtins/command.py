@@ -53,9 +53,8 @@ Output = Placeholder('output')
 
 
 class BaseCommand(Edge):
-    def __init__(self, build, env, name, outputs, cmds, files,
-                 environment=None, phony=False, extra_deps=None,
-                 description=None):
+    def __init__(self, context, name, outputs, cmds, files, environment=None,
+                 phony=False, extra_deps=None, description=None):
         self.name = name
         self.files = files
         self.phony = phony
@@ -64,17 +63,17 @@ class BaseCommand(Edge):
                     if isinstance(i, Node) and (i.creator or not phony)]
         implicit.extend(iterate(extra_deps))
 
-        super().__init__(build, outputs, extra_deps=implicit,
+        super().__init__(context.build, outputs, extra_deps=implicit,
                          description=description)
 
         # Do this after Edge.__init__ so that self.output is set for our
         # placeholders.
-        self.cmds = [env.run_arguments(self._expand_cmd(line))
+        self.cmds = [context.env.run_arguments(self._expand_cmd(line))
                      for line in cmds]
         self.env = environment or {}
 
     @staticmethod
-    def convert_args(builtins, kwargs):
+    def convert_args(context, kwargs):
         cmd = kwargs.pop('cmd', None)
         cmds = kwargs.pop('cmds', None)
         if (cmd is None) == (cmds is None):
@@ -82,7 +81,7 @@ class BaseCommand(Edge):
                              'specified')
         kwargs['cmds'] = [cmd] if cmds is None else cmds
 
-        convert_each(kwargs, 'files', builtins['auto_file'])
+        convert_each(kwargs, 'files', context['auto_file'])
         return kwargs
 
     def _expand_cmd(self, cmd):
@@ -100,14 +99,14 @@ class BaseCommand(Edge):
 class Command(BaseCommand):
     console = True
 
-    def __init__(self, build, env, name, **kwargs):
-        super().__init__(build, env, name, Phony(name), phony=True, **kwargs)
+    def __init__(self, context, name, **kwargs):
+        super().__init__(context, name, Phony(name), phony=True, **kwargs)
 
 
-@builtin.function('build_inputs', 'builtins', 'env')
-def command(build, builtins, env, name, **kwargs):
-    kwargs = Command.convert_args(builtins, kwargs)
-    return Command(build, env, name, **kwargs).public_output
+@builtin.function()
+def command(context, name, **kwargs):
+    kwargs = Command.convert_args(context, kwargs)
+    return Command(context, name, **kwargs).public_output
 
 
 command.input = Input
@@ -117,7 +116,7 @@ class BuildStep(BaseCommand):
     console = False
     msbuild_output = True
 
-    def __init__(self, build, env, name, type=None, always_outdated=False,
+    def __init__(self, context , name, type=None, always_outdated=False,
                  **kwargs):
         name = listify(name)
         project_name = name[0]
@@ -128,14 +127,14 @@ class BuildStep(BaseCommand):
         outputs = [self._make_outputs(*i) for i in zip(name, type)]
 
         desc = kwargs.pop('description', 'build => ' + ' '.join(name))
-        super().__init__(build, env, project_name, outputs,
-                         phony=always_outdated, description=desc, **kwargs)
+        super().__init__(context, project_name, outputs, phony=always_outdated,
+                         description=desc, **kwargs)
 
     @staticmethod
-    def convert_args(builtins, kwargs):
+    def convert_args(context, kwargs):
         if kwargs.get('type') is None:
-            kwargs['type'] = builtins['auto_file']
-        return BaseCommand.convert_args(builtins, kwargs)
+            kwargs['type'] = context['auto_file']
+        return BaseCommand.convert_args(context, kwargs)
 
     @staticmethod
     def _make_outputs(name, type):
@@ -145,10 +144,10 @@ class BuildStep(BaseCommand):
         return result
 
 
-@builtin.function('build_inputs', 'builtins', 'env')
-def build_step(build, builtins, env, name, **kwargs):
-    kwargs = BuildStep.convert_args(builtins, kwargs)
-    return BuildStep(build, env, name, **kwargs).public_output
+@builtin.function()
+def build_step(context, name, **kwargs):
+    kwargs = BuildStep.convert_args(context, kwargs)
+    return BuildStep(context, name, **kwargs).public_output
 
 
 build_step.input = Input

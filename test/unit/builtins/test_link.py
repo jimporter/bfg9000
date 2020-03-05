@@ -17,7 +17,7 @@ class LinkTest(BuiltinTest):
         step = AttrDict(**step_args)
 
         output = linker.output_file(name, step)
-        public_output = linker.post_build(self.build, [], output, step)
+        public_output = linker.post_build(self.context, [], output, step)
 
         result = [i for i in listify(public_output or output) if not i.private]
         for i in result:
@@ -35,69 +35,68 @@ class TestExecutable(LinkTest):
 
     def test_identity(self):
         expected = file_types.Executable(Path('exe', Root.srcdir), None)
-        self.assertIs(self.builtin_dict['executable'](expected), expected)
+        self.assertIs(self.context['executable'](expected), expected)
 
     def test_src_file(self):
         expected = file_types.Executable(
             Path('exe', Root.srcdir),
             self.env.target_platform.object_format, 'c'
         )
-        self.assertSameFile(self.builtin_dict['executable']('exe'), expected)
+        self.assertSameFile(self.context['executable']('exe'), expected)
         self.assertEqual(list(self.build.sources()), [self.bfgfile, expected])
 
-        self.builtin_dict['project'](lang='c++')
+        self.context['project'](lang='c++')
         expected.lang = 'c++'
-        self.assertSameFile(self.builtin_dict['executable']('exe'), expected)
+        self.assertSameFile(self.context['executable']('exe'), expected)
 
     def test_no_dist(self):
         expected = file_types.Executable(
             Path('exe', Root.srcdir),
             self.env.target_platform.object_format, 'c'
         )
-        self.assertSameFile(self.builtin_dict['executable']('exe', dist=False),
+        self.assertSameFile(self.context['executable']('exe', dist=False),
                             expected)
         self.assertEqual(list(self.build.sources()), [self.bfgfile])
 
     def test_make_simple(self):
-        result = self.builtin_dict['executable']('exe', ['main.cpp'])
+        result = self.context['executable']('exe', ['main.cpp'])
         self.assertSameFile(result, self.output_file('exe'))
         self.assertSameFile(result.creator.files[0],
                             self.object_file('exe.int/main'))
 
-        result = self.builtin_dict['executable'](name='exe',
-                                                 files=['main.cpp'])
+        result = self.context['executable'](name='exe', files=['main.cpp'])
         self.assertSameFile(result, self.output_file('exe'))
 
-        src = self.builtin_dict['source_file']('main.cpp')
-        result = self.builtin_dict['executable']('exe', [src])
+        src = self.context['source_file']('main.cpp')
+        result = self.context['executable']('exe', [src])
         self.assertSameFile(result, self.output_file('exe'))
 
-        obj = self.builtin_dict['object_file']('main.o', lang='c++')
-        result = self.builtin_dict['executable']('exe', [obj])
+        obj = self.context['object_file']('main.o', lang='c++')
+        result = self.context['executable']('exe', [obj])
         self.assertSameFile(result, self.output_file('exe'))
 
-        self.builtin_dict['project'](intermediate_dirs=False)
-        result = self.builtin_dict['executable']('exe', ['main.cpp'])
+        self.context['project'](intermediate_dirs=False)
+        result = self.context['executable']('exe', ['main.cpp'])
         self.assertSameFile(result, self.output_file('exe'))
         self.assertSameFile(result.creator.files[0], self.object_file('main'))
 
     def test_make_override_lang(self):
         expected = self.output_file('exe')
 
-        src = self.builtin_dict['source_file']('main.c', 'c')
-        result = self.builtin_dict['executable']('exe', [src], lang='c++')
+        src = self.context['source_file']('main.c', 'c')
+        result = self.context['executable']('exe', [src], lang='c++')
         self.assertSameFile(result, expected)
         self.assertEqual(result.creator.langs, ['c++'])
         self.assertEqual(result.creator.linker.lang, 'c++')
 
-        obj = self.builtin_dict['object_file']('main.o', lang='c')
-        result = self.builtin_dict['executable']('exe', [obj], lang='c++')
+        obj = self.context['object_file']('main.o', lang='c')
+        result = self.context['executable']('exe', [obj], lang='c++')
         self.assertSameFile(result, expected)
         self.assertEqual(result.creator.langs, ['c'])
         self.assertEqual(result.creator.linker.lang, 'c++')
 
     def test_make_directory(self):
-        executable = self.builtin_dict['executable']
+        executable = self.context['executable']
         result = executable('exe', ['main.cpp'], intermediate_dir=None)
         self.assertSameFile(result, self.output_file('exe'))
         self.assertSameFile(result.creator.files[0], self.object_file('main'))
@@ -107,7 +106,7 @@ class TestExecutable(LinkTest):
         self.assertSameFile(result.creator.files[0],
                             self.object_file('dir/main'))
 
-        self.builtin_dict['project'](intermediate_dirs=False)
+        self.context['project'](intermediate_dirs=False)
         result = executable('exe', ['main.cpp'], intermediate_dir='dir')
         self.assertSameFile(result, self.output_file('exe'))
         self.assertSameFile(result.creator.files[0],
@@ -122,46 +121,42 @@ class TestExecutable(LinkTest):
         ))
         pkg = CommonPackage('pkg', fmt, None, opts.option_list(pkg_libdir))
 
-        result = self.builtin_dict['executable'](
-            'exe', ['main.cpp'], libs='libfoo', packages=pkg
-        )
+        result = self.context['executable']('exe', ['main.cpp'], libs='libfoo',
+                                            packages=pkg)
         self.assertEqual(result.creator.options,
                          opts.option_list(lib, pkg_libdir))
 
     def test_invalid_type(self):
-        src = self.builtin_dict['source_file']('main.cpp')
-        self.assertRaises(TypeError, self.builtin_dict['executable'], src,
-                          [src])
+        src = self.context['source_file']('main.cpp')
+        self.assertRaises(TypeError, self.context['executable'], src, [src])
 
     def test_make_no_files(self):
-        self.assertRaises(ValueError, self.builtin_dict['executable'],
-                          'exe', [])
+        self.assertRaises(ValueError, self.context['executable'], 'exe', [])
 
     def test_make_multiple_formats(self):
         obj1 = file_types.ObjectFile(Path('obj1.o', Root.srcdir), 'elf', 'c')
         obj2 = file_types.ObjectFile(Path('obj2.o', Root.srcdir), 'coff', 'c')
-        self.assertRaises(ValueError, self.builtin_dict['executable'],
-                          'exe', [obj1, obj2])
+        self.assertRaises(ValueError, self.context['executable'], 'exe',
+                          [obj1, obj2])
 
     def test_make_no_langs(self):
         obj1 = file_types.ObjectFile(Path('obj1.o', Root.srcdir), 'elf')
         obj2 = file_types.ObjectFile(Path('obj2.o', Root.srcdir), 'elf')
-        self.assertRaises(ValueError, self.builtin_dict['executable'],
-                          'exe', [obj1, obj2])
+        self.assertRaises(ValueError, self.context['executable'], 'exe',
+                          [obj1, obj2])
 
     def test_extra_deps(self):
-        dep = self.builtin_dict['generic_file']('dep.txt')
-        result = self.builtin_dict['executable']('exe', ['main.cpp'],
-                                                 extra_deps=[dep])
+        dep = self.context['generic_file']('dep.txt')
+        result = self.context['executable']('exe', ['main.cpp'],
+                                            extra_deps=[dep])
         self.assertSameFile(result, self.output_file('exe'))
         self.assertSameFile(result.creator.files[0],
                             self.object_file('exe.int/main'))
         self.assertEqual(result.creator.extra_deps, [dep])
 
     def test_description(self):
-        result = self.builtin_dict['executable'](
-            'exe', ['main.cpp'], description='my description'
-        )
+        result = self.context['executable']('exe', ['main.cpp'],
+                                            description='my description')
         self.assertEqual(result.creator.description, 'my description')
 
 
@@ -170,21 +165,20 @@ class TestSharedLibrary(LinkTest):
 
     def test_identity(self):
         ex = file_types.SharedLibrary(Path('shared', Root.srcdir), None)
-        self.assertIs(self.builtin_dict['shared_library'](ex), ex)
+        self.assertIs(self.context['shared_library'](ex), ex)
 
     def test_src_file(self):
         expected = file_types.SharedLibrary(
             Path('shared', Root.srcdir),
             self.env.target_platform.object_format, 'c'
         )
-        self.assertSameFile(self.builtin_dict['shared_library']('shared'),
+        self.assertSameFile(self.context['shared_library']('shared'),
                             expected)
         self.assertEqual(list(self.build.sources()), [self.bfgfile, expected])
 
-        self.builtin_dict['project'](lang='c++')
+        self.context['project'](lang='c++')
         expected.lang = 'c++'
-        self.assertSameFile(self.builtin_dict['shared_library']('shared'),
-                            expected)
+        self.assertSameFile(self.context['shared_library']('shared'), expected)
 
     def test_no_dist(self):
         expected = file_types.SharedLibrary(
@@ -192,7 +186,7 @@ class TestSharedLibrary(LinkTest):
             self.env.target_platform.object_format, 'c'
         )
         self.assertSameFile(
-            self.builtin_dict['shared_library']('shared', dist=False), expected
+            self.context['shared_library']('shared', dist=False), expected
         )
         self.assertEqual(list(self.build.sources()), [self.bfgfile])
 
@@ -201,73 +195,72 @@ class TestSharedLibrary(LinkTest):
             file_types.SharedLibrary(Path('shared', Root.srcdir), None),
             file_types.StaticLibrary(Path('static', Root.srcdir), None)
         )
-        self.assertIs(self.builtin_dict['shared_library'](lib), lib.shared)
+        self.assertIs(self.context['shared_library'](lib), lib.shared)
 
     def test_convert_from_dual_invalid_args(self):
         lib = file_types.DualUseLibrary(
             file_types.SharedLibrary(Path('shared', Root.srcdir), None),
             file_types.StaticLibrary(Path('static', Root.srcdir), None)
         )
-        self.assertRaises(TypeError, self.builtin_dict['shared_library'],
-                          lib, files=['foo.cpp'])
+        self.assertRaises(TypeError, self.context['shared_library'], lib,
+                          files=['foo.cpp'])
 
     def test_make_simple(self):
         expected = self.output_file('shared')
 
-        result = self.builtin_dict['shared_library']('shared', ['main.cpp'])
+        result = self.context['shared_library']('shared', ['main.cpp'])
         self.assertSameFile(result, expected, exclude={'post_install'})
         self.assertSameFile(result.creator.files[0],
                             self.object_file('libshared.int/main'))
 
-        result = self.builtin_dict['shared_library'](name='shared',
-                                                     files=['main.cpp'])
+        result = self.context['shared_library'](name='shared',
+                                                files=['main.cpp'])
         self.assertSameFile(result, expected, exclude={'post_install'})
 
-        src = self.builtin_dict['source_file']('main.cpp')
-        result = self.builtin_dict['shared_library']('shared', [src])
+        src = self.context['source_file']('main.cpp')
+        result = self.context['shared_library']('shared', [src])
         self.assertSameFile(result, expected, exclude={'post_install'})
 
-        obj = self.builtin_dict['object_file']('main.o', lang='c++')
-        result = self.builtin_dict['shared_library']('shared', [obj])
+        obj = self.context['object_file']('main.o', lang='c++')
+        result = self.context['shared_library']('shared', [obj])
         self.assertSameFile(result, expected, exclude={'post_install'})
 
-        self.builtin_dict['project'](intermediate_dirs=False)
-        result = self.builtin_dict['shared_library']('shared', ['main.cpp'])
+        self.context['project'](intermediate_dirs=False)
+        result = self.context['shared_library']('shared', ['main.cpp'])
         self.assertSameFile(result, expected, exclude={'post_install'})
         self.assertSameFile(result.creator.files[0], self.object_file('main'))
 
     def test_make_soversion(self):
-        src = self.builtin_dict['source_file']('main.cpp')
-        result = self.builtin_dict['shared_library'](
-            'shared', [src], version='1', soversion='1'
-        )
+        src = self.context['source_file']('main.cpp')
+        result = self.context['shared_library']('shared', [src], version='1',
+                                                soversion='1')
         self.assertSameFile(result, self.output_file(
             'shared', step={'version': '1', 'soversion': '1'}
         ), exclude={'post_install'})
 
-        self.assertRaises(ValueError, self.builtin_dict['shared_library'],
-                          'shared', [src], version='1')
-        self.assertRaises(ValueError, self.builtin_dict['shared_library'],
-                          'shared', [src], soversion='1')
+        self.assertRaises(ValueError, self.context['shared_library'], 'shared',
+                          [src], version='1')
+        self.assertRaises(ValueError, self.context['shared_library'], 'shared',
+                          [src], soversion='1')
 
     def test_make_override_lang(self):
-        shared_library = self.builtin_dict['shared_library']
+        shared_library = self.context['shared_library']
         expected = self.output_file('shared')
 
-        src = self.builtin_dict['source_file']('main.c', 'c')
+        src = self.context['source_file']('main.c', 'c')
         result = shared_library('shared', [src], lang='c++')
         self.assertSameFile(result, expected, exclude={'post_install'})
         self.assertEqual(result.creator.langs, ['c++'])
         self.assertEqual(result.creator.linker.lang, 'c++')
 
-        obj = self.builtin_dict['object_file']('main.o', lang='c')
+        obj = self.context['object_file']('main.o', lang='c')
         result = shared_library('shared', [obj], lang='c++')
         self.assertSameFile(result, expected, exclude={'post_install'})
         self.assertEqual(result.creator.langs, ['c'])
         self.assertEqual(result.creator.linker.lang, 'c++')
 
     def test_make_runtime_deps(self):
-        shared_library = self.builtin_dict['shared_library']
+        shared_library = self.context['shared_library']
         libfoo = shared_library('foo', ['foo.cpp'])
 
         expected = self.output_file('shared')
@@ -276,7 +269,7 @@ class TestSharedLibrary(LinkTest):
         self.assertSameFile(result, expected, exclude={'post_install'})
 
     def test_make_directory(self):
-        shared_library = self.builtin_dict['shared_library']
+        shared_library = self.context['shared_library']
         expected = self.output_file('shared')
 
         result = shared_library('shared', ['main.cpp'], intermediate_dir=None)
@@ -288,7 +281,7 @@ class TestSharedLibrary(LinkTest):
         self.assertSameFile(result.creator.files[0],
                             self.object_file('dir/main'))
 
-        self.builtin_dict['project'](intermediate_dirs=False)
+        self.context['project'](intermediate_dirs=False)
         result = shared_library('shared', ['main.cpp'], intermediate_dir='dir')
         self.assertSameFile(result, expected, exclude={'post_install'})
         self.assertSameFile(result.creator.files[0],
@@ -303,33 +296,32 @@ class TestSharedLibrary(LinkTest):
         ))
         pkg = CommonPackage('pkg', fmt, None, opts.option_list(pkg_libdir))
 
-        result = self.builtin_dict['shared_library'](
-            'shared', ['main.cpp'], libs='libfoo', packages=pkg
-        )
+        result = self.context['shared_library']('shared', ['main.cpp'],
+                                                libs='libfoo', packages=pkg)
         self.assertEqual(result.creator.options,
                          opts.option_list(lib, pkg_libdir))
 
     def test_invalid_type(self):
-        src = self.builtin_dict['source_file']('main.cpp')
-        self.assertRaises(TypeError, self.builtin_dict['shared_library'],
-                          src, [src])
+        src = self.context['source_file']('main.cpp')
+        self.assertRaises(TypeError, self.context['shared_library'], src,
+                          [src])
 
     def test_make_no_files(self):
-        self.assertRaises(ValueError, self.builtin_dict['shared_library'],
-                          'shared', [])
+        self.assertRaises(ValueError, self.context['shared_library'], 'shared',
+                          [])
 
     def test_description(self):
-        result = self.builtin_dict['shared_library'](
+        result = self.context['shared_library'](
             'executable', ['main.cpp'], description='my description'
         )
         self.assertEqual(result.creator.description, 'my description')
 
     def test_extra_deps(self):
-        dep = self.builtin_dict['generic_file']('dep.txt')
+        dep = self.context['generic_file']('dep.txt')
         expected = self.output_file('shared')
 
-        result = self.builtin_dict['shared_library']('shared', ['main.cpp'],
-                                                     extra_deps=[dep])
+        result = self.context['shared_library']('shared', ['main.cpp'],
+                                                extra_deps=[dep])
         self.assertSameFile(result, expected, exclude={'post_install'})
         self.assertSameFile(result.creator.files[0],
                             self.object_file('libshared.int/main'))
@@ -354,21 +346,19 @@ class TestStaticLibrary(LinkTest):
 
     def test_identity(self):
         ex = file_types.StaticLibrary(Path('static', Root.srcdir), None)
-        self.assertIs(self.builtin_dict['static_library'](ex), ex)
+        self.assertIs(self.context['static_library'](ex), ex)
 
     def test_src_file(self):
         expected = file_types.StaticLibrary(
             Path('static', Root.srcdir),
             self.env.target_platform.object_format, 'c'
         )
-        self.assertSameFile(self.builtin_dict['static_library']('static'),
-                            expected)
+        self.assertSameFile(self.context['static_library']('static'), expected)
         self.assertEqual(list(self.build.sources()), [self.bfgfile, expected])
 
-        self.builtin_dict['project'](lang='c++')
+        self.context['project'](lang='c++')
         expected.lang = 'c++'
-        self.assertSameFile(self.builtin_dict['static_library']('static'),
-                            expected)
+        self.assertSameFile(self.context['static_library']('static'), expected)
 
     def test_no_dist(self):
         expected = file_types.StaticLibrary(
@@ -376,7 +366,7 @@ class TestStaticLibrary(LinkTest):
             self.env.target_platform.object_format, 'c'
         )
         self.assertSameFile(
-            self.builtin_dict['static_library']('static', dist=False), expected
+            self.context['static_library']('static', dist=False), expected
         )
         self.assertEqual(list(self.build.sources()), [self.bfgfile])
 
@@ -385,45 +375,45 @@ class TestStaticLibrary(LinkTest):
             file_types.SharedLibrary(Path('shared', Root.srcdir), None),
             file_types.StaticLibrary(Path('static', Root.srcdir), None)
         )
-        self.assertIs(self.builtin_dict['static_library'](lib), lib.static)
+        self.assertIs(self.context['static_library'](lib), lib.static)
 
     def test_convert_from_dual_invalid_args(self):
         lib = file_types.DualUseLibrary(
             file_types.SharedLibrary(Path('shared', Root.srcdir), None),
             file_types.StaticLibrary(Path('static', Root.srcdir), None)
         )
-        self.assertRaises(TypeError, self.builtin_dict['static_library'],
-                          lib, files=['foo.cpp'])
+        self.assertRaises(TypeError, self.context['static_library'], lib,
+                          files=['foo.cpp'])
 
     def test_make_simple(self):
         expected = self.output_file('static', extra=self.extra())
 
-        result = self.builtin_dict['static_library']('static', ['main.cpp'])
+        result = self.context['static_library']('static', ['main.cpp'])
         self.assertSameFile(result, expected)
         self.assertSameFile(result.creator.files[0],
                             self.object_file('libstatic.int/main'))
 
-        result = self.builtin_dict['static_library'](name='static',
-                                                     files=['main.cpp'])
+        result = self.context['static_library'](name='static',
+                                                files=['main.cpp'])
         self.assertSameFile(result, expected)
 
-        src = self.builtin_dict['source_file']('main.cpp')
-        result = self.builtin_dict['static_library']('static', [src])
+        src = self.context['source_file']('main.cpp')
+        result = self.context['static_library']('static', [src])
         self.assertSameFile(result, expected)
 
-        obj = self.builtin_dict['object_file']('main.o', lang='c++')
-        result = self.builtin_dict['static_library']('static', [obj])
+        obj = self.context['object_file']('main.o', lang='c++')
+        result = self.context['static_library']('static', [obj])
         self.assertSameFile(result, expected)
 
-        self.builtin_dict['project'](intermediate_dirs=False)
-        result = self.builtin_dict['static_library']('static', ['main.cpp'])
+        self.context['project'](intermediate_dirs=False)
+        result = self.context['static_library']('static', ['main.cpp'])
         self.assertSameFile(result, expected)
         self.assertSameFile(result.creator.files[0], self.object_file('main'))
 
     def test_make_override_lang(self):
-        static_library = self.builtin_dict['static_library']
+        static_library = self.context['static_library']
 
-        src = self.builtin_dict['source_file']('main.c', 'c')
+        src = self.context['source_file']('main.c', 'c')
         result = static_library('static', [src], lang='c++')
         self.assertSameFile(result, self.output_file(
             'static', extra=self.extra()
@@ -431,7 +421,7 @@ class TestStaticLibrary(LinkTest):
         self.assertEqual(result.creator.langs, ['c++'])
         self.assertEqual(result.creator.linker.lang, 'c++')
 
-        obj = self.builtin_dict['object_file']('main.o', lang='c')
+        obj = self.context['object_file']('main.o', lang='c')
         result = static_library('static', [obj], lang='c++')
         self.assertSameFile(result, self.output_file(
             'static', lang='c', extra=self.extra('c')
@@ -440,7 +430,7 @@ class TestStaticLibrary(LinkTest):
         self.assertEqual(result.creator.linker.lang, 'c++')
 
     def test_make_linktime_deps(self):
-        static_library = self.builtin_dict['static_library']
+        static_library = self.context['static_library']
         libfoo = static_library('libfoo.a')
 
         result = static_library('static', ['main.c'], libs=[libfoo])
@@ -450,7 +440,7 @@ class TestStaticLibrary(LinkTest):
         ))
 
     def test_make_directory(self):
-        static_library = self.builtin_dict['static_library']
+        static_library = self.context['static_library']
         expected = self.output_file('static', extra=self.extra())
 
         result = static_library('static', ['main.cpp'], intermediate_dir=None)
@@ -462,33 +452,33 @@ class TestStaticLibrary(LinkTest):
         self.assertSameFile(result.creator.files[0],
                             self.object_file('dir/main'))
 
-        self.builtin_dict['project'](intermediate_dirs=False)
+        self.context['project'](intermediate_dirs=False)
         result = static_library('static', ['main.cpp'], intermediate_dir='dir')
         self.assertSameFile(result, expected)
         self.assertSameFile(result.creator.files[0],
                             self.object_file('dir/main'))
 
     def test_invalid_type(self):
-        src = self.builtin_dict['source_file']('main.cpp')
-        self.assertRaises(TypeError, self.builtin_dict['static_library'],
-                          src, [src])
+        src = self.context['source_file']('main.cpp')
+        self.assertRaises(TypeError, self.context['static_library'], src,
+                          [src])
 
     def test_make_no_files(self):
-        self.assertRaises(ValueError, self.builtin_dict['static_library'],
-                          'static', [])
+        self.assertRaises(ValueError, self.context['static_library'], 'static',
+                          [])
 
     def test_description(self):
-        result = self.builtin_dict['static_library'](
+        result = self.context['static_library'](
             'executable', ['main.cpp'], description='my description'
         )
         self.assertEqual(result.creator.description, 'my description')
 
     def test_extra_deps(self):
-        dep = self.builtin_dict['generic_file']('dep.txt')
+        dep = self.context['generic_file']('dep.txt')
         expected = self.output_file('static', extra=self.extra())
 
-        result = self.builtin_dict['static_library']('static', ['main.cpp'],
-                                                     extra_deps=[dep])
+        result = self.context['static_library']('static', ['main.cpp'],
+                                                extra_deps=[dep])
         self.assertSameFile(result, expected)
         self.assertSameFile(result.creator.files[0],
                             self.object_file('libstatic.int/main'))
@@ -502,7 +492,7 @@ class TestLibrary(LinkTest):
             file_types.SharedLibrary(Path('shared', Root.srcdir), None),
             file_types.StaticLibrary(Path('static', Root.srcdir), None)
         )
-        self.assertIs(self.builtin_dict['library'](expected), expected)
+        self.assertIs(self.context['library'](expected), expected)
 
     def test_convert_to_shared(self):
         self.env.library_mode = LibraryMode(True, False)
@@ -510,7 +500,7 @@ class TestLibrary(LinkTest):
             file_types.SharedLibrary(Path('shared', Root.srcdir), None),
             file_types.StaticLibrary(Path('static', Root.srcdir), None)
         )
-        self.assertEqual(self.builtin_dict['library'](lib), lib.shared)
+        self.assertEqual(self.context['library'](lib), lib.shared)
 
     def test_convert_to_static(self):
         self.env.library_mode = LibraryMode(False, True)
@@ -518,7 +508,7 @@ class TestLibrary(LinkTest):
             file_types.SharedLibrary(Path('shared', Root.srcdir), None),
             file_types.StaticLibrary(Path('static', Root.srcdir), None)
         )
-        self.assertEqual(self.builtin_dict['library'](lib), lib.static)
+        self.assertEqual(self.context['library'](lib), lib.static)
 
     def test_convert_invalid_args(self):
         self.env.library_mode = LibraryMode(False, True)
@@ -526,12 +516,12 @@ class TestLibrary(LinkTest):
             file_types.SharedLibrary(Path('shared', Root.srcdir), None),
             file_types.StaticLibrary(Path('static', Root.srcdir), None)
         )
-        self.assertRaises(TypeError, self.builtin_dict['library'], lib,
+        self.assertRaises(TypeError, self.context['library'], lib,
                           files=['foo.cpp'])
 
     def test_no_library(self):
         self.env.library_mode = LibraryMode(False, False)
-        self.assertRaises(ValueError, self.builtin_dict['library'], 'library',
+        self.assertRaises(ValueError, self.context['library'], 'library',
                           files=['foo.cpp'])
 
     def test_src_file(self):
@@ -540,47 +530,43 @@ class TestLibrary(LinkTest):
             Path('library', Root.srcdir),
             self.env.target_platform.object_format, 'c'
         )
-        self.assertSameFile(self.builtin_dict['library']('library'), expected)
+        self.assertSameFile(self.context['library']('library'), expected)
         self.assertEqual(list(self.build.sources()), [self.bfgfile, expected])
 
-        self.builtin_dict['project'](lang='c++')
+        self.context['project'](lang='c++')
         expected.lang = 'c++'
-        self.assertSameFile(self.builtin_dict['library']('library'), expected)
+        self.assertSameFile(self.context['library']('library'), expected)
 
     def test_src_file_explicit_static(self):
         expected = file_types.StaticLibrary(
             Path('library', Root.srcdir),
             self.env.target_platform.object_format, 'c'
         )
-        self.assertSameFile(self.builtin_dict['library'](
-            'library', kind='static'
-        ), expected)
+        self.assertSameFile(self.context['library']('library', kind='static'),
+                            expected)
         self.assertEqual(list(self.build.sources()), [self.bfgfile, expected])
 
-        self.builtin_dict['project'](lang='c++')
+        self.context['project'](lang='c++')
         expected.lang = 'c++'
-        self.assertSameFile(self.builtin_dict['library'](
-            'library', kind='static'
-        ), expected)
+        self.assertSameFile(self.context['library']('library', kind='static'),
+                            expected)
 
     def test_src_file_explicit_shared(self):
         expected = file_types.SharedLibrary(
             Path('library', Root.srcdir),
             self.env.target_platform.object_format, 'c'
         )
-        self.assertSameFile(self.builtin_dict['library'](
-            'library', kind='shared'
-        ), expected)
+        self.assertSameFile(self.context['library']('library', kind='shared'),
+                            expected)
         self.assertEqual(list(self.build.sources()), [self.bfgfile, expected])
 
-        self.builtin_dict['project'](lang='c++')
+        self.context['project'](lang='c++')
         expected.lang = 'c++'
-        self.assertSameFile(self.builtin_dict['library'](
-            'library', kind='shared'
-        ), expected)
+        self.assertSameFile(self.context['library']('library', kind='shared'),
+                            expected)
 
     def test_src_file_explicit_dual(self):
-        self.assertRaises(ValueError, self.builtin_dict['library'], 'library',
+        self.assertRaises(ValueError, self.context['library'], 'library',
                           kind='dual')
 
     def test_no_dist(self):
@@ -589,33 +575,33 @@ class TestLibrary(LinkTest):
             self.env.target_platform.object_format, 'c'
         )
         self.assertSameFile(
-            self.builtin_dict['library']('shared', kind='shared', dist=False),
+            self.context['library']('shared', kind='shared', dist=False),
             expected
         )
         self.assertEqual(list(self.build.sources()), [self.bfgfile])
 
     def test_make_simple_shared(self):
         expected = self.output_file('library', mode='shared_library')
-        result = self.builtin_dict['library']('library', ['main.cpp'],
-                                              kind='shared')
+        result = self.context['library']('library', ['main.cpp'],
+                                         kind='shared')
         self.assertSameFile(result, expected, exclude={'post_install'})
         self.assertSameFile(result.creator.files[0],
                             self.object_file('liblibrary.int/main'))
 
-        src = self.builtin_dict['source_file']('main.cpp')
-        result = self.builtin_dict['library']('library', [src], kind='shared')
+        src = self.context['source_file']('main.cpp')
+        result = self.context['library']('library', [src], kind='shared')
         self.assertSameFile(result, expected, exclude={'post_install'})
 
     def test_make_simple_static(self):
         expected = self.output_file('library', mode='static_library')
-        result = self.builtin_dict['library']('library', ['main.cpp'],
-                                              kind='static')
+        result = self.context['library']('library', ['main.cpp'],
+                                         kind='static')
         self.assertSameFile(result, expected, exclude={'forward_opts'})
         self.assertSameFile(result.creator.files[0],
                             self.object_file('liblibrary.int/main'))
 
-        src = self.builtin_dict['source_file']('main.cpp')
-        result = self.builtin_dict['library']('library', [src], kind='static')
+        src = self.context['source_file']('main.cpp')
+        result = self.context['library']('library', [src], kind='static')
         self.assertSameFile(result, expected, exclude={'forward_opts'})
 
     def test_make_simple_dual(self):
@@ -629,10 +615,9 @@ class TestLibrary(LinkTest):
             'packages': [],
         }}
 
-        src = self.builtin_dict['source_file']('main.cpp')
+        src = self.context['source_file']('main.cpp')
         with mock.patch('warnings.warn', lambda s: None):
-            result = self.builtin_dict['library']('library', [src],
-                                                  kind='dual')
+            result = self.context['library']('library', [src], kind='dual')
 
         if self.env.builder('c++').can_dual_link:
             self.assertSameFile(result, file_types.DualUseLibrary(
@@ -651,7 +636,7 @@ class TestLibrary(LinkTest):
                                 self.object_file('liblibrary.int/main'))
 
     def test_make_directory(self):
-        library = self.builtin_dict['library']
+        library = self.context['library']
         expected = self.output_file('library', mode='shared_library')
 
         result = library('library', ['main.cpp'], kind='shared',
@@ -665,7 +650,7 @@ class TestLibrary(LinkTest):
         self.assertSameFile(result.creator.files[0],
                             self.object_file('dir/main'))
 
-        self.builtin_dict['project'](intermediate_dirs=False)
+        self.context['project'](intermediate_dirs=False)
         result = library('library', ['main.cpp'], kind='shared',
                          intermediate_dir='dir')
         self.assertSameFile(result, expected, exclude={'post_install'})
@@ -674,10 +659,10 @@ class TestLibrary(LinkTest):
 
     def test_extra_deps(self):
         # Shared
-        dep = self.builtin_dict['generic_file']('dep.txt')
+        dep = self.context['generic_file']('dep.txt')
         expected = self.output_file('library', mode='shared_library')
-        result = self.builtin_dict['library']('library', ['main.cpp'],
-                                              kind='shared', extra_deps=[dep])
+        result = self.context['library']('library', ['main.cpp'],
+                                         kind='shared', extra_deps=[dep])
         self.assertSameFile(result, expected, exclude={'post_install'})
         self.assertSameFile(result.creator.files[0],
                             self.object_file('liblibrary.int/main'))
@@ -685,8 +670,8 @@ class TestLibrary(LinkTest):
 
         # Static
         expected = self.output_file('library', mode='static_library')
-        result = self.builtin_dict['library']('library', ['main.cpp'],
-                                              kind='static', extra_deps=[dep])
+        result = self.context['library']('library', ['main.cpp'],
+                                         kind='static', extra_deps=[dep])
         self.assertSameFile(result, expected, exclude={'forward_opts'})
         self.assertSameFile(result.creator.files[0],
                             self.object_file('liblibrary.int/main'))
@@ -694,9 +679,8 @@ class TestLibrary(LinkTest):
 
         # Dual
         with mock.patch('warnings.warn', lambda s: None):
-            result = self.builtin_dict['library'](
-                'library', ['main.cpp'], kind='dual', extra_deps=[dep]
-            )
+            result = self.context['library']('library', ['main.cpp'],
+                                             kind='dual', extra_deps=[dep])
 
         if self.env.builder('c++').can_dual_link:
             for i in result.all:
@@ -710,7 +694,7 @@ class TestWholeArchive(BuiltinTest):
         expected = file_types.WholeArchive(
             file_types.StaticLibrary(Path('static', Root.srcdir), None)
         )
-        self.assertIs(self.builtin_dict['whole_archive'](expected), expected)
+        self.assertIs(self.context['whole_archive'](expected), expected)
 
     def test_src_file(self):
         expected = file_types.WholeArchive(
@@ -719,26 +703,26 @@ class TestWholeArchive(BuiltinTest):
                 self.env.target_platform.object_format, 'c'
             )
         )
-        self.assertSameFile(link.whole_archive(self.builtin_dict, 'static'),
+        self.assertSameFile(link.whole_archive(self.context, 'static'),
                             expected)
 
     def test_convert_from_static(self):
         lib = file_types.StaticLibrary(Path('static', Root.srcdir), None)
-        result = self.builtin_dict['whole_archive'](lib)
+        result = self.context['whole_archive'](lib)
         self.assertSameFile(result, file_types.WholeArchive(lib))
 
     def test_convert_from_static_invalid_args(self):
         lib = file_types.StaticLibrary(Path('static', Root.srcdir), None)
-        self.assertRaises(TypeError, self.builtin_dict['whole_archive'], lib,
+        self.assertRaises(TypeError, self.context['whole_archive'], lib,
                           files=['foo.cpp'])
 
 
 class TestMakeBackend(BuiltinTest):
     def test_simple(self):
         makefile = mock.Mock()
-        obj = self.builtin_dict['object_file']('main.o')
+        obj = self.context['object_file']('main.o')
 
-        result = self.builtin_dict['executable']('exe', obj)
+        result = self.context['executable']('exe', obj)
         link.make_link(result.creator, self.build, makefile, self.env)
         makefile.rule.assert_called_once_with(
             result, [obj], [], AlwaysEqual(), {}, None
@@ -746,9 +730,9 @@ class TestMakeBackend(BuiltinTest):
 
     def test_dir_sentinel(self):
         makefile = mock.Mock()
-        obj = self.builtin_dict['object_file']('main.o')
+        obj = self.context['object_file']('main.o')
 
-        result = self.builtin_dict['executable']('dir/exe', obj)
+        result = self.context['executable']('dir/exe', obj)
         link.make_link(result.creator, self.build, makefile, self.env)
         makefile.rule.assert_called_once_with(
             result, [obj], [Path('dir/.dir')], AlwaysEqual(), {}, None
@@ -756,10 +740,10 @@ class TestMakeBackend(BuiltinTest):
 
     def test_extra_deps(self):
         makefile = mock.Mock()
-        dep = self.builtin_dict['generic_file']('dep.txt')
-        obj = self.builtin_dict['object_file']('main.o')
+        dep = self.context['generic_file']('dep.txt')
+        obj = self.context['object_file']('main.o')
 
-        result = self.builtin_dict['executable']('exe', obj, extra_deps=dep)
+        result = self.context['executable']('exe', obj, extra_deps=dep)
         link.make_link(result.creator, self.build, makefile, self.env)
         makefile.rule.assert_called_once_with(
             result, [obj, dep], [], AlwaysEqual(), {}, None
@@ -769,9 +753,9 @@ class TestMakeBackend(BuiltinTest):
 class TestNinjaBackend(BuiltinTest):
     def test_simple(self):
         ninjafile = mock.Mock()
-        obj = self.builtin_dict['object_file']('main.o')
+        obj = self.context['object_file']('main.o')
 
-        result = self.builtin_dict['executable']('exe', obj)
+        result = self.context['executable']('exe', obj)
         link.ninja_link(result.creator, self.build, ninjafile, self.env)
         ninjafile.build.assert_called_once_with(
             output=[result], rule='cc_link', inputs=[obj], implicit=[],
@@ -780,10 +764,10 @@ class TestNinjaBackend(BuiltinTest):
 
     def test_extra_deps(self):
         ninjafile = mock.Mock()
-        dep = self.builtin_dict['generic_file']('dep.txt')
-        obj = self.builtin_dict['object_file']('main.o')
+        dep = self.context['generic_file']('dep.txt')
+        obj = self.context['object_file']('main.o')
 
-        result = self.builtin_dict['executable']('exe', obj, extra_deps=dep)
+        result = self.context['executable']('exe', obj, extra_deps=dep)
         link.ninja_link(result.creator, self.build, ninjafile, self.env)
         ninjafile.build.assert_called_once_with(
             output=[result], rule='cc_link', inputs=[obj], implicit=[dep],

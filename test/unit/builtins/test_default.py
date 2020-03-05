@@ -9,7 +9,7 @@ class TestDefaultOutputs(BuiltinTest):
         self.default = default.DefaultOutputs(self.build, self.env)
 
     def test_add_remove(self):
-        obj = self.builtin_dict['object_file'](file='src.cpp')
+        obj = self.context['object_file'](file='src.cpp')
         self.default.add(obj)
         self.assertEqual(self.default.outputs, [obj])
 
@@ -17,8 +17,8 @@ class TestDefaultOutputs(BuiltinTest):
         self.assertEqual(self.default.outputs, [])
 
     def test_add_remove_explicit(self):
-        obj1 = self.builtin_dict['object_file'](file='src1.cpp')
-        obj2 = self.builtin_dict['object_file'](file='src2.cpp')
+        obj1 = self.context['object_file'](file='src1.cpp')
+        obj2 = self.context['object_file'](file='src2.cpp')
         self.default.add(obj1)
         self.default.add(obj2, explicit=True)
         self.assertEqual(self.default.outputs, [obj2])
@@ -29,7 +29,7 @@ class TestDefaultOutputs(BuiltinTest):
         self.assertEqual(self.default.outputs, [obj1])
 
     def test_add_no_creator(self):
-        obj = self.builtin_dict['object_file']('obj.o')
+        obj = self.context['object_file']('obj.o')
         self.default.add(obj)
         self.assertEqual(self.default.outputs, [])
 
@@ -39,20 +39,20 @@ class TestDefaultOutputs(BuiltinTest):
 
 class TestDefault(BuiltinTest):
     def test_single_result(self):
-        obj = self.builtin_dict['object_file'](file='src.cpp')
-        self.assertEqual(self.builtin_dict['default'](obj), obj)
+        obj = self.context['object_file'](file='src.cpp')
+        self.assertEqual(self.context['default'](obj), obj)
         self.assertEqual(self.build['defaults'].outputs, [obj])
 
     def test_multiple_results(self):
-        obj1 = self.builtin_dict['object_file'](file='src1.cpp')
-        obj2 = self.builtin_dict['object_file'](file='src2.cpp')
-        self.assertEqual(self.builtin_dict['default'](obj1, obj2),
+        obj1 = self.context['object_file'](file='src1.cpp')
+        obj2 = self.context['object_file'](file='src2.cpp')
+        self.assertEqual(self.context['default'](obj1, obj2),
                          (obj1, obj2))
         self.assertEqual(self.build['defaults'].outputs, [obj1, obj2])
 
     def test_nested_results(self):
-        obj1 = self.builtin_dict['object_file'](file='src1.cpp')
-        obj2 = self.builtin_dict['object_file'](file='src2.cpp')
-        self.assertEqual(self.builtin_dict['default'](obj1, [obj2], None),
+        obj1 = self.context['object_file'](file='src1.cpp')
+        obj2 = self.context['object_file'](file='src2.cpp')
+        self.assertEqual(self.context['default'](obj1, [obj2], None),
                          (obj1, [obj2], None))
         self.assertEqual(self.build['defaults'].outputs, [obj1, obj2])

@@ -13,12 +13,12 @@ _exts = OrderedDict(
 )
 
 
-@builtin.function('builtins')
-def extra_dist(builtins, files=None, dirs=None):
+@builtin.function()
+def extra_dist(context, files=None, dirs=None):
     for i in iterate(files):
-        builtins['generic_file'](i)
+        context['generic_file'](i)
     for i in iterate(dirs):
-        builtins['directory'](i, include='*')
+        context['directory'](i, include='*')
 
 
 def _dist_command(format, build_inputs, buildfile, env):

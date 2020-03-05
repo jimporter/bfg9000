@@ -130,7 +130,7 @@ class TestPkgConfigRequirementSet(TestCase):
 
 class TestPkgConfig(BuiltinTest):
     def test_minimal(self):
-        pkg = PkgConfigInfo(self.builtin_dict, self.build, name='package',
+        pkg = PkgConfigInfo(self.context, name='package',
                             version='1.0')
         self.assertEqual(pkg.output, PkgConfigPcFile(Path(
             'pkgconfig/package.pc'
@@ -145,9 +145,8 @@ class TestPkgConfig(BuiltinTest):
 
     def test_metadata(self):
         pkg = PkgConfigInfo(
-            self.builtin_dict, self.build, name='package',
-            desc_name='my-package', desc='a cool package',
-            url='http://www.example.com/', version='1.0'
+            self.context, name='package', desc_name='my-package',
+            desc='a cool package', url='http://www.example.com/', version='1.0'
         )
         self.assertEqual(pkg.output, PkgConfigPcFile(Path(
             'pkgconfig/package.pc'
@@ -163,7 +162,7 @@ class TestPkgConfig(BuiltinTest):
 
     def test_requires(self):
         pkg = PkgConfigInfo(
-            self.builtin_dict, self.build, name='package', version='1.0',
+            self.context, name='package', version='1.0',
             requires=['req', ('vreq', '>=1.0')]
         )
 
@@ -173,4 +172,4 @@ class TestPkgConfig(BuiltinTest):
                          '\nRequires: req, vreq >= 1.0\n')
 
         with self.assertRaises(TypeError):
-            pkg = PkgConfigInfo(self.builtin_dict, self.build, requires=[1])
+            pkg = PkgConfigInfo(self.context, requires=[1])

@@ -7,11 +7,12 @@ from .common import BuiltinTest
 from .. import *
 
 from bfg9000 import file_types, options as opts
-from bfg9000.builtins import packages, project  # noqa
+from bfg9000.build_inputs import BuildInputs
+from bfg9000.builtins import builtin, packages, project  # noqa
 from bfg9000.exceptions import PackageResolutionError, PackageVersionError
 from bfg9000.file_types import Directory, HeaderDirectory
 from bfg9000.packages import CommonPackage, Framework
-from bfg9000.path import abspath
+from bfg9000.path import abspath, Path, Root
 from bfg9000.versioning import SpecifierSet, Version
 
 
@@ -41,10 +42,16 @@ def mock_execute(args, **kwargs):
 
 
 class TestFramework(TestCase):
+    def _make_context(self, env):
+        build = BuildInputs(env, Path('build.bfg', Root.srcdir))
+        return builtin.BuildContext(env, build, None)
+
     def test_framework(self):
         env = make_env('macos')
+        context = self._make_context(env)
+
         self.assertEqual(
-            packages.framework(env, 'name'),
+            context['framework']('name'),
             CommonPackage('name', env.target_platform.object_format,
                           link_options=opts.option_list(opts.lib(
                               Framework('name')
@@ -53,8 +60,10 @@ class TestFramework(TestCase):
 
     def test_framework_suffix(self):
         env = make_env('macos')
+        context = self._make_context(env)
+
         self.assertEqual(
-            packages.framework(env, 'name', 'suffix'),
+            context['framework']('name', 'suffix'),
             CommonPackage('name,suffix',
                           env.target_platform.object_format,
                           link_options=opts.option_list(opts.lib(
@@ -64,11 +73,13 @@ class TestFramework(TestCase):
 
     def test_frameworks_unsupported(self):
         env = make_env('linux')
-        with self.assertRaises(PackageResolutionError):
-            packages.framework(env, 'name')
+        context = self._make_context(env)
 
         with self.assertRaises(PackageResolutionError):
-            packages.framework(env, 'name', 'suffix')
+            context['framework']('name')
+
+        with self.assertRaises(PackageResolutionError):
+            context['framework']('name', 'suffix')
 
 
 class TestPackage(BuiltinTest):
@@ -76,7 +87,7 @@ class TestPackage(BuiltinTest):
         with mock.patch('bfg9000.shell.execute', mock_execute), \
              mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('logging.log'):  # noqa
-            pkg = self.builtin_dict['package']('name')
+            pkg = self.context['package']('name')
             self.assertEqual(pkg.name, 'name')
             self.assertEqual(pkg.version, Version('1.2.3'))
             self.assertEqual(pkg.specifier, SpecifierSet())
@@ -86,7 +97,7 @@ class TestPackage(BuiltinTest):
         with mock.patch('bfg9000.shell.execute', mock_execute), \
              mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('logging.log'):  # noqa
-            pkg = self.builtin_dict['package']('name', version='>1.0')
+            pkg = self.context['package']('name', version='>1.0')
             self.assertEqual(pkg.name, 'name')
             self.assertEqual(pkg.version, Version('1.2.3'))
             self.assertEqual(pkg.specifier, SpecifierSet('>1.0'))
@@ -96,7 +107,7 @@ class TestPackage(BuiltinTest):
         with mock.patch('bfg9000.shell.execute', mock_execute), \
              mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('logging.log'):  # noqa
-            pkg = self.builtin_dict['package']('name', lang='c++')
+            pkg = self.context['package']('name', lang='c++')
             self.assertEqual(pkg.name, 'name')
             self.assertEqual(pkg.version, Version('1.2.3'))
             self.assertEqual(pkg.specifier, SpecifierSet())
@@ -106,7 +117,7 @@ class TestPackage(BuiltinTest):
         with mock.patch('bfg9000.shell.execute', mock_execute), \
              mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('logging.log'):  # noqa
-            pkg = self.builtin_dict['package']('name', kind='static')
+            pkg = self.context['package']('name', kind='static')
             self.assertEqual(pkg.name, 'name')
             self.assertEqual(pkg.version, Version('1.2.3'))
             self.assertEqual(pkg.specifier, SpecifierSet())
@@ -121,7 +132,7 @@ class TestPackage(BuiltinTest):
                  mock.patch('bfg9000.shell.which', mock_which):  # noqa
                 yield m
 
-        package = self.builtin_dict['package']
+        package = self.context['package']
 
         with mock_context() as m:
             pkg = package('name')
@@ -148,7 +159,7 @@ class TestPackage(BuiltinTest):
             self.assertEqual(pkg.name, 'name')
             m.assert_called_once_with('c')
 
-        self.builtin_dict['project'](lang='c++')
+        self.context['project'](lang='c++')
         with mock_context() as m:
             pkg = package('name')
             self.assertEqual(pkg.name, 'name')
@@ -156,10 +167,14 @@ class TestPackage(BuiltinTest):
 
     def test_invalid_kind(self):
         with self.assertRaises(ValueError):
-            self.builtin_dict['package']('name', kind='bad')
+            self.context['package']('name', kind='bad')
 
 
 class TestBoostPackage(TestCase):
+    def _make_context(self, env):
+        build = BuildInputs(env, Path('build.bfg', Root.srcdir))
+        return builtin.BuildContext(env, build, None)
+
     def test_boost_version(self):
         data = '#define BOOST_LIB_VERSION "1_23_4"\n'
         with mock.patch('builtins.open', mock_open(read_data=data)):
@@ -183,6 +198,7 @@ class TestBoostPackage(TestCase):
 
     def test_posix(self):
         env = make_env('linux', clear_variables=True)
+        context = self._make_context(env)
 
         def mock_exists(x):
             x = x.string()
@@ -195,12 +211,13 @@ class TestBoostPackage(TestCase):
              mock.patch('bfg9000.shell.which', return_value=['command']), \
              mock.patch('bfg9000.shell.execute', mock_execute), \
              mock.patch('bfg9000.tools.cc.exists', mock_exists):  # noqa
-            pkg = packages.boost_package(env, 'thread')
+            pkg = context['boost_package']('thread')
             self.assertEqual(pkg.name, 'boost(thread)')
             self.assertEqual(pkg.version, Version('1.23'))
 
     def test_windows_default_location(self):
         env = make_env('winnt', clear_variables=True)
+        context = self._make_context(env)
         boost_incdir = r'C:\Boost\include\boost-1.23'
 
         def mock_walk(top, variables=None):
@@ -223,7 +240,7 @@ class TestBoostPackage(TestCase):
              mock.patch('bfg9000.shell.which', return_value=['command']), \
              mock.patch('bfg9000.shell.execute', mock_execute), \
              mock.patch('bfg9000.tools.msvc.exists', mock_exists):  # noqa
-            pkg = packages.boost_package(env, 'thread')
+            pkg = context['boost_package']('thread')
             self.assertEqual(pkg.name, 'boost(thread)')
             self.assertEqual(pkg.version, Version('1.23'))
             self.assertEqual(pkg._compile_options, opts.option_list(
@@ -238,7 +255,7 @@ class TestSystemExecutable(BuiltinTest):
     def test_name(self):
         with mock.patch('bfg9000.builtins.packages.which', mock_which):
             self.assertEqual(
-                packages.system_executable(self.env, 'name'),
+                self.context['system_executable']('name'),
                 file_types.Executable(abspath('/command'),
                                       self.env.target_platform.object_format)
             )
@@ -246,6 +263,6 @@ class TestSystemExecutable(BuiltinTest):
     def test_format(self):
         with mock.patch('bfg9000.builtins.packages.which', mock_which):
             self.assertEqual(
-                packages.system_executable(self.env, 'name', 'format'),
+                self.context['system_executable']('name', 'format'),
                 file_types.Executable(abspath('/command'), 'format')
             )

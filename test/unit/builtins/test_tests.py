@@ -18,14 +18,14 @@ class TestTestInputs(BuiltinTest):
 
     def test_filled(self):
         prog = file_types.Executable(Path('prog'), None)
-        self.builtin_dict['test'](prog)
+        self.context['test'](prog)
         self.assertEqual(bool(self.build['tests']), True)
 
 
 class TestTestCase(BuiltinTest):
     def test_basic(self):
         prog = file_types.Executable(Path('prog'), None)
-        case = self.builtin_dict['test'](prog)
+        case = self.context['test'](prog)
 
         self.assertEqual(case.cmd, [prog])
         self.assertEqual(case.inputs, [])
@@ -35,7 +35,7 @@ class TestTestCase(BuiltinTest):
     def test_creator(self):
         prog = file_types.Executable(Path('prog'), None)
         prog.creator = 'creator'
-        case = self.builtin_dict['test'](prog)
+        case = self.context['test'](prog)
 
         self.assertEqual(case.cmd, [prog])
         self.assertEqual(case.inputs, [prog])
@@ -44,7 +44,7 @@ class TestTestCase(BuiltinTest):
 
     def test_args(self):
         prog = file_types.Executable(Path('prog'), None)
-        case = self.builtin_dict['test']([prog, '--foo'])
+        case = self.context['test']([prog, '--foo'])
 
         self.assertEqual(case.cmd, [prog, '--foo'])
         self.assertEqual(case.inputs, [])
@@ -53,8 +53,8 @@ class TestTestCase(BuiltinTest):
 
     def test_driver(self):
         prog = file_types.Executable(Path('prog'), None)
-        driver = self.builtin_dict['test_driver'](prog)
-        case = self.builtin_dict['test'](prog, driver=driver)
+        driver = self.context['test_driver'](prog)
+        case = self.context['test'](prog, driver=driver)
 
         self.assertEqual(case.cmd, [prog])
         self.assertEqual(case.inputs, [])
@@ -64,7 +64,7 @@ class TestTestCase(BuiltinTest):
 
     def test_environment(self):
         prog = file_types.Executable(Path('prog'), None)
-        case = self.builtin_dict['test'](prog, environment={'VAR': 'foo'})
+        case = self.context['test'](prog, environment={'VAR': 'foo'})
 
         self.assertEqual(case.cmd, [prog])
         self.assertEqual(case.inputs, [])
@@ -73,16 +73,16 @@ class TestTestCase(BuiltinTest):
 
     def test_invalid(self):
         prog = file_types.Executable(Path('prog'), None)
-        driver = self.builtin_dict['test_driver'](prog)
+        driver = self.context['test_driver'](prog)
         with self.assertRaises(TypeError):
-            self.builtin_dict['test'](prog, driver=driver,
-                                      environment={'VAR': 'foo'})
+            self.context['test'](prog, driver=driver,
+                                 environment={'VAR': 'foo'})
 
 
 class TestTestDriver(BuiltinTest):
     def test_basic(self):
         prog = file_types.Executable(Path('prog'), None)
-        driver = self.builtin_dict['test_driver'](prog)
+        driver = self.context['test_driver'](prog)
 
         self.assertEqual(driver.cmd, [prog])
         self.assertEqual(driver.inputs, [])
@@ -93,8 +93,8 @@ class TestTestDriver(BuiltinTest):
 
     def test_case(self):
         prog = file_types.Executable(Path('prog'), None)
-        driver = self.builtin_dict['test_driver'](prog)
-        case = self.builtin_dict['test'](prog, driver=driver)
+        driver = self.context['test_driver'](prog)
+        case = self.context['test'](prog, driver=driver)
 
         self.assertEqual(driver.cmd, [prog])
         self.assertEqual(driver.inputs, [])
@@ -106,8 +106,8 @@ class TestTestDriver(BuiltinTest):
     def test_creator(self):
         prog = file_types.Executable(Path('prog'), None)
         prog.creator = 'creator'
-        driver = self.builtin_dict['test_driver'](prog)
-        case = self.builtin_dict['test'](prog, driver=driver)
+        driver = self.context['test_driver'](prog)
+        case = self.context['test'](prog, driver=driver)
 
         self.assertEqual(driver.cmd, [prog])
         self.assertEqual(driver.inputs, [prog])
@@ -118,8 +118,8 @@ class TestTestDriver(BuiltinTest):
 
     def test_args(self):
         prog = file_types.Executable(Path('prog'), None)
-        driver = self.builtin_dict['test_driver']([prog, '--foo'])
-        case = self.builtin_dict['test'](prog, driver=driver)
+        driver = self.context['test_driver']([prog, '--foo'])
+        case = self.context['test'](prog, driver=driver)
 
         self.assertEqual(driver.cmd, [prog, '--foo'])
         self.assertEqual(driver.inputs, [])
@@ -130,9 +130,9 @@ class TestTestDriver(BuiltinTest):
 
     def test_parent(self):
         prog = file_types.Executable(Path('prog'), None)
-        parent = self.builtin_dict['test_driver'](prog)
-        driver = self.builtin_dict['test_driver'](prog, parent=parent)
-        case = self.builtin_dict['test'](prog, driver=driver)
+        parent = self.context['test_driver'](prog)
+        driver = self.context['test_driver'](prog, parent=parent)
+        case = self.context['test'](prog, driver=driver)
 
         self.assertEqual(driver.cmd, [prog])
         self.assertEqual(driver.inputs, [])
@@ -144,10 +144,10 @@ class TestTestDriver(BuiltinTest):
 
     def test_environment(self):
         prog = file_types.Executable(Path('prog'), None)
-        driver = self.builtin_dict['test_driver'](
+        driver = self.context['test_driver'](
             prog, environment={'VAR': 'foo'}
         )
-        case = self.builtin_dict['test'](prog, driver=driver)
+        case = self.context['test'](prog, driver=driver)
 
         self.assertEqual(driver.cmd, [prog])
         self.assertEqual(driver.inputs, [])
@@ -158,8 +158,8 @@ class TestTestDriver(BuiltinTest):
 
     def test_wrap_children(self):
         prog = file_types.Executable(Path('prog'), None)
-        driver = self.builtin_dict['test_driver'](prog, wrap_children=True)
-        case = self.builtin_dict['test'](prog, driver=driver)
+        driver = self.context['test_driver'](prog, wrap_children=True)
+        case = self.context['test'](prog, driver=driver)
 
         self.assertEqual(driver.cmd, [prog])
         self.assertEqual(driver.inputs, [])
@@ -170,10 +170,10 @@ class TestTestDriver(BuiltinTest):
 
     def test_invalid(self):
         prog = file_types.Executable(Path('prog'), None)
-        parent = self.builtin_dict['test_driver'](prog)
+        parent = self.context['test_driver'](prog)
         with self.assertRaises(TypeError):
-            self.builtin_dict['test_driver'](prog, parent=parent,
-                                             environment={'VAR': 'foo'})
+            self.context['test_driver'](prog, parent=parent,
+                                        environment={'VAR': 'foo'})
 
 
 class TestTestDeps(BuiltinTest):
@@ -182,71 +182,69 @@ class TestTestDeps(BuiltinTest):
 
     def test_single(self):
         prog = file_types.Executable(Path('prog'), None)
-        self.builtin_dict['test_deps'](prog)
+        self.context['test_deps'](prog)
         self.assertEqual(self.build['tests'].extra_deps, [prog])
 
     def test_multiple(self):
         foo = file_types.Executable(Path('foo'), None)
         bar = file_types.Executable(Path('bar'), None)
-        self.builtin_dict['test_deps'](foo, bar)
+        self.context['test_deps'](foo, bar)
         self.assertEqual(self.build['tests'].extra_deps, [foo, bar])
 
     def test_none(self):
         with self.assertRaises(ValueError):
-            self.builtin_dict['test_deps']()
+            self.context['test_deps']()
 
 
 class TestBuildCommandsBase(BuiltinTest):
     def make_basic(self):
         test_exe = file_types.Executable(self.Path('test'), None)
-        self.builtin_dict['test'](test_exe)
+        self.context['test'](test_exe)
         return test_exe
 
     def make_extras(self):
         test_exe = file_types.Executable(self.Path('test'), None)
         test_exe.creator = 'creator'
-        self.builtin_dict['test']([test_exe, '--foo'],
-                                  environment={'VAR': 'value'})
+        self.context['test']([test_exe, '--foo'],
+                             environment={'VAR': 'value'})
         return test_exe
 
     def make_empty_driver(self):
         driver_exe = file_types.Executable(self.Path('driver'), None)
-        self.builtin_dict['test_driver'](driver_exe)
+        self.context['test_driver'](driver_exe)
         return driver_exe
 
     def make_driver(self):
         driver_exe = file_types.Executable(self.Path('driver'), None)
         driver_exe.creator = 'creator'
-        driver = self.builtin_dict['test_driver'](driver_exe)
+        driver = self.context['test_driver'](driver_exe)
 
         test_exe = file_types.Executable(self.Path('test'), None)
         test_exe.creator = 'creator'
-        self.builtin_dict['test'](test_exe, driver=driver)
+        self.context['test'](test_exe, driver=driver)
         return driver_exe, test_exe
 
     def make_complex(self):
         test_exe = file_types.Executable(self.Path('test'), None)
         test_exe.creator = 'creator'
-        self.builtin_dict['test'](test_exe)
+        self.context['test'](test_exe)
 
         driver_exe = file_types.Executable(self.Path('driver'), None)
-        driver = self.builtin_dict['test_driver'](driver_exe)
+        driver = self.context['test_driver'](driver_exe)
 
         mid_driver_exe = file_types.Executable(self.Path('mid_driver'), None)
-        mid_driver = self.builtin_dict['test_driver'](mid_driver_exe,
-                                                      parent=driver)
+        mid_driver = self.context['test_driver'](mid_driver_exe, parent=driver)
         mid_test_exe = file_types.Executable(self.Path('mid_test'), None)
         mid_test_exe.creator = 'creator'
-        self.builtin_dict['test'](mid_test_exe, driver=mid_driver)
+        self.context['test'](mid_test_exe, driver=mid_driver)
 
         inner_driver_exe = file_types.Executable(self.Path('inner_driver'),
                                                  None)
-        inner_driver = self.builtin_dict['test_driver'](inner_driver_exe,
-                                                        parent=mid_driver)
+        inner_driver = self.context['test_driver'](inner_driver_exe,
+                                                   parent=mid_driver)
         inner_test_exe = file_types.Executable(self.Path('inner_test'), None)
         inner_test_exe.creator = 'creator'
-        self.builtin_dict['test']([inner_test_exe, '--foo'],
-                                  driver=inner_driver)
+        self.context['test']([inner_test_exe, '--foo'], driver=inner_driver)
 
         return (test_exe, driver_exe, mid_driver_exe, mid_test_exe,
                 inner_driver_exe, inner_test_exe)

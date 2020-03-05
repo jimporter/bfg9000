@@ -4,7 +4,7 @@ from ..objutils import objectify
 
 
 @builtin.function(context='*')
-def bfg9000_required_version(version=None, python_version=None):
+def bfg9000_required_version(context, version=None, python_version=None):
     version = objectify(version or '', v.PythonSpecifierSet, prereleases=True)
     python_version = objectify(python_version or '', v.PythonSpecifierSet,
                                prereleases=True)
@@ -14,5 +14,5 @@ def bfg9000_required_version(version=None, python_version=None):
 
 
 @builtin.getter(context='*')
-def bfg9000_version():
+def bfg9000_version(context):
     return v.bfg_version

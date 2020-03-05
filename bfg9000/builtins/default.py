@@ -28,10 +28,10 @@ class DefaultOutputs:
         return self.default_outputs or self.fallback_defaults
 
 
-@builtin.function('build_inputs')
-def default(build, *args):
+@builtin.function()
+def default(context, *args):
     for i in iterate_each(args):
-        build['defaults'].add(i, explicit=True)
+        context.build['defaults'].add(i, explicit=True)
     return unlistify(args)
 
 

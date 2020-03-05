@@ -1,6 +1,5 @@
 from . import builtin
 from .. import options
-from ..objutils import memoize
 
 
 class Options:
@@ -12,6 +11,5 @@ class Options:
 
 
 @builtin.getter()
-@memoize
-def opts():
+def opts(context):
     return Options(options.Option.registry)

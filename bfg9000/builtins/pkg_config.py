@@ -151,12 +151,12 @@ class PkgConfigInfo:
         def __set__(self, obj, value):
             setattr(obj, '_' + self.fn.__name__, self.fn(obj, value))
 
-    def __init__(self, builtins, build, name=None, desc_name=None, desc=None,
-                 url=None, version=None, requires=None, requires_private=None,
+    def __init__(self, context, name=None, desc_name=None, desc=None, url=None,
+                 version=None, requires=None, requires_private=None,
                  conflicts=None, includes=None, libs=None, libs_private=None,
                  options=None, link_options=None, link_options_private=None,
                  lang=None, auto_fill=True):
-        self._builtins = builtins
+        self._builtins = context.builtins
         self.auto_fill = auto_fill
 
         self.name = name
@@ -164,7 +164,7 @@ class PkgConfigInfo:
         self.desc = desc
         self.url = url
         self.version = version
-        self.lang = lang or build['project']['lang']
+        self.lang = lang or context.build['project']['lang']
 
         self.requires = requires
         self.requires_private = requires_private
@@ -354,16 +354,17 @@ class PkgConfigInfo:
         return pkg_config, uniques(system)
 
 
-@builtin.function('builtins', 'build_inputs', 'env')
-def pkg_config(builtins, build, env, name=None, **kwargs):
-    if can_install(env):
-        build['pkg_config'].append(
-            PkgConfigInfo(builtins, build, name, **kwargs)
+@builtin.function()
+def pkg_config(context, name=None, **kwargs):
+    if can_install(context.env):
+        context.build['pkg_config'].append(
+            PkgConfigInfo(context, name, **kwargs)
         )
 
 
-@builtin.post('builtins', 'build_inputs', 'env')
-def finalize_pkg_config(builtins, build, env):
+@builtin.post()
+def finalize_pkg_config(context):
+    build = context.build
     install = build['install']
     defaults = {
         'name': build['project'].name,
@@ -390,6 +391,6 @@ def finalize_pkg_config(builtins, build, env):
             raise ValueError("duplicate pkg-config package '{}'".format(name))
 
     for info in build['pkg_config']:
-        with make_immediate_file(build, env, info.output) as out:
-            info.write(out, env)
-            builtins['install'](info.output)
+        with make_immediate_file(context, info.output) as out:
+            info.write(out, context.env)
+            context['install'](info.output)

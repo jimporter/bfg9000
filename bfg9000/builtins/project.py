@@ -22,9 +22,10 @@ class ProjectInfo:
         self._options[key] = value
 
 
-@builtin.function('build_inputs')
-def project(build, name=default_sentinel, version=default_sentinel, **kwargs):
-    info = build['project']
+@builtin.function()
+def project(context, name=default_sentinel, version=default_sentinel,
+            **kwargs):
+    info = context.build['project']
     if name is not default_sentinel:
         info.name = name
     if version is not default_sentinel:

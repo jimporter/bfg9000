@@ -17,17 +17,17 @@ class Builtins:
         assert kind in ('default', 'post')
         getattr(self, '_' + kind)[name] = value
 
-    def bind(self, **kwargs):
+    def bind(self, context):
         builtins = {}
         for k, v in self._default.items():
-            builtins[k] = v.bind(builtins=builtins, **kwargs)
+            builtins[k] = v.bind(context=context)
 
         builtins['__bfg9000__'] = builtins
         return builtins
 
-    def run_post(self, builtins, **kwargs):
+    def run_post(self, context):
         for v in self._post.values():
-            v(builtins=builtins, **kwargs)
+            v(context=context)
 
 
 build = Builtins()
@@ -47,70 +47,97 @@ def _add_builtin(context, kind, name, value):
         _allbuiltins[i].add(kind, name, value)
 
 
+class BaseContext:
+    def __init__(self, env):
+        self.env = env
+        self.builtins = _allbuiltins[self.kind].bind(context=self)
+
+    def __getitem__(self, key):
+        return self.builtins[key]
+
+    def run_post(self):
+        _allbuiltins[self.kind].run_post(context=self)
+
+
+class BuildContext(BaseContext):
+    kind = 'build'
+
+    def __init__(self, env, build, argv):
+        self.build = build
+        self.argv = argv
+        super().__init__(env)
+
+
+class OptionsContext(BaseContext):
+    kind = 'options'
+
+    def __init__(self, env, parser):
+        self.parser = parser
+        super().__init__(env)
+
+
+class ToolchainContext(BaseContext):
+    kind = 'toolchain'
+
+    def __init__(self, env, reload):
+        self.reload = reload
+        super().__init__(env)
+
+
 class _Binder:
+    builtin_bound = 0
+
     def __init__(self, fn):
         self._fn = fn
 
-    def bind(self, **kwargs):
+    def bind(self, context):
         return self._fn
 
 
 class _PartialFunctionBinder(_Binder):
-    def __init__(self, fn, *args):
-        super().__init__(fn)
-        self._args = args
+    builtin_bound = 1
 
-    def bind(self, **kwargs):
-        if not self._args:
-            return super().bind(**kwargs)
-        pre_args = tuple(kwargs[i] for i in self._args)
-
+    def bind(self, context):
         @functools.wraps(self._fn)
         def wrapper(*args, **kwargs):
-            return self._fn(*(pre_args + args), **kwargs)
+            return self._fn(context, *args, **kwargs)
 
         sig = inspect.signature(wrapper)
-        params = list(sig.parameters.values())[len(kwargs):]
+        params = list(sig.parameters.values())[self.builtin_bound:]
         wrapper.__signature__ = inspect.Signature(params)
         return wrapper
 
 
 class _GetterBinder(_Binder):
-    def __init__(self, fn, *args):
-        super().__init__(fn)
-        self._args = args
+    builtin_bound = 1
 
-    def bind(self, **kwargs):
-        return self._fn(*[kwargs[i] for i in self._args])
-
-
-class _PostWrapper:
-    def __init__(self, fn, *args):
-        self._fn = fn
-        self._args = args
-
-    def __call__(self, **kwargs):
-        args = tuple(kwargs[i] for i in self._args)
-        return self._fn(*args)
+    def bind(self, context):
+        return self._fn(context)
 
 
 class _Decorator:
-    def __init__(self, kind, binder):
-        self.__kind = kind
+    def __init__(self, binder):
         self.__binder = binder
 
-    def __call__(self, *args, context='build', name=None):
+    def __call__(self, context='build', name=None):
         def decorator(fn):
-            _add_builtin(context, self.__kind, name or fn.__name__,
-                         self.__binder(fn, *args))
-            fn._builtin_bound = len(args)
+            _add_builtin(context, 'default', name or fn.__name__,
+                         self.__binder(fn))
+            fn._builtin_bound = self.__binder.builtin_bound
             return fn
         return decorator
 
 
-function = _Decorator('default', _PartialFunctionBinder)
-getter = _Decorator('default', _GetterBinder)
-post = _Decorator('post', _PostWrapper)
+default = _Decorator(_Binder)
+function = _Decorator(_PartialFunctionBinder)
+getter = _Decorator(_GetterBinder)
+
+
+def post(context='build', name=None):
+    def decorator(fn):
+        _add_builtin(context, 'post', name or fn.__name__, fn)
+        return fn
+    return decorator
 
 
 def _get_argspec(fn):

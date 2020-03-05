@@ -202,7 +202,7 @@ class JarMaker(BuildCommand):
     def has_link_macros(self):
         return False
 
-    def pre_build(self, build, name, step):
+    def pre_build(self, context, name, step):
         # Fix up paths for the Class-Path field: escape spaces, use forward
         # slashes on Windows, and prefix Windows drive letters with '/' to
         # disambiguate them from URLs.
@@ -220,7 +220,7 @@ class JarMaker(BuildCommand):
         base = Path(name).parent()
 
         step.manifest = File(Path(name + '-manifest.txt'))
-        with make_immediate_file(build, self.env, step.manifest) as out:
+        with make_immediate_file(context, step.manifest) as out:
             classpath = ' '.join(fix_path(i.relpath(base)) for i in dirs)
             if classpath:
                 out.write('Class-Path: {}\n'.format(classpath))
