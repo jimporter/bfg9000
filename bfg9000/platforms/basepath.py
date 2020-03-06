@@ -62,9 +62,10 @@ class BasePath(safe_str.safe_string):
     def ensure(cls, path, root=Root.builddir, destdir=False, base=None,
                strict=False):
         result = objectify(path, base or cls, cls, root=root, destdir=destdir)
-        if strict and result.root != root:
+        raw_root = root.root if isinstance(root, cls) else root
+        if strict and result.root != raw_root:
             raise ValueError('expected root of {!r}, but got {!r}'
-                             .format(root.name, result.root.name))
+                             .format(raw_root.name, result.root.name))
         return result
 
     @staticmethod

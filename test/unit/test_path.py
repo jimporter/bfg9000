@@ -141,6 +141,17 @@ class TestPath(PathTestCase):
         self.assertIs(self.Path.ensure(p, path.InstallRoot.bindir, True), p)
         self.assertRaises(ValueError, self.Path.ensure, p, path.Root.srcdir,
                           strict=True)
+        self.assertRaises(ValueError, self.Path.ensure, '/foo',
+                          path.Root.srcdir, strict=True)
+
+        base = self.Path('base')
+        self.assertEqual(self.Path.ensure('foo', base), self.Path('base/foo'))
+        self.assertEqual(self.Path.ensure('foo', base), self.Path('base/foo'))
+        self.assertEqual(self.Path.ensure('/foo', base), self.Path('/foo'))
+        self.assertIs(self.Path.ensure(p, base), p)
+        self.assertRaises(ValueError, self.Path.ensure,
+                          self.Path('foo', path.Root.srcdir), strict=True)
+        self.assertRaises(ValueError, self.Path.ensure, '/foo', strict=True)
 
     def test_equality(self):
         self.assertTrue(self.Path('a', path.Root.srcdir) ==
