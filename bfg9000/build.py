@@ -1,4 +1,5 @@
 import errno
+from itertools import chain
 
 from .arguments.parser import ArgumentParser
 from .builtins import builtin, init as builtin_init
@@ -21,77 +22,79 @@ def is_srcdir(path):
     return exists(path.append(bfgfile))
 
 
-def _execute_file(f, filename, builtin_dict):
-    code = compile(f.read(), filename, 'exec')
-    try:
-        exec(code, builtin_dict)
-    except SystemExit:
-        pass
+def _execute_script(f, context, path, run_post=False):
+    builddir = context.env.builddir.string() if context.env.builddir else None
+    filename = path.realize({Root.srcdir: None, Root.builddir: builddir})
+
+    with pushd(path.parent().string(context.env.base_dirs)), \
+         context.push_path(path) as p:  # noqa
+        code = compile(f.read(), filename, 'exec')
+        try:
+            exec(code, context.builtins)
+        except SystemExit:
+            pass
+
+        if run_post:
+            context.run_post()
+        return p
 
 
-def load_toolchain(env, filename, reload=False):
+def execute_file(context, path, run_post=False):
+    with open(path.string(context.env.base_dirs), 'r') as f:
+        return _execute_script(f, context, path, run_post)
+
+
+def load_toolchain(env, path, reload=False):
     builtin_init()
     tools_init()
     if reload:
         env.init_variables()
 
     context = builtin.ToolchainContext(env, reload)
-    with open(filename.string(), 'r') as f:
-        _execute_file(f, f.name, context.builtins)
-        context.run_post()
+    execute_file(context, path, run_post=True)
 
     if not reload:
-        env.toolchain.path = filename
+        env.toolchain.path = path
 
 
-def _execute_options(env, optspath, parent=None, usage='parse'):
+def _execute_options(env, parent=None, usage='parse'):
+    optspath = Path(builtin.OptionsContext.filename, Root.srcdir)
     prog = parent.prog if parent else optspath.basename()
-    parser = ArgumentParser(prog=prog, parents=listify(parent),
-                            add_help=False)
-    executed = False
+    parser = ArgumentParser(prog=prog, parents=listify(parent), add_help=False)
 
     try:
-        with open(optspath.string(env.base_dirs), 'r') as f, \
-             pushd(env.srcdir.string()):  # noqa
+        with open(optspath.string(env.base_dirs), 'r') as f:
             group = parser.add_argument_group('project-defined arguments',
                                               description=user_description)
             group.usage = usage
 
             context = builtin.OptionsContext(env, group)
-            _execute_file(f, optspath.basename(), context.builtins)
-            context.run_post()
-        executed = True
+            _execute_script(f, context, optspath, run_post=True)
+            return parser, context.seen_paths
     except IOError as e:
         if e.errno != errno.ENOENT:
             raise
-
-    return parser, executed
-
-
-def _execute_configure(env, argv, bfgpath, extra_bootstrap=[]):
-    build = BuildInputs(env, bfgpath, extra_bootstrap)
-    context = builtin.BuildContext(env, build, argv)
-
-    with open(bfgpath.string(env.base_dirs), 'r') as f, \
-         pushd(env.srcdir.string()):  # noqa
-        _execute_file(f, bfgpath.basename(), context.builtins)
-        context.run_post()
-    return build
+        return parser, []
 
 
-def fill_user_help(env, parent, filename=optsfile):
+def fill_user_help(env, parent):
     builtin_init()
-    optspath = Path(filename, Root.srcdir)
-    return _execute_options(env, optspath, parent, usage='help')[0]
+    return _execute_options(env, parent, usage='help')[0]
 
 
-def configure_build(env, bfgfile=bfgfile, optsfile=optsfile):
+def configure_build(env):
     builtin_init()
-    bfgpath = Path(bfgfile, Root.srcdir)
-    optspath = Path(optsfile, Root.srcdir)
-
-    parser, executed = _execute_options(env, optspath)
+    parser, opts_paths = _execute_options(env)
     argv = parser.parse_args(env.extra_args)
 
-    extra_bootstrap = [optspath] if executed else []
-    return _execute_configure(env, argv, bfgpath, extra_bootstrap)
+    bfgpath = Path(builtin.BuildContext.filename, Root.srcdir)
+    build = BuildInputs(env, bfgpath)
+    context = builtin.BuildContext(env, build, argv)
+    execute_file(context, bfgpath, run_post=True)
+
+    # Add all the bfg files as bootstrap entries (except for the main
+    # build.bfg, which is already included).
+    for i in chain(context.seen_paths[1:], opts_paths):
+        build.add_bootstrap(i)
+
+    return build

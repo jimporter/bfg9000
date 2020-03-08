@@ -203,14 +203,11 @@ class JarMaker(BuildCommand):
         return False
 
     def pre_build(self, context, name, step):
-        # Fix up paths for the Class-Path field: escape spaces, use forward
-        # slashes on Windows, and prefix Windows drive letters with '/' to
-        # disambiguate them from URLs.
+        # Fix up paths for the Class-Path field: escape spaces and prefix
+        # Windows drive letters with '/' to disambiguate them from URLs.
         def fix_path(p):
-            if self.env.target_platform.family == 'windows':
-                if p[1] == ':':
-                    p = '/' + p
-                p = p.replace('\\', '/')
+            if self.env.target_platform.family == 'windows' and p[1] == ':':
+                p = '/' + p
             return p.replace(' ', '%20')
 
         libs = getattr(step, 'libs', []) + flatten(
@@ -221,7 +218,8 @@ class JarMaker(BuildCommand):
 
         step.manifest = File(Path(name + '-manifest.txt'))
         with make_immediate_file(context, step.manifest) as out:
-            classpath = ' '.join(fix_path(i.relpath(base)) for i in dirs)
+            classpath = ' '.join(fix_path(i.relpath(base, localize=False))
+                                 for i in dirs)
             if classpath:
                 out.write('Class-Path: {}\n'.format(classpath))
 

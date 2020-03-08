@@ -23,7 +23,7 @@ def static_file(context, file_type, name, dist=True, params=[], kwargs={}):
             next(iter(kwargs))
         ))
 
-    path = Path.ensure(name, Root.srcdir)
+    path = context['relpath'](name)
     file = file_type(path, *extra_args)
     if dist and path.root == Root.srcdir:
         context.build.add_source(file)
@@ -31,12 +31,13 @@ def static_file(context, file_type, name, dist=True, params=[], kwargs={}):
 
 
 class FileList(list):
-    def __init__(self, fn, files, **kwargs):
+    def __init__(self, context, fn, files, **kwargs):
         super().__init__(fn(i, **kwargs) for i in iterate(files))
+        self._relpath = context['relpath']
 
     def __getitem__(self, key):
         if isinstance(key, str):
-            key = Path(key, Root.srcdir)
+            key = self._relpath(key)
         elif isinstance(key, File):
             key = key.path
 
@@ -68,7 +69,7 @@ def generic_file(context, name, *, dist=True):
 @builtin.function()
 @builtin.type(SourceFile)
 def source_file(context, name, lang=None, *, dist=True):
-    path = Path.ensure(name, Root.srcdir)
+    path = context['relpath'](name)
     lang = lang or known_langs.fromext(path.ext(), 'source')
     return static_file(context, SourceFile, path, dist, [('lang', lang)])
 
@@ -76,7 +77,7 @@ def source_file(context, name, lang=None, *, dist=True):
 @builtin.function()
 @builtin.type(ResourceFile)
 def resource_file(context, name, lang=None, *, dist=True):
-    path = Path.ensure(name, Root.srcdir)
+    path = context['relpath'](name)
     lang = lang or known_langs.fromext(path.ext(), 'resource')
     return static_file(context, ResourceFile, path, dist, [('lang', lang)])
 
@@ -84,7 +85,7 @@ def resource_file(context, name, lang=None, *, dist=True):
 @builtin.function()
 @builtin.type(HeaderFile)
 def header_file(context, name, lang=None, *, dist=True):
-    path = Path.ensure(name, Root.srcdir)
+    path = context['relpath'](name)
     lang = lang or known_langs.fromext(path.ext(), 'header')
     return static_file(context, HeaderFile, path, dist, [('lang', lang)])
 
@@ -98,7 +99,7 @@ def module_def_file(context, name, *, dist=True):
 @builtin.function()
 @builtin.type(File)
 def auto_file(context, name, lang=None, *, dist=True):
-    path = Path.ensure(name, Root.srcdir)
+    path = context['relpath'](name)
     if lang:
         kind = None
         if lang in known_langs:
@@ -124,18 +125,18 @@ def _find(context, path, include, type, extra, *args, **kwargs):
     return context['find_files'](path, include, type, extra, *args, **kwargs)
 
 
-def _directory_path(thing):
+def _directory_path(context, thing):
     if isinstance(thing, File):
         return thing.path.parent()
     else:
-        return Path.ensure(thing, Root.srcdir)
+        return context['relpath'](thing)
 
 
 @builtin.function()
 @builtin.type(Directory, extra_in_type=File)
 def directory(context, name, include=None, extra=None, exclude=exclude_globs,
               filter=None, *, dist=True, cache=True):
-    path = _directory_path(name)
+    path = _directory_path(context, name)
     files = _find(context, path, include, '*', extra, exclude, filter,
                   dist=dist, cache=cache)
     return static_file(context, Directory, path, dist, [('files', files)])
@@ -152,7 +153,7 @@ def header_directory(context, name, include=None, extra=None,
     if isinstance(name, SourceCodeFile):
         lang = name.lang
 
-    path = _directory_path(name)
+    path = _directory_path(context, name)
     files = _find(context, path, include, 'f', extra, exclude, filter,
                   file_type=header_file, dist=dist, cache=cache)
     langs = uniques(i.lang for i in files if i.lang) if files else lang

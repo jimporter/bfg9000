@@ -279,7 +279,8 @@ class MsvcPchCompiler(MsvcBaseCompiler):
 
         if step.pch_source is None:
             ext = known_langs[self.lang].default_ext('source')
-            step.pch_source = SourceFile(header.path.stripext(ext).reroot(),
+            basename = header.path.stripext(ext).basename()
+            step.pch_source = SourceFile(Path(name).parent().append(basename),
                                          header.lang)
             with make_immediate_file(context, step.pch_source) as out:
                 out.write('#include "{}"\n'.format(header.path.basename()))

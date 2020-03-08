@@ -150,7 +150,7 @@ def find_files(context, path='.', name='*', type='*', extra=None,
              'd': dir_type or context['directory']}
     extra_types = {'f': context['generic_file'], 'd': context['directory']}
 
-    paths = [i.path if isinstance(i, File) else Path.ensure(i, Root.srcdir)
+    paths = [i.path if isinstance(i, File) else context['relpath'](i)
              for i in iterate(path)]
 
     found, seen_dirs = [], []

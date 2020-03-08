@@ -305,6 +305,39 @@ command('script', cmds=[
 ])
 ```
 
+## Submodules
+
+For larger projects, putting all of your build configuration in a single file
+can be difficult to maintain. Instead, you can split your configuration into
+multiple submodules. The [*submodule*](reference.md#submodule) function will
+execute the `build.bfg` file (or `options.bfg` file [when
+applicable](#user-defined-arguments)) in the specified directory and return any
+exported objects as a dict to be used in the parent module. The submodule can
+then call the [*export*](reference.md#export) function to return any relevant
+objects (e.g. built files) to the parent module:
+
+```python
+# In main build.bfg:
+sub = submodule('dir')
+executable('exe', ['exe.cpp'], libs=[sub['library']])
+
+# In sub/build.bfg:
+lib = library('mylib', ['mylib.cpp'])
+export(library=lib)
+```
+
+Within a submodule, all paths for inputs (source files) and outputs (built
+files) are relative to the directory containing the submodule's `build.bfg`
+file. (If you need to reference a file outside of the submodule's directory, you
+can simply prefix your path with `../`):
+
+```python
+# In sub/build.bfg:
+
+# Builds $(builddir)/libmylib.so (or similar) from $(srcdir)/sub/mylib.cpp:
+library('../mylib', ['mylib.cpp'])
+```
+
 ## Custom build steps
 
 Sometimes, the built-in build steps don't support the things you want to do

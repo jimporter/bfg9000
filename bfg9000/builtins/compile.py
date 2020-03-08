@@ -2,6 +2,7 @@ from collections import defaultdict
 
 from . import builtin
 from .. import options as opts
+from .path import buildpath, relname, within_directory
 from .file_types import FileList, static_file
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
@@ -25,7 +26,9 @@ class BaseCompile(Edge):
         if name is None:
             name = self.compiler.default_name(self.file, self)
             if directory:
-                name = directory.append(name).suffix
+                name = within_directory(Path(name), directory).suffix
+        else:
+            name = relname(context, name)
 
         extra_options = self.compiler.pre_build(context, name, self)
         output = self.compiler.output_file(name, self)
@@ -57,8 +60,8 @@ class BaseCompile(Edge):
         return lang, src_lang
 
     @staticmethod
-    def convert_args(kwargs):
-        convert_one(kwargs, 'directory', Path.ensure, strict=True)
+    def convert_args(context, kwargs):
+        convert_one(kwargs, 'directory', lambda x: buildpath(context, x, True))
         return kwargs
 
 
@@ -114,7 +117,7 @@ class Compile(BaseCompile):
                     packages=kwargs['packages'], options=kwargs['options'],
                     lang=lang)
 
-        kwargs = BaseCompile.convert_args(kwargs)
+        kwargs = BaseCompile.convert_args(context, kwargs)
         return kwargs
 
     def add_extra_options(self, options):
@@ -188,7 +191,7 @@ class GenerateSource(BaseCompile):
 
         kwargs['options'] = pshell.listify(kwargs.get('options'),
                                            type=opts.option_list)
-        kwargs = super().convert_args(kwargs)
+        kwargs = super().convert_args(context, kwargs)
         return file, kwargs
 
 
@@ -214,7 +217,7 @@ def object_files(context, files, **kwargs):
         file, kwargs = CompileSource.convert_args(context, file, kwargs)
         return CompileSource(context, None, file, **kwargs).public_output
 
-    return FileList(make_object_file, files, **kwargs)
+    return FileList(context, make_object_file, files, **kwargs)
 
 
 @builtin.function()
@@ -241,7 +244,7 @@ def generated_source(context, name, file, **kwargs):
 @builtin.function()
 @builtin.type(FileList, in_type=object)
 def generated_sources(context, files, **kwargs):
-    return FileList(context['generated_source'], files, **kwargs)
+    return FileList(context, context['generated_source'], files, **kwargs)
 
 
 @builtin.function()

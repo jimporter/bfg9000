@@ -1,5 +1,6 @@
 import functools
 import inspect
+from contextlib import contextmanager
 from itertools import chain
 
 from ..iterutils import iterate, listify
@@ -59,8 +60,39 @@ class BaseContext:
         _allbuiltins[self.kind].run_post(context=self)
 
 
-class BuildContext(BaseContext):
+class StackContext(BaseContext):
+    class PathEntry:
+        def __init__(self, path):
+            self.path = path
+            self.exports = {}
+
+    def __init__(self, env):
+        self.seen_paths = []
+        self.path_stack = []
+        super().__init__(env)
+
+    @contextmanager
+    def push_path(self, path):
+        self.seen_paths.append(path)
+        self.path_stack.append(self.PathEntry(path))
+        yield self.path_stack[-1]
+        self.path_stack.pop()
+
+    @property
+    def path(self):
+        return self.path_stack[-1].path
+
+    @property
+    def exports(self):
+        if len(self.path_stack) == 1:
+            raise ValueError('exports are not allowed on root-level bfg ' +
+                             'scripts')
+        return self.path_stack[-1].exports
+
+
+class BuildContext(StackContext):
     kind = 'build'
+    filename = 'build.bfg'
 
     def __init__(self, env, build, argv):
         self.build = build
@@ -68,8 +100,9 @@ class BuildContext(BaseContext):
         super().__init__(env)
 
 
-class OptionsContext(BaseContext):
+class OptionsContext(StackContext):
     kind = 'options'
+    filename = 'options.bfg'
 
     def __init__(self, env, parser):
         self.parser = parser
@@ -81,7 +114,16 @@ class ToolchainContext(BaseContext):
 
     def __init__(self, env, reload):
         self.reload = reload
+        self._pushed_path = False
         super().__init__(env)
+
+    @contextmanager
+    def push_path(self, path):
+        # Toolchains don't allow submodules, so we can only call push_path
+        # once.
+        assert not self._pushed_path
+        self._pushed_path = True
+        yield
 
 
 class _Binder:

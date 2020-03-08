@@ -6,6 +6,7 @@ from itertools import chain
 from . import builtin
 from .. import options as opts
 from .file_types import static_file
+from .path import relname
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..build_inputs import build_input, Edge
@@ -29,6 +30,7 @@ class Link(Edge):
                  entry_point=None, lang=None, extra_deps=None,
                  description=None):
         build = context.build
+        name = relname(context, name)
         self.name = self.__name(name)
 
         self.user_libs = libs

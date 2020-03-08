@@ -1,0 +1,15 @@
+# -*- python -*-
+
+# For larger projects, putting all of your build configuration in a single file
+# can be difficult to maintain. To alleviate this, you can split your
+# configuration into multiple submodules. The `submodule()` function will
+# execute the `build.bfg` file in the specified directory and return any
+# exported objects as a dict to be used in the parent module:
+
+sub = submodule('lib')
+
+executable(
+    'program', ['program.cpp'], includes=sub['includes'],
+    compile_options=[opts.define('NAME', '"' + argv.name + '"')],
+    libs=sub['lib']
+)

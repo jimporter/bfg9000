@@ -16,6 +16,9 @@ class BuiltinTest(TestCase):
         self.env = make_env()
         self.build = BuildInputs(self.env, Path('build.bfg', Root.srcdir))
         self.context = builtin.BuildContext(self.env, self.build, None)
+        self.context.path_stack.append(
+            builtin.BuildContext.PathEntry(self.build.bfgpath)
+        )
         self.bfgfile = file_types.File(self.build.bfgpath)
 
     def assertSameFile(self, a, b, exclude=set(), seen=None):

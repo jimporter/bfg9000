@@ -52,6 +52,44 @@ class TestCopyFile(BuiltinTest):
         self.assertRaises(ValueError, copy_file, file='file.txt',
                           directory=Path('dir', Root.srcdir))
 
+    def test_make_submodule(self):
+        with self.context.push_path(Path('dir/build.bfg', Root.srcdir)):
+            copy_file = self.context['copy_file']
+            File = file_types.File
+
+            result = copy_file(file='file.txt')
+            self.assertSameFile(result, File(Path('dir/file.txt')))
+            result = copy_file(file='sub/file.txt')
+            self.assertSameFile(result, File(Path('dir/sub/file.txt')))
+            result = copy_file(file='../file.txt')
+            self.assertSameFile(result, File(Path('file.txt')))
+
+            result = copy_file('copied.txt', 'file.txt')
+            self.assertSameFile(result, File(Path('dir/copied.txt')))
+            result = copy_file('../copied.txt', 'file.txt')
+            self.assertSameFile(result, File(Path('copied.txt')))
+
+            result = copy_file(file='file.txt', directory='sub')
+            self.assertSameFile(result, File(Path('dir/sub/file.txt')))
+            result = copy_file(file='foo/file.txt', directory='sub')
+            self.assertSameFile(result, File(Path('dir/sub/foo/file.txt')))
+            result = copy_file(file='../file.txt', directory='sub')
+            self.assertSameFile(result, File(Path('dir/sub/PAR/file.txt')))
+
+            result = copy_file(file='file.txt', directory=Path('dir2'))
+            self.assertSameFile(result, File(Path('dir2/dir/file.txt')))
+            result = copy_file(file='sub/file.txt', directory=Path('dir2'))
+            self.assertSameFile(result, File(Path('dir2/dir/sub/file.txt')))
+            result = copy_file(file='../file.txt', directory=Path('dir2'))
+            self.assertSameFile(result, File(Path('dir2/file.txt')))
+
+            result = copy_file(file='file.txt', directory=Path('dir'))
+            self.assertSameFile(result, File(Path('dir/dir/file.txt')))
+            result = copy_file(file='sub/file.txt', directory=Path('dir'))
+            self.assertSameFile(result, File(Path('dir/dir/sub/file.txt')))
+            result = copy_file(file='../file.txt', directory=Path('dir'))
+            self.assertSameFile(result, File(Path('dir/file.txt')))
+
     def test_extra_deps(self):
         dep = self.context['generic_file']('dep.txt')
         expected = file_types.File(Path('file.txt'))
@@ -71,11 +109,11 @@ class TestCopyFile(BuiltinTest):
 
 
 class TestCopyFiles(BuiltinTest):
-    def make_file_list(self):
+    def make_file_list(self, prefix=''):
         files = [file_types.File(Path(i, Root.builddir))
-                 for i in ['file1', 'file2']]
+                 for i in [prefix + 'file1', prefix + 'file2']]
         src_files = [file_types.File(Path(i, Root.srcdir))
-                     for i in ['file1', 'file2']]
+                     for i in [prefix + 'file1', prefix + 'file2']]
 
         file_list = self.context['copy_files'](src_files)
         return file_list, files, src_files
@@ -91,6 +129,12 @@ class TestCopyFiles(BuiltinTest):
     def test_getitem_string(self):
         file_list, files, src_files = self.make_file_list()
         self.assertEqual(file_list['file1'], files[0])
+
+    def test_getitem_string_submodule(self):
+        file_list, files, src_files = self.make_file_list('dir/')
+        self.assertEqual(file_list['dir/file1'], files[0])
+        with self.context.push_path(Path('dir/build.bfg', Root.srcdir)):
+            self.assertEqual(file_list['file1'], files[0])
 
     def test_getitem_path(self):
         file_list, files, src_files = self.make_file_list()

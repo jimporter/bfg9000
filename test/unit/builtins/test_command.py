@@ -53,6 +53,11 @@ class TestCommand(TestBaseCommand):
             self.env.tool('python')(script)
         ], extra_deps=[script])
 
+    def test_submodule(self):
+        with self.context.push_path(Path('dir/build.bfg', Root.srcdir)):
+            result = self.context['command']('foo', cmd=['echo', 'foo'])
+            self.assertSameFile(result, file_types.Phony('foo'))
+
     def test_input(self):
         script = self.context['source_file']('script.py')
 
@@ -183,6 +188,16 @@ class TestBuildStep(TestBaseCommand):
         self.assertSameFile(result, expected)
         self.assertCommand(result.creator, [['lex', foolex]],
                            extra_deps=[foolex], phony=False)
+
+    def test_submodule(self):
+        with self.context.push_path(Path('dir/build.bfg', Root.srcdir)):
+            result = self.context['build_step']('lex.yy.c', cmd=[
+                'lex', 'foo.lex'
+            ])
+            expected = file_types.SourceFile(
+                Path('lex.yy.c', Root.builddir), 'c'
+            )
+            self.assertSameFile(result, expected)
 
     def test_input(self):
         foolex = self.context['source_file']('foo.lex')

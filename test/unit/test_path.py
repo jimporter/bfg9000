@@ -283,25 +283,43 @@ class TestPath(PathTestCase):
         p = self.Path('foo/bar', path.Root.srcdir)
         self.assertEqual(p.relpath(p), '.')
         self.assertEqual(p.relpath(p, 'pre'), 'pre')
+        self.assertEqual(p.relpath(p, localize=False), '.')
+        self.assertEqual(p.relpath(p, 'pre', False), 'pre')
 
         self.assertEqual(p.relpath(self.Path('foo', path.Root.srcdir)), 'bar')
         self.assertEqual(p.relpath(self.Path('foo', path.Root.srcdir), 'pre'),
                          self.ospath.join('pre', 'bar'))
+        self.assertEqual(p.relpath(self.Path('foo', path.Root.srcdir),
+                                   localize=False), 'bar')
+        self.assertEqual(p.relpath(self.Path('foo', path.Root.srcdir), 'pre',
+                                   False), 'pre/bar')
 
         self.assertEqual(p.relpath(self.Path('baz', path.Root.srcdir)),
                          self.ospath.join('..', 'foo', 'bar'))
         self.assertEqual(p.relpath(self.Path('baz', path.Root.srcdir), 'pre'),
                          self.ospath.join('pre', '..', 'foo', 'bar'))
+        self.assertEqual(p.relpath(self.Path('baz', path.Root.srcdir),
+                                   localize=False), '../foo/bar')
+        self.assertEqual(p.relpath(self.Path('baz', path.Root.srcdir), 'pre',
+                                   False), 'pre/../foo/bar')
 
         self.assertEqual(p.relpath(self.Path('.', path.Root.srcdir)),
                          self.ospath.join('foo', 'bar'))
         self.assertEqual(p.relpath(self.Path('.', path.Root.srcdir), 'pre'),
                          self.ospath.join('pre', 'foo', 'bar'))
+        self.assertEqual(p.relpath(self.Path('.', path.Root.srcdir),
+                                   localize=False), 'foo/bar')
+        self.assertEqual(p.relpath(self.Path('.', path.Root.srcdir), 'pre',
+                                   False), 'pre/foo/bar')
 
         p = self.Path('.', path.Root.srcdir)
         self.assertEqual(p.relpath(path.Path('foo', path.Root.srcdir)), '..')
         self.assertEqual(p.relpath(path.Path('foo', path.Root.srcdir), 'pre'),
                          self.ospath.join('pre', '..'))
+        self.assertEqual(p.relpath(path.Path('foo', path.Root.srcdir),
+                                   localize=False), '..')
+        self.assertEqual(p.relpath(path.Path('foo', path.Root.srcdir), 'pre',
+                                   False), 'pre/..')
 
         p = self.Path('foo/bar', path.Root.srcdir)
         self.assertRaises(
@@ -309,34 +327,38 @@ class TestPath(PathTestCase):
         )
 
     def test_relpath_absolute(self):
-        p = self.Path('/foo/bar', path.Root.srcdir)
-        self.assertEqual(
-            p.relpath(self.Path('start', path.Root.srcdir)),
-            self.ospath.join(self.ospath.sep, 'foo', 'bar')
-        )
-        self.assertEqual(
-            p.relpath(self.Path('start', path.Root.srcdir), 'pre'),
-            self.ospath.join(self.ospath.sep, 'foo', 'bar')
-        )
+        p = self.Path('/foo/bar')
+        self.assertEqual(p.relpath(self.Path('start')),
+                         self.ospath.join(self.ospath.sep, 'foo', 'bar'))
+        self.assertEqual(p.relpath(self.Path('start'), 'pre'),
+                         self.ospath.join(self.ospath.sep, 'foo', 'bar'))
+        self.assertEqual(p.relpath(self.Path('start'), localize=False),
+                         '/foo/bar')
+        self.assertEqual(p.relpath(self.Path('start'), 'pre', False),
+                         '/foo/bar')
 
-        self.assertEqual(
-            p.relpath(self.Path('/start', path.Root.srcdir)),
-            self.ospath.join(self.ospath.sep, 'foo', 'bar')
-        )
-        self.assertEqual(
-            p.relpath(self.Path('/start', path.Root.srcdir), 'pre'),
-            self.ospath.join(self.ospath.sep, 'foo', 'bar')
-        )
+        self.assertEqual(p.relpath(self.Path('/start')),
+                         self.ospath.join(self.ospath.sep, 'foo', 'bar'))
+        self.assertEqual(p.relpath(self.Path('/start'), 'pre'),
+                         self.ospath.join(self.ospath.sep, 'foo', 'bar'))
+        self.assertEqual(p.relpath(self.Path('/start'), localize=False),
+                         '/foo/bar')
+        self.assertEqual(p.relpath(self.Path('/start'), 'pre', False),
+                         '/foo/bar')
 
-        p = self.Path(r'C:\foo\bar', path.Root.srcdir)
+        p = self.Path(r'C:\foo\bar')
         self.assertEqual(
-            p.relpath(self.Path(r'C:\start', path.Root.srcdir)),
+            p.relpath(self.Path(r'C:\start')),
             'C:' + self.ospath.sep + self.ospath.join('foo', 'bar')
         )
         self.assertEqual(
-            p.relpath(self.Path(r'C:\start', path.Root.srcdir), 'pre'),
+            p.relpath(self.Path(r'C:\start'), 'pre'),
             'C:' + self.ospath.sep + self.ospath.join('foo', 'bar')
         )
+        self.assertEqual(p.relpath(self.Path(r'C:\start'), localize=False),
+                         'C:/foo/bar')
+        self.assertEqual(p.relpath(self.Path(r'C:\start'), 'pre', False),
+                         'C:/foo/bar')
 
     def test_reroot(self):
         p = self.Path('foo/bar', path.Root.srcdir)

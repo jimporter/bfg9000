@@ -97,6 +97,16 @@ class TestExecutable(LinkTest):
 
     def test_make_directory(self):
         executable = self.context['executable']
+        result = executable('dir/exe', ['main.cpp'])
+        self.assertSameFile(result, self.output_file('dir/exe'))
+        self.assertSameFile(result.creator.files[0],
+                            self.object_file('dir/exe.int/PAR/main'))
+
+        result = executable('dir/exe', ['dir/main.cpp'])
+        self.assertSameFile(result, self.output_file('dir/exe'))
+        self.assertSameFile(result.creator.files[0],
+                            self.object_file('dir/exe.int/main'))
+
         result = executable('exe', ['main.cpp'], intermediate_dir=None)
         self.assertSameFile(result, self.output_file('exe'))
         self.assertSameFile(result.creator.files[0], self.object_file('main'))
@@ -111,6 +121,24 @@ class TestExecutable(LinkTest):
         self.assertSameFile(result, self.output_file('exe'))
         self.assertSameFile(result.creator.files[0],
                             self.object_file('dir/main'))
+
+    def test_make_submodule(self):
+        with self.context.push_path(Path('dir/build.bfg', Root.srcdir)):
+            executable = self.context['executable']
+            result = executable('exe', ['main.cpp'])
+            self.assertSameFile(result, self.output_file('dir/exe'))
+            self.assertSameFile(result.creator.files[0],
+                                self.object_file('dir/exe.int/main'))
+
+            result = executable('sub/exe', ['sub/main.cpp'])
+            self.assertSameFile(result, self.output_file('dir/sub/exe'))
+            self.assertSameFile(result.creator.files[0],
+                                self.object_file('dir/sub/exe.int/main'))
+
+            result = executable('exe', ['main.cpp'], intermediate_dir=None)
+            self.assertSameFile(result, self.output_file('dir/exe'))
+            self.assertSameFile(result.creator.files[0],
+                                self.object_file('dir/main'))
 
     def test_lib_order(self):
         fmt = self.env.target_platform.object_format
@@ -270,6 +298,18 @@ class TestSharedLibrary(LinkTest):
 
     def test_make_directory(self):
         shared_library = self.context['shared_library']
+        expected = self.output_file('dir/shared')
+
+        result = shared_library('dir/shared', ['main.cpp'])
+        self.assertSameFile(result, expected, exclude={'post_install'})
+        self.assertSameFile(result.creator.files[0],
+                            self.object_file('dir/libshared.int/PAR/main'))
+
+        result = shared_library('dir/shared', ['dir/main.cpp'])
+        self.assertSameFile(result, expected, exclude={'post_install'})
+        self.assertSameFile(result.creator.files[0],
+                            self.object_file('dir/libshared.int/main'))
+
         expected = self.output_file('shared')
 
         result = shared_library('shared', ['main.cpp'], intermediate_dir=None)
@@ -312,7 +352,7 @@ class TestSharedLibrary(LinkTest):
 
     def test_description(self):
         result = self.context['shared_library'](
-            'executable', ['main.cpp'], description='my description'
+            'shared', ['main.cpp'], description='my description'
         )
         self.assertEqual(result.creator.description, 'my description')
 
@@ -331,11 +371,11 @@ class TestSharedLibrary(LinkTest):
 class TestStaticLibrary(LinkTest):
     mode = 'static_library'
 
-    def extra(self, lang='c++', libs=[], **kwargs):
+    def extra(self, name='libstatic', lang='c++', libs=[], **kwargs):
         linker = self.env.builder(lang).linker(self.mode)
         extra = {'forward_opts': {
             'compile_options': linker.forwarded_compile_options(
-                AttrDict(name='libstatic')
+                AttrDict(name=name)
             ),
             'link_options': opts.option_list(),
             'libs': libs,
@@ -424,7 +464,7 @@ class TestStaticLibrary(LinkTest):
         obj = self.context['object_file']('main.o', lang='c')
         result = static_library('static', [obj], lang='c++')
         self.assertSameFile(result, self.output_file(
-            'static', lang='c', extra=self.extra('c')
+            'static', lang='c', extra=self.extra(lang='c')
         ))
         self.assertEqual(result.creator.langs, ['c'])
         self.assertEqual(result.creator.linker.lang, 'c++')
@@ -436,11 +476,24 @@ class TestStaticLibrary(LinkTest):
         result = static_library('static', ['main.c'], libs=[libfoo])
         self.assertSameFile(result, self.output_file(
             'static', lang='c',
-            extra=self.extra('c', [libfoo], linktime_deps=[libfoo])
+            extra=self.extra(lang='c', libs=[libfoo], linktime_deps=[libfoo])
         ))
 
     def test_make_directory(self):
         static_library = self.context['static_library']
+        expected = self.output_file('dir/static',
+                                    extra=self.extra('dir/libstatic'))
+
+        result = static_library('dir/static', ['main.cpp'])
+        self.assertSameFile(result, expected)
+        self.assertSameFile(result.creator.files[0],
+                            self.object_file('dir/libstatic.int/PAR/main'))
+
+        result = static_library('dir/static', ['dir/main.cpp'])
+        self.assertSameFile(result, expected)
+        self.assertSameFile(result.creator.files[0],
+                            self.object_file('dir/libstatic.int/main'))
+
         expected = self.output_file('static', extra=self.extra())
 
         result = static_library('static', ['main.cpp'], intermediate_dir=None)
@@ -469,7 +522,7 @@ class TestStaticLibrary(LinkTest):
 
     def test_description(self):
         result = self.context['static_library'](
-            'executable', ['main.cpp'], description='my description'
+            'static', ['main.cpp'], description='my description'
         )
         self.assertEqual(result.creator.description, 'my description')
 
@@ -637,6 +690,18 @@ class TestLibrary(LinkTest):
 
     def test_make_directory(self):
         library = self.context['library']
+        expected = self.output_file('dir/library', mode='shared_library')
+
+        result = library('dir/library', ['main.cpp'], kind='shared')
+        self.assertSameFile(result, expected, exclude={'post_install'})
+        self.assertSameFile(result.creator.files[0],
+                            self.object_file('dir/liblibrary.int/PAR/main'))
+
+        result = library('dir/library', ['dir/main.cpp'], kind='shared')
+        self.assertSameFile(result, expected, exclude={'post_install'})
+        self.assertSameFile(result.creator.files[0],
+                            self.object_file('dir/liblibrary.int/main'))
+
         expected = self.output_file('library', mode='shared_library')
 
         result = library('library', ['main.cpp'], kind='shared',

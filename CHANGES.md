@@ -3,6 +3,8 @@
 ## v0.6.0 (in progress)
 
 ### New features
+- Add support for including multiple `build.bfg` (and `options.bfg`) files from
+  subdirectories via `submodule()`
 - Add `opts.static` to request static linking of libraries
 - MSVC's runtime can now be selected by using a combination of `opts.static`
   and `opts.debug`
@@ -20,6 +22,8 @@
 - `copy_file()` now works correctly when copying into a subdirectory on the
   Make backend
 - `extra_deps` now works with `copy_file()`
+- Automatically-generated PCH source files (for MSVC compilers) are now placed
+  in the same directory as the resulting PCH
 
 ---
 

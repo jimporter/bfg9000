@@ -1,0 +1,10 @@
+# -*- python -*-
+
+# In addition to `build.bfg` files, submodules can be included in `options.bfg`
+# files; in this case, the `submodule()` function loads the `options.bfg` file
+# in the submodule directory instead.
+
+sub = submodule('lib')
+
+argument('name', default=sub['default_name'],
+         help='set the name to greet (default: %(default)s)')

@@ -117,6 +117,43 @@ class TestObjectFile(CompileTest):
         self.assertRaises(ValueError, object_file, file='main.cpp',
                           directory=Path('dir', Root.srcdir))
 
+    def test_make_submodule(self):
+        with self.context.push_path(Path('dir/build.bfg', Root.srcdir)):
+            object_file = self.context['object_file']
+
+            result = object_file(file='main.cpp')
+            self.assertSameFile(result, self.output_file('dir/main'))
+            result = object_file(file='sub/main.cpp')
+            self.assertSameFile(result, self.output_file('dir/sub/main'))
+            result = object_file(file='../main.cpp')
+            self.assertSameFile(result, self.output_file('main'))
+
+            result = object_file('object', 'main.cpp')
+            self.assertSameFile(result, self.output_file('dir/object'))
+            result = object_file('../object', 'main.cpp')
+            self.assertSameFile(result, self.output_file('object'))
+
+            result = object_file(file='main.cpp', directory='sub')
+            self.assertSameFile(result, self.output_file('dir/sub/main'))
+            result = object_file(file='foo/main.cpp', directory='sub')
+            self.assertSameFile(result, self.output_file('dir/sub/foo/main'))
+            result = object_file(file='../main.cpp', directory='sub')
+            self.assertSameFile(result, self.output_file('dir/sub/PAR/main'))
+
+            result = object_file(file='main.cpp', directory=Path('dir2'))
+            self.assertSameFile(result, self.output_file('dir2/dir/main'))
+            result = object_file(file='sub/main.cpp', directory=Path('dir2'))
+            self.assertSameFile(result, self.output_file('dir2/dir/sub/main'))
+            result = object_file(file='../main.cpp', directory=Path('dir2'))
+            self.assertSameFile(result, self.output_file('dir2/main'))
+
+            result = object_file(file='main.cpp', directory=Path('dir'))
+            self.assertSameFile(result, self.output_file('dir/dir/main'))
+            result = object_file(file='sub/main.cpp', directory=Path('dir'))
+            self.assertSameFile(result, self.output_file('dir/dir/sub/main'))
+            result = object_file(file='../main.cpp', directory=Path('dir'))
+            self.assertSameFile(result, self.output_file('dir/main'))
+
     def test_includes(self):
         object_file = self.context['object_file']
 
@@ -193,9 +230,11 @@ class TestPrecompiledHeader(CompileTest):
             pass
 
     mode = 'pch_compiler'
-    step = {'pch_source': file_types.SourceFile(
-        Path('main.cpp', Root.srcdir), 'c++'
-    )}
+
+    def output_file(self, name, pch_source='main.cpp', *args, **kwargs):
+        pch_source_path = Path(name).parent().append(pch_source)
+        step = {'pch_source': file_types.SourceFile(pch_source_path, 'c++')}
+        return super().output_file(name, step, *args, **kwargs)
 
     def test_identity(self):
         ex = file_types.PrecompiledHeader(Path('header', Root.srcdir), None)
@@ -230,20 +269,14 @@ class TestPrecompiledHeader(CompileTest):
             pch = self.context['precompiled_header']
 
             result = pch(file='main.hpp')
-            self.assertSameFile(result, self.output_file(
-                'main.hpp', self.step
-            ))
+            self.assertSameFile(result, self.output_file('main.hpp'))
 
             result = pch('object', 'main.hpp')
-            self.assertSameFile(result, self.output_file(
-                'object', self.step
-            ))
+            self.assertSameFile(result, self.output_file('object'))
 
             src = self.context['header_file']('main.hpp')
             result = pch('object', src)
-            self.assertSameFile(result, self.output_file(
-                'object', self.step
-            ))
+            self.assertSameFile(result, self.output_file('object'))
 
     def test_make_no_lang(self):
         with mock.patch('bfg9000.builtins.file_types.make_immediate_file',
@@ -251,9 +284,7 @@ class TestPrecompiledHeader(CompileTest):
             pch = self.context['precompiled_header']
 
             result = pch('object', 'main.goofy', lang='c++')
-            self.assertSameFile(result, self.output_file(
-                'object', self.step
-            ))
+            self.assertSameFile(result, self.output_file('object'))
             self.assertRaises(ValueError, pch, 'object', 'main.goofy')
 
             src = self.context['header_file']('main.goofy')
@@ -266,9 +297,7 @@ class TestPrecompiledHeader(CompileTest):
 
             src = self.context['header_file']('main.h', 'c')
             result = pch('object', src, lang='c++')
-            self.assertSameFile(result, self.output_file(
-                'object', self.step
-            ))
+            self.assertSameFile(result, self.output_file('object'))
             self.assertEqual(result.creator.compiler.lang, 'c++')
 
     def test_make_directory(self):
@@ -277,41 +306,63 @@ class TestPrecompiledHeader(CompileTest):
             pch = self.context['precompiled_header']
 
             result = pch(file='main.hpp', directory='dir')
-            self.assertSameFile(result, self.output_file(
-                'dir/main.hpp', self.step
-            ))
+            self.assertSameFile(result, self.output_file('dir/main.hpp'))
 
             src = self.context['header_file']('main.hpp')
             result = pch(file=src, directory='dir')
-            self.assertSameFile(result, self.output_file(
-                'dir/main.hpp', self.step
-            ))
+            self.assertSameFile(result, self.output_file('dir/main.hpp'))
 
             result = pch(file='main.hpp', directory='dir/')
-            self.assertSameFile(result, self.output_file(
-                'dir/main.hpp', self.step
-            ))
+            self.assertSameFile(result, self.output_file('dir/main.hpp'))
 
             result = pch(file='main.hpp', directory=Path('dir'))
-            self.assertSameFile(result, self.output_file(
-                'dir/main.hpp', self.step
-            ))
+            self.assertSameFile(result, self.output_file('dir/main.hpp'))
 
             result = pch(file='dir1/main.hpp', directory='dir2')
-            step = {'pch_source': file_types.SourceFile(
-                Path('dir1/main.cpp', Root.srcdir), 'c++'
-            )}
-            self.assertSameFile(result, self.output_file(
-                'dir2/dir1/main.hpp', step
-            ))
+            self.assertSameFile(result, self.output_file('dir2/dir1/main.hpp'))
 
             result = pch('object', 'main.hpp', directory='dir')
-            self.assertSameFile(result, self.output_file(
-                'object', self.step
-            ))
+            self.assertSameFile(result, self.output_file('object'))
 
             self.assertRaises(ValueError, pch, file='main.hpp',
                               directory=Path('dir', Root.srcdir))
+
+    def test_make_submodule(self):
+        with self.context.push_path(Path('dir/build.bfg', Root.srcdir)):
+            pch = self.context['precompiled_header']
+
+            res = pch(file='main.hpp')
+            self.assertSameFile(res, self.output_file('dir/main.hpp'))
+            res = pch(file='sub/main.hpp')
+            self.assertSameFile(res, self.output_file('dir/sub/main.hpp'))
+            res = pch(file='../main.hpp')
+            self.assertSameFile(res, self.output_file('main.hpp'))
+
+            res = pch('object', 'main.hpp')
+            self.assertSameFile(res, self.output_file('dir/object'))
+            res = pch('../object', 'main.hpp')
+            self.assertSameFile(res, self.output_file('object'))
+
+            res = pch(file='main.hpp', directory='sub')
+            self.assertSameFile(res, self.output_file('dir/sub/main.hpp'))
+            res = pch(file='foo/main.hpp', directory='sub')
+            self.assertSameFile(res, self.output_file('dir/sub/foo/main.hpp'))
+            res = pch(file='../main.hpp', directory='sub')
+            self.assertSameFile(res, self.output_file('dir/sub/PAR/main.hpp'))
+
+            res = pch(file='main.hpp', directory=Path('dir2'))
+            self.assertSameFile(res, self.output_file('dir2/dir/main.hpp'))
+            res = pch(file='sub/main.hpp', directory=Path('dir2'))
+            self.assertSameFile(res, self.output_file('dir2/dir/sub/main.hpp'))
+            res = pch(file='../main.hpp', directory=Path('dir2'))
+            self.assertSameFile(res, self.output_file('dir2/main.hpp'))
+
+            res = pch(file='main.hpp', directory=Path('dir'))
+            self.assertSameFile(res, self.output_file('dir/dir/main.hpp'))
+            res = pch(file='sub/main.hpp', directory=Path('dir'))
+            self.assertSameFile(res, self.output_file('dir/dir/sub/main.hpp'))
+            res = pch(file='../main.hpp', directory=Path('dir'))
+            self.assertSameFile(res, self.output_file('dir/main.hpp'))
 
     def test_extra_deps(self):
         dep = self.context['generic_file']('dep.txt')
@@ -320,9 +371,7 @@ class TestPrecompiledHeader(CompileTest):
             pch = self.context['precompiled_header']
 
             result = pch(file='main.hpp', extra_deps=[dep])
-            self.assertSameFile(result, self.output_file(
-                'main.hpp', self.step
-            ))
+            self.assertSameFile(result, self.output_file('main.hpp'))
             self.assertEqual(result.creator.extra_deps, [dep])
 
     def test_make_no_name_or_file(self):
@@ -344,24 +393,27 @@ class TestGeneratedSource(CompileTest):
              mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
             self.env.builder('qrc')
 
+    def output_file(self, name, step={}, lang='qrc', *args, **kwargs):
+        return super().output_file(name, step, lang, *args, **kwargs)
+
     def test_make_simple(self):
         result = self.context['generated_source'](file='file.qrc')
-        self.assertSameFile(result, self.output_file('file.cpp', lang='qrc'))
+        self.assertSameFile(result, self.output_file('file.cpp'))
 
         result = self.context['generated_source']('file.qrc')
-        self.assertSameFile(result, self.output_file('file.cpp', lang='qrc'))
+        self.assertSameFile(result, self.output_file('file.cpp'))
 
         result = self.context['generated_source']('name.cpp', 'file.qrc')
-        self.assertSameFile(result, self.output_file('name.cpp', lang='qrc'))
+        self.assertSameFile(result, self.output_file('name.cpp'))
 
         src = self.context['resource_file']('file.qrc')
         result = self.context['generated_source']('name.cpp', src)
-        self.assertSameFile(result, self.output_file('name.cpp', lang='qrc'))
+        self.assertSameFile(result, self.output_file('name.cpp'))
 
     def test_make_no_lang(self):
         gen_src = self.context['generated_source']
         result = gen_src('file.cpp', 'file.goofy', lang='qrc')
-        self.assertSameFile(result, self.output_file('file.cpp', lang='qrc'))
+        self.assertSameFile(result, self.output_file('file.cpp'))
 
         self.assertRaises(ValueError, gen_src, 'file.cpp', 'file.goofy')
 
@@ -371,34 +423,70 @@ class TestGeneratedSource(CompileTest):
     def test_make_override_lang(self):
         src = self.context['resource_file']('main.ui', 'qtui')
         result = self.context['generated_source']('main.cpp', src, lang='qrc')
-        self.assertSameFile(result, self.output_file('main.cpp', lang='qrc'))
+        self.assertSameFile(result, self.output_file('main.cpp'))
         self.assertEqual(result.creator.compiler.lang, 'qrc')
 
     def test_make_directory(self):
         gen_src = self.context['generated_source']
 
         res = gen_src(file='main.qrc', directory='dir')
-        self.assertSameFile(res, self.output_file('dir/main.cpp', lang='qrc'))
+        self.assertSameFile(res, self.output_file('dir/main.cpp'))
 
         src = self.context['resource_file']('main.qrc')
         res = gen_src(file=src, directory='dir')
-        self.assertSameFile(res, self.output_file('dir/main.cpp', lang='qrc'))
+        self.assertSameFile(res, self.output_file('dir/main.cpp'))
 
         res = gen_src(file='main.qrc', directory='dir/')
-        self.assertSameFile(res, self.output_file('dir/main.cpp', lang='qrc'))
+        self.assertSameFile(res, self.output_file('dir/main.cpp'))
 
         res = gen_src(file='main.qrc', directory=Path('dir'))
-        self.assertSameFile(res, self.output_file('dir/main.cpp', lang='qrc'))
+        self.assertSameFile(res, self.output_file('dir/main.cpp'))
 
         res = gen_src(file='dir1/main.qrc', directory='dir2')
-        self.assertSameFile(res, self.output_file('dir2/dir1/main.cpp',
-                                                  lang='qrc'))
+        self.assertSameFile(res, self.output_file('dir2/dir1/main.cpp'))
 
         res = gen_src('name.cpp', 'main.qrc', directory='dir')
-        self.assertSameFile(res, self.output_file('name.cpp', lang='qrc'))
+        self.assertSameFile(res, self.output_file('name.cpp'))
 
         self.assertRaises(ValueError, gen_src, file='main.qrc',
                           directory=Path('dir', Root.srcdir))
+
+    def test_make_submodule(self):
+        with self.context.push_path(Path('dir/build.bfg', Root.srcdir)):
+            gen_src = self.context['generated_source']
+
+            res = gen_src(file='main.qrc')
+            self.assertSameFile(res, self.output_file('dir/main.cpp'))
+            res = gen_src(file='sub/main.qrc')
+            self.assertSameFile(res, self.output_file('dir/sub/main.cpp'))
+            res = gen_src(file='../main.qrc')
+            self.assertSameFile(res, self.output_file('main.cpp'))
+
+            res = gen_src('name.cpp', 'main.qrc')
+            self.assertSameFile(res, self.output_file('dir/name.cpp'))
+            res = gen_src('../name.cpp', 'main.qrc')
+            self.assertSameFile(res, self.output_file('name.cpp'))
+
+            res = gen_src(file='main.qrc', directory='sub')
+            self.assertSameFile(res, self.output_file('dir/sub/main.cpp'))
+            res = gen_src(file='foo/main.qrc', directory='sub')
+            self.assertSameFile(res, self.output_file('dir/sub/foo/main.cpp'))
+            res = gen_src(file='../main.qrc', directory='sub')
+            self.assertSameFile(res, self.output_file('dir/sub/PAR/main.cpp'))
+
+            res = gen_src(file='main.qrc', directory=Path('dir2'))
+            self.assertSameFile(res, self.output_file('dir2/dir/main.cpp'))
+            res = gen_src(file='sub/main.qrc', directory=Path('dir2'))
+            self.assertSameFile(res, self.output_file('dir2/dir/sub/main.cpp'))
+            res = gen_src(file='../main.qrc', directory=Path('dir2'))
+            self.assertSameFile(res, self.output_file('dir2/main.cpp'))
+
+            res = gen_src(file='main.qrc', directory=Path('dir'))
+            self.assertSameFile(res, self.output_file('dir/dir/main.cpp'))
+            res = gen_src(file='sub/main.qrc', directory=Path('dir'))
+            self.assertSameFile(res, self.output_file('dir/dir/sub/main.cpp'))
+            res = gen_src(file='../main.qrc', directory=Path('dir'))
+            self.assertSameFile(res, self.output_file('dir/main.cpp'))
 
     def test_description(self):
         result = self.context['generated_source'](file='main.qrc',
@@ -409,17 +497,17 @@ class TestGeneratedSource(CompileTest):
         dep = self.context['generic_file']('dep.txt')
         result = self.context['generated_source'](file='file.qrc',
                                                   extra_deps=[dep])
-        self.assertSameFile(result, self.output_file('file.cpp', lang='qrc'))
+        self.assertSameFile(result, self.output_file('file.cpp'))
         self.assertEqual(result.creator.extra_deps, [dep])
 
 
 class TestObjectFiles(BuiltinTest):
-    def make_file_list(self, make_src=False):
+    def make_file_list(self, make_src=False, prefix=''):
         files = [file_types.ObjectFile(Path(i, Root.srcdir), None)
-                 for i in ['obj1', 'obj2']]
+                 for i in [prefix + 'obj1', prefix + 'obj2']]
         if make_src:
             src_files = [file_types.SourceFile(Path(i, Root.srcdir), None)
-                         for i in ['src1', 'src2']]
+                         for i in [prefix + 'src1', prefix + 'src2']]
             for f, s in zip(files, src_files):
                 f.creator = MockCompile(s)
 
@@ -440,6 +528,12 @@ class TestObjectFiles(BuiltinTest):
     def test_getitem_string(self):
         file_list, files, src_files = self.make_file_list(True)
         self.assertEqual(file_list['src1'], files[0])
+
+    def test_getitem_string_submodule(self):
+        file_list, files, src_files = self.make_file_list(True, 'dir/')
+        self.assertEqual(file_list['dir/src1'], files[0])
+        with self.context.push_path(Path('dir/build.bfg', Root.srcdir)):
+            self.assertEqual(file_list['src1'], files[0])
 
     def test_getitem_path(self):
         file_list, files, src_files = self.make_file_list(True)
@@ -465,11 +559,11 @@ class TestGeneratedSources(TestObjectFiles):
              mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
             self.env.builder('qrc')
 
-    def make_file_list(self, return_src=False):
+    def make_file_list(self, return_src=False, prefix=''):
         files = [file_types.SourceFile(Path(i, Root.builddir), 'c++')
-                 for i in ['src1.cpp', 'src2.cpp']]
+                 for i in [prefix + 'src1.cpp', prefix + 'src2.cpp']]
         src_files = [file_types.SourceFile(Path(i, Root.srcdir), 'qrc')
-                     for i in ['src1', 'src2']]
+                     for i in [prefix + 'src1', prefix + 'src2']]
 
         file_list = self.context['generated_sources'](src_files)
 

@@ -130,17 +130,18 @@ class BasePath(safe_str.safe_string):
     def basename(self):
         return posixpath.basename(self.suffix)
 
-    def relpath(self, start, prefix=''):
+    def relpath(self, start, prefix='', localize=True):
         if self.root == Root.absolute:
-            return self.__localize(self.suffix)
+            return self.__localize(self.suffix) if localize else self.suffix
         if self.root != start.root:
             raise ValueError('source mismatch')
 
         rel = posixpath.relpath(self.suffix or posixpath.curdir,
                                 start.suffix or posixpath.curdir)
-        if prefix and rel == self.curdir:
+        if prefix and rel == posixpath.curdir:
             return prefix
-        return self.__localize(posixpath.join(prefix, rel))
+        result = posixpath.join(prefix, rel)
+        return self.__localize(result) if localize else result
 
     def reroot(self, root=Root.builddir):
         return type(self)(self.suffix, root, self.destdir)

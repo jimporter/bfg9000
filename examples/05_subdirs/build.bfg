@@ -1,10 +1,10 @@
 # -*- python -*-
 
-# Larger projects often have their code split up into multiple directories. For
-# source files, this is easy: just write out the relative path to the file. For
-# header files, however, the build needs to know where to search for the
-# headers. The header_directory() function creates a reference to a directory
-# that can then be passed to the build functions:
+# Many projects have their code split up into multiple directories. For source
+# files, this is easy: just write out the relative path to the file. For header
+# files, however, the build needs to know where to search for the headers. The
+# header_directory() function creates a reference to a directory that can then
+# be passed to the build functions:
 
 include = header_directory('include', include='*.hpp')
 

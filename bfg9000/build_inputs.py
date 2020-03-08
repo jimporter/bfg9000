@@ -43,7 +43,7 @@ class Edge:
 
 
 class BuildInputs:
-    def __init__(self, env, bfgpath, extra_bootstrap=[]):
+    def __init__(self, env, bfgpath):
         self._sources = OrderedDict()
         self.bootstrap_paths = []
         self._edges = []
@@ -51,12 +51,14 @@ class BuildInputs:
         self._extra_inputs = {}
 
         self.bfgpath = bfgpath
-        for i in chain([bfgpath], extra_bootstrap):
-            self.bootstrap_paths.append(i)
-            self.add_source(File(i))
+        self.add_bootstrap(bfgpath)
 
         for name, fn in _build_inputs.items():
             self._extra_inputs[name] = fn(self, env)
+
+    def add_bootstrap(self, path):
+        self.bootstrap_paths.append(path)
+        return path
 
     def add_source(self, source):
         self._sources[source.path] = source
@@ -71,7 +73,8 @@ class BuildInputs:
         return target
 
     def sources(self):
-        return self._sources.values()
+        return chain((File(i) for i in self.bootstrap_paths),
+                     self._sources.values())
 
     def targets(self):
         return chain(

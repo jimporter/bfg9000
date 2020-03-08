@@ -1,0 +1,10 @@
+# -*- python -*-
+
+argument('enthusiasm', type=int, metavar='N', default=1,
+         help=('set number of exclamation points in greeting ' +
+               '(default: %(default)s)'))
+
+# While exporting file objects from a submodule is the most-common use for
+# `export()`, any object can be exported:
+
+export(default_name='Alice')

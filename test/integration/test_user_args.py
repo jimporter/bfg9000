@@ -8,6 +8,12 @@ class TestUserArgs(IntegrationTest):
         super().__init__(os.path.join(examples_dir, '10_custom_args'),
                          configure=False, *args, **kwargs)
 
+    def _check_help(self, args):
+        output = self.assertPopen(args)
+        self.assertRegex(output, r'(?m)^project-defined arguments:$')
+        self.assertRegex(output,
+                         r'(?m)^\s+--name NAME\s+set the name to greet$')
+
     def test_build_default(self):
         self.configure()
         self.build(executable('simple'))
@@ -20,21 +26,13 @@ class TestUserArgs(IntegrationTest):
 
     def test_help(self):
         os.chdir(self.srcdir)
-        output = self.assertPopen(
-            ['bfg9000', 'help', 'configure']
-        )
-        self.assertRegex(output, r'(?m)^project-defined arguments:$')
-        self.assertRegex(output,
-                    r'(?m)^\s+--name NAME\s+set the name to greet$')
+        self._check_help(['bfg9000', 'help', 'configure'])
+        self._check_help(['9k', '--help'])
 
     def test_help_explicit_srcdir(self):
         os.chdir(this_dir)
-        output = self.assertPopen(
-            ['bfg9000', 'help', 'configure', self.srcdir]
-        )
-        self.assertRegex(output, r'(?m)^project-defined arguments:$')
-        self.assertRegex(output,
-                    r'(?m)^\s+--name NAME\s+set the name to greet$')
+        self._check_help(['bfg9000', 'help', 'configure', self.srcdir])
+        self._check_help(['9k', self.srcdir, '--help'])
 
     @skip_if_backend('msbuild')
     def test_dist(self):

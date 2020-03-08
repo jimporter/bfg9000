@@ -1,0 +1,20 @@
+# -*- python -*-
+
+# Within a submodule, all paths for inputs (source files) and outputs (built
+# files) are relative to the directory containing the submodule's `build.bfg`
+# file. (If you need to reference a file outside of the submodule's
+# directory, you can simply prefix your path with `../`).
+
+includes = header_directory('.', include='*.hpp')
+
+lib = library(
+    'library', find_files('.', '*.cpp'),
+    compile_options=[opts.define('ENTHUSIASM', str(argv.enthusiasm))]
+)
+
+# Generally, when using a submodule, you'll want to be able to reference
+# files defined in the submodule in the parent. To do this, you can export them
+# via the `export()` function, which will return a dict of all the exports to
+# the parent module.
+
+export(includes=includes, lib=lib)

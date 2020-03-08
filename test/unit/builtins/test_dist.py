@@ -43,3 +43,11 @@ class TestExtraDist(BuiltinTest):
             File(Path('file', Root.srcdir)),
             Directory(Path('dir', Root.srcdir)),
         ])
+
+    def test_submodule(self):
+        with self.context.push_path(Path('dir/build.bfg', Root.srcdir)):
+            self.context['extra_dist'](files='file')
+        self.assertEqual(list(self.build.sources()), [
+            File(Path('build.bfg', Root.srcdir)),
+            File(Path('dir/file', Root.srcdir)),
+        ])

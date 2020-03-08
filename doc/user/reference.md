@@ -1149,6 +1149,13 @@ the message was logged from.
     Debug messages are hidden by default; pass `--debug` on the command line to
     them.
 
+### export(*...*) { #export }
+Availability: `build.bfg` and `options.bfg`
+{: .subtitle}
+
+Within a [submodule](#submodule), export a list of keyword arguments to be
+returned to the calling module.
+
 ### filter_by_platform(*name*, *path*, *type*) { #filter_by_platform }
 Availability: `build.bfg`
 {: .subtitle}
@@ -1267,10 +1274,13 @@ Return the extension of this path, if any; otherwise, return `''`.
 
 Return the parent of this path as a new *Path* object.
 
-#### *Path*.relpath(*start*, [*prefix*]) { #Path-relpath }
+#### *Path*.relpath(*start*, [*prefix*], [*localize*]) { #Path-relpath }
 
 Return a string representing this path's location relative to a starting path
-*start*. Both paths should have the same [*Root*](#Root)
+*start*. Both paths should have the same [*Root*](#Root). If *localize* is true
+(the default), this function will translate the path to the native form for the
+host platform; otherwise, it will return it untranslated (using POSIX-style
+separators).
 
 #### *Path*.reroot(*root*) { #Path-reroot }
 
@@ -1337,6 +1347,16 @@ used in a build script.
 
 Convert an object *s* into a "safe" string, if possible. Safe strings are used
 by the build backends to correctly handle escaping special characters as needed.
+
+### submodule(*path*) { #submodule }
+Availability: `build.bfg` and `options.bfg`
+{: .subtitle}
+
+Include and execute the `build.bfg` (or `options.bfg`, as appropriate) file
+contained in the submodule *path*. Within the submodule's bfg file, all paths
+for inputs (source files) and outputs (built files) are evaluated relative to
+*path*. This function returns a dict of all the [exported](#export) objects from
+the submodule's bfg file.
 
 ### warning(*...*) { #warning }
 

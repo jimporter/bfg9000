@@ -1,8 +1,9 @@
 from unittest import mock
 
-from .common import BuiltinTest
+from .common import AttrDict, BuiltinTest
 
-from bfg9000.builtins.file_types import static_file
+from bfg9000.builtins import regenerate  # noqa
+from bfg9000.builtins.file_types import FileList, static_file
 from bfg9000.file_types import *
 from bfg9000.path import Path, Root
 
@@ -29,6 +30,14 @@ class TestStaticFile(BuiltinTest):
         expected = File(p)
         self.assertSameFile(static_file(self.context, File, p), expected)
         self.assertEqual(list(self.build.sources()), [self.bfgfile])
+
+    def test_submodule(self):
+        with self.context.push_path(Path('dir/build.bfg', Root.srcdir)):
+            expected = File(srcpath('dir/file.txt'))
+            self.assertSameFile(static_file(self.context, File, 'file.txt'),
+                                expected)
+            self.assertEqual(list(self.build.sources()),
+                             [self.bfgfile, expected])
 
     def test_no_dist(self):
         p = srcpath('file.txt')
@@ -57,6 +66,48 @@ class TestStaticFile(BuiltinTest):
                           SourceFile, 'file.txt', params=[('lang', 'c')],
                           kwargs={'lang': 'c++', 'extra': 'value'})
         self.assertEqual(list(self.build.sources()), [self.bfgfile])
+
+
+class TestFileList(BuiltinTest):
+    def make_file_list(self, *args):
+        def make_file(src, format=None):
+            obj = ObjectFile(src.path.stripext('.o').reroot(), format,
+                             src.lang)
+            obj.creator = AttrDict(file=src)
+            return obj
+
+        files = [SourceFile(srcpath(i), 'c++') for i in args]
+        return FileList(self.context, make_file, files, format='elf')
+
+    def test_len(self):
+        self.assertEqual(len(self.make_file_list()), 0)
+        self.assertEqual(len(self.make_file_list('foo.cpp', 'bar.cpp')), 2)
+
+    def test_index_int(self):
+        f = self.make_file_list('foo.cpp', 'bar.cpp')
+        self.assertSameFile(f[0], ObjectFile(Path('foo.o'), 'elf', 'c++'))
+
+    def test_index_str(self):
+        f = self.make_file_list('foo.cpp', 'bar.cpp')
+        self.assertSameFile(f['foo.cpp'],
+                            ObjectFile(Path('foo.o'), 'elf', 'c++'))
+
+    def test_index_path(self):
+        f = self.make_file_list('foo.cpp', 'bar.cpp')
+        self.assertSameFile(f[srcpath('foo.cpp')],
+                            ObjectFile(Path('foo.o'), 'elf', 'c++'))
+
+    def test_index_file(self):
+        f = self.make_file_list('foo.cpp', 'bar.cpp')
+        src = SourceFile(srcpath('foo.cpp'), 'c++')
+        self.assertEqual(f[src], ObjectFile(Path('foo.o'), 'elf', 'c++'))
+
+    def test_submodule(self):
+        f = self.make_file_list('dir/foo.cpp', 'dir/bar.cpp')
+        obj = ObjectFile(Path('dir/foo.o'), 'elf', 'c++')
+        with self.context.push_path(Path('dir/build.bfg', Root.srcdir)):
+            self.assertSameFile(f['foo.cpp'], obj)
+        self.assertSameFile(f['dir/foo.cpp'], obj)
 
 
 class TestAutoFile(BuiltinTest):
@@ -101,6 +152,18 @@ class TestAutoFile(BuiltinTest):
                             expected)
         self.assertEqual(list(self.build.sources()), [self.bfgfile, expected])
 
+    def test_submodule(self):
+        with self.context.push_path(Path('dir/build.bfg', Root.srcdir)):
+            expected = SourceFile(srcpath('file.cpp'), 'c++')
+            self.assertIs(self.context['auto_file'](expected), expected)
+            self.assertEqual(list(self.build.sources()), [self.bfgfile])
+
+            expected = SourceFile(srcpath('dir/file.cpp'), 'c++')
+            self.assertSameFile(self.context['auto_file']('file.cpp'),
+                                expected)
+            self.assertEqual(list(self.build.sources()),
+                             [self.bfgfile, expected])
+
 
 class TestGenericFile(BuiltinTest):
     type = File
@@ -131,6 +194,18 @@ class TestGenericFile(BuiltinTest):
         expected = self.type(path, *self.args)
         self.assertSameFile(self.context[self.fn](path), expected)
         self.assertEqual(list(self.build.sources()), [self.bfgfile, expected])
+
+    def test_submodule(self):
+        with self.context.push_path(Path('dir/build.bfg', Root.srcdir)):
+            expected = self.type(srcpath(self.filename), *self.args)
+            self.assertIs(self.context[self.fn](expected), expected)
+            self.assertEqual(list(self.build.sources()), [self.bfgfile])
+
+            expected = self.type(srcpath('dir/' + self.filename), *self.args)
+            self.assertSameFile(self.context[self.fn](self.filename),
+                                expected)
+            self.assertEqual(list(self.build.sources()),
+                             [self.bfgfile, expected])
 
 
 class TestModuleDefFile(TestGenericFile):

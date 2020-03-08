@@ -2,6 +2,7 @@ import os
 
 from . import builtin
 from .file_types import FileList
+from .path import buildpath, relname, within_directory
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..build_inputs import Edge
@@ -28,16 +29,16 @@ class CopyFile(Edge):
     def convert_args(context, name, file, kwargs):
         directory = kwargs.pop('directory', None)
         if directory:
-            directory = Path.ensure(directory, strict=True)
+            directory = buildpath(context, directory, strict=True)
         file = context['auto_file'](file)
 
         def pathfn(file):
             if name is None:
                 path = file.path.reroot()
                 if directory:
-                    return directory.append(path.suffix)
+                    return within_directory(path, directory)
                 return path
-            return Path(name)
+            return Path(relname(context, name))
 
         output = file.clone(pathfn)
         return output, file, kwargs
@@ -57,7 +58,7 @@ def copy_file(context, name, file, **kwargs):
 @builtin.function()
 @builtin.type(FileList, in_type=object)
 def copy_files(context, files, **kwargs):
-    return FileList(context['copy_file'], files, **kwargs)
+    return FileList(context, context['copy_file'], files, **kwargs)
 
 
 @make.rule_handler(CopyFile)

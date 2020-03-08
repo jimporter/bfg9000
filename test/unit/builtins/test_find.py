@@ -239,6 +239,37 @@ class TestFindFiles(BuiltinTest):
         with mock_context():
             self.assertFound(self.find(srcpath('dir')), expected)
 
+    def test_submodule(self):
+        with self.context.push_path(Path('dir/build.bfg', Root.srcdir)), \
+             mock_context():  # noqa
+            expected = [
+                Directory(srcpath('dir')),
+                File(srcpath('dir/file2.txt'))
+            ]
+            self.assertFound(self.find('.'), expected)
+
+    def test_submodule_parent(self):
+        with self.context.push_path(Path('dir/build.bfg', Root.srcdir)), \
+             mock_context():  # noqa
+            expected = [
+                Directory(srcpath('.')),
+                Directory(srcpath('dir')),
+                SourceFile(srcpath('file.cpp'), 'c++'),
+                File(srcpath('dir/file2.txt'))
+            ]
+            self.assertFound(self.find('..'), expected)
+
+    def test_submodule_path_object(self):
+        with self.context.push_path(Path('dir/build.bfg', Root.srcdir)), \
+             mock_context():  # noqa
+            expected = [
+                Directory(srcpath('.')),
+                Directory(srcpath('dir')),
+                SourceFile(srcpath('file.cpp'), 'c++'),
+                File(srcpath('dir/file2.txt'))
+            ]
+            self.assertFound(self.find(srcpath('.')), expected)
+
     def test_name(self):
         expected = [
             SourceFile(srcpath('file.cpp'), 'c++'),
