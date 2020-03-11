@@ -143,7 +143,7 @@ class PkgConfigInfo:
         def __init__(self, fn):
             self.fn = fn
 
-        def __get__(self, obj, objtype=None):
+        def __get__(self, obj, owner=None):
             if obj is None:
                 return self
             return getattr(obj, '_' + self.fn.__name__)

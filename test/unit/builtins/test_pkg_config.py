@@ -128,6 +128,21 @@ class TestPkgConfigRequirementSet(TestCase):
                                           SimpleRequirement('foo', '<=2.0')})
 
 
+class TestSimpleProperty(TestCase):
+    class Foo:
+        @PkgConfigInfo._simple_property
+        def my_prop(self, value):
+            return value.upper()
+
+    def test_owner(self):
+        self.assertIsInstance(self.Foo.my_prop, PkgConfigInfo._simple_property)
+
+    def test_get_set(self):
+        f = self.Foo()
+        f.my_prop = 'value'
+        self.assertEqual(f.my_prop, 'VALUE')
+
+
 class TestPkgConfig(BuiltinTest):
     def test_minimal(self):
         pkg = PkgConfigInfo(self.context, name='package',
