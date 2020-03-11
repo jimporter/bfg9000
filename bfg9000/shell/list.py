@@ -14,9 +14,6 @@ class shell_list(list):
     def __getitem__(self, key):
         return shell_list(super().__getitem__(key))
 
-    def __getslice__(self, i, j):
-        return shell_list(super().__getslice__(i, j))
-
     def __eq__(self, rhs):
         return isinstance(rhs, shell_list) and super().__eq__(rhs)
 
