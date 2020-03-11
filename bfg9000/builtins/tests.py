@@ -17,9 +17,6 @@ class TestInputs:
         self.tests = []
         self.extra_deps = []
 
-    def __nonzero__(self):
-        return self.__bool__()
-
     def __bool__(self):
         return bool(self.tests)
 

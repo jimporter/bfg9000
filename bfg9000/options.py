@@ -55,9 +55,6 @@ class option_list:
     def __ne__(self, rhs):
         return not (self == rhs)
 
-    def __nonzero__(self):
-        return self.__bool__()
-
     def __bool__(self):
         return bool(self._options)
 

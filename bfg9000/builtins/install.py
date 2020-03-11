@@ -35,9 +35,6 @@ class InstallOutputs:
         for i in item.install_deps:
             self._add_implicit(i)
 
-    def __nonzero__(self):
-        return self.__bool__()
-
     def __bool__(self):
         return bool(self.implicit)
 
