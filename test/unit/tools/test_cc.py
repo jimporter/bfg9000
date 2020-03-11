@@ -25,7 +25,8 @@ def mock_which(*args, **kwargs):
 
 def mock_execute(args, **kwargs):
     if args[-1] == '-Wl,--version':
-        return '', '/usr/bin/ld --version\n'
+        return '', ('COLLECT_GCC=g++\n/usr/bin/collect2 --version\n' +
+                    '/usr/bin/ld --version\n')
     elif args[-1] == '-print-search-dirs':
         return 'libraries: =/lib/search/dir1:/lib/search/dir2\n'
     elif args[-1] == '-print-sysroot':
@@ -177,7 +178,7 @@ class TestCcBuilder(CrossPlatformTestCase):
         self.assertEqual(cc.linker('executable').version, None)
         self.assertEqual(cc.linker('shared_library').version, None)
 
-    def test_set_ld(self):
+    def test_set_ld_gold(self):
         version = ('g++ (Ubuntu 5.4.0-6ubuntu1~16.04.6) 5.4.0 20160609\n' +
                    'Copyright (C) 2015 Free Software Foundation, Inc.')
 
@@ -186,7 +187,43 @@ class TestCcBuilder(CrossPlatformTestCase):
              mock.patch('bfg9000.shell.execute', mock_execute), \
              mock.patch('logging.log'):  # noqa
             cc = CcBuilder(self.env, known_langs['c++'], ['g++'], version)
-        self.assertEqual(cc.linker('executable').command[-1], '-fuse-ld=gold')
+        self.assertEqual(cc.linker('executable').command,
+                         ['g++', '-fuse-ld=gold'])
+
+    def test_set_ld_unknown(self):
+        version = ('g++ (Ubuntu 5.4.0-6ubuntu1~16.04.6) 5.4.0 20160609\n' +
+                   'Copyright (C) 2015 Free Software Foundation, Inc.')
+
+        self.env.variables['LD'] = '/usr/bin/ld.goofy'
+        with mock.patch('bfg9000.shell.which', mock_which), \
+             mock.patch('bfg9000.shell.execute', mock_execute), \
+             mock.patch('logging.log'):  # noqa
+            cc = CcBuilder(self.env, known_langs['c++'], ['g++'], version)
+        self.assertEqual(cc.linker('executable').command, ['g++'])
+
+    def test_execution_failure(self):
+        def bad_execute(args, **kwargs):
+            raise OSError()
+
+        def weird_execute(args, **kwargs):
+            if args[-1] == '-Wl,--version':
+                return '', 'stderr\n'
+            return mock_execute(args, **kwargs)
+
+        version = ('g++ (Ubuntu 5.4.0-6ubuntu1~16.04.6) 5.4.0 20160609\n' +
+                   'Copyright (C) 2015 Free Software Foundation, Inc.')
+
+        with mock.patch('bfg9000.shell.which', mock_which), \
+             mock.patch('bfg9000.shell.execute', bad_execute), \
+             mock.patch('logging.log'):  # noqa
+            cc = CcBuilder(self.env, known_langs['c++'], ['g++'], version)
+        self.assertRaises(KeyError, cc.linker, 'raw')
+
+        with mock.patch('bfg9000.shell.which', mock_which), \
+             mock.patch('bfg9000.shell.execute', weird_execute), \
+             mock.patch('logging.log'):  # noqa
+            cc = CcBuilder(self.env, known_langs['c++'], ['g++'], version)
+        self.assertRaises(KeyError, cc.linker, 'raw')
 
 
 class TestCcCompiler(CrossPlatformTestCase):
