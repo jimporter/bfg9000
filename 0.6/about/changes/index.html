@@ -166,6 +166,8 @@
 <p class="subtitle">in progress</p>
 <h3 id="new-features">New features<a class="headerlink" href="#new-features" title="Permanent link">§</a></h3>
 <ul>
+<li>Add support for including multiple <code>build.bfg</code> (and <code>options.bfg</code>) files from
+  subdirectories via <code>submodule()</code></li>
 <li>Add <code>opts.static</code> to request static linking of libraries</li>
 <li>MSVC's runtime can now be selected by using a combination of <code>opts.static</code>
   and <code>opts.debug</code></li>
@@ -185,6 +187,8 @@
 <li><code>copy_file()</code> now works correctly when copying into a subdirectory on the
   Make backend</li>
 <li><code>extra_deps</code> now works with <code>copy_file()</code></li>
+<li>Automatically-generated PCH source files (for MSVC compilers) are now placed
+  in the same directory as the resulting PCH</li>
 </ul>
 <hr />
 <h2 id="v051">v0.5.1<a class="headerlink" href="#v051" title="Permanent link">§</a></h2>

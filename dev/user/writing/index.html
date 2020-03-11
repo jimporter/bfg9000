@@ -157,6 +157,7 @@
             <li><a href="#tests">Tests</a></li>
             <li><a href="#aliases">Aliases</a></li>
             <li><a href="#commands">Commands</a></li>
+            <li><a href="#submodules">Submodules</a></li>
             <li><a href="#custom-build-steps">Custom build steps</a></li>
             <li><a href="#user-defined-arguments">User-defined arguments</a></li>
             <li><a href="#generating-pkg-config-data">Generating pkg-config data</a></li>
@@ -401,6 +402,34 @@ multiple commands to this function via the <em>cmds</em> argument:</p>
     'touch file',
     ['python', 'script.py']
 ])
+</code></pre>
+
+<h2 id="submodules">Submodules<a class="headerlink" href="#submodules" title="Permanent link">§</a></h2>
+<p>For larger projects, putting all of your build configuration in a single file
+can be difficult to maintain. Instead, you can split your configuration into
+multiple submodules. The <a href="../reference/#submodule"><em>submodule</em></a> function will
+execute the <code>build.bfg</code> file (or <code>options.bfg</code> file <a href="#user-defined-arguments">when
+applicable</a>) in the specified directory and return any
+exported objects as a dict to be used in the parent module. The submodule can
+then call the <a href="../reference/#export"><em>export</em></a> function to return any relevant
+objects (e.g. built files) to the parent module:</p>
+<pre><code class="python"># In main build.bfg:
+sub = submodule('dir')
+executable('exe', ['exe.cpp'], libs=[sub['library']])
+
+# In sub/build.bfg:
+lib = library('mylib', ['mylib.cpp'])
+export(library=lib)
+</code></pre>
+
+<p>Within a submodule, all paths for inputs (source files) and outputs (built
+files) are relative to the directory containing the submodule's <code>build.bfg</code>
+file. (If you need to reference a file outside of the submodule's directory, you
+can simply prefix your path with <code>../</code>):</p>
+<pre><code class="python"># In sub/build.bfg:
+
+# Builds $(builddir)/libmylib.so (or similar) from $(srcdir)/sub/mylib.cpp:
+library('../mylib', ['mylib.cpp'])
 </code></pre>
 
 <h2 id="custom-build-steps">Custom build steps<a class="headerlink" href="#custom-build-steps" title="Permanent link">§</a></h2>
