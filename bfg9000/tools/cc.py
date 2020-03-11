@@ -363,7 +363,7 @@ class CcLinker(BuildCommand):
         return True
 
     @property
-    def has_link_macros(self):
+    def _has_link_macros(self):
         # We only need to define LIBFOO_EXPORTS/LIBFOO_STATIC macros on
         # platforms that have different import/export rules for libraries. We
         # approximate this by checking if the platform uses import libraries,
@@ -742,10 +742,10 @@ class CcSharedLibraryLinker(CcLinker):
         options = opts.option_list()
         if self.builder.object_format != 'coff':
             options.append(opts.pic())
-        if self.has_link_macros:
-            options.append(opts.define(library_macro(
-                step.name, 'shared_library'
-            )))
+        if self._has_link_macros:
+            options.append(opts.define(
+                library_macro(step.name, 'shared_library')
+            ))
         return options
 
     def flags(self, options, output=None, mode='normal'):

@@ -198,10 +198,6 @@ class JarMaker(BuildCommand):
     def needs_libs(self):
         return False
 
-    @property
-    def has_link_macros(self):
-        return False
-
     def pre_build(self, context, name, step):
         # Fix up paths for the Class-Path field: escape spaces and prefix
         # Windows drive letters with '/' to disambiguate them from URLs.

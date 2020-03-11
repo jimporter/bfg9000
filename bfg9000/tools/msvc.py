@@ -336,10 +336,6 @@ class MsvcLinker(BuildCommand):
     def needs_libs(self):
         return True
 
-    @property
-    def has_link_macros(self):
-        return True
-
     def search_dirs(self, strict=False):
         lib_path = [abspath(i) for i in
                     self.env.getvar('LIBRARY_PATH', '').split(os.pathsep)]
@@ -479,12 +475,9 @@ class MsvcSharedLibraryLinker(MsvcLinker):
         return super()._always_flags + ['/DLL']
 
     def compile_options(self, step):
-        options = opts.option_list()
-        if self.has_link_macros:
-            options.append(opts.define(library_macro(
-                step.name, 'shared_library'
-            )))
-        return options
+        return opts.option_list(
+            opts.define(library_macro(step.name, 'shared_library'))
+        )
 
     def output_file(self, name, step):
         dllname = Path(name + self.env.target_platform.shared_library_ext)
@@ -503,10 +496,6 @@ class MsvcStaticLinker(BuildCommand):
     def can_link(self, format, langs):
         return format == self.builder.object_format
 
-    @property
-    def has_link_macros(self):
-        return True
-
     def _call(self, cmd, input, output, flags=None):
         return list(chain(
             cmd, iterate(flags), iterate(input), ['/OUT:' + output]
@@ -516,12 +505,9 @@ class MsvcStaticLinker(BuildCommand):
         return self.forwarded_compile_options(step)
 
     def forwarded_compile_options(self, step):
-        options = opts.option_list()
-        if self.has_link_macros:
-            options.append(opts.define(library_macro(
-                step.name, 'static_library'
-            )))
-        return options
+        return opts.option_list(
+            opts.define(library_macro(step.name, 'static_library'))
+        )
 
     def flags(self, options, output=None, mode='normal'):
         flags = []
