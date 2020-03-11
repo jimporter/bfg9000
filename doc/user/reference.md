@@ -1140,6 +1140,8 @@ Return the current version of bfg9000. This can be useful if you want to
 optionally support a feature only available in certain versions of bfg.
 
 ### debug(*...*, [*show_stack*]) { #debug }
+Availability: `build.bfg`, `options.bfg`, and `<toolchain>.bfg`
+{: .subtitle}
 
 Log a debug message with the specified arguments separated by spaces (as with
 `print()`). If *show_stack* is true (the default), show the stack trace where
@@ -1226,12 +1228,16 @@ returning them as [path objects](#Path). The arguments to this function are the
 same as for [*find_files*](#find_files).
 
 ### info(*message*, [*show_stack*]) { #info }
+Availability: `build.bfg`, `options.bfg`, and `<toolchain>.bfg`
+{: .subtitle}
 
 Log an informational message with the specified arguments separated by spaces
 (as with `print()`). If *show_stack* is true, show the stack trace where the
 message was logged from.
 
 ### InstallRoot
+Availability: `build.bfg`, `options.bfg`, and `<toolchain>.bfg`
+{: .subtitle}
 
 An enumeration of root directories for [*Path*](#Path) objects, to be used
 during installation. Possible values are:
@@ -1244,6 +1250,8 @@ during installation. Possible values are:
 * *includedir*: A path relative to where header files will be installed
 
 ### Path(*path*, [*root*], [*destdir*]) { #Path }
+Availability: `build.bfg`, `options.bfg`, and `<toolchain>.bfg`
+{: .subtitle}
 
 Create a new path object for a given *path*. *root* may be a value in the
 [*Root*](#Root) or [*InstallRoot*](#InstallRoot) enumerations, or another *Path*
@@ -1328,6 +1336,8 @@ In addition, you can set a number of project-wide options with this function:
   [object files](#object_file), [libraries](#library))
 
 ### Root
+Availability: `build.bfg`, `options.bfg`, and `<toolchain>.bfg`
+{: .subtitle}
 
 An enumeration of root directories for [*Path*](#Path) objects. Possible values
 are:
@@ -1337,6 +1347,8 @@ are:
 * *absolute*: An absolute path
 
 ### safe_format(*fmt*, ...) { #safe_format }
+Availability: `build.bfg`, `options.bfg`, and `<toolchain>.bfg`
+{: .subtitle}
 
 Safely format a string *fmt*, as with [*str.format*][str-format]. Unlike
 *str.format* however, this converts placeholders to string via
@@ -1344,6 +1356,8 @@ Safely format a string *fmt*, as with [*str.format*][str-format]. Unlike
 used in a build script.
 
 ### safe_str(*s*) { #safe_str }
+Availability: `build.bfg`, `options.bfg`, and `<toolchain>.bfg`
+{: .subtitle}
 
 Convert an object *s* into a "safe" string, if possible. Safe strings are used
 by the build backends to correctly handle escaping special characters as needed.
@@ -1359,6 +1373,8 @@ for inputs (source files) and outputs (built files) are evaluated relative to
 the submodule's bfg file.
 
 ### warning(*...*) { #warning }
+Availability: `build.bfg`, `options.bfg`, and `<toolchain>.bfg`
+{: .subtitle}
 
 Log a warning with the specified arguments separated by spaces (as with
 `print()`) and the stack trace where the warning was emitted.

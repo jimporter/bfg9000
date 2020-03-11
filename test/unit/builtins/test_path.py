@@ -66,6 +66,7 @@ class TestPath(BuiltinTest):
         within = path.within_directory
         directory = Path('dir', Root.srcdir)
         subdir = Path('dir/sub', Root.srcdir)
+        subsubdir = Path('dir/sub/blub', Root.srcdir)
 
         self.assertEqual(within(Path('foo', Root.srcdir), directory),
                          Path('dir/foo', Root.srcdir))
@@ -73,6 +74,8 @@ class TestPath(BuiltinTest):
                          Path('dir/foo/bar', Root.srcdir))
         self.assertEqual(within(Path('dir/foo', Root.srcdir), directory),
                          Path('dir/dir/foo', Root.srcdir))
+        self.assertEqual(within(Path('dir/foo/bar', Root.srcdir), directory),
+                         Path('dir/dir/foo/bar', Root.srcdir))
 
         self.assertEqual(within(Path('foo', Root.srcdir), subdir),
                          Path('dir/sub/PAR/foo', Root.srcdir))
@@ -84,3 +87,25 @@ class TestPath(BuiltinTest):
                          Path('dir/sub/foo/bar', Root.srcdir))
         self.assertEqual(within(Path('dir/sub/foo', Root.srcdir), subdir),
                          Path('dir/sub/sub/foo', Root.srcdir))
+        self.assertEqual(within(Path('dir/sub/foo/bar', Root.srcdir), subdir),
+                         Path('dir/sub/sub/foo/bar', Root.srcdir))
+
+        self.assertEqual(within(Path('foo', Root.srcdir), subsubdir),
+                         Path('dir/sub/blub/PAR/PAR/foo', Root.srcdir))
+        self.assertEqual(within(Path('foo/bar', Root.srcdir), subsubdir),
+                         Path('dir/sub/blub/PAR/PAR/foo/bar', Root.srcdir))
+        self.assertEqual(within(Path('dir/foo', Root.srcdir), subsubdir),
+                         Path('dir/sub/blub/PAR/foo', Root.srcdir))
+        self.assertEqual(within(Path('dir/foo/bar', Root.srcdir), subsubdir),
+                         Path('dir/sub/blub/PAR/foo/bar', Root.srcdir))
+        self.assertEqual(within(Path('dir/sub/foo', Root.srcdir), subsubdir),
+                         Path('dir/sub/blub/foo', Root.srcdir))
+        self.assertEqual(within(Path('dir/sub/foo/bar', Root.srcdir),
+                                subsubdir),
+                         Path('dir/sub/blub/foo/bar', Root.srcdir))
+        self.assertEqual(within(Path('dir/sub/blub/foo', Root.srcdir),
+                                subsubdir),
+                         Path('dir/sub/blub/blub/foo', Root.srcdir))
+        self.assertEqual(within(Path('dir/sub/blub/foo/bar', Root.srcdir),
+                                subsubdir),
+                         Path('dir/sub/blub/blub/foo/bar', Root.srcdir))

@@ -26,5 +26,5 @@ def buildpath(context, path, strict=False):
 
 def within_directory(path, directory):
     suffix = path.relpath(directory.parent(), localize=False)
-    suffix = re.sub(r'(^|/)..(/|$)', r'\1PAR\2', suffix)
+    suffix = re.sub(r'(^|/)..(?=/|$)', r'\1PAR', suffix)
     return directory.append(suffix)
