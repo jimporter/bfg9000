@@ -129,7 +129,8 @@ class TestPackage(BuiltinTest):
             mock_obj = mock.patch.object
             with mock_obj(self.env, 'builder', wraps=self.env.builder) as m, \
                  mock.patch('bfg9000.shell.execute', mock_execute), \
-                 mock.patch('bfg9000.shell.which', mock_which):  # noqa
+                 mock.patch('bfg9000.shell.which', mock_which), \
+                 mock.patch('logging.log'):  # noqa
                 yield m
 
         package = self.context['package']
