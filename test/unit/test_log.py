@@ -9,6 +9,7 @@ from . import *
 
 from bfg9000 import log, iterutils
 from bfg9000.path import Path
+from bfg9000.safe_str import safe_string
 
 # Make sure we're referring to the .py file, not the .pyc file.
 this_file = __file__.rstrip('c')
@@ -171,6 +172,21 @@ class TestFormatMessage(TestCase):
     def test_path(self):
         self.assertEqual(log.format_message(Path('path')),
                          repr(Path('path')))
+
+    def test_safe_str(self):
+        class StrImplemented(safe_string):
+            def __str__(self):
+                return 'foo'
+
+            def __repr__(self):
+                return 'bar'
+
+        class StrUnimplemented(safe_string):
+            def __repr__(self):
+                return 'bar'
+
+        self.assertEqual(log.format_message(StrImplemented()), 'foo')
+        self.assertEqual(log.format_message(StrUnimplemented()), 'bar')
 
     def test_many(self):
         self.assertEqual(log.format_message('foo', 1, Path('path'), 'bar'),
