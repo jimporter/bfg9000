@@ -251,6 +251,31 @@ class TestBoostPackage(TestCase):
                 opts.lib_dir(Directory(abspath(r'C:\Boost\lib')))
             ))
 
+    def test_windows_not_found(self):
+        env = make_env('winnt', clear_variables=True)
+        context = self._make_context(env)
+
+        def mock_walk(top, variables=None):
+            yield (top,) + (
+                [top.append('boost-1.23')],
+                []
+            )
+
+        def mock_execute(*args, **kwargs):
+            if args[0][1] == '/?':
+                return 'cl.exe'
+            raise ValueError()
+
+        def mock_exists(x):
+            return False
+
+        with mock.patch('bfg9000.builtins.find._walk_flat', mock_walk), \
+             mock.patch('bfg9000.shell.which', return_value=['command']), \
+             mock.patch('bfg9000.shell.execute', mock_execute), \
+             mock.patch('bfg9000.tools.msvc.exists', mock_exists):  # noqa
+            self.assertRaises(PackageResolutionError, context['boost_package'],
+                              'thread')
+
 
 class TestSystemExecutable(BuiltinTest):
     def test_name(self):
