@@ -57,7 +57,24 @@ class StackFilter:
         return has_stack == self.has_stack
 
 
-class StackfulStreamHandler(logging.StreamHandler):
+class ColoredStreamHandler(logging.StreamHandler):
+    _format_codes = {
+        DEBUG: '1;35',
+        INFO: '1;34',
+        WARNING: '1;33',
+        ERROR: '1;31',
+        CRITICAL: '1;41;37',
+    }
+
+    def format(self, record):
+        record.coloredlevel = '\033[{format}m{name}\033[0m'.format(
+            format=self._format_codes.get(record.levelno, '1'),
+            name=record.levelname.lower()
+        )
+        return super().format(record)
+
+
+class StackfulStreamHandler(ColoredStreamHandler):
     def __init__(self, *args, debug=False, **kwargs):
         self.debug = debug
         super().__init__(*args, **kwargs)
@@ -94,10 +111,37 @@ class StackfulStreamHandler(logging.StreamHandler):
 
         if len(stack) or self.debug:
             return super().emit(record)
+
+        record.show_stack = False
         logging.root.handle(record)
 
 
-def init(color='auto', debug=False, warn_once=False, stream=None):
+def _init_logging(logger, debug, stream=None):
+    logger.setLevel(logging.DEBUG if debug else logging.INFO)
+
+    stackless = ColoredStreamHandler(stream)
+    stackless.addFilter(StackFilter(has_stack=False))
+
+    fmt = '%(coloredlevel)s: %(message)s'
+
+    stackless.setFormatter(logging.Formatter(fmt))
+    logger.addHandler(stackless)
+
+    stackful = StackfulStreamHandler(stream, debug=debug)
+    stackful.addFilter(StackFilter(has_stack=True))
+
+    fmt = '%(coloredlevel)s: %(user_pathname)s:%(user_lineno)d: %(message)s'
+    if debug:
+        fmt += '\033[2m%(stack_pre)s\033[0m'
+    fmt += '%(stack)s'
+    if debug:
+        fmt += '\033[2m%(stack_post)s\033[0m'
+
+    stackful.setFormatter(logging.Formatter(fmt))
+    logger.addHandler(stackful)
+
+
+def init(color='auto', debug=False, warn_once=False):
     if color == 'always':
         colorama.init(strip=False)
     elif color == 'never':
@@ -109,43 +153,16 @@ def init(color='auto', debug=False, warn_once=False, stream=None):
     if warn_once:
         warnings.filterwarnings('once')
 
-    logging.addLevelName(logging.CRITICAL,
-                         '\033[1;41;37m' + 'critical' + '\033[0m')
-    logging.addLevelName(logging.ERROR, '\033[1;31m' + 'error' + '\033[0m')
-    logging.addLevelName(logging.WARNING, '\033[1;33m' + 'warning' + '\033[0m')
-    logging.addLevelName(logging.INFO, '\033[1;34m' + 'info' + '\033[0m')
-    logging.addLevelName(logging.DEBUG, '\033[1;35m' + 'debug' + '\033[0m')
-
-    logging.root.setLevel(logging.DEBUG if debug else logging.INFO)
-
-    stackless = logging.StreamHandler(stream)
-    stackless.addFilter(StackFilter(has_stack=False))
-
-    fmt = '%(levelname)s: %(message)s'
-
-    stackless.setFormatter(logging.Formatter(fmt))
-    logging.root.addHandler(stackless)
-
-    stackful = StackfulStreamHandler(stream, debug=debug)
-    stackful.addFilter(StackFilter(has_stack=True))
-
-    fmt = '%(levelname)s: %(user_pathname)s:%(user_lineno)d: %(message)s'
-    if debug:
-        fmt += '\033[2m%(stack_pre)s\033[0m'
-    fmt += '%(stack)s'
-    if debug:
-        fmt += '\033[2m%(stack_post)s\033[0m'
-
-    stackful.setFormatter(logging.Formatter(fmt))
-    logging.root.addHandler(stackful)
+    _init_logging(logging.root, debug)
 
 
-def log_stack(level, message, *args, stacklevel=0, show_stack=True, **kwargs):
+def log_stack(level, message, *args, logger=logging, stacklevel=0,
+              show_stack=True, **kwargs):
     extra = {
         'full_stack': traceback.extract_stack()[1:-1 - stacklevel],
         'show_stack': show_stack
     }
-    logging.log(level, message, *args, extra=extra, **kwargs)
+    logger.log(level, message, *args, extra=extra, **kwargs)
 
 
 def format_message(*args):
@@ -165,9 +182,10 @@ def format_message(*args):
     return message
 
 
-def log_message(level, *args, stacklevel=0, **kwargs):
+def log_message(level, *args, logger=logging, stacklevel=0, **kwargs):
     stacklevel += 1
-    log_stack(level, format_message(*args), stacklevel=stacklevel, **kwargs)
+    log_stack(level, format_message(*args), logger=logger,
+              stacklevel=stacklevel, **kwargs)
 
 
 def info(*args, show_stack=False):
@@ -181,7 +199,7 @@ def debug(*args, show_stack=True):
 def _showwarning(message, category, filename, lineno, file=None, line=None):
     # Python 3.6 changes how stacklevel is counted.
     stacklevel = 2 if sys.version_info >= (3, 6) else 1
-    log_stack(logging.WARNING, message, stacklevel=stacklevel)
+    log_stack(WARNING, message, stacklevel=stacklevel)
 
 
 warnings.showwarning = _showwarning

@@ -3,6 +3,7 @@ import logging
 import sys
 import traceback
 import warnings
+from io import StringIO
 from unittest import mock
 
 from . import *
@@ -17,6 +18,27 @@ this_file = __file__.rstrip('c')
 
 def current_lineno():
     return inspect.stack()[1][2]
+
+
+class TestColoredStreamHandler(TestCase):
+    def setUp(self):
+        self.handler = log.ColoredStreamHandler()
+        fmt = '%(coloredlevel)s: %(message)s'
+        self.handler.setFormatter(logging.Formatter(fmt))
+
+    def test_info(self):
+        record = logging.LogRecord(
+            'name', log.INFO, 'pathname', 1, 'message', [], None
+        )
+        self.assertEqual(self.handler.format(record),
+                         '\033[1;34minfo\033[0m: message')
+
+    def test_unknown_level(self):
+        record = logging.LogRecord(
+            'name', 'unknown', 'pathname', 1, 'message', [], None
+        )
+        self.assertEqual(self.handler.format(record),
+                         '\033[1mlevel unknown\033[0m: message')
 
 
 class TestStackfulStreamHandler(TestCase):
@@ -121,6 +143,7 @@ class TestStackfulStreamHandler(TestCase):
             (iterutils_file, 63, 'first', 'raise LookupError()'),
         ])
 
+        self.assertEqual(record.show_stack, False)
         self.assertEqual(record.stack_pre, (
             '\n' +
             '  File "{}", line 63, in first\n' +
@@ -200,9 +223,10 @@ class TestLogStack(TestCase):
             tb = traceback.extract_stack()[1:]
             tb[-1].lineno -= 1
 
-            mocklog.assert_called_once_with(log.INFO, 'message', extra={
-                'full_stack': tb, 'show_stack': True
-            })
+            mocklog.assert_called_once_with(
+                log.INFO, 'message',
+                extra={'full_stack': tb, 'show_stack': True}
+            )
 
         with mock.patch('logging.log') as mocklog:
             log.log_message(log.INFO, 'foo', 1, Path('path'), 'bar')
@@ -210,9 +234,8 @@ class TestLogStack(TestCase):
             tb[-1].lineno -= 1
 
             mocklog.assert_called_once_with(
-                log.INFO, 'foo 1 ' + repr(Path('path')) + ' bar', extra={
-                    'full_stack': tb, 'show_stack': True
-                }
+                log.INFO, 'foo 1 ' + repr(Path('path')) + ' bar',
+                extra={'full_stack': tb, 'show_stack': True}
             )
 
     def test_stacklevel(self):
@@ -316,6 +339,38 @@ class TestLogStack(TestCase):
                 mocklog.assert_called_once_with(log.DEBUG, 'message', extra={
                     'full_stack': tb, 'show_stack': show_stack
                 })
+
+
+class TestLogger(TestCase):
+    @staticmethod
+    def _level(levelno):
+        return '\033[{format}m{name}\033[0m'.format(
+            format=log.ColoredStreamHandler._format_codes.get(levelno, '1'),
+            name=logging.getLevelName(levelno).lower()
+        )
+
+    def setUp(self):
+        self.out = StringIO()
+        self.logger = log.getLogger(__name__)
+        log._init_logging(self.logger, False, self.out)
+
+    def test_info(self):
+        log.log_message(log.INFO, 'message', logger=self.logger,
+                        show_stack=False)
+        self.assertEqual(self.out.getvalue(),
+                         '{}: message\n'.format(self._level(log.INFO)))
+
+    def test_exception(self):
+        try:
+            lineno = current_lineno() + 1
+            raise RuntimeError('runtime error')
+        except RuntimeError as e:
+            self.logger.exception(e)
+        self.assertEqual(self.out.getvalue(), (
+            '{level}: {file}:{line}: runtime error\n' +
+            '  File "{file}", line {line}, in test_exception\n' +
+            "    raise RuntimeError('runtime error')\n"
+        ).format(level=self._level(log.ERROR), file=this_file, line=lineno))
 
 
 class TestShowWarning(TestCase):

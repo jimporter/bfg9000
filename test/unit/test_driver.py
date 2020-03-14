@@ -70,7 +70,7 @@ class TestDirectoryPair(TestCase):
 class TestReloadException(TestCase):
     def setUp(self):
         self.stream = StringIO()
-        log.init(stream=self.stream)
+        log._init_logging(logging.root, debug=False, stream=self.stream)
 
     def tearDown(self):
         for i in logging.root.handlers[:]:
