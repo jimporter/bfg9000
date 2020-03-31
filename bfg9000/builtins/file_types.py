@@ -56,7 +56,8 @@ def make_immediate_file(context, file, mode='w', makedirs=True):
         _makedirs(file.path.parent().string(context.env.base_dirs),
                   exist_ok=True)
 
-    yield open(file.path.string(context.env.base_dirs), mode)
+    with open(file.path.string(context.env.base_dirs), mode) as f:
+        yield f
     context.build['regenerate'].outputs.append(file)
 
 
