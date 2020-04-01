@@ -536,6 +536,10 @@ class TestCcLinker(CrossPlatformTestCase):
             opts.rpath_dir(p2)
         )), ['-Wl,-rpath,' + p1 + ':' + p2])
 
+        self.assertEqual(self.linker.flags(opts.option_list(
+            opts.rpath_dir(p1)
+        ), mode='pkg-config'), [])
+
     def test_flags_rpath_link(self):
         p1 = self.Path('/path/to/lib')
         p2 = self.Path('/path/to/another/lib')
@@ -548,6 +552,10 @@ class TestCcLinker(CrossPlatformTestCase):
             opts.rpath_link_dir(p1),
             opts.rpath_link_dir(p2)
         )), ['-Wl,-rpath-link,' + p1 + ':' + p2])
+
+        self.assertEqual(self.linker.flags(opts.option_list(
+            opts.rpath_link_dir(p1)
+        ), mode='pkg-config'), [])
 
     def test_flags_module_def(self):
         path = self.Path('/path/to/module.def')

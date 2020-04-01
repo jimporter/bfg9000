@@ -3,7 +3,12 @@ from itertools import chain
 
 from .iterutils import isiterable, iterate
 
-__all__ = ['objectify', 'hashify', 'memoize']
+__all__ = ['convert_each', 'convert_one', 'hashify', 'identity', 'memoize',
+           'objectify']
+
+
+def identity(x):
+    return x
 
 
 def objectify(thing, valid_type, creator=None, in_type=str, **kwargs):

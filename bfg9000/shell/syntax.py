@@ -1,5 +1,6 @@
 from enum import Enum
 from io import StringIO
+from itertools import chain
 
 from .. import iterutils
 from .. import path
@@ -77,4 +78,6 @@ class Variable(safe_str.safe_string_ops):
         return not (self == rhs)
 
 
-path_vars = {i: Variable(i.name) for i in path.InstallRoot}
+path_vars = {i: Variable(i.name) for i in chain(
+    [path.Root.srcdir, path.Root.builddir], path.InstallRoot
+)}

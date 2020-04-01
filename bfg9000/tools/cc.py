@@ -585,13 +585,16 @@ class CcLinker(BuildCommand):
                 lib_dirs.append(i.directory.path)
             elif isinstance(i, opts.lib):
                 lib_dirs.extend(self._lib_dir(i.library, not pkgconf_mode))
-                rp, rplink = self._local_rpath(i.library, output)
-                rpaths.extend(rp)
-                rpath_links.extend(rplink)
+                if not pkgconf_mode:
+                    rp, rplink = self._local_rpath(i.library, output)
+                    rpaths.extend(rp)
+                    rpath_links.extend(rplink)
             elif isinstance(i, opts.rpath_dir):
-                rpaths.append(i.path)
+                if not pkgconf_mode:
+                    rpaths.append(i.path)
             elif isinstance(i, opts.rpath_link_dir):
-                rpath_links.append(i.path)
+                if not pkgconf_mode:
+                    rpath_links.append(i.path)
             elif isinstance(i, opts.module_def):
                 if self.env.target_platform.has_import_library:
                     flags.append(i.value.path)
@@ -618,9 +621,9 @@ class CcLinker(BuildCommand):
                 raise TypeError('unknown option type {!r}'.format(type(i)))
 
         flags.extend('-L' + i for i in uniques(lib_dirs))
-        if not pkgconf_mode and rpaths:
+        if rpaths:
             flags.append('-Wl,-rpath,' + safe_str.join(rpaths, ':'))
-        if not pkgconf_mode and rpath_links:
+        if rpath_links:
             flags.append('-Wl,-rpath-link,' + safe_str.join(rpath_links, ':'))
         return flags
 

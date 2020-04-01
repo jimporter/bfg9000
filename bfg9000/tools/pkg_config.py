@@ -3,23 +3,26 @@ import subprocess
 
 from . import tool
 from .common import SimpleCommand
-from .. import log, options as opts, shell
+from .. import log, options as opts
 from ..exceptions import PackageResolutionError, PackageVersionError
 from ..objutils import memoize
 from ..packages import Package, PackageKind
 from ..path import Path, Root
+from ..shell import posix as pshell
 from ..versioning import check_version, Version
 
 
 @tool('pkg_config')
 class PkgConfig(SimpleCommand):
+    # Map command names to pkg-config flags and whether they should be treated
+    # as shell arguments.
     _options = {
-        'version': ['--modversion'],
-        'cflags': ['--cflags'],
-        'lib_dirs': ['--libs-only-L'],
-        'ldflags': ['--libs-only-L', '--libs-only-other'],
-        'ldlibs': ['--libs-only-l'],
-        'path': ['--variable=pcfiledir'],
+        'version': (['--modversion'], False),
+        'path': (['--variable=pcfiledir'], False),
+        'cflags': (['--cflags'], True),
+        'lib_dirs': (['--libs-only-L'], True),
+        'ldflags': (['--libs-only-L', '--libs-only-other'], True),
+        'ldlibs': (['--libs-only-l'], True),
     }
 
     def __init__(self, env):
@@ -27,20 +30,27 @@ class PkgConfig(SimpleCommand):
                          default='pkg-config')
 
     def _call(self, cmd, name, type, static=False, msvc_syntax=False):
-        result = cmd + [name] + self._options[type]
+        result = cmd + [name] + self._options[type][0]
         if static:
             result.append('--static')
         if msvc_syntax:
             result.append('--msvc-syntax')
         return result
 
+    def run(self, name, type, *args, **kwargs):
+        result = super().run(name, type, *args, **kwargs).strip()
+        if self._options[type][1]:
+            return pshell.split(result, type=opts.option_list, escapes=True)
+        return result
+
 
 class PkgConfigPackage(Package):
     def __init__(self, name, format, specifier, kind, pkg_config):
+        super().__init__(name, format)
         self._pkg_config = pkg_config
 
         try:
-            version = Version(self._pkg_config.run(name, 'version').strip())
+            version = Version(self._call(name, 'version'))
         except subprocess.CalledProcessError:
             raise PackageResolutionError("unable to find package '{}'"
                                          .format(name))
@@ -49,12 +59,10 @@ class PkgConfigPackage(Package):
         self.version = version
         self.specifier = specifier
         self.static = kind == PackageKind.static
-        super().__init__(name, format)
 
     @memoize
     def _call(self, *args, **kwargs):
-        return shell.split(self._pkg_config.run(*args, **kwargs).strip(),
-                           type=opts.option_list)
+        return self._pkg_config.run(*args, **kwargs)
 
     def compile_options(self, compiler):
         return self._call(self.name, 'cflags', self.static,
@@ -88,7 +96,7 @@ class PkgConfigPackage(Package):
         return flags + libs + rpaths
 
     def path(self):
-        return self._pkg_config.run(self.name, 'path').strip()
+        return self._call(self.name, 'path')
 
     def __repr__(self):
         return '<PkgConfigPackage({!r}, {!r})>'.format(

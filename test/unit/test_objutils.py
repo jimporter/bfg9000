@@ -1,6 +1,12 @@
 from . import *
 
-from bfg9000.objutils import objectify
+from bfg9000.objutils import *
+
+
+class TestIdentity(TestCase):
+    def test_identity(self):
+        a = 1
+        self.assertIs(identity(a), a)
 
 
 class TestObjectify(TestCase):

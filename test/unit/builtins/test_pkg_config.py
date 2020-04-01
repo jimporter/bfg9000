@@ -147,7 +147,7 @@ class TestPkgConfig(BuiltinTest):
     def test_minimal(self):
         pkg = PkgConfigInfo(self.context, name='package',
                             version='1.0')
-        self.assertEqual(pkg.output, PkgConfigPcFile(Path(
+        self.assertEqual(pkg.output(), PkgConfigPcFile(Path(
             'pkgconfig/package.pc'
         )))
 
@@ -163,7 +163,7 @@ class TestPkgConfig(BuiltinTest):
             self.context, name='package', desc_name='my-package',
             desc='a cool package', url='http://www.example.com/', version='1.0'
         )
-        self.assertEqual(pkg.output, PkgConfigPcFile(Path(
+        self.assertEqual(pkg.output(), PkgConfigPcFile(Path(
             'pkgconfig/package.pc'
         )))
 
@@ -171,6 +171,23 @@ class TestPkgConfig(BuiltinTest):
         pkg.write(out, self.env)
         self.assertRegex(out.getvalue(),
                          '\n\nName: my-package\n' +
+                         'Description: a cool package\n' +
+                         'URL: http://www.example.com/\n' +
+                         'Version: 1.0\n$')
+
+    def test_metadata_uninstalled(self):
+        pkg = PkgConfigInfo(
+            self.context, name='package', desc_name='my-package',
+            desc='a cool package', url='http://www.example.com/', version='1.0'
+        )
+        self.assertEqual(pkg.output(False), PkgConfigPcFile(Path(
+            'pkgconfig/package-uninstalled.pc'
+        )))
+
+        out = StringIO()
+        pkg.write(out, self.env, False)
+        self.assertRegex(out.getvalue(),
+                         '\n\nName: my-package \\(uninstalled\\)\n' +
                          'Description: a cool package\n' +
                          'URL: http://www.example.com/\n' +
                          'Version: 1.0\n$')

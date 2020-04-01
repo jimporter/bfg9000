@@ -1,4 +1,5 @@
 from collections import Counter
+from functools import partial
 from itertools import chain
 
 from . import builtin
@@ -8,7 +9,7 @@ from .. import options as opts, path
 from ..build_inputs import build_input
 from ..file_types import *
 from ..iterutils import flatten, iterate, uniques, recursive_walk
-from ..objutils import objectify
+from ..objutils import objectify, identity
 from ..packages import CommonPackage
 from ..safe_str import literal, shell_literal
 from ..shell import posix as pshell
@@ -178,9 +179,9 @@ class PkgConfigInfo:
         self.link_options_private = pshell.listify(link_options_private,
                                                    type=opts.option_list)
 
-    @property
-    def output(self):
-        return PkgConfigPcFile(self.directory.append(self.name + '.pc'))
+    def output(self, installed=True):
+        basename = self.name + ('' if installed else '-uninstalled') + '.pc'
+        return PkgConfigPcFile(self.directory.append(basename))
 
     @_simple_property
     def includes(self, value):
@@ -230,18 +231,31 @@ class PkgConfigInfo:
             out.write_each(iterate(value), syntax, **kwargs)
             out.write_literal('\n')
 
-    def write(self, out, env):
+    def write(self, out, env, installed=True):
         out = Writer(out)
 
-        data = self._process_inputs(env)
-
-        for i in path.InstallRoot:
-            if i != path.InstallRoot.bindir:
-                self._write_variable(out, i.name, env.install_dirs[i])
+        if installed:
+            fn = partial(installify, cross=env)
+            for i in path.InstallRoot:
+                if i != path.InstallRoot.bindir:
+                    self._write_variable(out, i.name, env.install_dirs[i])
+        else:
+            fn = identity
+            self._write_variable(out, 'srcdir', env.srcdir)
+            # Set the builddir to be relative to the .pc file's dir so that
+            # users can move the build dir around and things still work.
+            self._write_variable(out, 'builddir', path.Path('.').relpath(
+                self.directory, prefix='${pcfiledir}'
+            ))
 
         out.write_literal('\n')
 
-        self._write_field(out, 'Name', data['desc_name'])
+        data = self._process_inputs(env, fn)
+        name = data['desc_name']
+        if not installed:
+            name += ' (uninstalled)'
+
+        self._write_field(out, 'Name', name)
         self._write_field(out, 'Description', data['desc'])
         self._write_field(out, 'URL', data['url'])
         self._write_field(out, 'Version', data['version'])
@@ -256,7 +270,7 @@ class PkgConfigInfo:
         self._write_field(out, 'Libs.private', data['ldflags_private'],
                           Syntax.shell)
 
-    def _process_inputs(self, env):
+    def _process_inputs(self, env, installify_fn):
         desc_name = self.desc_name or self.name
         includes = self.includes or []
         libs = self.libs or []
@@ -297,15 +311,15 @@ class PkgConfigInfo:
         linker = builder.linker('executable')
 
         compile_options = opts.option_list(
-            (opts.include_dir(installify(i, cross=env)) for i in includes),
+            (opts.include_dir(installify_fn(i)) for i in includes),
             self.options
         )
         link_options = opts.option_list(
-            (opts.lib(installify(i.all[0], cross=env)) for i in libs),
+            (opts.lib(installify_fn(i.all[0])) for i in libs),
             self.link_options
         )
         link_options_private = opts.option_list(
-            (opts.lib(installify(i.all[0], cross=env)) for i in libs_private),
+            (opts.lib(installify_fn(i.all[0])) for i in libs_private),
             fwd_ldflags, self.link_options_private
         )
 
@@ -356,10 +370,9 @@ class PkgConfigInfo:
 
 @builtin.function()
 def pkg_config(context, name=None, **kwargs):
-    if can_install(context.env):
-        context.build['pkg_config'].append(
-            PkgConfigInfo(context, name, **kwargs)
-        )
+    context.build['pkg_config'].append(
+        PkgConfigInfo(context, name, **kwargs)
+    )
 
 
 @builtin.post()
@@ -391,6 +404,9 @@ def finalize_pkg_config(context):
             raise ValueError("duplicate pkg-config package '{}'".format(name))
 
     for info in build['pkg_config']:
-        with make_immediate_file(context, info.output) as out:
-            info.write(out, context.env)
-            context['install'](info.output)
+        if can_install(context.env):
+            with make_immediate_file(context, info.output()) as out:
+                info.write(out, context.env)
+                context['install'](info.output())
+        with make_immediate_file(context, info.output(installed=False)) as out:
+            info.write(out, context.env, installed=False)
