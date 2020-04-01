@@ -26,7 +26,7 @@ class BasePath(safe_str.safe_string):
     )
 
     def __init__(self, path, root=Root.builddir, destdir=False):
-        if destdir and root in Root:
+        if destdir and isinstance(root, Root):
             raise ValueError('destdir only applies to install paths')
         drive, path = self.__normalize(path, expand_user=True)
 
