@@ -1,4 +1,3 @@
-import errno
 import functools
 import os
 from contextlib import contextmanager
@@ -56,34 +55,15 @@ islink = _wrap_ospath(os.path.islink)
 
 
 def samefile(path1, path2, variables=None):
-    if hasattr(os.path, 'samefile'):
-        return os.path.samefile(path1.string(variables),
-                                path2.string(variables))
-    else:
-        # This isn't entirely accurate, but it's close enough, and should only
-        # be necessary for Windows with Python 2.x.
-        return (os.path.realpath(path1.string(variables)) ==
-                os.path.realpath(path2.string(variables)))
-
-
-def makedirs(path, mode=0o777, exist_ok=False):
-    try:
-        os.makedirs(path, mode)
-    except OSError as e:
-        if not exist_ok or e.errno != errno.EEXIST or not os.path.isdir(path):
-            raise
-
-
-# Make an alias since the function below masks the module-level function with
-# one of its parameters.
-_makedirs = makedirs
+    return os.path.samefile(path1.string(variables),
+                            path2.string(variables))
 
 
 @contextmanager
 def pushd(dirname, makedirs=False, mode=0o777, exist_ok=False):
     old = os.getcwd()
     if makedirs:
-        _makedirs(dirname, mode, exist_ok)
+        os.makedirs(dirname, mode, exist_ok)
 
     os.chdir(dirname)
     yield

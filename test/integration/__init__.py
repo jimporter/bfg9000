@@ -9,7 +9,7 @@ from .. import *
 
 from bfg9000.backends import list_backends
 from bfg9000.iterutils import listify
-from bfg9000.path import InstallRoot, makedirs, Path, Root
+from bfg9000.path import InstallRoot, Path, Root
 
 this_dir = os.path.abspath(os.path.dirname(__file__))
 examples_dir = os.path.join(this_dir, '..', '..', 'examples')
@@ -54,7 +54,7 @@ def cleandir(path, recreate=True):
                     raise RuntimeError('unable to remove {}'.format(path))
                 time.sleep(t)
     if recreate:
-        makedirs(path)
+        os.makedirs(path)
 
 
 def skip_if_backend(backend, hide=False):

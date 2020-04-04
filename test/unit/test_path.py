@@ -1,4 +1,3 @@
-import errno
 import os
 from collections import namedtuple
 from unittest import mock
@@ -604,49 +603,10 @@ class TestWrappedOsPath(TestCase):
 
 
 class TestSamefile(TestCase):
-    def test_real(self):
+    def test_samefile(self):
         with mock.patch('os.path.samefile', lambda x, y: x == y, create=True):
             self.assertEqual(path.samefile(path.Path('/foo/bar'),
                                            path.Path('/foo/bar')), True)
-
-    def test_polyfill(self):
-        class OsPath:
-            def __init__(self):
-                for i in ('isabs', 'normpath', 'realpath', 'expanduser'):
-                    setattr(self, i, getattr(os.path, i))
-
-        with mock.patch('os.path', OsPath()):
-            self.assertEqual(path.samefile(path.Path('/foo/bar'),
-                                           path.Path('/foo/bar')), True)
-
-
-class TestMakedirs(TestCase):
-    def test_success(self):
-        with mock.patch('os.makedirs') as os_makedirs:
-            path.makedirs('foo')
-            path.makedirs('bar', 0o666)
-            self.assertEqual(os_makedirs.mock_calls, [
-                mock.call('foo', 0o777),
-                mock.call('bar', 0o666),
-            ])
-
-    def test_exists(self):
-        def mock_makedirs(path, mode):
-            raise OSError(errno.EEXIST, 'msg')
-
-        with mock.patch('os.makedirs', mock_makedirs), \
-             mock.patch('os.path.isdir', lambda x: x == 'dir'):  # noqa
-            self.assertRaises(OSError, path.makedirs, 'file')
-            self.assertRaises(OSError, path.makedirs, 'file', exist_ok=True)
-            self.assertRaises(OSError, path.makedirs, 'dir')
-            path.makedirs('dir', exist_ok=True)
-
-    def test_other_error(self):
-        def mock_makedirs(path, mode):
-            raise OSError(errno.EPERM, 'msg')
-
-        with mock.patch('os.makedirs', mock_makedirs):
-            self.assertRaises(OSError, path.makedirs, 'file')
 
 
 class TestPushd(TestCase):
@@ -665,7 +625,7 @@ class TestPushd(TestCase):
              mock.patch('os.chdir') as os_chdir:  # noqa
             with path.pushd('foo', makedirs=True):
                 self.assertEqual(os_makedirs.mock_calls, [
-                    mock.call('foo', 0o777)
+                    mock.call('foo', 0o777, False)
                 ])
                 self.assertEqual(os_chdir.mock_calls, [mock.call('foo')])
             self.assertEqual(os_chdir.mock_calls, [

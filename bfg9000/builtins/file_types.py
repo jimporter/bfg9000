@@ -1,3 +1,4 @@
+import os
 from contextlib import contextmanager
 
 from . import builtin
@@ -5,7 +6,7 @@ from .find import exclude_globs
 from ..file_types import *
 from ..iterutils import iterate, uniques
 from ..languages import known_langs
-from ..path import Path, Root, makedirs as _makedirs
+from ..path import Path, Root
 
 _kind_to_file_type = {
     'header': HeaderFile,
@@ -53,8 +54,8 @@ class FileList(list):
 @contextmanager
 def make_immediate_file(context, file, mode='w', makedirs=True):
     if makedirs:
-        _makedirs(file.path.parent().string(context.env.base_dirs),
-                  exist_ok=True)
+        os.makedirs(file.path.parent().string(context.env.base_dirs),
+                    exist_ok=True)
 
     with open(file.path.string(context.env.base_dirs), mode) as f:
         yield f

@@ -48,7 +48,7 @@ def write(env, build_inputs):
     with open(sln_file.string(env.base_dirs), 'w') as out:
         solution.write(out)
     for p in solution:
-        path.makedirs(p.path.parent().string(env.base_dirs), exist_ok=True)
+        os.makedirs(p.path.parent().string(env.base_dirs), exist_ok=True)
         with open(p.path.string(env.base_dirs), 'wb') as out:
             p.write(out)
     uuids.save()

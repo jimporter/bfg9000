@@ -49,9 +49,9 @@ class TestInstall(IntegrationTest):
 
     @skip_if_backend('msbuild')
     def test_install_existing_paths(self):
-        makedirs(self.includedir, exist_ok=True)
-        makedirs(self.bindir, exist_ok=True)
-        makedirs(self.libdir, exist_ok=True)
+        os.makedirs(self.includedir, exist_ok=True)
+        os.makedirs(self.bindir, exist_ok=True)
+        os.makedirs(self.libdir, exist_ok=True)
         self.build('install')
         self._check_installed()
 
