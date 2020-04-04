@@ -40,7 +40,7 @@ class TestRunExecutable(IntegrationTest):
 
     def test_java_classlist(self):
         self.assertRegex(self.build('java-classlist'),
-                    r'(?m)^\s*hello from java!$')
+                         r'(?m)^\s*hello from java!$')
 
     def test_python(self):
         self.assertRegex(self.build('python'), r'(?m)^\s*hello from python!$')

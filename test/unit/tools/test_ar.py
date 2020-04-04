@@ -44,7 +44,7 @@ class TestArLinker(CrossPlatformTestCase):
         def mock_execute(*args, **kwargs):
             raise OSError()
 
-        with mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
+        with mock.patch('bfg9000.shell.execute', mock_execute):
             self.assertEqual(self.ar.brand, 'unknown')
             self.assertEqual(self.ar.version, None)
 

@@ -95,7 +95,7 @@ class TestJvmBuilder(CrossPlatformTestCase):
     def test_scala(self):
         version = ('Scala code runner version 2.11.6 -- ' +
                    'Copyright 2002-2013, LAMP/EPFL')
-        with mock.patch('bfg9000.shell.which', mock_which):  # noqa
+        with mock.patch('bfg9000.shell.which', mock_which):
             jvm = JvmBuilder(self.env, known_langs['scala'], ['scalac'],
                              version)
 
@@ -208,7 +208,7 @@ class TestJvmCompiler(CrossPlatformTestCase):
 
         version = ('Scala code runner version 2.11.6 -- ' +
                    'Copyright 2002-2013, LAMP/EPFL')
-        with mock.patch('bfg9000.shell.which', mock_which):  # noqa
+        with mock.patch('bfg9000.shell.which', mock_which):
             scala_compiler = JvmBuilder(self.env, known_langs['scala'],
                                         ['scalac'], version).compiler
         self.assertEqual(scala_compiler.flags(opts.option_list(
@@ -235,7 +235,7 @@ class TestJvmCompiler(CrossPlatformTestCase):
     def test_flags_warning_scala(self):
         version = ('Scala code runner version 2.11.6 -- ' +
                    'Copyright 2002-2013, LAMP/EPFL')
-        with mock.patch('bfg9000.shell.which', mock_which):  # noqa
+        with mock.patch('bfg9000.shell.which', mock_which):
             self.compiler = JvmBuilder(self.env, known_langs['scala'],
                                        ['scalac'], version).compiler
 
@@ -261,7 +261,7 @@ class TestJvmCompiler(CrossPlatformTestCase):
     def test_flags_optimize(self):
         version = ('Scala code runner version 2.11.6 -- ' +
                    'Copyright 2002-2013, LAMP/EPFL')
-        with mock.patch('bfg9000.shell.which', mock_which):  # noqa
+        with mock.patch('bfg9000.shell.which', mock_which):
             self.compiler = JvmBuilder(self.env, known_langs['scala'],
                                        ['scalac'], version).compiler
 

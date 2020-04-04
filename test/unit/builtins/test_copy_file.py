@@ -198,7 +198,7 @@ class TestNinjaBackend(BuiltinTest):
 
         result = self.context['copy_file'](file=src)
         _copy_file.ninja_copy_file(result.creator, self.build, ninjafile,
-                             self.env)
+                                   self.env)
         ninjafile.build.assert_called_once_with(
             output=[result], rule='cp', inputs=src, implicit=[],
             variables={}
@@ -211,7 +211,7 @@ class TestNinjaBackend(BuiltinTest):
 
         result = self.context['copy_file'](file=src, extra_deps=dep)
         _copy_file.ninja_copy_file(result.creator, self.build, ninjafile,
-                             self.env)
+                                   self.env)
         ninjafile.build.assert_called_once_with(
             output=[result], rule='cp', inputs=src, implicit=[dep],
             variables={}

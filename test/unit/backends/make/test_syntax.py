@@ -145,12 +145,10 @@ class TestFunction(TestCase):
                          Function('call', 'fn', '1', '2'))
 
     def test_concat_str(self):
-        self.assertEqual(Function('fn', '1', '2') + 'foo', safe_str.jbos(
-            safe_str.literal('$(fn 1,2)'), 'foo'
-        ))
-        self.assertEqual('foo' + Function('fn', '1', '2'), safe_str.jbos(
-            'foo', safe_str.literal('$(fn 1,2)')
-        ))
+        self.assertEqual(Function('fn', '1', '2') + 'foo',
+                         safe_str.jbos(safe_str.literal('$(fn 1,2)'), 'foo'))
+        self.assertEqual('foo' + Function('fn', '1', '2'),
+                         safe_str.jbos('foo', safe_str.literal('$(fn 1,2)')))
 
         self.assertEqual(
             Function('fn', '1', '2', quoted=True) + 'foo',
@@ -158,8 +156,8 @@ class TestFunction(TestCase):
         )
         self.assertEqual(
             'foo' + Function('fn', '1', '2', quoted=True),
-            safe_str.jbos('foo', safe_str.literal("'$(fn 1,2)'")
-        ))
+            safe_str.jbos('foo', safe_str.literal("'$(fn 1,2)'"))
+        )
 
     def test_concat_path(self):
         self.assertEqual(
@@ -184,13 +182,13 @@ class TestFunction(TestCase):
         self.assertEqual(
             Function('foo', '1', '2') + Function('bar', '3', '4'),
             safe_str.jbos(safe_str.literal('$(foo 1,2)'),
-                          safe_str.literal('$(bar 3,4)')
-        ))
+                          safe_str.literal('$(bar 3,4)'))
+        )
         self.assertEqual(
             Function('foo', '1', '2', quoted=True) + Function('bar', '3', '4'),
             safe_str.jbos(safe_str.literal("'$(foo 1,2)'"),
-                          safe_str.literal('$(bar 3,4)')
-        ))
+                          safe_str.literal('$(bar 3,4)'))
+        )
 
     def test_invalid(self):
         with self.assertRaises(TypeError):

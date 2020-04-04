@@ -615,7 +615,7 @@ class TestNinjaBackend(BuiltinTest):
 
         result = self.context['object_file'](file=src)
         compile.ninja_compile(result.creator, self.build, ninjafile,
-                             self.env)
+                              self.env)
         ninjafile.build.assert_called_once_with(
             output=[result], rule='cxx', inputs=[src], implicit=[],
             variables={}
@@ -628,7 +628,7 @@ class TestNinjaBackend(BuiltinTest):
 
         result = self.context['object_file'](file=src, extra_deps=dep)
         compile.ninja_compile(result.creator, self.build, ninjafile,
-                             self.env)
+                              self.env)
         ninjafile.build.assert_called_once_with(
             output=[result], rule='cxx', inputs=[src], implicit=[dep],
             variables={}

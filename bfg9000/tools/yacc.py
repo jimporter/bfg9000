@@ -33,7 +33,7 @@ class YaccBuilder(Builder):
         lflags = shell.split(env.getvar(langinfo.var('flags'), ''))
 
         self.transpiler = YaccCompiler(self, env, name, name, command,
-                                      flags=(lflags_name, lflags))
+                                       flags=(lflags_name, lflags))
 
     @staticmethod
     def _parse_brand(version_output):
