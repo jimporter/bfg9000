@@ -183,8 +183,7 @@ def configure(parser, subparser, args, extra):
         subparser.error('build directory must not contain a {} file'
                         .format(build.bfgfile))
 
-    if not path.exists(args.builddir):
-        os.mkdir(args.builddir.string())
+    os.makedirs(args.builddir.string(), exist_ok=True)
 
     try:
         env, backend = environment_from_args(args)
