@@ -124,14 +124,14 @@ class SubprocessTestCase(TestCase):
         realpath = self.target_path(path)
         if not os.path.exists(realpath):
             raise unittest.TestCase.failureException(
-                "'{}' does not exist".format(realpath)
+                '{!r} does not exist'.format(os.path.normpath(realpath))
             )
 
     def assertNotExists(self, path):
         realpath = self.target_path(path)
         if os.path.exists(realpath):
             raise unittest.TestCase.failureException(
-                "'{}' exists".format(os.path.normpath(realpath))
+                '{!r} exists'.format(os.path.normpath(realpath))
             )
 
     def assertDirectory(self, path, contents):

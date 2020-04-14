@@ -375,11 +375,11 @@ class TestLogger(TestCase):
 
 class TestShowWarning(TestCase):
     def test_warn(self):
-        with mock.patch('logging.log') as mocklog:
-            class EqualWarning(UserWarning):
-                def __eq__(self, rhs):
-                    return type(self) == type(rhs)
+        class EqualWarning(UserWarning):
+            def __eq__(self, rhs):
+                return type(self) == type(rhs)
 
+        with mock.patch('logging.log') as mocklog:
             warnings.warn('message', EqualWarning)
 
             tb = traceback.extract_stack()[1:]
