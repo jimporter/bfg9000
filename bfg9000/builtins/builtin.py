@@ -75,8 +75,10 @@ class StackContext(BaseContext):
     def push_path(self, path):
         self.seen_paths.append(path)
         self.path_stack.append(self.PathEntry(path))
-        yield self.path_stack[-1]
-        self.path_stack.pop()
+        try:
+            yield self.path_stack[-1]
+        finally:
+            self.path_stack.pop()
 
     @property
     def path(self):

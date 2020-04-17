@@ -631,3 +631,14 @@ class TestPushd(TestCase):
             self.assertEqual(os_chdir.mock_calls, [
                 mock.call('foo'), mock.call('cwd')
             ])
+
+    def test_exception(self):
+        with mock.patch('os.getcwd', return_value='cwd'), \
+             mock.patch('os.chdir') as os_chdir:  # noqa
+            with self.assertRaises(ValueError):
+                with path.pushd('foo'):
+                    self.assertEqual(os_chdir.mock_calls, [mock.call('foo')])
+                    raise ValueError('uh oh!')
+            self.assertEqual(os_chdir.mock_calls, [
+                mock.call('foo'), mock.call('cwd')
+            ])
