@@ -2,7 +2,7 @@ import enum
 from collections import namedtuple
 
 from . import path, safe_str
-from .iterutils import isiterable, iterate
+from .iterutils import isiterable
 from .file_types import *
 from .platforms.framework import Framework
 
@@ -129,13 +129,13 @@ class Option(metaclass=OptionMeta):
                 except Exception:
                     raise ValueError('invalid {} {!r}'.format(t.__name__, v))
             else:
+                t = [t] if isinstance(t, type) else t
                 raise TypeError('expected {}; but got {}'.format(
-                    ', '.join(i.__name__ for i in iterate(t)), type(v).__name__
+                    ', '.join(i.__name__ for i in t), type(v).__name__
                 ))
 
         i = 0
         for k, t in zip(self.__slots__, self._types):
-            assert i < len(args)
             if isinstance(t, variadic):
                 v = [check_type(x, t.type) for x in args[i:]]
                 i = len(args)

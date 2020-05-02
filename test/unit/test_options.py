@@ -76,6 +76,16 @@ class TestOptionList(TestCase):
         opts = options.option_list(options.pthread(), options.pic())
         self.assertEqual(len(opts), 2)
 
+    def test_bool(self):
+        opts = options.option_list()
+        self.assertFalse(opts)
+
+        opts = options.option_list(options.pthread())
+        self.assertTrue(opts)
+
+        opts = options.option_list(options.pthread(), options.pic())
+        self.assertEqual(len(opts), 2)
+
     def test_index(self):
         opts = options.option_list(options.pthread(), options.pic())
         self.assertEqual(opts[0], options.pthread())
@@ -151,6 +161,39 @@ class TestOption(TestCase):
         self.assertEqual(my_option('foo').value, 'foo')
         self.assertEqual(my_option(1).value, 1)
         self.assertRaises(TypeError, my_option, 1.2)
+
+    def test_enum(self):
+        Value = options.OptionEnum('Value', ['foo', 'bar'])
+        my_option = options.option('my_option', [('value', Value)])
+
+        self.assertEqual(my_option(Value.foo).value, Value.foo)
+        self.assertEqual(my_option('foo').value, Value.foo)
+        self.assertRaises(TypeError, my_option, 1)
+        self.assertRaises(ValueError, my_option, 'unknown')
+
+    def test_variadic(self):
+        my_option = options.variadic_option('my_option')
+
+        o = my_option()
+        self.assertEqual(type(o), my_option)
+        self.assertEqual(o.value, [])
+
+        o = my_option('foo')
+        self.assertEqual(type(o), my_option)
+        self.assertEqual(o.value, ['foo'])
+
+        o = my_option('foo', 'bar')
+        self.assertEqual(type(o), my_option)
+        self.assertEqual(o.value, ['foo', 'bar'])
+
+    def test_variadic_type(self):
+        my_option = options.variadic_option('my_option', int)
+
+        self.assertEqual(my_option().value, [])
+        self.assertEqual(my_option(1).value, [1])
+        self.assertEqual(my_option(1, 2).value, [1, 2])
+
+        self.assertRaises(TypeError, my_option, 'foo')
 
     def test_matches(self):
         my_option = options.option('my_option', ['value'])
