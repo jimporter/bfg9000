@@ -4,9 +4,9 @@ from enum import Enum
 
 from .list import shell_list  # noqa
 from ..iterutils import listify
-from ..path import Path
+from ..path import BasePath, Path
 from ..platforms import platform_name
-from ..safe_str import safe_str
+from ..safe_str import jbos, safe_str
 
 windows_names = ('winnt', 'win9x', 'msdos')
 
@@ -53,14 +53,23 @@ def which(names, env=os.environ, base_dirs=None, resolve=False,
     ))
 
 
+def convert_args(args, base_dirs=None):
+    def convert(s):
+        s = safe_str(s)
+        if isinstance(s, BasePath):
+            return s.string(base_dirs)
+        elif isinstance(s, jbos):
+            return ''.join(convert(i) for i in s.bits)
+        else:
+            return s
+
+    return [convert(i) for i in args]
+
+
 def execute(args, shell=False, env=None, base_dirs=None, stdout=Mode.normal,
             stderr=Mode.normal, returncode=0):
-    def stringify(s):
-        s = safe_str(s)
-        return s.string(base_dirs) if isinstance(s, Path) else s
-
     if not shell:
-        args = [stringify(i) for i in args]
+        args = convert_args(args, base_dirs)
 
     def conv(mode):
         return ({Mode.normal : None,
