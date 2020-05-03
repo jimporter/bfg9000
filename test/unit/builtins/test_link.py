@@ -373,14 +373,12 @@ class TestStaticLibrary(LinkTest):
 
     def extra(self, name='libstatic', lang='c++', libs=[], **kwargs):
         linker = self.env.builder(lang).linker(self.mode)
-        extra = {'forward_opts': {
-            'compile_options': linker.forwarded_compile_options(
+        extra = {'forward_opts': opts.ForwardOptions(
+            compile_options=linker.forwarded_compile_options(
                 AttrDict(name=name)
             ),
-            'link_options': opts.option_list(),
-            'libs': libs,
-            'packages': [],
-        }}
+            libs=libs,
+        )}
         extra.update(kwargs)
         return extra
 
@@ -659,14 +657,11 @@ class TestLibrary(LinkTest):
 
     def test_make_simple_dual(self):
         linker = self.env.builder('c++').linker('static_library')
-        static_extra = {'forward_opts': {
-            'compile_options': linker.forwarded_compile_options(
+        static_extra = {'forward_opts': opts.ForwardOptions(
+            compile_options=linker.forwarded_compile_options(
                 AttrDict(name='liblibrary')
-            ),
-            'link_options': opts.option_list(),
-            'libs': [],
-            'packages': [],
-        }}
+            )
+        )}
 
         src = self.context['source_file']('main.cpp')
         with mock.patch('warnings.warn', lambda s: None):

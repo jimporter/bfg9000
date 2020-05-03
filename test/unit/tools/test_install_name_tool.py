@@ -15,13 +15,8 @@ class TestInstallNameTool(ToolTestCase):
         self.assertEqual(self.tool('path'), None)
 
     def test_id(self):
-        self.assertEqual(self.tool('path', 'id'), [
+        self.assertEqual(self.tool('path', id='id'), [
             self.tool, '-id', 'id', 'path'
-        ])
-
-    def test_delete(self):
-        self.assertEqual(self.tool('path', delete_rpath='old'), [
-            self.tool, '-delete_rpath', 'old', 'path'
         ])
 
     def test_changes(self):
@@ -30,7 +25,7 @@ class TestInstallNameTool(ToolTestCase):
         ])
 
     def test_all(self):
-        self.assertEqual(self.tool('path', 'id', 'old', ['changes']), [
-            self.tool, '-id', 'id', '-delete_rpath', 'old', '-change',
+        self.assertEqual(self.tool('path', id='id', changes=['changes']), [
+            self.tool, '-id', 'id', '-change',
             'changes', 'path'
         ])

@@ -7,6 +7,8 @@ in progress
 ### New features
 - Add support for including multiple `build.bfg` (and `options.bfg`) files from
   subdirectories via `submodule()`
+- Create `-uninstalled` variants of generated *pkg-config* `.pc` files and
+  allow build scripts to use them internally
 - Add `opts.static` to request static linking of libraries
 - MSVC's runtime can now be selected by using a combination of `opts.static`
   and `opts.debug`
@@ -26,6 +28,8 @@ in progress
 - `extra_deps` now works with `copy_file()`
 - Automatically-generated PCH source files (for MSVC compilers) are now placed
   in the same directory as the resulting PCH
+- The `install_name` for libraries on macOS is now always an absolute path,
+  instead of using `@rpath`-based paths prior to installation
 
 ---
 

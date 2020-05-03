@@ -839,10 +839,13 @@ Availability: `build.bfg`
 {: .subtitle}
 
 Create [pkg-config][pkg-config] information for this project and install it
-along with the rest of the installed files. All of these arguments are optional
-and will be automatically inferred from the rest of the build where possible.
-Unless otherwise noted, these arguments correspond directly to the fields in the
-pkg-config `.pc` file.
+along with the rest of the installed files. In addition, create an
+`-uninstalled` variant of the pkg-config file to allow it to be used prior to
+installing the project.
+
+All of the arguments below are optional and will be automatically inferred from
+the rest of the build where possible. Unless otherwise noted, these arguments
+correspond directly to the fields in the pkg-config `.pc` file.
 
 * *name*: The name of the package (to be used at the name of the `.pc` file)
 * *desc_name*: A human-readable name for the package (stored as the `Name`
@@ -883,6 +886,9 @@ default values for the following fields:
 * *version*: The [project's version](#project), or `0.0` if none is specified
 * *includes*: The list of [installed](#install) header files/directories
 * *libs*: The list of [installed](#install) library files
+
+If *auto_fill* is false, this function will return a [*package*](#package)
+object that can be used in other build steps as normal.
 
 ### system_executable(*name*) { #system_executable }
 Availability: `build.bfg`

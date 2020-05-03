@@ -471,27 +471,12 @@ class CcLinker(BuildCommand):
                     if not isinstance(local, BasePath) or local != installed:
                         changed = True
             elif isinstance(i, opts.rpath_dir):
-                result.append(i.path)
+                if i.when & opts.RpathWhen.installed:
+                    if not (i.when & opts.RpathWhen.uninstalled):
+                        changed = True
+                    result.append(i.path)
 
         return uniques(result) if changed else []
-
-    def _darwin_rpath(self, options, output):
-        if output and self.builder.object_format == 'mach-o':
-            # Currently, we set the rpath on macOS to make it easy to load
-            # locally-built shared libraries. Once we install the build, we'll
-            # convert all the rpath-based paths to absolute paths and remove
-            # the rpath from the binary.
-            for i in options:
-                if ( isinstance(i, opts.lib) and
-                     isinstance(i.library, Library) and not
-                     isinstance(i.library, StaticLibrary) ):
-                    return Path('.').cross(self.env).relpath(
-                        output.path.parent(), prefix='@loader_path'
-                    )
-
-        # We didn't find a shared library, or we're just not be building for
-        # macOS, so return nothing.
-        return None
 
     def always_libs(self, primary):
         # XXX: Don't just asssume that these are the right libraries to use.
@@ -578,7 +563,6 @@ class CcLinker(BuildCommand):
     def flags(self, options, output=None, mode='normal'):
         pkgconf_mode = mode == 'pkg-config'
         flags, rpaths, rpath_links, lib_dirs = [], [], [], []
-        rpaths.extend(iterate(self._darwin_rpath(options, output)))
 
         for i in options:
             if isinstance(i, opts.lib_dir):
@@ -590,7 +574,7 @@ class CcLinker(BuildCommand):
                     rpaths.extend(rp)
                     rpath_links.extend(rplink)
             elif isinstance(i, opts.rpath_dir):
-                if not pkgconf_mode:
+                if not pkgconf_mode and i.when & opts.RpathWhen.uninstalled:
                     rpaths.append(i.path)
             elif isinstance(i, opts.rpath_link_dir):
                 if not pkgconf_mode:
@@ -615,6 +599,8 @@ class CcLinker(BuildCommand):
                 flags.append('--main={}'.format(i.value))
             elif isinstance(i, safe_str.stringy_types):
                 flags.append(i)
+            elif isinstance(i, opts.install_name_change):
+                pass
             elif isinstance(i, opts.lib_literal):
                 pass
             else:
@@ -647,12 +633,17 @@ class CcLinker(BuildCommand):
             rpath = self._installed_rpaths(options, output)
             return self.env.tool('patchelf')(path, rpath)
         else:  # mach-o
-            rpath = self._darwin_rpath(options, output)
-            changes = [(darwin_install_name(i),
-                        file_install_path(i, cross=self.env))
-                       for i in output.runtime_deps]
+            change_opts = options.filter(opts.install_name_change)
+            changes = (
+                [(i.old, i.new) for i in change_opts] +
+                [(darwin_install_name(i, self.env),
+                  file_install_path(i, cross=self.env))
+                 for i in output.runtime_deps]
+            )
+
             return self.env.tool('install_name_tool')(
-                path, path if self._is_library else None, rpath, changes
+                path, id=path.cross(self.env) if self._is_library else None,
+                changes=changes
             )
 
 
@@ -731,14 +722,13 @@ class CcSharedLibraryLinker(CcLinker):
         return super()._always_flags + [shared, '-fPIC']
 
     def _soname(self, library):
-        if isinstance(library, VersionedSharedLibrary):
-            soname = library.soname
-        else:
-            soname = library
-
         if self.env.target_platform.genus == 'darwin':
-            return ['-install_name', darwin_install_name(soname)]
+            return ['-install_name', darwin_install_name(library, self.env)]
         else:
+            if isinstance(library, VersionedSharedLibrary):
+                soname = library.soname
+            else:
+                soname = library
             return ['-Wl,-soname,' + soname.path.basename()]
 
     def compile_options(self, step):

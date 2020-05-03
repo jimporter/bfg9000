@@ -2,10 +2,8 @@ from io import StringIO
 
 from .common import BuiltinTest, TestCase
 
-from bfg9000.builtins import project  # noqa
+from bfg9000.builtins import default, link, packages, project  # noqa
 from bfg9000.builtins.pkg_config import *
-from bfg9000.file_types import PkgConfigPcFile
-from bfg9000.path import Path
 from bfg9000.safe_str import safe_str, shell_literal
 
 
@@ -141,18 +139,18 @@ class TestSimpleProperty(TestCase):
         f = self.Foo()
         f.my_prop = 'value'
         self.assertEqual(f.my_prop, 'VALUE')
+        f.my_prop = None
+        self.assertEqual(f.my_prop, None)
 
 
 class TestPkgConfig(BuiltinTest):
     def test_minimal(self):
         pkg = PkgConfigInfo(self.context, name='package',
                             version='1.0')
-        self.assertEqual(pkg.output(), PkgConfigPcFile(Path(
-            'pkgconfig/package.pc'
-        )))
+        data = pkg.finalize()
 
         out = StringIO()
-        pkg.write(out, self.env)
+        PkgConfigWriter(self.context)._write(out, data, installed=True)
         self.assertRegex(out.getvalue(),
                          '\n\nName: package\n' +
                          'Description: package library\n' +
@@ -163,12 +161,10 @@ class TestPkgConfig(BuiltinTest):
             self.context, name='package', desc_name='my-package',
             desc='a cool package', url='http://www.example.com/', version='1.0'
         )
-        self.assertEqual(pkg.output(), PkgConfigPcFile(Path(
-            'pkgconfig/package.pc'
-        )))
+        data = pkg.finalize()
 
         out = StringIO()
-        pkg.write(out, self.env)
+        PkgConfigWriter(self.context)._write(out, data, installed=True)
         self.assertRegex(out.getvalue(),
                          '\n\nName: my-package\n' +
                          'Description: a cool package\n' +
@@ -180,12 +176,10 @@ class TestPkgConfig(BuiltinTest):
             self.context, name='package', desc_name='my-package',
             desc='a cool package', url='http://www.example.com/', version='1.0'
         )
-        self.assertEqual(pkg.output(False), PkgConfigPcFile(Path(
-            'pkgconfig/package-uninstalled.pc'
-        )))
+        data = pkg.finalize()
 
         out = StringIO()
-        pkg.write(out, self.env, False)
+        PkgConfigWriter(self.context)._write(out, data, installed=False)
         self.assertRegex(out.getvalue(),
                          '\n\nName: my-package \\(uninstalled\\)\n' +
                          'Description: a cool package\n' +
@@ -195,13 +189,41 @@ class TestPkgConfig(BuiltinTest):
     def test_requires(self):
         pkg = PkgConfigInfo(
             self.context, name='package', version='1.0',
-            requires=['req', ('vreq', '>=1.0')]
+            requires=['req', ('vreq', '>=1.0')],
+            requires_private=['preq'],
+            conflicts=['creq'],
         )
+        data = pkg.finalize()
 
         out = StringIO()
-        pkg.write(out, self.env)
-        self.assertRegex(out.getvalue(),
-                         '\nRequires: req, vreq >= 1.0\n')
+        PkgConfigWriter(self.context)._write(out, data, installed=True)
+        self.assertIn('\nRequires: req, vreq >= 1.0\n', out.getvalue())
+        self.assertIn('\nRequires.private: preq\n', out.getvalue())
+        self.assertIn('\nConflicts: creq\n', out.getvalue())
 
         with self.assertRaises(TypeError):
             pkg = PkgConfigInfo(self.context, requires=[1])
+
+    def test_includes_libs(self):
+        public = self.context['shared_library']('public', 'public.cpp')
+
+        static_library = self.context['static_library']
+        inner = static_library('inner', 'inner.cpp', link_options=['-inner'])
+        middle = static_library('middle', 'middle.cpp', libs=inner,
+                                link_options=['-middle'])
+        private = static_library('private', 'private.cpp', libs=middle)
+
+        pkg = PkgConfigInfo(
+            self.context, name='package', version='1.0',
+            includes=['include'], libs=[public], libs_private=[private]
+        )
+        data = pkg.finalize()
+
+        out = StringIO()
+        PkgConfigWriter(self.context)._write(out, data, installed=True)
+        self.assertIn("\nCflags: -I'${includedir}'\n", out.getvalue())
+        # We intentionally don't check the newline at the end, since MinGW
+        # generates `-lpublic.dll`.
+        self.assertIn("\nLibs: -L'${libdir}' -lpublic", out.getvalue())
+        self.assertIn("\nLibs.private: -middle -inner -L'${libdir}' " +
+                      "-lprivate -lmiddle -linner\n", out.getvalue())

@@ -5,6 +5,8 @@
 ### New features
 - Add support for including multiple `build.bfg` (and `options.bfg`) files from
   subdirectories via `submodule()`
+- Create `-uninstalled` variants of generated *pkg-config* `.pc` files and
+  allow build scripts to use them internally
 - Add `opts.static` to request static linking of libraries
 - MSVC's runtime can now be selected by using a combination of `opts.static`
   and `opts.debug`
@@ -17,6 +19,8 @@
 - Drop support for Python 2
 - `show_stack` for `info()` and `debug()` must now be specified as a keyword
   argument
+- The `install_name` for libraries on macOS is now always an absolute path,
+  instead of using `@rpath`-based paths prior to installation
 
 ### Bug fixes
 - `copy_file()` now works correctly when copying into a subdirectory on the

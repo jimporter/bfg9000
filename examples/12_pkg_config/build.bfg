@@ -20,7 +20,7 @@ install(lib, include)
 # file. There are numerous options available, but the ones below are the most
 # important:
 
-pkg_config(
+hello_pkg = pkg_config(
     # Every package needs a name, since that's how pkg-config looks them up!
     'hello',
     # Packages must also have versions so that users of the package can set
@@ -38,3 +38,11 @@ pkg_config(
     # specify will be used.
     auto_fill=False
 )
+
+# You can even use the pkg-config package you just created when building other
+# binaries. However, this is only allowed when auto_fill is false, since
+# bfg9000 won't know what an auto-filled pkg-config .pc file would look like
+# until after the build script is finished.
+
+sample = executable('sample', 'sample.cpp', packages=[hello_pkg])
+install(sample)

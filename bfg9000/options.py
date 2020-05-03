@@ -1,6 +1,11 @@
 import enum
 from collections import namedtuple
 
+try:
+    from enum import Flag
+except ImportError:
+    from enum import IntEnum as Flag
+
 from . import path, safe_str
 from .iterutils import isiterable
 from .file_types import *
@@ -72,6 +77,40 @@ class option_list:
                             .format(type(rhs)))
         self.extend(rhs)
         return self
+
+
+class ForwardOptions:
+    __slots__ = ['compile_options', 'link_options', 'libs', 'packages']
+
+    def __init__(self, *, compile_options=None, link_options=None, libs=None,
+                 packages=None):
+        self.compile_options = compile_options or option_list()
+        self.link_options = link_options or option_list()
+        self.libs = libs or []
+        self.packages = packages or []
+
+    def update(self, rhs):
+        for i in self.__slots__:
+            getattr(self, i).extend(getattr(rhs, i))
+
+    def __eq__(self, rhs):
+        return all(getattr(self, i) == getattr(rhs, i) for i in self.__slots__)
+
+    def __repr__(self):
+        return repr({i: getattr(self, i) for i in self.__slots__})
+
+    @classmethod
+    def recurse(cls, libs):
+        def do_recurse(result, libs):
+            for i in libs:
+                forward_opts = getattr(i, 'forward_opts', None)
+                if forward_opts:
+                    result.update(forward_opts)
+                    do_recurse(result, forward_opts.libs)
+
+        result = cls()
+        do_recurse(result, libs)
+        return result
 
 
 variadic = namedtuple('variadic', ['type'])
@@ -163,7 +202,12 @@ class Option(metaclass=OptionMeta):
 
 class OptionEnum(enum.Enum):
     def __repr__(self):
-        return repr(self.name)
+        return self.name
+
+
+class OptionFlag(Flag):
+    def __repr__(self):
+        return self.name
 
 
 def option(name, fields=[]):
@@ -195,12 +239,28 @@ class define(Option):
 
 # Link options
 entry_point = option('entry_point', [('value', str)])
+install_name_change = option('install_name_change',
+                             [('old', str), ('new', str)])
 lib = option('lib', [('library', (Library, Framework, str))])
 lib_dir = option('lib_dir', [('directory', Directory)])
 lib_literal = option('lib_literal', [('value', safe_str.stringy_types)])
 module_def = option('module_def', [('value', ModuleDefFile)])
-rpath_dir = option('rpath_dir', [('path', path.BasePath)])
 rpath_link_dir = option('rpath_link_dir', [('path', path.BasePath)])
+
+
+class RpathWhen(OptionFlag):
+    installed = 1
+    uninstalled = 2
+    always = installed | uninstalled
+
+
+class rpath_dir(Option):
+    _fields = [ ('path', path.BasePath),
+                ('when', RpathWhen) ]
+
+    def __init__(self, path, when=RpathWhen.always):
+        super()._init(path, when)
+
 
 # General options
 debug = option('debug')

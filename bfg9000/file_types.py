@@ -267,7 +267,7 @@ class VersionedSharedLibrary(SharedLibrary):
 class StaticLibrary(Library):
     def __init__(self, path, format, lang=None, forward_opts=None):
         super().__init__(path, format, lang)
-        self.forward_opts = forward_opts or {}
+        self.forward_opts = forward_opts
 
 
 class WholeArchive(StaticLibrary):

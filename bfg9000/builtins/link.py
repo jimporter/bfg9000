@@ -12,7 +12,7 @@ from ..backends.ninja import writer as ninja
 from ..build_inputs import build_input, Edge
 from ..file_types import *
 from ..iterutils import (first, flatten, iterate, listify, merge_dicts,
-                         merge_into_dict, slice_dict, uniques)
+                         slice_dict, uniques)
 from ..languages import known_langs
 from ..objutils import convert_each, convert_one
 from ..shell import posix as pshell
@@ -34,11 +34,11 @@ class Link(Edge):
         self.name = self.__name(name)
 
         self.user_libs = libs
-        forward_opts = self.__get_forward_opts(self.user_libs)
-        self.libs = self.user_libs + forward_opts.get('libs', [])
+        forward_opts = opts.ForwardOptions.recurse(self.user_libs)
+        self.libs = self.user_libs + forward_opts.libs
 
         self.user_packages = packages
-        self.packages = self.user_packages + forward_opts.get('packages', [])
+        self.packages = self.user_packages + forward_opts.packages
 
         self.user_files = files
         self.files = self.user_files + flatten(
@@ -73,7 +73,7 @@ class Link(Edge):
             compile_opts = self.linker.compile_options(self)
         else:
             compile_opts = opts.option_list()
-        compile_opts.extend(forward_opts.get('compile_options', []))
+        compile_opts.extend(forward_opts.compile_options)
         for i in self.files:
             if hasattr(i.creator, 'add_extra_options'):
                 i.creator.add_extra_options(compile_opts)
@@ -126,19 +126,6 @@ class Link(Edge):
     def __name(cls, name):
         head, tail = os.path.split(name)
         return os.path.join(head, cls._prefix + tail)
-
-    @staticmethod
-    def __get_forward_opts(libs):
-        result = {}
-
-        def accumulate(libs):
-            for i in libs:
-                if hasattr(i, 'forward_opts'):
-                    merge_into_dict(result, i.forward_opts)
-                    accumulate(i.forward_opts.get('libs', []))
-
-        accumulate(libs)
-        return result
 
     def __find_linker(self, env, format, langs):
         for i in langs:
@@ -193,7 +180,7 @@ class DynamicLink(Link):
 
         self._internal_options.collect(
             (i.link_options(self.linker) for i in self.packages),
-            extra_options, forward_opts.get('link_options', [])
+            extra_options, forward_opts.link_options
         )
 
         first(output).runtime_deps.extend(
@@ -253,16 +240,13 @@ class StaticLink(Link):
         self._internal_options = extra_options
 
         primary = first(output)
-        primary.forward_opts = {
-            'compile_options': opts.option_list(),
-            # Don't include libs in link_options, since later link steps will
-            # handle adding them to their LDFLAGS.
-            'link_options': self.user_options,
-            'libs': self.libs,
-            'packages': self.user_packages,
-        }
+        primary.forward_opts = opts.ForwardOptions(
+            link_options=self.user_options,
+            libs=self.user_libs,
+            packages=self.user_packages,
+        )
         if hasattr(self.linker, 'forwarded_compile_options'):
-            primary.forward_opts['compile_options'].extend(
+            primary.forward_opts.compile_options.extend(
                 self.linker.forwarded_compile_options(self)
             )
 
@@ -463,12 +447,14 @@ def make_link(rule, build_inputs, buildfile, env):
     if hasattr(linker, 'transform_input'):
         files = linker.transform_input(files)
 
-    manifest = listify(getattr(rule, 'manifest', None))
+    package_build_deps = flatten(i.deps for i in rule.packages)
     module_defs = listify(getattr(rule, 'module_defs', None))
+    manifest = listify(getattr(rule, 'manifest', None))
     make.multitarget_rule(
         buildfile,
         targets=rule.output,
-        deps=rule.files + rule.libs + module_defs + manifest + rule.extra_deps,
+        deps=(rule.files + rule.libs + package_build_deps + module_defs +
+              manifest + rule.extra_deps),
         order_only=make.directory_deps(rule.output),
         recipe=make.Call(recipename, files, *output_params),
         variables=variables
@@ -505,13 +491,15 @@ def ninja_link(rule, build_inputs, buildfile, env):
             input_var, output_vars, **cmd_kwargs
         ), description=rule.desc_verb + ' => ' + first(output_vars))
 
-    manifest = listify(getattr(rule, 'manifest', None))
+    package_build_deps = flatten(i.deps for i in rule.packages)
     module_defs = listify(getattr(rule, 'module_defs', None))
+    manifest = listify(getattr(rule, 'manifest', None))
     buildfile.build(
         output=rule.output,
         rule=linker.rule_name,
         inputs=rule.files,
-        implicit=rule.libs + module_defs + manifest + rule.extra_deps,
+        implicit=(rule.libs + package_build_deps + module_defs + manifest +
+                  rule.extra_deps),
         variables=variables
     )
 

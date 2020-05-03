@@ -8,7 +8,7 @@ from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..build_inputs import build_input, Edge
 from ..file_types import *
-from ..iterutils import first, iterate
+from ..iterutils import first, flatten, iterate
 from ..languages import known_langs
 from ..objutils import convert_each, convert_one
 from ..path import Path
@@ -313,6 +313,7 @@ def make_compile(rule, build_inputs, buildfile, env):
     deps.extend(getattr(rule, 'include_deps', []))
     if compiler.needs_libs:
         deps.extend(rule.libs)
+    deps.extend(flatten(i.deps for i in getattr(rule, 'packages', [])))
 
     if compiler.deps_flavor == 'gcc':
         depfile = rule.output[0].path.addext('.d')
@@ -374,6 +375,9 @@ def ninja_compile(rule, build_inputs, buildfile, env):
     implicit_deps.extend(getattr(rule, 'include_deps', []))
     if compiler.needs_libs:
         implicit_deps.extend(rule.libs)
+    implicit_deps.extend(flatten(
+        i.deps for i in getattr(rule, 'packages', [])
+    ))
 
     # Ninja doesn't support multiple outputs and deps-parsing at the same time,
     # so just use the first output and set up an alias if necessary. Aliases

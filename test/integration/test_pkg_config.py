@@ -34,6 +34,13 @@ class PkgConfigTest(IntegrationTest):
     def assertPkgConfig(self, args, result, **kwargs):
         self.assertEqual(pkg_config(args, **kwargs), result)
 
+    def _paths(self):
+        pkgconfdir = norm(pjoin(self.builddir, 'pkgconfig')).replace('\\', '/')
+        return { True: {'include': norm(pjoin(self.srcdir, self.src_include)),
+                        'lib': pjoin(pkgconfdir, '..')},
+                 False: {'include': norm(self.includedir),
+                         'lib': norm(self.libdir)} }
+
     def _check_requires(self, uninstalled):
         self.assertPkgConfig(['hello', '--print-requires'], '',
                              uninstalled=uninstalled)
@@ -49,16 +56,11 @@ class PkgConfigTest(IntegrationTest):
 @skip_if_backend('msbuild')
 @skip_if(is_mingw, 'no libogg on mingw (yet)')
 class TestPkgConfig(PkgConfigTest):
+    src_include = 'include'
+
     def __init__(self, *args, **kwargs):
         super().__init__(os.path.join(examples_dir, '12_pkg_config'),
                          configure=False, install=True, *args, **kwargs)
-
-    def _paths(self):
-        pkgconfdir = norm(pjoin(self.builddir, 'pkgconfig')).replace('\\', '/')
-        return { True: {'include': norm(pjoin(self.srcdir, 'include')),
-                        'lib': pjoin(pkgconfdir, '..')},
-                 False: {'include': norm(self.includedir),
-                         'lib': norm(self.libdir)} }
 
     def test_configure_default(self):
         self.configure()
@@ -77,6 +79,11 @@ class TestPkgConfig(PkgConfigTest):
             assertPkgConfig(['hello', '--libs-only-l', '--static'],
                             '-lhello -logg')
             assertPkgConfig(['hello', '--libs-only-other'], '')
+
+        self.build('pkg-config-hello')
+        self.assertExists(shared_library('hello'))
+        if not is_msvc:
+            self.assertNotExists(static_library('hello'))
 
     # Dual-use libraries collide on MSVC.
     @skip_if(is_msvc, hide=True)
@@ -105,6 +112,12 @@ class TestPkgConfig(PkgConfigTest):
                             '-lhello -linner -logg')
             assertPkgConfig(['hello', '--libs-only-other'], '')
 
+        self.build('pkg-config-hello')
+        self.assertExists(shared_library('hello'))
+        if env.target_platform.family == 'windows':
+            self.assertExists(import_library('hello'))
+        self.assertExists(static_library('hello'))
+
     def test_configure_static(self):
         self.configure(extra_args=['--disable-shared', '--enable-static'])
         self.assertExists(os.path.join('pkgconfig', 'hello.pc'))
@@ -123,7 +136,62 @@ class TestPkgConfig(PkgConfigTest):
                             '-lhello -linner -logg')
             assertPkgConfig(['hello', '--libs-only-other'], '')
 
-    def test_configure_using_system_pkg(self):
+        self.build('pkg-config-hello')
+        self.assertExists(static_library('hello'))
+        self.assertNotExists(shared_library('hello'))
+
+    def test_build_sample_prog(self):
+        self.configure()
+        self.build(executable('sample'))
+        self.assertOutput([executable('sample')], 'hello, library!\n')
+
+    def test_install(self):
+        self.configure()
+        self.build('install')
+
+        os.chdir(self.srcdir)
+        cleandir(self.builddir)
+
+        extra = []
+        if env.target_platform.has_import_library:
+            extra = [os.path.join(self.libdir, import_library('hello').path)]
+
+        self.assertDirectory(self.installdir, [
+            os.path.join(self.includedir, 'hello.hpp'),
+            os.path.join(self.libdir, shared_library('hello').path),
+            os.path.join(self.libdir, shared_library('inner').path),
+            os.path.join(self.libdir, 'pkgconfig', 'hello.pc'),
+            os.path.join(self.bindir, executable('sample').path),
+        ] + extra)
+
+        self.assertOutput(
+            [os.path.join(self.bindir, executable('sample').path)],
+            'hello, library!\n'
+        )
+
+        self.configure(srcdir='pkg_config_use', installdir=None, env={
+            'PKG_CONFIG_PATH': os.path.join(self.libdir, 'pkgconfig')
+        })
+        self.build()
+
+        env_vars = None
+        if env.target_platform.family == 'windows':
+            env_vars = {'PATH': (os.path.abspath(self.libdir) +
+                                 os.pathsep + os.environ['PATH'])}
+        self.assertOutput([executable('program')], 'hello, library!\n',
+                          env=env_vars)
+
+
+@skip_if_backend('msbuild')
+@skip_if(is_mingw, 'no libogg on mingw (yet)')
+class TestPkgConfigUsingSystemPkg(PkgConfigTest):
+    src_include = 'include'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__('pkg_config_system', configure=False, install=True,
+                         *args, **kwargs)
+
+    def test_configure(self):
         self.configure(env={'PKG_CONFIG': 'nonexist'})
         self.assertExists(os.path.join('pkgconfig', 'hello.pc'))
         self.assertExists(os.path.join('pkgconfig', 'hello-uninstalled.pc'))
@@ -141,47 +209,15 @@ class TestPkgConfig(PkgConfigTest):
                             '-lhello -logg')
             assertPkgConfig(['hello', '--libs-only-other'], '')
 
-    def test_install(self):
-        self.configure()
-        self.build('install')
-
-        extra = []
-        if env.target_platform.has_import_library:
-            extra = [os.path.join(self.libdir, import_library('hello').path)]
-
-        self.assertDirectory(self.installdir, [
-            os.path.join(self.includedir, 'hello.hpp'),
-            os.path.join(self.libdir, shared_library('hello').path),
-            os.path.join(self.libdir, shared_library('inner').path),
-            os.path.join(self.libdir, 'pkgconfig', 'hello.pc'),
-        ] + extra)
-
-        self.configure(srcdir='pkg_config_use', installdir=None, env={
-            'PKG_CONFIG_PATH': os.path.join(self.libdir, 'pkgconfig')
-        })
-        self.build()
-
-        env_vars = None
-        if env.target_platform.family == 'windows':
-            env_vars = {'PATH': (os.path.abspath(self.libdir) +
-                                 os.pathsep + os.environ['PATH'])}
-        self.assertOutput([executable('program')], 'hello, library!\n',
-                          env=env_vars)
-
 
 @skip_if_backend('msbuild')
 @skip_if(is_mingw, 'no libogg on mingw (yet)')
 class TestPkgConfigAuto(PkgConfigTest):
+    src_include = ''
+
     def __init__(self, *args, **kwargs):
         super().__init__('pkg_config_auto', configure=False, install=True,
                          *args, **kwargs)
-
-    def _paths(self):
-        pkgconfdir = norm(pjoin(self.builddir, 'pkgconfig')).replace('\\', '/')
-        return { True: {'include': norm(self.srcdir),
-                        'lib': pjoin(pkgconfdir, '..')},
-                 False: {'include': norm(self.includedir),
-                         'lib': norm(self.libdir)} }
 
     def test_configure_default(self):
         self.configure()

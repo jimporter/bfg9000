@@ -1,4 +1,3 @@
-import os
 from unittest import mock
 
 from .. import *
@@ -404,6 +403,9 @@ class TestCcLinker(CrossPlatformTestCase):
             return CcBuilder(self.env, known_langs[lang], ['c++'],
                              'version').linker('executable')
 
+    def _get_output_file(self):
+        return Executable(self.Path('program'), 'native')
+
     def setUp(self):
         self.linker = self._get_linker('c++')
 
@@ -439,7 +441,8 @@ class TestCcLinker(CrossPlatformTestCase):
         if self.shared:
             output = SharedLibrary(self.Path('out'), 'native')
             if self.env.target_platform.genus == 'darwin':
-                soname = ['-install_name', os.path.join('@rpath', 'out')]
+                soname = ['-install_name',
+                          self.Path('out').string(self.env.base_dirs)]
             else:
                 soname = ['-Wl,-soname,out']
         else:
@@ -447,13 +450,10 @@ class TestCcLinker(CrossPlatformTestCase):
             soname = []
 
         if self.env.target_platform.genus == 'linux':
-            rpath = rpath_with_output = ['-Wl,-rpath,' + libdir]
+            rpath = ['-Wl,-rpath,' + libdir]
             srcdir_rpath = ['-Wl,-rpath,' + srclibdir]
-        elif self.env.target_platform.genus == 'darwin':
-            rpath = []
-            rpath_with_output = srcdir_rpath = ['-Wl,-rpath,@loader_path']
         else:
-            rpath = rpath_with_output = srcdir_rpath = []
+            rpath = srcdir_rpath = []
 
         # Lib dir
         self.assertEqual(self.linker.flags(opts.option_list(
@@ -466,7 +466,7 @@ class TestCcLinker(CrossPlatformTestCase):
         )), ['-L' + libdir] + rpath)
         self.assertEqual(self.linker.flags(opts.option_list(
             opts.lib(SharedLibrary(lib, 'native'))
-        ), output), ['-L' + libdir] + rpath_with_output + soname)
+        ), output), ['-L' + libdir] + rpath + soname)
         self.assertEqual(self.linker.flags(opts.option_list(
             opts.lib(SharedLibrary(srclib, 'native'))
         ), output), ['-L' + srclibdir] + srcdir_rpath + soname)
@@ -521,7 +521,7 @@ class TestCcLinker(CrossPlatformTestCase):
         self.assertEqual(self.linker.flags(opts.option_list(
             opts.lib_dir(Directory(libdir)),
             opts.lib(SharedLibrary(lib, 'native'))
-        ), output), ['-L' + libdir] + rpath_with_output + soname)
+        ), output), ['-L' + libdir] + rpath + soname)
 
     def test_flags_rpath(self):
         p1 = self.Path('path1')
@@ -612,6 +612,11 @@ class TestCcLinker(CrossPlatformTestCase):
     def test_flags_string(self):
         self.assertEqual(self.linker.flags(opts.option_list('-v')), ['-v'])
 
+    def test_flags_install_name_change(self):
+        self.assertEqual(self.linker.flags(opts.option_list(
+            opts.install_name_change('foo.dylib', 'bar.dylib')
+        )), [])
+
     def test_flags_lib_literal(self):
         self.assertEqual(self.linker.flags(opts.option_list(
             opts.lib_literal('-lfoo')
@@ -701,43 +706,86 @@ class TestCcLinker(CrossPlatformTestCase):
         self.assertEqual(self.linker.lib_flags(opts.option_list('-Lfoo')), [])
 
     @only_if_platform('linux', hide=True)
-    def test_installed_rpaths(self):
-        output = Executable(self.Path('program'), 'native')
+    def test_post_installed_linux(self):
+        output = self._get_output_file()
+        shared = SharedLibrary(self.Path('libfoo.so'), 'native')
+        shared_abs = SharedLibrary(self.Path('/path/to/libfoo.so'), 'native')
+        static = StaticLibrary(self.Path('libfoo.a'), 'native')
 
-        # Local shared lib
-        rpaths = self.linker._installed_rpaths(opts.option_list(
-            opts.lib(SharedLibrary(self.Path('libfoo.so'), 'native'))
-        ), output)
-        self.assertEqual(rpaths, [self.Path('', InstallRoot.libdir)])
+        with mock.patch('bfg9000.shell.which', return_value=['command']):
+            # Local shared lib
+            cmd = self.linker.post_install(opts.option_list(opts.lib(shared)),
+                                           output, None)
+            self.assertEqual(cmd, [
+                self.env.tool('patchelf'), '--set-rpath',
+                self.Path('', InstallRoot.libdir), file_install_path(output)
+            ])
 
-        # Absolute shared lib
-        rpaths = self.linker._installed_rpaths(opts.option_list(
-            opts.lib(SharedLibrary(self.Path('/path/to/libfoo.so'), 'native'))
-        ), output)
-        self.assertEqual(rpaths, [])
+            # Absolute shared lib
+            cmd = self.linker.post_install(
+                opts.option_list(opts.lib(shared_abs)), output, None
+            )
+            self.assertEqual(cmd, None)
 
-        # Local static lib
-        rpaths = self.linker._installed_rpaths(opts.option_list(
-            opts.lib(StaticLibrary(self.Path('libfoo.a'), 'native'))
-        ), output)
-        self.assertEqual(rpaths, [])
+            # Local static lib
+            cmd = self.linker.post_install(opts.option_list(opts.lib(static)),
+                                           output, None)
+            self.assertEqual(cmd, None)
 
-        # Explicit rpath dir
-        rpaths = self.linker._installed_rpaths(opts.option_list(
-            opts.rpath_dir(self.Path('/path'))
-        ), output)
-        self.assertEqual(rpaths, [])
+            # Explicit rpath dir
+            cmd = self.linker.post_install(opts.option_list(
+                opts.rpath_dir(self.Path('/path'))
+            ), output, None)
+            self.assertEqual(cmd, None)
 
-        # Mixed
-        rpaths = self.linker._installed_rpaths(opts.option_list(
-            opts.lib(SharedLibrary(self.Path('libfoo.so'), 'native')),
-            opts.lib(SharedLibrary(self.Path('/path/to/libfoo.so'), 'native')),
-            opts.lib(StaticLibrary(self.Path('libfoo.a'), 'native')),
-            opts.rpath_dir(self.Path('/path')),
-            opts.rpath_dir(self.Path('/path/to'))
-        ), output)
-        self.assertEqual(rpaths, [self.Path('', InstallRoot.libdir),
-                                  self.Path('/path/to'), self.Path('/path')])
+            # Mixed
+            cmd = self.linker.post_install(opts.option_list(
+                opts.lib(shared), opts.lib(shared_abs), opts.lib(static),
+                opts.rpath_dir(self.Path('/path')),
+                opts.rpath_dir(self.Path('/path/to'))
+            ), output, None)
+            self.assertEqual(cmd, [
+                self.env.tool('patchelf'), '--set-rpath',
+                (self.Path('', InstallRoot.libdir) + ':' +
+                 self.Path('/path/to') + ':' + self.Path('/path')),
+                file_install_path(output)
+            ])
+
+    @only_if_platform('macos', hide=True)
+    def test_post_installed_macos(self):
+        output = self._get_output_file()
+        installed = file_install_path(output)
+        deplib = SharedLibrary(self.Path('libfoo.so'), 'native')
+
+        with mock.patch('bfg9000.shell.which', return_value=['command']):
+            install_name_tool = self.env.tool('install_name_tool')
+
+            # No runtime deps
+            cmd = self.linker.post_install(opts.option_list(), output, None)
+            self.assertEqual(cmd, [
+                install_name_tool, '-id', installed.cross(self.env), installed
+            ] if self.shared else None)
+
+            cmd = self.linker.post_install(opts.option_list(
+                opts.install_name_change('old.dylib', 'new.dylib')
+            ), output, None)
+            self.assertEqual(cmd, (
+                [install_name_tool] +
+                (['-id', installed.cross(self.env)] if self.shared else []) +
+                ['-change', 'old.dylib', 'new.dylib', installed]
+            ))
+
+            # Dependent on local shared lib
+            output.runtime_deps = [deplib]
+            cmd = self.linker.post_install(
+                opts.option_list(opts.lib(deplib)), output, None
+            )
+            self.assertEqual(cmd, (
+                [install_name_tool] +
+                (['-id', installed.cross(self.env)] if self.shared else []) +
+                ['-change', deplib.path.string(self.env.base_dirs),
+                 file_install_path(deplib, cross=self.env), installed]
+            ))
 
 
 class TestCcSharedLinker(TestCcLinker):
@@ -748,6 +796,9 @@ class TestCcSharedLinker(TestCcLinker):
              mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
             return CcBuilder(self.env, known_langs[lang], ['c++'],
                              'version').linker('shared_library')
+
+    def _get_output_file(self):
+        return SharedLibrary(self.Path('liboutput.so'), 'native')
 
     def test_call(self):
         if not self.env.target_platform.has_import_library:

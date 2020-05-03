@@ -3,6 +3,7 @@ try:
 except ImportError:
     from enum import EnumMeta as _EnumMeta, IntEnum as _Flag
 
+from .iterutils import listify as _listify
 from .options import option_list as _option_list
 from .platforms.framework import Framework  # noqa
 
@@ -27,9 +28,10 @@ class PackageKind(_Flag, metaclass=_PackageKindMeta):
 class Package:
     is_package = True
 
-    def __init__(self, name, format):
+    def __init__(self, name, format, deps=None):
         self.name = name
         self.format = format
+        self.deps = _listify(deps)
 
     def __hash__(self):
         return hash(self.name)

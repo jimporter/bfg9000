@@ -13,12 +13,10 @@ class InstallNameTool(SimpleCommand):
             default='install_name_tool'
         )
 
-    def _call(self, cmd, file, id=None, delete_rpath=None, changes=[]):
+    def _call(self, cmd, file, *, id=None, changes=[]):
         args = []
         if id:
             args += ['-id', id]
-        if delete_rpath:
-            args += ['-delete_rpath', delete_rpath]
         args += flatten(['-change'] + listify(i) for i in changes)
 
         if args:
