@@ -1,7 +1,7 @@
-from collections import Iterable
+from collections.abc import Iterable, Mapping
 
-__all__ = ['default_sentinel', 'first', 'flatten', 'isiterable', 'iterate',
-           'iterate_each', 'map_iterable', 'listify', 'merge_dicts',
+__all__ = ['default_sentinel', 'first', 'flatten', 'isiterable', 'ismapping',
+           'iterate', 'iterate_each', 'map_iterable', 'listify', 'merge_dicts',
            'merge_into_dict', 'recursive_walk', 'slice_dict', 'tween',
            'uniques', 'unlistify']
 
@@ -10,7 +10,12 @@ default_sentinel = object()
 
 
 def isiterable(thing):
-    return isinstance(thing, Iterable) and not isinstance(thing, str)
+    return (isinstance(thing, Iterable) and not isinstance(thing, str) and
+            not ismapping(thing))
+
+
+def ismapping(thing):
+    return isinstance(thing, Mapping)
 
 
 def iterate(thing):
@@ -119,10 +124,10 @@ def merge_into_dict(dst, *args):
     for d in args:
         for k, v in d.items():
             curr = dst.get(k)
-            if isinstance(v, dict):
+            if ismapping(v):
                 if curr is None:
                     dst[k] = dict(v)
-                elif isinstance(curr, dict):
+                elif ismapping(curr):
                     merge_into_dict(curr, v)
                 else:
                     raise TypeError('type mismatch for {}'.format(k))
@@ -134,7 +139,7 @@ def merge_into_dict(dst, *args):
                 else:
                     raise TypeError('type mismatch for {}'.format(k))
             elif v is not None:
-                if curr is not None and isiterable(curr):
+                if curr is not None and isiterable(curr) or ismapping(curr):
                     raise TypeError('type mismatch for {}'.format(k))
                 dst[k] = v
             elif k not in dst:

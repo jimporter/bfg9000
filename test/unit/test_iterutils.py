@@ -11,7 +11,7 @@ class TestIsIterable(TestCase):
         self.assertTrue(iterutils.isiterable([]))
 
     def test_dict(self):
-        self.assertTrue(iterutils.isiterable([]))
+        self.assertFalse(iterutils.isiterable({}))
 
     def test_generator(self):
         gen = (i for i in range(10))
@@ -22,6 +22,20 @@ class TestIsIterable(TestCase):
 
     def test_none(self):
         self.assertFalse(iterutils.isiterable(None))
+
+
+class TestIsMapping(TestCase):
+    def test_list(self):
+        self.assertFalse(iterutils.ismapping([]))
+
+    def test_dict(self):
+        self.assertTrue(iterutils.ismapping({}))
+
+    def test_string(self):
+        self.assertFalse(iterutils.ismapping('foo'))
+
+    def test_none(self):
+        self.assertFalse(iterutils.ismapping(None))
 
 
 class TestIterate(TestCase):
