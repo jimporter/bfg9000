@@ -838,10 +838,12 @@ preferred to use <code>-pthread</code> during compilation <em>and</em> linking. 
 <h3 id="pkg_config">pkg_config([<em>name</em>], [<em>desc_name</em>], [<em>desc</em>], [<em>url</em>], [<em>version</em>], [<em>requires</em>], [<em>requires_private</em>], [<em>conflicts</em>], [<em>includes</em>], [<em>libs</em>], [<em>libs_private</em>], [<em>options</em>], [<em>link_options</em>], [<em>link_options_private</em>], [<em>auto_fill</em>])<a class="headerlink" href="#pkg_config" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Create <a href="https://www.freedesktop.org/wiki/Software/pkg-config/">pkg-config</a> information for this project and install it
-along with the rest of the installed files. All of these arguments are optional
-and will be automatically inferred from the rest of the build where possible.
-Unless otherwise noted, these arguments correspond directly to the fields in the
-pkg-config <code>.pc</code> file.</p>
+along with the rest of the installed files. In addition, create an
+<code>-uninstalled</code> variant of the pkg-config file to allow it to be used prior to
+installing the project.</p>
+<p>All of the arguments below are optional and will be automatically inferred from
+the rest of the build where possible. Unless otherwise noted, these arguments
+correspond directly to the fields in the pkg-config <code>.pc</code> file.</p>
 <ul>
 <li><em>name</em>: The name of the package (to be used at the name of the <code>.pc</code> file)</li>
 <li><em>desc_name</em>: A human-readable name for the package (stored as the <code>Name</code>
@@ -883,6 +885,8 @@ default values for the following fields:</p>
 <li><em>includes</em>: The list of <a href="#install">installed</a> header files/directories</li>
 <li><em>libs</em>: The list of <a href="#install">installed</a> library files</li>
 </ul>
+<p>If <em>auto_fill</em> is false, this function will return a <a href="#package"><em>package</em></a>
+object that can be used in other build steps as normal.</p>
 <h3 id="system_executable">system_executable(<em>name</em>)<a class="headerlink" href="#system_executable" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Search for an executable named <em>name</em> somewhere in the system's PATH.</p>

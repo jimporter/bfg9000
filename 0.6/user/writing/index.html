@@ -532,6 +532,18 @@ pkg_config()
 )
 </code></pre>
 
+<p>You can even use the pkg-config package you just created when building other
+binaries. However, this is only allowed when <em>auto_fill</em> is <em>False</em>, since
+bfg9000 won't know what an auto-filled <code>pkg-config</code> <code>.pc</code> file would look like
+until after the build script is finished:</p>
+<pre><code class="python">my_pkg = pkg_config(
+    # ...
+    auto_fill=False,
+)
+
+executable('prog', 'prog.cpp', packages=[my_pkg])
+</code></pre>
+
 <p>Libraries are perhaps the most interesting part of the <em>pkg_config()</em> function.
 If a library listed here depends on any packages or other libraries, they will
 automatically be included in the <code>pkg-config</code> info.</p>
