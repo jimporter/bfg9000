@@ -24,9 +24,9 @@ class TestUuidMap(TestCase):
 
     def test_existing(self):
         data = ('{"version": 1, "map": {' +
-                  '"foo": "00000000000000000000000000000001", ' +
-                  '"bar": "00000000000000000000000000000002"' +
-                '}}')  # noqa
+                '"foo": "00000000000000000000000000000001", ' +
+                '"bar": "00000000000000000000000000000002"' +
+                '}}')
         with mock.patch('builtins.open', mock_open(read_data=data)):
             u = UuidMap('.bfg_uuid')
 

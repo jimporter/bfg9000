@@ -49,11 +49,11 @@ class MsvcBuilder(Builder):
                 origin = os.path.dirname(i)
         link_command = check_which(
             env.getvar(ldinfo.var('linker'), os.path.join(origin, 'link')),
-            env.variables, kind='dynamic linker'.format(self.lang)
+            env.variables, kind='{} dynamic linker'.format(self.lang)
         )
         lib_command = check_which(
             env.getvar(arinfo.var('linker'), os.path.join(origin, 'lib')),
-            env.variables, kind='static linker'.format(self.lang)
+            env.variables, kind='{} static linker'.format(self.lang)
         )
 
         cflags_name = langinfo.var('flags').lower()
