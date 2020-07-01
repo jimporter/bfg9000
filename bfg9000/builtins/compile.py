@@ -261,10 +261,10 @@ def _get_flags(backend, rule, build_inputs, buildfile):
 
     compiler = rule.compiler
     if hasattr(compiler, 'flags_var'):
+        gopts = build_inputs['compile_options'][compiler.lang]
         global_cflags, cflags = backend.flags_vars(
             compiler.flags_var,
-            ( compiler.global_flags +
-              compiler.flags(build_inputs['compile_options'][compiler.lang]) ),
+            compiler.global_flags + compiler.flags(gopts, mode='global'),
             buildfile
         )
         cmd_kwargs['flags'] = cflags

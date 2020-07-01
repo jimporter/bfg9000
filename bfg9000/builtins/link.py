@@ -393,11 +393,10 @@ def _get_flags(backend, rule, build_inputs, buildfile):
 
     linker = rule.linker
     if hasattr(linker, 'flags_var'):
+        gopts = build_inputs['link_options'][rule.base_mode][linker.family]
         global_ldflags, ldflags = backend.flags_vars(
             linker.flags_var,
-            (linker.global_flags +
-             linker.flags(build_inputs['link_options'][rule.base_mode]
-                          [linker.family])),
+            linker.global_flags + linker.flags(gopts, mode='global'),
             buildfile
         )
         cmd_kwargs['flags'] = ldflags

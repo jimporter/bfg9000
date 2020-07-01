@@ -581,7 +581,7 @@ class TestMakeBackend(BuiltinTest):
         compile.make_compile(result.creator, self.build, makefile,
                              self.env)
         makefile.rule.assert_called_once_with(
-            result, [src], [], AlwaysEqual(), {}, None
+            result, [src], [], AlwaysEqual(), AlwaysEqual(), None
         )
 
     def test_dir_sentinel(self):
@@ -592,7 +592,8 @@ class TestMakeBackend(BuiltinTest):
         compile.make_compile(result.creator, self.build, makefile,
                              self.env)
         makefile.rule.assert_called_once_with(
-            result, [src], [Path('dir/.dir')], AlwaysEqual(), {}, None
+            result, [src], [Path('dir/.dir')], AlwaysEqual(), AlwaysEqual(),
+            None
         )
 
     def test_extra_deps(self):
@@ -604,7 +605,7 @@ class TestMakeBackend(BuiltinTest):
         compile.make_compile(result.creator, self.build, makefile,
                              self.env)
         makefile.rule.assert_called_once_with(
-            result, [src, dep], [], AlwaysEqual(), {}, None
+            result, [src, dep], [], AlwaysEqual(), AlwaysEqual(), None
         )
 
 
@@ -618,7 +619,7 @@ class TestNinjaBackend(BuiltinTest):
                               self.env)
         ninjafile.build.assert_called_once_with(
             output=[result], rule='cxx', inputs=[src], implicit=[],
-            variables={}
+            variables=AlwaysEqual()
         )
 
     def test_extra_deps(self):
@@ -631,5 +632,5 @@ class TestNinjaBackend(BuiltinTest):
                               self.env)
         ninjafile.build.assert_called_once_with(
             output=[result], rule='cxx', inputs=[src], implicit=[dep],
-            variables={}
+            variables=AlwaysEqual()
         )

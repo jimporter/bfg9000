@@ -133,13 +133,13 @@ class TestMsvcCompiler(CrossPlatformTestCase):
                          file_types.ObjectFile(Path('file.obj'), fmt, 'c++'))
 
     def test_flags_empty(self):
-        self.assertEqual(self.compiler.flags(opts.option_list()), [])
+        self.assertEqual(self.compiler.flags(opts.option_list()), ['/MD'])
 
     def test_flags_include_dir(self):
         p = self.Path('/path/to/include')
         self.assertEqual(self.compiler.flags(opts.option_list(
             opts.include_dir(file_types.HeaderDirectory(p))
-        )), ['/I' + p])
+        )), ['/I' + p, '/MD'])
         self.assertEqual(self.compiler.flags(opts.option_list(
             opts.include_dir(file_types.HeaderDirectory(p))
         ), mode='pkg-config'), ['-I' + p])
@@ -147,14 +147,14 @@ class TestMsvcCompiler(CrossPlatformTestCase):
     def test_flags_define(self):
         self.assertEqual(self.compiler.flags(opts.option_list(
             opts.define('NAME')
-        )), ['/DNAME'])
+        )), ['/DNAME', '/MD'])
         self.assertEqual(self.compiler.flags(opts.option_list(
             opts.define('NAME')
         ), mode='pkg-config'), ['-DNAME'])
 
         self.assertEqual(self.compiler.flags(opts.option_list(
             opts.define('NAME', 'value')
-        )), ['/DNAME=value'])
+        )), ['/DNAME=value', '/MD'])
         self.assertEqual(self.compiler.flags(opts.option_list(
             opts.define('NAME', 'value')
         ), mode='pkg-config'), ['-DNAME=value'])
@@ -162,7 +162,7 @@ class TestMsvcCompiler(CrossPlatformTestCase):
     def test_flags_std(self):
         self.assertEqual(self.compiler.flags(opts.option_list(
             opts.std('c++14')
-        )), ['/std:c++14'])
+        )), ['/std:c++14', '/MD'])
 
     def test_flags_static(self):
         self.assertEqual(self.compiler.flags(opts.option_list(
@@ -180,20 +180,20 @@ class TestMsvcCompiler(CrossPlatformTestCase):
     def test_flags_warning(self):
         self.assertEqual(self.compiler.flags(opts.option_list(
             opts.warning('disable')
-        )), ['/w'])
+        )), ['/w', '/MD'])
         self.assertEqual(self.compiler.flags(opts.option_list(
             opts.warning('all')
-        )), ['/W3'])
+        )), ['/W3', '/MD'])
         self.assertEqual(self.compiler.flags(opts.option_list(
             opts.warning('extra')
-        )), ['/W4'])
+        )), ['/W4', '/MD'])
         self.assertEqual(self.compiler.flags(opts.option_list(
             opts.warning('error')
-        )), ['/WX'])
+        )), ['/WX', '/MD'])
 
         self.assertEqual(self.compiler.flags(opts.option_list(
             opts.warning('all', 'extra', 'error')
-        )), ['/W3', '/W4', '/WX'])
+        )), ['/W3', '/W4', '/WX', '/MD'])
 
         with self.assertRaises(ValueError):
             self.compiler.flags(opts.option_list(opts.warning('unknown')))
@@ -201,34 +201,35 @@ class TestMsvcCompiler(CrossPlatformTestCase):
     def test_flags_optimize(self):
         self.assertEqual(self.compiler.flags(opts.option_list(
             opts.optimize('disable')
-        )), ['/Od'])
+        )), ['/Od', '/MD'])
         self.assertEqual(self.compiler.flags(opts.option_list(
             opts.optimize('size')
-        )), ['/O1'])
+        )), ['/O1', '/MD'])
         self.assertEqual(self.compiler.flags(opts.option_list(
             opts.optimize('speed')
-        )), ['/O2'])
+        )), ['/O2', '/MD'])
         self.assertEqual(self.compiler.flags(opts.option_list(
             opts.optimize('linktime')
-        )), ['/GL'])
+        )), ['/GL', '/MD'])
 
         self.assertEqual(self.compiler.flags(opts.option_list(
             opts.optimize('speed', 'linktime')
-        )), ['/O2', '/GL'])
+        )), ['/O2', '/GL', '/MD'])
 
     def test_flags_include_pch(self):
         p = self.Path('/path/to/header.hpp')
         self.assertEqual(self.compiler.flags(opts.option_list(opts.pch(
             file_types.MsvcPrecompiledHeader(p, p, 'header', 'native', 'c++')
-        ))), ['/Yuheader'])
+        ))), ['/Yuheader', '/MD'])
 
     def test_flags_sanitize(self):
         self.assertEqual(self.compiler.flags(opts.option_list(
             opts.sanitize()
-        )), ['/RTC1'])
+        )), ['/RTC1', '/MD'])
 
     def test_flags_string(self):
-        self.assertEqual(self.compiler.flags(opts.option_list('-v')), ['-v'])
+        self.assertEqual(self.compiler.flags(opts.option_list('-v')),
+                         ['-v', '/MD'])
 
     def test_flags_invalid(self):
         with self.assertRaises(TypeError):
