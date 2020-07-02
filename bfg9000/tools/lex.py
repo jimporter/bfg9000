@@ -80,7 +80,7 @@ class LexCompiler(BuildCommand):
         lang = self._output_lang(options)
         return SourceFile(Path(name), lang)
 
-    def flags(self, options, output=None, mode='normal'):
+    def flags(self, options, global_options=None, output=None, mode='normal'):
         flags = []
         for i in options:
             if isinstance(i, opts.define):

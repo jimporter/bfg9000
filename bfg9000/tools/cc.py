@@ -222,7 +222,7 @@ class CcBaseCompiler(BuildCommand):
         else:
             return ['-I' + directory.path]
 
-    def flags(self, options, output=None, mode='normal'):
+    def flags(self, options, global_options=None, output=None, mode='normal'):
         flags = []
         for i in options:
             if isinstance(i, opts.include_dir):
@@ -560,7 +560,7 @@ class CcLinker(BuildCommand):
                 return []
             raise
 
-    def flags(self, options, output=None, mode='normal'):
+    def flags(self, options, global_options=None, output=None, mode='normal'):
         pkgconf_mode = mode == 'pkg-config'
         flags, rpaths, rpath_links, lib_dirs = [], [], [], []
 
@@ -613,7 +613,7 @@ class CcLinker(BuildCommand):
             flags.append('-Wl,-rpath-link,' + safe_str.join(rpath_links, ':'))
         return flags
 
-    def lib_flags(self, options, mode='normal'):
+    def lib_flags(self, options, global_options=None, mode='normal'):
         pkgconf_mode = mode == 'pkg-config'
         flags = []
         for i in options:
@@ -741,8 +741,8 @@ class CcSharedLibraryLinker(CcLinker):
             ))
         return options
 
-    def flags(self, options, output=None, mode='normal'):
-        flags = super().flags(options, output, mode)
+    def flags(self, options, global_options=None, output=None, mode='normal'):
+        flags = super().flags(options, global_options, output, mode)
         if output:
             flags.extend(self._soname(first(output)))
         return flags

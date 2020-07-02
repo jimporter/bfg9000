@@ -49,9 +49,9 @@ class BaseCompile(Edge):
     def options(self):
         return self._internal_options + self.user_options
 
-    @property
-    def flags(self):
-        return self.compiler.flags(self.options, self.raw_output)
+    def flags(self, global_options=None):
+        return self.compiler.flags(self.options, global_options,
+                                   self.raw_output)
 
     @staticmethod
     def _convert_args_lang(kwargs):
@@ -268,7 +268,7 @@ def _get_flags(backend, rule, build_inputs, buildfile):
             buildfile
         )
         cmd_kwargs['flags'] = cflags
-        flags = rule.flags
+        flags = rule.flags(gopts)
         if flags:
             variables[cflags] = [global_cflags] + flags
 

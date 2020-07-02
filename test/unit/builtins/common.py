@@ -14,12 +14,16 @@ class AlwaysEqual:
 class BuiltinTest(TestCase):
     def setUp(self):
         self.env = make_env()
-        self.build = BuildInputs(self.env, Path('build.bfg', Root.srcdir))
-        self.context = builtin.BuildContext(self.env, self.build, None)
-        self.context.path_stack.append(
-            builtin.BuildContext.PathEntry(self.build.bfgpath)
-        )
+        self.build, self.context = self._make_context(self.env)
         self.bfgfile = file_types.File(self.build.bfgpath)
+
+    def _make_context(self, env):
+        build = BuildInputs(env, Path('build.bfg', Root.srcdir))
+        context = builtin.BuildContext(env, build, None)
+        context.path_stack.append(
+            builtin.BuildContext.PathEntry(build.bfgpath)
+        )
+        return build, context
 
     def assertSameFile(self, a, b, exclude=set(), seen=None):
         if seen is None:

@@ -466,10 +466,10 @@ class TestCcLinker(CrossPlatformTestCase):
         )), ['-L' + libdir] + rpath)
         self.assertEqual(self.linker.flags(opts.option_list(
             opts.lib(SharedLibrary(lib, 'native'))
-        ), output), ['-L' + libdir] + rpath + soname)
+        ), output=output), ['-L' + libdir] + rpath + soname)
         self.assertEqual(self.linker.flags(opts.option_list(
             opts.lib(SharedLibrary(srclib, 'native'))
-        ), output), ['-L' + srclibdir] + srcdir_rpath + soname)
+        ), output=output), ['-L' + srclibdir] + srcdir_rpath + soname)
 
         if self.env.target_platform.genus == 'linux':
             libdir2 = self.Path('foo')
@@ -482,7 +482,7 @@ class TestCcLinker(CrossPlatformTestCase):
             self.assertEqual(
                 self.linker.flags(opts.option_list(
                     opts.lib(SharedLibrary(lib2, 'native'))
-                ), output),
+                ), output=output),
                 ['-L' + libdir2, '-Wl,-rpath,$ORIGIN/foo'] + soname
             )
 
@@ -521,7 +521,7 @@ class TestCcLinker(CrossPlatformTestCase):
         self.assertEqual(self.linker.flags(opts.option_list(
             opts.lib_dir(Directory(libdir)),
             opts.lib(SharedLibrary(lib, 'native'))
-        ), output), ['-L' + libdir] + rpath + soname)
+        ), output=output), ['-L' + libdir] + rpath + soname)
 
     def test_flags_rpath(self):
         p1 = self.Path('path1')

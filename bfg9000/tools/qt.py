@@ -74,7 +74,7 @@ class MocCompiler(BuildCommand):
     def output_file(self, name, step):
         return SourceFile(Path(name), 'c++')
 
-    def flags(self, options, output=None, mode='normal'):
+    def flags(self, options, global_options=None, output=None, mode='normal'):
         flags = []
         for i in options:
             if isinstance(i, opts.include_dir):
@@ -153,7 +153,7 @@ class RccCompiler(BuildCommand):
     def output_file(self, name, step):
         return SourceFile(Path(name), 'c++')
 
-    def flags(self, options, output=None, mode='normal'):
+    def flags(self, options, global_options=None, output=None, mode='normal'):
         flags = []
         for i in options:
             if isinstance(i, safe_str.stringy_types):
@@ -216,7 +216,7 @@ class UicCompiler(BuildCommand):
     def output_file(self, name, step):
         return HeaderFile(Path(name), 'c++')
 
-    def flags(self, options, output=None, mode='normal'):
+    def flags(self, options, global_options=None, output=None, mode='normal'):
         flags = []
         for i in options:
             if isinstance(i, safe_str.stringy_types):

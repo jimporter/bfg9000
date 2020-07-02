@@ -2,12 +2,17 @@ from collections import namedtuple
 from unittest import mock
 
 from .common import AlwaysEqual, AttrDict, BuiltinTest
+from .. import make_env
+
 from bfg9000 import file_types, options as opts
+from bfg9000.backends.make import syntax as make
+from bfg9000.backends.ninja import syntax as ninja
 from bfg9000.builtins import compile, link, packages, project  # noqa
 from bfg9000.environment import LibraryMode
 from bfg9000.iterutils import listify, unlistify
 from bfg9000.packages import CommonPackage
 from bfg9000.path import Path, Root
+from bfg9000.tools.msvc import MsvcBuilder
 
 MockCompile = namedtuple('MockCompile', ['file'])
 
@@ -574,63 +579,117 @@ class TestGeneratedSources(TestObjectFiles):
 
 class TestMakeBackend(BuiltinTest):
     def test_simple(self):
-        makefile = mock.Mock()
+        makefile = make.Makefile(None)
         src = self.context['source_file']('main.cpp')
-
         result = self.context['object_file'](file=src)
-        compile.make_compile(result.creator, self.build, makefile,
-                             self.env)
-        makefile.rule.assert_called_once_with(
-            result, [src], [], AlwaysEqual(), AlwaysEqual(), None
-        )
+
+        with mock.patch.object(make.Makefile, 'rule') as mrule, \
+             mock.patch('logging.log'):  # noqa
+            compile.make_compile(result.creator, self.build, makefile,
+                                 self.env)
+            mrule.assert_called_once_with(
+                result, [src], [], AlwaysEqual(), AlwaysEqual(), None
+            )
 
     def test_dir_sentinel(self):
-        makefile = mock.Mock()
+        makefile = make.Makefile(None)
         src = self.context['source_file']('dir/main.cpp')
-
         result = self.context['object_file'](file=src)
-        compile.make_compile(result.creator, self.build, makefile,
-                             self.env)
-        makefile.rule.assert_called_once_with(
-            result, [src], [Path('dir/.dir')], AlwaysEqual(), AlwaysEqual(),
-            None
-        )
+
+        with mock.patch.object(make.Makefile, 'rule') as mrule, \
+             mock.patch('logging.log'):  # noqa
+            compile.make_compile(result.creator, self.build, makefile,
+                                 self.env)
+            mrule.assert_called_once_with(
+                result, [src], [Path('dir/.dir')], AlwaysEqual(),
+                AlwaysEqual(), None,
+            )
 
     def test_extra_deps(self):
-        makefile = mock.Mock()
+        makefile = make.Makefile(None)
         dep = self.context['generic_file']('dep.txt')
         src = self.context['source_file']('main.cpp')
-
         result = self.context['object_file'](file=src, extra_deps=dep)
-        compile.make_compile(result.creator, self.build, makefile,
-                             self.env)
-        makefile.rule.assert_called_once_with(
-            result, [src, dep], [], AlwaysEqual(), AlwaysEqual(), None
-        )
+
+        with mock.patch.object(make.Makefile, 'rule') as mrule, \
+             mock.patch('logging.log'):  # noqa
+            compile.make_compile(result.creator, self.build, makefile,
+                                 self.env)
+            makefile.rule.assert_called_once_with(
+                result, [src, dep], [], AlwaysEqual(), AlwaysEqual(), None,
+            )
+
+    def test_local_options(self):
+        env = make_env('winnt', clear_variables=True,
+                       variables={'CXX': 'nonexist'})
+        build, context = self._make_context(env)
+        with mock.patch('bfg9000.tools.c_family._builders', (MsvcBuilder,)), \
+             mock.patch('logging.log'):  # noqa
+            context['global_options'](opts.debug(), lang='c++')
+            src = context['source_file']('main.cpp')
+            result = context['object_file'](file=src, options=[opts.static()])
+
+        makefile = make.Makefile(None)
+        with mock.patch.object(make.Makefile, 'rule') as mrule, \
+             mock.patch.object(make.Makefile, 'variable',
+                               wraps=makefile.variable) as mvar, \
+             mock.patch('logging.log'):  # noqa
+            compile.make_compile(result.creator, build, makefile, env)
+            mrule.assert_called_once_with(result, [src], [], AlwaysEqual(), {
+                make.var('CXXFLAGS'): [make.var('GLOBAL_CXXFLAGS'), '/MTd']
+            }, None)
+            mvar.assert_any_call('GLOBAL_CXXFLAGS', ['/Zi'],
+                                 make.Section.flags, True)
 
 
 class TestNinjaBackend(BuiltinTest):
     def test_simple(self):
-        ninjafile = mock.Mock()
+        ninjafile = ninja.NinjaFile(None)
         src = self.context['source_file']('main.cpp')
-
         result = self.context['object_file'](file=src)
-        compile.ninja_compile(result.creator, self.build, ninjafile,
-                              self.env)
-        ninjafile.build.assert_called_once_with(
-            output=[result], rule='cxx', inputs=[src], implicit=[],
-            variables=AlwaysEqual()
-        )
+
+        with mock.patch.object(ninja.NinjaFile, 'build') as mbuild:
+            compile.ninja_compile(result.creator, self.build, ninjafile,
+                                  self.env)
+            mbuild.assert_called_once_with(
+                output=[result], rule='cxx', inputs=[src], implicit=[],
+                variables=AlwaysEqual(),
+            )
 
     def test_extra_deps(self):
-        ninjafile = mock.Mock()
+        ninjafile = ninja.NinjaFile(None)
         dep = self.context['generic_file']('dep.txt')
         src = self.context['source_file']('main.cpp')
-
         result = self.context['object_file'](file=src, extra_deps=dep)
-        compile.ninja_compile(result.creator, self.build, ninjafile,
-                              self.env)
-        ninjafile.build.assert_called_once_with(
-            output=[result], rule='cxx', inputs=[src], implicit=[dep],
-            variables=AlwaysEqual()
-        )
+
+        with mock.patch.object(ninja.NinjaFile, 'build') as mbuild:
+            compile.ninja_compile(result.creator, self.build, ninjafile,
+                                  self.env)
+            mbuild.assert_called_once_with(
+                output=[result], rule='cxx', inputs=[src], implicit=[dep],
+                variables=AlwaysEqual(),
+            )
+
+    def test_local_options(self):
+        env = make_env('winnt', clear_variables=True,
+                       variables={'CXX': 'nonexist'})
+        build, context = self._make_context(env)
+        with mock.patch('bfg9000.tools.c_family._builders', (MsvcBuilder,)), \
+             mock.patch('logging.log'):  # noqa
+            context['global_options'](opts.debug(), lang='c++')
+            src = context['source_file']('main.cpp')
+            result = context['object_file'](file=src, options=[opts.static()])
+
+        ninjafile = ninja.NinjaFile(None)
+        with mock.patch.object(ninja.NinjaFile, 'build') as mbuild, \
+             mock.patch.object(ninja.NinjaFile, 'variable',
+                               wraps=ninjafile.variable) as mvar:  # noqa
+            compile.ninja_compile(result.creator, build, ninjafile, env)
+            mbuild.assert_called_once_with(
+                output=[result], rule='cxx', inputs=[src], implicit=[],
+                variables={ninja.var('cxxflags'): [
+                    ninja.var('global_cxxflags'), '/MTd'
+                ]},
+            )
+            mvar.assert_any_call('global_cxxflags', ['/Zi'],
+                                 ninja.Section.flags, True)

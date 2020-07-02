@@ -66,7 +66,7 @@ class ArLinker(BuildCommand):
             ))
         return options
 
-    def flags(self, options, output=None, mode='normal'):
+    def flags(self, options, global_options=None, output=None, mode='normal'):
         flags = []
         for i in options:
             if isinstance(i, safe_str.stringy_types):

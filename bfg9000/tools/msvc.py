@@ -156,7 +156,7 @@ class MsvcBaseCompiler(BuildCommand):
     def _always_flags(self):
         return ['/nologo', '/EHsc']
 
-    def flags(self, options, output=None, mode='normal'):
+    def flags(self, options, global_options=None, output=None, mode='normal'):
         syntax = 'cc' if mode == 'pkg-config' else 'msvc'
         debug = static = False
         flags = []
@@ -191,6 +191,12 @@ class MsvcBaseCompiler(BuildCommand):
                 flags.append(i)
             else:
                 raise TypeError('unknown option type {!r}'.format(type(i)))
+
+        for i in global_options or []:
+            if isinstance(i, opts.debug):
+                debug = True
+            elif isinstance(i, opts.static):
+                static = True
 
         if mode == 'normal':
             flags.append('/M{link}{debug}'.format(link='T' if static else 'D',
@@ -381,7 +387,7 @@ class MsvcLinker(BuildCommand):
             return [library.path.parent()]
         return []
 
-    def flags(self, options, output=None, mode='normal'):
+    def flags(self, options, global_options=None, output=None, mode='normal'):
         syntax = 'cc' if mode == 'pkg-config' else 'msvc'
         flags, lib_dirs = [], []
         for i in options:
@@ -409,7 +415,7 @@ class MsvcLinker(BuildCommand):
         flags.extend(prefix + i for i in uniques(lib_dirs))
         return flags
 
-    def lib_flags(self, options, mode='normal'):
+    def lib_flags(self, options, global_options=None, mode='normal'):
         syntax = 'cc' if mode == 'pkg-config' else 'msvc'
         flags = []
         for i in options:
@@ -509,7 +515,7 @@ class MsvcStaticLinker(BuildCommand):
             opts.define(library_macro(step.name, 'static_library'))
         )
 
-    def flags(self, options, output=None, mode='normal'):
+    def flags(self, options, global_options=None, output=None, mode='normal'):
         flags = []
         for i in options:
             if isinstance(i, safe_str.stringy_types):

@@ -1,6 +1,7 @@
 from unittest import mock
 
 from .common import AlwaysEqual, AttrDict, BuiltinTest
+from bfg9000.backends.msbuild.solution import Solution
 from bfg9000.builtins import compile, default, link, packages, project  # noqa
 from bfg9000 import file_types, options as opts
 from bfg9000.environment import LibraryMode
@@ -833,3 +834,98 @@ class TestNinjaBackend(BuiltinTest):
             output=[result], rule='cc_link', inputs=[obj], implicit=[dep],
             variables={}
         )
+
+
+class TestMsbuildBackend(BuiltinTest):
+    def setUp(self):
+        from .. import make_env
+        self.env = make_env('winnt', clear_variables=True,
+                            variables={'CXX': 'nonexist'})
+        self.build, self.context = self._make_context(self.env)
+        from bfg9000.tools.msvc import MsvcBuilder
+        self.patch_builder = mock.patch('bfg9000.tools.c_family._builders',
+                                        (MsvcBuilder,))
+        self.patch_builder.start()
+
+    def tearDown(self):
+        self.patch_builder.stop()
+
+    def assertSubdict(self, actual, expected):
+        subdict = {k: v for k, v in actual.items() if k in expected}
+        self.assertDictEqual(subdict, expected)
+
+    def test_simple(self):
+        solution = Solution(mock.MagicMock())
+        with mock.patch('logging.log'):
+            src = self.context['source_file']('main.cpp')
+            result = self.context['executable']('exe', src)
+
+        link.msbuild_link(result.creator, self.build, solution, self.env)
+        self.assertSubdict(solution[result].compile_options, {
+            'defines': [],
+            'includes': [],
+            'extra': [],
+        })
+        self.assertEqual(solution[result].files[0]['name'], src)
+        self.assertSubdict(solution[result].files[0]['options'], {
+            'defines': [],
+            'includes': [],
+            'extra': [],
+        })
+        self.assertSubdict(solution[result].link_options, {
+            'debug': None,
+            'libs': [],
+        })
+
+    def test_compile_options(self):
+        solution = Solution(mock.MagicMock())
+        self.context['global_options'](opts.define('FOO'), lang='c++')
+        with mock.patch('logging.log'):
+            src = self.context['source_file']('main.cpp')
+            result = self.context['executable']('exe', src, compile_options=[
+                opts.define('BAR', 'bar'), '/DBAZ'
+            ])
+
+        link.msbuild_link(result.creator, self.build, solution, self.env)
+        self.assertSubdict(solution[result].compile_options, {
+            'defines': ['FOO'],
+            'includes': [],
+            'extra': [],
+        })
+        self.assertSubdict(solution[result].files[0]['options'], {
+            'defines': ['BAR=bar', 'BAZ'],
+            'includes': [],
+            'extra': [],
+        })
+
+    def test_link_options(self):
+        solution = Solution(mock.MagicMock())
+        self.context['global_link_options'](opts.debug())
+
+        with mock.patch('logging.log'):
+            src = self.context['source_file']('main.cpp')
+            result = self.context['executable'](
+                'exe', src, link_options=['/FOO'], libs='libfoo'
+            )
+
+        link.msbuild_link(result.creator, self.build, solution, self.env)
+        self.assertSubdict(solution[result].link_options, {
+            'debug': True,
+        })
+
+    def test_local_options(self):
+        solution = Solution(mock.MagicMock())
+        self.context['global_options'](opts.debug(), lang='c++')
+        with mock.patch('logging.log'):
+            src = self.context['source_file']('main.cpp')
+            result = self.context['executable']('exe', src)
+
+        link.msbuild_link(result.creator, self.build, solution, self.env)
+        self.assertSubdict(solution[result].compile_options, {
+            'debug': 'pdb',
+            'runtime': None,
+        })
+        self.assertSubdict(solution[result].files[0]['options'], {
+            'debug': None,
+            'runtime': 'dynamic-debug',
+        })

@@ -11,8 +11,7 @@ from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..build_inputs import build_input, Edge
 from ..file_types import *
-from ..iterutils import (first, flatten, iterate, listify, merge_dicts,
-                         slice_dict, uniques)
+from ..iterutils import first, flatten, iterate, listify, slice_dict, uniques
 from ..languages import known_langs
 from ..objutils import convert_each, convert_one
 from ..shell import posix as pshell
@@ -158,13 +157,11 @@ class DynamicLink(Link):
     def options(self):
         return self._internal_options + self.user_options
 
-    @property
-    def flags(self):
-        return self.linker.flags(self.options, self.raw_output)
+    def flags(self, global_options=None):
+        return self.linker.flags(self.options, global_options, self.raw_output)
 
-    @property
-    def lib_flags(self):
-        return self.linker.lib_flags(self.options)
+    def lib_flags(self, global_options=None):
+        return self.linker.lib_flags(self.options, global_options)
 
     def _fill_options(self, env, extra_options, forward_opts, output):
         linkers = (env.builder(i).linker(self.mode) for i in self.langs)
@@ -229,12 +226,11 @@ class StaticLink(Link):
     def options(self):
         return self._internal_options + self.user_static_options
 
-    @property
-    def flags(self):
+    def flags(self, global_options=None):
         # Only pass the static-link options to the static linker. The other
         # options are forwarded on to the dynamic linker when this library is
         # used.
-        return self.linker.flags(self.options, self.raw_output)
+        return self.linker.flags(self.options, global_options, self.raw_output)
 
     def _fill_options(self, env, extra_options, forward_opts, output):
         self._internal_options = extra_options
@@ -392,24 +388,28 @@ def _get_flags(backend, rule, build_inputs, buildfile):
     cmd_kwargs = {}
 
     linker = rule.linker
-    if hasattr(linker, 'flags_var'):
+    if hasattr(linker, 'flags_var') or hasattr(linker, 'libs_var'):
         gopts = build_inputs['link_options'][rule.base_mode][linker.family]
+
+    if hasattr(linker, 'flags_var'):
         global_ldflags, ldflags = backend.flags_vars(
             linker.flags_var,
             linker.global_flags + linker.flags(gopts, mode='global'),
             buildfile
         )
         cmd_kwargs['flags'] = ldflags
-        flags = rule.flags
+        flags = rule.flags(gopts)
         if flags:
             variables[ldflags] = [global_ldflags] + flags
 
-    if hasattr(rule.linker, 'libs_var'):
+    if hasattr(linker, 'libs_var'):
         global_ldlibs, ldlibs = backend.flags_vars(
-            rule.linker.libs_var, rule.linker.global_libs, buildfile
+            linker.libs_var,
+            linker.global_libs + linker.lib_flags(gopts, mode='global'),
+            buildfile
         )
         cmd_kwargs['libs'] = ldlibs
-        lib_flags = rule.lib_flags
+        lib_flags = rule.lib_flags(gopts)
         if lib_flags:
             variables[ldlibs] = [global_ldlibs] + lib_flags
 
@@ -507,24 +507,39 @@ try:
     from .compile import CompileHeader
     from ..backends.msbuild import writer as msbuild
 
-    def _parse_compiler_cflags(compilers, global_options):
-        per_compiler_cflags = {}
-        for c in compilers:
-            key = c.command_var
-            if key not in per_compiler_cflags:
-                per_compiler_cflags[key] = c.parse_flags(msbuild.textify_each(
-                    c.global_flags + c.flags(global_options[c.lang])
-                ))
-        return per_compiler_cflags
+    def _parse_compiler_cflags(compiler, global_options):
+        return compiler.parse_flags(msbuild.textify_each(
+            compiler.global_flags +
+            compiler.flags(global_options[compiler.lang], mode='global')
+        ))
 
-    def _parse_file_cflags(file, per_compiler_cflags):
-        cflags = file.creator.compiler.parse_flags(
-            msbuild.textify_each(file.creator.flags)
+    def _parse_file_cflags(file, global_options, include_compiler=False):
+        compiler = file.creator.compiler
+        gopts = global_options[compiler.lang]
+        cflags = file.creator.flags(gopts)
+        if include_compiler:
+            cflags = (compiler.global_flags +
+                      compiler.flags(gopts, mode='global') +
+                      cflags)
+
+        return compiler.parse_flags(msbuild.textify_each(cflags))
+
+    def _parse_ldflags(rule, output, global_options):
+        linker = rule.linker
+        gopts = global_options[rule.base_mode][linker.family]
+
+        ldflags = [linker.global_flags + linker.flags(gopts) +
+                   rule.flags(gopts)]
+        if hasattr(rule.linker, 'libs_var'):
+            ldflags.append(linker.global_libs + linker.lib_flags(gopts) +
+                           rule.lib_flags(gopts))
+        link_options = linker.parse_flags(
+            *[msbuild.textify_each(i) for i in ldflags]
         )
-        if not per_compiler_cflags:
-            return cflags
-        key = file.creator.compiler.command_var
-        return merge_dicts(per_compiler_cflags[key], cflags)
+        if hasattr(output, 'import_lib'):
+            link_options['import_lib'] = output.import_lib
+
+        return link_options
 
     @msbuild.rule_handler(DynamicLink, SharedLink, StaticLink)
     def msbuild_link(rule, build_inputs, solution, env):
@@ -534,6 +549,8 @@ try:
                              'with msvc')
 
         output = rule.output[0]
+        global_compile_opts = build_inputs['compile_options']
+        global_link_opts = build_inputs['link_options']
 
         # Parse compilation flags; if there's only one set of them (i.e. the
         # command_var is the same for every compiler), we can apply these to
@@ -542,28 +559,12 @@ try:
         obj_creators = [i.creator for i in rule.files]
         compilers = uniques(i.compiler for i in obj_creators)
 
-        per_compiler_options = _parse_compiler_cflags(
-            compilers, build_inputs['compile_options']
-        )
-        if len(per_compiler_options) == 1:
-            common_compile_options = per_compiler_options.popitem()[1]
+        if len(uniques(i.command_var for i in compilers)) == 1:
+            common_compile_options = _parse_compiler_cflags(
+                compilers[0], global_compile_opts
+            )
         else:
             common_compile_options = None
-
-        # Parse linking flags.
-        ldflags = [
-            rule.linker.global_flags +
-            rule.linker.flags(build_inputs['link_options'][rule.base_mode]
-                              [rule.linker.family]) +
-            rule.flags
-        ]
-        if hasattr(rule.linker, 'libs_var'):
-            ldflags.append(rule.linker.global_libs + rule.lib_flags)
-        link_options = rule.linker.parse_flags(
-            *[msbuild.textify_each(i) for i in ldflags]
-        )
-        if hasattr(output, 'import_lib'):
-            link_options['import_lib'] = output.import_lib
 
         deps = chain(
             (i.creator.file for i in rule.files),
@@ -588,10 +589,13 @@ try:
             output_file=output,
             files=[{
                 'name': get_source(i),
-                'options': _parse_file_cflags(i, per_compiler_options),
+                'options': _parse_file_cflags(
+                    i, global_compile_opts,
+                    include_compiler=(common_compile_options is None)
+                ),
             } for i in rule.files],
             compile_options=common_compile_options,
-            link_options=link_options,
+            link_options=_parse_ldflags(rule, output, global_link_opts),
             dependencies=solution.dependencies(deps),
         )
         solution[output] = project

@@ -169,6 +169,11 @@ class TestMsvcCompiler(CrossPlatformTestCase):
             opts.static()
         )), ['/MT'])
 
+        self.assertEqual(self.compiler.flags(
+            opts.option_list(),
+            opts.option_list(opts.static()),
+        ), ['/MT'])
+
     def test_flags_debug(self):
         self.assertEqual(self.compiler.flags(opts.option_list(
             opts.debug()
@@ -176,6 +181,15 @@ class TestMsvcCompiler(CrossPlatformTestCase):
         self.assertEqual(self.compiler.flags(opts.option_list(
             opts.debug(), opts.static()
         )), ['/Zi', '/MTd'])
+
+        self.assertEqual(self.compiler.flags(
+            opts.option_list(),
+            opts.option_list(opts.debug()),
+        ), ['/MDd'])
+        self.assertEqual(self.compiler.flags(
+            opts.option_list(opts.static()),
+            opts.option_list(opts.debug()),
+        ), ['/MTd'])
 
     def test_flags_warning(self):
         self.assertEqual(self.compiler.flags(opts.option_list(
