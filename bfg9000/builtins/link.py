@@ -77,7 +77,7 @@ class Link(Edge):
             if hasattr(i.creator, 'add_extra_options'):
                 i.creator.add_extra_options(compile_opts)
 
-        extra_options = self.linker.pre_build(context, name, self)
+        extra_options = self.linker.pre_output(context, name, self)
 
         output = self.linker.output_file(name, self)
         primary = first(output)
@@ -87,7 +87,7 @@ class Link(Edge):
         self._fill_options(context.env, extra_options, forward_opts, output)
 
         options = self.options
-        public_output = self.linker.post_build(context, options, output, self)
+        public_output = self.linker.post_output(context, options, output, self)
         primary.post_install = self.linker.post_install(options, output, self)
 
         super().__init__(build, output, public_output, extra_deps, description)

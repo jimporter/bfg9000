@@ -18,7 +18,7 @@ class LinkTest(BuiltinTest):
         step = AttrDict(**step_args)
 
         output = linker.output_file(name, step)
-        public_output = linker.post_build(self.context, [], output, step)
+        public_output = linker.post_output(self.context, [], output, step)
 
         result = [i for i in listify(public_output or output) if not i.private]
         for i in result:

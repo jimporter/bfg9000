@@ -65,7 +65,7 @@ class YaccCompiler(BuildCommand):
             cmd, iterate(flags), [input, '-o', first(output)]
         ))
 
-    def pre_build(self, context, name, step):
+    def pre_output(self, context, name, step):
         name = listify(name)
         return opts.option_list(['--defines=' + name[1]]
                                 if len(name) > 1 else [])

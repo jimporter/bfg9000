@@ -136,10 +136,10 @@ class BuildCommand(Command):
     def num_outputs(self):
         return 'all'
 
-    def pre_build(self, context, name, step):
+    def pre_output(self, context, name, step):
         return opts.option_list()
 
-    def post_build(self, context, options, output, step):
+    def post_output(self, context, options, output, step):
         return None
 
     def post_install(self, options, output, step):

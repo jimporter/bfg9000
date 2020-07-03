@@ -31,7 +31,7 @@ class CompileTest(BuiltinTest):
         step = AttrDict(**step)
 
         output = compiler.output_file(name, step)
-        public_output = compiler.post_build(self.build, [], output, step)
+        public_output = compiler.post_output(self.build, [], output, step)
 
         result = [i for i in listify(public_output or output) if not i.private]
         for i in result:

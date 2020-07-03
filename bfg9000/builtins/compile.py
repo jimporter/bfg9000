@@ -30,7 +30,7 @@ class BaseCompile(Edge):
         else:
             name = relname(context, name)
 
-        extra_options = self.compiler.pre_build(context, name, self)
+        extra_options = self.compiler.pre_output(context, name, self)
         output = self.compiler.output_file(name, self)
         primary = first(output)
 
@@ -40,7 +40,7 @@ class BaseCompile(Edge):
 
         options = self.options
         compiler = self.compiler
-        public_output = compiler.post_build(context, options, output, self)
+        public_output = compiler.post_output(context, options, output, self)
         primary.post_install = compiler.post_install(options, output, self)
 
         super().__init__(build, output, public_output, extra_deps, description)

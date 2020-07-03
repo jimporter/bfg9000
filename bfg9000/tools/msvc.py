@@ -279,7 +279,7 @@ class MsvcPchCompiler(MsvcBaseCompiler):
         result.append('/Fp' + output[0])
         return result
 
-    def pre_build(self, context, name, step):
+    def pre_output(self, context, name, step):
         header = getattr(step, 'file')
         options = opts.option_list()
 
