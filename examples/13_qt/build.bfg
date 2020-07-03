@@ -19,7 +19,7 @@ ui = generated_source('designer/widget.ui')
 
 moc = generated_source(file='designer/window.hpp', lang='qtmoc')
 executable('qt-designer', ['designer/main.cpp', 'designer/window.cpp', moc],
-           includes=[ui], packages=widgets)
+           includes=[ui], link_options=[opts.gui(main=True)], packages=widgets)
 
 # Building Qt Quick projects is easy too. Much like Qt Designer projects, all
 # you'll need to do is add some extra build step for the Qt-specific bits:
@@ -31,4 +31,5 @@ qml = package('Qt5Qml')
 # to `generated_source` along with all the other arguments:
 
 qrc = generated_sources(['qml/qml.qrc'])
-executable('qt-qml', ['qml/main.cpp'] + qrc, packages=[widgets, qml])
+executable('qt-qml', ['qml/main.cpp'] + qrc,
+           link_options=[opts.gui(main=True)], packages=[widgets, qml])

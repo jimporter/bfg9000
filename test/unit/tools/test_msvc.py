@@ -430,6 +430,21 @@ class TestMsvcLinker(CrossPlatformTestCase):
             opts.entry_point('symbol')
         )), ['/ENTRY:symbol'])
 
+    def test_flags_gui(self):
+        self.assertEqual(self.linker.flags(opts.option_list(opts.gui())),
+                         ['/SUBSYSTEM:WINDOWS'])
+        self.assertEqual(self.linker.flags(opts.option_list(opts.gui(False))),
+                         ['/SUBSYSTEM:WINDOWS'])
+        self.assertEqual(self.linker.flags(opts.option_list(opts.gui(True))),
+                         ['/SUBSYSTEM:WINDOWS', '/ENTRY:mainCRTStartup'])
+
+        self.assertEqual(self.linker.flags(opts.option_list(
+            opts.entry_point('symbol'), opts.gui(True)
+        )), ['/ENTRY:symbol', '/SUBSYSTEM:WINDOWS'])
+        self.assertEqual(self.linker.flags(opts.option_list(
+            opts.gui(True), opts.entry_point('symbol')
+        )), ['/SUBSYSTEM:WINDOWS', '/ENTRY:symbol'])
+
     def test_flags_string(self):
         self.assertEqual(self.linker.flags(opts.option_list('-v')), ['-v'])
 

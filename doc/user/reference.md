@@ -695,6 +695,15 @@ Set the symbol to use for beginning program execution. This is equivalent to
 passing `entry_point=value` to [*executable*](#executable) or
 [*shared_library*](#shared_library).
 
+### opts.gui([*main*]) { #opts-gui }
+
+Generate a graphical program; this is important for Windows builds, since the
+default is to generate a command-line program that opens a terminal window. On
+Windows, this option sets the subsystem to `WINDOWS`; if *main* is true, it also
+sets the entry point to `mainCRTStartup` (which calls the standard `main`
+function instead of the Windows-specific `WinMain`). On other platforms, this
+option has no effect.
+
 ### opts.optimize(*...*) { #opts-optimize }
 
 Set the level of optimization for the compiler employ; multiple values can be

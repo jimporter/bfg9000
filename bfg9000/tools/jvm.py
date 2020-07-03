@@ -251,6 +251,8 @@ class JarMaker(BuildCommand):
                 pass
             elif isinstance(i, opts.entry_point):
                 pass
+            elif isinstance(i, opts.gui):
+                pass
             else:
                 raise TypeError('unknown option type {!r}'.format(type(i)))
         return flags

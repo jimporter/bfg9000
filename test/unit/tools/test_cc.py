@@ -613,6 +613,13 @@ class TestCcLinker(CrossPlatformTestCase):
     def test_flags_string(self):
         self.assertEqual(self.linker.flags(opts.option_list('-v')), ['-v'])
 
+    def test_flags_gui(self):
+        self.assertEqual(
+            self.linker.flags(opts.option_list(opts.gui())),
+            (['-mwindows'] if self.env.target_platform.family == 'windows'
+             else [])
+        )
+
     def test_flags_install_name_change(self):
         self.assertEqual(self.linker.flags(opts.option_list(
             opts.install_name_change('foo.dylib', 'bar.dylib')

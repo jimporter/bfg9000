@@ -390,6 +390,7 @@ class MsvcLinker(BuildCommand):
     def flags(self, options, global_options=None, output=None, mode='normal'):
         syntax = 'cc' if mode == 'pkg-config' else 'msvc'
         flags, lib_dirs = [], []
+        auto_entry_point = None
         for i in options:
             if isinstance(i, opts.lib_dir):
                 lib_dirs.append(i.directory.path)
@@ -405,7 +406,12 @@ class MsvcLinker(BuildCommand):
                 if opts.OptimizeValue.linktime in i.value:
                     flags.append('/LTCG')
             elif isinstance(i, opts.entry_point):
+                auto_entry_point = False
                 flags.append('/ENTRY:{}'.format(i.value))
+            elif isinstance(i, opts.gui):
+                flags.append('/SUBSYSTEM:WINDOWS')
+                if i.main and auto_entry_point is not False:
+                    auto_entry_point = True
             elif isinstance(i, safe_str.stringy_types):
                 flags.append(i)
             elif isinstance(i, opts.lib_literal):
@@ -413,6 +419,8 @@ class MsvcLinker(BuildCommand):
             else:
                 raise TypeError('unknown option type {!r}'.format(type(i)))
 
+        if auto_entry_point:
+            flags.append('/ENTRY:mainCRTStartup')
         prefix = '-L' if syntax == 'cc' else '/LIBPATH:'
         flags.extend(prefix + i for i in uniques(lib_dirs))
         return flags

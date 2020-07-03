@@ -332,6 +332,14 @@ class TestJvmLinker(CrossPlatformTestCase):
             opts.optimize('size')
         )), [])
 
+    def test_flags_entry_point(self):
+        self.assertEqual(self.linker.flags(opts.option_list(
+            opts.entry_point('symbol')
+        )), [])
+
+    def test_flags_gui(self):
+        self.assertEqual(self.linker.flags(opts.option_list(opts.gui())), [])
+
     def test_flags_invalid(self):
         with self.assertRaises(TypeError):
             self.linker.flags(opts.option_list(123))

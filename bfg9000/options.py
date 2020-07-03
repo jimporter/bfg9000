@@ -248,6 +248,13 @@ module_def = option('module_def', [('value', ModuleDefFile)])
 rpath_link_dir = option('rpath_link_dir', [('path', path.BasePath)])
 
 
+class gui(Option):
+    _fields = [('main', bool)]
+
+    def __init__(self, main=False):
+        super()._init(main)
+
+
 class RpathWhen(OptionFlag):
     installed = 1
     uninstalled = 2

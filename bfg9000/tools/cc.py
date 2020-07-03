@@ -595,6 +595,9 @@ class CcLinker(BuildCommand):
                     flags.append('-Wl,-e,{}'.format(i.value))
             elif isinstance(i, safe_str.stringy_types):
                 flags.append(i)
+            elif isinstance(i, opts.gui):
+                if self.env.target_platform.family == 'windows':
+                    flags.append('-mwindows')
             elif isinstance(i, opts.install_name_change):
                 pass
             elif isinstance(i, opts.lib_literal):

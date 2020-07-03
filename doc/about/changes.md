@@ -9,6 +9,7 @@ in progress
   subdirectories via `submodule()`
 - Create `-uninstalled` variants of generated *pkg-config* `.pc` files and
   allow build scripts to use them internally
+- Add `opts.gui` to generate graphical programs (important on Windows)
 - Add `opts.static` to request static linking of libraries
 - MSVC's runtime can now be selected by using a combination of `opts.static`
   and `opts.debug`
