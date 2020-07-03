@@ -217,6 +217,7 @@ The following arguments may also be specified:
   to *object_file*
 * *compile_options*: Forwarded on to [*object_file*](#object_file) as *options*
 * *link_options*: Command-line options to pass to the linker
+* *entry_point*: The symbol for beginning execution of this program
 * *module_defs*: A [*module_def_file*](#module_def_file) specifying information
   about exports and other program info, sometimes used on Windows
 * *lang*: Forwarded on to [*object_file*](#object_file)
@@ -457,7 +458,8 @@ Availability: `build.bfg`
 {: .subtitle}
 
 Create a build step that builds a static library named *name*. Its arguments are
-the same as [*executable*](#executable), with the following additional argument:
+the same as [*executable*](#executable) (however, *entry_point* cannot be
+specified for static libraries), with the following additional argument:
 
 * *static_link_options*: Command-line options to pass to the linker
 
@@ -686,6 +688,12 @@ string like so:
 ```python
 opts.define('MY_MACRO', '"This is a string, isn\'t it?"')
 ```
+
+### opts.entry_point(*value*) { #opts-entry_point }
+
+Set the symbol to use for beginning program execution. This is equivalent to
+passing `entry_point=value` to [*executable*](#executable) or
+[*shared_library*](#shared_library).
 
 ### opts.optimize(*...*) { #opts-optimize }
 

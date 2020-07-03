@@ -14,6 +14,7 @@
   iterable in the appropriate build target
 - `info()`, `debug()`, and `warning()` now take a variable number of arguments
   to print
+- Add support for setting the entry point for native binaries (C, C++, etc)
 
 ### Breaking changes
 - Drop support for Python 2

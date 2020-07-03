@@ -566,15 +566,6 @@ class TestCcLinker(CrossPlatformTestCase):
             [path] if self.env.target_platform.family == 'windows' else []
         )
 
-    def test_flags_entry_point(self):
-        java_linker = self._get_linker('java')
-        self.assertEqual(java_linker.flags(opts.option_list(
-            opts.entry_point('Main')
-        )), ['--main=Main'])
-
-        with self.assertRaises(ValueError):
-            self.linker.flags(opts.option_list(opts.entry_point('Main')))
-
     def test_flags_optimize(self):
         self.assertEqual(self.linker.flags(opts.option_list(
             opts.optimize('disable')
@@ -608,6 +599,16 @@ class TestCcLinker(CrossPlatformTestCase):
             self.linker.flags(opts.option_list(opts.pthread())),
             [] if self.env.target_platform.genus == 'darwin' else ['-pthread']
         )
+
+    def test_flags_entry_point(self):
+        java_linker = self._get_linker('java')
+        self.assertEqual(java_linker.flags(opts.option_list(
+            opts.entry_point('symbol')
+        )), ['--main=symbol'])
+
+        self.assertEqual(self.linker.flags(opts.option_list(
+            opts.entry_point('symbol')
+        )), ['-Wl,-e,symbol'])
 
     def test_flags_string(self):
         self.assertEqual(self.linker.flags(opts.option_list('-v')), ['-v'])

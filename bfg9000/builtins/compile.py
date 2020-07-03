@@ -31,12 +31,12 @@ class BaseCompile(Edge):
             name = relname(context, name)
 
         extra_options = self.compiler.pre_output(context, name, self)
-        output = self.compiler.output_file(name, self)
-        primary = first(output)
-
         self._internal_options = opts.option_list(
             internal_options, extra_options
         )
+
+        output = self.compiler.output_file(name, self)
+        primary = first(output)
 
         options = self.options
         compiler = self.compiler

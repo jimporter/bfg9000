@@ -408,11 +408,6 @@ class CcLinker(BuildCommand):
             iterate(libs), ['-o', output]
         ))
 
-    def pre_output(self, context, name, step):
-        entry_point = getattr(step, 'entry_point', None)
-        return opts.option_list(opts.entry_point(entry_point) if entry_point
-                                else None)
-
     @property
     def _always_flags(self):
         if self.builder.object_format == 'mach-o':
@@ -594,9 +589,10 @@ class CcLinker(BuildCommand):
                 if self.env.target_platform.genus != 'darwin':
                     flags.append('-pthread')
             elif isinstance(i, opts.entry_point):
-                if self.lang != 'java':
-                    raise ValueError('entry point only applies to java')
-                flags.append('--main={}'.format(i.value))
+                if self.lang == 'java':
+                    flags.append('--main={}'.format(i.value))
+                else:
+                    flags.append('-Wl,-e,{}'.format(i.value))
             elif isinstance(i, safe_str.stringy_types):
                 flags.append(i)
             elif isinstance(i, opts.install_name_change):

@@ -425,6 +425,11 @@ class TestMsvcLinker(CrossPlatformTestCase):
             opts.optimize('speed', 'linktime')
         )), ['/LTCG'])
 
+    def test_flags_entry_point(self):
+        self.assertEqual(self.linker.flags(opts.option_list(
+            opts.entry_point('symbol')
+        )), ['/ENTRY:symbol'])
+
     def test_flags_string(self):
         self.assertEqual(self.linker.flags(opts.option_list('-v')), ['-v'])
 

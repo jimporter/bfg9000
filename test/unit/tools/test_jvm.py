@@ -313,7 +313,7 @@ class TestJvmLinker(CrossPlatformTestCase):
         self.assertEqual(self.linker.output_file('file', None),
                          file_types.Library(Path('file.jar'), 'jvm', 'java'))
         self.assertEqual(self.linker.output_file('file', AttrDict(
-            entry_point='foo'
+            options=opts.option_list(opts.entry_point('foo'))
         )), file_types.ExecutableLibrary(Path('file.jar'), 'jvm', 'java'))
 
     def test_flags_empty(self):

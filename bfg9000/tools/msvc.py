@@ -404,6 +404,8 @@ class MsvcLinker(BuildCommand):
             elif isinstance(i, opts.optimize):
                 if opts.OptimizeValue.linktime in i.value:
                     flags.append('/LTCG')
+            elif isinstance(i, opts.entry_point):
+                flags.append('/ENTRY:{}'.format(i.value))
             elif isinstance(i, safe_str.stringy_types):
                 flags.append(i)
             elif isinstance(i, opts.lib_literal):

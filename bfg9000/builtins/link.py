@@ -26,8 +26,7 @@ class Link(Edge):
     extra_kwargs = ()
 
     def __init__(self, context, name, files, libs, packages, link_options,
-                 entry_point=None, lang=None, extra_deps=None,
-                 description=None):
+                 lang=None, extra_deps=None, description=None):
         build = context.build
         name = relname(context, name)
         self.name = self.__name(name)
@@ -49,8 +48,6 @@ class Link(Edge):
             raise ValueError('need at least one source file')
 
         self.user_options = link_options
-        if entry_point:
-            self.entry_point = entry_point
 
         formats = uniques(i.format for i in chain(self.files, self.libs,
                                                   self.packages))
@@ -78,13 +75,13 @@ class Link(Edge):
                 i.creator.add_extra_options(compile_opts)
 
         extra_options = self.linker.pre_output(context, name, self)
+        self._fill_options(context.env, extra_options, forward_opts)
 
         output = self.linker.output_file(name, self)
         primary = first(output)
 
         primary.package_deps.extend(self.packages)
-
-        self._fill_options(context.env, extra_options, forward_opts, output)
+        self._fill_output(output)
 
         options = self.options
         public_output = self.linker.post_output(context, options, output, self)
@@ -142,10 +139,11 @@ class DynamicLink(Link):
     _preferred_lib = 'shared'
     _prefix = ''
 
-    extra_kwargs = ('module_defs',)
+    extra_kwargs = ('entry_point', 'module_defs')
 
-    def __init__(self, *args, **kwargs):
-        self.module_defs = kwargs.pop('module_defs', None)
+    def __init__(self, *args, entry_point=None, module_defs=None, **kwargs):
+        self.entry_point = entry_point
+        self.module_defs = module_defs
         super().__init__(*args, **kwargs)
 
     @classmethod
@@ -163,9 +161,10 @@ class DynamicLink(Link):
     def lib_flags(self, global_options=None):
         return self.linker.lib_flags(self.options, global_options)
 
-    def _fill_options(self, env, extra_options, forward_opts, output):
+    def _fill_options(self, env, extra_options, forward_opts):
         linkers = (env.builder(i).linker(self.mode) for i in self.langs)
         self._internal_options = opts.option_list(
+            opts.entry_point(self.entry_point) if self.entry_point else None,
             opts.module_def(self.module_defs) if self.module_defs else None
         )
 
@@ -180,6 +179,7 @@ class DynamicLink(Link):
             extra_options, forward_opts.link_options
         )
 
+    def _fill_output(self, output):
         first(output).runtime_deps.extend(
             i.runtime_file for i in self.libs if i.runtime_file
         )
@@ -193,9 +193,9 @@ class SharedLink(DynamicLink):
 
     extra_kwargs = DynamicLink.extra_kwargs + ('version', 'soversion')
 
-    def __init__(self, *args, **kwargs):
-        self.version = kwargs.pop('version', None)
-        self.soversion = kwargs.pop('soversion', None)
+    def __init__(self, *args, version=None, soversion=None, **kwargs):
+        self.version = version
+        self.soversion = soversion
         if (self.version is None) != (self.soversion is None):
             raise ValueError('specify both version and soversion or neither')
         super().__init__(*args, **kwargs)
@@ -211,8 +211,8 @@ class StaticLink(Link):
 
     extra_kwargs = ('static_link_options',)
 
-    def __init__(self, *args, **kwargs):
-        self.user_static_options = kwargs.pop('static_link_options', None)
+    def __init__(self, *args, static_link_options=None, **kwargs):
+        self.user_static_options = static_link_options
         super().__init__(*args, **kwargs)
 
     @classmethod
@@ -232,9 +232,10 @@ class StaticLink(Link):
         # used.
         return self.linker.flags(self.options, global_options, self.raw_output)
 
-    def _fill_options(self, env, extra_options, forward_opts, output):
+    def _fill_options(self, env, extra_options, forward_opts):
         self._internal_options = extra_options
 
+    def _fill_output(self, output):
         primary = first(output)
         primary.forward_opts = opts.ForwardOptions(
             link_options=self.user_options,

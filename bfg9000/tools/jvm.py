@@ -198,7 +198,7 @@ class JarMaker(BuildCommand):
     def needs_libs(self):
         return False
 
-    def pre_output(self, context, name, step):
+    def post_output(self, context, options, output, step):
         # Fix up paths for the Class-Path field: escape spaces and prefix
         # Windows drive letters with '/' to disambiguate them from URLs.
         def fix_path(p):
@@ -210,24 +210,31 @@ class JarMaker(BuildCommand):
             i.libs for i in getattr(step, 'packages', [])
         )
         dirs = uniques(i.path for i in libs)
-        base = Path(name).parent()
+        base = output.path.parent()
 
-        step.manifest = File(Path(name + '-manifest.txt'))
+        step.manifest = File(output.path.stripext('-manifest.txt'))
         with make_immediate_file(context, step.manifest) as out:
             classpath = ' '.join(fix_path(i.relpath(base, localize=False))
                                  for i in dirs)
             if classpath:
                 out.write('Class-Path: {}\n'.format(classpath))
 
-            if getattr(step, 'entry_point', None):
-                out.write('Main-Class: {}\n'.format(step.entry_point))
+            entry_point = self._entry_point(options)
+            if entry_point:
+                out.write('Main-Class: {}\n'.format(entry_point))
 
-        return opts.option_list()
+        return None
 
     def _call(self, cmd, input, output, manifest, flags=None):
         return list(chain(
             cmd, iterate(flags), [output, manifest], iterate(input)
         ))
+
+    def _entry_point(self, options):
+        filtered = options.filter(opts.entry_point) if options else None
+        if filtered:
+            return filtered[-1].value
+        return None
 
     def transform_input(self, input):
         return ['@' + safe_str.safe_str(i) if isinstance(i, ObjectFileList)
@@ -242,15 +249,16 @@ class JarMaker(BuildCommand):
                 pass
             elif isinstance(i, opts.optimize):
                 pass
+            elif isinstance(i, opts.entry_point):
+                pass
             else:
                 raise TypeError('unknown option type {!r}'.format(type(i)))
         return flags
 
     def output_file(self, name, step):
-        if getattr(step, 'entry_point', None):
-            filetype = ExecutableLibrary
-        else:
-            filetype = Library
+        options = getattr(step, 'options', None)
+        filetype = (ExecutableLibrary if self._entry_point(options)
+                    else Library)
         return filetype(Path(name + '.jar'), self.builder.object_format,
                         self.lang)
 
