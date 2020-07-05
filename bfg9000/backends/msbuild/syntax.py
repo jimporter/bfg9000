@@ -53,7 +53,8 @@ def textify(thing, quoted=False, builddir=BuildDir.output):
     elif isinstance(thing, safe_str.jbos):
         return ''.join(textify(i, quoted, builddir) for i in thing.bits)
     elif isinstance(thing, path.BasePath):
-        return ntpath.normpath(thing.realize(_path_vars[builddir]))
+        path_str = thing.realize(_path_vars[builddir], variable_sep=False)
+        return ntpath.normpath(path_str)
     else:
         raise TypeError(type(thing))
 
@@ -125,7 +126,9 @@ class Project:
                 E.ProjectGuid(self.uuid_str),
                 E.RootNamespace(self.name),
                 E.Platform(self.real_platform),
-                E.SourceDir(textify(self.srcdir))
+                # By convention, directories in MSBuild files have trailing
+                # backslashes.
+                E.SourceDir(textify(self.srcdir) + '\\')
             ),
             *children
         )

@@ -442,6 +442,15 @@ class TestPath(PathTestCase):
         self.assertEqual(p.realize(path_vars_with_destdir),
                          self.ospath.join('$(destdir)$(bindir)', 'foo'))
 
+    def test_realize_no_variable_sep(self):
+        p = self.Path('foo', path.Root.srcdir)
+        self.assertEqual(p.realize(path_variables, variable_sep=False),
+                         '$(srcdir)foo')
+
+        p = self.Path('foo/bar', path.Root.srcdir)
+        self.assertEqual(p.realize(path_variables, variable_sep=False),
+                         self.ospath.join('$(srcdir)foo', 'bar'))
+
     def test_string(self):
         ospath = self.ospath
         paths = {path.Root.srcdir: self.Path('/srcdir', path.Root.absolute)}

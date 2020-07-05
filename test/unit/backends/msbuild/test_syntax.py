@@ -35,17 +35,17 @@ class TestTextify(TestCase):
         p1 = Path('foo')
         p2 = Path('foo', Root.srcdir)
 
-        self.assertEqual(textify(p1), r'$(OutDir)\foo')
-        self.assertEqual(textify(p2), r'$(SourceDir)\foo')
+        self.assertEqual(textify(p1), '$(OutDir)foo')
+        self.assertEqual(textify(p2), '$(SourceDir)foo')
 
         self.assertEqual(textify(p1, builddir=BuildDir.intermediate),
-                         r'$(IntDir)\foo')
+                         '$(IntDir)foo')
         self.assertEqual(textify(p2, builddir=BuildDir.intermediate),
-                         r'$(SourceDir)\foo')
+                         '$(SourceDir)foo')
         self.assertEqual(textify(p1, builddir=BuildDir.solution),
-                         r'$(SolutionDir)\foo')
+                         '$(SolutionDir)foo')
         self.assertEqual(textify(p2, builddir=BuildDir.solution),
-                         r'$(SourceDir)\foo')
+                         '$(SourceDir)foo')
 
     def test_file(self):
         class MockCreator:
@@ -53,13 +53,13 @@ class TestTextify(TestCase):
                 self.msbuild_output = msbuild_output
 
         src = SourceFile(Path('foo'), 'c++')
-        self.assertEqual(textify(src), r'$(SolutionDir)\foo')
+        self.assertEqual(textify(src), '$(SolutionDir)foo')
 
         src.creator = MockCreator()
-        self.assertEqual(textify(src), r'$(IntDir)\foo')
+        self.assertEqual(textify(src), '$(IntDir)foo')
 
         src.creator = MockCreator(True)
-        self.assertEqual(textify(src), r'$(OutDir)\foo')
+        self.assertEqual(textify(src), '$(OutDir)foo')
 
     def test_invalid(self):
         with self.assertRaises(TypeError):
@@ -86,9 +86,9 @@ class TestVcxProject(ProjectTest):
         tree = etree.fromstring(out.getvalue())
         project = self.xpath(tree, '/x:Project')[0]
         self.assertXPath(project, './x:PropertyGroup/x:TargetPath/text()',
-                         [r'$(OutDir)\output'])
+                         ['$(OutDir)output'])
         self.assertXPath(project, './x:ItemGroup/x:ClCompile/@Include',
-                         [r'$(SolutionDir)\src.cpp'])
+                         ['$(SolutionDir)src.cpp'])
 
     def test_duplicate_basename(self):
         proj = VcxProject(
@@ -100,11 +100,11 @@ class TestVcxProject(ProjectTest):
         proj.write(out)
         tree = etree.fromstring(out.getvalue())
         self.assertXPath(tree, 'x:ItemGroup/x:ClCompile/@Include', [
-            r'$(SolutionDir)\a\src.cpp', r'$(SolutionDir)\b\src.cpp'
+            r'$(SolutionDir)a\src.cpp', r'$(SolutionDir)b\src.cpp'
         ])
         self.assertXPath(
             tree, 'x:ItemGroup/x:ClCompile/x:ObjectFileName/text()',
-            [r'$(IntDir)\a\src.obj', r'$(IntDir)\b\src.obj']
+            [r'$(IntDir)a\src.obj', r'$(IntDir)b\src.obj']
         )
 
     def test_compile_options(self):

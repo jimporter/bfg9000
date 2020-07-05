@@ -157,7 +157,7 @@ class BasePath(safe_str.safe_string):
             base = InstallRoot[data[1]]
         return cls(data[0], base, data[2])
 
-    def realize(self, variables, executable=False):
+    def realize(self, variables, executable=False, variable_sep=True):
         root = variables[self.root] if self.root != Root.absolute else None
         if executable and root is None and posixpath.sep not in self.suffix:
             root = posixpath.curdir
@@ -174,8 +174,9 @@ class BasePath(safe_str.safe_string):
         # Join the separator and the suffix first so that we don't end up with
         # unnecessarily-escaped backslashes on Windows. (It doesn't hurt
         # anything; it just looks weird.)
-        return (self.__localize(root) +
-                self.__localize(posixpath.sep + self.suffix))
+        suffix = (posixpath.sep + self.suffix if variable_sep else
+                  self.suffix)
+        return self.__localize(root) + self.__localize(suffix)
 
     def string(self, variables=None):
         path = self
