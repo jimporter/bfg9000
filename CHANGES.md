@@ -30,6 +30,8 @@
 - `extra_deps` now works with `copy_file()`
 - Automatically-generated PCH source files (for MSVC compilers) are now placed
   in the same directory as the resulting PCH
+- MSBuild backend can now build libraries with no source files that link to a
+  whole-archive library
 
 ---
 

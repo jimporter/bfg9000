@@ -159,12 +159,13 @@ class VcxProject(Project):
     }
 
     def __init__(self, env, name, mode='Application', configuration=None,
-                 output_file=None, files=None, compile_options=None,
+                 output_file=None, files=None, objs=None, compile_options=None,
                  link_options=None, dependencies=None):
         super().__init__(env, name, configuration, dependencies)
         self.mode = mode
         self.output_file = output_file
         self.files = files or []
+        self.objs = objs or []
         self.compile_options = compile_options or {}
         self.link_options = link_options or {}
 
@@ -197,6 +198,7 @@ class VcxProject(Project):
             override_props,
             E.ItemDefinitionGroup(compile_opts, link_opts),
             self._compiles(self.files),
+            self._links(self.objs),
             E.Import(Project=r'$(VCTargetsPath)\Microsoft.Cpp.Targets')
         ])
 
@@ -207,14 +209,14 @@ class VcxProject(Project):
         # First, figure out all the common prefixes of files with the same
         # basename so we can use this to give them unique object names.
         names = defaultdict(lambda: [])
-        for i in self.files:
+        for i in files:
             p = i['name'].path
             names[basename(p)].append(p.parent())
         prefixes = {k: path.commonprefix(v) if len(v) > 1 else None
                     for k, v in names.items()}
 
         compiles = E.ItemGroup()
-        for i in self.files:
+        for i in files:
             name = i['name']
             c = E.ClCompile(Include=textify(name))
             self._write_compile_options(c, i['options'])
@@ -229,6 +231,12 @@ class VcxProject(Project):
                 )))
             compiles.append(c)
         return compiles
+
+    def _links(self, objs):
+        links = E.ItemGroup()
+        for i in objs:
+            links.append(E.Link(Include=textify(i)))
+        return links
 
     def _write_compile_options(self, element, options):
         warnings = options.get('warnings', {})

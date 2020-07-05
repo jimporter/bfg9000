@@ -583,6 +583,18 @@ try:
                 return file.creator.pch_source
             return file.creator.file
 
+        # MSBuild doesn't build anything if it thinks there are no object files
+        # to link. This is a problem for building libraries with no sources
+        # that link to a whole-archive (a fairly-common way of making a shared
+        # library out of a static one). To get around this, explicitly add the
+        # whole-archive as an object file to link, in addition to passing
+        # `/WHOLEARCHIVE:foo` as usual.
+        objs = []
+        if not rule.files:
+            for i in rule.libs:
+                if isinstance(i, WholeArchive):
+                    objs.append(i.library)
+
         # Create the project file.
         project = msbuild.VcxProject(
             env, name=rule.name,
@@ -595,6 +607,7 @@ try:
                     include_compiler=(common_compile_options is None)
                 ),
             } for i in rule.files],
+            objs=objs,
             compile_options=common_compile_options,
             link_options=_parse_ldflags(rule, output, global_link_opts),
             dependencies=solution.dependencies(deps),

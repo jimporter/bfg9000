@@ -11,7 +11,6 @@ class TestWholeArchive(IntegrationTest):
     @skip_if(cxx.flavor == 'msvc' and cxx.version and
              cxx.version in SpecifierSet('<19'),
              'requires cc builder or msvc 2015 update 2', hide=True)
-    @skip_if_backend('msbuild')
     def test_build(self):
         self.build()
         self.assertOutput([executable('program')], 'hello, library!\n')
