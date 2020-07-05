@@ -5,7 +5,7 @@ from lxml.builder import E
 from . import *
 
 from bfg9000.backends.msbuild.syntax import *
-from bfg9000.file_types import SourceFile
+from bfg9000.file_types import SourceFile, StaticLibrary
 from bfg9000.path import Path, Root
 from bfg9000.safe_str import jbos, literal, safe_string
 from bfg9000.tools.common import Command
@@ -89,6 +89,16 @@ class TestVcxProject(ProjectTest):
                          ['$(OutDir)output'])
         self.assertXPath(project, './x:ItemGroup/x:ClCompile/@Include',
                          ['$(SolutionDir)src.cpp'])
+
+    def test_objs(self):
+        proj = VcxProject(FakeEnv(), 'project', output_file=Path('output'),
+                          objs=[StaticLibrary(Path('file.lib'), 'coff')])
+        out = BytesIO()
+        proj.write(out)
+        tree = etree.fromstring(out.getvalue())
+        project = self.xpath(tree, '/x:Project')[0]
+        self.assertXPath(project, './x:ItemGroup/x:Link/@Include',
+                         ['$(SolutionDir)file.lib'])
 
     def test_duplicate_basename(self):
         proj = VcxProject(
