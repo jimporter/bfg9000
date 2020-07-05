@@ -21,14 +21,14 @@ CalledProcessError = subprocess.CalledProcessError
 
 def which(names, env=os.environ, base_dirs=None, resolve=False,
           kind='executable'):
-    paths = env.get('PATH', os.defpath).split(os.pathsep)
-    exts = ['']
-    if platform_name() in windows_names + ('cygwin',):
-        exts.extend(env.get('PATHEXT', '').split(os.pathsep))
-
     names = listify(names)
     if len(names) == 0:
         raise TypeError('must supply at least one name')
+
+    paths = env.get('PATH', os.defpath).split(os.pathsep)
+    exts = ['']
+    if platform_name() in windows_names + ('cygwin',) and env.get('PATHEXT'):
+        exts.extend(env.get('PATHEXT', '').split(os.pathsep))
 
     for name in names:
         name = listify(name)
@@ -66,7 +66,7 @@ def convert_args(args, base_dirs=None):
     return [convert(i) for i in args]
 
 
-def execute(args, shell=False, env=None, base_dirs=None, stdout=Mode.normal,
+def execute(args, *, shell=False, env=None, base_dirs=None, stdout=Mode.normal,
             stderr=Mode.normal, returncode=0):
     if not shell:
         args = convert_args(args, base_dirs)

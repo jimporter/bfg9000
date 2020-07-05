@@ -1,4 +1,4 @@
-import sys
+import importlib
 from collections import namedtuple
 from unittest import mock
 
@@ -7,7 +7,7 @@ from .. import *
 from bfg9000.environment import Environment
 from bfg9000.safe_str import jbos, shell_literal
 from bfg9000.shell import shell_list
-from bfg9000.tools import _tools
+from bfg9000.tools import _tools, setenv
 
 MockPlatform = namedtuple('MockPlatform', ['family'])
 
@@ -20,35 +20,21 @@ class TestSetEnv(TestCase):
     def setUp(self):
         self.env = make_env(platform='winnt')
 
-    def tearDown(self):
-        self._clear_import()
-
-    @classmethod
-    def setUpClass(cls):
-        cls._clear_import()
-
     @classmethod
     def tearDownClass(cls):
-        # Restore setenv to the system's default.
-        cls._do_import()
+        cls.reload_import()
 
-    @staticmethod
-    def _do_import():
-        return __import__(
-            'bfg9000.tools.setenv', globals(), locals()
-        ).tools.setenv
-
-    @staticmethod
-    def _clear_import():
-        sys.modules.pop('bfg9000.tools.setenv', None)
+    @classmethod
+    def reload_import(cls):
         _tools.pop('setenv', None)
+        importlib.reload(setenv)
 
     def _init_setenv(self):
         with mock.patch('bfg9000.platforms.host.platform_info',
                         return_value=MockPlatform('windows')), \
              mock.patch('bfg9000.shell.which', return_value=['command']), \
              mock.patch.object(Environment, 'getvar', mock_getvar):  # noqa
-            setenv = self._do_import()
+            self.reload_import()
             self.setenv = setenv.SetEnv(self.env)
             return setenv
 
@@ -60,7 +46,7 @@ class TestSetEnv(TestCase):
     def test_env_nonexist(self):
         with mock.patch('bfg9000.platforms.host.platform_info',
                         return_value=MockPlatform('posix')):
-            self._do_import()
+            self.reload_import()
         with self.assertRaises(ValueError):
             self.env.tool('setenv')
 
@@ -86,6 +72,6 @@ class TestSetEnv(TestCase):
     def test_non_windows(self):
         with mock.patch('bfg9000.platforms.host.platform_info',
                         return_value=MockPlatform('posix')):
-            setenv = self._do_import()
+            setenv = self.reload_import()
         with self.assertRaises(AttributeError):
             setenv.SetEnv
