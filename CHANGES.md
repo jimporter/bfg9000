@@ -25,15 +25,17 @@
 - Drop support for Python 2
 - `show_stack` for `info()` and `debug()` must now be specified as a keyword
   argument
-- The `install_name` for libraries on macOS is now always an absolute path,
-  instead of using `@rpath`-based paths prior to installation
 
 ### Bug fixes
 - `copy_file()` now works correctly when copying into a subdirectory on the
   Make backend
 - `extra_deps` now works with `copy_file()`
+- Calling `exit()` with a non-zero return code from a `build.bfg` file now
+  causes configuration to fail
 - Automatically-generated PCH source files (for MSVC compilers) are now placed
   in the same directory as the resulting PCH
+- The `install_name` for libraries on macOS is now always an absolute path,
+  instead of using `@rpath`-based paths prior to installation
 - MSBuild backend can now build libraries with no source files that link to a
   whole-archive library
 

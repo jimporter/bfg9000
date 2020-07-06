@@ -18,6 +18,12 @@ argument name with `-x`. For example, `--foo` may also be written as `--x-foo`.
 """
 
 
+class ScriptExitError(RuntimeError):
+    def __init__(self, path, code):
+        super().__init__('{} failed with exit status {}'.format(path, code))
+        self.code = code
+
+
 def is_srcdir(path):
     return exists(path.append(bfgfile))
 
@@ -31,8 +37,9 @@ def _execute_script(f, context, path, run_post=False):
         code = compile(f.read(), filename, 'exec')
         try:
             exec(code, context.builtins)
-        except SystemExit:
-            pass
+        except SystemExit as e:
+            if e.code:
+                raise ScriptExitError(filename, e.code)
 
         if run_post:
             context.run_post()

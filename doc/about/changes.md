@@ -32,6 +32,8 @@ in progress
 - `copy_file()` now works correctly when copying into a subdirectory on the
   Make backend
 - `extra_deps` now works with `copy_file()`
+- Calling `exit()` with a non-zero return code from a `build.bfg` file now
+  causes configuration to fail
 - Automatically-generated PCH source files (for MSVC compilers) are now placed
   in the same directory as the resulting PCH
 - The `install_name` for libraries on macOS is now always an absolute path,

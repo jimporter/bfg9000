@@ -53,7 +53,7 @@ def handle_reload_exception(e, suggest_rerun=False):
     if suggest_rerun and isinstance(e, EnvVersionError):
         msg += '\n  Please re-run bfg9000 manually'
     logger.error(msg, exc_info=True)
-    return 1
+    return e.code if isinstance(e, build.ScriptExitError) else 1
 
 
 def environment_from_args(args):
@@ -196,7 +196,7 @@ def configure(parser, subparser, args, extra):
         backend.write(env, build_inputs)
     except Exception as e:
         logger.exception(e)
-        return 1
+        return e.code if isinstance(e, build.ScriptExitError) else 1
 
 
 def refresh(parser, subparser, args, extra):
