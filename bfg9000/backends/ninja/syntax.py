@@ -9,10 +9,10 @@ from ... import shell
 from ... import iterutils
 from ...platforms.host import platform_info
 from ...tools.common import Command
-from ...versioning import Version
+from ...versioning import SpecifierSet, Version
 
-__all__ = ['NinjaFile', 'Section', 'Syntax', 'Writer', 'Variable', 'var',
-           'path_vars']
+__all__ = ['features', 'NinjaFile', 'path_vars', 'Section', 'Syntax', 'var',
+           'Variable', 'Writer']
 
 Rule = namedtuple('Rule', ['command', 'depfile', 'deps', 'description',
                            'generator', 'pool', 'restat'])
@@ -144,6 +144,23 @@ if platform_info().destdir:
     path_vars[path.DestDir.destdir] = Variable('DESTDIR')
 
 
+class _NinjaFeatures:
+    _features = {
+        'console': '1.5',
+    }
+
+    def version(self, feature):
+        return self._features[feature]
+
+    def supported(self, feature, version):
+        return version and version in SpecifierSet(
+            '>={}'.format(self.version(feature))
+        )
+
+
+features = _NinjaFeatures()
+
+
 class NinjaFile:
     Section = Section
 
@@ -189,7 +206,7 @@ class NinjaFile:
 
         if pool is not None:
             if pool == 'console':
-                self.min_version('1.5')
+                self.min_version(features.version('console'))
             else:
                 raise ValueError('unknown pool {!r}'.format(pool))
 

@@ -4,7 +4,7 @@ from ... import iterutils
 from ... import path
 from ... import shell
 from .syntax import *
-from ...versioning import SpecifierSet, Version
+from ...versioning import Version
 
 
 def version(env=os.environ):
@@ -75,8 +75,7 @@ def command_build(buildfile, env, output, inputs=None, implicit=None,
     else:
         extra_implicit = []
 
-    if ( console and env.backend_version and env.backend_version in
-         SpecifierSet('>=1.5') ):
+    if console and features.supported('console', env.backend_version):
         rule_name = 'console_command'
         rule_kwargs = {'pool': 'console'}
     else:

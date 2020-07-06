@@ -1,6 +1,8 @@
-from .common import AttrDict, BuiltinTest, TestCase
+from unittest import mock
 
+from .common import AttrDict, BuiltinTest, TestCase
 from bfg9000 import file_types
+from bfg9000.builtins import command as _command
 from bfg9000.builtins.command import Placeholder
 from bfg9000.path import Path, Root
 from bfg9000.safe_str import literal, jbos
@@ -441,3 +443,24 @@ class TestPlaceholder(TestCase):
         self.assertRaises(TypeError, lambda: p[0:1][0])
         self.assertRaises(TypeError, lambda: p[0][0:1])
         self.assertRaises(TypeError, lambda: p[0:1][0:1])
+
+
+class TestMakeBackend(BuiltinTest):
+    def test_simple(self):
+        makefile = mock.Mock()
+        result = self.context['command']('foo', cmd=['echo', 'foo'])
+        _command.make_command(result.creator, self.build, makefile, self.env)
+        makefile.rule.assert_called_once_with(
+            result, [], [], [['echo', 'foo']], None, True
+        )
+
+
+class TestNinjaBackend(BuiltinTest):
+    def test_simple(self):
+        ninjafile = mock.Mock()
+        result = self.context['command']('foo', cmd=['echo', 'foo'])
+        _command.ninja_command(result.creator, self.build, ninjafile, self.env)
+        ninjafile.build.assert_called_once_with(
+            output=[result], rule='command', inputs=[], implicit=['PHONY'],
+            order_only=None, variables={'cmd': ['echo', 'foo']}
+        )

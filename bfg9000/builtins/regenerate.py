@@ -28,11 +28,15 @@ def make_regenerate_rule(build_inputs, buildfile, env):
 def ninja_regenerate_rule(build_inputs, buildfile, env):
     bfg9000 = env.tool('bfg9000')
 
+    rule_kwargs = {}
+    if ninja.features.supported('console', env.backend_version):
+        rule_kwargs['pool'] = 'console'
     buildfile.rule(
         name='regenerate',
         command=bfg9000(Path('.')),
         generator=True,
         depfile=build_inputs['regenerate'].depfile,
+        **rule_kwargs
     )
     buildfile.build(
         output=[Path('build.ninja')] + build_inputs['regenerate'].outputs,
