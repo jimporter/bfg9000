@@ -113,7 +113,8 @@ class Link(Edge):
             pch=kwargs.pop('pch', None),
             options=kwargs.pop('compile_options', None),
             libs=kwargs['libs'], packages=kwargs['packages'], lang=lang,
-            directory=intdir
+            directory=intdir,
+            extra_deps=kwargs.pop('extra_compile_deps', None)
         )
 
         return files, kwargs

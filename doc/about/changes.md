@@ -13,6 +13,8 @@ in progress
 - Add `opts.static` to request static linking of libraries
 - MSVC's runtime can now be selected by using a combination of `opts.static`
   and `opts.debug`
+- Link steps (`executable`, `library`, etc) now accept an `extra_compile_deps`
+  argument to forward on to the compilation step
 - Iterables passed to `default` or `install` will include each element of the
   iterable in the appropriate build target
 - `info()`, `debug()`, and `warning()` now take a variable number of arguments

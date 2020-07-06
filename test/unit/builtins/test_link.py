@@ -183,6 +183,16 @@ class TestExecutable(LinkTest):
                             self.object_file('exe.int/main'))
         self.assertEqual(result.creator.extra_deps, [dep])
 
+    def test_extra_compile_deps(self):
+        dep = self.context['generic_file']('dep.txt')
+        result = self.context['executable']('exe', ['main.cpp'],
+                                            extra_compile_deps=[dep])
+        self.assertSameFile(result, self.output_file('exe'))
+        self.assertSameFile(result.creator.files[0],
+                            self.object_file('exe.int/main'))
+        self.assertEqual(result.creator.extra_deps, [])
+        self.assertEqual(result.creator.files[0].creator.extra_deps, [dep])
+
     def test_description(self):
         result = self.context['executable']('exe', ['main.cpp'],
                                             description='my description')
@@ -368,6 +378,18 @@ class TestSharedLibrary(LinkTest):
                             self.object_file('libshared.int/main'))
         self.assertEqual(result.creator.extra_deps, [dep])
 
+    def test_extra_compile_deps(self):
+        dep = self.context['generic_file']('dep.txt')
+        expected = self.output_file('shared')
+
+        result = self.context['shared_library']('shared', ['main.cpp'],
+                                                extra_compile_deps=[dep])
+        self.assertSameFile(result, expected, exclude={'post_install'})
+        self.assertSameFile(result.creator.files[0],
+                            self.object_file('libshared.int/main'))
+        self.assertEqual(result.creator.extra_deps, [])
+        self.assertEqual(result.creator.files[0].creator.extra_deps, [dep])
+
 
 class TestStaticLibrary(LinkTest):
     mode = 'static_library'
@@ -535,6 +557,18 @@ class TestStaticLibrary(LinkTest):
         self.assertSameFile(result.creator.files[0],
                             self.object_file('libstatic.int/main'))
         self.assertEqual(result.creator.extra_deps, [dep])
+
+    def test_extra_compile_deps(self):
+        dep = self.context['generic_file']('dep.txt')
+        expected = self.output_file('static', extra=self.extra())
+
+        result = self.context['static_library']('static', ['main.cpp'],
+                                                extra_compile_deps=[dep])
+        self.assertSameFile(result, expected)
+        self.assertSameFile(result.creator.files[0],
+                            self.object_file('libstatic.int/main'))
+        self.assertEqual(result.creator.extra_deps, [])
+        self.assertEqual(result.creator.files[0].creator.extra_deps, [dep])
 
 
 class TestLibrary(LinkTest):

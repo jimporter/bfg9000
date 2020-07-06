@@ -223,6 +223,8 @@ The following arguments may also be specified:
 * *lang*: Forwarded on to [*object_file*](#object_file)
 * *intermediate_dir*: Fowarded on to [*object_file*](#object_file) as
   *directory*, defaulting to `<name>.int`
+* *extra_compile_deps*: Forwarded on to [*object_file*](#object_file) as
+  *extra_deps*
 
 If neither *files* nor *libs* is specified, this function merely references an
 *existing* executable file (a precompiled binary, a shell script, etc) somewhere
