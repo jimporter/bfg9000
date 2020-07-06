@@ -174,11 +174,15 @@
 <li>Add <code>opts.static</code> to request static linking of libraries</li>
 <li>MSVC's runtime can now be selected by using a combination of <code>opts.static</code>
   and <code>opts.debug</code></li>
+<li>Link steps (<code>executable</code>, <code>library</code>, etc) now accept an <code>extra_compile_deps</code>
+  argument to forward on to the compilation step</li>
 <li>Iterables passed to <code>default</code> or <code>install</code> will include each element of the
   iterable in the appropriate build target</li>
 <li><code>info()</code>, <code>debug()</code>, and <code>warning()</code> now take a variable number of arguments
   to print</li>
 <li>Add support for setting the entry point for native binaries (C, C++, etc)</li>
+<li>Regenerating build files with the Ninja backend now uses the <code>console</code> pool,
+  allowing realtime output and colored text</li>
 </ul>
 <h3 id="breaking-changes">Breaking changes<a class="headerlink" href="#breaking-changes" title="Permanent link">§</a></h3>
 <ul>
@@ -191,6 +195,8 @@
 <li><code>copy_file()</code> now works correctly when copying into a subdirectory on the
   Make backend</li>
 <li><code>extra_deps</code> now works with <code>copy_file()</code></li>
+<li>Calling <code>exit()</code> with a non-zero return code from a <code>build.bfg</code> file now
+  causes configuration to fail</li>
 <li>Automatically-generated PCH source files (for MSVC compilers) are now placed
   in the same directory as the resulting PCH</li>
 <li>The <code>install_name</code> for libraries on macOS is now always an absolute path,
