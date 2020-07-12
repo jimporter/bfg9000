@@ -3,7 +3,8 @@ import re
 from itertools import chain
 
 from . import pkg_config
-from .common import BuildCommand, Builder, check_which, library_macro
+from .common import (BuildCommand, Builder, check_which, library_macro,
+                     SimpleBuildCommand)
 from .. import log, options as opts, safe_str, shell
 from ..arguments.windows import ArgumentParser
 from ..builtins.file_types import make_immediate_file
@@ -72,21 +73,21 @@ class MsvcBuilder(Builder):
         arflags_name = arinfo.var('flags').lower()
         arflags = shell.split(env.getvar(arinfo.var('flags'), ''))
 
-        self.compiler = MsvcCompiler(self, env, name, command, cflags_name,
-                                     cflags)
-        self.pch_compiler = MsvcPchCompiler(self, env, name, command,
-                                            cflags_name, cflags)
+        compile_kwargs = {'command': (name, command),
+                          'flags': (cflags_name, cflags)}
+        self.compiler = MsvcCompiler(self, env, **compile_kwargs)
+        self.pch_compiler = MsvcPchCompiler(self, env, **compile_kwargs)
+
+        link_kwargs = {'command': (ld_name, link_command),
+                       'flags': (ldflags_name, ldflags),
+                       'libs': (ldlibs_name, ldlibs)}
         self._linkers = {
-            'executable': MsvcExecutableLinker(
-                self, env, name, ld_name, link_command, ldflags_name, ldflags,
-                ldlibs_name, ldlibs
-            ),
-            'shared_library': MsvcSharedLibraryLinker(
-                self, env, name, ld_name, link_command, ldflags_name, ldflags,
-                ldlibs_name, ldlibs
-            ),
+            'executable': MsvcExecutableLinker(self, env, name, **link_kwargs),
+            'shared_library': MsvcSharedLibraryLinker(self, env, name,
+                                                      **link_kwargs),
             'static_library': MsvcStaticLinker(
-                self, env, ar_name, lib_command, arflags_name, arflags
+                self, env, command=(ar_name, lib_command),
+                flags=(arflags_name, arflags)
             ),
         }
         self.packages = MsvcPackageResolver(self, env)
@@ -125,11 +126,6 @@ class MsvcBuilder(Builder):
 
 
 class MsvcBaseCompiler(BuildCommand):
-    def __init__(self, builder, env, rule_name, command_var, command,
-                 cflags_name, cflags):
-        super().__init__(builder, env, rule_name, command_var, command,
-                         flags=(cflags_name, cflags))
-
     @property
     def deps_flavor(self):
         return 'msvc'
@@ -239,9 +235,8 @@ class MsvcBaseCompiler(BuildCommand):
 
 
 class MsvcCompiler(MsvcBaseCompiler):
-    def __init__(self, builder, env, name, command, cflags_name, cflags):
-        super().__init__(builder, env, name, name, command, cflags_name,
-                         cflags)
+    def __init__(self, builder, env, *, command, flags):
+        super().__init__(builder, env, command=command, flags=flags)
 
     @property
     def accepts_pch(self):
@@ -260,9 +255,9 @@ class MsvcCompiler(MsvcBaseCompiler):
 
 
 class MsvcPchCompiler(MsvcBaseCompiler):
-    def __init__(self, builder, env, name, command, cflags_name, cflags):
-        super().__init__(builder, env, name + '_pch', name, command,
-                         cflags_name, cflags)
+    def __init__(self, builder, env, *, command, flags):
+        super().__init__(builder, env, command[0] + '_pch', command=command,
+                         flags=flags)
 
     @property
     def num_outputs(self):
@@ -318,13 +313,6 @@ class MsvcLinker(BuildCommand):
         'c'     : {'c'},
         'c++'   : {'c', 'c++'},
     }
-
-    def __init__(self, builder, env, rule_name, name, command, ldflags_name,
-                 ldflags, ldlibs_name, ldlibs):
-        super().__init__(
-            builder, env, rule_name, name, command,
-            flags=(ldflags_name, ldflags), libs=(ldlibs_name, ldlibs)
-        )
 
     def _extract_lib_name(self, library):
         basename = library.path.basename()
@@ -461,10 +449,9 @@ class MsvcLinker(BuildCommand):
 
 
 class MsvcExecutableLinker(MsvcLinker):
-    def __init__(self, builder, env, name, command_var, command, ldflags_name,
-                 ldflags, ldlibs_name, ldlibs):
-        super().__init__(builder, env, name + '_link', command_var, command,
-                         ldflags_name, ldflags, ldlibs_name, ldlibs)
+    def __init__(self, builder, env, name, *, command, flags, libs):
+        super().__init__(builder, env, name + '_link', command=command,
+                         flags=flags, libs=libs)
 
     def output_file(self, name, step):
         path = Path(name + self.env.target_platform.executable_ext)
@@ -472,10 +459,9 @@ class MsvcExecutableLinker(MsvcLinker):
 
 
 class MsvcSharedLibraryLinker(MsvcLinker):
-    def __init__(self, builder, env, name, command_var, command, ldflags_name,
-                 ldflags, ldlibs_name, ldlibs):
-        super().__init__(builder, env, name + '_linklib', command_var, command,
-                         ldflags_name, ldflags, ldlibs_name, ldlibs)
+    def __init__(self, builder, env, name, *, command, flags, libs):
+        super().__init__(builder, env, name + '_linklib',
+                         command=command, flags=flags, libs=libs)
 
     @property
     def num_outputs(self):
@@ -504,11 +490,7 @@ class MsvcSharedLibraryLinker(MsvcLinker):
         return [dll, dll.import_lib, dll.export_file]
 
 
-class MsvcStaticLinker(BuildCommand):
-    def __init__(self, builder, env, name, command, arflags_name, arflags):
-        super().__init__(builder, env, name, name, command,
-                         flags=(arflags_name, arflags))
-
+class MsvcStaticLinker(SimpleBuildCommand):
     def can_link(self, format, langs):
         return format == self.builder.object_format
 

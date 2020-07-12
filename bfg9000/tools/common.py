@@ -55,11 +55,10 @@ class Builder:
 
 
 class Command:
-    def __init__(self, env, rule_name, command_var, command):
+    def __init__(self, env, rule_name=None, *, command):
         self.env = env
-        self.rule_name = rule_name
-        self.command_var = command_var
-        self.command = command
+        self.command_var, self.command = command
+        self.rule_name = rule_name or self.command_var
 
     @staticmethod
     def convert_args(args, conv):
@@ -97,13 +96,12 @@ class SimpleCommand(Command):
     def __init__(self, env, name, env_var, default, kind='executable'):
         cmd = check_which(env.getvar(env_var, default), env.variables,
                           kind=kind)
-        super().__init__(env, name, name, cmd)
+        super().__init__(env, command=(name, cmd))
 
 
 class BuildCommand(Command):
-    def __init__(self, builder, env, rule_name, command_var, command,
-                 **kwargs):
-        super().__init__(env, rule_name, command_var, command)
+    def __init__(self, builder, env, rule_name=None, *, command, **kwargs):
+        super().__init__(env, rule_name, command=command)
         self.builder = builder
 
         # Fill in the names and values of the various flags needed for this
@@ -144,6 +142,11 @@ class BuildCommand(Command):
 
     def post_install(self, options, output, step):
         return None
+
+
+class SimpleBuildCommand(BuildCommand):
+    def __init__(self, builder, env, *, command, flags):
+        super().__init__(builder, env, command=command, flags=flags)
 
 
 def check_which(names, *args, **kwargs):

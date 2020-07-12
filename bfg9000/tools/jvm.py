@@ -2,7 +2,8 @@ import os
 import re
 from itertools import chain
 
-from .common import BuildCommand, Builder, check_which, not_buildroot
+from .common import (BuildCommand, Builder, check_which, not_buildroot,
+                     SimpleBuildCommand)
 from .. import log, options as opts, safe_str, shell
 from ..builtins.file_types import make_immediate_file
 from ..exceptions import PackageResolutionError
@@ -55,12 +56,12 @@ class JvmBuilder(Builder):
         jarflags_name = ldinfo.var('flags').lower()
         jarflags = shell.split(env.getvar(ldinfo.var('flags'), 'cfm'))
 
-        self.compiler = JvmCompiler(self, env, name, command, flags_name,
-                                    flags)
-        self._linker = JarMaker(self, env, jar_name, jar_command,
-                                jarflags_name, jarflags)
+        self.compiler = JvmCompiler(self, env, command=(name, command),
+                                    flags=(flags_name, flags))
+        self._linker = JarMaker(self, env, command=(jar_name, jar_command),
+                                flags=(jarflags_name, jarflags))
         self.packages = JvmPackageResolver(self, env, run_command)
-        self.runner = JvmRunner(self, env, run_name, run_command)
+        self.runner = JvmRunner(self, env, command=(run_name, run_command))
 
     @staticmethod
     def _parse_brand(env, lang, version_output, run_command):
@@ -117,11 +118,7 @@ class JvmBuilder(Builder):
         return self._linker
 
 
-class JvmCompiler(BuildCommand):
-    def __init__(self, builder, env, name, command, flags_name, flags):
-        super().__init__(builder, env, name, name, command,
-                         flags=(flags_name, flags))
-
+class JvmCompiler(SimpleBuildCommand):
     @property
     def deps_flavor(self):
         return None
@@ -182,11 +179,7 @@ class JvmCompiler(BuildCommand):
                               self.builder.object_format, self.lang)
 
 
-class JarMaker(BuildCommand):
-    def __init__(self, builder, env, name, command, jarflags_name, jarflags):
-        super().__init__(builder, env, 'jar', 'jar', command,
-                         flags=(jarflags_name, jarflags))
-
+class JarMaker(SimpleBuildCommand):
     @property
     def flavor(self):
         return 'jar'
@@ -336,8 +329,8 @@ class JvmPackageResolver:
 
 
 class JvmRunner(BuildCommand):
-    def __init__(self, builder, env, name, command):
-        super().__init__(builder, env, name, name, command)
+    def __init__(self, builder, env, *, command):
+        super().__init__(builder, env, command=command)
 
     def _call(self, cmd, file, cp=None, jar=False):
         result = list(cmd)

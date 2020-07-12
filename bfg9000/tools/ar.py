@@ -2,7 +2,7 @@ import os
 from itertools import chain
 
 from .. import options as opts, safe_str, shell
-from .common import BuildCommand, library_macro
+from .common import library_macro, SimpleBuildCommand
 from ..file_types import StaticLibrary
 from ..iterutils import iterate
 from ..objutils import memoize
@@ -10,11 +10,7 @@ from ..path import Path
 from ..versioning import detect_version
 
 
-class ArLinker(BuildCommand):
-    def __init__(self, builder, env, name, command, arflags_name, arflags):
-        super().__init__(builder, env, name, name, command,
-                         flags=(arflags_name, arflags))
-
+class ArLinker(SimpleBuildCommand):
     @memoize
     def _check_version(self):
         try:

@@ -18,8 +18,8 @@ class TestArLinker(CrossPlatformTestCase):
     def setUp(self):
         with mock.patch('bfg9000.shell.which', mock_which):
             fmt = self.env.target_platform.object_format
-            self.ar = ArLinker(AttrDict(object_format=fmt), self.env, 'ar',
-                               ['ar'], 'arflags', [])
+            self.ar = ArLinker(AttrDict(object_format=fmt), self.env,
+                               command=('ar', ['ar']), flags=('arflags', []))
 
     def test_flavor(self):
         self.assertEqual(self.ar.flavor, 'ar')

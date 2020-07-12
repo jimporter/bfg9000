@@ -2,7 +2,7 @@ from itertools import chain
 
 from . import builder
 from .. import options as opts, safe_str, shell
-from .common import BuildCommand, Builder, choose_builder
+from .common import Builder, choose_builder, SimpleBuildCommand
 from ..file_types import HeaderFile, SourceFile
 from ..iterutils import iterate
 from ..languages import known_langs
@@ -34,7 +34,7 @@ class MocBuilder(Builder):
         mocflags_name = langinfo.var('flags').lower()
         mocflags = shell.split(env.getvar(langinfo.var('flags'), ''))
 
-        self.transpiler = MocCompiler(self, env, name, name, command,
+        self.transpiler = MocCompiler(self, env, command=(name, command),
                                       flags=(mocflags_name, mocflags))
 
     @staticmethod
@@ -49,7 +49,7 @@ class MocBuilder(Builder):
                            stderr=shell.Mode.devnull)
 
 
-class MocCompiler(BuildCommand):
+class MocCompiler(SimpleBuildCommand):
     @property
     def deps_flavor(self):
         return None
@@ -111,8 +111,8 @@ class RccBuilder(Builder):
         rccflags_name = langinfo.var('flags').lower()
         rccflags = shell.split(env.getvar(langinfo.var('flags'), ''))
 
-        self.transpiler = RccCompiler(self, env, name, command, rccflags_name,
-                                      rccflags)
+        self.transpiler = RccCompiler(self, env, command=(name, command),
+                                      flags=(rccflags_name, rccflags))
 
     @staticmethod
     def _parse_brand(version_output):
@@ -126,11 +126,7 @@ class RccBuilder(Builder):
                            stderr=shell.Mode.devnull)
 
 
-class RccCompiler(BuildCommand):
-    def __init__(self, builder, env, name, command, rccflags_name, rccflags):
-        super().__init__(builder, env, name, name, command,
-                         flags=(rccflags_name, rccflags))
-
+class RccCompiler(SimpleBuildCommand):
     @property
     def deps_flavor(self):
         return 'gcc'
@@ -176,8 +172,8 @@ class UicBuilder(Builder):
         uicflags_name = langinfo.var('flags').lower()
         uicflags = shell.split(env.getvar(langinfo.var('flags'), ''))
 
-        self.transpiler = UicCompiler(self, env, name, command, uicflags_name,
-                                      uicflags)
+        self.transpiler = UicCompiler(self, env, command=(name, command),
+                                      flags=(uicflags_name, uicflags))
 
     @staticmethod
     def _parse_brand(version_output):
@@ -191,11 +187,7 @@ class UicBuilder(Builder):
                            stderr=shell.Mode.devnull)
 
 
-class UicCompiler(BuildCommand):
-    def __init__(self, builder, env, name, command, uicflags_name, uicflags):
-        super().__init__(builder, env, name, name, command,
-                         flags=(uicflags_name, uicflags))
-
+class UicCompiler(SimpleBuildCommand):
     @property
     def deps_flavor(self):
         return None

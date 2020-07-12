@@ -2,7 +2,7 @@ from itertools import chain
 
 from . import builder
 from .. import options as opts, safe_str, shell
-from .common import BuildCommand, Builder, choose_builder
+from .common import Builder, choose_builder, SimpleBuildCommand
 from ..file_types import SourceFile
 from ..iterutils import iterate
 from ..languages import known_langs
@@ -32,7 +32,7 @@ class LexBuilder(Builder):
         lflags_name = langinfo.var('flags').lower()
         lflags = shell.split(env.getvar(langinfo.var('flags'), ''))
 
-        self.transpiler = LexCompiler(self, env, name, name, command,
+        self.transpiler = LexCompiler(self, env, command=(name, command),
                                       flags=(lflags_name, lflags))
 
     @staticmethod
@@ -47,7 +47,7 @@ class LexBuilder(Builder):
                            stderr=shell.Mode.devnull)
 
 
-class LexCompiler(BuildCommand):
+class LexCompiler(SimpleBuildCommand):
     @property
     def deps_flavor(self):
         return None

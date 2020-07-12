@@ -84,25 +84,24 @@ class CcBuilder(Builder):
         except (OSError, shell.CalledProcessError):
             pass
 
-        self.compiler = CcCompiler(self, env, name, command, cflags_name,
-                                   cflags)
+        compile_kwargs = {'command': (name, command),
+                          'flags': (cflags_name, cflags)}
+        self.compiler = CcCompiler(self, env, **compile_kwargs)
         try:
-            self.pch_compiler = CcPchCompiler(self, env, name, command,
-                                              cflags_name, cflags)
+            self.pch_compiler = CcPchCompiler(self, env, **compile_kwargs)
         except ValueError:
             self.pch_compiler = None
 
+        link_kwargs = {'command': (name, link_command),
+                       'flags': (ldflags_name, ldflags),
+                       'libs': (ldlibs_name, ldlibs)}
         self._linkers = {
-            'executable': CcExecutableLinker(
-                self, env, name, link_command, ldflags_name, ldflags,
-                ldlibs_name, ldlibs
+            'executable': CcExecutableLinker(self, env, **link_kwargs),
+            'shared_library': CcSharedLibraryLinker(self, env, **link_kwargs),
+            'static_library': ArLinker(
+                self, env, command=(ar_name, ar_command),
+                flags=(arflags_name, arflags)
             ),
-            'shared_library': CcSharedLibraryLinker(
-                self, env, name, link_command, ldflags_name, ldflags,
-                ldlibs_name, ldlibs
-            ),
-            'static_library': ArLinker(self, env, ar_name, ar_command,
-                                       arflags_name, arflags),
         }
         if ld_command:
             self._linkers['raw'] = LdLinker(self, env, ld_command, stdout)
@@ -171,11 +170,6 @@ class CcBuilder(Builder):
 
 
 class CcBaseCompiler(BuildCommand):
-    def __init__(self, builder, env, rule_name, command_var, command,
-                 cflags_name, cflags):
-        super().__init__(builder, env, rule_name, command_var, command,
-                         flags=(cflags_name, cflags))
-
     @property
     def deps_flavor(self):
         return None if self.lang in ('f77', 'f95') else 'gcc'
@@ -273,9 +267,8 @@ class CcCompiler(CcBaseCompiler):
         'java'  : 'java',
     }
 
-    def __init__(self, builder, env, name, command, cflags_name, cflags):
-        super().__init__(builder, env, name, name, command, cflags_name,
-                         cflags)
+    def __init__(self, builder, env, *, command, flags):
+        super().__init__(builder, env, command=command, flags=flags)
 
     @property
     def accepts_pch(self):
@@ -298,12 +291,12 @@ class CcPchCompiler(CcBaseCompiler):
         'objc++': 'objective-c++-header',
     }
 
-    def __init__(self, builder, env, name, command, cflags_name, cflags):
+    def __init__(self, builder, env, *, command, flags):
         if builder.lang not in self._langs:
             raise ValueError('{} has no precompiled headers'
                              .format(builder.lang))
-        super().__init__(builder, env, name + '_pch', name, command,
-                         cflags_name, cflags)
+        super().__init__(builder, env, command[0] + '_pch', command=command,
+                         flags=flags)
 
     @property
     def accepts_pch(self):
@@ -329,12 +322,8 @@ class CcLinker(BuildCommand):
         'java'  : {'java', 'c', 'c++', 'objc', 'objc++', 'f77', 'f95'},
     }
 
-    def __init__(self, builder, env, rule_name, command_var, command,
-                 ldflags_name, ldflags, ldlibs_name, ldlibs):
-        super().__init__(
-            builder, env, rule_name, command_var, command,
-            flags=(ldflags_name, ldflags), libs=(ldlibs_name, ldlibs)
-        )
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
         # Create a regular expression to extract the library name for linking
         # with -l.
@@ -649,10 +638,9 @@ class CcLinker(BuildCommand):
 class CcExecutableLinker(CcLinker):
     _is_library = False
 
-    def __init__(self, builder, env, name, command, ldflags_name, ldflags,
-                 ldlibs_name, ldlibs):
-        super().__init__(builder, env, name + '_link', name, command,
-                         ldflags_name, ldflags, ldlibs_name, ldlibs)
+    def __init__(self, builder, env, *, command, flags, libs):
+        super().__init__(builder, env, command[0] + '_link', command=command,
+                         flags=flags, libs=libs)
 
     def output_file(self, name, step):
         path = Path(name + self.env.target_platform.executable_ext)
@@ -662,10 +650,9 @@ class CcExecutableLinker(CcLinker):
 class CcSharedLibraryLinker(CcLinker):
     _is_library = True
 
-    def __init__(self, builder, env, name, command, ldflags_name, ldflags,
-                 ldlibs_name, ldlibs):
-        super().__init__(builder, env, name + '_linklib', name, command,
-                         ldflags_name, ldflags, ldlibs_name, ldlibs)
+    def __init__(self, builder, env, *, command, flags, libs):
+        super().__init__(builder, env, command[0] + '_linklib',
+                         command=command, flags=flags, libs=libs)
 
     @property
     def num_outputs(self):

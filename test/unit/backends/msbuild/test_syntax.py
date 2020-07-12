@@ -233,5 +233,5 @@ class TestCommandProject(ProjectTest):
         self.assertEqual(CommandProject.convert_command(['foo', 'bar']),
                          'foo bar')
         self.assertEqual(CommandProject.convert_command(
-            [Command(None, 'rule', 'var', 'command'), 'bar']
+            [Command(None, 'rule', command=('var', 'command')), 'bar']
         ), 'command bar')
