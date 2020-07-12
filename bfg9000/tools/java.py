@@ -23,5 +23,5 @@ _builders = (jvm.JvmBuilder, cc.CcBuilder)
 
 @builder('java', 'scala')
 def java_builder(env, lang):
-    return choose_builder(env, known_langs[lang], _default_cmds[lang],
-                          _builders)
+    return choose_builder(env, known_langs[lang], _builders,
+                          default_candidates=_default_cmds[lang])

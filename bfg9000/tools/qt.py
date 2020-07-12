@@ -23,7 +23,8 @@ with known_langs.make('qtui') as x:
 
 @builder('qtmoc')
 def moc_builder(env):
-    return choose_builder(env, known_langs['qtmoc'], ['moc'], (MocBuilder,))
+    return choose_builder(env, known_langs['qtmoc'], (MocBuilder,),
+                          default_candidates=['moc'])
 
 
 class MocBuilder(Builder):
@@ -100,7 +101,8 @@ class MocCompiler(SimpleBuildCommand):
 
 @builder('qrc')
 def qrc_builder(env):
-    return choose_builder(env, known_langs['qrc'], ['rcc'], (RccBuilder,))
+    return choose_builder(env, known_langs['qrc'], (RccBuilder,),
+                          default_candidates=['rcc'])
 
 
 class RccBuilder(Builder):
@@ -161,7 +163,8 @@ class RccCompiler(SimpleBuildCommand):
 
 @builder('qtui')
 def qtui_builder(env):
-    return choose_builder(env, known_langs['qtui'], ['uic'], (UicBuilder,))
+    return choose_builder(env, known_langs['qtui'], (UicBuilder,),
+                          default_candidates=['uic'])
 
 
 class UicBuilder(Builder):

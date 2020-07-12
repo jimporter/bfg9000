@@ -159,13 +159,18 @@ def check_which(names, *args, **kwargs):
         return shell.listify(names[0])
 
 
-def choose_builder(env, langinfo, default_candidates, builders):
-    candidates = listify(env.getvar(langinfo.var('compiler'),
-                                    default_candidates))
+def choose_builder(env, langinfo, builders, *, candidates=None,
+                   default_candidates=None, strict=False):
+    if candidates is None:
+        candidates = env.getvar(langinfo.var('compiler'), default_candidates)
+    candidates = listify(candidates)
+
     try:
         cmd = shell.which(candidates, env.variables,
                           kind='{} compiler'.format(langinfo.name))
     except IOError as e:
+        if strict:
+            raise
         warnings.warn(str(e))
         cmd = shell.listify(candidates[0])
         builder_type = first(builders)

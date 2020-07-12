@@ -18,6 +18,9 @@
 - `info()`, `debug()`, and `warning()` now take a variable number of arguments
   to print
 - Add support for setting the entry point for native binaries (C, C++, etc)
+- Try to find the right compiler to use for C-family languages by guessing based
+  on other compilers in the family (e.g. if `CXX=g++`, guess that the C compiler
+  is `gcc`)
 - Regenerating build files with the Ninja backend now uses the `console` pool,
   allowing realtime output and colored text
 

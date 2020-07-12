@@ -19,9 +19,10 @@ _windows_cmds = ['yacc', 'bison', 'win_bison']
 
 @builder('yacc')
 def yacc_builder(env):
-    cmds = (_windows_cmds if env.host_platform.family == 'windows'
-            else _posix_cmds)
-    return choose_builder(env, known_langs['yacc'], cmds, (YaccBuilder,))
+    candidates = (_windows_cmds if env.host_platform.family == 'windows'
+                  else _posix_cmds)
+    return choose_builder(env, known_langs['yacc'], (YaccBuilder,),
+                          default_candidates=candidates)
 
 
 class YaccBuilder(Builder):

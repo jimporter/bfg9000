@@ -19,9 +19,10 @@ _windows_cmds = ['lex', 'flex', 'win_flex']
 
 @builder('lex')
 def lex_builder(env):
-    cmds = (_windows_cmds if env.host_platform.family == 'windows'
-            else _posix_cmds)
-    return choose_builder(env, known_langs['lex'], cmds, (LexBuilder,))
+    candidates = (_windows_cmds if env.host_platform.family == 'windows'
+                  else _posix_cmds)
+    return choose_builder(env, known_langs['lex'], (LexBuilder,),
+                          default_candidates=candidates)
 
 
 class LexBuilder(Builder):
