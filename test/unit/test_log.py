@@ -267,8 +267,11 @@ class TestLogStack(TestCase):
             })
 
         with mock.patch('logging.log') as mocklog:
-            log.log_message(log.INFO, 'foo', 1, Path('path'), 'bar',
-                            show_stack=False)
+            # Make sure the log_message call is all on one line to avoid
+            # differences in how stacks for multi-line statements are handled
+            # on various Python versions.
+            args = (log.INFO, 'foo', 1, Path('path'), 'bar')
+            log.log_message(*args, show_stack=False)
             tb = traceback.extract_stack()[1:]
             tb[-1].lineno -= 1
 
