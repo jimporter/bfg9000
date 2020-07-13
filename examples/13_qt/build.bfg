@@ -1,12 +1,15 @@
 # -*- python -*-
 
-global_options([opts.pic(), opts.std('c++11')], lang='c++')
+global_options([opts.std('c++11')], lang='c++')
+if env.target_platform.family == 'posix':
+    global_options([opts.pic()], lang='c++')
 
 # Qt provides two main ways to build user interfaces: the Qt Designer, which
 # works directly with Qt widgets, or via Qt Quick, which uses QML. In both
 # cases, building Qt needs some additional build steps:
 
-widgets = package('Qt5Widgets')
+widgets = package('Qt5Widgets', headers=['QApplication', 'QtCore'],
+                  libs=['Qt5Widgets', 'Qt5Core'])
 
 # Compiling Qt UI files is simple: just use the `generated_source` build step
 # and the output will be a C++ file ready to be compiled.
@@ -18,13 +21,19 @@ ui = generated_source('designer/widget.ui')
 # the language as it can't be automatically determined from the file extension:
 
 moc = generated_source(file='designer/window.hpp', lang='qtmoc')
+
+# To build cross-platform graphical applications, you can use the `opts.gui`
+# link option. For Windows targets, this sets the subsystem to "windows" so no
+# terminal pops up when the application starts; setting `main` to true also
+# ensures that the entry point of the application is `main`, not `WinMain`:
+
 executable('qt-designer', ['designer/main.cpp', 'designer/window.cpp', moc],
            includes=[ui], link_options=[opts.gui(main=True)], packages=widgets)
 
 # Building Qt Quick projects is easy too. Much like Qt Designer projects, all
 # you'll need to do is add some extra build step for the Qt-specific bits:
 
-qml = package('Qt5Qml')
+qml = package('Qt5Qml', headers=['QQmlApplicationEngine'])
 
 # Like with `object_files`, you can generate sources for multiple inputs at
 # once using `generated_sources`. Each input in the list will be forwarded on

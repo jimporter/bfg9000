@@ -16,7 +16,7 @@ environment:
   PYTHON_PATH: C:\Python37
   BFG_SKIPPED_TESTS: fortran objc scala
   BACKENDS: ninja make msbuild
-  CPPFLAGS: /IC:\projects\bfg9000\include /WX
+  CPPFLAGS: /WX /IC:\projects\bfg9000\include
 
   matrix:
     - COMPILER: vs
@@ -42,6 +42,7 @@ for:
       VS: C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall.bat
       BOOST_INCLUDEDIR: C:\Libraries\boost_1_58_0
       BOOST_LIBRARYDIR: C:\Libraries\boost_1_58_0\lib32-msvc-12.0
+      QT_ROOT: C:\Qt\5.8\msvc2013
       LIBOGG: libogg-1.3.2
       LIBOGG_VS: VS2010
       CHOCO_EXTRAS: make
@@ -52,6 +53,7 @@ for:
       VS: C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat
       BOOST_INCLUDEDIR: C:\Libraries\boost_1_63_0
       BOOST_LIBRARYDIR: C:\Libraries\boost_1_63_0\lib32-msvc-14.0
+      QT_ROOT: C:\Qt\5.11.3\msvc2015
       CHOCO_EXTRAS: make
   - matrix:
       only:
@@ -61,6 +63,7 @@ for:
       VS: C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat
       BOOST_INCLUDEDIR: C:\Libraries\boost_1_67_0
       BOOST_LIBRARYDIR: C:\Libraries\boost_1_67_0\lib32-msvc-14.1
+      QT_ROOT: C:\Qt\5.13.2\msvc2017
       CHOCO_EXTRAS: make
   - matrix:
       only:
@@ -70,8 +73,9 @@ for:
       BACKENDS: ninja make
       CC: gcc
       CXX: g++
-      CPPFLAGS: -IC:\projects\bfg9000\include -Wall -Werror
+      CPPFLAGS: -Wall -Werror -IC:\projects\bfg9000\include
       MAKE: mingw32-make
+      QT_ROOT: C:\Qt\5.13.2\mingw73_64
       MINGW_PATH: C:\msys64\mingw64\bin
       LIBOGG_PLAT: x64
   - matrix:
@@ -124,13 +128,20 @@ install:
 
   # Set up paths and other necessary bits for the compiler.
   - if defined VS call "%VS%" x86
+  - >
+    if defined QT_ROOT
+    set PATH=%QT_ROOT%\bin;%PATH% &
+    set CPATH=%QT_ROOT%\include;%QT_ROOT%\include\QtWidgets;%QT_ROOT%\include\QtQml;%CPATH% &
+    set LIBRARY_PATH=%QT_ROOT%\lib;%LIBRARY_PATH%
   - set PATH=%MINGW_PATH%;%LIBRARY_PATH%;%PATH%
   - set PATH=%PYTHON_PATH%;%PYTHON_PATH%\Scripts;%PATH%
 
   # Make a `libogg.a` file for MinGW.
   - >
-    if defined MINGW_PATH gendef lib\libogg.dll &
-    dlltool -U -d libogg.def -l lib\libogg.a & del libogg.def
+    if defined MINGW_PATH
+    gendef lib\libogg.dll &
+    dlltool -U -d libogg.def -l lib\libogg.a &
+    del libogg.def
 build_script:
   - pip install codecov .[test]
 test_script:
