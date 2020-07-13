@@ -316,6 +316,11 @@ class TestJvmLinker(CrossPlatformTestCase):
             options=opts.option_list(opts.entry_point('foo'))
         )), file_types.ExecutableLibrary(Path('file.jar'), 'jvm', 'java'))
 
+    def test_can_link(self):
+        self.assertTrue(self.linker.can_link('jvm', ['java', 'scala']))
+        self.assertTrue(self.linker.can_link('jvm', ['goofy']))
+        self.assertFalse(self.linker.can_link('goofy', ['java']))
+
     def test_flags_empty(self):
         self.assertEqual(self.linker.flags(opts.option_list()), [])
 

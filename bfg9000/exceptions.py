@@ -11,3 +11,7 @@ class VersionError(Exception):
 
 class PackageVersionError(PackageResolutionError, VersionError):
     pass
+
+
+class ToolNotFoundError(LookupError):
+    pass

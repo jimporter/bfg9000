@@ -130,10 +130,10 @@ class Environment:
     def _runner(self, lang):
         try:
             return self.builder(lang).runner
-        except ValueError:
+        except tools.ToolNotFoundError:
             try:
                 return self.tool(tools.get_tool_runner(lang))
-            except ValueError:
+            except tools.ToolNotFoundError:
                 return None
 
     def run_arguments(self, args, lang=None):

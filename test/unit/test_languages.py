@@ -15,7 +15,7 @@ class TestLanguages(TestCase):
             x.vars(compiler='CXX')
             x.exts(source=['.cxx', '.cpp'], header=['.hpp'])
             x.auxexts(header=['.h'])
-        with self.known_langs.make('goofy', base='c++') as x:
+        with self.known_langs.make('goofy', src_lang='c++') as x:
             x.vars(compiler='GOOFY')
             x.exts(source=['.goofy'])
             x.auxexts(header=['.h'])
@@ -109,33 +109,51 @@ class TestLanguages(TestCase):
 class TestFormats(TestCase):
     def setUp(self):
         self.known_formats = Formats()
-        with self.known_formats.make('native', 'static') as x:
-            x.vars(linker='AR')
-        with self.known_formats.make('native', 'dynamic') as x:
-            x.vars(linker='LD')
+        with self.known_formats.make('native') as fmt:
+            with fmt.make('static') as x:
+                x.vars(linker='AR')
+            with fmt.make('dynamic') as x:
+                x.vars(linker='LD')
 
     def test_make(self):
-        with self.known_formats.make('goofy', 'dynamic') as x:
+        with self.known_formats.make('goofy') as fmt, fmt.make('dynamic') as x:
             x.vars(linker='GOOFY')
+        with self.known_formats.make('weird', src_lang='c') as fmt, \
+             fmt.make('dynamic') as x:  # noqa
+            x.vars(linker='WEIRD')
 
-        native = self.known_formats['native', 'static']
-        self.assertEqual(native.name, ('native', 'static'))
-        self.assertEqual(native.var('linker'), 'AR')
+        native = self.known_formats['native']
+        native_stat = native['static']
+        native_dyn = native['dynamic']
+        self.assertEqual(native.src_lang, None)
+        self.assertEqual(native_stat.name, 'static')
+        self.assertEqual(native_stat.var('linker'), 'AR')
+        self.assertEqual(native_dyn.name, 'dynamic')
+        self.assertEqual(native_dyn.var('linker'), 'LD')
 
-        native = self.known_formats['native', 'dynamic']
-        self.assertEqual(native.name, ('native', 'dynamic'))
-        self.assertEqual(native.var('linker'), 'LD')
+        goofy = self.known_formats['goofy']
+        goofy_dyn = goofy['dynamic']
+        self.assertEqual(goofy.src_lang, None)
+        self.assertEqual(goofy_dyn.name, 'dynamic')
+        self.assertEqual(goofy_dyn.var('linker'), 'GOOFY')
 
-        goofy = self.known_formats['goofy', 'dynamic']
-        self.assertEqual(goofy.name, ('goofy', 'dynamic'))
-        self.assertEqual(goofy.var('linker'), 'GOOFY')
+        weird = self.known_formats['weird']
+        weird_dyn = weird['dynamic']
+        self.assertEqual(weird.src_lang, 'c')
+        self.assertEqual(weird_dyn.name, 'dynamic')
+        self.assertEqual(weird_dyn.var('linker'), 'WEIRD')
 
     def test_make_invalid_attr(self):
-        with self.known_formats.make('goofy', 'dynamic') as x:
-            with self.assertRaises(AttributeError):
-                x.unknown()
+        with self.known_formats.make('goofy') as fmt:
+            with fmt.make('dynamic') as x:
+                with self.assertRaises(AttributeError):
+                    x.unknown()
 
     def test_get_unrecognized_format(self):
-        msg = r"^unrecognized format 'goofy \(dynamic\)'$"
+        msg = r"^unrecognized format 'goofy'$"
         with self.assertRaisesRegex(ValueError, msg):
-            self.known_formats['goofy', 'dynamic']
+            self.known_formats['goofy']
+
+        msg = r"^unrecognized format 'native \(goofy\)'$"
+        with self.assertRaisesRegex(ValueError, msg):
+            self.known_formats['native']['goofy']

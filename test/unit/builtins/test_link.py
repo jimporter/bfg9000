@@ -11,9 +11,12 @@ from bfg9000.path import Path, Root
 
 
 class LinkTest(BuiltinTest):
-    def output_file(self, name, step={}, lang='c++', mode=None, extra={}):
-        linker = self.env.builder(lang).linker(mode or self.mode)
-        step_args = {'langs': [lang]}
+    def output_file(self, name, step={}, lang=None, input_langs=['c++'],
+                    mode=None, extra={}):
+        linker = (self.env.builder(lang or input_langs[0])
+                  .linker(mode or self.mode))
+        step_args = {'langs': [lang] if lang else input_langs,
+                     'input_langs': input_langs}
         step_args.update(step)
         step = AttrDict(**step_args)
 
@@ -82,19 +85,30 @@ class TestExecutable(LinkTest):
         self.assertSameFile(result.creator.files[0], self.object_file('main'))
 
     def test_make_override_lang(self):
-        expected = self.output_file('exe')
-
+        expected = self.output_file('exe', lang='c++', input_langs=['c++'])
         src = self.context['source_file']('main.c', 'c')
         result = self.context['executable']('exe', [src], lang='c++')
         self.assertSameFile(result, expected)
+        self.assertEqual(result.creator.input_langs, ['c++'])
         self.assertEqual(result.creator.langs, ['c++'])
         self.assertEqual(result.creator.linker.lang, 'c++')
 
+        expected = self.output_file('exe', lang='c++', input_langs=['c'])
         obj = self.context['object_file']('main.o', lang='c')
         result = self.context['executable']('exe', [obj], lang='c++')
         self.assertSameFile(result, expected)
-        self.assertEqual(result.creator.langs, ['c'])
+        self.assertEqual(result.creator.input_langs, ['c'])
+        self.assertEqual(result.creator.langs, ['c++'])
         self.assertEqual(result.creator.linker.lang, 'c++')
+
+    def test_make_from_unknown_lang_obj(self):
+        obj = self.context['object_file']('main.o', lang='goofy')
+        result = self.context['executable']('exe', [obj])
+        self.assertSameFile(result, self.output_file('exe', lang='c'))
+
+        obj = self.context['object_file']('main.o', lang='goofy')
+        result = self.context['executable']('exe', [obj], lang='c++')
+        self.assertSameFile(result, self.output_file('exe', lang='c++'))
 
     def test_make_directory(self):
         executable = self.context['executable']
@@ -284,19 +298,33 @@ class TestSharedLibrary(LinkTest):
 
     def test_make_override_lang(self):
         shared_library = self.context['shared_library']
-        expected = self.output_file('shared')
 
+        expected = self.output_file('shared', lang='c++', input_langs=['c++'])
         src = self.context['source_file']('main.c', 'c')
         result = shared_library('shared', [src], lang='c++')
         self.assertSameFile(result, expected, exclude={'post_install'})
+        self.assertEqual(result.creator.input_langs, ['c++'])
         self.assertEqual(result.creator.langs, ['c++'])
         self.assertEqual(result.creator.linker.lang, 'c++')
 
+        expected = self.output_file('shared', lang='c++', input_langs=['c'])
         obj = self.context['object_file']('main.o', lang='c')
         result = shared_library('shared', [obj], lang='c++')
         self.assertSameFile(result, expected, exclude={'post_install'})
-        self.assertEqual(result.creator.langs, ['c'])
+        self.assertEqual(result.creator.input_langs, ['c'])
+        self.assertEqual(result.creator.langs, ['c++'])
         self.assertEqual(result.creator.linker.lang, 'c++')
+
+    def test_make_from_unknown_lang_obj(self):
+        obj = self.context['object_file']('main.o', lang='goofy')
+        result = self.context['shared_library']('shared', [obj])
+        self.assertSameFile(result, self.output_file('shared', lang='c'),
+                            exclude={'post_install'})
+
+        obj = self.context['object_file']('main.o', lang='goofy')
+        result = self.context['shared_library']('shared', [obj], lang='c++')
+        self.assertSameFile(result, self.output_file('shared', lang='c++'),
+                            exclude={'post_install'})
 
     def test_make_runtime_deps(self):
         shared_library = self.context['shared_library']
@@ -474,21 +502,35 @@ class TestStaticLibrary(LinkTest):
     def test_make_override_lang(self):
         static_library = self.context['static_library']
 
+        expected = self.output_file('static', extra=self.extra())
         src = self.context['source_file']('main.c', 'c')
         result = static_library('static', [src], lang='c++')
-        self.assertSameFile(result, self.output_file(
-            'static', extra=self.extra()
-        ))
+        self.assertSameFile(result, expected)
+        self.assertEqual(result.creator.input_langs, ['c++'])
         self.assertEqual(result.creator.langs, ['c++'])
         self.assertEqual(result.creator.linker.lang, 'c++')
 
+        expected = self.output_file('static', lang='c++', input_langs=['c'],
+                                    extra=self.extra(lang='c'))
         obj = self.context['object_file']('main.o', lang='c')
         result = static_library('static', [obj], lang='c++')
-        self.assertSameFile(result, self.output_file(
-            'static', lang='c', extra=self.extra(lang='c')
-        ))
-        self.assertEqual(result.creator.langs, ['c'])
+        self.assertSameFile(result, expected)
+        self.assertEqual(result.creator.input_langs, ['c'])
+        self.assertEqual(result.creator.langs, ['c++'])
         self.assertEqual(result.creator.linker.lang, 'c++')
+
+    def test_make_from_unknown_lang_obj(self):
+        expected = self.output_file('static', lang='c', input_langs=['goofy'],
+                                    extra=self.extra())
+        obj = self.context['object_file']('main.o', lang='goofy')
+        result = self.context['static_library']('static', [obj])
+        self.assertSameFile(result, expected)
+
+        expected = self.output_file('static', lang='c++',
+                                    input_langs=['goofy'], extra=self.extra())
+        obj = self.context['object_file']('main.o', lang='goofy')
+        result = self.context['static_library']('static', [obj], lang='c++')
+        self.assertSameFile(result, expected)
 
     def test_make_linktime_deps(self):
         static_library = self.context['static_library']
@@ -496,7 +538,7 @@ class TestStaticLibrary(LinkTest):
 
         result = static_library('static', ['main.c'], libs=[libfoo])
         self.assertSameFile(result, self.output_file(
-            'static', lang='c',
+            'static', input_langs=['c'],
             extra=self.extra(lang='c', libs=[libfoo], linktime_deps=[libfoo])
         ))
 

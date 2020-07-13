@@ -57,9 +57,15 @@ class TestArLinker(CrossPlatformTestCase):
     def test_output_file(self):
         fmt = self.env.target_platform.object_format
         self.assertEqual(
-            self.ar.output_file('foo', AttrDict(langs=['c++'])),
+            self.ar.output_file('foo', AttrDict(input_langs=['c++'])),
             file_types.StaticLibrary(Path('libfoo.a'), fmt, ['c++'])
         )
+
+    def test_can_link(self):
+        fmt = self.env.target_platform.object_format
+        self.assertTrue(self.ar.can_link(fmt, ['c', 'c++']))
+        self.assertTrue(self.ar.can_link(fmt, ['goofy']))
+        self.assertFalse(self.ar.can_link('goofy', ['c']))
 
     def test_flags_empty(self):
         self.assertEqual(self.ar.flags(opts.option_list()), [])

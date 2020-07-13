@@ -12,6 +12,8 @@ from bfg9000.tools.msvc import MsvcBuilder
 from bfg9000.versioning import Version
 
 known_langs = Languages()
+with known_langs.make('c') as x:
+    x.vars(compiler='CC', flags='CFLAGS')
 with known_langs.make('c++') as x:
     x.vars(compiler='CXX', flags='CXXFLAGS')
 
@@ -331,12 +333,15 @@ class TestMsvcLinker(CrossPlatformTestCase):
     def __init__(self, *args, **kwargs):
         super().__init__(clear_variables=True, *args, **kwargs)
 
-    def setUp(self):
+    def _get_linker(self, lang):
         version = ('Microsoft (R) C/C++ Optimizing Compiler Version ' +
                    '19.12.25831 for x86')
-        with mock.patch('bfg9000.shell.which', mock_which):
-            self.linker = MsvcBuilder(self.env, known_langs['c++'], ['cl'],
-                                      version).linker('executable')
+        with mock.patch('bfg9000.shell.which', mock_which):  # noqa
+            return MsvcBuilder(self.env, known_langs[lang], ['cl'],
+                               version).linker('executable')
+
+    def setUp(self):
+        self.linker = self._get_linker('c++')
 
     def test_call(self):
         extra = self.linker._always_flags
@@ -357,6 +362,15 @@ class TestMsvcLinker(CrossPlatformTestCase):
         ext = self.env.target_platform.executable_ext
         self.assertEqual(self.linker.output_file('prog', None),
                          file_types.Executable(Path('prog' + ext), fmt, 'c++'))
+
+    def test_can_link(self):
+        fmt = self.env.target_platform.object_format
+        self.assertTrue(self.linker.can_link(fmt, ['c', 'c++']))
+        self.assertTrue(self.linker.can_link(fmt, ['goofy']))
+        self.assertFalse(self.linker.can_link('goofy', ['c']))
+
+        c_linker = self._get_linker('c')
+        self.assertFalse(c_linker.can_link(fmt, ['c++']))
 
     def test_flags_empty(self):
         self.assertEqual(self.linker.flags(opts.option_list()), [])
@@ -523,10 +537,12 @@ class TestMsvcLinker(CrossPlatformTestCase):
 
 
 class TestMsvcSharedLinker(TestMsvcLinker):
-    def setUp(self):
-        with mock.patch('bfg9000.shell.which', mock_which):
-            self.linker = MsvcBuilder(self.env, known_langs['c++'], ['cl'],
-                                      'version').linker('shared_library')
+    def _get_linker(self, lang):
+        version = ('Microsoft (R) C/C++ Optimizing Compiler Version ' +
+                   '19.12.25831 for x86')
+        with mock.patch('bfg9000.shell.which', mock_which):  # noqa
+            return MsvcBuilder(self.env, known_langs[lang], ['cl'],
+                               version).linker('shared_library')
 
     def test_call(self):
         extra = self.linker._always_flags
@@ -576,9 +592,15 @@ class TestMsvcStaticLinker(CrossPlatformTestCase):
     def test_output_file(self):
         fmt = self.env.target_platform.object_format
         self.assertEqual(
-            self.linker.output_file('lib', AttrDict(langs=['c++'])),
+            self.linker.output_file('lib', AttrDict(input_langs=['c++'])),
             file_types.StaticLibrary(Path('lib.lib'), fmt, ['c++'])
         )
+
+    def test_can_link(self):
+        fmt = self.env.target_platform.object_format
+        self.assertTrue(self.linker.can_link(fmt, ['c', 'c++']))
+        self.assertTrue(self.linker.can_link(fmt, ['goofy']))
+        self.assertFalse(self.linker.can_link('goofy', ['c']))
 
     def test_flags_empty(self):
         self.assertEqual(self.linker.flags(opts.option_list()), [])

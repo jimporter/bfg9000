@@ -174,7 +174,7 @@ class GenerateSource(BaseCompile):
     def __init__(self, context, name, file, options, lang=None,
                  directory=None, extra_deps=None, description=None):
         self.file = file
-        if not isinstance(self.file, CodeFile):
+        if not isinstance(self.file, CodeFile) or self.file.lang is None:
             raise ValueError('unable to determine language for file {!r}'
                              .format(self.file.path))
 

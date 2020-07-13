@@ -28,10 +28,11 @@ with known_langs.make('objc++') as x:
     x.exts(source=['.mm', '.M'])
     x.auxexts(header=['.h'])
 
-with known_formats.make('native', mode='dynamic') as x:
-    x.vars(linker='LD', flags='LDFLAGS', libs='LDLIBS')
-with known_formats.make('native', mode='static') as x:
-    x.vars(linker='AR', flags='ARFLAGS')
+with known_formats.make('native', src_lang='c') as fmt:
+    with fmt.make('dynamic') as x:
+        x.vars(linker='LD', flags='LDFLAGS', libs='LDLIBS')
+    with fmt.make('static') as x:
+        x.vars(linker='AR', flags='ARFLAGS')
 
 
 # Make a pair of functions to convert between C and C++ command names (e.g.

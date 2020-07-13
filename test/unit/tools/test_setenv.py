@@ -5,6 +5,7 @@ from unittest import mock
 from .. import *
 
 from bfg9000.environment import Environment
+from bfg9000.exceptions import ToolNotFoundError
 from bfg9000.safe_str import jbos, shell_literal
 from bfg9000.shell import shell_list
 from bfg9000.tools import _tools, setenv
@@ -50,7 +51,7 @@ class TestSetEnv(TestCase):
         with mock.patch('bfg9000.platforms.host.platform_info',
                         return_value=MockPlatform('posix')):
             self.reload_import()
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ToolNotFoundError):
             self.env.tool('setenv')
 
     def test_basic(self):

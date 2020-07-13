@@ -44,7 +44,7 @@ class JvmBuilder(Builder):
         self.object_format = 'jvm'
 
         name = langinfo.var('compiler').lower()
-        ldinfo = known_formats['jvm', 'dynamic']
+        ldinfo = known_formats['jvm']['dynamic']
 
         flags_name = langinfo.var('flags').lower()
         flags = shell.split(env.getvar(langinfo.var('flags'), ''))

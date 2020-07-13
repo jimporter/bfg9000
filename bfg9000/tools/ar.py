@@ -80,4 +80,4 @@ class ArLinker(SimpleBuildCommand):
         head, tail = os.path.split(name)
         path = os.path.join(head, 'lib' + tail + '.a')
         return StaticLibrary(Path(path), self.builder.object_format,
-                             step.langs)
+                             step.input_langs)

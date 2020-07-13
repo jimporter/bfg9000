@@ -9,7 +9,7 @@ from ..languages import known_langs
 from ..path import Path
 from ..versioning import detect_version
 
-with known_langs.make('qtmoc', base='c++') as x:
+with known_langs.make('qtmoc', src_lang='c++') as x:
     x.vars(compiler='MOC', flags='MOCFLAGS')
 
 with known_langs.make('qrc') as x:

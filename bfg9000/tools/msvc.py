@@ -39,8 +39,8 @@ class MsvcBuilder(Builder):
         self.object_format = env.target_platform.object_format
 
         name = langinfo.var('compiler').lower()
-        ldinfo = known_formats['native', 'dynamic']
-        arinfo = known_formats['native', 'static']
+        ldinfo = known_formats['native']['dynamic']
+        arinfo = known_formats['native']['static']
 
         # Look for the last argument that looks like our compiler and use its
         # directory as the base directory to find the linkers.
@@ -309,6 +309,7 @@ class MsvcPchCompiler(MsvcBaseCompiler):
 
 class MsvcLinker(BuildCommand):
     __lib_re = re.compile(r'(.*)\.lib$')
+    __known_langs = {'c', 'c++'}
     __allowed_langs = {
         'c'     : {'c'},
         'c++'   : {'c', 'c++'},
@@ -323,8 +324,10 @@ class MsvcLinker(BuildCommand):
         return m.group(1)
 
     def can_link(self, format, langs):
-        return (format == self.builder.object_format and
-                self.__allowed_langs[self.lang].issuperset(langs))
+        if format != self.builder.object_format:
+            return False
+        relevant_langs = self.__known_langs.intersection(langs)
+        return self.__allowed_langs[self.lang].issuperset(relevant_langs)
 
     @property
     def needs_libs(self):
@@ -517,8 +520,8 @@ class MsvcStaticLinker(SimpleBuildCommand):
         return flags
 
     def output_file(self, name, step):
-        return StaticLibrary(Path(name + '.lib'),
-                             self.builder.object_format, step.langs)
+        return StaticLibrary(Path(name + '.lib'), self.builder.object_format,
+                             step.input_langs)
 
     def parse_flags(self, flags):
         return {'extra': flags}

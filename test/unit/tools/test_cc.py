@@ -429,6 +429,13 @@ class TestCcLinker(CrossPlatformTestCase):
         self.assertEqual(self.linker.output_file('prog', None),
                          Executable(Path('prog' + ext), fmt, 'c++'))
 
+    def test_can_link(self):
+        fmt = self.env.target_platform.object_format
+        self.assertTrue(self.linker.can_link(fmt, ['c', 'c++']))
+        self.assertTrue(self.linker.can_link(fmt, ['goofy']))
+        self.assertFalse(self.linker.can_link('goofy', ['c']))
+        self.assertFalse(self.linker.can_link(fmt, ['objc++']))
+
     def test_flags_empty(self):
         self.assertEqual(self.linker.flags(opts.option_list()), [])
 

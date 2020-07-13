@@ -41,6 +41,8 @@
   instead of using `@rpath`-based paths prior to installation
 - MSBuild backend can now build libraries with no source files that link to a
   whole-archive library
+- Object files with unrecognized source languages can now be linked with the
+  default linker for their object format
 
 ---
 

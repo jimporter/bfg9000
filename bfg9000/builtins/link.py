@@ -10,10 +10,12 @@ from .path import relname
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..build_inputs import build_input, Edge
+from ..exceptions import ToolNotFoundError
 from ..file_types import *
 from ..iterutils import first, flatten, iterate, listify, slice_dict, uniques
-from ..languages import known_langs
+from ..languages import known_formats, known_langs
 from ..objutils import convert_each, convert_one
+from ..platforms import known_native_object_formats
 from ..shell import posix as pshell
 
 build_input('link_options')(lambda build_inputs, env: {
@@ -53,16 +55,17 @@ class Link(Edge):
                                                   self.packages))
         if len(formats) > 1:
             raise ValueError('cannot link multiple object formats')
+        self.format = formats[0]
 
-        self.langs = uniques(chain(
+        self.input_langs = uniques(chain(
             (i.lang for i in self.files if i.lang is not None),
             (j for i in self.libs for j in iterate(i.lang))
         ))
-        if not lang and not self.langs:
+        if not lang and not self.input_langs:
             raise ValueError('unable to determine language')
 
-        search_langs = [lang] if lang else self.langs
-        self.linker = self.__find_linker(context.env, formats[0], search_langs)
+        self.langs = [lang] if lang else self.input_langs
+        self.linker = self.__find_linker(context.env, formats[0], self.langs)
 
         # Forward any necessary options to the compile step.
         if hasattr(self.linker, 'compile_options'):
@@ -119,14 +122,28 @@ class Link(Edge):
 
         return files, kwargs
 
+    def _get_linkers(self, env, langs):
+        yielded = False
+        for i in langs:
+            try:
+                linker = env.builder(i).linker(self.mode)
+                yielded = True
+                yield linker
+            except ToolNotFoundError:
+                pass
+        if not yielded:
+            fmt = ('native' if self.format in known_native_object_formats
+                   else self.format)
+            src_lang = known_formats[fmt].src_lang
+            yield env.builder(src_lang).linker(self.mode)
+
     @classmethod
     def __name(cls, name):
         head, tail = os.path.split(name)
         return os.path.join(head, cls._prefix + tail)
 
     def __find_linker(self, env, format, langs):
-        for i in langs:
-            linker = env.builder(i).linker(self.mode)
+        for linker in self._get_linkers(env, langs):
             if linker.can_link(format, langs):
                 return linker
         raise ValueError('unable to find linker')
@@ -163,13 +180,13 @@ class DynamicLink(Link):
         return self.linker.lib_flags(self.options, global_options)
 
     def _fill_options(self, env, extra_options, forward_opts):
-        linkers = (env.builder(i).linker(self.mode) for i in self.langs)
         self._internal_options = opts.option_list(
             opts.entry_point(self.entry_point) if self.entry_point else None,
             opts.module_def(self.module_defs) if self.module_defs else None
         )
 
         if self.linker.needs_libs:
+            linkers = self._get_linkers(env, self.input_langs)
             self._internal_options.collect(
                 (i.always_libs(i is self.linker) for i in linkers),
                 (opts.lib(i) for i in self.libs)
@@ -545,7 +562,7 @@ try:
 
     @msbuild.rule_handler(DynamicLink, SharedLink, StaticLink)
     def msbuild_link(rule, build_inputs, solution, env):
-        if ( any(i not in ['c', 'c++'] for i in rule.langs) or
+        if ( any(i not in ['c', 'c++'] for i in rule.input_langs) or
              rule.linker.flavor != 'msvc' ):
             raise ValueError('msbuild backend currently only supports c/c++ ' +
                              'with msvc')

@@ -71,7 +71,7 @@ def runner(context, names, lang, strict=False):
 
 @builtin.function(context='toolchain')
 def linker(context, names, format='native', mode='dynamic', strict=False):
-    var = known_formats[format, mode].var('linker')
+    var = known_formats[format][mode].var('linker')
     linker = context['which'](names, strict=strict, kind='linker')
     context.env.variables[var] = linker
 
@@ -82,7 +82,7 @@ def link_options(context, options, format='native', mode='dynamic'):
     # *not* semantic options.
     if isiterable(options):
         options = pshell.join(options)
-    context.env.variables[known_formats[format, mode].var('flags')] = options
+    context.env.variables[known_formats[format][mode].var('flags')] = options
 
 
 @builtin.function(context='toolchain')
@@ -91,7 +91,7 @@ def lib_options(context, options, format='native', mode='dynamic'):
     # *not* semantic options.
     if isiterable(options):
         options = pshell.join(options)
-    context.env.variables[known_formats[format, mode].var('libs')] = options
+    context.env.variables[known_formats[format][mode].var('libs')] = options
 
 
 @builtin.function(context='toolchain')

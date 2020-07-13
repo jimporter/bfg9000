@@ -84,12 +84,12 @@ class TestObjectFile(CompileTest):
                                              lang='c++')
         self.assertSameFile(result, self.output_file('object'))
 
-        self.assertRaises(ValueError, self.context['object_file'], 'object',
-                          'main.goofy')
+        with self.assertRaises(ValueError):
+            self.context['object_file']('object', 'main.goofy')
 
         src = self.context['source_file']('main.goofy')
-        self.assertRaises(ValueError, self.context['object_file'], 'object',
-                          src)
+        with self.assertRaises(ValueError):
+            self.context['object_file']('object', src)
 
     def test_make_override_lang(self):
         src = self.context['source_file']('main.c', 'c')

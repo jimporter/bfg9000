@@ -35,8 +35,8 @@ class CcBuilder(Builder):
         self.object_format = env.target_platform.object_format
 
         name = langinfo.var('compiler').lower()
-        ldinfo = known_formats['native', 'dynamic']
-        arinfo = known_formats['native', 'static']
+        ldinfo = known_formats['native']['dynamic']
+        arinfo = known_formats['native']['static']
 
         # Try to infer the appropriate -fuse-ld option from the LD environment
         # variable.
@@ -312,6 +312,7 @@ class CcPchCompiler(CcBaseCompiler):
 
 
 class CcLinker(BuildCommand):
+    __known_langs = {'java', 'c', 'c++', 'objc', 'objc++', 'f77', 'f95'}
     __allowed_langs = {
         'c'     : {'c'},
         'c++'   : {'c', 'c++', 'f77', 'f95'},
@@ -344,8 +345,10 @@ class CcLinker(BuildCommand):
         return next(i for i in m.groups() if i is not None)
 
     def can_link(self, format, langs):
-        return (format == self.builder.object_format and
-                self.__allowed_langs[self.lang].issuperset(langs))
+        if format != self.builder.object_format:
+            return False
+        relevant_langs = self.__known_langs.intersection(langs)
+        return self.__allowed_langs[self.lang].issuperset(relevant_langs)
 
     @property
     def needs_libs(self):

@@ -13,23 +13,23 @@ def _get_prop(attr, desc):
     return inner
 
 
-class _Info:
+class _VarInfo:
     _fields = ('vars',)
 
-    def __init__(self, name, vars):
+    def __init__(self, name, *, vars):
         self.name = name
         self._var = vars
 
     var = _get_prop('_var', 'var')
 
 
-class _LanguageInfo(_Info):
+class _LanguageInfo(_VarInfo):
     _kind = 'language'
-    _fields = _Info._fields + ('exts', 'auxexts')
+    _fields = _VarInfo._fields + ('exts', 'auxexts')
 
-    def __init__(self, name, base, vars, exts, auxexts):
-        super().__init__(name, vars)
-        self._base = base
+    def __init__(self, name, *, src_lang, vars, exts, auxexts):
+        super().__init__(name, vars=vars)
+        self._src_lang = src_lang
 
         allkeys = set(exts.keys()) | set(auxexts.keys())
         self._exts = {i: listify(exts.get(i)) for i in allkeys}
@@ -40,7 +40,7 @@ class _LanguageInfo(_Info):
 
     @property
     def src_lang(self):
-        return self._base or self.name
+        return self._src_lang or self.name
 
     def allexts(self, key):
         return self.exts(key) + self.auxexts(key)
@@ -58,8 +58,29 @@ class _LanguageInfo(_Info):
         return None
 
 
-class _FormatInfo(_Info):
+class _FormatInfo:
     _kind = 'format'
+    _fields = ()
+
+    def __init__(self, name, *, src_lang, children):
+        self.name = name
+        self._children = children
+        self._src_lang = src_lang
+
+    @property
+    def src_lang(self):
+        return self._src_lang
+
+    def __getitem__(self, mode):
+        try:
+            return self._children[mode]
+        except KeyError:
+            raise ValueError("unrecognized format '{} ({})'"
+                             .format(self.name, mode))
+
+
+class _FormatModeInfo(_VarInfo):
+    _kind = 'format mode'
 
 
 class _Definer:
@@ -121,29 +142,35 @@ class Languages:
     def extinfo(self, ext):
         return self._ext2lang.get(ext, (None, None))
 
-    def make(self, name, base=None):
-        return _Definer(self, _LanguageInfo, name, base=base)
+    def make(self, name, *, src_lang=None):
+        return _Definer(self, _LanguageInfo, name, src_lang=src_lang)
 
 
 class Formats:
+    class _ModeDefiner(_Definer):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, children={}, **kwargs)
+
+        def _add(self, info):
+            self._data['children'][info.name] = info
+
+        def make(self, name):
+            return _Definer(self, _FormatModeInfo, name)
+
     def __init__(self):
         self._formats = {}
 
     def __getitem__(self, name):
         try:
-            return self._formats[name[0]][name[1]]
+            return self._formats[name]
         except KeyError:
-            raise ValueError("unrecognized format '{} ({})'"
-                             .format(name[0], name[1]))
+            raise ValueError("unrecognized format '{}'".format(name))
 
     def _add(self, info):
-        name, mode = info.name
-        if name not in self._formats:
-            self._formats[name] = {}
-        self._formats[name][mode] = info
+        self._formats[info.name] = info
 
-    def make(self, name, mode):
-        return _Definer(self, _FormatInfo, (name, mode))
+    def make(self, name, *, src_lang=None):
+        return self._ModeDefiner(self, _FormatInfo, name, src_lang=src_lang)
 
 
 known_langs = Languages()

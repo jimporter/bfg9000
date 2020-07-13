@@ -3,6 +3,7 @@ import os
 from . import *
 
 from bfg9000.environment import Environment, LibraryMode
+from bfg9000.exceptions import ToolNotFoundError
 from bfg9000.file_types import SourceFile
 from bfg9000.path import Path, Root, InstallRoot
 from bfg9000.tools import rm, lex, scripts  # noqa
@@ -27,13 +28,13 @@ class TestEnvironment(TestCase):
     def test_builder(self):
         env = self.make_env()
         self.assertIsInstance(env.builder('lex'), lex.LexBuilder)
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ToolNotFoundError):
             env.builder('nonexist')
 
     def test_tool(self):
         env = self.make_env()
         self.assertIsInstance(env.tool('rm'), rm.Rm)
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ToolNotFoundError):
             env.tool('nonexist')
 
     def test_run_arguments(self):
