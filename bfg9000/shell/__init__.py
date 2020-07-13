@@ -5,18 +5,22 @@ from enum import Enum
 from .list import shell_list  # noqa
 from ..iterutils import listify
 from ..path import BasePath, Path
-from ..platforms import platform_name
+from ..platforms.host import platform_info
 from ..safe_str import jbos, safe_str
 
-windows_names = ('winnt', 'win9x', 'msdos')
-
-if platform_name() in windows_names:
+if platform_info().family == 'windows':
     from .windows import *  # noqa
 else:
     from .posix import *  # noqa
 
-Mode = Enum('Mode', ['normal', 'pipe', 'stdout', 'devnull'])
 CalledProcessError = subprocess.CalledProcessError
+
+
+class Mode(Enum):
+    normal = None
+    pipe = subprocess.PIPE
+    stdout = subprocess.STDOUT
+    devnull = subprocess.DEVNULL
 
 
 def which(names, env=os.environ, base_dirs=None, resolve=False,
@@ -27,7 +31,7 @@ def which(names, env=os.environ, base_dirs=None, resolve=False,
 
     paths = env.get('PATH', os.defpath).split(os.pathsep)
     exts = ['']
-    if platform_name() in windows_names + ('cygwin',) and env.get('PATHEXT'):
+    if platform_info().has_path_ext and env.get('PATHEXT'):
         exts.extend(env.get('PATHEXT', '').split(os.pathsep))
 
     for name in names:
@@ -71,15 +75,12 @@ def execute(args, *, shell=False, env=None, base_dirs=None, stdout=Mode.normal,
     if not shell:
         args = convert_args(args, base_dirs)
 
-    def conv(mode):
-        return ({Mode.normal : None,
-                 Mode.pipe   : subprocess.PIPE,
-                 Mode.stdout : subprocess.STDOUT,
-                 Mode.devnull: subprocess.DEVNULL}).get(mode, mode)
+    def conv_mode(mode):
+        return mode.value if isinstance(mode, Mode) else mode
 
     proc = subprocess.Popen(
         args, universal_newlines=True, shell=shell, env=env,
-        stdout=conv(stdout), stderr=conv(stderr)
+        stdout=conv_mode(stdout), stderr=conv_mode(stderr)
     )
     output = proc.communicate()
     if not (returncode == 'any' or

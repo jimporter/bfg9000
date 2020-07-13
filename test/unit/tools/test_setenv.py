@@ -26,6 +26,9 @@ class TestSetEnv(TestCase):
 
     @classmethod
     def reload_import(cls):
+        # Note: Doing this is slightly risky and can cause other tests to break
+        # in obscure ways if they try to use the same module. Luckily, no other
+        # unit tests need to use this module.
         _tools.pop('setenv', None)
         importlib.reload(setenv)
 

@@ -43,17 +43,20 @@ class TestWhich(TestCase):
                              [os.path.normpath('/usr/local/bin/python')])
 
     def test_path_ext(self):
+        class MockInfo:
+            has_path_ext = True
+
         env = {'PATH': '/usr/bin', 'PATHEXT': '.exe'}
-        with mock.patch('bfg9000.shell.platform_name', return_value='winnt'), \
+        with mock.patch('bfg9000.shell.platform_info', MockInfo), \
              mock.patch('os.path.exists', side_effect=[False, True]):  # noqa
             self.assertEqual(which('python', env=env), ['python'])
 
-        with mock.patch('bfg9000.shell.platform_name', return_value='winnt'), \
+        with mock.patch('bfg9000.shell.platform_info', MockInfo), \
              mock.patch('os.path.exists', side_effect=[False, True]):  # noqa
             self.assertEqual(which('python', env=env, resolve=True),
                              [os.path.normpath('/usr/bin/python.exe')])
 
-        with mock.patch('bfg9000.shell.platform_name', return_value='winnt'), \
+        with mock.patch('bfg9000.shell.platform_info', MockInfo), \
              mock.patch('os.path.exists', side_effect=[False, True]):  # noqa
             self.assertEqual(
                 which([['python', '--foo']], env=env, resolve=True),

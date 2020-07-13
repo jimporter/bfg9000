@@ -51,6 +51,10 @@ class PosixHostPlatform(HostPlatform, PosixPlatform):
     def destdir(self):
         return True
 
+    @property
+    def has_path_ext(self):
+        return False
+
 
 class PosixTargetPlatform(TargetPlatform, PosixPlatform):
     _package_map = {

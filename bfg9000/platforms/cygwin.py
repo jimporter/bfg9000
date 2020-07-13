@@ -2,7 +2,9 @@ from .posix import PosixHostPlatform, PosixTargetPlatform
 
 
 class CygwinHostPlatform(PosixHostPlatform):
-    pass
+    @property
+    def has_path_ext(self):
+        return True
 
 
 class CygwinTargetPlatform(PosixTargetPlatform):

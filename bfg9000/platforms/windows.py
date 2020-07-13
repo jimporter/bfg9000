@@ -38,6 +38,10 @@ class WindowsHostPlatform(HostPlatform, WindowsPlatform):
     def destdir(self):
         return False
 
+    @property
+    def has_path_ext(self):
+        return True
+
 
 class WindowsTargetPlatform(TargetPlatform, WindowsPlatform):
     _package_map = {
