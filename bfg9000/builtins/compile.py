@@ -409,5 +409,10 @@ try:
     def msbuild_compile(rule, build_inputs, solution, env):
         # MSBuild does compilation and linking in one unit; see link.py.
         pass
+
+    @msbuild.rule_handler(GenerateSource)
+    def msbuild_generate_source(rule, build_inputs, solution, env):
+        raise ValueError('msbuild backend does not currently support ' +
+                         "'generated_source'")  # pragma: no cover
 except ImportError:  # pragma: no cover
     pass
