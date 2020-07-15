@@ -118,7 +118,7 @@ class TestRccBuilder(CrossPlatformTestCase):
             )
 
     def test_default_name(self):
-        src = ResourceFile(Path('file.qrc', Root.srcdir), 'qrc')
+        src = SourceFile(Path('file.qrc', Root.srcdir), 'qrc')
         self.assertEqual(self.compiler.default_name(src, None), 'file.cpp')
 
     def test_output_file(self):
@@ -157,7 +157,7 @@ class TestUicBuilder(CrossPlatformTestCase):
                          [self.compiler, 'flags', 'in', '-o', 'out'])
 
     def test_default_name(self):
-        src = ResourceFile(Path('file.ui', Root.srcdir), 'qtui')
+        src = SourceFile(Path('file.ui', Root.srcdir), 'qtui')
         self.assertEqual(self.compiler.default_name(src, None), 'ui_file.h')
 
     def test_output_file(self):

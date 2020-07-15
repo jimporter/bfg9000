@@ -19,6 +19,8 @@ in progress
   iterable in the appropriate build target
 - `info()`, `debug()`, and `warning()` now take a variable number of arguments
   to print
+- `generated_source()` steps are now automatically created as necessary for
+  files passed to `object_file()`, if possible
 - Add support for setting the entry point for native binaries (C, C++, etc)
 - Try to find the right compiler to use for C-family languages by guessing based
   on other compilers in the family (e.g. if `CXX=g++`, guess that the C compiler
@@ -30,6 +32,7 @@ in progress
 - Drop support for Python 2
 - `show_stack` for `info()` and `debug()` must now be specified as a keyword
   argument
+- `resource_file()` has been deprecated; use `source_file()` instead
 
 ### Bug fixes
 - `copy_file()` now works correctly when copying into a subdirectory on the

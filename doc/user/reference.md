@@ -61,10 +61,10 @@ source files of that type (see each step's documentation for details).
 
 Create a reference to an existing file named *name*. This function will try to
 automatically determine the file's kind based on its extension:
-[*source_file*](#source_file); [*header_file*](#header_file);
-[*resource_file*](#resource_file); or, if the extension is not recognized,
-[*generic_file*](#generic_file). If *lang* is specified, files with an
-unrecognized extension will always be treated as [*source_file*](#source_file)s.
+[*source_file*](#source_file); [*header_file*](#header_file); or, if the
+extension is not recognized, [*generic_file*](#generic_file). If *lang* is
+specified, files with an unrecognized extension will always be treated as
+[*source_file*](#source_file)s.
 
 !!! note
     This function is primarily useful for writing generic code that works with
@@ -124,13 +124,6 @@ Availability: `build.bfg`
 Create a reference to an existing module-definition file named *name*.
 [Module-definition files][def-file] are sometimes used when building libraries
 on Windows.
-
-### resource_file(*name*, [*lang*], [*dist*]) { #resource_file }
-Availability: `build.bfg`
-{: .subtitle}
-
-Create a reference to an existing resource file named *name*. If *lang* is not
-specified, the language of the file is inferred from its extension.
 
 ### source_file(*name*, [*lang*], [*dist*]) { #source_file }
 Availability: `build.bfg`

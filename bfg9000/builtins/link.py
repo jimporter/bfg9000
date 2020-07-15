@@ -13,7 +13,7 @@ from ..build_inputs import build_input, Edge
 from ..exceptions import ToolNotFoundError
 from ..file_types import *
 from ..iterutils import first, flatten, iterate, listify, slice_dict, uniques
-from ..languages import known_formats, known_langs
+from ..languages import known_formats
 from ..objutils import convert_each, convert_one
 from ..platforms import known_native_object_formats
 from ..shell import posix as pshell
@@ -97,12 +97,10 @@ class Link(Edge):
     @classmethod
     def convert_args(cls, context, name, files, kwargs):
         lang = kwargs.get('lang')
-        src_lang = known_langs[lang].src_lang if lang else None
-        kwargs['lang'] = src_lang
 
         convert_each(kwargs, 'libs', context['library'],
-                     kind=cls._preferred_lib, lang=src_lang)
-        convert_each(kwargs, 'packages', context['package'], lang=src_lang)
+                     kind=cls._preferred_lib, lang=lang)
+        convert_each(kwargs, 'packages', context['package'], lang=lang)
 
         kwargs['link_options'] = pshell.listify(kwargs.get('link_options'),
                                                 type=opts.option_list)
@@ -366,7 +364,7 @@ def library(context, name, files=None, *, kind=None, **kwargs):
         )
         shared = SharedLink(context, name, shared_files, **shared_kwargs)
         if not shared.linker.builder.can_dual_link:
-            warnings.warn("dual linking not supported with {}"
+            warnings.warn('dual linking not supported with {}'
                           .format(shared.linker.brand))
             return shared.public_output
 

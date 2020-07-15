@@ -1,4 +1,5 @@
 import os
+import warnings
 from contextlib import contextmanager
 
 from . import builtin
@@ -11,7 +12,6 @@ from ..path import Path, Root
 _kind_to_file_type = {
     'header': HeaderFile,
     'source': SourceFile,
-    'resource': ResourceFile,
 }
 
 
@@ -76,12 +76,12 @@ def source_file(context, name, lang=None, *, dist=True):
     return static_file(context, SourceFile, path, dist, [('lang', lang)])
 
 
+# TODO: remove this after 0.6 is released.
 @builtin.function()
-@builtin.type(ResourceFile)
-def resource_file(context, name, lang=None, *, dist=True):
-    path = context['relpath'](name)
-    lang = lang or known_langs.fromext(path.ext(), 'resource')
-    return static_file(context, ResourceFile, path, dist, [('lang', lang)])
+@builtin.type(SourceFile)
+def resource_file(context, name, lang=None, *, dist=True):  # pragma: no cover
+    warnings.warn("'resource_file' is deprecated; use 'source_file' instead")
+    return source_file(context, name, lang, dist=dist)
 
 
 @builtin.function()
@@ -105,7 +105,8 @@ def auto_file(context, name, lang=None, *, dist=True):
     if lang:
         kind = None
         if lang in known_langs:
-            kind = known_langs[lang].extkind(path.ext())
+            src_lang = known_langs[lang].src_lang
+            kind = known_langs[src_lang].extkind(path.ext())
     else:
         lang, kind = known_langs.extinfo(path.ext())
 
@@ -145,14 +146,14 @@ def directory(context, name, include=None, extra=None, exclude=exclude_globs,
 
 
 @builtin.function()
-@builtin.type(HeaderDirectory, extra_in_type=SourceCodeFile)
+@builtin.type(HeaderDirectory, extra_in_type=CodeFile)
 def header_directory(context, name, include=None, extra=None,
                      exclude=exclude_globs, filter=None, system=False,
                      lang=None, *, dist=True, cache=True):
     def header_file(*args, **kwargs):
         return context['header_file'](*args, lang=lang, **kwargs)
 
-    if isinstance(name, SourceCodeFile):
+    if isinstance(name, CodeFile):
         lang = name.lang
 
     path = _directory_path(context, name)

@@ -91,6 +91,9 @@ class TestObjectFile(CompileTest):
         with self.assertRaises(ValueError):
             self.context['object_file']('object', src)
 
+        with self.assertRaises(ValueError):
+            self.context['object_file']('object', 'main.hpp')
+
     def test_make_override_lang(self):
         src = self.context['source_file']('main.c', 'c')
         result = self.context['object_file']('object', src, lang='c++')
@@ -212,6 +215,38 @@ class TestObjectFile(CompileTest):
 
         self.assertRaises(TypeError, self.context['object_file'],
                           file='main.java', pch=pch)
+
+    def test_auto_generate_source(self):
+        result = self.context['object_file'](file='main.qrc')
+        intermediate = result.creator.file
+        self.assertSameFile(result, self.output_file('main'))
+        self.assertSameFile(intermediate, file_types.SourceFile(
+            Path('main.cpp'), lang='c++'
+        ))
+        self.assertSameFile(intermediate.creator.file, file_types.SourceFile(
+            Path('main.qrc', Root.srcdir), lang='qrc'
+        ))
+
+        src = self.context['auto_file']('main.hpp', lang='qtmoc')
+        result = self.context['object_file'](file=src)
+        intermediate = result.creator.file
+        self.assertSameFile(result, self.output_file('moc_main'))
+        self.assertSameFile(intermediate, file_types.SourceFile(
+            Path('moc_main.cpp', Root.builddir), lang='c++'
+        ))
+        self.assertSameFile(intermediate.creator.file, file_types.HeaderFile(
+            Path('main.hpp', Root.srcdir), lang='qtmoc'
+        ))
+
+        result = self.context['object_file'](file='main.qrc', directory='dir')
+        intermediate = result.creator.file
+        self.assertSameFile(result, self.output_file('dir/main'))
+        self.assertSameFile(intermediate, file_types.SourceFile(
+            Path('dir/main.cpp'), lang='c++'
+        ))
+        self.assertSameFile(intermediate.creator.file, file_types.SourceFile(
+            Path('main.qrc', Root.srcdir), lang='qrc'
+        ))
 
     def test_extra_deps(self):
         dep = self.context['generic_file']('dep.txt')
@@ -411,7 +446,7 @@ class TestGeneratedSource(CompileTest):
         result = self.context['generated_source']('name.cpp', 'file.qrc')
         self.assertSameFile(result, self.output_file('name.cpp'))
 
-        src = self.context['resource_file']('file.qrc')
+        src = self.context['source_file']('file.qrc')
         result = self.context['generated_source']('name.cpp', src)
         self.assertSameFile(result, self.output_file('name.cpp'))
 
@@ -422,11 +457,11 @@ class TestGeneratedSource(CompileTest):
 
         self.assertRaises(ValueError, gen_src, 'file.cpp', 'file.goofy')
 
-        src = self.context['resource_file']('file.goofy')
+        src = self.context['source_file']('file.goofy')
         self.assertRaises(ValueError, gen_src, 'file.cpp', src)
 
     def test_make_override_lang(self):
-        src = self.context['resource_file']('main.ui', 'qtui')
+        src = self.context['source_file']('main.ui', 'qtui')
         result = self.context['generated_source']('main.cpp', src, lang='qrc')
         self.assertSameFile(result, self.output_file('main.cpp'))
         self.assertEqual(result.creator.compiler.lang, 'qrc')
@@ -437,7 +472,7 @@ class TestGeneratedSource(CompileTest):
         res = gen_src(file='main.qrc', directory='dir')
         self.assertSameFile(res, self.output_file('dir/main.cpp'))
 
-        src = self.context['resource_file']('main.qrc')
+        src = self.context['source_file']('main.qrc')
         res = gen_src(file=src, directory='dir')
         self.assertSameFile(res, self.output_file('dir/main.cpp'))
 

@@ -9,7 +9,6 @@ from ..backends.ninja import writer as ninja
 from ..build_inputs import build_input, Edge
 from ..file_types import *
 from ..iterutils import first, flatten, iterate
-from ..languages import known_langs
 from ..objutils import convert_each, convert_one
 from ..path import Path
 from ..shell import posix as pshell
@@ -54,12 +53,6 @@ class BaseCompile(Edge):
                                    self.raw_output)
 
     @staticmethod
-    def _convert_args_lang(kwargs):
-        lang = kwargs.get('lang')
-        src_lang = known_langs[lang].src_lang if lang else None
-        return lang, src_lang
-
-    @staticmethod
     def convert_args(context, kwargs):
         convert_one(kwargs, 'directory', lambda x: buildpath(context, x, True))
         return kwargs
@@ -96,19 +89,19 @@ class Compile(BaseCompile):
                          extra_deps, description)
 
     @staticmethod
-    def convert_args(context, lang, src_lang, kwargs):
+    def convert_args(context, lang, kwargs):
         def pch(file, **kwargs):
             return context['precompiled_header'](file, file, **kwargs)
 
         includes = kwargs.get('includes')
         kwargs['include_deps'] = [
             i for i in iterate(includes)
-            if isinstance(i, SourceCodeFile) or getattr(i, 'creator', None)
+            if isinstance(i, CodeFile) or getattr(i, 'creator', None)
         ]
         convert_each(kwargs, 'includes', context['header_directory'])
 
-        convert_each(kwargs, 'libs', context['library'], lang=src_lang)
-        convert_each(kwargs, 'packages', context['package'], lang=src_lang)
+        convert_each(kwargs, 'libs', context['library'], lang=lang)
+        convert_each(kwargs, 'packages', context['package'], lang=lang)
 
         kwargs['options'] = pshell.listify(kwargs.get('options'),
                                            type=opts.option_list)
@@ -130,42 +123,67 @@ class Compile(BaseCompile):
 
 class CompileSource(Compile):
     def __init__(self, context, name, file, lang=None, **kwargs):
-        self.file = file
-        if self.file.lang is None:
+        builder_lang = lang or getattr(file, 'lang', None)
+        if builder_lang is None:
             raise ValueError('unable to determine language for file {!r}'
-                             .format(self.file.path))
+                             .format(file.path))
 
-        self.compiler = context.env.builder(lang or self.file.lang).compiler
+        self.file = file
+        self.compiler = context.env.builder(builder_lang).compiler
         super().__init__(context, name, **kwargs)
 
     @classmethod
     def convert_args(cls, context, file, kwargs):
-        lang, src_lang = cls._convert_args_lang(kwargs)
-        file = context['source_file'](file, lang=src_lang)
-        return file, super().convert_args(context, lang, src_lang, kwargs)
+        lang = kwargs.get('lang')
+        if lang is None:
+            # Check if the input file needs to be forwarded on to
+            # `generated_source`.
+            guessed_file = context['auto_file'](file)
+            if getattr(guessed_file, 'lang', None) is None:
+                raise ValueError('unable to determine language for file {!r}'
+                                 .format(guessed_file.path))
+
+            builder = context.env.builder(guessed_file.lang)
+            if hasattr(builder, 'compiler'):
+                # This builder supports compilation; no need to forward to
+                # `generated_source`.
+                file = context['source_file'](file)
+            else:
+                # Pop off the `directory` argument and pass it to
+                # `generated_source`. This puts the intermediate source file in
+                # the `directory`, and then our final object file will
+                # automatically go there as well without needing the
+                # `directory` itself.
+                file = context['generated_source'](
+                    guessed_file, directory=kwargs.pop('directory', None)
+                )
+        else:
+            file = context['source_file'](file, lang=lang)
+
+        return file, super().convert_args(context, lang or file.lang, kwargs)
 
 
 class CompileHeader(Compile):
     desc_verb = 'compile-header'
 
     def __init__(self, context, name, file, source, lang=None, **kwargs):
-        self.file = file
-        if self.file.lang is None:
+        builder_lang = lang or getattr(file, 'lang', None)
+        if builder_lang is None:
             raise ValueError('unable to determine language for file {!r}'
-                             .format(self.file.path))
+                             .format(file.path))
 
+        self.file = file
         self.pch_source = source
-
-        lang = lang or self.file.lang
-        self.compiler = context.env.builder(lang).pch_compiler
+        self.compiler = context.env.builder(builder_lang).pch_compiler
         super().__init__(context, name, **kwargs)
 
     @classmethod
     def convert_args(cls, context, file, kwargs):
-        lang, src_lang = cls._convert_args_lang(kwargs)
-        file = context['header_file'](file, lang=src_lang)
-        convert_one(kwargs, 'source', context['source_file'], lang=file.lang)
-        return file, super().convert_args(context, lang, src_lang, kwargs)
+        lang = kwargs.get('lang')
+        file = context['header_file'](file, lang=lang)
+        file_lang = lang or file.lang
+        convert_one(kwargs, 'source', context['source_file'], lang=file_lang)
+        return file, super().convert_args(context, file_lang, kwargs)
 
 
 class GenerateSource(BaseCompile):
@@ -173,26 +191,25 @@ class GenerateSource(BaseCompile):
 
     def __init__(self, context, name, file, options, lang=None,
                  directory=None, extra_deps=None, description=None):
-        self.file = file
-        if not isinstance(self.file, CodeFile) or self.file.lang is None:
+        builder_lang = lang or getattr(file, 'lang', None)
+        if builder_lang is None:
             raise ValueError('unable to determine language for file {!r}'
-                             .format(self.file.path))
+                             .format(file.path))
 
+        self.file = file
         self.user_options = options
-
-        self.compiler = context.env.builder(lang or self.file.lang).transpiler
+        self.compiler = context.env.builder(builder_lang).transpiler
         super().__init__(context, name, None, directory, extra_deps,
                          description)
 
     @classmethod
     def convert_args(cls, context, file, kwargs):
-        lang, src_lang = cls._convert_args_lang(kwargs)
-        file = context['auto_file'](file, lang=src_lang)
+        lang = kwargs.get('lang')
+        file = context['auto_file'](file, lang=lang)
 
         kwargs['options'] = pshell.listify(kwargs.get('options'),
                                            type=opts.option_list)
-        kwargs = super().convert_args(context, kwargs)
-        return file, kwargs
+        return file, super().convert_args(context, kwargs)
 
 
 @builtin.function()
@@ -212,7 +229,7 @@ def object_file(context, name=None, file=None, **kwargs):
 @builtin.function()
 @builtin.type(FileList, in_type=object)
 def object_files(context, files, **kwargs):
-    @builtin.type(ObjectFile, extra_in_type=SourceFile)
+    @builtin.type(ObjectFile, extra_in_type=CodeFile)
     def make_object_file(file, **kwargs):
         file, kwargs = CompileSource.convert_args(context, file, kwargs)
         return CompileSource(context, None, file, **kwargs).public_output
@@ -235,7 +252,7 @@ def precompiled_header(context, name=None, file=None, **kwargs):
 
 
 @builtin.function()
-@builtin.type(SourceCodeFile, short_circuit=False, first_optional=True)
+@builtin.type(CodeFile, short_circuit=False, first_optional=True)
 def generated_source(context, name, file, **kwargs):
     file, kwargs = GenerateSource.convert_args(context, file, kwargs)
     return GenerateSource(context, name, file, **kwargs).public_output

@@ -9,16 +9,19 @@ from ..languages import known_langs
 from ..path import Path
 from ..versioning import detect_version
 
+# Set the source language to C++, since we want to be able to use the C++
+# language definition to infer whether a file passed to `moc` is a source or
+# header file based on its extension.
 with known_langs.make('qtmoc', src_lang='c++') as x:
     x.vars(compiler='MOC', flags='MOCFLAGS')
 
 with known_langs.make('qrc') as x:
     x.vars(compiler='RCC', flags='RCCFLAGS')
-    x.exts(resource=['.qrc'])
+    x.exts(source=['.qrc'])
 
 with known_langs.make('qtui') as x:
     x.vars(compiler='UIC', flags='UICFLAGS')
-    x.exts(resource=['.ui'])
+    x.exts(source=['.ui'])
 
 
 @builder('qtmoc')

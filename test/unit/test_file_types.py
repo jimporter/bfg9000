@@ -73,12 +73,6 @@ class TestDirectory(FileTest):
         )
 
 
-class TestResourceFile(FileTest):
-    def test_clone(self):
-        self.assertClone(ResourceFile(Path('a', Root.srcdir), 'c'),
-                         ResourceFile(Path('a'), 'c'))
-
-
 class TestSourceFile(FileTest):
     def test_clone(self):
         self.assertClone(SourceFile(Path('a', Root.srcdir), 'c'),

@@ -4,41 +4,44 @@ global_options([opts.std('c++11')], lang='c++')
 if env.target_platform.family == 'posix':
     global_options([opts.pic()], lang='c++')
 
-# Qt provides two main ways to build user interfaces: the Qt Designer, which
-# works directly with Qt widgets, or via Qt Quick, which uses QML. In both
-# cases, building Qt needs some additional build steps:
+# Qt provides two main ways to build user interfaces: Qt Quick, which uses QML,
+# or the Qt Designer, which works directly with Qt widgets.
 
 widgets = package('Qt5Widgets', headers=['QApplication', 'QtCore'],
                   libs=['Qt5Widgets', 'Qt5Core'])
 
-# Compiling Qt UI files is simple: just use the `generated_source` build step
-# and the output will be a C++ file ready to be compiled.
-
-ui = generated_source('designer/widget.ui')
-
-# Running C++ source files through the meta-object compiler isn't much harder;
-# again, just use `generated_source`. However, you'll need to explicitly pass
-# the language as it can't be automatically determined from the file extension:
-
-moc = generated_source(file='designer/window.hpp', lang='qtmoc')
+qml = package('Qt5Qml', headers=['QQmlApplicationEngine'])
 
 # To build cross-platform graphical applications, you can use the `opts.gui`
 # link option. For Windows targets, this sets the subsystem to "windows" so no
 # terminal pops up when the application starts; setting `main` to true also
-# ensures that the entry point of the application is `main`, not `WinMain`:
+# ensures that the entry point of the application is `main`, not `WinMain`.
+
+link_opts = [opts.gui(main=True)]
+
+# Building a project with Qt Quick is simple: just specify the input files and
+# the appropriate package dependencies and you're set! Observant readers will
+# notice that 'qml/qml.qrc' isn't a C++ source file, and that it needs to be
+# built into C++ by the `rcc` tool. This happens automatically here: much like
+# how `executable` (and `library`, etc) will automatically call `object_file`
+# as needed to produce object files for linking, `object_file` itself will call
+# `generated_source` to turn the QRC input into its C++ output:
+
+executable('qt-qml', ['qml/main.cpp', 'qml/qml.qrc'],
+           link_options=link_opts, packages=[widgets, qml])
+
+# Building a project with the Qt Designer isn't much more difficult. However,
+# because bfg can't tell which files need to be passed through `moc` (the Qt
+# meta-object compiler), we'll need to indicate this explicitly:
+
+moc = generated_source('designer/window.hpp', lang='qtmoc')
+
+# We can also explicitly use `generated_source` for files that bfg can
+# automatically detect, or use `generated_sources` to do this for multiple
+# files. Since `uic` (the Qt UI compiler) generates a header file, we'll need
+# to do this instead of relying on `generated_source` being called implicitly:
+
+ui = generated_sources(['designer/widget.ui'])
 
 executable('qt-designer', ['designer/main.cpp', 'designer/window.cpp', moc],
-           includes=[ui], link_options=[opts.gui(main=True)], packages=widgets)
-
-# Building Qt Quick projects is easy too. Much like Qt Designer projects, all
-# you'll need to do is add some extra build step for the Qt-specific bits:
-
-qml = package('Qt5Qml', headers=['QQmlApplicationEngine'])
-
-# Like with `object_files`, you can generate sources for multiple inputs at
-# once using `generated_sources`. Each input in the list will be forwarded on
-# to `generated_source` along with all the other arguments:
-
-qrc = generated_sources(['qml/qml.qrc'])
-executable('qt-qml', ['qml/main.cpp'] + qrc,
-           link_options=[opts.gui(main=True)], packages=[widgets, qml])
+           includes=ui, link_options=link_opts, packages=widgets)

@@ -50,8 +50,10 @@ bfg9000 tries its best to make your build scripts easy to read and to minimize
 verbosity. First, arguments that normally take a list can take a single item
 instead, e.g. `executable('simple', files='simple.cpp')`. In addition, bfg9000
 will automatically convert a string argument to an object of the appropriate
-type. In the previous example, `'simple.cpp'` is automatically converted to a
-[*source_file*](reference.md#source_file).
+type. In the previous example, `'simple.cpp'` is automatically passed to
+[*object_files*](reference.md#object_files), which in turn converts it to a
+[*source_file*](reference.md#source_file) and generates the appropriate build
+step.
 
 ### Subdirectories
 
@@ -174,6 +176,49 @@ these macros to set the appropriate attributes for your public symbols:
 #  define LIB_PUBLIC
 #endif
 ```
+
+## Generated sources
+
+In addition to compiling and linking, many build involve a source-generation
+step, e.g. generating lexers/parsers via Lex/Yacc. bfg9000 tries to make this as
+simple as possible. Much like how [*executable()*](reference.md#executable) (and
+[*library()*](reference.md#library), etc) will automatically invoke
+[*object_files*](reference.md#object_files) as needed to create the compilation
+steps, bfg9000 will automatically add the appropriate
+[*generated_source()*](reference.md#generated_source) calls where possible.
+Here, since `'qml.qrc'` can be auto-detected as a Qt QRC file, the `'qml.cpp'`
+file will be created and passed on to the implicit
+[*object_file*](reference.md#object_file) call:
+
+```python
+executable('qtprog', ['main.cpp', 'qml.qrc'], ...)
+```
+
+However, there are situations where this doesn't work automatically. Some
+source-generation steps, such as Yacc, output multiple files, so they can't be
+invoked implicitly:
+
+```python
+parse, parse_h = generated_source(file='calc.y')
+executable('calc', files=[parse, ...], includes=[parse_h])
+```
+
+In addition, bfg9000 can only invoke
+[*generated_source()*](reference.md#generated_source) automatically when the
+file is passed as the source to be compiled by
+[*object_file*](reference.md#object_file). Using a Qt UI file, for example,
+requires explicitly generating the source:
+
+```python
+widget = generated_source('widget.ui')
+executable('qtprog, ['main.cpp'], includes=[widget], ...)
+```
+
+Finally, some source-generators don't have their own unique file extensions, so
+it's not possible to automatically detect their language. In this case, you can
+either explicitly call [*generated_source()*](reference.md#generated_source) or
+create the file object with the appropriate language, e.g.:
+`auto_file('window.hpp', lang='qtmoc')`.
 
 ## Finding files
 

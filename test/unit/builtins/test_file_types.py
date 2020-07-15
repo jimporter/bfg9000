@@ -235,14 +235,6 @@ class TestHeaderFile(TestSourceFile):
     filename = 'file.hpp'
 
 
-class TestReourceFile(TestSourceFile):
-    type = ResourceFile
-    args = ('qrc',)
-    fn = 'resource_file'
-    filename = 'file.qrc'
-    lang = 'qrc'
-
-
 class TestDirectory(TestGenericFile):
     type = Directory
     fn = 'directory'
