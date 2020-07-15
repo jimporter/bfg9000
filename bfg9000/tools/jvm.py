@@ -191,6 +191,10 @@ class JarMaker(SimpleBuildCommand):
     def needs_libs(self):
         return False
 
+    @property
+    def needs_package_options(self):
+        return False
+
     def post_output(self, context, options, output, step):
         # Fix up paths for the Class-Path field: escape spaces and prefix
         # Windows drive letters with '/' to disambiguate them from URLs.

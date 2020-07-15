@@ -1,9 +1,8 @@
-import re
 from collections import namedtuple
 
 from . import builder, cc, msvc
 from .. import log
-from .common import choose_builder
+from .common import choose_builder, make_command_converter_pair
 from ..languages import known_formats, known_langs
 
 _guessed_info = namedtuple('_guessed_info', ['lang', 'cmd', 'guessed_cmd'])
@@ -35,25 +34,7 @@ with known_formats.make('native', src_lang='c') as fmt:
         x.vars(linker='AR', flags='ARFLAGS')
 
 
-# Make a pair of functions to convert between C and C++ command names (e.g.
-# `gcc` <=> `g++`).
-def _make_converters(mapping):
-    def make(mapping):
-        sub = '|'.join(re.escape(i[0]) for i in mapping)
-        ex = re.compile(r'(?:^|(?<=\W))({})(?:$|(?=\W))'.format(sub))
-        d = dict(mapping)
-
-        def fn(cmd):
-            s, n = ex.subn(lambda m: d[m.group(1)], cmd)
-            return s if n > 0 else None
-
-        return fn
-
-    inverse = [(v, k) for k, v in mapping]
-    return make(mapping), make(inverse)
-
-
-_c_to_cxx, _cxx_to_c = _make_converters([
+_c_to_cxx, _cxx_to_c = make_command_converter_pair([
     # These are ordered from most- to least-specific; in particular, we want
     # `clang-cl` to stay that way when converted between C and C++ contexts.
     ('clang-cl', 'clang-cl'),

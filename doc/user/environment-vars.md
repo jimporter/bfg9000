@@ -204,6 +204,22 @@ Default: *none*
 Command line arguments to pass to the compiler when compiling any Scala source
 file.
 
+### Windows resource files
+---
+
+#### *RC*
+Default: `windres` (POSIX), `rc` (Windows)
+{: .subtitle}
+
+The command to use when compiling Windows resource (`.rc`) files.
+
+#### *RCFLAGS*
+Default: *none*
+{: .subtitle}
+
+Command line arguments to pass to the compiler when compiling any Windows
+resource file.
+
 ### Yacc
 ---
 

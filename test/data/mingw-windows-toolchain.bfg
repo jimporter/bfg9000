@@ -3,6 +3,7 @@
 target_platform('winnt', 'i686')
 compiler(['i686-w64-mingw32-g++-win32',
           'i686-w64-mingw32-g++'], 'c++')
+compiler(['i686-w64-mingw32-windres'], 'rc')
 compile_options(['-Wall'], 'c++')
 
 environ['LDFLAGS'] = '-static-libstdc++ -static-libgcc'

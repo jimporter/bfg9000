@@ -21,6 +21,7 @@ in progress
   to print
 - `generated_source()` steps are now automatically created as necessary for
   files passed to `object_file()`, if possible
+- Add support for compiling Windows `.rc` files
 - Add support for setting the entry point for native binaries (C, C++, etc)
 - Try to find the right compiler to use for C-family languages by guessing based
   on other compilers in the family (e.g. if `CXX=g++`, guess that the C compiler

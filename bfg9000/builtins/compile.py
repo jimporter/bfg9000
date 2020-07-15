@@ -67,16 +67,8 @@ class Compile(BaseCompile):
         self.packages = packages
         self.user_options = options
 
-        internal_options = opts.option_list(
-            (opts.include_dir(i) for i in self.includes),
-            (i.compile_options(self.compiler) for i in self.packages)
-        )
-
-        self.pch = pch
-        if self.pch:
-            if not self.compiler.accepts_pch:
-                raise TypeError('pch not supported for this compiler')
-            internal_options.append(opts.pch(self.pch))
+        internal_options = opts.option_list(opts.include_dir(i)
+                                            for i in self.includes)
 
         # Don't bother handling forward_opts from libs now, since the only
         # languages that need libs during compilation don't support static
@@ -84,6 +76,16 @@ class Compile(BaseCompile):
         if self.compiler.needs_libs:
             self.libs = libs
             internal_options.extend(opts.lib(i) for i in self.libs)
+
+        if self.compiler.needs_package_options:
+            internal_options.collect(i.compile_options(self.compiler)
+                                     for i in self.packages)
+
+        self.pch = pch
+        if self.pch:
+            if not self.compiler.accepts_pch:
+                raise TypeError('pch not supported for this compiler')
+            internal_options.append(opts.pch(self.pch))
 
         super().__init__(context, name, internal_options, directory,
                          extra_deps, description)

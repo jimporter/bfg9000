@@ -125,8 +125,9 @@ class Link(Edge):
         for i in langs:
             try:
                 linker = env.builder(i).linker(self.mode)
-                yielded = True
-                yield linker
+                if linker:
+                    yielded = True
+                    yield linker
             except ToolNotFoundError:
                 pass
         if not yielded:
@@ -190,10 +191,12 @@ class DynamicLink(Link):
                 (opts.lib(i) for i in self.libs)
             )
 
-        self._internal_options.collect(
-            (i.link_options(self.linker) for i in self.packages),
-            extra_options, forward_opts.link_options
-        )
+        if self.linker.needs_package_options:
+            self._internal_options.collect(i.link_options(self.linker)
+                                           for i in self.packages)
+
+        self._internal_options.collect(extra_options,
+                                       forward_opts.link_options)
 
     def _fill_output(self, output):
         first(output).runtime_deps.extend(

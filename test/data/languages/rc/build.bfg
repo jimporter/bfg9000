@@ -1,0 +1,6 @@
+# -*- python -*-
+
+if env.target_platform.family != 'windows':
+    exit(1)
+
+executable('simple', files=['simple.cpp', 'resource.rc'])

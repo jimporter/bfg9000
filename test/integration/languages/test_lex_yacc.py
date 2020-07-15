@@ -1,10 +1,13 @@
-from . import *
+import os.path
+
+from .. import *
 
 
 @skip_if_backend('msbuild')
 class TestLexYacc(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        super().__init__('lex_yacc', *args, **kwargs)
+        super().__init__(os.path.join('languages', 'lex_yacc'), *args,
+                         **kwargs)
 
     def test_build(self):
         self.build()

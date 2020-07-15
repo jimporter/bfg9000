@@ -38,6 +38,26 @@ def darwin_install_name(library, env, strict=True):
         return None
 
 
+# Make a function to convert between command names for different languages in
+# the same family (e.g. # `gcc` => `g++`). If no entry in the mapping matches
+# the command, we return None to indicate that the conversion has failed.
+def make_command_converter(mapping):
+    sub = '|'.join(re.escape(i[0]) for i in mapping)
+    ex = re.compile(r'(?:^|(?<=\W))({})(?:$|(?=\W))'.format(sub))
+    d = dict(mapping)
+
+    def fn(cmd):
+        s, n = ex.subn(lambda m: d[m.group(1)], cmd)
+        return s if n > 0 else None
+
+    return fn
+
+
+def make_command_converter_pair(mapping):
+    inverse = [(v, k) for k, v in mapping]
+    return make_command_converter(mapping), make_command_converter(inverse)
+
+
 def not_buildroot(thing):
     if isinstance(thing, path.BasePath):
         return thing != type(thing)('.')
@@ -129,6 +149,10 @@ class BuildCommand(Command):
     @property
     def flavor(self):
         return self.builder.flavor
+
+    @property
+    def needs_package_options(self):
+        return True
 
     @property
     def num_outputs(self):
