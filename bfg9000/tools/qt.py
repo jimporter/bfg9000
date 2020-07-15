@@ -58,10 +58,6 @@ class MocCompiler(SimpleBuildCommand):
     def deps_flavor(self):
         return None
 
-    @property
-    def needs_libs(self):
-        return False
-
     def _call(self, cmd, input, output, flags=None):
         return list(chain(
             cmd, iterate(flags), [input, '-o', output]
@@ -136,10 +132,6 @@ class RccCompiler(SimpleBuildCommand):
     def deps_flavor(self):
         return 'gcc'
 
-    @property
-    def needs_libs(self):
-        return False
-
     def _call(self, cmd, input, output, deps=None, flags=None):
         result = list(chain(cmd, iterate(flags), [input, '-o', output]))
         if deps:
@@ -197,10 +189,6 @@ class UicCompiler(SimpleBuildCommand):
     @property
     def deps_flavor(self):
         return None
-
-    @property
-    def needs_libs(self):
-        return False
 
     def _call(self, cmd, input, output, flags=None):
         return list(chain(

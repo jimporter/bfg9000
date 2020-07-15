@@ -151,10 +151,6 @@ class BuildCommand(Command):
         return self.builder.flavor
 
     @property
-    def needs_package_options(self):
-        return True
-
-    @property
     def num_outputs(self):
         return 'all'
 

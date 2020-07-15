@@ -48,10 +48,18 @@ class MsvcRcCompiler(SimpleBuildCommand):
     def needs_libs(self):
         return False
 
+    @property
+    def needs_package_options(self):
+        return False
+
     def _call(self, cmd, input, output, flags=None):
         return list(chain(
-            cmd, iterate(flags), ['/fo', output, input]
+            cmd, self._always_flags, iterate(flags), ['/fo', output, input]
         ))
+
+    @property
+    def _always_flags(self):
+        return ['/nologo']
 
     def default_name(self, input, step):
         return input.path.stripext().suffix

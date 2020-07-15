@@ -54,10 +54,6 @@ class YaccCompiler(SimpleBuildCommand):
         return None
 
     @property
-    def needs_libs(self):
-        return False
-
-    @property
     def num_outputs(self):
         return 1
 

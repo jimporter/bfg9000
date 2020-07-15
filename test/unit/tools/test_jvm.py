@@ -43,6 +43,12 @@ class TestJvmBuilder(CrossPlatformTestCase):
 
         self.assertEqual(jvm.compiler.deps_flavor, None)
         self.assertEqual(jvm.compiler.needs_libs, True)
+
+        self.assertEqual(jvm.compiler.needs_package_options, True)
+        self.assertEqual(jvm.linker('executable').needs_package_options, False)
+        self.assertEqual(jvm.linker('shared_library').needs_package_options,
+                         False)
+
         self.assertEqual(jvm.compiler.accepts_pch, False)
 
         self.assertRaises(AttributeError, lambda: jvm.pch_compiler)

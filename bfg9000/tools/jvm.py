@@ -128,6 +128,10 @@ class JvmCompiler(SimpleBuildCommand):
         return True
 
     @property
+    def needs_package_options(self):
+        return True
+
+    @property
     def accepts_pch(self):
         return False
 

@@ -19,7 +19,7 @@ _builders = (cc.CcRcBuilder, msvc.MsvcRcBuilder)
 
 
 @builder('rc')
-def winrc_builder(env):
+def rc_builder(env):
     langinfo = known_langs['rc']
     cmd = env.getvar(langinfo.var('compiler'))
     if cmd:
@@ -39,8 +39,6 @@ def winrc_builder(env):
     else:
         guessed_cmd = None
 
-    log.info('xxx guessed command: {!r} {!r}'.format(guessed_cmd, sibling_cmd))
-
     # If the guessed command is the same as the first default command
     # candidate, remove it. This will keep us from logging a useless info
     # message that we guessed the default value for the command.
@@ -56,4 +54,4 @@ def winrc_builder(env):
 
     # Try the default command candidates.
     return choose_builder(env, langinfo, _builders,
-                          default_candidates=candidates)
+                          candidates=candidates)

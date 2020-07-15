@@ -23,7 +23,6 @@ class TestYaccBuilder(CrossPlatformTestCase):
     def test_properties(self):
         self.assertEqual(self.compiler.num_outputs, 1)
         self.assertEqual(self.compiler.deps_flavor, None)
-        self.assertEqual(self.compiler.needs_libs, False)
 
     def test_call(self):
         self.assertEqual(self.compiler('in', 'out'),

@@ -53,10 +53,6 @@ class LexCompiler(SimpleBuildCommand):
     def deps_flavor(self):
         return None
 
-    @property
-    def needs_libs(self):
-        return False
-
     def _call(self, cmd, input, output, flags=None):
         return list(chain(
             cmd, iterate(flags), ['-o', output, input]

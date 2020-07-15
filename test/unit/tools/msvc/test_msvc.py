@@ -39,6 +39,12 @@ class TestMsvcBuilder(CrossPlatformTestCase):
         self.assertEqual(cc.compiler.needs_libs, False)
         self.assertEqual(cc.pch_compiler.needs_libs, False)
 
+        self.assertEqual(cc.compiler.needs_package_options, True)
+        self.assertEqual(cc.pch_compiler.needs_package_options, True)
+        self.assertEqual(cc.linker('executable').needs_package_options, True)
+        self.assertEqual(cc.linker('shared_library').needs_package_options,
+                         True)
+
         self.assertEqual(cc.compiler.accepts_pch, True)
         self.assertEqual(cc.pch_compiler.accepts_pch, False)
 

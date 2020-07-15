@@ -57,6 +57,10 @@ class CcLinker(BuildCommand):
         return True
 
     @property
+    def needs_package_options(self):
+        return True
+
+    @property
     def _has_link_macros(self):
         # We only need to define LIBFOO_EXPORTS/LIBFOO_STATIC macros on
         # platforms that have different import/export rules for libraries. We

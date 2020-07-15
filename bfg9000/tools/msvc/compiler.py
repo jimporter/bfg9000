@@ -36,6 +36,10 @@ class MsvcBaseCompiler(BuildCommand):
     def needs_libs(self):
         return False
 
+    @property
+    def needs_package_options(self):
+        return True
+
     def search_dirs(self, strict=False):
         cpath = [abspath(i) for i in
                  self.env.getvar('CPATH', '').split(os.pathsep)]

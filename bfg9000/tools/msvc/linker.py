@@ -39,6 +39,10 @@ class MsvcLinker(BuildCommand):
     def needs_libs(self):
         return True
 
+    @property
+    def needs_package_options(self):
+        return True
+
     def search_dirs(self, strict=False):
         lib_path = [abspath(i) for i in
                     self.env.getvar('LIBRARY_PATH', '').split(os.pathsep)]

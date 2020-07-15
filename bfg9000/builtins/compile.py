@@ -330,7 +330,7 @@ def make_compile(rule, build_inputs, buildfile, env):
     if getattr(rule, 'pch', None):
         deps.append(rule.pch)
     deps.extend(getattr(rule, 'include_deps', []))
-    if compiler.needs_libs:
+    if getattr(rule, 'libs', None):
         deps.extend(rule.libs)
     deps.extend(flatten(i.deps for i in getattr(rule, 'packages', [])))
 
@@ -392,7 +392,7 @@ def ninja_compile(rule, build_inputs, buildfile, env):
         inputs = [rule.pch_source]
         implicit_deps.append(rule.file)
     implicit_deps.extend(getattr(rule, 'include_deps', []))
-    if compiler.needs_libs:
+    if getattr(rule, 'libs', None):
         implicit_deps.extend(rule.libs)
     implicit_deps.extend(flatten(
         i.deps for i in getattr(rule, 'packages', [])
