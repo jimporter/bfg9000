@@ -93,8 +93,8 @@ class SubprocessTestCase(TestCase):
             prefix = '.'
             if self.backend == 'msbuild':
                 prefix = 'Default'
-                if os.getenv('PLATFORM') == 'X64':
-                    prefix = os.path.join('X64', prefix)
+                if os.getenv('PLATFORM') == 'x64':
+                    prefix = os.path.join('x64', prefix)
             return os.path.join(prefix, target.path)
         return target
 
