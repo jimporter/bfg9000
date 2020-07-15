@@ -150,6 +150,7 @@
             <li><a href="#your-first-build-script">Your first build script</a></li>
             <li><a href="#building-executables">Building executables</a></li>
             <li><a href="#building-libraries">Building libraries</a></li>
+            <li><a href="#generated-sources">Generated sources</a></li>
             <li><a href="#finding-files">Finding files</a></li>
             <li><a href="#default-targets">Default targets</a></li>
             <li><a href="#external-packages">External packages</a></li>
@@ -205,8 +206,10 @@ scripts.</p>
 verbosity. First, arguments that normally take a list can take a single item
 instead, e.g. <code>executable('simple', files='simple.cpp')</code>. In addition, bfg9000
 will automatically convert a string argument to an object of the appropriate
-type. In the previous example, <code>'simple.cpp'</code> is automatically converted to a
-<a href="../reference/#source_file"><em>source_file</em></a>.</p>
+type. In the previous example, <code>'simple.cpp'</code> is automatically passed to
+<a href="../reference/#object_files"><em>object_files</em></a>, which in turn converts it to a
+<a href="../reference/#source_file"><em>source_file</em></a> and generates the appropriate build
+step.</p>
 <h3 id="subdirectories">Subdirectories<a class="headerlink" href="#subdirectories" title="Permanent link">§</a></h3>
 <p>Many projects organize their headers and source files into different
 directories. For source files, this is easy to handle: just write out the
@@ -302,6 +305,41 @@ these macros to set the appropriate attributes for your public symbols:</p>
 #endif
 </code></pre>
 
+<h2 id="generated-sources">Generated sources<a class="headerlink" href="#generated-sources" title="Permanent link">§</a></h2>
+<p>In addition to compiling and linking, many build involve a source-generation
+step, e.g. generating lexers/parsers via Lex/Yacc. bfg9000 tries to make this as
+simple as possible. Much like how <a href="../reference/#executable"><em>executable()</em></a> (and
+<a href="../reference/#library"><em>library()</em></a>, etc) will automatically invoke
+<a href="../reference/#object_files"><em>object_files</em></a> as needed to create the compilation
+steps, bfg9000 will automatically add the appropriate
+<a href="../reference/#generated_source"><em>generated_source()</em></a> calls where possible.
+Here, since <code>'qml.qrc'</code> can be auto-detected as a Qt QRC file, the <code>'qml.cpp'</code>
+file will be created and passed on to the implicit
+<a href="../reference/#object_file"><em>object_file</em></a> call:</p>
+<pre><code class="python">executable('qtprog', ['main.cpp', 'qml.qrc'], ...)
+</code></pre>
+
+<p>However, there are situations where this doesn't work automatically. Some
+source-generation steps, such as Yacc, output multiple files, so they can't be
+invoked implicitly:</p>
+<pre><code class="python">parse, parse_h = generated_source(file='calc.y')
+executable('calc', files=[parse, ...], includes=[parse_h])
+</code></pre>
+
+<p>In addition, bfg9000 can only invoke
+<a href="../reference/#generated_source"><em>generated_source()</em></a> automatically when the
+file is passed as the source to be compiled by
+<a href="../reference/#object_file"><em>object_file</em></a>. Using a Qt UI file, for example,
+requires explicitly generating the source:</p>
+<pre><code class="python">widget = generated_source('widget.ui')
+executable('qtprog, ['main.cpp'], includes=[widget], ...)
+</code></pre>
+
+<p>Finally, some source-generators don't have their own unique file extensions, so
+it's not possible to automatically detect their language. In this case, you can
+either explicitly call <a href="../reference/#generated_source"><em>generated_source()</em></a> or
+create the file object with the appropriate language, e.g.:
+<code>auto_file('window.hpp', lang='qtmoc')</code>.</p>
 <h2 id="finding-files">Finding files<a class="headerlink" href="#finding-files" title="Permanent link">§</a></h2>
 <p>For projects with many source files, it can be inconvenient to manually list all
 of them. Since <code>build.bfg</code> files are just Python scripts, you <em>could</em> use

@@ -180,7 +180,13 @@
   iterable in the appropriate build target</li>
 <li><code>info()</code>, <code>debug()</code>, and <code>warning()</code> now take a variable number of arguments
   to print</li>
+<li><code>generated_source()</code> steps are now automatically created as necessary for
+  files passed to <code>object_file()</code>, if possible</li>
+<li>Add support for compiling Windows <code>.rc</code> files</li>
 <li>Add support for setting the entry point for native binaries (C, C++, etc)</li>
+<li>Try to find the right compiler to use for C-family languages by guessing based
+  on other compilers in the family (e.g. if <code>CXX=g++</code>, guess that the C compiler
+  is <code>gcc</code>)</li>
 <li>Regenerating build files with the Ninja backend now uses the <code>console</code> pool,
   allowing realtime output and colored text</li>
 </ul>
@@ -189,6 +195,7 @@
 <li>Drop support for Python 2</li>
 <li><code>show_stack</code> for <code>info()</code> and <code>debug()</code> must now be specified as a keyword
   argument</li>
+<li><code>resource_file()</code> has been deprecated; use <code>source_file()</code> instead</li>
 </ul>
 <h3 id="bug-fixes">Bug fixes<a class="headerlink" href="#bug-fixes" title="Permanent link">§</a></h3>
 <ul>
@@ -203,6 +210,8 @@
   instead of using <code>@rpath</code>-based paths prior to installation</li>
 <li>MSBuild backend can now build libraries with no source files that link to a
   whole-archive library</li>
+<li>Object files with unrecognized source languages can now be linked with the
+  default linker for their object format</li>
 </ul>
 <hr />
 <h2 id="v051">v0.5.1<a class="headerlink" href="#v051" title="Permanent link">§</a></h2>

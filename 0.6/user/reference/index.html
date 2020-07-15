@@ -218,10 +218,10 @@ specify <code>dist=False</code> when creating the file object.</p>
 <h3 id="auto_file">auto_file(<em>name</em>, [<em>lang</em>], [<em>dist</em>])<a class="headerlink" href="#auto_file" title="Permanent link">§</a></h3>
 <p>Create a reference to an existing file named <em>name</em>. This function will try to
 automatically determine the file's kind based on its extension:
-<a href="#source_file"><em>source_file</em></a>; <a href="#header_file"><em>header_file</em></a>;
-<a href="#resource_file"><em>resource_file</em></a>; or, if the extension is not recognized,
-<a href="#generic_file"><em>generic_file</em></a>. If <em>lang</em> is specified, files with an
-unrecognized extension will always be treated as <a href="#source_file"><em>source_file</em></a>s.</p>
+<a href="#source_file"><em>source_file</em></a>; <a href="#header_file"><em>header_file</em></a>; or, if the
+extension is not recognized, <a href="#generic_file"><em>generic_file</em></a>. If <em>lang</em> is
+specified, files with an unrecognized extension will always be treated as
+<a href="#source_file"><em>source_file</em></a>s.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>This function is primarily useful for writing generic code that works with
@@ -263,10 +263,6 @@ not specified, the language of the file is inferred from its extension.</p>
 <p>Create a reference to an existing module-definition file named <em>name</em>.
 <a href="https://docs.microsoft.com/en-us/cpp/build/reference/module-definition-dot-def-files">Module-definition files</a> are sometimes used when building libraries
 on Windows.</p>
-<h3 id="resource_file">resource_file(<em>name</em>, [<em>lang</em>], [<em>dist</em>])<a class="headerlink" href="#resource_file" title="Permanent link">§</a></h3>
-<p class="subtitle">Availability: <code>build.bfg</code></p>
-<p>Create a reference to an existing resource file named <em>name</em>. If <em>lang</em> is not
-specified, the language of the file is inferred from its extension.</p>
 <h3 id="source_file">source_file(<em>name</em>, [<em>lang</em>], [<em>dist</em>])<a class="headerlink" href="#source_file" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Create a reference to an existing source file named <em>name</em>. If <em>lang</em> is not

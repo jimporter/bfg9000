@@ -174,7 +174,9 @@ compiling any C-family source file (C, C++, Objective C/C++).</p>
 <h4 id="cc"><em>CC</em><a class="headerlink" href="#cc" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <code>cc</code> (POSIX), <code>cl</code> (Windows)</p>
 <p>The command to use when compiling C source files. Also the command to use with
-cc-style toolchains when linking object files whose source is in C.</p>
+cc-style toolchains when linking object files whose source is in C. If not
+defined, bfg9000 will try to guess the command to use by checking
+<a href="#objc"><code>OBJC</code></a>, <a href="#cxx"><code>CXX</code></a>, and <a href="#objcxx"><code>OBJCXX</code></a>, in that order.</p>
 <h4 id="cflags"><em>CFLAGS</em><a class="headerlink" href="#cflags" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <em>none</em></p>
 <p>Command line arguments to pass to the compiler when compiling any C source file.</p>
@@ -183,7 +185,9 @@ cc-style toolchains when linking object files whose source is in C.</p>
 <h4 id="cxx"><em>CXX</em><a class="headerlink" href="#cxx" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <code>c++</code> (POSIX), <code>cl</code> (Windows)</p>
 <p>The command to use when compiling C++ source files. Also the command to use with
-cc-style toolchains when linking object files whose source is in C++.</p>
+cc-style toolchains when linking object files whose source is in C++. If not
+defined, bfg9000 will try to guess the command to use by checking
+<a href="#objcxx"><code>OBJCXX</code></a>, <a href="#cc"><code>CC</code></a>, and <a href="#objc"><code>OBJC</code></a>, in that order.</p>
 <h4 id="cxxflags"><em>CXXFLAGS</em><a class="headerlink" href="#cxxflags" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <em>none</em></p>
 <p>Command line arguments to pass to the compiler when compiling any C++ source
@@ -222,7 +226,8 @@ file.</p>
 <p class="subtitle">Default: <code>cc</code></p>
 <p>The command to use when compiling Objective C source files. Also the command to
 use with cc-style toolchains when linking object files whose source is in
-Objective C.</p>
+Objective C. If not defined, bfg9000 will try to guess the command to use by
+checking <a href="#cc"><code>CC</code></a>, <a href="#objcxx"><code>OBJCXX</code></a>, and <a href="#cxx"><code>CXX</code></a>, in that order.</p>
 <h4 id="objcflags"><em>OBJCFLAGS</em><a class="headerlink" href="#objcflags" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <em>none</em></p>
 <p>Command line arguments to pass to the compiler when compiling any Objective C
@@ -233,7 +238,8 @@ source file.</p>
 <p class="subtitle">Default: <code>c++</code></p>
 <p>The command to use when compiling Objective C++ source files. Also the command
 to use with cc-style toolchains when linking object files whose source is in
-Objective C++.</p>
+Objective C++. If not defined, bfg9000 will try to guess the command to use by
+checking <a href="#cxx"><code>CXX</code></a>, <a href="#objc"><code>OBJC</code></a>, and <a href="#cc"><code>CC</code></a>, in that order.</p>
 <h4 id="objcxxflags"><em>OBJCXXFLAGS</em><a class="headerlink" href="#objcxxflags" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <em>none</em></p>
 <p>Command line arguments to pass to the compiler when compiling any Objective C++
@@ -273,6 +279,15 @@ macros.</p>
 <p class="subtitle">Default: <em>none</em></p>
 <p>Command line arguments to pass to the compiler when compiling any Scala source
 file.</p>
+<h3 id="windows-resource-files">Windows resource files<a class="headerlink" href="#windows-resource-files" title="Permanent link">§</a></h3>
+<hr />
+<h4 id="rc"><em>RC</em><a class="headerlink" href="#rc" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <code>windres</code> (POSIX), <code>rc</code> (Windows)</p>
+<p>The command to use when compiling Windows resource (<code>.rc</code>) files.</p>
+<h4 id="rcflags"><em>RCFLAGS</em><a class="headerlink" href="#rcflags" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <em>none</em></p>
+<p>Command line arguments to pass to the compiler when compiling any Windows
+resource file.</p>
 <h3 id="yacc">Yacc<a class="headerlink" href="#yacc" title="Permanent link">§</a></h3>
 <hr />
 <h4 id="yacc_1"><em>YACC</em><a class="headerlink" href="#yacc_1" title="Permanent link">§</a></h4>
