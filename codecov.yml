@@ -1,6 +1,3 @@
-ignore:
-  - "test"
-
 comment: false
 coverage:
   status:

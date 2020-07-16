@@ -143,8 +143,10 @@ install:
     dlltool -U -d libogg.def -l lib\libogg.a &
     del libogg.def
 build_script:
-  - pip install codecov .[test]
+  - pip install .[test]
 test_script:
   - python setup.py coverage -q
 on_success:
-  - codecov
+  - coverage xml
+  - set PATH=C:\Program Files\Git\bin;%PATH%
+  - curl -s https://codecov.io/bash | bash -s -- -U "-s" -A "-s"
