@@ -77,26 +77,36 @@ class ProjectTest(TestCase):
 
 
 class TestVcxProject(ProjectTest):
+    def _write_get_tree(self, proj):
+        out = BytesIO()
+        proj.write(out)
+        return etree.fromstring(out.getvalue())
+
     def test_write(self):
         proj = VcxProject(FakeEnv(), 'project', output_file=Path('output'),
                           files=[{'name': SourceFile(Path('src.cpp'), 'c++'),
                                   'options': {}}])
-        out = BytesIO()
-        proj.write(out)
-        tree = etree.fromstring(out.getvalue())
-        project = self.xpath(tree, '/x:Project')[0]
+
+        project = self.xpath(self._write_get_tree(proj), '/x:Project')[0]
         self.assertXPath(project, './x:PropertyGroup/x:TargetPath/text()',
                          ['$(OutDir)output'])
         self.assertXPath(project, './x:ItemGroup/x:ClCompile/@Include',
                          ['$(SolutionDir)src.cpp'])
 
+    def test_resources(self):
+        proj = VcxProject(FakeEnv(), 'project', output_file=Path('output'),
+                          files=[{'name': SourceFile(Path('res.rc'), 'rc'),
+                                  'options': {}}])
+
+        project = self.xpath(self._write_get_tree(proj), '/x:Project')[0]
+        self.assertXPath(project, './x:ItemGroup/x:ResourceCompile/@Include',
+                         ['$(SolutionDir)res.rc'])
+
     def test_objs(self):
         proj = VcxProject(FakeEnv(), 'project', output_file=Path('output'),
                           objs=[StaticLibrary(Path('file.lib'), 'coff')])
-        out = BytesIO()
-        proj.write(out)
-        tree = etree.fromstring(out.getvalue())
-        project = self.xpath(tree, '/x:Project')[0]
+
+        project = self.xpath(self._write_get_tree(proj), '/x:Project')[0]
         self.assertXPath(project, './x:ItemGroup/x:Link/@Include',
                          ['$(SolutionDir)file.lib'])
 
@@ -106,9 +116,8 @@ class TestVcxProject(ProjectTest):
                 {'name': SourceFile(Path('a/src.cpp'), 'c++'), 'options': {}},
                 {'name': SourceFile(Path('b/src.cpp'), 'c++'), 'options': {}},
             ])
-        out = BytesIO()
-        proj.write(out)
-        tree = etree.fromstring(out.getvalue())
+
+        tree = self._write_get_tree(proj)
         self.assertXPath(tree, 'x:ItemGroup/x:ClCompile/@Include', [
             r'$(SolutionDir)a\src.cpp', r'$(SolutionDir)b\src.cpp'
         ])
@@ -121,48 +130,48 @@ class TestVcxProject(ProjectTest):
         proj = VcxProject(FakeEnv(), 'project')
 
         root = E.Element()
-        proj._write_compile_options(root, {})
+        proj._cl_compile_options(root, {})
         self.assertXPath(root, './*', [])
 
         root = E.Element()
-        proj._write_compile_options(root, {
+        proj._cl_compile_options(root, {
             'warnings': {'level': 'all', 'as_error': True}
         })
         self.assertXPath(root, './WarningLevel/text()', ['EnableAllWarnings'])
         self.assertXPath(root, './TreatWarningAsError/text()', ['true'])
 
         root = E.Element()
-        proj._write_compile_options(root, {'debug': 'pdb'})
+        proj._cl_compile_options(root, {'debug': 'pdb'})
         self.assertXPath(root, './DebugInformationFormat/text()',
                          ['ProgramDatabase'])
 
         root = E.Element()
-        proj._write_compile_options(root, {'includes': ['foo', 'bar']})
+        proj._cl_compile_options(root, {'includes': ['foo', 'bar']})
         self.assertXPath(root, './AdditionalIncludeDirectories/text()',
                          ['foo;bar;%(AdditionalIncludeDirectories)'])
 
         root = E.Element()
-        proj._write_compile_options(root, {'defines': ['foo', 'bar']})
+        proj._cl_compile_options(root, {'defines': ['foo', 'bar']})
         self.assertXPath(root, './PreprocessorDefinitions/text()',
                          ['foo;bar;%(PreprocessorDefinitions)'])
 
         root = E.Element()
-        proj._write_compile_options(root, {'pch': {'create': 'foo'}})
+        proj._cl_compile_options(root, {'pch': {'create': 'foo'}})
         self.assertXPath(root, './PrecompiledHeader/text()', ['Create'])
         self.assertXPath(root, './PrecompiledHeaderFile/text()', ['foo'])
 
         root = E.Element()
-        proj._write_compile_options(root, {'pch': {'use': 'foo'}})
+        proj._cl_compile_options(root, {'pch': {'use': 'foo'}})
         self.assertXPath(root, './PrecompiledHeader/text()', ['Use'])
         self.assertXPath(root, './PrecompiledHeaderFile/text()', ['foo'])
 
         root = E.Element()
-        proj._write_compile_options(root, {'runtime': 'dynamic-debug'})
+        proj._cl_compile_options(root, {'runtime': 'dynamic-debug'})
         self.assertXPath(root, './RuntimeLibrary/text()',
                          ['MultiThreadedDebugDLL'])
 
         root = E.Element()
-        proj._write_compile_options(root, {'extra': ['foo', 'bar']})
+        proj._cl_compile_options(root, {'extra': ['foo', 'bar']})
         self.assertXPath(root, './AdditionalOptions/text()',
                          ['foo bar %(AdditionalOptions)'])
 
@@ -170,24 +179,24 @@ class TestVcxProject(ProjectTest):
         proj = VcxProject(FakeEnv(), 'project')
 
         root = E.Element()
-        proj._write_link_options(root, {})
+        proj._link_options(root, {})
         self.assertXPath(root, './OutputFile/text()', ['$(TargetPath)'])
 
         root = E.Element()
-        proj._write_link_options(root, {'debug': True})
+        proj._link_options(root, {'debug': True})
         self.assertXPath(root, './GenerateDebugInformation/text()', ['true'])
 
         root = E.Element()
-        proj._write_link_options(root, {'import_lib': 'foo'})
+        proj._link_options(root, {'import_lib': 'foo'})
         self.assertXPath(root, './ImportLibrary/text()', ['foo'])
 
         root = E.Element()
-        proj._write_link_options(root, {'extra': ['foo', 'bar']})
+        proj._link_options(root, {'extra': ['foo', 'bar']})
         self.assertXPath(root, './AdditionalOptions/text()',
                          ['foo bar %(AdditionalOptions)'])
 
         root = E.Element()
-        proj._write_link_options(root, {'libs': ['foo', 'bar']})
+        proj._link_options(root, {'libs': ['foo', 'bar']})
         self.assertXPath(root, './AdditionalDependencies/text()',
                          ['foo;bar;%(AdditionalDependencies)'])
 

@@ -563,7 +563,7 @@ try:
 
     @msbuild.rule_handler(DynamicLink, SharedLink, StaticLink)
     def msbuild_link(rule, build_inputs, solution, env):
-        if ( any(i not in ['c', 'c++'] for i in rule.input_langs) or
+        if ( any(i not in ['c', 'c++', 'rc'] for i in rule.input_langs) or
              rule.linker.flavor != 'msvc' ):
             raise ValueError('msbuild backend currently only supports c/c++ ' +
                              'with msvc')

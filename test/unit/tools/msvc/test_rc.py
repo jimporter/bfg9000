@@ -5,6 +5,7 @@ from .common import mock_which
 
 from bfg9000 import options as opts
 from bfg9000.file_types import HeaderDirectory, ObjectFile, SourceFile
+from bfg9000.iterutils import merge_dicts
 from bfg9000.languages import Languages
 from bfg9000.path import Path, Root
 from bfg9000.tools.msvc.rc import MsvcRcBuilder
@@ -102,3 +103,21 @@ class TestMsvcRcCompiler(CrossPlatformTestCase):
     def test_flags_invalid(self):
         with self.assertRaises(TypeError):
             self.compiler.flags(opts.option_list(123))
+
+    def test_parse_flags(self):
+        default = {
+            'defines': [],
+            'extra': [],
+            'includes': [],
+            'nologo': None,
+        }
+
+        def assertFlags(flags, extra={}):
+            self.assertEqual(self.compiler.parse_flags(flags),
+                             merge_dicts(default, extra))
+
+        assertFlags([])
+        assertFlags(['/un', 'known'], {'extra': ['/un', 'known']})
+        assertFlags(['/nologo'], {'nologo': True})
+        assertFlags(['/dfoo'], {'defines': ['foo']})
+        assertFlags(['/Idir'], {'includes': ['dir']})

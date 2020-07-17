@@ -11,7 +11,7 @@ from ... import path
 from ... import safe_str
 from ...shell import windows as wshell
 from ...file_types import File
-from ...iterutils import isiterable
+from ...iterutils import isiterable, partition
 from ...tools.common import Command
 
 __all__ = ['BuildDir', 'CommandProject', 'NoopProject', 'Project',
@@ -130,7 +130,7 @@ class Project:
                 # backslashes.
                 E.SourceDir(textify(self.srcdir) + '\\')
             ),
-            *children
+            *(i for i in children if i is not None)
         )
         out.write(etree.tostring(project, doctype=self._DOCTYPE,
                                  pretty_print=True))
@@ -187,9 +187,11 @@ class VcxProject(Project):
         )
 
         compile_opts = E.ClCompile()
-        self._write_compile_options(compile_opts, self.compile_options)
+        self._cl_compile_options(compile_opts, self.compile_options)
         link_opts = E.Lib() if self.mode == 'StaticLibrary' else E.Link()
-        self._write_link_options(link_opts, self.link_options)
+        self._link_options(link_opts, self.link_options)
+        sources, resources = partition(lambda i: i['name'].lang != 'rc',
+                                       self.files)
 
         self._write(out, [
             E.Import(Project=r'$(VCTargetsPath)\Microsoft.Cpp.default.props'),
@@ -200,14 +202,18 @@ class VcxProject(Project):
             E.Import(Project=r'$(VCTargetsPath)\Microsoft.Cpp.props'),
             override_props,
             E.ItemDefinitionGroup(compile_opts, link_opts),
-            self._compiles(self.files),
+            self._compiles(sources, self._cl_compile),
+            self._compiles(resources, self._resource_compile),
             self._links(self.objs),
             E.Import(Project=r'$(VCTargetsPath)\Microsoft.Cpp.Targets')
         ])
 
-    def _compiles(self, files):
+    def _compiles(self, files, func):
         def basename(path):
             return path.stripext().basename()
+
+        if not files:
+            return None
 
         # First, figure out all the common prefixes of files with the same
         # basename so we can use this to give them unique object names.
@@ -221,8 +227,7 @@ class VcxProject(Project):
         compiles = E.ItemGroup()
         for i in files:
             name = i['name']
-            c = E.ClCompile(Include=textify(name))
-            self._write_compile_options(c, i['options'])
+            c = func(name, i['options'])
 
             prefix = prefixes[basename(name.path)]
             if prefix:
@@ -236,38 +241,33 @@ class VcxProject(Project):
         return compiles
 
     def _links(self, objs):
+        if not objs:
+            return None
+
         links = E.ItemGroup()
         for i in objs:
             links.append(E.Link(Include=textify(i)))
         return links
 
-    def _write_compile_options(self, element, options):
+    def _cl_compile(self, name, options):
+        element = E.ClCompile(Include=textify(name))
+        self._cl_compile_options(element, options)
+        return element
+
+    def _resource_compile(self, name, options):
+        element = E.ResourceCompile(Include=textify(name))
+        self._common_compile_options(element, options)
+        return element
+
+    def _cl_compile_options(self, element, options):
         warnings = options.get('warnings', {})
-        if warnings.get('level') is not None:
-            element.append(E.WarningLevel(
-                self._warning_levels[warnings['level']]
-            ))
-        if warnings.get('as_error') is not None:
-            element.append(E.TreatWarningAsError(
-                'true' if warnings['as_error'] else 'false'
-            ))
+        self._add_mapped_option(element, 'WarningLevel', warnings.get('level'),
+                                self._warning_levels)
+        self._add_bool_option(element, 'TreatWarningAsError',
+                              warnings.get('as_error'))
 
-        if options.get('debug'):
-            element.append(E.DebugInformationFormat(
-                self._debug_modes[options['debug']]
-            ))
-
-        if options.get('includes'):
-            element.append(E.AdditionalIncludeDirectories( ';'.join(chain(
-                textify_each(options['includes']),
-                ['%(AdditionalIncludeDirectories)']
-            )) ))
-
-        if options.get('defines'):
-            element.append(E.PreprocessorDefinitions( ';'.join(chain(
-                textify_each(options['defines']),
-                ['%(PreprocessorDefinitions)']
-            )) ))
+        self._add_mapped_option(element, 'DebugInformationFormat',
+                                options.get('debug'), self._debug_modes)
 
         pch = options.get('pch', {})
         if pch.get('create') is not None:
@@ -277,38 +277,45 @@ class VcxProject(Project):
             element.append(E.PrecompiledHeader('Use'))
             element.append(E.PrecompiledHeaderFile(pch['use']))
 
-        if options.get('runtime'):
-            element.append(E.RuntimeLibrary(
-                self._runtimes[options['runtime']]
-            ))
+        self._add_mapped_option(element, 'RuntimeLibrary',
+                                options.get('runtime'), self._runtimes)
+        self._common_compile_options(element, options)
 
-        if options.get('extra'):
-            element.append(E.AdditionalOptions( ' '.join(chain(
-                textify_each(options['extra'], quoted=True),
-                ['%(AdditionalOptions)']
-            )) ))
+    def _common_compile_options(self, element, options):
+        self._add_list_option(element, 'AdditionalIncludeDirectories',
+                              options.get('includes'))
+        self._add_list_option(element, 'PreprocessorDefinitions',
+                              options.get('defines'))
+        self._add_list_option(element, 'AdditionalOptions',
+                              options.get('extra'), quoted=True)
 
-    def _write_link_options(self, element, options):
+    def _link_options(self, element, options):
         element.append(E.OutputFile('$(TargetPath)'))
 
-        if options.get('debug'):
-            element.append(E.GenerateDebugInformation('true'))
+        self._add_bool_option(element, 'GenerateDebugInformation',
+                              options.get('debug'))
 
         if options.get('import_lib'):
-            element.append(E.ImportLibrary(
-                textify(options['import_lib'])
-            ))
+            element.append(E.ImportLibrary( textify(options['import_lib']) ))
 
-        if options.get('extra'):
-            element.append(E.AdditionalOptions( ' '.join(chain(
-                textify_each(options['extra'], quoted=True),
-                ['%(AdditionalOptions)']
-            )) ))
+        self._add_list_option(element, 'AdditionalOptions',
+                              options.get('extra'), quoted=True)
+        self._add_list_option(element, 'AdditionalDependencies',
+                              options.get('libs'))
 
-        if options.get('libs'):
-            element.append(E.AdditionalDependencies( ';'.join(chain(
-                textify_each(options['libs']),
-                ['%(AdditionalDependencies)']
+    def _add_bool_option(self, element, name, value):
+        if value is not None:
+            element.append(E(name, 'true' if value else 'false'))
+
+    def _add_mapped_option(self, element, name, value, mapping):
+        if value is not None:
+            element.append(E(name, mapping[value]))
+
+    def _add_list_option(self, element, name, value, *, quoted=False):
+        if value:
+            delim = ' ' if quoted else ';'
+            element.append(E(name, delim.join(chain(
+                textify_each(value), ['%({})'.format(name)]
             )) ))
 
 

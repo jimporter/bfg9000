@@ -81,6 +81,27 @@ class TestMapIterable(TestCase):
                          [3, 4])
 
 
+class TestPartition(TestCase):
+    def test_empty(self):
+        self.assertEqual(iterutils.partition(lambda i: i[0] == 'b', []),
+                         ([], []))
+
+    def test_all_true(self):
+        self.assertEqual(iterutils.partition(
+            lambda i: len(i), ['foo', 'bar', 'baz']
+        ), (['foo', 'bar', 'baz'], []))
+
+    def test_all_false(self):
+        self.assertEqual(iterutils.partition(
+            lambda i: i[0] == 'z', ['foo', 'bar', 'baz']
+        ), ([], ['foo', 'bar', 'baz']))
+
+    def test_mixed(self):
+        self.assertEqual(iterutils.partition(
+            lambda i: i[0] == 'b', ['foo', 'bar', 'baz']
+        ), (['bar', 'baz'], ['foo']))
+
+
 class TestListify(TestCase):
     def test_none(self):
         self.assertEqual(iterutils.listify(None), [])

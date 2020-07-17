@@ -2,8 +2,10 @@ from itertools import chain
 
 from ... import options as opts, safe_str, shell
 from ..common import Builder, SimpleBuildCommand
+from ...arguments.windows import ArgumentParser
 from ...file_types import ObjectFile
 from ...iterutils import iterate
+from ...objutils import memoize
 from ...path import Path
 from ...versioning import detect_version
 
@@ -83,3 +85,18 @@ class MsvcRcCompiler(SimpleBuildCommand):
             else:
                 raise TypeError('unknown option type {!r}'.format(type(i)))
         return flags
+
+    @staticmethod
+    @memoize
+    def __parser():
+        parser = ArgumentParser()
+        parser.add('/nologo')
+        parser.add('/d', type=list, dest='defines')
+        parser.add('/I', type=list, dest='includes')
+
+        return parser
+
+    def parse_flags(self, flags):
+        result, extra = self.__parser().parse_known(flags)
+        result['extra'] = extra
+        return result

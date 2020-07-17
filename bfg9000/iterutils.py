@@ -1,9 +1,10 @@
 from collections.abc import Iterable, Mapping
+from functools import reduce
 
 __all__ = ['default_sentinel', 'first', 'flatten', 'isiterable', 'ismapping',
-           'iterate', 'iterate_each', 'map_iterable', 'listify', 'merge_dicts',
-           'merge_into_dict', 'recursive_walk', 'slice_dict', 'tween',
-           'uniques', 'unlistify']
+           'iterate', 'iterate_each', 'listify', 'map_iterable', 'merge_dicts',
+           'merge_into_dict', 'partition', 'recursive_walk', 'slice_dict',
+           'tween', 'uniques', 'unlistify']
 
 # This could go in a funcutils module if we ever create one...
 default_sentinel = object()
@@ -47,6 +48,11 @@ def map_iterable(func, thing):
         return t(func(i) for i in thing)
     else:
         return func(thing)
+
+
+def partition(func, iterable):
+    return reduce(lambda result, i: result[not func(i)].append(i) or result,
+                  iterable, ([], []))
 
 
 def listify(thing, always_copy=False, scalar_ok=True, type=list):
