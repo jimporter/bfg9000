@@ -1,7 +1,9 @@
 from unittest import mock
 
 from .common import AlwaysEqual, AttrDict, BuiltinTest
+from bfg9000.backends.make import syntax as make
 from bfg9000.backends.msbuild.solution import Solution
+from bfg9000.backends.ninja import syntax as ninja
 from bfg9000.builtins import compile, default, link, packages, project  # noqa
 from bfg9000 import file_types, options as opts
 from bfg9000.environment import LibraryMode
@@ -11,10 +13,12 @@ from bfg9000.path import Path, Root
 
 
 class LinkTest(BuiltinTest):
+    def linker(self, lang='c++', mode=None):
+        return self.env.builder(lang).linker(mode or self.mode)
+
     def output_file(self, name, step={}, lang=None, input_langs=['c++'],
                     mode=None, extra={}):
-        linker = (self.env.builder(lang or input_langs[0])
-                  .linker(mode or self.mode))
+        linker = self.linker(lang or input_langs[0], mode)
         step_args = {'langs': [lang] if lang else input_langs,
                      'input_langs': input_langs}
         step_args.update(step)
@@ -166,8 +170,9 @@ class TestExecutable(LinkTest):
 
         result = self.context['executable']('exe', ['main.cpp'], libs='libfoo',
                                             packages=pkg)
-        self.assertEqual(result.creator.options,
-                         opts.option_list(lib, pkg_libdir))
+        self.assertEqual(result.creator.options, opts.option_list(
+            self.linker().always_libs(True), lib, pkg_libdir
+        ))
 
     def test_invalid_type(self):
         src = self.context['source_file']('main.cpp')
@@ -377,8 +382,9 @@ class TestSharedLibrary(LinkTest):
 
         result = self.context['shared_library']('shared', ['main.cpp'],
                                                 libs='libfoo', packages=pkg)
-        self.assertEqual(result.creator.options,
-                         opts.option_list(lib, pkg_libdir))
+        self.assertEqual(result.creator.options, opts.option_list(
+            self.linker().always_libs(True), lib, pkg_libdir
+        ))
 
     def test_invalid_type(self):
         src = self.context['source_file']('main.cpp')
@@ -855,60 +861,77 @@ class TestWholeArchive(BuiltinTest):
 
 
 class TestMakeBackend(BuiltinTest):
-    def test_simple(self):
-        makefile = mock.Mock()
-        obj = self.context['object_file']('main.o')
+    def _variables(self, lang='c++'):
+        linker = self.env.builder(lang).linker('executable')
+        libs = linker.lib_flags(linker.always_libs(True))
+        if libs:
+            return {make.var('LDLIBS'): [make.var('GLOBAL_LDLIBS')] + libs}
+        return {}
 
+    def test_simple(self):
+        obj = self.context['object_file']('main.o')
         result = self.context['executable']('exe', obj)
-        link.make_link(result.creator, self.build, makefile, self.env)
-        makefile.rule.assert_called_once_with(
-            result, [obj], [], AlwaysEqual(), {}, None
-        )
+
+        makefile = make.Makefile(None)
+        with mock.patch.object(make.Makefile, 'rule') as mrule:
+            link.make_link(result.creator, self.build, makefile, self.env)
+        mrule.assert_called_once_with(result, [obj], [], AlwaysEqual(),
+                                      self._variables(), None)
 
     def test_dir_sentinel(self):
-        makefile = mock.Mock()
         obj = self.context['object_file']('main.o')
-
         result = self.context['executable']('dir/exe', obj)
-        link.make_link(result.creator, self.build, makefile, self.env)
-        makefile.rule.assert_called_once_with(
-            result, [obj], [Path('dir/.dir')], AlwaysEqual(), {}, None
-        )
+
+        makefile = make.Makefile(None)
+        with mock.patch.object(make.Makefile, 'rule') as mrule:
+            link.make_link(result.creator, self.build, makefile, self.env)
+        mrule.assert_called_once_with(result, [obj], [Path('dir/.dir')],
+                                      AlwaysEqual(), self._variables(), None)
 
     def test_extra_deps(self):
-        makefile = mock.Mock()
         dep = self.context['generic_file']('dep.txt')
         obj = self.context['object_file']('main.o')
-
         result = self.context['executable']('exe', obj, extra_deps=dep)
-        link.make_link(result.creator, self.build, makefile, self.env)
-        makefile.rule.assert_called_once_with(
-            result, [obj, dep], [], AlwaysEqual(), {}, None
-        )
+
+        makefile = make.Makefile(None)
+        with mock.patch.object(make.Makefile, 'rule') as mrule:
+            link.make_link(result.creator, self.build, makefile, self.env)
+        mrule.assert_called_once_with(result, [obj, dep], [], AlwaysEqual(),
+                                      self._variables(), None)
 
 
 class TestNinjaBackend(BuiltinTest):
-    def test_simple(self):
-        ninjafile = mock.Mock()
-        obj = self.context['object_file']('main.o')
+    def _variables(self, lang='c++'):
+        linker = self.env.builder(lang).linker('executable')
+        libs = linker.lib_flags(linker.always_libs(True))
+        if libs:
+            return {ninja.var('ldlibs'): [ninja.var('global_ldlibs')] + libs}
+        return {}
 
+    def test_simple(self):
+        obj = self.context['object_file']('main.o')
         result = self.context['executable']('exe', obj)
-        link.ninja_link(result.creator, self.build, ninjafile, self.env)
-        ninjafile.build.assert_called_once_with(
+
+        ninjafile = ninja.NinjaFile(None)
+        with mock.patch.object(ninja.NinjaFile, 'build') as mbuild:
+            link.ninja_link(result.creator, self.build, ninjafile, self.env)
+
+        mbuild.assert_called_once_with(
             output=[result], rule='cc_link', inputs=[obj], implicit=[],
-            variables={}
+            variables=self._variables()
         )
 
     def test_extra_deps(self):
-        ninjafile = mock.Mock()
         dep = self.context['generic_file']('dep.txt')
         obj = self.context['object_file']('main.o')
-
         result = self.context['executable']('exe', obj, extra_deps=dep)
-        link.ninja_link(result.creator, self.build, ninjafile, self.env)
-        ninjafile.build.assert_called_once_with(
+
+        ninjafile = ninja.NinjaFile(None)
+        with mock.patch.object(ninja.NinjaFile, 'build') as mbuild:
+            link.ninja_link(result.creator, self.build, ninjafile, self.env)
+        mbuild.assert_called_once_with(
             output=[result], rule='cc_link', inputs=[obj], implicit=[dep],
-            variables={}
+            variables=self._variables()
         )
 
 
@@ -918,6 +941,7 @@ class TestMsbuildBackend(BuiltinTest):
         self.env = make_env('winnt', clear_variables=True,
                             variables={'CXX': 'nonexist'})
         self.build, self.context = self._make_context(self.env)
+
         from bfg9000.tools.msvc import MsvcBuilder
         self.patch_builder = mock.patch('bfg9000.tools.c_family._builders',
                                         (MsvcBuilder,))
@@ -948,9 +972,11 @@ class TestMsbuildBackend(BuiltinTest):
             'includes': [],
             'extra': [],
         })
+
+        libs = self.env.builder('c++').linker('executable').always_libs(True)
         self.assertSubdict(solution[result].link_options, {
             'debug': None,
-            'libs': [],
+            'libs': [i.library for i in libs],
         })
 
     def test_compile_options(self):

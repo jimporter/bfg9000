@@ -21,12 +21,17 @@ class MsvcLinker(BuildCommand):
         'c++'   : {'c', 'c++'},
     }
 
+    _always_libs = [
+        'kernel32', 'user32', 'gdi32', 'winspool', 'comdlg32', 'advapi32',
+        'shell32', 'ole32', 'oleaut32', 'uuid', 'odbc32', 'odbccp32',
+    ]
+
     def _extract_lib_name(self, library):
-        basename = library.path.basename()
-        m = self.__lib_re.match(basename)
+        lib = library if isinstance(library, str) else library.path.basename()
+        m = self.__lib_re.match(lib)
         if not m:
             raise ValueError("'{}' is not a valid library name"
-                             .format(basename))
+                             .format(lib))
         return m.group(1)
 
     def can_link(self, format, langs):
@@ -61,7 +66,10 @@ class MsvcLinker(BuildCommand):
         return ['/nologo']
 
     def always_libs(self, primary):
-        return opts.option_list()
+        if not primary:
+            return opts.option_list()
+        return opts.option_list(opts.lib(i + '.lib')
+                                for i in self._always_libs)
 
     def _link_lib(self, library, syntax):
         if isinstance(library, Framework):
@@ -71,8 +79,6 @@ class MsvcLinker(BuildCommand):
                 return ['/WHOLEARCHIVE:' + library.path]
             raise TypeError('whole-archives require MSVC 2015 Update 2')
 
-        # Unlike the cc linker, we only support Library objects here (strings
-        # aren't allowed!)
         if syntax == 'cc':
             return ['-l' + self._extract_lib_name(library)]
         else:
@@ -81,7 +87,7 @@ class MsvcLinker(BuildCommand):
             # find the right library when there are name collisions (e.g.
             # linking to a system `libfoo` when also building a local `libfoo`
             # to use elsewhere).
-            return [library.path]
+            return [library if isinstance(library, str) else library.path]
 
     def _lib_dir(self, library, syntax):
         if syntax == 'cc' and not isinstance(library, WholeArchive):
