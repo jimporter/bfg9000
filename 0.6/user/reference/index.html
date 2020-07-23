@@ -922,14 +922,16 @@ for <code>build.bfg</code> files are shown below.</p>
 <h4 id="env-builder">env.builder(<em>lang</em>)<a class="headerlink" href="#env-builder" title="Permanent link">§</a></h4>
 <p>Return the <a href="#builders">builder</a> used by bfg9000 for a particular language
 <em>lang</em>.</p>
-<h4 id="env-execute">env.execute(<em>args</em>, [<em>env</em>], [<em>env_update</em>], [<em>shell</em>], [<em>stdout</em>], [<em>stderr</em>], [<em>returncode</em>])<a class="headerlink" href="#env-execute" title="Permanent link">§</a></h4>
+<h4 id="env-execute">env.execute(<em>args</em>, [<em>env</em>], [<em>extra_env</em>], [<em>shell</em>], [<em>stdout</em>], [<em>stderr</em>], [<em>returncode</em>])<a class="headerlink" href="#env-execute" title="Permanent link">§</a></h4>
 <p>Execute the command-line arguments in <em>args</em> and return the output. If <em>shell</em>
 is true, <em>args</em> should be a string that will be interpreted by the system's
 shell; if not (the default), it should be a series of arguments.</p>
 <p>You can also set <em>env</em> to be a dictionary of environment variables to pass to
-the child process. If <em>env_update</em> is true (the default), these will be added to
-the environment variables in <a href="#env-variables"><em>env.varables</em></a>; otherwise, <em>env</em>
-represents <em>all</em> the environment variables to pass to the child process.</p>
+the child process; if <em>env</em> is <em>None</em> (the default), the environment variables
+in <a href="#env-variables"><em>env.variables</em></a> will be used instead. Similarly, you can
+set <em>extra_env</em> to be a dict of env vars; these will be added to the dict in
+<em>env</em> (or to <em>env.variables</em> if <em>env</em> is <em>None</em>) to produce the final set of
+environment variables to pass to the child process.</p>
 <p><em>stdout</em> and <em>stderr</em> are <a href="#env-Mode"><em>env.Mode</em></a> values that describe how (or
 if) output should be redirected. By default, both are set to <em>Mode.normal</em>.</p>
 <p>Finally, <em>returncode</em> specifies the expected return code from the subprocess.
@@ -955,7 +957,7 @@ type (or a list beginning with a file type) such as an
 <a href="#executable"><em>executable</em></a>, it will be prepended with the
 <a href="#builder-runner">runner</a> for <em>lang</em> as needed. If <em>lang</em> is <em>None</em>, the
 language will be determined by the language of <em>args</em>'s first element.</p>
-<h4 id="env-run">env.run(<em>args</em>, [<em>lang</em>], [<em>env</em>], [<em>env_update</em>], [<em>stdout</em>], [<em>stderr</em>], [<em>returncode</em>])<a class="headerlink" href="#env-run" title="Permanent link">§</a></h4>
+<h4 id="env-run">env.run(<em>args</em>, [<em>lang</em>], [<em>env</em>], [<em>extra_env</em>], [<em>stdout</em>], [<em>stderr</em>], [<em>returncode</em>])<a class="headerlink" href="#env-run" title="Permanent link">§</a></h4>
 <p>Run a command, generating any arguments needed to perform the operation.
 Equivalent to <code>env.execute(env.run_arguments(arg, lang), ...)</code>.</p>
 <h4 id="env-host_platform">env.target_platform<a class="headerlink" href="#env-host_platform" title="Permanent link">§</a></h4>
