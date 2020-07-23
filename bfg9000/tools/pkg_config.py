@@ -51,13 +51,15 @@ class PkgConfig(SimpleCommand):
             result.append('--msvc-syntax')
         return result
 
-    def run(self, name, type, *args, env=None, installed=None, **kwargs):
+    def run(self, name, type, *args, extra_env=None, installed=None, **kwargs):
         if installed is True:
-            env = dict(PKG_CONFIG_DISABLE_UNINSTALLED='1', **(env or {}))
+            extra_env = dict(PKG_CONFIG_DISABLE_UNINSTALLED='1',
+                             **(extra_env or {}))
         elif installed is False:
             name += '-uninstalled'
 
-        result = super().run(name, type, *args, env=env, **kwargs).strip()
+        result = super().run(name, type, *args, extra_env=extra_env,
+                             **kwargs).strip()
         if self._options[type][1]:
             return self._options[type][1](result)
         return result
@@ -82,17 +84,17 @@ class PkgConfigPackage(Package):
         self.static = kind == PackageKind.static
 
     @memoize
-    def _call(self, *args, env=None, **kwargs):
-        final_env = dict(**self._env, **env) if env else self._env
-        return self._pkg_config.run(*args, env=final_env, **kwargs)
+    def _call(self, *args, extra_env=None, **kwargs):
+        final_env = dict(**self._env, **extra_env) if extra_env else self._env
+        return self._pkg_config.run(*args, extra_env=final_env, **kwargs)
 
     def _get_rpaths(self):
-        env = {'PKG_CONFIG_ALLOW_SYSTEM_LIBS': '1'}
+        extra_env = {'PKG_CONFIG_ALLOW_SYSTEM_LIBS': '1'}
 
         def rpaths_for(installed):
             try:
-                args = self._call(self.name, 'lib_dirs', self.static, env=env,
-                                  installed=installed)
+                args = self._call(self.name, 'lib_dirs', self.static,
+                                  extra_env=extra_env, installed=installed)
             except shell.CalledProcessError:
                 return None
             lib_dirs = _lib_dirs_parser.parse_known_args(args)[0].lib_dirs

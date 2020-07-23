@@ -26,7 +26,7 @@ class TestSubmodule(IntegrationTest):
                 self.target_path(output_file('lib'))
             ) + os.pathsep + os.environ['PATH']}
         self.assertOutput([executable('program')], 'Hello, Alice!\n',
-                          env=env_vars)
+                          extra_env=env_vars)
 
     def test_build_with_args(self):
         self.configure(extra_args=['--name=Bob', '--enthusiasm=3'])
@@ -38,7 +38,7 @@ class TestSubmodule(IntegrationTest):
                 self.target_path(output_file('lib'))
             ) + os.pathsep + os.environ['PATH']}
         self.assertOutput([executable('program')], 'Hello, Bob!!!\n',
-                          env=env_vars)
+                          extra_env=env_vars)
 
     def test_help(self):
         os.chdir(self.srcdir)

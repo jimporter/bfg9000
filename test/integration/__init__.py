@@ -98,24 +98,24 @@ class SubprocessTestCase(TestCase):
             return os.path.join(prefix, target.path)
         return target
 
-    def assertPopen(self, command, env=None, env_update=True, input=None,
+    def assertPopen(self, command, input=None, *, env=None, extra_env=None,
                     returncode=0):
-        final_env = env
-        if env is not None and env_update:
-            final_env = dict(os.environ)
-            final_env.update(env)
+        if env is None:
+            env = os.environ
+        if extra_env:
+            env = env.copy()
+            env.update(extra_env)
 
         command = [self.target_path(i) for i in command]
-        proc = subprocess.Popen(
-            command, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT, env=final_env, universal_newlines=True
+        proc = subprocess.run(
+            command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+            input=input, env=env, universal_newlines=True
         )
-        output = proc.communicate(input)[0]
         if not (returncode == 'any' or
                 (returncode == 'fail' and proc.returncode != 0) or
                 proc.returncode in listify(returncode)):
-            raise SubprocessError(proc.returncode, env, output)
-        return output
+            raise SubprocessError(proc.returncode, env, proc.stdout)
+        return proc.stdout
 
     def assertOutput(self, command, output, *args, **kwargs):
         self.assertEqual(self.assertPopen(command, *args, **kwargs), output)
@@ -150,11 +150,12 @@ class SubprocessTestCase(TestCase):
 
 class BasicIntegrationTest(SubprocessTestCase):
     def __init__(self, srcdir, *args, install=False, configure=True,
-                 stage_src=False, backend=None, env=None, extra_args=None,
-                 **kwargs):
+                 stage_src=False, backend=None, env=None, extra_env=None,
+                 extra_args=None, **kwargs):
         self._configure = configure
         self.backend = backend
         self.env = env
+        self.extra_env = extra_env
         self.extra_args = extra_args or []
 
         super().__init__(*args, **kwargs)
@@ -205,7 +206,7 @@ class BasicIntegrationTest(SubprocessTestCase):
 
     def configure(self, srcdir=None, builddir=None, installdir=_unset,
                   orig_srcdir=_unset, extra_args=_unset, env=_unset,
-                  backend=_unset, returncode=0):
+                  extra_env=_unset, backend=_unset, returncode=0):
         if srcdir:
             srcdir = os.path.join(test_data_dir, srcdir)
         else:
@@ -218,10 +219,15 @@ class BasicIntegrationTest(SubprocessTestCase):
             orig_srcdir = self.orig_srcdir
         if extra_args is _unset:
             extra_args = self.extra_args
-        if env is _unset:
-            env = self.env
         if backend is _unset:
             backend = self.backend
+
+        if env is _unset:
+            env = self.env
+            if extra_env is _unset:
+                extra_env = self.extra_env
+        elif extra_env is _unset:
+            extra_env = None
 
         if orig_srcdir:
             cleandir(srcdir, recreate=False)
@@ -238,7 +244,7 @@ class BasicIntegrationTest(SubprocessTestCase):
         self.assertPopen(
             ['bfg9000', '--debug', 'configure', builddir,
              '--backend', backend] + install_args + extra_args,
-            env=env, env_update=True, returncode=returncode
+            env=env, extra_env=extra_env, returncode=returncode
         )
         os.chdir(builddir)
 

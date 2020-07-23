@@ -107,7 +107,7 @@ class TestDestDir(IntegrationTest):
 
     @skip_if_backend('msbuild')
     def test_install_destdir(self):
-        self.configure(env={'DESTDIR': self.destdir})
+        self.configure(extra_env={'DESTDIR': self.destdir})
         self.build('install')
         self._check_installed()
         self._check_run()
@@ -121,7 +121,7 @@ class TestDestDir(IntegrationTest):
 
     @skip_if_backend('msbuild')
     def test_uninstall_destdir(self):
-        self.configure(env={'DESTDIR': self.destdir})
+        self.configure(extra_env={'DESTDIR': self.destdir})
         self.build('install')
         self._check_installed()
 

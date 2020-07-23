@@ -52,7 +52,7 @@ class TestSharedLibrary(IntegrationTest):
                 for i in ('outer', 'middle', 'inner')
             ]) + os.pathsep + os.environ['PATH']}
         self.assertOutput([executable('program')], 'hello, library!\n',
-                          env=env_vars)
+                          extra_env=env_vars)
 
     @skip_if_backend('msbuild')
     def test_install(self):
@@ -76,7 +76,7 @@ class TestSharedLibrary(IntegrationTest):
                 )) for i in ('outer', 'middle', 'inner')
             ]) + os.pathsep + os.environ['PATH']}
         self.assertOutput([pjoin(self.bindir, executable('program').path)],
-                          'hello, library!\n', env=env_vars)
+                          'hello, library!\n', extra_env=env_vars)
 
 
 class TestStaticLibrary(IntegrationTest):

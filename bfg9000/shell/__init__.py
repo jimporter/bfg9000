@@ -78,18 +78,18 @@ def execute(args, *, shell=False, env=None, base_dirs=None, stdout=Mode.normal,
     def conv_mode(mode):
         return mode.value if isinstance(mode, Mode) else mode
 
-    proc = subprocess.Popen(
+    proc = subprocess.run(
         args, universal_newlines=True, shell=shell, env=env,
         stdout=conv_mode(stdout), stderr=conv_mode(stderr)
     )
-    output = proc.communicate()
     if not (returncode == 'any' or
             (returncode == 'fail' and proc.returncode != 0) or
             proc.returncode in listify(returncode)):
-        raise CalledProcessError(proc.returncode, args)
+        raise CalledProcessError(proc.returncode, proc.args, proc.stdout,
+                                 proc.stderr)
 
     if stdout == Mode.pipe:
         if stderr == Mode.pipe:
-            return output
-        return output[0]
-    return output[1]
+            return proc.stdout, proc.stderr
+        return proc.stdout
+    return proc.stderr

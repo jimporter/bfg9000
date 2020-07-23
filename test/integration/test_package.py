@@ -21,7 +21,7 @@ class TestPackage(IntegrationTest):
 class TestSystemPackage(IntegrationTest):
     def __init__(self, *args, **kwargs):
         super().__init__(os.path.join(examples_dir, '04_package'),
-                         env={'PKG_CONFIG': 'nonexist'}, *args, **kwargs)
+                         extra_env={'PKG_CONFIG': 'nonexist'}, *args, **kwargs)
 
     def test_build(self):
         self.build()
@@ -52,7 +52,7 @@ class TestOpenGLPackage(IntegrationTest):
 
 class TestOpenGLSystemPackage(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        super().__init__('opengl', env={'PKG_CONFIG': 'nonexist'}, *args,
+        super().__init__('opengl', extra_env={'PKG_CONFIG': 'nonexist'}, *args,
                          **kwargs)
 
     def test_build(self):

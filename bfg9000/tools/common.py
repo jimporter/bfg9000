@@ -99,7 +99,7 @@ class Command:
         return self._call(cmd, *args, **kwargs)
 
     def run(self, *args, **kwargs):
-        run_kwargs = slice_dict(kwargs, ('env', 'env_update'))
+        run_kwargs = slice_dict(kwargs, ('env', 'extra_env'))
 
         return self.env.execute(
             self(*args, **kwargs), stdout=shell.Mode.pipe,

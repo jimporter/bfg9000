@@ -935,16 +935,18 @@ compatibility.
 Return the [builder](#builders) used by bfg9000 for a particular language
 *lang*.
 
-#### env.execute(*args*, [*env*], [*env_update*], [*shell*], [*stdout*], [*stderr*], [*returncode*]) { #env-execute }
+#### env.execute(*args*, [*env*], [*extra_env*], [*shell*], [*stdout*], [*stderr*], [*returncode*]) { #env-execute }
 
 Execute the command-line arguments in *args* and return the output. If *shell*
 is true, *args* should be a string that will be interpreted by the system's
 shell; if not (the default), it should be a series of arguments.
 
 You can also set *env* to be a dictionary of environment variables to pass to
-the child process. If *env_update* is true (the default), these will be added to
-the environment variables in [*env.varables*](#env-variables); otherwise, *env*
-represents *all* the environment variables to pass to the child process.
+the child process; if *env* is *None* (the default), the environment variables
+in [*env.variables*](#env-variables) will be used instead. Similarly, you can
+set *extra_env* to be a dict of env vars; these will be added to the dict in
+*env* (or to *env.variables* if *env* is *None*) to produce the final set of
+environment variables to pass to the child process.
 
 *stdout* and *stderr* are [*env.Mode*](#env-Mode) values that describe how (or
 if) output should be redirected. By default, both are set to *Mode.normal*.
@@ -980,7 +982,7 @@ type (or a list beginning with a file type) such as an
 [runner](#builder-runner) for *lang* as needed. If *lang* is *None*, the
 language will be determined by the language of *args*'s first element.
 
-#### env.run(*args*, [*lang*], [*env*], [*env_update*], [*stdout*], [*stderr*], [*returncode*]) { #env-run }
+#### env.run(*args*, [*lang*], [*env*], [*extra_env*], [*stdout*], [*stderr*], [*returncode*]) { #env-run }
 
 Run a command, generating any arguments needed to perform the operation.
 Equivalent to `env.execute(env.run_arguments(arg, lang), ...)`.

@@ -139,12 +139,12 @@ class TestEnv(BasicIntegrationTest):
                          configure=False, *args, **kwargs)
 
     def test_env(self):
-        self.configure(env={'MY_ENV_VAR': 'value'}, backend=backends[0])
+        self.configure(extra_env={'MY_ENV_VAR': 'value'}, backend=backends[0])
         output = self.assertPopen(['bfg9000', 'env'])
         self.assertRegex(output, '(?m)^MY_ENV_VAR=value$')
 
     def test_env_unique(self):
-        self.configure(env={'MY_ENV_VAR': 'value'}, backend=backends[0])
+        self.configure(extra_env={'MY_ENV_VAR': 'value'}, backend=backends[0])
         output = self.assertPopen(['bfg9000', 'env', '-u'])
         self.assertEqual(output, 'MY_ENV_VAR=value\n')
 

@@ -37,7 +37,7 @@ class TestJava(IntegrationTest):
 class TestGcj(IntegrationTest):
     def __init__(self, *args, **kwargs):
         super().__init__(os.path.join('languages', 'java'),
-                         env={'JAVAC': 'gcj'}, *args, **kwargs)
+                         extra_env={'JAVAC': 'gcj'}, *args, **kwargs)
 
     def test_build(self):
         self.build('program')
@@ -78,7 +78,7 @@ class TestJavaLibrary(IntegrationTest):
 
         self.configure(
             srcdir=os.path.join('languages', 'java_package'), installdir=None,
-            env={'CLASSPATH': os.path.join(self.libdir, '*')}
+            extra_env={'CLASSPATH': os.path.join(self.libdir, '*')}
         )
         self.build()
         self.assertOutput(['java', '-jar', 'program.jar'],

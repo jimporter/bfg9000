@@ -169,7 +169,7 @@ class TestPkgConfig(PkgConfigTest):
             'hello, library!\n'
         )
 
-        self.configure(srcdir='pkg_config_use', installdir=None, env={
+        self.configure(srcdir='pkg_config_use', installdir=None, extra_env={
             'PKG_CONFIG_PATH': os.path.join(self.libdir, 'pkgconfig')
         })
         self.build()
@@ -179,7 +179,7 @@ class TestPkgConfig(PkgConfigTest):
             env_vars = {'PATH': (os.path.abspath(self.libdir) +
                                  os.pathsep + os.environ['PATH'])}
         self.assertOutput([executable('program')], 'hello, library!\n',
-                          env=env_vars)
+                          extra_env=env_vars)
 
 
 @skip_if_backend('msbuild')
@@ -192,7 +192,7 @@ class TestPkgConfigUsingSystemPkg(PkgConfigTest):
                          *args, **kwargs)
 
     def test_configure(self):
-        self.configure(env={'PKG_CONFIG': 'nonexist'})
+        self.configure(extra_env={'PKG_CONFIG': 'nonexist'})
         self.assertExists(os.path.join('pkgconfig', 'hello.pc'))
         self.assertExists(os.path.join('pkgconfig', 'hello-uninstalled.pc'))
 
@@ -307,7 +307,7 @@ class TestPkgConfigAuto(PkgConfigTest):
             pjoin(self.libdir, 'pkgconfig', 'hello.pc'),
         ] + extra)
 
-        self.configure(srcdir='pkg_config_use', installdir=None, env={
+        self.configure(srcdir='pkg_config_use', installdir=None, extra_env={
             'PKG_CONFIG_PATH': pjoin(self.libdir, 'pkgconfig')
         })
         self.build()
@@ -317,4 +317,4 @@ class TestPkgConfigAuto(PkgConfigTest):
             env_vars = {'PATH': (os.path.abspath(self.libdir) +
                                  os.pathsep + os.environ['PATH'])}
         self.assertOutput([executable('program')], 'hello, library!\n',
-                          env=env_vars)
+                          extra_env=env_vars)

@@ -158,19 +158,17 @@ class Environment:
                             .format(lang))
         return args
 
-    def execute(self, args, env=None, env_update=True, **kwargs):
-        env_vars = self.variables
-        if env:
-            if env_update:
-                env_vars = env_vars.copy()
-                env_vars.update(env)
-            else:
-                env_vars = env
+    def execute(self, args, *, env=None, extra_env=None, **kwargs):
+        if env is None:
+            env = self.variables
+        if extra_env:
+            env = env.copy()
+            env.update(extra_env)
 
         if not kwargs.get('shell', False):
             args = Command.convert_args(args, lambda x: x.command)
 
-        return shell.execute(args, env=env_vars, base_dirs=self.base_dirs,
+        return shell.execute(args, env=env, base_dirs=self.base_dirs,
                              **kwargs)
 
     def run(self, args, lang=None, *posargs, **kwargs):

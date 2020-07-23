@@ -36,6 +36,8 @@ in progress
 - `show_stack` for `info()` and `debug()` must now be specified as a keyword
   argument
 - `resource_file()` has been deprecated; use `source_file()` instead
+- Adding to existing environment variables in `env.execute()` and `env.run()`
+  is now done via `extra_env`, not `env`/`env_update`
 
 ### Bug fixes
 - `copy_file()` now works correctly when copying into a subdirectory on the

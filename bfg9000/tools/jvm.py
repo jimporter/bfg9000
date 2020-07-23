@@ -293,7 +293,7 @@ class JvmPackageResolver:
 
         try:
             output = env.execute(
-                command + args, env=extra_env, stdout=shell.Mode.devnull,
+                command + args, extra_env=extra_env, stdout=shell.Mode.devnull,
                 stderr=shell.Mode.pipe, returncode=returncode
             )
             self.ext_dirs = self._get_dirs('java.ext.dirs', output)
