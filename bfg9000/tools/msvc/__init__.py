@@ -172,7 +172,7 @@ class MsvcPackageResolver:
                 opts.lib(self.library(i, kind)) for i in iterate(lib_names)
             )
 
-            path_note = ' in {!r}'.format(
+            path_note = ' in {}'.format(
                 link_options[0].library.path.parent().string()
             ) if link_options else ''
             log.info('found package {!r} via path-search{}'

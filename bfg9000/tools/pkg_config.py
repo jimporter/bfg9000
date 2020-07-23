@@ -1,4 +1,5 @@
 import argparse
+import os
 import subprocess
 
 from . import tool
@@ -177,6 +178,6 @@ class PkgConfigPackage(Package):
 def resolve(env, name, format, version=None, kind=PackageKind.any):
     package = PkgConfigPackage(name, format, version, kind,
                                env.tool('pkg_config'))
-    log.info('found package {!r} version {} via pkg-config in {!r}'
-             .format(name, package.version, package.path()))
+    log.info('found package {!r} version {} via pkg-config in {}'
+             .format(name, package.version, os.path.normpath(package.path())))
     return package

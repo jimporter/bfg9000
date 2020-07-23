@@ -260,7 +260,7 @@ class CcPackageResolver:
                         lib_path = lib.path.parent().string()
                     link_options.append(opts.lib(lib))
 
-            path_note = ' in {!r}'.format(lib_path) if lib_path else ''
+            path_note = ' in {}'.format(lib_path) if lib_path else ''
             log.info('found package {!r} via path-search{}'
                      .format(name, path_note))
             return CommonPackage(name, format, compile_options, link_options)
