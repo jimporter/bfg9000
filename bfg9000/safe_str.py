@@ -147,8 +147,7 @@ class Formatter(_string.Formatter):
         return format_field(value, format_spec)
 
     # We need to copy these from the Python stdlib implementation to change the
-    # join() call at the end of _vformat (and to get automatic field numbering
-    # in Python 2.7...)
+    # join() call at the end of _vformat.
     def vformat(self, format_string, args, kwargs):
         used_args = set()
         result, _ = self._vformat(format_string, args, kwargs, used_args, 2)

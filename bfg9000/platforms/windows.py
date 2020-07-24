@@ -10,6 +10,8 @@ class WindowsPath(BasePath):
 
 
 class WindowsPlatform(Platform):
+    Path = WindowsPath
+
     @property
     def _triplet_sys_abi(self):
         return 'win32'
@@ -18,7 +20,9 @@ class WindowsPlatform(Platform):
     def family(self):
         return 'windows'
 
-    Path = WindowsPath
+    @property
+    def object_format(self):
+        return 'coff'
 
 
 class WindowsHostPlatform(HostPlatform, WindowsPlatform):
@@ -49,10 +53,6 @@ class WindowsTargetPlatform(TargetPlatform, WindowsPlatform):
         'glu': 'glu32',
         'glut': 'glut32',
     }
-
-    @property
-    def object_format(self):
-        return 'coff'
 
     @property
     def executable_ext(self):

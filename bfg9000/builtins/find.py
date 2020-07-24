@@ -139,9 +139,9 @@ def find(env, path='.', name='*', type='*', extra=None, exclude=exclude_globs,
 
 
 @builtin.function()
-def find_files(context, path='.', name='*', type='*', extra=None,
+def find_files(context, path='.', name='*', type='*', *, extra=None,
                exclude=exclude_globs, filter=None, flat=False, file_type=None,
-               dir_type=None, *, dist=True, cache=True):
+               dir_type=None, dist=True, cache=True):
     final_filter = _make_filter_from_glob(type, name, extra, exclude)
     if filter:
         final_filter = _combine_filters(final_filter, filter)

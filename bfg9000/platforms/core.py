@@ -56,7 +56,7 @@ def platform_name():
     if system == 'windows':
         try:
             uname = subprocess.check_output(
-                'uname', universal_newlines=True
+                ['uname'], universal_newlines=True
             ).lower()
             if uname.startswith('cygwin'):
                 return 'cygwin'

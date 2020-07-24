@@ -59,7 +59,7 @@ class BaseCompile(Edge):
 
 
 class Compile(BaseCompile):
-    def __init__(self, context, name, includes, include_deps, pch, libs,
+    def __init__(self, context, name, *, includes, include_deps, pch, libs,
                  packages, options, lang=None, directory=None, extra_deps=None,
                  description=None):
         self.includes = includes
@@ -124,7 +124,7 @@ class Compile(BaseCompile):
 
 
 class CompileSource(Compile):
-    def __init__(self, context, name, file, lang=None, **kwargs):
+    def __init__(self, context, name, file, *, lang=None, **kwargs):
         builder_lang = lang or getattr(file, 'lang', None)
         if builder_lang is None:
             raise ValueError('unable to determine language for file {!r}'
@@ -168,7 +168,7 @@ class CompileSource(Compile):
 class CompileHeader(Compile):
     desc_verb = 'compile-header'
 
-    def __init__(self, context, name, file, source, lang=None, **kwargs):
+    def __init__(self, context, name, file, *, source, lang=None, **kwargs):
         builder_lang = lang or getattr(file, 'lang', None)
         if builder_lang is None:
             raise ValueError('unable to determine language for file {!r}'
@@ -191,7 +191,7 @@ class CompileHeader(Compile):
 class GenerateSource(BaseCompile):
     desc_verb = 'generate'
 
-    def __init__(self, context, name, file, options, lang=None,
+    def __init__(self, context, name, file, *, options, lang=None,
                  directory=None, extra_deps=None, description=None):
         builder_lang = lang or getattr(file, 'lang', None)
         if builder_lang is None:

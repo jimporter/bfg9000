@@ -11,6 +11,8 @@ class PosixPath(BasePath):
 
 
 class PosixPlatform(Platform):
+    Path = PosixPath
+
     @property
     def _triplet_vendor(self):
         if self.genus == 'darwin':
@@ -32,7 +34,9 @@ class PosixPlatform(Platform):
     def family(self):
         return 'posix'
 
-    Path = PosixPath
+    @property
+    def object_format(self):
+        return 'elf'
 
 
 class PosixHostPlatform(HostPlatform, PosixPlatform):
@@ -62,10 +66,6 @@ class PosixTargetPlatform(TargetPlatform, PosixPlatform):
         'glu': 'GLU',
         'zlib': 'z',
     }
-
-    @property
-    def object_format(self):
-        return 'elf'
 
     @property
     def executable_ext(self):
@@ -98,16 +98,22 @@ class PosixTargetPlatform(TargetPlatform, PosixPlatform):
         }
 
 
-class DarwinTargetPlatform(PosixTargetPlatform):
+class DarwinPlatform(PosixPlatform):
+    @property
+    def object_format(self):
+        return 'mach-o'
+
+
+class DarwinHostPlatform(PosixHostPlatform, DarwinPlatform):
+    pass
+
+
+class DarwinTargetPlatform(PosixTargetPlatform, DarwinPlatform):
     _package_map = {
         'gl': Framework('OpenGL'),
         'glu': Framework('OpenGL'),
         'glut': Framework('GLUT'),
     }
-
-    @property
-    def object_format(self):
-        return 'mach-o'
 
     @property
     def shared_library_ext(self):

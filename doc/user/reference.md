@@ -57,7 +57,7 @@ source files of that type (see each step's documentation for details).
     distribution](writing.md#distributing-your-source). To disable this, you can
     specify `dist=False` when creating the file object.
 
-### auto_file(*name*, [*lang*], [*dist*]) { #auto_file }
+### auto_file(*name*, [*lang*], \*, [*dist*]) { #auto_file }
 
 Create a reference to an existing file named *name*. This function will try to
 automatically determine the file's kind based on its extension:
@@ -71,15 +71,16 @@ specified, files with an unrecognized extension will always be treated as
     multiple kinds of files; when creating a reference to a specific, *known*
     file, the concrete function listed above should be used instead.
 
-### directory(*name*, [*include*], [*extra*], [*exclude*], [*filter*], [*dist*], [*cache*]) { #directory }
+### directory(*name*, [*include*], \*, [*extra*], [*exclude*], [*filter*], [*dist*], [*cache*]) { #directory }
 Availability: `build.bfg`
 {: .subtitle}
 
-Create a reference to an existing directory named *name*. This allows you to
-refer to an arbitrary subfolder of your source directory. The arguments
+Create a reference to an existing directory named *name*; if *name* is a file
+object, create a reference to the directory containing that file. The arguments
 *include*, *extra*, *exclude*, *filter*, *dist*, and *cache* are forwarded to
-[*find_files*](#find_files). Any matching files will be added to the project's
-[source distribution](writing.md#distributing-your-source).
+[*find_files*](#find_files); if neither *include* nor *extra* are specified,
+*find_files* will not be called. Any matching files will be added to the
+project's [source distribution](writing.md#distributing-your-source).
 
 ### extra_dist([*files*], [*dirs*]) { #extra_dist }
 Availability: `build.bfg`
@@ -89,27 +90,27 @@ Add extra *files* and *dirs* to the list of recognized source files. This lets
 you reference files that are part of the source distribution but which have no
 impact on the build proper (e.g. READMEs).
 
-### generic_file(*name*, [*dist*]) { #generic_file }
+### generic_file(*name*, \*, [*dist*]) { #generic_file }
 Availability: `build.bfg`
 {: .subtitle}
 
 Create a reference to an existing file named *name*.
 
-### header_directory(*name*, [*include*], [*extra*], [*exclude*], [*filter*], [*system*], [*dist*], [*cache*]) { #header_directory }
+### header_directory(*name*, [*include*], [*lang*], \*, [*extra*], [*exclude*], [*filter*], [*system*], [*dist*], [*cache*]) { #header_directory }
 Availability: `build.bfg`
 {: .subtitle}
 
 Create a reference to a directory named *name* containing header files for the
-project. This can then be used in the *include* argument when
-[compiling](#object_file) a source file. The arguments
-*include*, *extra*, *exclude*, *filter*, *dist*, and *cache* are forwarded to
-[*find_files*](#find_files). Any matching files will be added to the project's
-[source distribution](writing.md#distributing-your-source).
+project (if *name* is a file object, create a reference to the directory
+containing that file). This can then be used in the *include* argument when
+[compiling](#object_file) a source file. The arguments *include*, *extra*,
+*exclude*, *filter*, *dist*, and *cache* are forwarded to
+[*find_files*](#find_files), as with [*directory*](#directory).
 
 If *system* is *True*, this directory will be treated as a [system
 directory][system-directory] for compilers that support this.
 
-### header_file(*name*, [*lang*], [*dist*]) { #header_file }
+### header_file(*name*, [*lang*], \*, [*dist*]) { #header_file }
 Availability: `build.bfg`
 {: .subtitle}
 
@@ -117,7 +118,7 @@ Create a reference to an existing header named *name*. This is useful if you'd
 like to [install](#install) a single header file for your project. If *lang* is
 not specified, the language of the file is inferred from its extension.
 
-### module_def_file(*name*, [*dist*]) { #module_def_file }
+### module_def_file(*name*, \*, [*dist*]) { #module_def_file }
 Availability: `build.bfg`
 {: .subtitle}
 
@@ -125,7 +126,7 @@ Create a reference to an existing module-definition file named *name*.
 [Module-definition files][def-file] are sometimes used when building libraries
 on Windows.
 
-### source_file(*name*, [*lang*], [*dist*]) { #source_file }
+### source_file(*name*, [*lang*], \*, [*dist*]) { #source_file }
 Availability: `build.bfg`
 {: .subtitle}
 
@@ -164,7 +165,7 @@ vendor). This is described in more detail for each step below.
     platform you're running on. For instance, when building an executable file
     named "foo" on Windows, the resulting file will be `foo.exe`.
 
-### copy_file([*name*], *file*, [*mode*], [*directory*], [*extra_deps*], [*description*]) { #copy_file }
+### copy_file([*name*], *file*, \*, [*mode*], [*directory*], [*extra_deps*], [*description*]) { #copy_file }
 Availability: `build.bfg`
 {: .subtitle}
 
@@ -180,7 +181,7 @@ file into if *name* is unspecified, as with [*object_file*](#object_file).
 This build step recognizes the [environment
 variables](environment-vars.md#command-variables) for the relevant copy mode.
 
-### copy_files(*files*, [*mode*], [*extra_deps*], [*description*]) { #copy_files }
+### copy_files(*files*, \*, [*mode*], [*extra_deps*], [*description*]) { #copy_files }
 Availability: `build.bfg`
 {: .subtitle}
 
@@ -192,7 +193,7 @@ Like [*object_files*](#object_files), *copy_files* returns a special list that
 allows you to index into it using the filename of one of the source files listed
 in *files*.
 
-### executable(*name*, [*files*, ..., [*extra_deps*], [*description*]]) { #executable }
+### executable(*name*, [*files*, \*, ..., [*extra_deps*], [*description*]]) { #executable }
 Availability: `build.bfg`
 {: .subtitle}
 
@@ -240,7 +241,7 @@ relevant language.
     to build your project, any linker options that need to be forwarded on to
     `ld` should be prepended with `'-Wl,'`.
 
-### generated_source([*name*], *file*, ..., [*extra_deps*], [*description*]) { #generated_source }
+### generated_source([*name*], *file*, \*, ..., [*extra_deps*], [*description*]) { #generated_source }
 Availability: `build.bfg`
 {: .subtitle}
 
@@ -269,7 +270,7 @@ The following arguments may also be specified:
 This build step recognizes the [compilation environment
 variables](environment-vars.md#compilation-variables) for the relevant language.
 
-### generated_sources(*files*, ..., [*extra_deps*], [*description*]) { #generated_sources }
+### generated_sources(*files*, \*, ..., [*extra_deps*], [*description*]) { #generated_sources }
 Availability: `build.bfg`
 {: .subtitle}
 
@@ -281,7 +282,7 @@ Like [*object_files*](#object_files), *generated_sources* returns a special list
 that allows you to index into it using the filename of one of the source files
 listed in *files*.
 
-### library(*name*, [*files*, ..., [*extra_deps*], [*description*]]) { #library }
+### library(*name*, [*files*, \*, ..., [*extra_deps*], [*description*]]) { #library }
 Availability: `build.bfg`
 {: .subtitle}
 
@@ -319,7 +320,7 @@ relevant language.
     library builds are enabled with MSVC, bfg9000 will fall back to building
     only the shared library.
 
-### object_file([*name*], [*file*, ..., [*extra_deps*], [*description*]]) { #object_file }
+### object_file([*name*], [*file*, \*, ..., [*extra_deps*], [*description*]]) { #object_file }
 Availability: `build.bfg`
 {: .subtitle}
 
@@ -357,7 +358,7 @@ addition, the following arguments may be specified:
 This build step recognizes the [compilation environment
 variables](environment-vars.md#compilation-variables) for the relevant language.
 
-### object_files(*files*, ..., [*extra_deps*], [*description*]) { #object_files }
+### object_files(*files*, \*, ..., [*extra_deps*], [*description*]) { #object_files }
 Availability: `build.bfg`
 {: .subtitle}
 
@@ -377,7 +378,7 @@ foo_obj = objs['foo.cpp']
 test_exe = executable('test', ['test.cpp', foo_obj])
 ```
 
-### precompiled_header([*name*], [*file*, ..., [*extra_deps*], [*description*]]) { #precompiled_header }
+### precompiled_header([*name*], [*file*, \*, ..., [*extra_deps*], [*description*]]) { #precompiled_header }
 Availability: `build.bfg`
 {: .subtitle}
 
@@ -412,7 +413,7 @@ In addition, the following argument may be specified:
     within the context of a particular source file and will contain all the
     code *up to and including* the header in question.
 
-### shared_library(*name*, [*files*, ..., [*extra_deps*], [*description*]]) { #shared_library }
+### shared_library(*name*, [*files*, \*, ..., [*extra_deps*], [*description*]]) { #shared_library }
 Availability: `build.bfg`
 {: .subtitle}
 
@@ -448,7 +449,7 @@ relevant language.
     Windows](writing.md#building-libraries-on-windows) for an example of how to
     use this macro in your code.
 
-### static_library(*name*, [*files*, ..., [*extra_deps*], [*description*]]) { #static_library }
+### static_library(*name*, [*files*, \*, ..., [*extra_deps*], [*description*]]) { #static_library }
 Availability: `build.bfg`
 {: .subtitle}
 
@@ -484,7 +485,7 @@ variables](environment-vars.md#static-linking).
     [Building libraries on Windows](writing.md#building-libraries-on-windows)
     for an example of how to use this macro in your code.
 
-### whole_archive(*name*, [*files*, ..., [*extra_deps*]]) { #whole_archive }
+### whole_archive(*name*, [*files*, \*, ..., [*extra_deps*]]) { #whole_archive }
 Availability: `build.bfg`
 {: .subtitle}
 
@@ -507,7 +508,7 @@ you can also wrap your tests with a separate driver using
 For cases where you only want to *build* the tests, not run them, you can use
 the `tests` target.
 
-### test(*test*, [*environment*|*driver*]) { #test }
+### test(*test*, \*, [*environment*|*driver*]) { #test }
 Availability: `build.bfg`
 {: .subtitle}
 
@@ -516,7 +517,7 @@ to run; this works much like the *cmd* argument in the [*command*](#command)
 built-in. You can also pass temporary environment variables as a dict via
 *environment*, or specify a test driver to add this test file to via *driver*.
 
-### test_driver(*cmd*, [*environment*|*parent*], [*wrap_children*]) { #test_driver }
+### test_driver(*cmd*, \*, [*environment*|*parent*], [*wrap_children*]) { #test_driver }
 Availability: `build.bfg`
 {: .subtitle}
 
@@ -614,7 +615,7 @@ corresponding to that placeholder.
 You may also pass a dict to *environment* to set environment variables for the
 commands. These override any environment variables set on the command line.
 
-### build_step(*name*, *cmd*|*cmds*, [*files*], [*environment*], [*type*], [*always_outdated*], [*extra_deps*], [*description*]) { #build_step }
+### build_step(*name*, \*, *cmd*|*cmds*, [*files*], [*environment*], [*type*], [*always_outdated*], [*extra_deps*], [*description*]) { #build_step }
 Availability: `build.bfg`
 {: .subtitle}
 
@@ -633,7 +634,7 @@ list thereof) taking a path and returning a file object. If *type* is a single
 function, it will be applied to every output of *build_step*; if it's a list of
 functions, they will be applied element-wise to each output.
 
-### command(*name*, *cmd*|*cmds*, [*files*], [*environment*], [*extra_deps*], [*description*]) { #command }
+### command(*name*, \*, *cmd*|*cmds*, [*files*], [*environment*], [*extra_deps*], [*description*]) { #command }
 Availability: `build.bfg`
 {: .subtitle}
 
@@ -801,7 +802,7 @@ Reference a macOS [framework][framework] named *name* with the optional suffix
 *suffix*. Though not a "package" in name, this can be used wherever packages are
 accepted.
 
-### package(*name*, [*version*], [*lang*], [*kind*], [*headers*], [*libs*]) { #package }
+### package(*name*, [*version*], \*, [*lang*], [*kind*], [*headers*], [*libs*]) { #package }
 Availability: `build.bfg`
 {: .subtitle}
 
@@ -846,7 +847,7 @@ This function recognizes the following environment variables:
     preferred to use `-pthread` during compilation *and* linking. Using
     `package('pthread')` will handle this automatically.
 
-### pkg_config([*name*], [*desc_name*], [*desc*], [*url*], [*version*], [*requires*], [*requires_private*], [*conflicts*], [*includes*], [*libs*], [*libs_private*], [*options*], [*link_options*], [*link_options_private*], [*auto_fill*]) { #pkg_config }
+### pkg_config([*name*], \*, [*version*], [*includes*], [*libs*], [*auto_fill*], *...*) { #pkg_config }
 Availability: `build.bfg`
 {: .subtitle}
 
@@ -902,11 +903,13 @@ default values for the following fields:
 If *auto_fill* is false, this function will return a [*package*](#package)
 object that can be used in other build steps as normal.
 
-### system_executable(*name*) { #system_executable }
+### system_executable(*name*, [*format*]) { #system_executable }
 Availability: `build.bfg`
 {: .subtitle}
 
-Search for an executable named *name* somewhere in the system's PATH.
+Search for an executable named *name* somewhere in the system's `PATH`. If
+*format* is unset, the executable's object format will be set to the default
+for the host platform.
 
 This function recognizes the following environment variables:
 [`PATH`](environment-vars.md#path), [`PATHEXT`](environment-vars.md#pathext).
@@ -935,7 +938,7 @@ compatibility.
 Return the [builder](#builders) used by bfg9000 for a particular language
 *lang*.
 
-#### env.execute(*args*, [*env*], [*extra_env*], [*shell*], [*stdout*], [*stderr*], [*returncode*]) { #env-execute }
+#### env.execute(*args*, \*, [*env*], [*extra_env*], [*shell*], [*stdout*], [*stderr*], [*returncode*]) { #env-execute }
 
 Execute the command-line arguments in *args* and return the output. If *shell*
 is true, *args* should be a string that will be interpreted by the system's
@@ -982,7 +985,7 @@ type (or a list beginning with a file type) such as an
 [runner](#builder-runner) for *lang* as needed. If *lang* is *None*, the
 language will be determined by the language of *args*'s first element.
 
-#### env.run(*args*, [*lang*], [*env*], [*extra_env*], [*stdout*], [*stderr*], [*returncode*]) { #env-run }
+#### env.run(*args*, \*, [*lang*], [*env*], [*extra_env*], [*stdout*], [*stderr*], [*returncode*]) { #env-run }
 
 Run a command, generating any arguments needed to perform the operation.
 Equivalent to `env.execute(env.run_arguments(arg, lang), ...)`.
@@ -1203,7 +1206,7 @@ An enum to be used as the result of a filter function for
 * *not_now*: Don't include this file in the results, but do include it in the
   [source distribution](writing.md#distributing-your-source)
 
-### find_files([*path*], [*name*], [*type*], [*extra*], [*exclude*], [*flat*], [*filter*], [*file_type*], [*dir_type*], [*dist*], [*cache*]) { #find_files }
+### find_files([*path*], [*name*], [*type*], \*, [*extra*], [*exclude*], *...*) { #find_files }
 Availability: `build.bfg`
 {: .subtitle}
 
@@ -1239,7 +1242,7 @@ specified:
 The *cache* argument is particularly important. It allows you to add or remove
 source files and not have to worry about manually rerunning bfg9000.
 
-### find_paths([*path*], [*name*], [*type*], [*extra*], [*exclude*], [*flat*], [*filter*], [*file_type*], [*dir_type*], [*dist*], [*cache*]) { #find_paths }
+### find_paths([*path*], [*name*], [*type*], \*, [*extra*], [*exclude*], *...*) { #find_paths }
 Availability: `build.bfg`
 {: .subtitle}
 

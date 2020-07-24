@@ -188,7 +188,7 @@ setup(
         ],
         'bfg9000.platforms.host': [
             'cygwin=bfg9000.platforms.cygwin:CygwinHostPlatform',
-            'darwin=bfg9000.platforms.posix:PosixHostPlatform',
+            'darwin=bfg9000.platforms.posix:DarwinHostPlatform',
             'linux=bfg9000.platforms.posix:PosixHostPlatform',
             'msdos=bfg9000.platforms.windows:WindowsTargetPlatform',
             'posix=bfg9000.platforms.posix:PosixHostPlatform',

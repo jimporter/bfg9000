@@ -18,7 +18,7 @@ def make_depfile(subcmd, output, depfile):
 
 
 def run_rcc(subcmd, output):
-    return subprocess.call(subcmd + ['-o', output])
+    return subprocess.run(subcmd + ['-o', output]).returncode
 
 
 def main():

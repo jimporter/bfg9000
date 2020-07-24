@@ -53,8 +53,9 @@ Output = Placeholder('output')
 
 
 class BaseCommand(Edge):
-    def __init__(self, context, name, outputs, cmds, files, environment=None,
-                 phony=False, extra_deps=None, description=None):
+    def __init__(self, context, name, outputs, *, cmds, files,
+                 environment=None, phony=False, extra_deps=None,
+                 description=None):
         self.name = name
         self.files = files
         self.phony = phony
@@ -116,7 +117,7 @@ class BuildStep(BaseCommand):
     console = False
     msbuild_output = True
 
-    def __init__(self, context , name, type=None, always_outdated=False,
+    def __init__(self, context, name, type=None, always_outdated=False,
                  **kwargs):
         name = listify(name)
         project_name = name[0]

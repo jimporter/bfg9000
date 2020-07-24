@@ -21,6 +21,7 @@ class TestHostPlatform(TestCase):
         self.assertEqual(platform.genus, 'linux')
         self.assertEqual(platform.family, 'posix')
         self.assertEqual(platform.triplet, 'i686-pc-linux-gnu')
+        self.assertEqual(platform.object_format, 'elf')
 
     def test_cygwin(self):
         with mock.patch('platform.machine', return_value='x86_64'):
@@ -30,6 +31,7 @@ class TestHostPlatform(TestCase):
         self.assertEqual(platform.genus, 'cygwin')
         self.assertEqual(platform.family, 'posix')
         self.assertEqual(platform.triplet, 'x86_64-unknown-windows-cygnus')
+        self.assertEqual(platform.object_format, 'coff')
 
     def test_darwin(self):
         with mock.patch('platform.machine', return_value='x86_64'):
@@ -39,6 +41,7 @@ class TestHostPlatform(TestCase):
         self.assertEqual(platform.genus, 'darwin')
         self.assertEqual(platform.family, 'posix')
         self.assertEqual(platform.triplet, 'x86_64-apple-darwin')
+        self.assertEqual(platform.object_format, 'mach-o')
 
     def test_linux(self):
         with mock.patch('platform.machine', return_value='x86_64'):
@@ -48,6 +51,7 @@ class TestHostPlatform(TestCase):
         self.assertEqual(platform.genus, 'linux')
         self.assertEqual(platform.family, 'posix')
         self.assertEqual(platform.triplet, 'x86_64-unknown-linux-gnu')
+        self.assertEqual(platform.object_format, 'elf')
 
     def test_android(self):
         with mock.patch('platform.machine', return_value='arm'):
@@ -57,6 +61,7 @@ class TestHostPlatform(TestCase):
         self.assertEqual(platform.genus, 'linux')
         self.assertEqual(platform.family, 'posix')
         self.assertEqual(platform.triplet, 'arm-unknown-linux-android')
+        self.assertEqual(platform.object_format, 'elf')
 
     def test_windows(self):
         with mock.patch('platform.machine', return_value='x86_64'):
@@ -66,6 +71,7 @@ class TestHostPlatform(TestCase):
         self.assertEqual(platform.genus, 'winnt')
         self.assertEqual(platform.family, 'windows')
         self.assertEqual(platform.triplet, 'x86_64-unknown-win32')
+        self.assertEqual(platform.object_format, 'coff')
 
     def test_unknown(self):
         with mock.patch('platform.machine', return_value='x86_64'):
@@ -75,6 +81,7 @@ class TestHostPlatform(TestCase):
         self.assertEqual(platform.genus, 'onosendai')
         self.assertEqual(platform.family, 'posix')
         self.assertEqual(platform.triplet, 'x86_64-unknown-onosendai')
+        self.assertEqual(platform.object_format, 'elf')
 
     def test_equality(self):
         a = posix.PosixHostPlatform('linux', 'linux', 'x86_64')

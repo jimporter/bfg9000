@@ -24,7 +24,7 @@ class BoostPackage(CommonPackage):
 
 @builtin.function()
 @builtin.type(Package)
-def package(context, name, version=None, lang=default_sentinel,
+def package(context, name, version=None, *, lang=default_sentinel,
             kind=PackageKind.any.name, headers=None, libs=default_sentinel):
     version = objectify(version or '', SpecifierSet)
     kind = PackageKind[kind]
@@ -50,7 +50,7 @@ def system_executable(context, name, format=None):
     env = context.env
     return Executable(
         Path(which([[name]], env.variables, resolve=True)[0], Root.absolute),
-        format or env.target_platform.object_format
+        format or env.host_platform.object_format
     )
 
 

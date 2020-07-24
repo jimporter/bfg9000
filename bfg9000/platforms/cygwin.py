@@ -1,17 +1,19 @@
-from .posix import PosixHostPlatform, PosixTargetPlatform
+from .posix import PosixPlatform, PosixHostPlatform, PosixTargetPlatform
 
 
-class CygwinHostPlatform(PosixHostPlatform):
+class CygwinPlatform(PosixPlatform):
+    @property
+    def object_format(self):
+        return 'coff'
+
+
+class CygwinHostPlatform(PosixHostPlatform, CygwinPlatform):
     @property
     def has_path_ext(self):
         return True
 
 
-class CygwinTargetPlatform(PosixTargetPlatform):
-    @property
-    def object_format(self):
-        return 'coff'
-
+class CygwinTargetPlatform(PosixTargetPlatform, CygwinPlatform):
     @property
     def executable_ext(self):
         return '.exe'

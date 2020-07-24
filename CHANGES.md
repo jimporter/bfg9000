@@ -31,9 +31,11 @@
 
 ### Breaking changes
 - Drop support for Python 2
+- `resource_file()` has been deprecated; use `source_file()` instead
 - `show_stack` for `info()` and `debug()` must now be specified as a keyword
   argument
-- `resource_file()` has been deprecated; use `source_file()` instead
+- `find_files`, `find_paths`, `directory`, and `header_directory` now require
+  uncommon arguments to be specified as keyword arguments
 - Adding to existing environment variables in `env.execute()` and `env.run()`
   is now done via `extra_env`, not `env`/`env_update`
 

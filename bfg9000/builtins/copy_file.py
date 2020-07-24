@@ -15,7 +15,7 @@ class CopyFile(Edge):
     __modes = {'copy', 'symlink', 'hardlink'}
     msbuild_output = True
 
-    def __init__(self, context, output, file, mode='copy', extra_deps=None,
+    def __init__(self, context, output, file, *, mode='copy', extra_deps=None,
                  description=None):
         if mode not in self.__modes:
             raise ValueError('unrecognized copy mode {!r}'.format(mode))

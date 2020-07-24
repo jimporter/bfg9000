@@ -156,8 +156,8 @@ class PkgConfigInfo:
             final_value = self.fn(obj, value) if value is not None else None
             setattr(obj, '_' + self.fn.__name__, final_value)
 
-    def __init__(self, context, name=None, desc_name=None, desc=None, url=None,
-                 version=None, requires=None, requires_private=None,
+    def __init__(self, context, name=None, *, desc_name=None, desc=None,
+                 url=None, version=None, requires=None, requires_private=None,
                  conflicts=None, includes=None, libs=None, libs_private=None,
                  options=None, link_options=None, link_options_private=None,
                  lang=None, auto_fill=True):

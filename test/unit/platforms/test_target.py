@@ -22,6 +22,7 @@ class TestTargetPlatform(TestCase):
         self.assertEqual(platform.genus, 'linux')
         self.assertEqual(platform.family, 'posix')
         self.assertEqual(platform.triplet, 'i686-pc-linux-gnu')
+        self.assertEqual(platform.object_format, 'elf')
 
     def test_cygwin(self):
         with mock.patch('platform.machine', return_value='x86_64'):
@@ -31,6 +32,7 @@ class TestTargetPlatform(TestCase):
         self.assertEqual(platform.genus, 'cygwin')
         self.assertEqual(platform.family, 'posix')
         self.assertEqual(platform.triplet, 'x86_64-unknown-windows-cygnus')
+        self.assertEqual(platform.object_format, 'coff')
 
         windows = target.platform_info('cygwin')
         posix = target.platform_info('linux')
@@ -48,6 +50,7 @@ class TestTargetPlatform(TestCase):
         self.assertEqual(platform.genus, 'darwin')
         self.assertEqual(platform.family, 'posix')
         self.assertEqual(platform.triplet, 'x86_64-apple-darwin')
+        self.assertEqual(platform.object_format, 'mach-o')
         self.assertEqual(platform.transform_package('gl'),
                          Framework('OpenGL'))
 
@@ -59,6 +62,7 @@ class TestTargetPlatform(TestCase):
         self.assertEqual(platform.genus, 'linux')
         self.assertEqual(platform.family, 'posix')
         self.assertEqual(platform.triplet, 'x86_64-unknown-linux-gnu')
+        self.assertEqual(platform.object_format, 'elf')
         self.assertEqual(platform.transform_package('gl'), 'GL')
 
     def test_android(self):
@@ -69,6 +73,7 @@ class TestTargetPlatform(TestCase):
         self.assertEqual(platform.genus, 'linux')
         self.assertEqual(platform.family, 'posix')
         self.assertEqual(platform.triplet, 'arm-unknown-linux-android')
+        self.assertEqual(platform.object_format, 'elf')
         self.assertEqual(platform.transform_package('gl'), 'GL')
 
     def test_windows(self):
@@ -79,6 +84,7 @@ class TestTargetPlatform(TestCase):
         self.assertEqual(platform.genus, 'winnt')
         self.assertEqual(platform.family, 'windows')
         self.assertEqual(platform.triplet, 'x86_64-unknown-win32')
+        self.assertEqual(platform.object_format, 'coff')
         self.assertEqual(platform.transform_package('gl'), 'opengl32')
 
     def test_unknown(self):
@@ -88,6 +94,7 @@ class TestTargetPlatform(TestCase):
         self.assertEqual(platform.species, 'onosendai')
         self.assertEqual(platform.genus, 'onosendai')
         self.assertEqual(platform.family, 'posix')
+        self.assertEqual(platform.object_format, 'elf')
         self.assertEqual(platform.triplet, 'x86_64-unknown-onosendai')
 
     def test_equality(self):
