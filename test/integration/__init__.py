@@ -114,7 +114,8 @@ class SubprocessTestCase(TestCase):
         if not (returncode == 'any' or
                 (returncode == 'fail' and proc.returncode != 0) or
                 proc.returncode in listify(returncode)):
-            raise SubprocessError(proc.returncode, env, proc.stdout)
+            raise SubprocessError(proc.returncode, extra_env or env,
+                                  proc.stdout)
         return proc.stdout
 
     def assertOutput(self, command, output, *args, **kwargs):
