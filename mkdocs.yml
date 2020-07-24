@@ -19,19 +19,20 @@ markdown_extensions:
 
 nav:
   - Home: index.md
-  - Getting Started: getting-started.md
   - User Guide:
-      - Features: user/features.md
-      - Building with bfg9000: user/building.md
-      - Writing a Build File: user/writing.md
-      - Reference: user/reference.md
-      - Command-Line Reference: user/command-line.md
-      - Environment Variables: user/environment-vars.md
+    - Features: user/features.md
+    - Getting Started: user/getting-started.md
+    - Building with bfg9000: user/building.md
+    - Writing a Build File: user/writing.md
   - Developer Guide:
-      - Build Backends: developer/backends.md
-      - Build Tools: developer/tools.md
-      - Builtins: developer/builtins.md
-      - Contributing: developer/contributing.md
+    - Contributing: developer/contributing.md
+    - Build Backends: developer/backends.md
+    - Build Tools: developer/tools.md
+    - Builtins: developer/builtins.md
+  - Reference:
+    - Builtin Functions: reference/builtins.md
+    - Command-Line Interface: reference/command-line.md
+    - Environment Variables: reference/environment-vars.md
   - About:
-      - Changes: about/changes.md
-      - License: about/license.md
+    - Changes: about/changes.md
+    - License: about/license.md

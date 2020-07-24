@@ -57,7 +57,8 @@ permissions issues with intermediate files as well as being more secure.
 ## pkg-config lookup and generation
 
 bfg9000 supports [`pkg-config`][pkg-config] both for looking up packages as well
-as [generating](reference.md#pkg_config) `.pc` files for your own packages.
+as [generating](../reference/builtins.md#pkg_config) `.pc` files for your own
+packages.
 
 [ninja]: https://ninja-build.org/
 [make]: https://www.gnu.org/software/make/

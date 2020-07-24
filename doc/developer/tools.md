@@ -7,7 +7,7 @@
 As a build configuration system, bfg9000 naturally interacts with many other
 tools; this interaction is defined for each tool in [`bfg9000/tools/`][tools];
 each file is automatically imported and the tools are added to a dict ultimately
-used by the [*environment object*](../user/reference.md#environment-object).
+used by the [*environment object*](../reference/builtins.md#environment-object).
 
 ## Decorators
 

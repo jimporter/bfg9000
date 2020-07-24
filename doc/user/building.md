@@ -70,15 +70,15 @@ $ bfg9000 configure builddir/ --backend=make
 ```
 
 For a complete description of the available command-line options for bfg9000,
-see the [Command-line Reference](command-line.md) chapter.
+see the [Command-line Reference](../reference/command-line.md) chapter.
 
 ## Setting build options
 
 Many options for building can be set via the environment. These generally follow
 the UNIX naming conventions, so you can use, say,
-[`CXX`](environment-vars.md#cxx) to change the C++ compiler that bfg9000 uses.
-For a full listing of the recognized environment variables, see the [Environment
-Variables](environment-vars.md) chapter.
+[`CXX`](../reference/environment-vars.md#cxx) to change the C++ compiler that
+bfg9000 uses. For a full listing of the recognized environment variables, see
+the [Environment Variables](../reference/environment-vars.md) chapter.
 
 ## Using toolchain files
 
@@ -113,7 +113,7 @@ compile_options(['-Wall'], 'c++')
 ```
 
 For more information on the available builtins, see the [reference
-guide](reference.md#toolchain).
+guide](../reference/builtins.md#toolchain).
 
 ## Installing your software
 

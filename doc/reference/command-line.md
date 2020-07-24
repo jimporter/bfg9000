@@ -42,18 +42,18 @@ is present on your system, it will be the default.
 
 #### --toolchain *FILE* { #configure-toolchain }
 
-An optional [toolchain file](building.md#using-toolchain-files) that can be used
-to easily set all the options required for a certain build.
+An optional [toolchain file](../user/building.md#using-toolchain-files) that
+can be used to easily set all the options required for a certain build.
 
 #### --enable-shared, --disable-shared { #configure-enable-shared }
 
 Enable/disable building shared libraries when using
-[*library*()](reference.md#library) in your build.bfg files. Defaults to enabled.
+[*library*()](builtins.md#library) in your build.bfg files. Defaults to enabled.
 
 #### --enable-static, --disable-static { #configure-enable-static }
 
 Enable/disable building static libraries when using
-[*library*()](reference.md#library) in your build.bfg files. Defaults to enabled.
+[*library*()](builtins.md#library) in your build.bfg files. Defaults to enabled.
 
 #### --prefix *PATH* { #configure-prefix }
 

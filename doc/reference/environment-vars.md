@@ -382,14 +382,14 @@ Default: *none*
 {: .subtitle}
 
 *MSVC-only*. A list of directories to search for [system
-libraries](reference.md#package), delimited by `;`.
+libraries](builtins.md#package), delimited by `;`.
 
 #### *LIBRARY_PATH*
 Default: *none*
 {: .subtitle}
 
 A list of additional directories to search for [system
-libraries](reference.md#package). On POSIX systems, this is delimited by
+libraries](builtins.md#package). On POSIX systems, this is delimited by
 `:`; on Windows, by `;`.
 
 #### *PATH*
@@ -397,7 +397,7 @@ Default: *none*
 {: .subtitle}
 
 A list of directories to search for [system
-executables](reference.md#system_executable). On POSIX systems, this is
+executables](builtins.md#system_executable). On POSIX systems, this is
 delimited by `:`; on Windows, by `;`.
 
 #### *PATHEXT*

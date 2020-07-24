@@ -1,4 +1,4 @@
-# Reference
+# Builtin Functions
 
 Below are listed all the builtin functions and properties available to bfg9000
 scripts (`build.bfg` and `options.bfg`). Most are only available to `build.bfg`
@@ -54,8 +54,8 @@ source files of that type (see each step's documentation for details).
 !!! note
     By default, when creating a file object in the source directory, it will
     automatically be added to the project's [source
-    distribution](writing.md#distributing-your-source). To disable this, you can
-    specify `dist=False` when creating the file object.
+    distribution](../user/writing.md#distributing-your-source). To disable this,
+    you can specify `dist=False` when creating the file object.
 
 ### auto_file(*name*, [*lang*], \*, [*dist*]) { #auto_file }
 
@@ -80,7 +80,7 @@ object, create a reference to the directory containing that file. The arguments
 *include*, *extra*, *exclude*, *filter*, *dist*, and *cache* are forwarded to
 [*find_files*](#find_files); if neither *include* nor *extra* are specified,
 *find_files* will not be called. Any matching files will be added to the
-project's [source distribution](writing.md#distributing-your-source).
+project's [source distribution](../user/writing.md#distributing-your-source).
 
 ### extra_dist([*files*], [*dirs*]) { #extra_dist }
 Availability: `build.bfg`
@@ -446,8 +446,8 @@ relevant language.
     Additionally for native languages on Windows, this step will add a
     preprocessor macro named `LIB<NAME>_EXPORTS` that can be used for declaring
     public symbols. See [Building libraries on
-    Windows](writing.md#building-libraries-on-windows) for an example of how to
-    use this macro in your code.
+    Windows](../user/writing.md#building-libraries-on-windows) for an example of
+    how to use this macro in your code.
 
 ### static_library(*name*, [*files*, \*, ..., [*extra_deps*], [*description*]]) { #static_library }
 Availability: `build.bfg`
@@ -482,8 +482,9 @@ variables](environment-vars.md#static-linking).
 !!! note
     On Windows, this step will add a preprocessor macro on Windows named
     `LIB<NAME>_STATIC` that can be used for declaring public symbols. See
-    [Building libraries on Windows](writing.md#building-libraries-on-windows)
-    for an example of how to use this macro in your code.
+    [Building libraries on
+    Windows](../user/writing.md#building-libraries-on-windows) for an example of
+    how to use this macro in your code.
 
 ### whole_archive(*name*, [*files*, \*, ..., [*extra_deps*]]) { #whole_archive }
 Availability: `build.bfg`
@@ -1135,8 +1136,9 @@ All other arguments to this function have the same behavior as in
 Availability: `build.bfg`
 {: .subtitle}
 
-Retrieve the set of [user-defined arguments](writing.md#user-defined-arguments)
-passed to bfg9000; this is an [*argparse.Namespace*][namespace] object.
+Retrieve the set of [user-defined
+arguments](../user/writing.md#user-defined-arguments) passed to bfg9000; this is
+an [*argparse.Namespace*][namespace] object.
 
 ### \__bfg9000__
 Availability: `build.bfg`, `options.bfg`, and `<toolchain>.bfg`
@@ -1204,7 +1206,7 @@ An enum to be used as the result of a filter function for
 * *include*: Include this file in the results
 * *exclude*: Don't include this file in the results
 * *not_now*: Don't include this file in the results, but do include it in the
-  [source distribution](writing.md#distributing-your-source)
+  [source distribution](../user/writing.md#distributing-your-source)
 
 ### find_files([*path*], [*name*], [*type*], \*, [*extra*], [*exclude*], *...*) { #find_files }
 Availability: `build.bfg`
@@ -1222,7 +1224,7 @@ specified:
   only directories, or `'*'` to find either
 * *extra*: A glob (or list of globs) to match extra files (which will not be
   returned from *find_files* but will be added to the
-  [source distribution](writing.md#distributing-your-source))
+  [source distribution](../user/writing.md#distributing-your-source))
 * *exclude*: A glob (or list of globs) of files to exclude from results; by
   default, `.#*`, `*~`, and `#*#` are exluded
 * *flat*: If true, *find_files* will not recurse into subdirectories; otherwise,
@@ -1348,7 +1350,7 @@ Availability: `build.bfg`
 Set the name and/or version of the project. If you don't call this function to
 specify a project name, it defaults to the name of the project's source
 directory. This is primarily useful for creating [source
-distributions](writing.md#distributing-your-source).
+distributions](../user/writing.md#distributing-your-source).
 
 In addition, you can set a number of project-wide options with this function:
 

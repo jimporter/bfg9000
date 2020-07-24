@@ -15,7 +15,7 @@ bfg9000 supports building code written in the following languages:
 * Scala
 
 For more details on what you can do with bfg9000, see the
-[features](user/features.md) page.
+[features](features.md) page.
 
 ## Installation
 

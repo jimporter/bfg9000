@@ -44,8 +44,8 @@ bfg9000 can safely avoid worrying about trying to do this efficiently in Python.
 
 Called when bfg9000 has finished building its internal dependency graph and it's
 time to generate the backend-specific build files. *env* is an
-[*Environment*](../user/reference.md#environment) object and *build_inputs* is a
-*BuildInputs* object containing the internal dependency graph.
+[*Environment*](../reference/builtins.md#environment) object and *build_inputs*
+is a *BuildInputs* object containing the internal dependency graph.
 `build_inputs.edges()` returns a list of *Edge*s that correspond to each build
 step defined in the `build.bfg` file.
 
