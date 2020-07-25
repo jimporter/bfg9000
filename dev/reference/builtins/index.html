@@ -8,7 +8,7 @@
         
         
         <link rel="shortcut icon" href="../../img/favicon.ico">
-        <title>Reference - bfg9000</title>
+        <title>Builtin Functions - bfg9000</title>
         <link href="../../css/bootstrap-custom.min.css" rel="stylesheet">
         <link href="../../css/font-awesome.min.css" rel="stylesheet">
         <link href="../../css/base.css" rel="stylesheet">
@@ -51,41 +51,34 @@
                             <li >
                                 <a href="../..">Home</a>
                             </li>
-                            <li >
-                                <a href="../../getting-started/">Getting Started</a>
-                            </li>
-                            <li class="dropdown active">
+                            <li class="dropdown">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">User Guide <b class="caret"></b></a>
                                 <ul class="dropdown-menu">
                                     
 <li >
-    <a href="../features/">Features</a>
+    <a href="../../user/features/">Features</a>
 </li>
                                     
 <li >
-    <a href="../building/">Building with bfg9000</a>
+    <a href="../../user/getting-started/">Getting Started</a>
 </li>
                                     
 <li >
-    <a href="../writing/">Writing a Build File</a>
-</li>
-                                    
-<li class="active">
-    <a href="./">Reference</a>
+    <a href="../../user/building/">Building with bfg9000</a>
 </li>
                                     
 <li >
-    <a href="../command-line/">Command-Line Reference</a>
-</li>
-                                    
-<li >
-    <a href="../environment-vars/">Environment Variables</a>
+    <a href="../../user/writing/">Writing a Build File</a>
 </li>
                                 </ul>
                             </li>
                             <li class="dropdown">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">Developer Guide <b class="caret"></b></a>
                                 <ul class="dropdown-menu">
+                                    
+<li >
+    <a href="../../developer/contributing/">Contributing</a>
+</li>
                                     
 <li >
     <a href="../../developer/backends/">Build Backends</a>
@@ -98,9 +91,26 @@
 <li >
     <a href="../../developer/builtins/">Builtins</a>
 </li>
+                                </ul>
+                            </li>
+                            <li class="dropdown active">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">Reference <b class="caret"></b></a>
+                                <ul class="dropdown-menu">
+                                    
+<li class="active">
+    <a href="./">Builtin Functions</a>
+</li>
                                     
 <li >
-    <a href="../../developer/contributing/">Contributing</a>
+    <a href="../command-line/">Command-Line Interface</a>
+</li>
+                                    
+<li >
+    <a href="../languages/">Supported Languages</a>
+</li>
+                                    
+<li >
+    <a href="../environment-vars/">Environment Variables</a>
 </li>
                                 </ul>
                             </li>
@@ -126,7 +136,7 @@
                             </a>
                         </li>
                             <li >
-                                <a rel="next" href="../writing/">
+                                <a rel="next" href="../../developer/builtins/">
                                     <i class="fa fa-arrow-left"></i> Previous
                                 </a>
                             </li>
@@ -146,7 +156,7 @@
         <div class="container">
                 <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
-        <li class="main active"><a href="#reference">Reference</a></li>
+        <li class="main active"><a href="#builtin-functions">Builtin Functions</a></li>
             <li><a href="#general">General</a></li>
             <li><a href="#file-objects">File objects</a></li>
             <li><a href="#build-steps">Build steps</a></li>
@@ -165,7 +175,7 @@
 </div></div>
                 <div class="col-md-9" role="main">
 
-<h1 id="reference">Reference<a class="headerlink" href="#reference" title="Permanent link">§</a></h1>
+<h1 id="builtin-functions">Builtin Functions<a class="headerlink" href="#builtin-functions" title="Permanent link">§</a></h1>
 <p>Below are listed all the builtin functions and properties available to bfg9000
 scripts (<code>build.bfg</code> and <code>options.bfg</code>). Most are only available to <code>build.bfg</code>
 files, since that's where most of the build configuration logic belongs, but
@@ -182,11 +192,11 @@ equivalent to bfg9000.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>While absolute paths are rarely needed in a <code>build.bfg</code> script, it's still
-possible to use them. However, there are some caveats: 1) POSIX-style
-absolute paths will refer to that (absolute) path on the <em>current</em> drive,
-2) Windows-style absolute paths will fail to work on POSIX systems, and 3)
-Windows-style paths with a drive letter and a <em>relative</em> path (e.g. <code>C:foo</code>)
-are unsupported by bfg9000.</p>
+possible to use them. However, there are some caveats: 1) on Windows,
+POSIX-style absolute paths will refer to that (absolute) path on the
+<em>current</em> drive, 2) Windows-style absolute paths will fail to work on POSIX
+systems, and 3) Windows-style paths with a drive letter and a <em>relative</em>
+path (e.g. <code>C:foo</code>) are unsupported by bfg9000.</p>
 </div>
 <h2 id="file-objects">File objects<a class="headerlink" href="#file-objects" title="Permanent link">§</a></h2>
 <p>Files used in a <code>build.bfg</code> script are divided by their types (e.g. source
@@ -211,9 +221,9 @@ source files of that type (see each step's documentation for details).</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>By default, when creating a file object in the source directory, it will
-automatically be added to the project's <a href="../writing/#distributing-your-source">source
-distribution</a>. To disable this, you can
-specify <code>dist=False</code> when creating the file object.</p>
+automatically be added to the project's <a href="../../user/writing/#distributing-your-source">source
+distribution</a>. To disable this,
+you can specify <code>dist=False</code> when creating the file object.</p>
 </div>
 <h3 id="auto_file">auto_file(<em>name</em>, [<em>lang</em>], *, [<em>dist</em>])<a class="headerlink" href="#auto_file" title="Permanent link">§</a></h3>
 <p>Create a reference to an existing file named <em>name</em>. This function will try to
@@ -235,7 +245,7 @@ object, create a reference to the directory containing that file. The arguments
 <em>include</em>, <em>extra</em>, <em>exclude</em>, <em>filter</em>, <em>dist</em>, and <em>cache</em> are forwarded to
 <a href="#find_files"><em>find_files</em></a>; if neither <em>include</em> nor <em>extra</em> are specified,
 <em>find_files</em> will not be called. Any matching files will be added to the
-project's <a href="../writing/#distributing-your-source">source distribution</a>.</p>
+project's <a href="../../user/writing/#distributing-your-source">source distribution</a>.</p>
 <h3 id="extra_dist">extra_dist([<em>files</em>], [<em>dirs</em>])<a class="headerlink" href="#extra_dist" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Add extra <em>files</em> and <em>dirs</em> to the list of recognized source files. This lets
@@ -536,9 +546,9 @@ or C++): <code>name.dll</code> and <code>name.lib</code>. The latter is the <em>
 when linking to this library.</p>
 <p>Additionally for native languages on Windows, this step will add a
 preprocessor macro named <code>LIB&lt;NAME&gt;_EXPORTS</code> that can be used for declaring
-public symbols. See <a href="../writing/#building-libraries-on-windows">Building libraries on
-Windows</a> for an example of how to
-use this macro in your code.</p>
+public symbols. See <a href="../../user/writing/#building-libraries-on-windows">Building libraries on
+Windows</a> for an example of
+how to use this macro in your code.</p>
 </div>
 <h3 id="static_library">static_library(<em>name</em>, [<em>files</em>, *, ..., [<em>extra_deps</em>], [<em>description</em>]])<a class="headerlink" href="#static_library" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
@@ -569,8 +579,9 @@ variables</a>.</p>
 <p class="admonition-title">Note</p>
 <p>On Windows, this step will add a preprocessor macro on Windows named
 <code>LIB&lt;NAME&gt;_STATIC</code> that can be used for declaring public symbols. See
-<a href="../writing/#building-libraries-on-windows">Building libraries on Windows</a>
-for an example of how to use this macro in your code.</p>
+<a href="../../user/writing/#building-libraries-on-windows">Building libraries on
+Windows</a> for an example of
+how to use this macro in your code.</p>
 </div>
 <h3 id="whole_archive">whole_archive(<em>name</em>, [<em>files</em>, *, ..., [<em>extra_deps</em>]])<a class="headerlink" href="#whole_archive" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
@@ -1052,8 +1063,9 @@ command-line arguments.</p>
 </ul>
 <h3 id="argv">argv<a class="headerlink" href="#argv" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
-<p>Retrieve the set of <a href="../writing/#user-defined-arguments">user-defined arguments</a>
-passed to bfg9000; this is an <a href="https://docs.python.org/library/argparse.html#argparse.Namespace"><em>argparse.Namespace</em></a> object.</p>
+<p>Retrieve the set of <a href="../../user/writing/#user-defined-arguments">user-defined
+arguments</a> passed to bfg9000; this is
+an <a href="https://docs.python.org/library/argparse.html#argparse.Namespace"><em>argparse.Namespace</em></a> object.</p>
 <h3 id="95_bfg9000__">__bfg9000__<a class="headerlink" href="#95_bfg9000__" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code>, <code>options.bfg</code>, and <code>&lt;toolchain&gt;.bfg</code></p>
 <p>A dictionary containing all the builtin functions and global variables defined
@@ -1100,7 +1112,7 @@ names are: <code>'posix'</code>,<code>'linux'</code>, <code>'darwin'</code>, <co
 <li><em>include</em>: Include this file in the results</li>
 <li><em>exclude</em>: Don't include this file in the results</li>
 <li><em>not_now</em>: Don't include this file in the results, but do include it in the
-  <a href="../writing/#distributing-your-source">source distribution</a></li>
+  <a href="../../user/writing/#distributing-your-source">source distribution</a></li>
 </ul>
 <h3 id="find_files">find_files([<em>path</em>], [<em>name</em>], [<em>type</em>], *, [<em>extra</em>], [<em>exclude</em>], <em>...</em>)<a class="headerlink" href="#find_files" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
@@ -1116,7 +1128,7 @@ specified:</p>
   only directories, or <code>'*'</code> to find either</li>
 <li><em>extra</em>: A glob (or list of globs) to match extra files (which will not be
   returned from <em>find_files</em> but will be added to the
-  <a href="../writing/#distributing-your-source">source distribution</a>)</li>
+  <a href="../../user/writing/#distributing-your-source">source distribution</a>)</li>
 <li><em>exclude</em>: A glob (or list of globs) of files to exclude from results; by
   default, <code>.#*</code>, <code>*~</code>, and <code>#*#</code> are exluded</li>
 <li><em>flat</em>: If true, <em>find_files</em> will not recurse into subdirectories; otherwise,
@@ -1203,7 +1215,7 @@ extension specified in <em>replace</em>, returning the newly-created <em>Path</e
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Set the name and/or version of the project. If you don't call this function to
 specify a project name, it defaults to the name of the project's source
-directory. This is primarily useful for creating <a href="../writing/#distributing-your-source">source
+directory. This is primarily useful for creating <a href="../../user/writing/#distributing-your-source">source
 distributions</a>.</p>
 <p>In addition, you can set a number of project-wide options with this function:</p>
 <ul>

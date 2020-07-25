@@ -51,9 +51,6 @@
                             <li >
                                 <a href="../..">Home</a>
                             </li>
-                            <li >
-                                <a href="../../getting-started/">Getting Started</a>
-                            </li>
                             <li class="dropdown">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">User Guide <b class="caret"></b></a>
                                 <ul class="dropdown-menu">
@@ -63,29 +60,25 @@
 </li>
                                     
 <li >
+    <a href="../../user/getting-started/">Getting Started</a>
+</li>
+                                    
+<li >
     <a href="../../user/building/">Building with bfg9000</a>
 </li>
                                     
 <li >
     <a href="../../user/writing/">Writing a Build File</a>
 </li>
-                                    
-<li >
-    <a href="../../user/reference/">Reference</a>
-</li>
-                                    
-<li >
-    <a href="../../user/command-line/">Command-Line Reference</a>
-</li>
-                                    
-<li >
-    <a href="../../user/environment-vars/">Environment Variables</a>
-</li>
                                 </ul>
                             </li>
                             <li class="dropdown active">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">Developer Guide <b class="caret"></b></a>
                                 <ul class="dropdown-menu">
+                                    
+<li >
+    <a href="../contributing/">Contributing</a>
+</li>
                                     
 <li class="active">
     <a href="./">Build Backends</a>
@@ -98,9 +91,26 @@
 <li >
     <a href="../builtins/">Builtins</a>
 </li>
+                                </ul>
+                            </li>
+                            <li class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">Reference <b class="caret"></b></a>
+                                <ul class="dropdown-menu">
                                     
 <li >
-    <a href="../contributing/">Contributing</a>
+    <a href="../../reference/builtins/">Builtin Functions</a>
+</li>
+                                    
+<li >
+    <a href="../../reference/command-line/">Command-Line Interface</a>
+</li>
+                                    
+<li >
+    <a href="../../reference/languages/">Supported Languages</a>
+</li>
+                                    
+<li >
+    <a href="../../reference/environment-vars/">Environment Variables</a>
 </li>
                                 </ul>
                             </li>
@@ -126,7 +136,7 @@
                             </a>
                         </li>
                             <li >
-                                <a rel="next" href="../../user/environment-vars/">
+                                <a rel="next" href="../contributing/">
                                     <i class="fa fa-arrow-left"></i> Previous
                                 </a>
                             </li>
@@ -188,8 +198,8 @@ bfg9000 can safely avoid worrying about trying to do this efficiently in Python.
 <h3 id="backend-write">backend.write(<em>env</em>, <em>build_inputs</em>)<a class="headerlink" href="#backend-write" title="Permanent link">§</a></h3>
 <p>Called when bfg9000 has finished building its internal dependency graph and it's
 time to generate the backend-specific build files. <em>env</em> is an
-<a href="../../user/reference/#environment"><em>Environment</em></a> object and <em>build_inputs</em> is a
-<em>BuildInputs</em> object containing the internal dependency graph.
+<a href="../../reference/builtins/#environment"><em>Environment</em></a> object and <em>build_inputs</em>
+is a <em>BuildInputs</em> object containing the internal dependency graph.
 <code>build_inputs.edges()</code> returns a list of <em>Edge</em>s that correspond to each build
 step defined in the <code>build.bfg</code> file.</p>
 <h3 id="backend-priority">backend.priority<a class="headerlink" href="#backend-priority" title="Permanent link">§</a></h3>

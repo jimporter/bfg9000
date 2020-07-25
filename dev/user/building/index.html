@@ -51,15 +51,16 @@
                             <li >
                                 <a href="../..">Home</a>
                             </li>
-                            <li >
-                                <a href="../../getting-started/">Getting Started</a>
-                            </li>
                             <li class="dropdown active">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">User Guide <b class="caret"></b></a>
                                 <ul class="dropdown-menu">
                                     
 <li >
     <a href="../features/">Features</a>
+</li>
+                                    
+<li >
+    <a href="../getting-started/">Getting Started</a>
 </li>
                                     
 <li class="active">
@@ -69,23 +70,15 @@
 <li >
     <a href="../writing/">Writing a Build File</a>
 </li>
-                                    
-<li >
-    <a href="../reference/">Reference</a>
-</li>
-                                    
-<li >
-    <a href="../command-line/">Command-Line Reference</a>
-</li>
-                                    
-<li >
-    <a href="../environment-vars/">Environment Variables</a>
-</li>
                                 </ul>
                             </li>
                             <li class="dropdown">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">Developer Guide <b class="caret"></b></a>
                                 <ul class="dropdown-menu">
+                                    
+<li >
+    <a href="../../developer/contributing/">Contributing</a>
+</li>
                                     
 <li >
     <a href="../../developer/backends/">Build Backends</a>
@@ -98,9 +91,26 @@
 <li >
     <a href="../../developer/builtins/">Builtins</a>
 </li>
+                                </ul>
+                            </li>
+                            <li class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">Reference <b class="caret"></b></a>
+                                <ul class="dropdown-menu">
                                     
 <li >
-    <a href="../../developer/contributing/">Contributing</a>
+    <a href="../../reference/builtins/">Builtin Functions</a>
+</li>
+                                    
+<li >
+    <a href="../../reference/command-line/">Command-Line Interface</a>
+</li>
+                                    
+<li >
+    <a href="../../reference/languages/">Supported Languages</a>
+</li>
+                                    
+<li >
+    <a href="../../reference/environment-vars/">Environment Variables</a>
 </li>
                                 </ul>
                             </li>
@@ -126,7 +136,7 @@
                             </a>
                         </li>
                             <li >
-                                <a rel="next" href="../features/">
+                                <a rel="next" href="../getting-started/">
                                     <i class="fa fa-arrow-left"></i> Previous
                                 </a>
                             </li>
@@ -217,13 +227,13 @@ option. For instance, to build a Makefile even if Ninja is installed:</p>
 </code></pre>
 
 <p>For a complete description of the available command-line options for bfg9000,
-see the <a href="../command-line/">Command-line Reference</a> chapter.</p>
+see the <a href="../../reference/command-line/">Command-line Reference</a> chapter.</p>
 <h2 id="setting-build-options">Setting build options<a class="headerlink" href="#setting-build-options" title="Permanent link">§</a></h2>
 <p>Many options for building can be set via the environment. These generally follow
 the UNIX naming conventions, so you can use, say,
-<a href="../environment-vars/#cxx"><code>CXX</code></a> to change the C++ compiler that bfg9000 uses.
-For a full listing of the recognized environment variables, see the <a href="../environment-vars/">Environment
-Variables</a> chapter.</p>
+<a href="../../reference/environment-vars/#cxx"><code>CXX</code></a> to change the C++ compiler that
+bfg9000 uses. For a full listing of the recognized environment variables, see
+the <a href="../../reference/environment-vars/">Environment Variables</a> chapter.</p>
 <h2 id="using-toolchain-files">Using toolchain files<a class="headerlink" href="#using-toolchain-files" title="Permanent link">§</a></h2>
 <p>In order to simplify setting up all the myriad options required for certain
 builds (and to share those settings with others), bfg9000 allows users to use
@@ -249,7 +259,7 @@ compiler('x86_64-w64-mingw32-g++-win32', 'c++')
 compile_options(['-Wall'], 'c++')
 </code></pre>
 
-<p>For more information on the available builtins, see the <a href="../reference/#toolchain">reference
+<p>For more information on the available builtins, see the <a href="../../reference/builtins/#toolchain">reference
 guide</a>.</p>
 <h2 id="installing-your-software">Installing your software<a class="headerlink" href="#installing-your-software" title="Permanent link">§</a></h2>
 <p>After building your software, you may wish to install it to another directory on

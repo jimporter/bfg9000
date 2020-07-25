@@ -8,7 +8,7 @@
         
         
         <link rel="shortcut icon" href="../../img/favicon.ico">
-        <title>Command-Line Reference - bfg9000</title>
+        <title>Command-Line Interface - bfg9000</title>
         <link href="../../css/bootstrap-custom.min.css" rel="stylesheet">
         <link href="../../css/font-awesome.min.css" rel="stylesheet">
         <link href="../../css/base.css" rel="stylesheet">
@@ -51,41 +51,34 @@
                             <li >
                                 <a href="../..">Home</a>
                             </li>
-                            <li >
-                                <a href="../../getting-started/">Getting Started</a>
-                            </li>
-                            <li class="dropdown active">
+                            <li class="dropdown">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">User Guide <b class="caret"></b></a>
                                 <ul class="dropdown-menu">
                                     
 <li >
-    <a href="../features/">Features</a>
+    <a href="../../user/features/">Features</a>
 </li>
                                     
 <li >
-    <a href="../building/">Building with bfg9000</a>
+    <a href="../../user/getting-started/">Getting Started</a>
 </li>
                                     
 <li >
-    <a href="../writing/">Writing a Build File</a>
+    <a href="../../user/building/">Building with bfg9000</a>
 </li>
                                     
 <li >
-    <a href="../reference/">Reference</a>
-</li>
-                                    
-<li class="active">
-    <a href="./">Command-Line Reference</a>
-</li>
-                                    
-<li >
-    <a href="../environment-vars/">Environment Variables</a>
+    <a href="../../user/writing/">Writing a Build File</a>
 </li>
                                 </ul>
                             </li>
                             <li class="dropdown">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">Developer Guide <b class="caret"></b></a>
                                 <ul class="dropdown-menu">
+                                    
+<li >
+    <a href="../../developer/contributing/">Contributing</a>
+</li>
                                     
 <li >
     <a href="../../developer/backends/">Build Backends</a>
@@ -98,9 +91,26 @@
 <li >
     <a href="../../developer/builtins/">Builtins</a>
 </li>
+                                </ul>
+                            </li>
+                            <li class="dropdown active">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">Reference <b class="caret"></b></a>
+                                <ul class="dropdown-menu">
                                     
 <li >
-    <a href="../../developer/contributing/">Contributing</a>
+    <a href="../builtins/">Builtin Functions</a>
+</li>
+                                    
+<li class="active">
+    <a href="./">Command-Line Interface</a>
+</li>
+                                    
+<li >
+    <a href="../languages/">Supported Languages</a>
+</li>
+                                    
+<li >
+    <a href="../environment-vars/">Environment Variables</a>
 </li>
                                 </ul>
                             </li>
@@ -126,12 +136,12 @@
                             </a>
                         </li>
                             <li >
-                                <a rel="next" href="../reference/">
+                                <a rel="next" href="../builtins/">
                                     <i class="fa fa-arrow-left"></i> Previous
                                 </a>
                             </li>
                             <li >
-                                <a rel="prev" href="../environment-vars/">
+                                <a rel="prev" href="../languages/">
                                     Next <i class="fa fa-arrow-right"></i>
                                 </a>
                             </li>
@@ -180,14 +190,14 @@ directory, and bfg9000 will look for a build.bfg file in the current directory.<
 default value depends on what build backends you have installed, but if <code>ninja</code>
 is present on your system, it will be the default.</p>
 <h4 id="configure-toolchain">--toolchain <em>FILE</em><a class="headerlink" href="#configure-toolchain" title="Permanent link">§</a></h4>
-<p>An optional <a href="../building/#using-toolchain-files">toolchain file</a> that can be used
-to easily set all the options required for a certain build.</p>
+<p>An optional <a href="../../user/building/#using-toolchain-files">toolchain file</a> that
+can be used to easily set all the options required for a certain build.</p>
 <h4 id="configure-enable-shared">--enable-shared, --disable-shared<a class="headerlink" href="#configure-enable-shared" title="Permanent link">§</a></h4>
 <p>Enable/disable building shared libraries when using
-<a href="../reference/#library"><em>library</em>()</a> in your build.bfg files. Defaults to enabled.</p>
+<a href="../builtins/#library"><em>library</em>()</a> in your build.bfg files. Defaults to enabled.</p>
 <h4 id="configure-enable-static">--enable-static, --disable-static<a class="headerlink" href="#configure-enable-static" title="Permanent link">§</a></h4>
 <p>Enable/disable building static libraries when using
-<a href="../reference/#library"><em>library</em>()</a> in your build.bfg files. Defaults to enabled.</p>
+<a href="../builtins/#library"><em>library</em>()</a> in your build.bfg files. Defaults to enabled.</p>
 <h4 id="configure-prefix">--prefix <em>PATH</em><a class="headerlink" href="#configure-prefix" title="Permanent link">§</a></h4>
 <p>The installation prefix to use when installing built files. On Linux and macOS,
 this defaults to <code>/usr/local</code>; on Windows, there is no default (thus, to

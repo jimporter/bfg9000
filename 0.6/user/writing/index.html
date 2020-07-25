@@ -51,9 +51,6 @@
                             <li >
                                 <a href="../..">Home</a>
                             </li>
-                            <li >
-                                <a href="../../getting-started/">Getting Started</a>
-                            </li>
                             <li class="dropdown active">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">User Guide <b class="caret"></b></a>
                                 <ul class="dropdown-menu">
@@ -63,29 +60,25 @@
 </li>
                                     
 <li >
+    <a href="../getting-started/">Getting Started</a>
+</li>
+                                    
+<li >
     <a href="../building/">Building with bfg9000</a>
 </li>
                                     
 <li class="active">
     <a href="./">Writing a Build File</a>
 </li>
-                                    
-<li >
-    <a href="../reference/">Reference</a>
-</li>
-                                    
-<li >
-    <a href="../command-line/">Command-Line Reference</a>
-</li>
-                                    
-<li >
-    <a href="../environment-vars/">Environment Variables</a>
-</li>
                                 </ul>
                             </li>
                             <li class="dropdown">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">Developer Guide <b class="caret"></b></a>
                                 <ul class="dropdown-menu">
+                                    
+<li >
+    <a href="../../developer/contributing/">Contributing</a>
+</li>
                                     
 <li >
     <a href="../../developer/backends/">Build Backends</a>
@@ -98,9 +91,26 @@
 <li >
     <a href="../../developer/builtins/">Builtins</a>
 </li>
+                                </ul>
+                            </li>
+                            <li class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">Reference <b class="caret"></b></a>
+                                <ul class="dropdown-menu">
                                     
 <li >
-    <a href="../../developer/contributing/">Contributing</a>
+    <a href="../../reference/builtins/">Builtin Functions</a>
+</li>
+                                    
+<li >
+    <a href="../../reference/command-line/">Command-Line Interface</a>
+</li>
+                                    
+<li >
+    <a href="../../reference/languages/">Supported Languages</a>
+</li>
+                                    
+<li >
+    <a href="../../reference/environment-vars/">Environment Variables</a>
 </li>
                                 </ul>
                             </li>
@@ -131,7 +141,7 @@
                                 </a>
                             </li>
                             <li >
-                                <a rel="prev" href="../reference/">
+                                <a rel="prev" href="../../developer/contributing/">
                                     Next <i class="fa fa-arrow-right"></i>
                                 </a>
                             </li>
@@ -175,7 +185,7 @@ is unavoidable. By using a general-purpose language, this complexity can
 (hopefully!) be managed.</p>
 <h2 id="your-first-build-script">Your first build script<a class="headerlink" href="#your-first-build-script" title="Permanent link">§</a></h2>
 <p>The simplest build script, compiling a single source file into an
-<a href="../reference/#executable">executable</a>, is indeed very simple:</p>
+<a href="../../reference/builtins/#executable">executable</a>, is indeed very simple:</p>
 <pre><code class="python">executable('simple', files=['simple.cpp'])
 </code></pre>
 
@@ -187,8 +197,9 @@ appropriate name for the target platform (<code>'simple'</code> on Linux and OS 
 <p>Sometimes, it can be helpful to display messages to the user when they're
 building your project. While <code>print</code>, <code>sys.stdout</code>, and the like work, these
 aren't integrated into bfg9000's logging system. Instead, you can use
-<a href="../reference/#info"><em>info()</em></a>, <a href="../reference/#warning"><em>warning()</em></a>, or
-<a href="../reference/#debug"><em>debug()</em></a> to log your messages:</p>
+<a href="../../reference/builtins/#info"><em>info()</em></a>,
+<a href="../../reference/builtins/#warning"><em>warning()</em></a>, or
+<a href="../../reference/builtins/#debug"><em>debug()</em></a> to log your messages:</p>
 <pre><code class="python">try:
     pkg = package('optional_dependency')
 except PackageResolutionError:
@@ -207,15 +218,15 @@ verbosity. First, arguments that normally take a list can take a single item
 instead, e.g. <code>executable('simple', files='simple.cpp')</code>. In addition, bfg9000
 will automatically convert a string argument to an object of the appropriate
 type. In the previous example, <code>'simple.cpp'</code> is automatically passed to
-<a href="../reference/#object_files"><em>object_files</em></a>, which in turn converts it to a
-<a href="../reference/#source_file"><em>source_file</em></a> and generates the appropriate build
-step.</p>
+<a href="../../reference/builtins/#object_files"><em>object_files</em></a>, which in turn converts
+it to a <a href="../../reference/builtins/#source_file"><em>source_file</em></a> and generates the
+appropriate build step.</p>
 <h3 id="subdirectories">Subdirectories<a class="headerlink" href="#subdirectories" title="Permanent link">§</a></h3>
 <p>Many projects organize their headers and source files into different
 directories. For source files, this is easy to handle: just write out the
 relative path to the file. For header files, you need to let your compiler know
 where they're located. The
-<a href="../reference/#header_directory"><em>header_directory</em></a> function creates
+<a href="../../reference/builtins/#header_directory"><em>header_directory</em></a> function creates
 a reference to the directory, which can then be passed to your build function
 via the <em>include</em> argument:</p>
 <pre><code class="python">include_dir = header_directory('include')
@@ -239,9 +250,9 @@ provide options for a single binary with the <em>compile_options</em> and
            link_options=['-static-libstdc++'])
 </code></pre>
 
-<p>You can also specify <a href="../reference/#global_options">global compiler options</a> (on
-a per-language basis) as well as <a href="../reference/#global_link_options">global linker
-options</a>:</p>
+<p>You can also specify <a href="../../reference/builtins/#global_options">global compiler
+options</a> (on a per-language basis) as
+well as <a href="../../reference/builtins/#global_link_options">global linker options</a>:</p>
 <pre><code class="python">global_options(['-Wall', '-Werror'], lang='c++')
 global_link_options(['-static-libstdc++'])
 </code></pre>
@@ -253,19 +264,19 @@ line arguments.</p>
 <p>Naturally, the interpretations of these options depend on the compiler (or
 linker!) being used. One method is simply to the kind of compiler being used and
 supply the appropriate option strings. You can do this by consulting the build's
-<a href="../reference/#environment">Environment</a> and checking the compiler's
-<a href="../reference/#compiler-flavor"><em>flavor</em></a>.</p>
-<p>However, it's often better to use <a href="../reference/#semantic-options"><em>semantic
-options</em></a>, options that are defined as objects
-which will automatically be interpreted by the compiler:</p>
+<a href="../../reference/builtins/#environment">Environment</a> and checking the compiler's
+<a href="../../reference/builtins/#compiler-flavor"><em>flavor</em></a>.</p>
+<p>However, it's often better to use <a href="../../reference/builtins/#semantic-options"><em>semantic
+options</em></a>, options that are defined
+as objects which will automatically be interpreted by the compiler:</p>
 <pre><code class="python">executable('simple', files=['simple.cpp'],
            compile_options=[opts.define('DEBUG')])
 </code></pre>
 
 <h2 id="building-libraries">Building libraries<a class="headerlink" href="#building-libraries" title="Permanent link">§</a></h2>
 <p>In addition to building executables, you can obviously also build
-<a href="../reference/#library">libraries</a>. This takes the same arguments as an
-executable as described above. Once you've defined how to build your library,
+<a href="../../reference/builtins/#library">libraries</a>. This takes the same arguments as
+an executable as described above. Once you've defined how to build your library,
 you can pass it along to an executable or other shared library via the <em>libs</em>
 argument:</p>
 <pre><code class="python">lib = library('library', files=['library.cpp'])
@@ -281,8 +292,9 @@ it represents arguments that will be <em>forwarded</em> to the dynamic linker wh
 static lib is used.</p>
 <h3 id="shared-and-static-libraries">Shared and static libraries<a class="headerlink" href="#shared-and-static-libraries" title="Permanent link">§</a></h3>
 <p>Sometimes, you may want to explicitly specify in the build file whether to
-create a <a href="../reference/#shared_library">shared</a> or a
-<a href="../reference/#static_library">static</a> library. This is easy to accomplish:</p>
+create a <a href="../../reference/builtins/#shared_library">shared</a> or a
+<a href="../../reference/builtins/#static_library">static</a> library. This is easy to
+accomplish:</p>
 <pre><code class="python">shared = shared_library('shared', files=['shared.cpp'])
 static = static_library('static', files=['static.cpp'])
 </code></pre>
@@ -308,14 +320,16 @@ these macros to set the appropriate attributes for your public symbols:</p>
 <h2 id="generated-sources">Generated sources<a class="headerlink" href="#generated-sources" title="Permanent link">§</a></h2>
 <p>In addition to compiling and linking, many build involve a source-generation
 step, e.g. generating lexers/parsers via Lex/Yacc. bfg9000 tries to make this as
-simple as possible. Much like how <a href="../reference/#executable"><em>executable()</em></a> (and
-<a href="../reference/#library"><em>library()</em></a>, etc) will automatically invoke
-<a href="../reference/#object_files"><em>object_files</em></a> as needed to create the compilation
-steps, bfg9000 will automatically add the appropriate
-<a href="../reference/#generated_source"><em>generated_source()</em></a> calls where possible.
-Here, since <code>'qml.qrc'</code> can be auto-detected as a Qt QRC file, the <code>'qml.cpp'</code>
+simple as possible. Much like how
+<a href="../../reference/builtins/#executable"><em>executable()</em></a> (and
+<a href="../../reference/builtins/#library"><em>library()</em></a>, etc) will automatically invoke
+<a href="../../reference/builtins/#object_files"><em>object_files</em></a> as needed to create the
+compilation steps, bfg9000 will automatically add the appropriate
+<a href="../../reference/builtins/#generated_source"><em>generated_source()</em></a> calls where
+possible.</p>
+<p>Here, since <code>'qml.qrc'</code> can be auto-detected as a Qt QRC file, the <code>'qml.cpp'</code>
 file will be created and passed on to the implicit
-<a href="../reference/#object_file"><em>object_file</em></a> call:</p>
+<a href="../../reference/builtins/#object_file"><em>object_file</em></a> call:</p>
 <pre><code class="python">executable('qtprog', ['main.cpp', 'qml.qrc'], ...)
 </code></pre>
 
@@ -327,27 +341,28 @@ executable('calc', files=[parse, ...], includes=[parse_h])
 </code></pre>
 
 <p>In addition, bfg9000 can only invoke
-<a href="../reference/#generated_source"><em>generated_source()</em></a> automatically when the
-file is passed as the source to be compiled by
-<a href="../reference/#object_file"><em>object_file</em></a>. Using a Qt UI file, for example,
-requires explicitly generating the source:</p>
+<a href="../../reference/builtins/#generated_source"><em>generated_source()</em></a> automatically
+when the file is passed as the source to be compiled by
+<a href="../../reference/builtins/#object_file"><em>object_file</em></a>. Using a Qt UI file, for
+example, requires explicitly generating the source:</p>
 <pre><code class="python">widget = generated_source('widget.ui')
 executable('qtprog, ['main.cpp'], includes=[widget], ...)
 </code></pre>
 
 <p>Finally, some source-generators don't have their own unique file extensions, so
 it's not possible to automatically detect their language. In this case, you can
-either explicitly call <a href="../reference/#generated_source"><em>generated_source()</em></a> or
-create the file object with the appropriate language, e.g.:
+either explicitly call
+<a href="../../reference/builtins/#generated_source"><em>generated_source()</em></a> or create the
+file object with the appropriate language, e.g.:
 <code>auto_file('window.hpp', lang='qtmoc')</code>.</p>
 <h2 id="finding-files">Finding files<a class="headerlink" href="#finding-files" title="Permanent link">§</a></h2>
 <p>For projects with many source files, it can be inconvenient to manually list all
 of them. Since <code>build.bfg</code> files are just Python scripts, you <em>could</em> use
 Python's standard library to examine the file system and build the list.
 However, there's a better way: bfg9000 provides a
-<a href="../reference/#find_files"><em>find_files()</em></a> function to fetch the list; if the
-list ever changes, the build files will be regenerated <em>automatically</em> the next
-time they're run.</p>
+<a href="../../reference/builtins/#find_files"><em>find_files()</em></a> function to fetch the
+list; if the list ever changes, the build files will be regenerated
+<em>automatically</em> the next time they're run.</p>
 <p><em>find_files()</em> starts at a base directory and searches recursively for any files
 matching a particular glob:</p>
 <pre><code class="python">hello_files = find_files('src/hello', '*.cpp')
@@ -361,17 +376,17 @@ For instance, you can search only for files or only for directories by passing
 <p>When you're building multiple binaries, you might want to be able to specify
 what gets built by default, i.e. when calling <code>make</code> (or <code>ninja</code>) with no
 arguments. Normally, every executable and library (except those passed to
-<a href="../reference/#test"><em>test()</em></a>) will get built. However, you can pass any build
-steps to <a href="../reference/#default"><em>default()</em></a>, and they'll be set as the
-default, overriding the normal behavior. This makes it easy to provide your
-users with a standard build that gets them all the bits they need, and none they
-don't.</p>
+<a href="../../reference/builtins/#test"><em>test()</em></a>) will get built. However, you can pass
+any build steps to <a href="../../reference/builtins/#default"><em>default()</em></a>, and they'll
+be set as the default, overriding the normal behavior. This makes it easy to
+provide your users with a standard build that gets them all the bits they need,
+and none they don't.</p>
 <h2 id="external-packages">External packages<a class="headerlink" href="#external-packages" title="Permanent link">§</a></h2>
 <p>Most projects have external packages that they depend on. There are lots of
 different ways these packages are organized, and bfg9000 currently supports
-two of them: <a href="../reference/#package">"ordinary" packages</a> (resolved using either
-<a href="https://www.freedesktop.org/wiki/Software/pkg-config/"><code>pkg-config</code></a> or searched for in the default location for your
-system) and <a href="../reference/#boost_package">Boost packages</a>:</p>
+two of them: <a href="../../reference/builtins/#package">"ordinary" packages</a> (resolved
+using either <a href="https://www.freedesktop.org/wiki/Software/pkg-config/"><code>pkg-config</code></a> or searched for in the default location
+for your system) and <a href="../../reference/builtins/#boost_package">Boost packages</a>:</p>
 <pre><code class="python">ogg = package('ogg', kind='static')
 prog_opts = boost_package('program_options', version='&gt;=1.55')
 </code></pre>
@@ -385,8 +400,8 @@ building binaries by passing them in the <em>packages</em> argument:</p>
 <p>After building, you might want to allow your project to be installed onto the
 user's system somewhere. Most files (headers, executables, libraries) can be
 added to the list of installed files via the
-<a href="../reference/#install"><em>install()</em></a> function. You can also install entire
-directories of headers:</p>
+<a href="../../reference/builtins/#install"><em>install()</em></a> function. You can also install
+entire directories of headers:</p>
 <pre><code class="python">include_dir = header_directory('include')
 lib = static_library('program', files=['src/prog.cpp'], includes=[include_dir])
 install(lib, include_dir)
@@ -395,19 +410,20 @@ install(lib, include_dir)
 <h2 id="tests">Tests<a class="headerlink" href="#tests" title="Permanent link">§</a></h2>
 <p>All good projects should have tests. Since your project is good (isn't it?),
 yours has tests too, and you should have a good way to execute those tests from
-your build system. bfg9000 provides a <a href="../reference/#test-steps">set of
-functions</a> for running tests. The most important of
-these is aptly named <a href="../reference/#test"><em>test()</em></a>. Any executable can be passed
-to this function, and it will be executed as a test; an exit status of 0 marks
-success, and non-zero marks failure:</p>
+your build system. bfg9000 provides a <a href="../../reference/builtins/#test-steps">set of
+functions</a> for running tests. The most
+important of these is aptly named <a href="../../reference/builtins/#test"><em>test()</em></a>. Any
+executable can be passed to this function, and it will be executed as a test; an
+exit status of 0 marks success, and non-zero marks failure:</p>
 <pre><code class="python">test( executable('test_foo', files=['test_foo.cpp']) )
 </code></pre>
 
-<p>In addition, you can provide a <a href="../reference/#test_driver">test driver</a> that
-collects all of your tests together and runs them as one. <em>test_driver()</em> takes
-an executable (a <a href="../reference/#system_executable"><em>system_executable</em></a> by
-default) that runs all the test files. This allows you to aggregate multiple
-test files into a single run, which is very useful for reporting:</p>
+<p>In addition, you can provide a <a href="../../reference/builtins/#test_driver">test
+driver</a> that collects all of your tests
+together and runs them as one. <em>test_driver()</em> takes an executable (a
+<a href="../../reference/builtins/#system_executable"><em>system_executable</em></a> by default)
+that runs all the test files. This allows you to aggregate multiple test files
+into a single run, which is very useful for reporting:</p>
 <pre><code class="python">mettle = test_driver('mettle')
 test( executable('test_foo', files=['test_foo.cpp']), driver=mettle )
 test( executable('test_bar', files=['test_bar.cpp']), driver=mettle )
@@ -445,12 +461,12 @@ multiple commands to this function via the <em>cmds</em> argument:</p>
 <h2 id="submodules">Submodules<a class="headerlink" href="#submodules" title="Permanent link">§</a></h2>
 <p>For larger projects, putting all of your build configuration in a single file
 can be difficult to maintain. Instead, you can split your configuration into
-multiple submodules. The <a href="../reference/#submodule"><em>submodule</em></a> function will
-execute the <code>build.bfg</code> file (or <code>options.bfg</code> file <a href="#user-defined-arguments">when
+multiple submodules. The <a href="../../reference/builtins/#submodule"><em>submodule</em></a>
+function will execute the <code>build.bfg</code> file (or <code>options.bfg</code> file <a href="#user-defined-arguments">when
 applicable</a>) in the specified directory and return any
 exported objects as a dict to be used in the parent module. The submodule can
-then call the <a href="../reference/#export"><em>export</em></a> function to return any relevant
-objects (e.g. built files) to the parent module:</p>
+then call the <a href="../../reference/builtins/#export"><em>export</em></a> function to return any
+relevant objects (e.g. built files) to the parent module:</p>
 <pre><code class="python"># In main build.bfg:
 sub = submodule('dir')
 executable('exe', ['exe.cpp'], libs=[sub['library']])
@@ -473,8 +489,8 @@ library('../mylib', ['mylib.cpp'])
 <h2 id="custom-build-steps">Custom build steps<a class="headerlink" href="#custom-build-steps" title="Permanent link">§</a></h2>
 <p>Sometimes, the built-in build steps don't support the things you want to do
 (e.g. if you're generating source files via Flex/Bison). In these cases, you
-can use <a href="../reference/#build_step"><em>build_step()</em></a> to define a step that produces
-a file by running an arbitrary command:</p>
+can use <a href="../../reference/builtins/#build_step"><em>build_step()</em></a> to define a step
+that produces a file by running an arbitrary command:</p>
 <pre><code class="python">lex = build_step('lex.yy.c', cmd=[ 'flex', source_file('hello.lex') ])
 </code></pre>
 
@@ -486,10 +502,11 @@ a file by running an arbitrary command:</p>
 </code></pre>
 
 <p>By default, the output of a custom build step is passed through
-<a href="../reference/#auto_file"><em>auto_file</em></a>, which produces a source file, header
-file, or a generic file based on the path's extension. When this doesn't produce
-the expected results, you can supply the <em>type</em> argument, which lets you pass a
-function taking a path and returning a file object to represent the output:</p>
+<a href="../../reference/builtins/#auto_file"><em>auto_file</em></a>, which produces a source file,
+header file, or a generic file based on the path's extension. When this doesn't
+produce the expected results, you can supply the <em>type</em> argument, which lets you
+pass a function taking a path and returning a file object to represent the
+output:</p>
 <pre><code class="python">libfoo = shared_library(...)
 stripped = build_step('libfoo.so', cmd=[
     'strip', '-o', build_step.output, libfoo
@@ -514,7 +531,7 @@ different branding for testing and release builds. You can add support for
 options to configure your build by creating a <code>options.bfg</code> file alongside your
 <code>build.bfg</code>.</p>
 <p>Inside <code>options.bfg</code>, you can define arguments with the
-<a href="../reference/#argument"><em>argument()</em></a> function:</p>
+<a href="../../reference/builtins/#argument"><em>argument()</em></a> function:</p>
 <pre><code class="python"># Adds --name/--x-name to the list of available command-line options, e.g.:
 #   9k build/ --name=foobar
 argument('name', default='unnamed', help=&quot;set the program's name&quot;)
@@ -532,8 +549,8 @@ argument('bar', action='with', help='build the bar module')
 </code></pre>
 
 <p>Once these options are defined, you can fetch their results from the built-in
-<a href="../reference/#argv"><em>argv</em></a> global in your <code>build.bfg</code> file. This object is
-simply an <a href="https://docs.python.org/library/argparse.html#argparse.Namespace"><em>argparse.Namespace</em></a> object:</p>
+<a href="../../reference/builtins/#argv"><em>argv</em></a> global in your <code>build.bfg</code> file. This
+object is simply an <a href="https://docs.python.org/library/argparse.html#argparse.Namespace"><em>argparse.Namespace</em></a> object:</p>
 <pre><code class="python">print(&quot;This program's name is {}&quot;.format(argv.name))
 
 if argv.foo:
@@ -547,10 +564,10 @@ if argv.bar:
 a common tool to simplify using the library. <code>pkg-config</code> allows users to look
 up a package and retrieve all the compiler and linker options required to use
 that package. You can generate a <code>pkg-config</code> <code>.pc</code> file using the
-<a href="../reference/#pkg_config"><em>pkg_config()</em></a> function. By default (or if the
-<em>auto_fill</em> parameter is <em>True</em>), this function will automatically fill in the
-values for the package's name, version, installed include directories, and
-installed libraries:</p>
+<a href="../../reference/builtins/#pkg_config"><em>pkg_config()</em></a> function. By default (or
+if the <em>auto_fill</em> parameter is <em>True</em>), this function will automatically fill
+in the values for the package's name, version, installed include directories,
+and installed libraries:</p>
 <pre><code class="python">project('my_project', '1.0')
 
 include = header_directory('include', include='*.hpp')
@@ -586,7 +603,7 @@ executable('prog', 'prog.cpp', packages=[my_pkg])
 If a library listed here depends on any packages or other libraries, they will
 automatically be included in the <code>pkg-config</code> info.</p>
 <p>There are several other options available to tweak the output of this function,
-detailed in the <a href="../reference/#pkg_config">reference guide</a>.</p></div>
+detailed in the <a href="../../reference/builtins/#pkg_config">reference guide</a>.</p></div>
         </div>
 
         <footer class="col-md-12">
