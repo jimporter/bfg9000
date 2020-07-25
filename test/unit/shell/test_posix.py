@@ -66,6 +66,8 @@ class TestQuote(TestCase):
 
         self.assertEqual(posix.quote(original), quoted)
         self.assertEqual(posix.quote_info(original), (quoted, needs_quote))
+        self.assertEqual(posix.force_quote(original),
+                         posix.wrap_quotes(inner_quoted))
 
     def test_empty(self):
         self.assertQuote('', False, '', '')

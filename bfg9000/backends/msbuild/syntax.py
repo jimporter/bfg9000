@@ -53,8 +53,17 @@ def textify(thing, quoted=False, builddir=BuildDir.output):
     elif isinstance(thing, safe_str.jbos):
         return ''.join(textify(i, quoted, builddir) for i in thing.bits)
     elif isinstance(thing, path.BasePath):
-        path_str = thing.realize(_path_vars[builddir], variable_sep=False)
-        return ntpath.normpath(path_str)
+        path_str = ntpath.normpath(thing.realize(
+            _path_vars[builddir], variable_sep=False
+        ))
+        if not quoted:
+            return path_str
+        elif thing.root == path.Root.absolute:
+            return wshell.quote(path_str, escape_percent=True)
+        else:
+            # Quote the path even if the suffix doesn't need any quotes, in
+            # case the root path does.
+            return wshell.force_quote(path_str, escape_percent=True)
     else:
         raise TypeError(type(thing))
 

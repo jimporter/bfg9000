@@ -34,9 +34,14 @@ class TestTextify(TestCase):
     def test_path(self):
         p1 = Path('foo')
         p2 = Path('foo', Root.srcdir)
+        p3 = Path('/foo', Root.absolute)
 
         self.assertEqual(textify(p1), '$(OutDir)foo')
+        self.assertEqual(textify(p1, quoted=True), '"$(OutDir)foo"')
         self.assertEqual(textify(p2), '$(SourceDir)foo')
+        self.assertEqual(textify(p2, quoted=True), '"$(SourceDir)foo"')
+        self.assertEqual(textify(p3), r'\foo')
+        self.assertEqual(textify(p3, quoted=True), r'\foo')
 
         self.assertEqual(textify(p1, builddir=BuildDir.intermediate),
                          '$(IntDir)foo')
@@ -46,6 +51,18 @@ class TestTextify(TestCase):
                          '$(SolutionDir)foo')
         self.assertEqual(textify(p2, builddir=BuildDir.solution),
                          '$(SourceDir)foo')
+
+    def test_path_spaces(self):
+        p1 = Path('foo bar')
+        p2 = Path('foo bar', Root.srcdir)
+        p3 = Path('/foo bar', Root.absolute)
+
+        self.assertEqual(textify(p1), '$(OutDir)foo bar')
+        self.assertEqual(textify(p1, quoted=True), '"$(OutDir)foo bar"')
+        self.assertEqual(textify(p2), '$(SourceDir)foo bar')
+        self.assertEqual(textify(p2, quoted=True), '"$(SourceDir)foo bar"')
+        self.assertEqual(textify(p3), r'\foo bar')
+        self.assertEqual(textify(p3, quoted=True), r'"\foo bar"')
 
     def test_file(self):
         class MockCreator:

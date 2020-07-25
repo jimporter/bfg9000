@@ -8,8 +8,8 @@ from ..platforms.host import platform_info
 from ..safe_str import jbos, safe_str, shell_literal
 
 __all__ = ['split', 'join', 'listify', 'inner_quote', 'inner_quote_info',
-           'wrap_quotes', 'quote', 'quote_info', 'escape_line', 'join_lines',
-           'local_env', 'global_env']
+           'wrap_quotes', 'quote_info', 'quote', 'force_quote', 'escape_line',
+           'join_lines', 'local_env', 'global_env']
 
 _bad_chars = re.compile(r'[^\w@%+=:,./-]')
 _ends_unescaped_quote = re.compile(r"(^|[^\\])(\\\\)*'$")
@@ -68,6 +68,10 @@ def quote_info(s):
 
 def quote(s):
     return quote_info(s)[0]
+
+
+def force_quote(s):
+    return wrap_quotes(inner_quote(s))
 
 
 def _escape_word(word):

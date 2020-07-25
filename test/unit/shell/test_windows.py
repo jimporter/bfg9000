@@ -75,6 +75,8 @@ class TestQuote(TestCase):
         self.assertEqual(windows.quote(original, **kwargs), quoted)
         self.assertEqual(windows.quote_info(original, **kwargs),
                          (quoted, needs_quote))
+        self.assertEqual(windows.force_quote(original, **kwargs),
+                         windows.wrap_quotes(inner_quoted))
 
     def test_empty(self):
         self.assertQuote('', False, '', '')

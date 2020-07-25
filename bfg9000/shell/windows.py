@@ -8,8 +8,8 @@ from .. import iterutils
 from ..safe_str import jbos, safe_str, shell_literal
 
 __all__ = ['split', 'join', 'listify', 'inner_quote', 'inner_quote_info',
-           'wrap_quotes', 'quote', 'quote_info', 'escape_line', 'join_lines',
-           'global_env']
+           'wrap_quotes', 'quote_info', 'quote', 'force_quote', 'escape_line',
+           'join_lines', 'global_env']
 
 # XXX: We need a way to escape cmd.exe-specific characters.
 _bad_chars = re.compile(r'(\s|"|\\$)')
@@ -113,6 +113,10 @@ def quote_info(s, escape_percent=False):
 
 def quote(s, escape_percent=False):
     return quote_info(s, escape_percent)[0]
+
+
+def force_quote(s, escape_percent=False):
+    return wrap_quotes(inner_quote(s, escape_percent))
 
 
 def escape_line(line, listify=False):
