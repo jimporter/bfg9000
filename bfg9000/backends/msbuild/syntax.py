@@ -203,7 +203,7 @@ class VcxProject(Project):
                                        self.files)
 
         self._write(out, [
-            E.Import(Project=r'$(VCTargetsPath)\Microsoft.Cpp.default.props'),
+            E.Import(Project=r'$(VCTargetsPath)\Microsoft.Cpp.Default.props'),
             E.PropertyGroup({'Label': 'Configuration'},
                 E.ConfigurationType(self.mode),
                 E.PlatformToolset(self.toolset)
@@ -214,7 +214,7 @@ class VcxProject(Project):
             self._compiles(sources, self._cl_compile),
             self._compiles(resources, self._resource_compile),
             self._links(self.objs),
-            E.Import(Project=r'$(VCTargetsPath)\Microsoft.Cpp.Targets')
+            E.Import(Project=r'$(VCTargetsPath)\Microsoft.Cpp.targets')
         ])
 
     def _compiles(self, files, func):
@@ -368,9 +368,8 @@ class CommandProject(Project):
             target.append(line)
 
         self._write(out, [
-            # Import the C++ properties to get $(OutDir). There might be a
-            # better way to handle this.
-            E.Import(Project=r'$(VCTargetsPath)\Microsoft.Cpp.default.props'),
+            # Import the C++ properties to get $(OutDir).
+            E.Import(Project=r'$(VCTargetsPath)\Microsoft.Cpp.Default.props'),
             E.Import(Project=r'$(VCTargetsPath)\Microsoft.Cpp.props'),
             target
         ])
