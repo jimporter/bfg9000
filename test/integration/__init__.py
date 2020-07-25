@@ -100,16 +100,15 @@ class SubprocessTestCase(TestCase):
 
     def assertPopen(self, command, input=None, *, env=None, extra_env=None,
                     returncode=0):
-        if env is None:
-            env = os.environ
+        final_env = env if env is not None else os.environ
         if extra_env:
-            env = env.copy()
-            env.update(extra_env)
+            final_env = final_env.copy()
+            final_env.update(extra_env)
 
         command = [self.target_path(i) for i in command]
         proc = subprocess.run(
             command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-            input=input, env=env, universal_newlines=True
+            input=input, env=final_env, universal_newlines=True
         )
         if not (returncode == 'any' or
                 (returncode == 'fail' and proc.returncode != 0) or
