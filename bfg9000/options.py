@@ -116,13 +116,6 @@ class ForwardOptions:
 variadic = namedtuple('variadic', ['type'])
 
 
-# XXX: This is a separate function to make Python 2.7.8 and earlier happy. For
-# details, see <https://bugs.python.org/issue21591>.
-def _make_init(slots, attrs):
-    exec('def __init__(self, {0}):\n    self._init({0})'
-         .format(', '.join(slots)), globals(), attrs)
-
-
 class OptionMeta(type):
     @staticmethod
     def _make_args(slots, types):
@@ -143,7 +136,9 @@ class OptionMeta(type):
                       '_types': types})
 
         if '__init__' not in attrs:
-            _make_init(cls._make_args(slots, types), attrs)
+            exec('def __init__(self, {0}):\n    self._init({0})'.format(
+                ', '.join(cls._make_args(slots, types))
+            ), globals(), attrs)
 
         return type.__new__(cls, name, bases, attrs)
 
