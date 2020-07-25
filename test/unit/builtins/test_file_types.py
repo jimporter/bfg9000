@@ -140,6 +140,18 @@ class TestAutoFile(BuiltinTest):
                             expected)
         self.assertEqual(list(self.build.sources()), [self.bfgfile, expected])
 
+    def test_src_lang(self):
+        expected_src = SourceFile(srcpath('file.cpp'), 'qtmoc')
+        self.assertSameFile(self.context['auto_file']('file.cpp', 'qtmoc'),
+                            expected_src)
+
+        expected_hdr = HeaderFile(srcpath('file.hpp'), 'qtmoc')
+        self.assertSameFile(self.context['auto_file']('file.hpp', 'qtmoc'),
+                            expected_hdr)
+        self.assertEqual(list(self.build.sources()), [
+            self.bfgfile, expected_src, expected_hdr,
+        ])
+
     def test_unknown_ext(self):
         expected = SourceFile(srcpath('file.goofy'), 'c++')
         self.assertSameFile(self.context['auto_file']('file.goofy', 'c++'),
