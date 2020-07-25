@@ -19,11 +19,11 @@ equivalent to bfg9000.
 
 !!! note
     While absolute paths are rarely needed in a `build.bfg` script, it's still
-    possible to use them. However, there are some caveats: 1) POSIX-style
-    absolute paths will refer to that (absolute) path on the *current* drive,
-    2) Windows-style absolute paths will fail to work on POSIX systems, and 3)
-    Windows-style paths with a drive letter and a *relative* path (e.g. `C:foo`)
-    are unsupported by bfg9000.
+    possible to use them. However, there are some caveats: 1) on Windows,
+    POSIX-style absolute paths will refer to that (absolute) path on the
+    *current* drive, 2) Windows-style absolute paths will fail to work on POSIX
+    systems, and 3) Windows-style paths with a drive letter and a *relative*
+    path (e.g. `C:foo`) are unsupported by bfg9000.
 
 ## File objects
 

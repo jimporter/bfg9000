@@ -14,6 +14,7 @@ extra_javascript:
 markdown_extensions:
   - admonition
   - attr_list
+  - def_list
   - toc:
       permalink: §
 
@@ -32,6 +33,7 @@ nav:
   - Reference:
     - Builtin Functions: reference/builtins.md
     - Command-Line Interface: reference/command-line.md
+    - Supported Languages: reference/languages.md
     - Environment Variables: reference/environment-vars.md
   - About:
     - Changes: about/changes.md
