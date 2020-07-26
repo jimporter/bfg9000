@@ -91,8 +91,7 @@ class Link(Edge):
         primary.post_install = self.linker.post_install(options, output, self)
 
         super().__init__(build, output, public_output, extra_deps, description)
-
-        build['defaults'].add(primary)
+        build['defaults'].add(self.public_output)
 
     @classmethod
     def convert_args(cls, context, name, files, kwargs):
@@ -544,20 +543,22 @@ try:
 
         return compiler.parse_flags(msbuild.textify_each(cflags))
 
-    def _parse_ldflags(rule, output, global_options):
+    def _parse_ldflags(rule, global_options):
         linker = rule.linker
         gopts = global_options[rule.base_mode][linker.family]
+        primary = first(rule.output)
 
         ldflags = [linker.global_flags + linker.flags(gopts) +
                    rule.flags(gopts)]
         if hasattr(rule.linker, 'libs_var'):
             ldflags.append(linker.global_libs + linker.lib_flags(gopts) +
                            rule.lib_flags(gopts))
+
         link_options = linker.parse_flags(
             *[msbuild.textify_each(i) for i in ldflags]
         )
-        if hasattr(output, 'import_lib'):
-            link_options['import_lib'] = output.import_lib
+        if hasattr(primary, 'import_lib'):
+            link_options['import_lib'] = primary.import_lib
 
         return link_options
 
@@ -568,7 +569,6 @@ try:
             raise ValueError('msbuild backend currently only supports c/c++ ' +
                              'with msvc')
 
-        output = rule.output[0]
         global_compile_opts = build_inputs['compile_options']
         global_link_opts = build_inputs['link_options']
 
@@ -618,7 +618,7 @@ try:
         project = msbuild.VcxProject(
             env, name=rule.name,
             mode=rule.msbuild_mode,
-            output_file=output,
+            output_file=first(rule.output),
             files=[{
                 'name': get_source(i),
                 'options': _parse_file_cflags(
@@ -628,9 +628,9 @@ try:
             } for i in rule.files],
             objs=objs,
             compile_options=common_compile_options,
-            link_options=_parse_ldflags(rule, output, global_link_opts),
+            link_options=_parse_ldflags(rule, global_link_opts),
             dependencies=solution.dependencies(deps),
         )
-        solution[output] = project
+        solution[first(rule.public_output)] = project
 except ImportError:  # pragma: no cover
     pass

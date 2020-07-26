@@ -107,7 +107,7 @@ class TestSolution(TestCase):
         class MockOutput:
             class MockCreator:
                 def __init__(self, output):
-                    self.output = output
+                    self.public_output = output
 
             def __init__(self, output=None):
                 self.creator = self.MockCreator(output) if output else None
@@ -123,6 +123,20 @@ class TestSolution(TestCase):
         with self.assertRaises(RuntimeError):
             self.sln.dependencies([ MockOutput([Phony('wrong')]) ])
 
+    def test_set_default(self):
+        foo_proj = Project(FakeEnv(), 'foo_proj')
+        self.sln[Phony('foo')] = foo_proj
+        bar_proj = Project(FakeEnv(), 'bar_proj')
+        self.sln[Phony('bar')] = bar_proj
+
+        self.assertEqual(list(iter(self.sln)), [foo_proj, bar_proj])
+
+        self.sln.set_default(Phony('bar'))
+        self.assertEqual(list(iter(self.sln)), [bar_proj, foo_proj])
+
+        self.sln.set_default(Phony('nonexist'))
+        self.assertEqual(list(iter(self.sln)), [bar_proj, foo_proj])
+
     def test_write(self):
         class MockDependency:
             uuid_str = '{00000000-0000-0000-0000-000000000001}'
@@ -137,12 +151,33 @@ class TestSolution(TestCase):
         guid_ex = '{[A-Z0-9-]+}'
         self.assertRegex(out.getvalue(), (
             r'(?m)^Project\("{0}"\) = "{1}", "{1}.{1}\.proj", "{0}"\n'
+            r'EndProject\n'
+            r'Project\("{0}"\) = "{2}", "{2}.{2}\.proj", "{0}"\n'
+            r'\tProjectSection\(ProjectDependencies\) = postProject\n'
+            r'\t\t{0} = {0}\n'
+            r'\tEndProjectSection\n'
             r'EndProject$'
-        ).format(guid_ex, 'foo_proj'))
+        ).format(guid_ex, 'foo_proj', 'bar_proj'))
+
+    def test_write_set_default(self):
+        class MockDependency:
+            uuid_str = '{00000000-0000-0000-0000-000000000001}'
+
+        foo_proj = Project(FakeEnv(), 'foo_proj')
+        self.sln[Phony('foo')] = foo_proj
+        bar_proj = Project(FakeEnv(), 'bar_proj', dependencies=[foo_proj])
+        self.sln[Phony('bar')] = bar_proj
+        self.sln.set_default(Phony('bar'))
+
+        out = StringIO()
+        self.sln.write(out)
+        guid_ex = '{[A-Z0-9-]+}'
         self.assertRegex(out.getvalue(), (
             r'(?m)^Project\("{0}"\) = "{1}", "{1}.{1}\.proj", "{0}"\n'
             r'\tProjectSection\(ProjectDependencies\) = postProject\n'
             r'\t\t{0} = {0}\n'
             r'\tEndProjectSection\n'
+            r'EndProject\n'
+            r'Project\("{0}"\) = "{2}", "{2}.{2}\.proj", "{0}"\n'
             r'EndProject$'
-        ).format(guid_ex, 'bar_proj'))
+        ).format(guid_ex, 'bar_proj', 'foo_proj'))

@@ -52,3 +52,21 @@ def ninja_all_rule(build_inputs, buildfile, env):
         rule='phony',
         inputs=build_inputs['defaults'].outputs,
     )
+
+
+try:
+    from ..backends.msbuild import writer as msbuild
+
+    @msbuild.post_rule
+    def msbuild_default(build_inputs, solution, env):
+        # Default builds go first in the solution. As a partial implementation,
+        # we treat the first explicit default or the last implicit default as
+        # the "default project". XXX: For full support, we'd need to support
+        # aliases so that we can have multiple builds be the default.
+        defaults = build_inputs['defaults']
+        if defaults.default_outputs:
+            solution.set_default(defaults.default_outputs[0])
+        elif defaults.fallback_defaults:
+            solution.set_default(defaults.fallback_defaults[-1])
+except ImportError:  # pragma: no cover
+    pass

@@ -1,7 +1,9 @@
 import json
 import uuid
+from collections import OrderedDict
 
 from ... import path
+from ...iterutils import first
 
 __all__ = ['SlnBuilder', 'SlnElement', 'SlnVariable', 'Solution', 'UuidMap']
 
@@ -65,22 +67,27 @@ class Solution:
     def __init__(self, uuids):
         self.uuid = uuids['']
         self._uuids = uuids
-        self._projects = []
-        self._project_map = {}
+        self._projects = OrderedDict()
 
     def __setitem__(self, key, value):
         value.set_uuid(self._uuids)
-        self._projects.append(value)
-        self._project_map[key] = value
+        self._projects[key] = value
 
     def __getitem__(self, key):
-        return self._project_map[key]
+        return self._projects[key]
+
+    def set_default(self, key):
+        if key not in self._projects:
+            return
+        new_projects = OrderedDict([ ('key', self._projects.pop(key)) ])
+        new_projects.update(self._projects)
+        self._projects = new_projects
 
     def __iter__(self):
-        return iter(self._projects)
+        return iter(self._projects.values())
 
     def __contains__(self, key):
-        return key in self._project_map
+        return key in self._projects
 
     def dependencies(self, deps):
         # By definition, a dependency for an edge must already be defined by
@@ -92,7 +99,7 @@ class Solution:
             if not dep.creator:
                 continue
 
-            dep_output = dep.creator.output[0]
+            dep_output = first(dep.creator.public_output)
             if dep_output not in self:
                 raise RuntimeError('unknown dependency for {!r}'.format(dep))
             dependencies.append(self[dep_output])
@@ -116,7 +123,7 @@ class Solution:
         configs = set()
         project_info = []
 
-        for p in self._projects:
+        for p in self:
             path_vars = {path.Root.builddir: None}
             proj = S.Project(
                 '"{}"'.format(self.uuid_str),
