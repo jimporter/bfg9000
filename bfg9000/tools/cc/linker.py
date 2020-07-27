@@ -156,10 +156,10 @@ class CcLinker(BuildCommand):
         changed = False
         for i in options:
             if isinstance(i, opts.lib):
-                lib = i.library
-                if isinstance(lib, Library) and lib.runtime_file:
-                    local = self._local_rpath(lib, output)[0][0]
-                    installed = file_install_path(lib, cross=self.env).parent()
+                if isinstance(i.library, Library) and i.library.runtime_file:
+                    runtime = i.library.runtime_file
+                    local = self._local_rpath(runtime, output)[0][0]
+                    installed = file_install_path(runtime, self.env).parent()
                     result.append(installed)
                     if not isinstance(local, BasePath) or local != installed:
                         changed = True
