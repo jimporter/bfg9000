@@ -2,13 +2,14 @@ import os
 import re
 from itertools import chain
 
+from .. import install_name_tool, patchelf
 from ... import options as opts, safe_str, shell
 from .flags import optimize_flags
 from ..common import BuildCommand, darwin_install_name, library_macro
 from ...builtins.copy_file import CopyFile
 from ...file_types import *
 from ...iterutils import first, iterate, listify, recursive_walk, uniques
-from ...path import abspath, BasePath, InstallRoot, Path, Root
+from ...path import abspath, Path
 from ...versioning import SpecifierSet
 from ...packages import Framework
 
@@ -117,18 +118,9 @@ class CcLinker(BuildCommand):
              self.builder.object_format != 'elf' ):
             return None, []
 
-        runtime_lib = library.runtime_file
-        if not runtime_lib:
+        rpath = patchelf.local_rpath(self.env, library, output)
+        if rpath is None:
             return None, []
-
-        rpath = runtime_lib.path.parent().cross(self.env)
-        if rpath.root != Root.absolute and rpath.root not in InstallRoot:
-            if not output:
-                raise ValueError('unable to construct rpath')
-            # This should almost always be true, except for when linking to a
-            # shared library stored in the srcdir.
-            if rpath.root == output.path.root:
-                rpath = rpath.relpath(output.path.parent(), prefix='$ORIGIN')
 
         # Prior to binutils 2.28, GNU's BFD-based ld doesn't correctly respect
         # $ORIGIN in a shared library's DT_RPATH/DT_RUNPATH field. This results
@@ -145,29 +137,9 @@ class CcLinker(BuildCommand):
         rpath_link = []
         if output and fix_rpath:
             rpath_link = [i.path.parent() for i in
-                          recursive_walk(runtime_lib, 'runtime_deps')]
+                          recursive_walk(library.runtime_file, 'runtime_deps')]
 
         return rpath, rpath_link
-
-    def _installed_rpaths(self, options, output):
-        result = []
-        changed = False
-        for i in options:
-            if isinstance(i, opts.lib):
-                local = self._local_rpath(i.library, output)[0]
-                if local is not None:
-                    installed = file_install_path(i.library.runtime_file,
-                                                  cross=self.env).parent()
-                    result.append(installed)
-                    if not isinstance(local, BasePath) or local != installed:
-                        changed = True
-            elif isinstance(i, opts.rpath_dir):
-                if i.when & opts.RpathWhen.installed:
-                    if not (i.when & opts.RpathWhen.uninstalled):
-                        changed = True
-                    result.append(i.path)
-
-        return uniques(result) if changed else []
 
     def always_libs(self, primary):
         # XXX: Don't just asssume that these are the right libraries to use.
@@ -322,23 +294,11 @@ class CcLinker(BuildCommand):
         if self.builder.object_format not in ['elf', 'mach-o']:
             return None
 
-        path = file_install_path(output)
-
         if self.builder.object_format == 'elf':
-            rpath = self._installed_rpaths(options, output)
-            return self.env.tool('patchelf')(path, rpath)
+            return patchelf.post_install(self.env, options, output)
         else:  # mach-o
-            change_opts = options.filter(opts.install_name_change)
-            changes = (
-                [(i.old, i.new) for i in change_opts] +
-                [(darwin_install_name(i, self.env),
-                  file_install_path(i, cross=self.env))
-                 for i in output.runtime_deps]
-            )
-
-            return self.env.tool('install_name_tool')(
-                path, id=path.cross(self.env) if self._is_library else None,
-                changes=changes
+            return install_name_tool.post_install(
+                self.env, options, output, is_library=self._is_library
             )
 
 
