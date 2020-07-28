@@ -113,53 +113,51 @@ class CcLinker(BuildCommand):
         return []
 
     def _local_rpath(self, library, output):
-        if not isinstance(library, Library):
-            return [], []
+        if ( not isinstance(library, Library) or
+             self.builder.object_format != 'elf' ):
+            return None, []
 
         runtime_lib = library.runtime_file
-        if runtime_lib and self.builder.object_format == 'elf':
-            path = runtime_lib.path.parent().cross(self.env)
-            if path.root != Root.absolute and path.root not in InstallRoot:
-                if not output:
-                    raise ValueError('unable to construct rpath')
-                # This should almost always be true, except for when linking to
-                # a shared library stored in the srcdir.
-                if path.root == output.path.root:
-                    path = path.relpath(output.path.parent(), prefix='$ORIGIN')
-            rpath = [path]
+        if not runtime_lib:
+            return None, []
 
-            # Prior to binutils 2.28, GNU's BFD-based ld doesn't correctly
-            # respect $ORIGIN in a shared library's DT_RPATH/DT_RUNPATH field.
-            # This results in ld being unable to find other shared libraries
-            # needed by the directly-linked library. For more information, see:
-            # <https://sourceware.org/bugzilla/show_bug.cgi?id=20535>.
-            try:
-                ld = self.builder.linker('raw')
-                fix_rpath = (ld.brand == 'bfd' and ld.version in
-                             SpecifierSet('<2.28'))
-            except KeyError:
-                fix_rpath = False
+        rpath = runtime_lib.path.parent().cross(self.env)
+        if rpath.root != Root.absolute and rpath.root not in InstallRoot:
+            if not output:
+                raise ValueError('unable to construct rpath')
+            # This should almost always be true, except for when linking to a
+            # shared library stored in the srcdir.
+            if rpath.root == output.path.root:
+                rpath = rpath.relpath(output.path.parent(), prefix='$ORIGIN')
 
-            rpath_link = []
-            if output and fix_rpath:
-                rpath_link = [i.path.parent() for i in
-                              recursive_walk(runtime_lib, 'runtime_deps')]
+        # Prior to binutils 2.28, GNU's BFD-based ld doesn't correctly respect
+        # $ORIGIN in a shared library's DT_RPATH/DT_RUNPATH field. This results
+        # in ld being unable to find other shared libraries needed by the
+        # directly-linked library. For more information, see:
+        # <https://sourceware.org/bugzilla/show_bug.cgi?id=20535>.
+        try:
+            ld = self.builder.linker('raw')
+            fix_rpath = (ld.brand == 'bfd' and ld.version in
+                         SpecifierSet('<2.28'))
+        except KeyError:
+            fix_rpath = False
 
-            return rpath, rpath_link
+        rpath_link = []
+        if output and fix_rpath:
+            rpath_link = [i.path.parent() for i in
+                          recursive_walk(runtime_lib, 'runtime_deps')]
 
-        # Either we don't need rpaths or the object format must not support
-        # them, so just return nothing.
-        return [], []
+        return rpath, rpath_link
 
     def _installed_rpaths(self, options, output):
         result = []
         changed = False
         for i in options:
             if isinstance(i, opts.lib):
-                if isinstance(i.library, Library) and i.library.runtime_file:
-                    runtime = i.library.runtime_file
-                    local = self._local_rpath(runtime, output)[0][0]
-                    installed = file_install_path(runtime, self.env).parent()
+                local = self._local_rpath(i.library, output)[0]
+                if local is not None:
+                    installed = file_install_path(i.library.runtime_file,
+                                                  cross=self.env).parent()
                     result.append(installed)
                     if not isinstance(local, BasePath) or local != installed:
                         changed = True
@@ -264,7 +262,7 @@ class CcLinker(BuildCommand):
                 lib_dirs.extend(self._lib_dir(i.library, not pkgconf_mode))
                 if not pkgconf_mode:
                     rp, rplink = self._local_rpath(i.library, output)
-                    rpaths.extend(rp)
+                    rpaths.extend(iterate(rp))
                     rpath_links.extend(rplink)
             elif isinstance(i, opts.rpath_dir):
                 if not pkgconf_mode and i.when & opts.RpathWhen.uninstalled:
