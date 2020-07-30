@@ -240,12 +240,12 @@ class LinkLibrary(SharedLibrary):
         return super().clone(path, False, inner)
 
 
-@_clone_traits(subfiles={'soname': 'soname', 'link': 'linkname'})
+@_clone_traits(subfiles={'soname': 'soname_path', 'link': 'linkname_path'})
 class VersionedSharedLibrary(SharedLibrary):
-    def __init__(self, path, format, lang, soname, linkname):
+    def __init__(self, path, format, lang, soname_path, linkname_path):
         super().__init__(path, format, lang)
-        self.soname = LinkLibrary(soname, self)
-        self.link = LinkLibrary(linkname, self.soname)
+        self.soname = LinkLibrary(soname_path, self)
+        self.link = LinkLibrary(linkname_path, self.soname)
 
 
 class StaticLibrary(Library):
@@ -272,16 +272,16 @@ class ExportFile(File):
 # anything with a .dll extension (for instance, .NET DLLs are just regular
 # shared libraries). While this is a "library" in some senses, since you can't
 # link to it during building, we just consider it a LinkedBinary.
-@_clone_traits(subfiles={'import_lib': 'import_name',
-                         'export_file': 'export_name'})
+@_clone_traits(subfiles={'import_lib': 'import_path',
+                         'export_file': 'export_path'})
 class DllBinary(LinkedBinary):
     install_root = _InstallRoot.bindir
     private = True
 
-    def __init__(self, path, format, lang, import_name, export_name=None):
+    def __init__(self, path, format, lang, import_path, export_path=None):
         super().__init__(path, format, lang)
-        self.import_lib = LinkLibrary(import_name, self)
-        self.export_file = ExportFile(export_name) if export_name else None
+        self.import_lib = LinkLibrary(import_path, self)
+        self.export_file = ExportFile(export_path) if export_path else None
 
 
 class DualUseLibrary(BaseFile):

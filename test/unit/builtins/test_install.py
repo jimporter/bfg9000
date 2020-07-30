@@ -132,18 +132,18 @@ class TestInstallify(FileTest):
     def test_installify_private(self):
         self._check(DllBinary, Path('foo/bar.dll', Root.srcdir),
                     Path('bar.dll', InstallRoot.bindir, True),
-                    {'import_name': Path('foo/bar.lib', Root.srcdir),
-                     'export_name': Path('foo/bar.exp', Root.srcdir)},
-                    {'import_name': Path('bar.lib', InstallRoot.libdir, True),
-                     'export_name': Path('foo/bar.exp', Root.srcdir)},
+                    {'import_path': Path('foo/bar.lib', Root.srcdir),
+                     'export_path': Path('foo/bar.exp', Root.srcdir)},
+                    {'import_path': Path('bar.lib', InstallRoot.libdir, True),
+                     'export_path': Path('foo/bar.exp', Root.srcdir)},
                     format=None, lang='c++')
         self._check(DllBinary, Path('foo/bar.dll', Root.builddir),
                     Path('foo/bar.dll', InstallRoot.bindir, True),
-                    {'import_name': Path('foo/bar.lib', Root.builddir),
-                     'export_name': Path('foo/bar.exp', Root.builddir)},
-                    {'import_name': Path('foo/bar.lib', InstallRoot.libdir,
+                    {'import_path': Path('foo/bar.lib', Root.builddir),
+                     'export_path': Path('foo/bar.exp', Root.builddir)},
+                    {'import_path': Path('foo/bar.lib', InstallRoot.libdir,
                                          True),
-                     'export_name': Path('foo/bar.exp', Root.builddir)},
+                     'export_path': Path('foo/bar.exp', Root.builddir)},
                     format=None, lang='c++')
 
     def test_installify_not_installable(self):
