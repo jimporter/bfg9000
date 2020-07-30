@@ -2,7 +2,7 @@ import re
 import warnings
 
 from .. import options as opts
-from .. import file_types, path, shell
+from .. import path, shell
 from ..iterutils import first, iterate, listify, slice_dict
 
 _modes = {
@@ -22,20 +22,6 @@ def library_macro(name, mode):
         name=_macro_ex2.sub('LIB_', _macro_ex.sub('_', name.upper())),
         suffix=_modes[mode]
     )
-
-
-def darwin_install_name(library, env, strict=True):
-    while isinstance(library, file_types.LinkLibrary):
-        library = library.library
-
-    if isinstance(library, file_types.VersionedSharedLibrary):
-        return library.soname.path.string(env.base_dirs)
-    elif isinstance(library, file_types.SharedLibrary):
-        return library.path.string(env.base_dirs)
-    elif strict:  # pragma: no cover
-        raise TypeError('unable to create darwin install_name')
-    else:
-        return None
 
 
 # Make a function to convert between command names for different languages in

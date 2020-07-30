@@ -1,9 +1,11 @@
 from unittest import mock
 
 from ... import *
+from .. import MockInstallOutputs
 from .common import known_langs, mock_execute, mock_which
 
 from bfg9000 import options as opts
+from bfg9000.builtins.install import installify
 from bfg9000.file_types import *
 from bfg9000.tools.cc import CcBuilder
 from bfg9000.packages import Framework
@@ -346,64 +348,66 @@ class TestCcLinker(CrossPlatformTestCase):
         shared_abs = SharedLibrary(self.Path('/path/to/libfoo.so'), 'native')
         static = StaticLibrary(self.Path('libfoo.a'), 'native')
 
+        install_outputs = MockInstallOutputs(self.env)
         with mock.patch('bfg9000.shell.which', return_value=['command']):
             # Local shared lib
-            cmd = self.linker.post_install(opts.option_list(opts.lib(shared)),
-                                           output, None)
-            self.assertEqual(cmd, [
+            fn = self.linker.post_install(opts.option_list(opts.lib(shared)),
+                                          output, None)
+            self.assertEqual(fn(install_outputs), [
                 self.env.tool('patchelf'), '--set-rpath',
-                self.Path('', InstallRoot.libdir), file_install_path(output)
+                self.Path('', InstallRoot.libdir), installify(output).path
             ])
 
             # Absolute shared lib
-            cmd = self.linker.post_install(
+            fn = self.linker.post_install(
                 opts.option_list(opts.lib(shared_abs)), output, None
             )
-            self.assertEqual(cmd, None)
+            self.assertEqual(fn(install_outputs), None)
 
             # Local static lib
-            cmd = self.linker.post_install(opts.option_list(opts.lib(static)),
-                                           output, None)
-            self.assertEqual(cmd, None)
+            fn = self.linker.post_install(opts.option_list(opts.lib(static)),
+                                          output, None)
+            self.assertEqual(fn(install_outputs), None)
 
             # Explicit rpath dir
-            cmd = self.linker.post_install(opts.option_list(
+            fn = self.linker.post_install(opts.option_list(
                 opts.rpath_dir(self.Path('/path'))
             ), output, None)
-            self.assertEqual(cmd, None)
+            self.assertEqual(fn(install_outputs), None)
 
             # Mixed
-            cmd = self.linker.post_install(opts.option_list(
+            fn = self.linker.post_install(opts.option_list(
                 opts.lib(shared), opts.lib(shared_abs), opts.lib(static),
                 opts.rpath_dir(self.Path('/path')),
                 opts.rpath_dir(self.Path('/path/to'))
             ), output, None)
-            self.assertEqual(cmd, [
+            self.assertEqual(fn(install_outputs), [
                 self.env.tool('patchelf'), '--set-rpath',
                 (self.Path('', InstallRoot.libdir) + ':' +
                  self.Path('/path/to') + ':' + self.Path('/path')),
-                file_install_path(output)
+                installify(output).path
             ])
 
     @only_if_platform('macos', hide=True)
     def test_post_installed_macos(self):
         output = self._get_output_file()
-        installed = file_install_path(output)
+        installed = installify(output).path
         deplib = SharedLibrary(self.Path('libfoo.so'), 'native')
 
+        install_outputs = MockInstallOutputs(self.env)
         with mock.patch('bfg9000.shell.which', return_value=['command']):
             install_name_tool = self.env.tool('install_name_tool')
 
             # No runtime deps
-            cmd = self.linker.post_install(opts.option_list(), output, None)
-            self.assertEqual(cmd, [
+            fn = self.linker.post_install(opts.option_list(), output, None)
+            self.assertEqual(fn(install_outputs), [
                 install_name_tool, '-id', installed.cross(self.env), installed
             ] if self.shared else None)
 
-            cmd = self.linker.post_install(opts.option_list(
+            fn = self.linker.post_install(opts.option_list(
                 opts.install_name_change('old.dylib', 'new.dylib')
             ), output, None)
-            self.assertEqual(cmd, (
+            self.assertEqual(fn(install_outputs), (
                 [install_name_tool] +
                 (['-id', installed.cross(self.env)] if self.shared else []) +
                 ['-change', 'old.dylib', 'new.dylib', installed]
@@ -411,14 +415,14 @@ class TestCcLinker(CrossPlatformTestCase):
 
             # Dependent on local shared lib
             output.runtime_deps = [deplib]
-            cmd = self.linker.post_install(
+            fn = self.linker.post_install(
                 opts.option_list(opts.lib(deplib)), output, None
             )
-            self.assertEqual(cmd, (
+            self.assertEqual(fn(install_outputs), (
                 [install_name_tool] +
                 (['-id', installed.cross(self.env)] if self.shared else []) +
                 ['-change', deplib.path.string(self.env.base_dirs),
-                 file_install_path(deplib, cross=self.env), installed]
+                 installify(deplib, cross=self.env).path, installed]
             ))
 
 

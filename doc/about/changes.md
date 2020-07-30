@@ -49,6 +49,8 @@ in progress
   causes configuration to fail
 - Automatically-generated PCH source files (for MSVC compilers) are now placed
   in the same directory as the resulting PCH
+- The contents of header directories in the build directory are now installed to
+  the base include directory
 - The `install_name` for libraries on macOS is now always an absolute path,
   instead of using `@rpath`-based paths prior to installation
 - MSBuild backend can now build libraries with no source files that link to a

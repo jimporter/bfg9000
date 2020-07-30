@@ -95,6 +95,16 @@ class TestPath(PathTestCase):
         self.assertEqual(p.root, path.InstallRoot.bindir)
         self.assertEqual(p.destdir, True)
 
+        p = self.Path('/foo/bar', path.Root.absolute, True)
+        self.assertEqual(p.suffix, '/foo/bar')
+        self.assertEqual(p.root, path.Root.absolute)
+        self.assertEqual(p.destdir, True)
+
+        p = self.Path('/foo/bar', path.InstallRoot.bindir, True)
+        self.assertEqual(p.suffix, '/foo/bar')
+        self.assertEqual(p.root, path.Root.absolute)
+        self.assertEqual(p.destdir, True)
+
         self.assertRaises(ValueError, self.Path, 'foo/bar', path.Root.srcdir,
                           True)
 
@@ -442,6 +452,12 @@ class TestPath(PathTestCase):
         self.assertEqual(p.realize(path_vars_with_destdir),
                          self.ospath.join('$(destdir)$(bindir)', 'foo'))
 
+        p = self.Path('/foo', path.Root.absolute, True)
+        self.assertEqual(p.realize(path_variables),
+                         self.ospath.join(self.ospath.sep, 'foo'))
+        self.assertEqual(p.realize(path_vars_with_destdir),
+                         self.ospath.join('$(destdir)', 'foo'))
+
     def test_realize_no_variable_sep(self):
         p = self.Path('foo', path.Root.srcdir)
         self.assertEqual(p.realize(path_variables, variable_sep=False),
@@ -501,77 +517,6 @@ class TestAbsPath(TestCase):
                              path.Path('C:/foo/bar', path.Root.absolute))
             self.assertEqual(path.abspath('D:/foo/bar'),
                              path.Path('D:/foo/bar', path.Root.absolute))
-
-
-class TestInstallPath(TestCase):
-    def test_install_path_file(self):
-        p = path.Path('foo/bar', path.Root.srcdir)
-        self.assertEqual(path.install_path(p, path.InstallRoot.bindir),
-                         path.Path('bar', path.InstallRoot.bindir, True))
-
-        p = path.Path('foo/bar', path.Root.builddir)
-        self.assertEqual(path.install_path(p, path.InstallRoot.bindir),
-                         path.Path('foo/bar', path.InstallRoot.bindir, True))
-
-        p = path.abspath('/foo/bar')
-        with self.assertRaises(TypeError):
-            path.install_path(p, path.InstallRoot.bindir)
-
-    def test_install_path_directory(self):
-        p = path.Path('foo/bar', path.Root.srcdir)
-        self.assertEqual(path.install_path(p, path.InstallRoot.bindir, True),
-                         path.Path('', path.InstallRoot.bindir, True))
-
-        p = path.Path('foo/bar', path.Root.builddir)
-        self.assertEqual(path.install_path(p, path.InstallRoot.bindir, True),
-                         path.Path('foo/bar', path.InstallRoot.bindir, True))
-
-        p = path.abspath('/foo/bar')
-        with self.assertRaises(TypeError):
-            path.install_path(p, path.InstallRoot.bindir, True)
-
-    def test_install_path_cross(self):
-        for name in ('winnt', 'linux'):
-            platform = target.platform_info(name)
-            env = MockEnv(platform)
-
-            p = path.Path('foo/bar', path.Root.srcdir)
-            self.assertEqual(
-                path.install_path(p, path.InstallRoot.bindir, cross=env),
-                platform.Path('bar', path.InstallRoot.bindir)
-            )
-
-            p = path.Path('foo/bar', path.Root.builddir)
-            self.assertEqual(
-                path.install_path(p, path.InstallRoot.bindir, cross=env),
-                platform.Path('foo/bar', path.InstallRoot.bindir)
-            )
-
-            p = path.Path('/foo/bar', path.Root.absolute)
-            self.assertEqual(
-                path.install_path(p, path.InstallRoot.bindir, cross=env),
-                platform.Path('/foo/bar', path.Root.absolute)
-            )
-
-    def test_install_path_cross_directory(self):
-        for name in ('winnt', 'linux'):
-            platform = target.platform_info(name)
-            env = MockEnv(platform)
-
-            p = path.Path('foo/bar', path.Root.srcdir)
-            self.assertEqual(path.install_path(p, path.InstallRoot.bindir,
-                                               True, cross=env),
-                             platform.Path('', path.InstallRoot.bindir))
-
-            p = path.Path('foo/bar', path.Root.builddir)
-            self.assertEqual(path.install_path(p, path.InstallRoot.bindir,
-                                               True, cross=env),
-                             platform.Path('foo/bar', path.InstallRoot.bindir))
-
-            p = path.Path('/foo/bar', path.Root.absolute)
-            self.assertEqual(path.install_path(p, path.InstallRoot.bindir,
-                                               True, cross=env),
-                             platform.Path('/foo/bar', path.Root.absolute))
 
 
 class TestCommonPrefix(TestCase):

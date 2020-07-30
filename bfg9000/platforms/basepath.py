@@ -26,13 +26,13 @@ class BasePath(safe_str.safe_string):
     )
 
     def __init__(self, path, root=Root.builddir, destdir=False):
-        if destdir and isinstance(root, Root):
-            raise ValueError('destdir only applies to install paths')
+        if destdir and isinstance(root, Root) and root != Root.absolute:
+            raise ValueError('destdir only applies to absolute or install ' +
+                             'paths')
         drive, path = self.__normalize(path, expand_user=True)
 
         if posixpath.isabs(path):
             root = Root.absolute
-            destdir = False
         elif root == Root.absolute:
             raise ValueError("'{}' is not absolute".format(path))
         elif isinstance(root, BasePath):
@@ -158,14 +158,20 @@ class BasePath(safe_str.safe_string):
         return cls(data[0], base, data[2])
 
     def realize(self, variables, executable=False, variable_sep=True):
-        root = variables[self.root] if self.root != Root.absolute else None
+        if self.root == Root.absolute:
+            variable_sep = False
+            root = None
+        else:
+            root = variables[self.root]
+
         if executable and root is None and posixpath.sep not in self.suffix:
             root = posixpath.curdir
 
         # Not all platforms (e.g. Windows) support $(DESTDIR), so only emit the
         # destdir variable if it's defined.
         if self.destdir and DestDir.destdir in variables:
-            root = variables[DestDir.destdir] + root
+            destdir = variables[DestDir.destdir]
+            root = destdir if root is None else destdir + root
         if root is None:
             return self.__localize(self.suffix or posixpath.curdir)
         if not self.suffix:

@@ -2,9 +2,8 @@ from unittest import mock
 
 from .. import *
 
-from bfg9000 import file_types
 from bfg9000.languages import Languages
-from bfg9000.path import Path, Root
+from bfg9000.path import Root
 from bfg9000.tools import cc, common
 
 known_langs = Languages()
@@ -54,34 +53,6 @@ class TestLibraryMacro(TestCase):
                          'LIB_1_LIBFOO_EXPORTS')
         self.assertEqual(common.library_macro('1/libfoo', 'static_library'),
                          'LIB_1_LIBFOO_STATIC')
-
-
-class TestDarwinInstallName(TestCase):
-    def setUp(self):
-        self.env = make_env()
-
-    def test_shared_library(self):
-        lib = file_types.SharedLibrary(Path('libfoo.dylib'), 'native')
-        self.assertEqual(common.darwin_install_name(lib, self.env),
-                         self.env.builddir.append('libfoo.dylib').string())
-
-    def test_versioned_shared_library(self):
-        lib = file_types.VersionedSharedLibrary(
-            Path('libfoo.1.2.3.dylib'), 'native', 'c', Path('libfoo.1.dylib'),
-            Path('libfoo.dylib')
-        )
-        self.assertEqual(common.darwin_install_name(lib, self.env),
-                         self.env.builddir.append('libfoo.1.dylib').string())
-        self.assertEqual(common.darwin_install_name(lib.soname, self.env),
-                         self.env.builddir.append('libfoo.1.dylib').string())
-        self.assertEqual(common.darwin_install_name(lib.link, self.env),
-                         self.env.builddir.append('libfoo.1.dylib').string())
-
-    def test_static_library(self):
-        lib = file_types.StaticLibrary(Path('libfoo.a'), 'native')
-        self.assertRaises(TypeError, common.darwin_install_name, lib, self.env)
-        self.assertEqual(common.darwin_install_name(lib, self.env, False),
-                         None)
 
 
 class TestNotBuildroot(CrossPlatformTestCase):

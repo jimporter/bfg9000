@@ -10,8 +10,10 @@ class TestDoppel(ToolTestCase):
         with mock.patch('bfg9000.shell.which', return_value=['command']):
             self.assertIsInstance(self.env.tool('doppel'), Doppel)
 
-    def test_data_args(self):
-        self.assertEqual(type(self.tool.data_args), list)
+    def test_kind_args(self):
+        self.assertEqual(type(self.tool.kind_args('program')), list)
+        self.assertEqual(type(self.tool.kind_args('data')), list)
+        self.assertRaises(ValueError, self.tool.kind_args, 'unknown')
 
     def test_call_onto(self):
         self.assertEqual(self.tool('onto', 'src', 'dst'),

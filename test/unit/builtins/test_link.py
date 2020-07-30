@@ -267,25 +267,25 @@ class TestSharedLibrary(LinkTest):
         expected = self.output_file('shared')
 
         result = self.context['shared_library']('shared', ['main.cpp'])
-        self.assertSameFile(result, expected, exclude={'post_install'})
+        self.assertSameFile(result, expected)
         self.assertSameFile(result.creator.files[0],
                             self.object_file('libshared.int/main'))
 
         result = self.context['shared_library'](name='shared',
                                                 files=['main.cpp'])
-        self.assertSameFile(result, expected, exclude={'post_install'})
+        self.assertSameFile(result, expected)
 
         src = self.context['source_file']('main.cpp')
         result = self.context['shared_library']('shared', [src])
-        self.assertSameFile(result, expected, exclude={'post_install'})
+        self.assertSameFile(result, expected)
 
         obj = self.context['object_file']('main.o', lang='c++')
         result = self.context['shared_library']('shared', [obj])
-        self.assertSameFile(result, expected, exclude={'post_install'})
+        self.assertSameFile(result, expected)
 
         self.context['project'](intermediate_dirs=False)
         result = self.context['shared_library']('shared', ['main.cpp'])
-        self.assertSameFile(result, expected, exclude={'post_install'})
+        self.assertSameFile(result, expected)
         self.assertSameFile(result.creator.files[0], self.object_file('main'))
 
     def test_make_soversion(self):
@@ -294,7 +294,7 @@ class TestSharedLibrary(LinkTest):
                                                 soversion='1')
         self.assertSameFile(result, self.output_file(
             'shared', step={'version': '1', 'soversion': '1'}
-        ), exclude={'post_install'})
+        ))
 
         self.assertRaises(ValueError, self.context['shared_library'], 'shared',
                           [src], version='1')
@@ -307,7 +307,7 @@ class TestSharedLibrary(LinkTest):
         expected = self.output_file('shared', lang='c++', input_langs=['c++'])
         src = self.context['source_file']('main.c', 'c')
         result = shared_library('shared', [src], lang='c++')
-        self.assertSameFile(result, expected, exclude={'post_install'})
+        self.assertSameFile(result, expected)
         self.assertEqual(result.creator.input_langs, ['c++'])
         self.assertEqual(result.creator.langs, ['c++'])
         self.assertEqual(result.creator.linker.lang, 'c++')
@@ -315,7 +315,7 @@ class TestSharedLibrary(LinkTest):
         expected = self.output_file('shared', lang='c++', input_langs=['c'])
         obj = self.context['object_file']('main.o', lang='c')
         result = shared_library('shared', [obj], lang='c++')
-        self.assertSameFile(result, expected, exclude={'post_install'})
+        self.assertSameFile(result, expected)
         self.assertEqual(result.creator.input_langs, ['c'])
         self.assertEqual(result.creator.langs, ['c++'])
         self.assertEqual(result.creator.linker.lang, 'c++')
@@ -323,13 +323,11 @@ class TestSharedLibrary(LinkTest):
     def test_make_from_unknown_lang_obj(self):
         obj = self.context['object_file']('main.o', lang='goofy')
         result = self.context['shared_library']('shared', [obj])
-        self.assertSameFile(result, self.output_file('shared', lang='c'),
-                            exclude={'post_install'})
+        self.assertSameFile(result, self.output_file('shared', lang='c'))
 
         obj = self.context['object_file']('main.o', lang='goofy')
         result = self.context['shared_library']('shared', [obj], lang='c++')
-        self.assertSameFile(result, self.output_file('shared', lang='c++'),
-                            exclude={'post_install'})
+        self.assertSameFile(result, self.output_file('shared', lang='c++'))
 
     def test_make_runtime_deps(self):
         shared_library = self.context['shared_library']
@@ -338,36 +336,36 @@ class TestSharedLibrary(LinkTest):
         expected = self.output_file('shared')
         expected.runtime_file.runtime_deps = [libfoo.runtime_file]
         result = shared_library('shared', ['main.cpp'], libs=[libfoo])
-        self.assertSameFile(result, expected, exclude={'post_install'})
+        self.assertSameFile(result, expected)
 
     def test_make_directory(self):
         shared_library = self.context['shared_library']
         expected = self.output_file('dir/shared')
 
         result = shared_library('dir/shared', ['main.cpp'])
-        self.assertSameFile(result, expected, exclude={'post_install'})
+        self.assertSameFile(result, expected)
         self.assertSameFile(result.creator.files[0],
                             self.object_file('dir/libshared.int/PAR/main'))
 
         result = shared_library('dir/shared', ['dir/main.cpp'])
-        self.assertSameFile(result, expected, exclude={'post_install'})
+        self.assertSameFile(result, expected)
         self.assertSameFile(result.creator.files[0],
                             self.object_file('dir/libshared.int/main'))
 
         expected = self.output_file('shared')
 
         result = shared_library('shared', ['main.cpp'], intermediate_dir=None)
-        self.assertSameFile(result, expected, exclude={'post_install'})
+        self.assertSameFile(result, expected)
         self.assertSameFile(result.creator.files[0], self.object_file('main'))
 
         result = shared_library('shared', ['main.cpp'], intermediate_dir='dir')
-        self.assertSameFile(result, expected, exclude={'post_install'})
+        self.assertSameFile(result, expected)
         self.assertSameFile(result.creator.files[0],
                             self.object_file('dir/main'))
 
         self.context['project'](intermediate_dirs=False)
         result = shared_library('shared', ['main.cpp'], intermediate_dir='dir')
-        self.assertSameFile(result, expected, exclude={'post_install'})
+        self.assertSameFile(result, expected)
         self.assertSameFile(result.creator.files[0],
                             self.object_file('dir/main'))
 
@@ -407,7 +405,7 @@ class TestSharedLibrary(LinkTest):
 
         result = self.context['shared_library']('shared', ['main.cpp'],
                                                 extra_deps=[dep])
-        self.assertSameFile(result, expected, exclude={'post_install'})
+        self.assertSameFile(result, expected)
         self.assertSameFile(result.creator.files[0],
                             self.object_file('libshared.int/main'))
         self.assertEqual(result.creator.extra_deps, [dep])
@@ -418,7 +416,7 @@ class TestSharedLibrary(LinkTest):
 
         result = self.context['shared_library']('shared', ['main.cpp'],
                                                 extra_compile_deps=[dep])
-        self.assertSameFile(result, expected, exclude={'post_install'})
+        self.assertSameFile(result, expected)
         self.assertSameFile(result.creator.files[0],
                             self.object_file('libshared.int/main'))
         self.assertEqual(result.creator.extra_deps, [])
@@ -718,13 +716,13 @@ class TestLibrary(LinkTest):
         expected = self.output_file('library', mode='shared_library')
         result = self.context['library']('library', ['main.cpp'],
                                          kind='shared')
-        self.assertSameFile(result, expected, exclude={'post_install'})
+        self.assertSameFile(result, expected)
         self.assertSameFile(result.creator.files[0],
                             self.object_file('liblibrary.int/main'))
 
         src = self.context['source_file']('main.cpp')
         result = self.context['library']('library', [src], kind='shared')
-        self.assertSameFile(result, expected, exclude={'post_install'})
+        self.assertSameFile(result, expected)
 
     def test_make_simple_static(self):
         expected = self.output_file('library', mode='static_library')
@@ -755,7 +753,7 @@ class TestLibrary(LinkTest):
                 self.output_file('library', mode='shared_library'),
                 self.output_file('library', mode='static_library',
                                  extra=static_extra)
-            ), exclude={'post_install'})
+            ))
             for i in result.all:
                 self.assertSameFile(i.creator.files[0],
                                     self.object_file('liblibrary.int/main'))
@@ -771,12 +769,12 @@ class TestLibrary(LinkTest):
         expected = self.output_file('dir/library', mode='shared_library')
 
         result = library('dir/library', ['main.cpp'], kind='shared')
-        self.assertSameFile(result, expected, exclude={'post_install'})
+        self.assertSameFile(result, expected)
         self.assertSameFile(result.creator.files[0],
                             self.object_file('dir/liblibrary.int/PAR/main'))
 
         result = library('dir/library', ['dir/main.cpp'], kind='shared')
-        self.assertSameFile(result, expected, exclude={'post_install'})
+        self.assertSameFile(result, expected)
         self.assertSameFile(result.creator.files[0],
                             self.object_file('dir/liblibrary.int/main'))
 
@@ -784,19 +782,19 @@ class TestLibrary(LinkTest):
 
         result = library('library', ['main.cpp'], kind='shared',
                          intermediate_dir=None)
-        self.assertSameFile(result, expected, exclude={'post_install'})
+        self.assertSameFile(result, expected)
         self.assertSameFile(result.creator.files[0], self.object_file('main'))
 
         result = library('library', ['main.cpp'], kind='shared',
                          intermediate_dir='dir')
-        self.assertSameFile(result, expected, exclude={'post_install'})
+        self.assertSameFile(result, expected)
         self.assertSameFile(result.creator.files[0],
                             self.object_file('dir/main'))
 
         self.context['project'](intermediate_dirs=False)
         result = library('library', ['main.cpp'], kind='shared',
                          intermediate_dir='dir')
-        self.assertSameFile(result, expected, exclude={'post_install'})
+        self.assertSameFile(result, expected)
         self.assertSameFile(result.creator.files[0],
                             self.object_file('dir/main'))
 
@@ -806,7 +804,7 @@ class TestLibrary(LinkTest):
         expected = self.output_file('library', mode='shared_library')
         result = self.context['library']('library', ['main.cpp'],
                                          kind='shared', extra_deps=[dep])
-        self.assertSameFile(result, expected, exclude={'post_install'})
+        self.assertSameFile(result, expected)
         self.assertSameFile(result.creator.files[0],
                             self.object_file('liblibrary.int/main'))
         self.assertEqual(result.creator.extra_deps, [dep])

@@ -1,7 +1,6 @@
 from . import tool
-from .. import options as opts
-from .common import darwin_install_name, SimpleCommand
-from ..file_types import file_install_path
+from .. import file_types, options as opts
+from .common import SimpleCommand
 from ..iterutils import flatten, listify
 
 
@@ -25,13 +24,27 @@ class InstallNameTool(SimpleCommand):
             return cmd + args + [file]
 
 
-def post_install(env, options, output, *, is_library=False):
+def darwin_install_name(library, env, strict=True):
+    while isinstance(library, file_types.LinkLibrary):
+        library = library.library
+
+    if isinstance(library, file_types.VersionedSharedLibrary):
+        return library.soname.path.string(env.base_dirs)
+    elif isinstance(library, file_types.SharedLibrary):
+        return library.path.string(env.base_dirs)
+    elif strict:  # pragma: no cover
+        raise TypeError('unable to create darwin install_name')
+    else:
+        return None
+
+
+def post_install(env, options, output, install_db, *, is_library=False):
     change_opts = options.filter(opts.install_name_change)
     changes = ([(i.old, i.new) for i in change_opts] +
-               [(darwin_install_name(i, env), file_install_path(i, cross=env))
+               [(darwin_install_name(i, env), install_db.target[i].path)
                 for i in output.runtime_deps])
 
-    path = file_install_path(output)
+    path = install_db.host[output].path
     return env.tool('install_name_tool')(
         path, id=path.cross(env) if is_library else None, changes=changes
     )

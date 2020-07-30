@@ -10,9 +10,12 @@ class Doppel(SimpleCommand):
         super().__init__(env, name='doppel', env_var='DOPPEL',
                          default='doppel')
 
-    @property
-    def data_args(self):
-        return ['-m', '644']
+    def kind_args(self, kind):
+        if kind == 'data':
+            return ['-m', '644']
+        elif kind == 'program':
+            return []
+        raise ValueError('unknown kind {!r}'.format(kind))
 
     def _call(self, cmd, mode, src, dst, directory=None, format=None,
               dest_prefix=None):
@@ -37,4 +40,4 @@ class Doppel(SimpleCommand):
             result.append(dst)
             return result
 
-        raise ValueError("unknown mode '{}'".format(mode))
+        raise ValueError('unknown mode {!r}'.format(mode))

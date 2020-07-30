@@ -1,11 +1,12 @@
 import os
 import re
+from functools import partial
 from itertools import chain
 
 from .. import install_name_tool, patchelf
 from ... import options as opts, safe_str, shell
 from .flags import optimize_flags
-from ..common import BuildCommand, darwin_install_name, library_macro
+from ..common import BuildCommand, library_macro
 from ...builtins.copy_file import CopyFile
 from ...file_types import *
 from ...iterutils import first, iterate, listify, recursive_walk, uniques
@@ -295,11 +296,10 @@ class CcLinker(BuildCommand):
             return None
 
         if self.builder.object_format == 'elf':
-            return patchelf.post_install(self.env, options, output)
+            return partial(patchelf.post_install, self.env, options, output)
         else:  # mach-o
-            return install_name_tool.post_install(
-                self.env, options, output, is_library=self._is_library
-            )
+            return partial(install_name_tool.post_install, self.env,
+                           options, output, is_library=self._is_library)
 
 
 class CcExecutableLinker(CcLinker):
@@ -376,7 +376,9 @@ class CcSharedLibraryLinker(CcLinker):
 
     def _soname(self, library):
         if self.env.target_platform.genus == 'darwin':
-            return ['-install_name', darwin_install_name(library, self.env)]
+            return ['-install_name', install_name_tool.darwin_install_name(
+                library, self.env
+            )]
         else:
             if isinstance(library, VersionedSharedLibrary):
                 soname = library.soname

@@ -1,54 +1,75 @@
+from collections import namedtuple
 from unittest import mock
 
-from .common import AlwaysEqual, BuiltinTest
+from .common import AlwaysEqual, BuiltinTest, FileTest
 
 from bfg9000.backends.make import syntax as make
 from bfg9000.backends.ninja import syntax as ninja
-from bfg9000.builtins import compile, default, install, link, packages, project  # noqa
-from bfg9000.file_types import Executable, Phony
+from bfg9000.builtins import (compile, default, install, link,  # noqa
+                              packages, project)  # noqa
+from bfg9000.file_types import *
 from bfg9000.path import Path, Root, InstallRoot
+from bfg9000.platforms import target
+
+MockEnv = namedtuple('MockEnv', ['target_platform'])
 
 
 class TestInstall(BuiltinTest):
     def test_install_none(self):
         self.assertEqual(self.context['install'](), None)
         self.assertEqual(self.build['install'].explicit, [])
-        self.assertEqual(self.build['install'].implicit, [])
+        self.assertEqual(self.build['install'].host, {})
+        self.assertEqual(self.build['install'].target, {})
 
     def test_install_single(self):
         exe = Executable(Path('exe', Root.srcdir), None)
-        installed = Executable(Path('exe', InstallRoot.bindir), None)
-        self.assertEqual(self.context['install'](exe), installed)
+        host = Executable(Path('exe', InstallRoot.bindir, True), None)
+        target = Executable(Path('exe', InstallRoot.bindir), None)
+
+        self.assertEqual(self.context['install'](exe), target)
         self.assertEqual(self.build['install'].explicit, [exe])
-        self.assertEqual(self.build['install'].implicit, [exe])
+        self.assertEqual(self.build['install'].host, {exe: host})
+        self.assertEqual(self.build['install'].target, {exe: target})
 
     def test_install_multiple(self):
-        exe1 = Executable(Path('exe1', Root.srcdir), None)
-        exe2 = Executable(Path('exe2', Root.srcdir), None)
-        installed1 = Executable(Path('exe1', InstallRoot.bindir), None)
-        installed2 = Executable(Path('exe2', InstallRoot.bindir), None)
-        self.assertEqual(self.context['install'](exe1, exe2),
-                         (installed1, installed2))
-        self.assertEqual(self.build['install'].explicit, [exe1, exe2])
-        self.assertEqual(self.build['install'].implicit, [exe1, exe2])
+        exes = [Executable(Path('exe1', Root.srcdir), None),
+                Executable(Path('exe2', Root.srcdir), None)]
+        hosts = [Executable(Path('exe1', InstallRoot.bindir, True), None),
+                 Executable(Path('exe2', InstallRoot.bindir, True), None)]
+        targets = [Executable(Path('exe1', InstallRoot.bindir), None),
+                   Executable(Path('exe2', InstallRoot.bindir), None)]
+
+        self.assertEqual(self.context['install'](*exes), tuple(targets))
+        install = self.build['install']
+        self.assertEqual(install.explicit, exes)
+        self.assertEqual(install.host, dict(zip(exes, hosts)))
+        self.assertEqual(install.target, dict(zip(exes, targets)))
 
     def test_install_nested_multiple(self):
-        exe1 = Executable(Path('exe1', Root.srcdir), None)
-        exe2 = Executable(Path('exe2', Root.srcdir), None)
-        installed1 = Executable(Path('exe1', InstallRoot.bindir), None)
-        installed2 = Executable(Path('exe2', InstallRoot.bindir), None)
-        self.assertEqual(self.context['install'](exe1, [exe2], None),
-                         (installed1, [installed2], None))
-        self.assertEqual(self.build['install'].explicit, [exe1, exe2])
-        self.assertEqual(self.build['install'].implicit, [exe1, exe2])
+        exes = [Executable(Path('exe1', Root.srcdir), None),
+                Executable(Path('exe2', Root.srcdir), None)]
+        hosts = [Executable(Path('exe1', InstallRoot.bindir, True), None),
+                 Executable(Path('exe2', InstallRoot.bindir, True), None)]
+        targets = [Executable(Path('exe1', InstallRoot.bindir), None),
+                   Executable(Path('exe2', InstallRoot.bindir), None)]
+
+        self.assertEqual(self.context['install'](exes[0], [exes[1]], None),
+                         (targets[0], [targets[1]], None))
+        install = self.build['install']
+        self.assertEqual(install.explicit, exes)
+        self.assertEqual(install.host, dict(zip(exes, hosts)))
+        self.assertEqual(install.target, dict(zip(exes, targets)))
 
     def test_install_add_to_default(self):
         exe = Executable(Path('exe', Root.srcdir), None)
         exe.creator = 'creator'
-        installed = Executable(Path('exe', InstallRoot.bindir), None)
-        self.assertEqual(self.context['install'](exe), installed)
+        host = Executable(Path('exe', InstallRoot.bindir, True), None)
+        target = Executable(Path('exe', InstallRoot.bindir), None)
+
+        self.assertEqual(self.context['install'](exe), target)
         self.assertEqual(self.build['install'].explicit, [exe])
-        self.assertEqual(self.build['install'].implicit, [exe])
+        self.assertEqual(self.build['install'].host, {exe: host})
+        self.assertEqual(self.build['install'].target, {exe: target})
         self.assertEqual(self.build['defaults'].outputs, [exe])
 
     def test_invalid(self):
@@ -59,13 +80,85 @@ class TestInstall(BuiltinTest):
         self.assertRaises(ValueError, self.context['install'], exe)
 
     def test_cant_install(self):
+        exes = [Executable(Path('exe1', Root.srcdir), None),
+                Executable(Path('exe2', Root.srcdir), None)]
+        targets = [Executable(Path('exe1', InstallRoot.bindir), None),
+                   Executable(Path('exe2', InstallRoot.bindir), None)]
+        install = self.context['install']
         with mock.patch('bfg9000.builtins.install.can_install',
-                        return_value=False), \
-             mock.patch('warnings.warn') as m:  # noqa
-            exe = Executable(Path('exe', Root.srcdir), None)
-            installed = Executable(Path('exe', InstallRoot.bindir), None)
-            self.assertEqual(self.context['install'](exe), installed)
-            self.assertEqual(m.call_count, 1)
+                        return_value=False):
+            with mock.patch('warnings.warn') as m:
+                self.assertEqual(install(exes[0]), targets[0])
+                self.assertEqual(m.call_count, 1)
+            with mock.patch('warnings.warn') as m:
+                self.assertEqual(install(*exes), tuple(targets))
+                self.assertEqual(m.call_count, 1)
+            with mock.patch('warnings.warn') as m:
+                self.assertEqual(install(exes[0], [exes[1]], None),
+                                 (targets[0], [targets[1]], None))
+                self.assertEqual(m.call_count, 1)
+
+
+class TestInstallify(FileTest):
+    def _check(self, kind, src, dst, src_kwargs={}, dst_kwargs={}, **kwargs):
+        f = kind(src, **src_kwargs, **kwargs)
+        installed = kind(dst, **dst_kwargs, **kwargs)
+        self.assertSameFile(install.installify(f), installed)
+        for name in ('winnt', 'linux'):
+            env = MockEnv(target.platform_info(name))
+            dst_kwargs_cross = {k: v.cross(env) if v.destdir else v
+                                for k, v in dst_kwargs.items()}
+            installed = kind(dst.cross(env), **dst_kwargs_cross, **kwargs)
+            self.assertSameFile(install.installify(f, cross=env), installed)
+
+    def test_installify(self):
+        self._check(Executable, Path('foo/bar', Root.srcdir),
+                    Path('bar', InstallRoot.bindir, True), format=None)
+        self._check(Executable, Path('foo/bar', Root.builddir),
+                    Path('foo/bar', InstallRoot.bindir, True), format=None)
+
+    def test_installify_header(self):
+        self._check(HeaderFile, Path('foo/bar.hpp', Root.srcdir),
+                    Path('bar.hpp', InstallRoot.includedir, True), lang='c++')
+        self._check(HeaderFile, Path('foo/bar.hpp', Root.builddir),
+                    Path('foo/bar.hpp', InstallRoot.includedir, True),
+                    lang='c++')
+
+        self._check(HeaderDirectory, Path('foo/bar', Root.srcdir),
+                    Path('', InstallRoot.includedir, True))
+        self._check(HeaderDirectory, Path('foo/bar', Root.builddir),
+                    Path('', InstallRoot.includedir, True))
+
+    def test_installify_private(self):
+        self._check(DllBinary, Path('foo/bar.dll', Root.srcdir),
+                    Path('bar.dll', InstallRoot.bindir, True),
+                    {'import_name': Path('foo/bar.lib', Root.srcdir),
+                     'export_name': Path('foo/bar.exp', Root.srcdir)},
+                    {'import_name': Path('bar.lib', InstallRoot.libdir, True),
+                     'export_name': Path('foo/bar.exp', Root.srcdir)},
+                    format=None, lang='c++')
+        self._check(DllBinary, Path('foo/bar.dll', Root.builddir),
+                    Path('foo/bar.dll', InstallRoot.bindir, True),
+                    {'import_name': Path('foo/bar.lib', Root.builddir),
+                     'export_name': Path('foo/bar.exp', Root.builddir)},
+                    {'import_name': Path('foo/bar.lib', InstallRoot.libdir,
+                                         True),
+                     'export_name': Path('foo/bar.exp', Root.builddir)},
+                    format=None, lang='c++')
+
+    def test_installify_not_installable(self):
+        f = File(Path('foo/bar.txt', Root.srcdir))
+        self.assertRaises(TypeError, install.installify, f)
+
+        hdr = PrecompiledHeader(Path('foo/bar.pch', Root.srcdir), 'c++')
+        self.assertRaises(TypeError, install.installify, hdr)
+
+    def test_installify_non_file(self):
+        self.assertRaises(TypeError, install.installify, Phony('name'))
+
+    def test_installify_absolute(self):
+        exe = Executable(Path('/foo/bar', Root.absolute), None)
+        self.assertRaises(ValueError, install.installify, exe)
 
 
 class TestMakeBackend(BuiltinTest):

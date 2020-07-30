@@ -1,4 +1,5 @@
 import warnings
+from collections import OrderedDict
 
 from . import builtin
 from .. import path
@@ -6,40 +7,66 @@ from .. import shell
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..build_inputs import build_input
-from ..file_types import Directory, File, file_install_path, installify
-from ..iterutils import flatten, iterate, iterate_each, map_iterable, unlistify
+from ..file_types import BaseFile, Directory
+from ..iterutils import flatten, iterate, map_iterable, unlistify
 
 
 @build_input('install')
 class InstallOutputs:
     def __init__(self, build_inputs, env):
         self.explicit = []
-        self.implicit = []
+        self.host = OrderedDict()
+        self.target = OrderedDict()
+        self.env = env
 
     def add(self, item):
         if item not in self.explicit:
             self.explicit.append(item)
-
-        for i in item.all:
-            self._add_implicit(i)
+        return self._add_implicit(item)
 
     def _add_implicit(self, item):
-        if not isinstance(item, File):
-            raise TypeError('expected a file or directory')
-        if item.path.root not in (path.Root.srcdir, path.Root.builddir):
-            raise ValueError('external files are not installable')
+        host = installify(item)
+        target = installify(item, cross=self.env)
+        assert len(item.all) == len(host.all) == len(target.all)
+        for src, h, t in zip(item.all, host.all, target.all):
+            if src not in self.host:
+                self.host[src] = h
+                self.target[src] = t
 
-        if item not in self.implicit:
-            self.implicit.append(item)
+            for dep in src.install_deps:
+                self._add_implicit(dep)
 
-        for i in item.install_deps:
-            self._add_implicit(i)
+        return target
 
     def __bool__(self):
-        return bool(self.implicit)
+        return bool(self.explicit)
 
     def __iter__(self):
-        return iter(self.implicit)
+        return iter(self.host)
+
+
+def installify(file, cross=None):
+    def pathfn(f):
+        if f is not file and f.private:
+            # Private subfiles won't (and in some cases can't) be installed.
+            return f.path
+        if f.path.root not in (path.Root.srcdir, path.Root.builddir):
+            raise ValueError('external files are not installable')
+        if f.install_root is None:
+            raise TypeError('{!r} is not installable'.format(type(f).__name__))
+
+        if isinstance(f, Directory):
+            suffix = ''
+        elif f.path.root == path.Root.srcdir:
+            suffix = f.path.basename()
+        else:
+            suffix = f.path.suffix
+        cls = cross.target_platform.Path if cross else type(f.path)
+        return cls(suffix, f.install_root, destdir=not cross)
+
+    if not isinstance(file, BaseFile):
+        raise TypeError('expected a file or directory')
+    return file.clone(pathfn, recursive=True)
 
 
 def can_install(env):
@@ -57,72 +84,73 @@ def install(context, *args):
                       'build disabled')
 
     context['default'](*args)
-    for i in iterate_each(args):
-        if can_inst:
-            context.build['install'].add(i)
-
-    return unlistify(tuple(
-        map_iterable(lambda x: installify(x, context.env), i) for i in args
-    ))
+    return unlistify(tuple(map_iterable(context.build['install'].add, i)
+                           for i in args))
 
 
 def _doppel_cmd(env, buildfile):
     doppel = env.tool('doppel')
 
     def wrapper(kind):
-        cmd = buildfile.cmd_var(doppel)
-        basename = cmd.name
+        cmd_var = buildfile.cmd_var(doppel)
+        cmd = [cmd_var] + doppel.kind_args(kind)
 
-        if kind != 'program':
-            kind = 'data'
-            cmd = [cmd] + doppel.data_args
+        basename = cmd_var.name
         if basename.isupper():
             kind = kind.upper()
-
         name = '{name}_{kind}'.format(name=basename, kind=kind)
+
         cmd = buildfile.variable(name, cmd, buildfile.Section.command, True)
         return lambda *args, **kwargs: doppel(*args, cmd=cmd, **kwargs)
     return wrapper
 
 
-def _install_commands(install_outputs, doppel):
-    def install_line(output):
-        cmd = doppel(output.install_kind)
-        if isinstance(output, Directory):
-            if output.files is not None:
-                src = [i.path.relpath(output.path) for i in output.files]
-                dst = file_install_path(output)
-                return cmd('into', src, dst, directory=output.path)
+def _install_files(install_outputs, buildfile, env):
+    doppel = _doppel_cmd(env, buildfile)
+
+    def install_line(src, dst):
+        cmd = doppel(src.install_kind)
+        if isinstance(src, Directory):
+            if src.files is not None:
+                src_paths = [i.path.relpath(src.path) for i in src.files]
+                return cmd('into', src_paths, dst.path, directory=src.path)
 
             warnings.warn(
                 ('installed directory {!r} has no matching files; did you ' +
-                 'forget to set `include`?').format(output.path)
+                 'forget to set `include`?').format(src.path)
             )
 
-        src = output.path
-        dst = file_install_path(output)
-        return cmd('onto', src, dst)
+        return cmd('onto', src.path, dst.path)
 
-    return ([install_line(i) for i in install_outputs] +
-            [i.post_install for i in install_outputs if i.post_install])
+    def post_install(i):
+        return i.post_install(install_outputs) if i.post_install else None
+
+    return ([install_line(*i) for i in install_outputs.host.items()] +
+            list(filter( None, (post_install(i) for i in install_outputs) )))
 
 
-def _uninstall_command(install_outputs, rm):
-    def uninstall_line(output):
-        if isinstance(output, Directory):
-            dst = file_install_path(output)
-            return [dst.append(i.path.relpath(output.path)) for i in
-                    iterate(output.files)]
-        return [file_install_path(output)]
+def _uninstall_files(install_outputs, env):
+    def uninstall_line(src, dst):
+        if isinstance(src, Directory):
+            return [dst.path.append(i.path.relpath(src.path)) for i in
+                    iterate(src.files)]
+        return [dst.path]
 
-    return rm(flatten(uninstall_line(i) for i in install_outputs))
+    if install_outputs:
+        return [env.tool('rm')(flatten(
+            uninstall_line(*i) for i in install_outputs.host.items()
+        ))]
+    return []
 
 
 @make.post_rule
 def make_install_rule(build_inputs, buildfile, env):
     install_outputs = build_inputs['install']
-    if not install_outputs:
+    if not can_install(env) or not install_outputs:
         return
+
+    install_files = _install_files(install_outputs, buildfile, env)
+    uninstall_files = _uninstall_files(install_outputs, env)
 
     for i in path.InstallRoot:
         buildfile.variable(make.path_vars[i], env.install_dirs[i],
@@ -134,12 +162,12 @@ def make_install_rule(build_inputs, buildfile, env):
     buildfile.rule(
         target='install',
         deps='all',
-        recipe=_install_commands(install_outputs, _doppel_cmd(env, buildfile)),
+        recipe=install_files,
         phony=True
     )
     buildfile.rule(
         target='uninstall',
-        recipe=[_uninstall_command(install_outputs, env.tool('rm'))],
+        recipe=uninstall_files,
         phony=True
     )
 
@@ -147,8 +175,11 @@ def make_install_rule(build_inputs, buildfile, env):
 @ninja.post_rule
 def ninja_install_rule(build_inputs, buildfile, env):
     install_outputs = build_inputs['install']
-    if not install_outputs:
+    if not can_install(env) or not install_outputs:
         return
+
+    install_files = _install_files(install_outputs, buildfile, env)
+    uninstall_files = _uninstall_files(install_outputs, env)
 
     for i in path.InstallRoot:
         buildfile.variable(ninja.path_vars[i], env.install_dirs[i],
@@ -158,17 +189,16 @@ def ninja_install_rule(build_inputs, buildfile, env):
                            env.variables.get('DESTDIR', ''),
                            ninja.Section.path)
 
-    install = _install_commands(install_outputs, _doppel_cmd(env, buildfile))
     ninja.command_build(
         buildfile, env,
         output='install',
         inputs=['all'],
-        command=shell.join_lines(install),
+        command=shell.join_lines(install_files),
         phony=True
     )
     ninja.command_build(
         buildfile, env,
         output='uninstall',
-        command=_uninstall_command(install_outputs, env.tool('rm')),
+        command=shell.join_lines(uninstall_files),
         phony=True
     )

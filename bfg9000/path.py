@@ -12,20 +12,6 @@ def abspath(path, type=Path):
     return type.abspath(path)
 
 
-def install_path(path, install_root, directory=False, cross=None):
-    cls = cross.target_platform.Path if cross else type(path)
-    if path.root == Root.absolute:
-        if not cross:
-            raise TypeError('path is absolute')
-        return cls(path.suffix, path.root)
-
-    if path.root == Root.srcdir:
-        suffix = path.curdir if directory else path.basename()
-    else:
-        suffix = path.suffix
-    return cls(suffix, install_root, destdir=not cross)
-
-
 def commonprefix(paths):
     if not paths or any(i.root != paths[0].root for i in paths):
         return None

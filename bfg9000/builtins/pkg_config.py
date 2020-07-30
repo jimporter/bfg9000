@@ -1,6 +1,5 @@
 import warnings
 from collections import Counter
-from functools import partial
 from itertools import chain
 
 from . import builtin
@@ -15,7 +14,7 @@ from ..packages import CommonPackage, PackageKind
 from ..safe_str import literal, shell_literal
 from ..shell import posix as pshell
 from ..shell.syntax import Syntax, Writer
-from ..tools.common import darwin_install_name
+from ..tools.install_name_tool import darwin_install_name
 from ..tools.pkg_config import PkgConfigPackage
 from ..versioning import simplify_specifiers, Specifier, SpecifierSet
 
@@ -186,8 +185,7 @@ class PkgConfigInfo:
 
     @_simple_property
     def includes(self, value):
-        return uniques(self._builtins['header_directory'](i)
-                       for i in iterate(value))
+        return uniques(self._header(i) for i in iterate(value))
 
     @_simple_property
     def libs(self, value):
@@ -209,10 +207,17 @@ class PkgConfigInfo:
     def conflicts(self, value):
         return self._filter_packages(iterate(value))[0]
 
+    def _header(self, header):
+        if not isinstance(header, HeaderFile):
+            header = self._builtins['header_directory'](header)
+        self._builtins['install'](header)
+        return header
+
     def _library(self, lib):
-        if isinstance(lib, DualUseLibrary):
-            return lib
-        return self._builtins['library'](lib)
+        if not isinstance(lib, DualUseLibrary):
+            lib = self._builtins['library'](lib)
+        self._builtins['install'](lib)
+        return lib
 
     def _set_requires(self, value):
         reqs, system, deps = self._filter_packages(iterate(value))
@@ -336,10 +341,18 @@ class PkgConfigWriter:
             self._write(out, data, installed)
         return path
 
+    def _installify(self, file):
+        return self.context.build['install'].target[file]
+
+    @staticmethod
+    def _ensure_header_directory(file):
+        if isinstance(file, HeaderFile):
+            return HeaderDirectory(file.path.parent())
+        return file
+
     def _write(self, out, data, installed):
         env = self.context.env
-        installify_fn = (partial(installify, cross=env) if installed
-                         else identity)
+        installify_fn = self._installify if installed else identity
 
         # Get the compiler and linker to use for generating flags.
         builder = env.builder(data['lang'])
@@ -347,7 +360,8 @@ class PkgConfigWriter:
         linker = builder.linker('executable')
 
         compile_options = opts.option_list(
-            (opts.include_dir(installify_fn(i)) for i in data['includes']),
+            (opts.include_dir(self._ensure_header_directory(installify_fn(i)))
+             for i in data['includes']),
             data['options']
         )
         link_options = opts.option_list(

@@ -1,7 +1,7 @@
 from . import tool
 from .. import options as opts, safe_str
 from .common import SimpleCommand
-from ..file_types import file_install_path, Library
+from ..file_types import Library
 from ..iterutils import uniques
 from ..path import BasePath, InstallRoot, Root
 
@@ -12,9 +12,8 @@ class PatchElf(SimpleCommand):
         super().__init__(env, name='patchelf', env_var='PATCHELF',
                          default='patchelf')
 
-    def _call(self, cmd, file, rpath=None):
-        if rpath:
-            return cmd + ['--set-rpath', safe_str.join(rpath, ':'), file]
+    def _call(self, cmd, file, rpath=[]):
+        return cmd + ['--set-rpath', safe_str.join(rpath, ':'), file]
 
 
 def local_rpath(env, library, output):
@@ -32,13 +31,18 @@ def local_rpath(env, library, output):
     return rpath
 
 
-def installed_rpath(env, library):
+def installed_rpath(env, library, install_db):
     if not library.runtime_file:
         return None
-    return file_install_path(library.runtime_file, cross=env).parent()
+    try:
+        return install_db.target[library.runtime_file].path.parent()
+    except KeyError:
+        if library.runtime_file.path.root == Root.absolute:
+            return library.runtime_file.path.parent()
+        raise
 
 
-def post_install(env, options, output):
+def post_install(env, options, output, install_db):
     rpaths = []
     changed = False
     for i in options:
@@ -47,15 +51,16 @@ def post_install(env, options, output):
                 continue
             local = local_rpath(env, i.library, output)
             if local is not None:
-                installed = installed_rpath(env, i.library)
+                installed = installed_rpath(env, i.library, install_db)
                 rpaths.append(installed)
                 if not isinstance(local, BasePath) or local != installed:
                     changed = True
         elif isinstance(i, opts.rpath_dir):
+            if i.when != opts.RpathWhen.always:
+                changed = True
             if i.when & opts.RpathWhen.installed:
-                if not (i.when & opts.RpathWhen.uninstalled):
-                    changed = True
                 rpaths.append(i.path)
 
-    rpaths = uniques(rpaths) if changed else []
-    return env.tool('patchelf')(file_install_path(output), rpaths)
+    if changed:
+        return env.tool('patchelf')(install_db.host[output].path,
+                                    uniques(rpaths))
