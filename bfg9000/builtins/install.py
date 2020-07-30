@@ -19,22 +19,26 @@ class InstallOutputs:
         self.target = OrderedDict()
         self.env = env
 
-    def add(self, item):
+    def add(self, item, directory=None):
         if item not in self.explicit:
             self.explicit.append(item)
-        return self._add_implicit(item)
+        return self._add_implicit(item, directory)
 
-    def _add_implicit(self, item):
-        host = installify(item)
-        target = installify(item, cross=self.env)
+    def _add_implicit(self, item, directory):
+        host = installify(item, directory=directory)
+        target = installify(item, directory=directory, cross=self.env)
         assert len(item.all) == len(host.all) == len(target.all)
         for src, h, t in zip(item.all, host.all, target.all):
-            if src not in self.host:
+            if src in self.host:
+                if self.host[src].path != h.path:
+                    raise ValueError(('{!r} already installed to a ' +
+                                      'different location').format(src.path))
+            else:
                 self.host[src] = h
                 self.target[src] = t
 
             for dep in src.install_deps:
-                self._add_implicit(dep)
+                self._add_implicit(dep, directory)
 
         return target
 
@@ -45,24 +49,37 @@ class InstallOutputs:
         return iter(self.host)
 
 
-def installify(file, cross=None):
+def installify(file, *, directory=None, cross=None):
     def pathfn(f):
         if f is not file and f.private:
             # Private subfiles won't (and in some cases can't) be installed.
             return f.path
         if f.path.root not in (path.Root.srcdir, path.Root.builddir):
             raise ValueError('external files are not installable')
-        if f.install_root is None:
-            raise TypeError('{!r} is not installable'.format(type(f).__name__))
 
+        # Get the install root.
+        if isinstance(directory, path.Path):
+            install_root = directory
+            if not isinstance(install_root.root, path.InstallRoot):
+                raise ValueError('not an install directory')
+        elif f.install_root is None:
+            raise TypeError(('{!r} is not installable; specify an absolute ' +
+                             'install directory?').format(type(f).__name__))
+        elif directory:
+            install_root = path.Path(directory, f.install_root)
+        else:
+            install_root = f.install_root
+
+        # Get the suffix.
         if isinstance(f, Directory):
             suffix = ''
         elif f.path.root == path.Root.srcdir:
             suffix = f.path.basename()
         else:
             suffix = f.path.suffix
+
         cls = cross.target_platform.Path if cross else type(f.path)
-        return cls(suffix, f.install_root, destdir=not cross)
+        return cls(suffix, install_root, destdir=not cross)
 
     if not isinstance(file, BaseFile):
         raise TypeError('expected a file or directory')
@@ -74,7 +91,7 @@ def can_install(env):
 
 
 @builtin.function()
-def install(context, *args):
+def install(context, *args, directory=None):
     if len(args) == 0:
         return
 
@@ -84,8 +101,9 @@ def install(context, *args):
                       'build disabled')
 
     context['default'](*args)
-    return unlistify(tuple(map_iterable(context.build['install'].add, i)
-                           for i in args))
+    return unlistify(tuple(map_iterable(
+        lambda i: context.build['install'].add(i, directory), i
+    ) for i in args))
 
 
 def _doppel_cmd(env, buildfile):

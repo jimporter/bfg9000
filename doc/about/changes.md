@@ -17,6 +17,8 @@ in progress
   (`kernel32.lib`, etc)
 - Link steps (`executable`, `library`, etc) now accept an `extra_compile_deps`
   argument to forward on to the compilation step
+- Allow customizing `install` locations for specific files via the `directory`
+  argument
 - Iterables passed to `default` or `install` will include each element of the
   iterable in the appropriate build target
 - `info()`, `debug()`, and `warning()` now take a variable number of arguments

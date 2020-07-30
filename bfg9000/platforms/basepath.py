@@ -25,7 +25,7 @@ class BasePath(safe_str.safe_string):
         [(DestDir.destdir, '$(DESTDIR)')]
     )
 
-    def __init__(self, path, root=Root.builddir, destdir=False):
+    def __init__(self, path, root=Root.builddir, destdir=None):
         if destdir and isinstance(root, Root) and root != Root.absolute:
             raise ValueError('destdir only applies to absolute or install ' +
                              'paths')
@@ -37,16 +37,19 @@ class BasePath(safe_str.safe_string):
             raise ValueError("'{}' is not absolute".format(path))
         elif isinstance(root, BasePath):
             path = self.__join(root.suffix, path)
-            destdir = root.destdir
+            if destdir is None:
+                destdir = root.destdir
             root = root.root
 
+        if not isinstance(root, (Root, InstallRoot)):
+            raise ValueError('invalid root {!r}'.format(root))
         if ( path == posixpath.pardir or
              path.startswith(posixpath.pardir + posixpath.sep) ):
             raise ValueError("too many '..': path cannot escape root")
 
         self.suffix = drive + path
         self.root = root
-        self.destdir = destdir
+        self.destdir = bool(destdir)
 
     @classmethod
     def abspath(cls, path):

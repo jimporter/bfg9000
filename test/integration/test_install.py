@@ -26,8 +26,8 @@ class TestInstall(IntegrationTest):
             extra = [pjoin(self.libdir, import_library('shared_a').path)]
 
         self.assertDirectory(self.installdir, [
-            pjoin(self.includedir, 'shared_a.hpp'),
-            pjoin(self.includedir, 'static_a.hpp'),
+            pjoin(self.includedir, 'myproject', 'shared_a.hpp'),
+            pjoin(self.includedir, 'myproject', 'static_a.hpp'),
             pjoin(self.bindir, executable('program').path),
             pjoin(self.libdir, shared_library('shared_a').path),
             pjoin(self.libdir, shared_library('shared_b').path),
@@ -87,8 +87,8 @@ class TestDestDir(IntegrationTest):
 
     def _check_installed(self):
         self.assertDirectory(self.destdir + self.installdir, [
-            self.destdir + pjoin(self.includedir, 'shared_a.hpp'),
-            self.destdir + pjoin(self.includedir, 'static_a.hpp'),
+            self.destdir + pjoin(self.includedir, 'myproject', 'shared_a.hpp'),
+            self.destdir + pjoin(self.includedir, 'myproject', 'static_a.hpp'),
             self.destdir + pjoin(self.bindir, executable('program').path),
             self.destdir + pjoin(self.libdir, shared_library('shared_a').path),
             self.destdir + pjoin(self.libdir, shared_library('shared_b').path),

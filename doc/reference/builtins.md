@@ -564,7 +564,7 @@ To allow this to be chained with other functions, *default* will return the
 arguments passed into it: as a single object if one argument is passed, or a
 tuple if multiple are passed.
 
-### install(*...*) { #install }
+### install(*...*, [*directory*]) { #install }
 Availability: `build.bfg`
 {: .subtitle}
 
@@ -575,6 +575,12 @@ accumulated into the `install` target. If an iterable object is passed as an
 argument to *install*, each element of the iterable will be added. If there are
 any runtime dependencies for a file (such as shared libraries you just built),
 they will be installed as well.
+
+The install location can be customized via the *directory* argument. If passed
+as a string, the value will be appended to the default install location, e.g.
+`install(header_file('foo.hpp'), directory='dir')` will install to
+`$INCLUDEDIR/dir/foo.hpp`. You can also pass a [*Path*](#Path) object to
+override the default install location entirely.
 
 To allow referencing the installed copies of the files passed to it, *install*
 will return file objects representing the installed files: as a single object if

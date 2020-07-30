@@ -50,6 +50,9 @@ class TestPath(PathTestCase):
         self.assertRaises(ValueError, self.Path, 'foo/../../bar',
                           path.Root.srcdir)
 
+        self.assertRaises(ValueError, self.Path, 'foo', None)
+        self.assertRaises(ValueError, self.Path, 'foo', 'root')
+
     def test_construct_absolute(self):
         p = self.Path('/foo/bar', path.Root.absolute)
         self.assertEqual(p.suffix, '/foo/bar')
@@ -125,7 +128,12 @@ class TestPath(PathTestCase):
             p = self.Path('bar', base, True)
             self.assertEqual(p.suffix, base.suffix + '/bar')
             self.assertEqual(p.root, base.root)
-            self.assertEqual(p.destdir, base.destdir)
+            self.assertEqual(p.destdir, True)
+
+            p = self.Path('bar', base, False)
+            self.assertEqual(p.suffix, base.suffix + '/bar')
+            self.assertEqual(p.root, base.root)
+            self.assertEqual(p.destdir, False)
 
             p = self.Path('/bar', base)
             self.assertEqual(p.suffix, '/bar')

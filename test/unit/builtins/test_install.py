@@ -60,6 +60,15 @@ class TestInstall(BuiltinTest):
         self.assertEqual(install.host, dict(zip(exes, hosts)))
         self.assertEqual(install.target, dict(zip(exes, targets)))
 
+    def test_install_directory(self):
+        exe = Executable(Path('exe', Root.srcdir), None)
+        host = Executable(Path('dir/exe', InstallRoot.bindir, True), None)
+        target = Executable(Path('dir/exe', InstallRoot.bindir), None)
+        self.assertEqual(self.context['install'](exe, directory='dir'), target)
+        self.assertEqual(self.build['install'].explicit, [exe])
+        self.assertEqual(self.build['install'].host, {exe: host})
+        self.assertEqual(self.build['install'].target, {exe: target})
+
     def test_install_add_to_default(self):
         exe = Executable(Path('exe', Root.srcdir), None)
         exe.creator = 'creator'
@@ -71,6 +80,22 @@ class TestInstall(BuiltinTest):
         self.assertEqual(self.build['install'].host, {exe: host})
         self.assertEqual(self.build['install'].target, {exe: target})
         self.assertEqual(self.build['defaults'].outputs, [exe])
+
+    def test_reinstall(self):
+        exe = Executable(Path('exe', Root.srcdir), None)
+        host = Executable(Path('exe', InstallRoot.bindir, True), None)
+        target = Executable(Path('exe', InstallRoot.bindir), None)
+        self.assertEqual(self.context['install'](exe), target)
+        self.assertEqual(self.context['install'](exe), target)
+        self.assertEqual(self.build['install'].explicit, [exe])
+        self.assertEqual(self.build['install'].host, {exe: host})
+        self.assertEqual(self.build['install'].target, {exe: target})
+
+        self.assertRaises(ValueError, self.context['install'], exe,
+                          directory='dir')
+        self.assertEqual(self.build['install'].explicit, [exe])
+        self.assertEqual(self.build['install'].host, {exe: host})
+        self.assertEqual(self.build['install'].target, {exe: target})
 
     def test_invalid(self):
         phony = Phony('name')
@@ -100,22 +125,57 @@ class TestInstall(BuiltinTest):
 
 
 class TestInstallify(FileTest):
-    def _check(self, kind, src, dst, src_kwargs={}, dst_kwargs={}, **kwargs):
+    def _check(self, kind, src, dst, src_kwargs={}, dst_kwargs={},
+               directory=None, **kwargs):
         f = kind(src, **src_kwargs, **kwargs)
         installed = kind(dst, **dst_kwargs, **kwargs)
-        self.assertSameFile(install.installify(f), installed)
+        self.assertSameFile(install.installify(f, directory=directory),
+                            installed)
         for name in ('winnt', 'linux'):
             env = MockEnv(target.platform_info(name))
             dst_kwargs_cross = {k: v.cross(env) if v.destdir else v
                                 for k, v in dst_kwargs.items()}
             installed = kind(dst.cross(env), **dst_kwargs_cross, **kwargs)
-            self.assertSameFile(install.installify(f, cross=env), installed)
+            self.assertSameFile(install.installify(
+                f, directory=directory, cross=env
+            ), installed)
 
     def test_installify(self):
         self._check(Executable, Path('foo/bar', Root.srcdir),
                     Path('bar', InstallRoot.bindir, True), format=None)
         self._check(Executable, Path('foo/bar', Root.builddir),
                     Path('foo/bar', InstallRoot.bindir, True), format=None)
+
+    def test_installify_relative_directory(self):
+        self._check(Executable, Path('foo/bar', Root.srcdir),
+                    Path('dir/bar', InstallRoot.bindir, True), format=None,
+                    directory='dir')
+        self._check(Executable, Path('foo/bar', Root.builddir),
+                    Path('dir/foo/bar', InstallRoot.bindir, True), format=None,
+                    directory='dir')
+
+        self.assertRaises(TypeError, install.installify, File(Path('foo/bar')),
+                          directory='dir')
+
+    def test_installify_absolute_directory(self):
+        directory = Path('share', InstallRoot.prefix)
+        self._check(Executable, Path('foo/bar', Root.srcdir),
+                    Path('share/bar', InstallRoot.prefix, True), format=None,
+                    directory=directory)
+        self._check(Executable, Path('foo/bar', Root.builddir),
+                    Path('share/foo/bar', InstallRoot.prefix, True),
+                    format=None, directory=directory)
+
+        self._check(File, Path('foo/bar', Root.srcdir),
+                    Path('share/bar', InstallRoot.prefix, True),
+                    directory=directory)
+        self._check(File, Path('foo/bar', Root.builddir),
+                    Path('share/foo/bar', InstallRoot.prefix, True),
+                    directory=directory)
+
+        self.assertRaises(ValueError, install.installify,
+                          Executable(Path('foo/bar'), None),
+                          directory=Path('/share', Root.absolute))
 
     def test_installify_header(self):
         self._check(HeaderFile, Path('foo/bar.hpp', Root.srcdir),
