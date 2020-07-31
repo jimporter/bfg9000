@@ -14,35 +14,56 @@ imported and its builtins are added to a dict of globals to pass to `build.bfg`.
 Builtins are defined by using decorators defined in `bfg9000.builtins.builtin`;
 by default, these make the decorated object available to `build.bfg`, but you
 can also specify the context to change where the object is available: `'build'`
-for `build.bfg` files, `'options'` for `options.bfg` files, and `'*'` for all
-files.
+for `build.bfg` files, `'options'` for `options.bfg` files, `'toolchain'` for
+`<toolchain>.bfg` files, and `'*'` for all files; in addition, you can specify
+a list of any of these strings to add the object to multiple contexts.
 
-These decorators also accept a list of internal global variables to be passed
-to the decorated function. For *build* contexts, valid globals are
-`build_inputs`, `env`, and `argv`; for *options* contexts, `env` and `parser`.
+### @default([*context*], [*name*]) { #default }
 
-### @function(*global*, ..., [*context*]) { #function }
+Define a function (or other callable object, including a type) as a builtin for
+the specified *context*s. If *name* is passed, it will be used as the builtin's
+name; otherwise, the function's name will be used.
 
-Define a function (or other callable object, including a type) as a builtin with
-the specified *global*s passed as the initial arguments to the function.
+### @function([*context*], [*name*]) { #function }
 
-### @getter(*global*, ..., [*context*]) { #getter }
+Define a function (or other callable object) as a builtin for the specified
+*context*s. If *name* is passed, it will be used as the builtin's name;
+otherwise, the function's name will be used. When called by a bfg script, the
+function will be passed a [context object](#context-objects) as the first
+argument.
 
-Define a getter function as a builtin with the specified *global*s passed as
-the initial arguments to the function.
+### @getter([*context*], [*name*]) { #getter }
 
-### @post(*global*, ..., [*context*]) { #post }
+Define a getter function as a builtin for the specified *context*s. If *name* is
+passed, it will be used as the builtin's name; otherwise, the function's name
+will be used. When called by a bfg script, the function will be passed a
+[context object](#context-objects) as the first argument.
 
-Define a function to be run after the user's build script (`build.bfg` or
-`options.bfg`, depending on *context*) is executed.
+### @post([*context*], [*name*]) { #post }
 
-### @type(*out_type*, [*in_type*]) { #type }
+Define a function to be run after the user's build script is executed for the
+specified *context*s. When called after a bfg script, the function will be
+passed a [context object](#context-objects) its only argument.
+
+### @type(*out_type*, [*in_type*], [*extra_in_type*], [*short_circuit*], [*first_optional*]) { #type }
 
 Define the return type of the decorated function as *out_type* and accepting
-automatic conversion of any object of *in_type* (either a type or tuple of
-types, defaulting to *string_types*) as the first argument. This is primarily
-useful for autoconversion of strings to the corresponding object for one of a
-build step's arguments (e.g. converting `'foo.cpp'` to a *SourceFile*).
+automatic conversion of any object of *in_type* or *extra_in_type* (either a
+type or tuple of types, defaulting to *string_or_path_types*) as the first
+argument. If *short_circuit* is true (the default), passing in an object of type
+*out_type* will simply return the input with no changes. If *first_optional* is
+true, calling the decorated function with a single positional argument will pass
+*None* as the first argument, and the supplied argument as the second.
+
+This decorator is primarily useful for autoconversion of strings to the
+corresponding object for one of a build step's arguments (e.g. converting
+`'foo.cpp'` to a *SourceFile*).
+
+## Context objects
+
+Context objects contain all the necessary data to manage the internal state
+corresponding to a bfg script. These can be used by builtins to work with the
+environment, add build steps to the graph, etc.
 
 [github-issue-48]: https://github.com/jimporter/bfg9000/issues/48
 [builtins]: https://github.com/jimporter/bfg9000/tree/master/bfg9000/builtins
