@@ -158,6 +158,7 @@
     <ul class="nav bs-sidenav">
         <li class="main active"><a href="#builtins">Builtins</a></li>
             <li><a href="#decorators">Decorators</a></li>
+            <li><a href="#context-objects">Context objects</a></li>
     </ul>
 </div></div>
                 <div class="col-md-9" role="main">
@@ -176,26 +177,43 @@ imported and its builtins are added to a dict of globals to pass to <code>build.
 <p>Builtins are defined by using decorators defined in <code>bfg9000.builtins.builtin</code>;
 by default, these make the decorated object available to <code>build.bfg</code>, but you
 can also specify the context to change where the object is available: <code>'build'</code>
-for <code>build.bfg</code> files, <code>'options'</code> for <code>options.bfg</code> files, and <code>'*'</code> for all
-files.</p>
-<p>These decorators also accept a list of internal global variables to be passed
-to the decorated function. For <em>build</em> contexts, valid globals are
-<code>build_inputs</code>, <code>env</code>, and <code>argv</code>; for <em>options</em> contexts, <code>env</code> and <code>parser</code>.</p>
-<h3 id="function">@function(<em>global</em>, ..., [<em>context</em>])<a class="headerlink" href="#function" title="Permanent link">§</a></h3>
-<p>Define a function (or other callable object, including a type) as a builtin with
-the specified <em>global</em>s passed as the initial arguments to the function.</p>
-<h3 id="getter">@getter(<em>global</em>, ..., [<em>context</em>])<a class="headerlink" href="#getter" title="Permanent link">§</a></h3>
-<p>Define a getter function as a builtin with the specified <em>global</em>s passed as
-the initial arguments to the function.</p>
-<h3 id="post">@post(<em>global</em>, ..., [<em>context</em>])<a class="headerlink" href="#post" title="Permanent link">§</a></h3>
-<p>Define a function to be run after the user's build script (<code>build.bfg</code> or
-<code>options.bfg</code>, depending on <em>context</em>) is executed.</p>
-<h3 id="type">@type(<em>out_type</em>, [<em>in_type</em>])<a class="headerlink" href="#type" title="Permanent link">§</a></h3>
+for <code>build.bfg</code> files, <code>'options'</code> for <code>options.bfg</code> files, <code>'toolchain'</code> for
+<code>&lt;toolchain&gt;.bfg</code> files, and <code>'*'</code> for all files; in addition, you can specify
+a list of any of these strings to add the object to multiple contexts.</p>
+<h3 id="default">@default([<em>context</em>], [<em>name</em>])<a class="headerlink" href="#default" title="Permanent link">§</a></h3>
+<p>Define a function (or other callable object, including a type) as a builtin for
+the specified <em>context</em>s. If <em>name</em> is passed, it will be used as the builtin's
+name; otherwise, the function's name will be used.</p>
+<h3 id="function">@function([<em>context</em>], [<em>name</em>])<a class="headerlink" href="#function" title="Permanent link">§</a></h3>
+<p>Define a function (or other callable object) as a builtin for the specified
+<em>context</em>s. If <em>name</em> is passed, it will be used as the builtin's name;
+otherwise, the function's name will be used. When called by a bfg script, the
+function will be passed a <a href="#context-objects">context object</a> as the first
+argument.</p>
+<h3 id="getter">@getter([<em>context</em>], [<em>name</em>])<a class="headerlink" href="#getter" title="Permanent link">§</a></h3>
+<p>Define a getter function as a builtin for the specified <em>context</em>s. If <em>name</em> is
+passed, it will be used as the builtin's name; otherwise, the function's name
+will be used. When called by a bfg script, the function will be passed a
+<a href="#context-objects">context object</a> as the first argument.</p>
+<h3 id="post">@post([<em>context</em>], [<em>name</em>])<a class="headerlink" href="#post" title="Permanent link">§</a></h3>
+<p>Define a function to be run after the user's build script is executed for the
+specified <em>context</em>s. When called after a bfg script, the function will be
+passed a <a href="#context-objects">context object</a> its only argument.</p>
+<h3 id="type">@type(<em>out_type</em>, [<em>in_type</em>], [<em>extra_in_type</em>], [<em>short_circuit</em>], [<em>first_optional</em>])<a class="headerlink" href="#type" title="Permanent link">§</a></h3>
 <p>Define the return type of the decorated function as <em>out_type</em> and accepting
-automatic conversion of any object of <em>in_type</em> (either a type or tuple of
-types, defaulting to <em>string_types</em>) as the first argument. This is primarily
-useful for autoconversion of strings to the corresponding object for one of a
-build step's arguments (e.g. converting <code>'foo.cpp'</code> to a <em>SourceFile</em>).</p></div>
+automatic conversion of any object of <em>in_type</em> or <em>extra_in_type</em> (either a
+type or tuple of types, defaulting to <em>string_or_path_types</em>) as the first
+argument. If <em>short_circuit</em> is true (the default), passing in an object of type
+<em>out_type</em> will simply return the input with no changes. If <em>first_optional</em> is
+true, calling the decorated function with a single positional argument will pass
+<em>None</em> as the first argument, and the supplied argument as the second.</p>
+<p>This decorator is primarily useful for autoconversion of strings to the
+corresponding object for one of a build step's arguments (e.g. converting
+<code>'foo.cpp'</code> to a <em>SourceFile</em>).</p>
+<h2 id="context-objects">Context objects<a class="headerlink" href="#context-objects" title="Permanent link">§</a></h2>
+<p>Context objects contain all the necessary data to manage the internal state
+corresponding to a bfg script. These can be used by builtins to work with the
+environment, add build steps to the graph, etc.</p></div>
         </div>
 
         <footer class="col-md-12">
