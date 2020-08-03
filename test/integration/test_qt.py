@@ -9,7 +9,7 @@ class TestQt(IntegrationTest):
             output = self.assertPopen([exe], extra_env={'DISPLAY': ''},
                                       returncode='fail')
             self.assertRegex(output,
-                             r'QXcbConnection: Could not connect to display')
+                             r'[Cc]ould not connect to display')
 
     def __init__(self, *args, **kwargs):
         env_vars = ({} if env.builder('c++').flavor == 'msvc'
