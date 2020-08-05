@@ -204,9 +204,6 @@ class BasePath(safe_str.safe_string):
 
         return result
 
-    def __str__(self):
-        raise NotImplementedError()
-
     def __repr__(self):
         return '`{}`'.format(self.realize(self.__repr_variables))
 

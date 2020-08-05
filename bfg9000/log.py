@@ -85,7 +85,7 @@ class StackfulStreamHandler(ColoredStreamHandler):
                 e = record.exc_info[1]
                 record.msg = e.msg
 
-                # Figure out where to put the carat.
+                # Figure out where to put the caret.
                 text = e.text.expandtabs()
                 dedent = len(text) - len(text.lstrip())
                 offset = 4 - dedent - 1 + e.offset
@@ -93,6 +93,11 @@ class StackfulStreamHandler(ColoredStreamHandler):
                 record.full_stack = [(e.filename, e.lineno, '<module>',
                                       e.text + ' ' * offset + '^')]
             else:
+                if not record.msg:
+                    record.msg = record.exc_info[0].__name__
+                elif self.debug:
+                    record.msg = '{}: {}'.format(record.exc_info[0].__name__,
+                                                 record.msg)
                 record.full_stack = traceback.extract_tb(record.exc_info[2])
             record.exc_info = None
 

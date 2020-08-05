@@ -119,7 +119,8 @@ class ConfigureHelp(argparse.Action):
 def add_generic_args(parser):
     parser.add_argument('--version', action='version',
                         version='%(prog)s ' + version)
-    parser.add_argument('--debug', action='store_true', help=argparse.SUPPRESS)
+    parser.add_argument('--debug', action='store_true',
+                        help='report extra information for debugging bfg9000')
     parser.add_argument('--color', metavar='WHEN',
                         choices=['always', 'never', 'auto'], default='auto',
                         help=('show colored output (one of: %(choices)s; ' +

@@ -13,6 +13,10 @@ class safe_string:
     def __radd__(self, lhs):
         return jbos(safe_str(lhs), self)
 
+    def __str__(self):
+        raise NotImplementedError('{} cannot be converted to str'
+                                  .format(type(self).__name__))
+
 
 class safe_string_ops:
     def __add__(self, rhs):
@@ -39,9 +43,6 @@ class literal_types(safe_string):
         if not isinstance(string, str):
             raise TypeError('expected a string')
         self.string = string
-
-    def __str__(self):
-        raise NotImplementedError()
 
     def __repr__(self):
         return '`{}`'.format(self.string)
@@ -110,9 +111,6 @@ class jbos(safe_string):  # Just a Bunch of Strings
         elif len(self.bits) == 1:
             return self.bits[0]
         return self
-
-    def __str__(self):
-        raise NotImplementedError()
 
     def __repr__(self):
         return '|{}|'.format(', '.join(repr(i) for i in self.bits))

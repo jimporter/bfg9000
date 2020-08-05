@@ -54,6 +54,7 @@ class TestStackfulStreamHandler(TestCase):
         with mock.patch.object(logging.StreamHandler, 'emit'):
             handler.emit(record)
 
+        self.assertEqual(record.msg, 'msg')
         self.assertEqual(record.full_stack, [
             (this_file, lineno, 'test_runtime_error',
              "raise RuntimeError('runtime error')"),
@@ -81,6 +82,7 @@ class TestStackfulStreamHandler(TestCase):
             handler.emit(record)
 
         iterutils_file = iterutils.__file__.rstrip('c')
+        self.assertEqual(record.msg, 'msg')
         self.assertEqual(record.full_stack, [
             (this_file, lineno, 'test_internal_error',
              "iterutils.first(None)"),
@@ -111,6 +113,7 @@ class TestStackfulStreamHandler(TestCase):
         with mock.patch.object(logging.StreamHandler, 'emit'):
             handler.emit(record)
 
+        self.assertEqual(record.msg, 'syntax error')
         self.assertEqual(record.full_stack, [
             ('file.py', 1, '<module>', 'line\n       ^'),
         ])
@@ -123,6 +126,60 @@ class TestStackfulStreamHandler(TestCase):
         self.assertEqual(record.stack_post, '')
         self.assertEqual(record.user_pathname, 'file.py')
         self.assertEqual(record.user_lineno, 1)
+
+    def test_empty_msg(self):
+        handler = log.StackfulStreamHandler()
+        try:
+            lineno = current_lineno() + 1
+            raise RuntimeError('runtime error')
+        except RuntimeError:
+            record = logging.LogRecord(
+                'name', 'level', 'pathname', 1, '', [], sys.exc_info()
+            )
+        with mock.patch.object(logging.StreamHandler, 'emit'):
+            handler.emit(record)
+
+        self.assertEqual(record.msg, 'RuntimeError')
+        self.assertEqual(record.full_stack, [
+            (this_file, lineno, 'test_empty_msg',
+             "raise RuntimeError('runtime error')"),
+        ])
+        self.assertEqual(record.stack_pre, '')
+        self.assertEqual(record.stack, (
+            '\n' +
+            '  File "{}", line {}, in test_empty_msg\n' +
+            "    raise RuntimeError('runtime error')"
+        ).format(this_file, lineno))
+        self.assertEqual(record.stack_post, '')
+        self.assertEqual(record.user_pathname, this_file)
+        self.assertEqual(record.user_lineno, lineno)
+
+    def test_debug(self):
+        handler = log.StackfulStreamHandler(debug=True)
+        try:
+            lineno = current_lineno() + 1
+            raise RuntimeError('runtime error')
+        except RuntimeError:
+            record = logging.LogRecord(
+                'name', 'level', 'pathname', 1, 'msg', [], sys.exc_info()
+            )
+        with mock.patch.object(logging.StreamHandler, 'emit'):
+            handler.emit(record)
+
+        self.assertEqual(record.msg, 'RuntimeError: msg')
+        self.assertEqual(record.full_stack, [
+            (this_file, lineno, 'test_debug',
+             "raise RuntimeError('runtime error')"),
+        ])
+        self.assertEqual(record.stack_pre, '')
+        self.assertEqual(record.stack, (
+            '\n' +
+            '  File "{}", line {}, in test_debug\n' +
+            "    raise RuntimeError('runtime error')"
+        ).format(this_file, lineno))
+        self.assertEqual(record.stack_post, '')
+        self.assertEqual(record.user_pathname, this_file)
+        self.assertEqual(record.user_lineno, lineno)
 
     def test_no_user_stack(self):
         handler = log.StackfulStreamHandler()
