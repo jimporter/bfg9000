@@ -469,7 +469,7 @@ def make_link(rule, build_inputs, buildfile, env):
     module_defs = listify(getattr(rule, 'module_defs', None))
     manifest = listify(getattr(rule, 'manifest', None))
     make.multitarget_rule(
-        buildfile,
+        build_inputs, buildfile,
         targets=rule.output,
         deps=(rule.files + rule.libs + package_build_deps + module_defs +
               manifest + rule.extra_deps),

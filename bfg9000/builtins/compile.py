@@ -340,7 +340,7 @@ def make_compile(rule, build_inputs, buildfile, env):
         buildfile.include(depfile, optional=True)
 
     make.multitarget_rule(
-        buildfile,
+        build_inputs, buildfile,
         targets=rule.output,
         deps=deps + rule.extra_deps,
         order_only=make.directory_deps(rule.output),

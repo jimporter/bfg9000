@@ -13,3 +13,11 @@ class TestCustomSteps(IntegrationTest):
     def test_goodbye(self):
         self.build(executable('goodbye'))
         self.assertOutput([executable('goodbye')], 'goodbye from python!\n')
+
+        # Ensure that cleaning multitarget make rules removes the .stamp file.
+        if self.backend == 'make':
+            self.clean()
+            self.assertDirectory('.', {
+                '.bfg_environ', 'Makefile',
+                os.path.join('goodbye.int', '.dir'),
+            })

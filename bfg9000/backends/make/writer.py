@@ -1,8 +1,7 @@
 import os
 import re
 
-from ... import path
-from ... import shell
+from ... import file_types, path, shell
 from .syntax import *
 from ...iterutils import listify, uniques
 from ...versioning import Version
@@ -76,14 +75,17 @@ def _get_path(thing):
     return thing if isinstance(thing, path.Path) else thing.path
 
 
-def multitarget_rule(buildfile, targets, deps=None, order_only=None,
-                     recipe=None, variables=None, phony=None):
+def multitarget_rule(build_inputs, buildfile, targets, deps=None,
+                     order_only=None, recipe=None, variables=None, phony=None,
+                     clean_stamp=True):
     targets = listify(targets)
     if len(targets) > 1:
         first = targets[0]
         primary = _get_path(first).addext('.stamp')
         buildfile.rule(target=targets, deps=[primary])
         recipe = listify(recipe) + [Silent([ 'touch', qvar('@') ])]
+        if clean_stamp:
+            build_inputs.add_target(file_types.File(primary))
     else:
         primary = targets[0]
 

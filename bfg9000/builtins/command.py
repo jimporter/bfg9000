@@ -159,7 +159,7 @@ build_step.output = Output
 def make_command(rule, build_inputs, buildfile, env):
     # Join all the commands onto one line so that users can use 'cd' and such.
     make.multitarget_rule(
-        buildfile,
+        build_inputs, buildfile,
         targets=rule.output,
         deps=rule.files + rule.extra_deps,
         order_only=(make.directory_deps(rule.output) if

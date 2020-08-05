@@ -17,10 +17,11 @@ def make_regenerate_rule(build_inputs, buildfile, env):
     bfg9000 = env.tool('bfg9000')
 
     make.multitarget_rule(
-        buildfile,
+        build_inputs, buildfile,
         targets=[Path('Makefile')] + build_inputs['regenerate'].outputs,
         deps=build_inputs.bootstrap_paths + listify(env.toolchain.path),
-        recipe=[bfg9000(Path('.'))]
+        recipe=[bfg9000(Path('.'))],
+        clean_stamp=False
     )
 
 
