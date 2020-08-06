@@ -7,6 +7,7 @@ from .build_inputs import BuildInputs
 from .path import exists, Path, pushd, Root
 from .iterutils import listify
 from .tools import init as tools_init
+from . import keywords
 
 bfgfile = 'build.bfg'
 optsfile = 'options.bfg'
@@ -36,6 +37,9 @@ def _execute_script(f, context, path, run_post=False):
          context.push_path(path) as p:  # noqa
         code = compile(f.read(), filename, 'exec')
         try:
+            for keyword, value in context.builtins.items():
+                if hasattr(keywords, keyword):
+                    setattr(keywords, keyword, value)
             exec(code, context.builtins)
         except SystemExit as e:
             if e.code:
