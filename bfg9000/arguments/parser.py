@@ -59,13 +59,11 @@ class ArgumentParser(_ArgumentParser):
 
 
 class BaseFile:
-    def __init__(self, check_type, kind, must_exist=False):
-        self._check_type = check_type
-        self._kind = kind
+    def __init__(self, must_exist=False):
         self.must_exist = must_exist
 
     def __call__(self, string):
-        p = _path.abspath(string)
+        p = self._abspath(string)
         if _path.exists(p):
             if not self._check_type(p):
                 raise ArgumentTypeError("'{}' is not a {}"
@@ -77,13 +75,27 @@ class BaseFile:
 
 
 class Directory(BaseFile):
-    def __init__(self, *args, **kwargs):
-        super().__init__(_path.isdir, 'directory', *args, **kwargs)
+    _kind = 'directory'
+
+    @staticmethod
+    def _abspath(p):
+        return _path.abspath(p, directory=True)
+
+    @staticmethod
+    def _check_type(p):
+        return _path.isdir(p)
 
 
 class File(BaseFile):
-    def __init__(self, *args, **kwargs):
-        super().__init__(_path.isfile, 'file', *args, **kwargs)
+    _kind = 'file'
+
+    @staticmethod
+    def _abspath(p):
+        return _path.abspath(p, directory=False)
+
+    @staticmethod
+    def _check_type(p):
+        return _path.isfile(p)
 
 
 # It'd be nice to just have a UserArgumentParser class with this method but it

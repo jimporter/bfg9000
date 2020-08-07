@@ -5,7 +5,7 @@ from .. import shell
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..build_inputs import Edge
-from ..file_types import File, Node, Phony
+from ..file_types import FileOrDirectory, Node, Phony
 from ..iterutils import isiterable, iterate, listify
 from ..objutils import convert_each
 from ..path import Path, Root
@@ -140,8 +140,9 @@ class BuildStep(BaseCommand):
     @staticmethod
     def _make_outputs(name, type):
         result = type(Path(name, Root.builddir))
-        if not isinstance(result, File):
-            raise ValueError('expected a function returning a file')
+        if not isinstance(result, FileOrDirectory):
+            raise ValueError('expected a function returning a file or ' +
+                             'directory')
         return result
 
 

@@ -2,7 +2,7 @@ from collections import OrderedDict
 from itertools import chain
 
 from .path import Path, Root
-from .file_types import File, Node
+from .file_types import Directory, File, Node
 from .iterutils import iterate, listify, unlistify
 from .objutils import objectify
 
@@ -32,7 +32,8 @@ class Edge:
         ])
 
         def make(name):
-            f = File(Path.ensure(name, Root.srcdir))
+            path = Path.ensure(name, Root.srcdir)
+            f = Directory(path) if path.directory else File(path)
             if f.path.root == Root.srcdir:
                 return build.add_source(f)
             return f

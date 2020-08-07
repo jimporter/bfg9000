@@ -24,6 +24,10 @@ def try_from_json(type, value):
     return type.from_json(value) if value is not None else None
 
 
+def try_as_directory(path):
+    return path.as_directory() if path is not None else None
+
+
 class EnvVersionError(RuntimeError):
     pass
 
@@ -66,15 +70,15 @@ class Environment:
         return env
 
     def __init__(self, bfgdir, backend, backend_version, srcdir, builddir):
-        self.bfgdir = bfgdir
+        self.bfgdir = bfgdir.as_directory()
         self.backend = backend
         self.backend_version = backend_version
 
         self.host_platform = platforms.host.platform_info()
         self.target_platform = platforms.target.platform_info()
 
-        self.srcdir = srcdir
-        self.builddir = builddir
+        self.srcdir = srcdir.as_directory()
+        self.builddir = try_as_directory(builddir)
         self.install_dirs = {}
         self.toolchain = Toolchain()
 
@@ -89,11 +93,11 @@ class Environment:
             if ( (self.is_cross and v and v.root == Root.absolute) or
                  self.install_dirs.get(k) ):
                 continue
-            self.install_dirs[k] = v
+            self.install_dirs[k] = try_as_directory(v)
 
         for k, v in install_dirs.items():
             if v:
-                self.install_dirs[k] = v
+                self.install_dirs[k] = v.as_directory()
 
         self.library_mode = LibraryMode(*library_mode)
         self.extra_args = extra_args
@@ -281,11 +285,11 @@ class Environment:
             setattr(env, i, data[i])
 
         for i in ('bfgdir', 'srcdir', 'builddir'):
-            setattr(env, i, Path.from_json(data[i]))
+            setattr(env, i, Path.from_json(data[i]).as_directory())
 
         env.backend_version = Version(data['backend_version'])
         env.install_dirs = {
-            InstallRoot[k]: Path.from_json(v) if v else None
+            InstallRoot[k]: Path.from_json(v).as_directory() if v else None
             for k, v in data['install_dirs'].items()
         }
         env.toolchain = Toolchain.from_json(data['toolchain'])

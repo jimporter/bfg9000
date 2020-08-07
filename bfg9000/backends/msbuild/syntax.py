@@ -10,7 +10,7 @@ from .solution import uuid_str
 from ... import path
 from ... import safe_str
 from ...shell import windows as wshell
-from ...file_types import File
+from ...file_types import FileOrDirectory
 from ...iterutils import isiterable, partition
 from ...tools.common import Command
 
@@ -37,7 +37,7 @@ _path_vars = {
 
 
 def textify(thing, quoted=False, builddir=BuildDir.output):
-    if isinstance(thing, File):
+    if isinstance(thing, FileOrDirectory):
         if thing.creator is None:
             builddir = BuildDir.solution
         elif getattr(thing.creator, 'msbuild_output', False):

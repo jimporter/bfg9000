@@ -4,7 +4,7 @@ import re
 from enum import IntEnum
 
 from . import builtin
-from ..file_types import File
+from ..file_types import FileOrDirectory
 from ..iterutils import iterate
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
@@ -150,8 +150,8 @@ def find_files(context, path='.', name='*', type='*', *, extra=None,
              'd': dir_type or context['directory']}
     extra_types = {'f': context['generic_file'], 'd': context['directory']}
 
-    paths = [i.path if isinstance(i, File) else context['relpath'](i)
-             for i in iterate(path)]
+    paths = [i.path if isinstance(i, FileOrDirectory) else
+             context['relpath'](i) for i in iterate(path)]
 
     found, seen_dirs = [], []
     for path, type, matched in _find_files(context.env, paths, final_filter,

@@ -8,8 +8,8 @@ from .platforms.host import platform_info
 Path = platform_info().Path
 
 
-def abspath(path, type=Path):
-    return type.abspath(path)
+def abspath(path, type=Path, **kwargs):
+    return type.abspath(path, **kwargs)
 
 
 def commonprefix(paths):
@@ -22,8 +22,8 @@ def commonprefix(paths):
 
     for i, bit in enumerate(lo):
         if bit != hi[i]:
-            return cls(cls.sep.join(lo[:i]), paths[0].root)
-    return cls(cls.sep.join(lo), paths[0].root)
+            return cls(cls.sep.join(lo[:i]), paths[0].root, directory=True)
+    return cls(cls.sep.join(lo), paths[0].root, directory=(lo != hi))
 
 
 def _wrap_ospath(fn):

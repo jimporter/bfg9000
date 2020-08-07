@@ -134,6 +134,18 @@ class TestAutoFile(BuiltinTest):
                             expected)
         self.assertEqual(list(self.build.sources()), [self.bfgfile, expected])
 
+    def test_directory(self):
+        expected = Directory(srcpath('directory/'))
+        self.assertSameFile(self.context['auto_file']('directory/'),
+                            expected)
+        self.assertEqual(list(self.build.sources()), [self.bfgfile, expected])
+
+    def test_header_directory(self):
+        expected = HeaderDirectory(srcpath('directory/'), 'c++')
+        self.assertSameFile(self.context['auto_file']('directory/', 'c++'),
+                            expected)
+        self.assertEqual(list(self.build.sources()), [self.bfgfile, expected])
+
     def test_auxext(self):
         expected = HeaderFile(srcpath('file.h'), 'c++')
         self.assertSameFile(self.context['auto_file']('file.h', 'c++'),

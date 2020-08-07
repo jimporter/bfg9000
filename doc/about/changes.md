@@ -25,6 +25,8 @@ in progress
   to print
 - `generated_source()` steps are now automatically created as necessary for
   files passed to `object_file()`, if possible
+- Paths with a trailing `/` are now treated as directory paths, and when passed
+  to `auto_file()` will create a directory object
 - Add support for compiling Windows `.rc` files
 - Add support for setting the entry point for native binaries (C, C++, etc)
 - Try to find the right compiler to use for C-family languages by guessing based

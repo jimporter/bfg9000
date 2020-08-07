@@ -39,7 +39,7 @@ class FileList(list):
     def __getitem__(self, key):
         if isinstance(key, str):
             key = self._relpath(key)
-        elif isinstance(key, File):
+        elif isinstance(key, FileOrDirectory):
             key = key.path
 
         if isinstance(key, Path):
@@ -102,18 +102,21 @@ def module_def_file(context, name, *, dist=True):
 @builtin.type(File)
 def auto_file(context, name, lang=None, *, dist=True):
     path = context['relpath'](name)
-    if lang:
-        kind = None
-        if lang in known_langs:
-            src_lang = known_langs[lang].src_lang
-            kind = known_langs[src_lang].extkind(path.ext())
+    if path.directory:
+        file_type = HeaderDirectory if lang else Directory
     else:
-        lang, kind = known_langs.extinfo(path.ext())
+        if lang:
+            kind = None
+            if lang in known_langs:
+                src_lang = known_langs[lang].src_lang
+                kind = known_langs[src_lang].extkind(path.ext())
+        else:
+            lang, kind = known_langs.extinfo(path.ext())
 
-    if lang:
-        return static_file(context, _kind_to_file_type[kind or 'source'], path,
-                           dist, [('lang', lang)])
-    return static_file(context, File, path, dist)
+        file_type = _kind_to_file_type[kind or 'source'] if lang else File
+
+    params = [('lang', lang)] if lang else []
+    return static_file(context, file_type, path, dist, params)
 
 
 # These builtins will find all the files in a directory so that they can be

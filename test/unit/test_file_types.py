@@ -42,12 +42,21 @@ class TestNode(TestCase):
 
 
 class TestFile(FileTest):
+    def test_directory_path(self):
+        self.assertRaises(ValueError, File, Path('foo/', Root.srcdir))
+
     def test_clone(self):
         self.assertClone(File(Path('a', Root.srcdir)),
                          File(Path('a')))
 
 
 class TestDirectory(FileTest):
+    def test_directory_path(self):
+        d = Directory(Path('foo', Root.srcdir))
+        self.assertTrue(d.path.directory)
+        d = Directory(Path('foo/', Root.srcdir))
+        self.assertTrue(d.path.directory)
+
     def test_clone(self):
         self.assertClone(Directory(Path('a', Root.srcdir)),
                          Directory(Path('a')), extra={'files'})

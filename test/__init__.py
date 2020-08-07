@@ -96,6 +96,10 @@ class TestCase(unittest.TestCase):
     def parameterize(self):
         return [] if self._hideTest() else [self]
 
+    def assertPathsEqual(self, a, b):
+        self.assertEqual(a, b)
+        self.assertEqual(a.directory, b.directory)
+
 
 def parameterize_tests(tests, **kwargs):
     result = []

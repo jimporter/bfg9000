@@ -25,46 +25,52 @@ class BasePath(safe_str.safe_string):
         [(DestDir.destdir, '$(DESTDIR)')]
     )
 
-    def __init__(self, path, root=Root.builddir, destdir=None):
+    def __init__(self, path, root=Root.builddir, destdir=None, directory=None):
         if destdir and isinstance(root, Root) and root != Root.absolute:
             raise ValueError('destdir only applies to absolute or install ' +
                              'paths')
-        drive, path = self.__normalize(path, expand_user=True)
+        drive, normpath, isdir = self.__normalize(path, expand_user=True)
+        if directory is False and isdir:
+            raise ValueError('expected a non-directory path')
 
-        if posixpath.isabs(path):
+        if posixpath.isabs(normpath):
             root = Root.absolute
         elif root == Root.absolute:
             raise ValueError("'{}' is not absolute".format(path))
         elif isinstance(root, BasePath):
-            path = self.__join(root.suffix, path)
+            normpath, isdir = self.__join(root.suffix, path)
             if destdir is None:
                 destdir = root.destdir
             root = root.root
 
         if not isinstance(root, (Root, InstallRoot)):
             raise ValueError('invalid root {!r}'.format(root))
-        if ( path == posixpath.pardir or
-             path.startswith(posixpath.pardir + posixpath.sep) ):
+        if ( normpath == posixpath.pardir or
+             normpath.startswith(posixpath.pardir + posixpath.sep) ):
             raise ValueError("too many '..': path cannot escape root")
 
-        self.suffix = drive + path
+        self.suffix = drive + normpath
         self.root = root
+        self.directory = directory or isdir or normpath == ''
         self.destdir = bool(destdir)
 
     @classmethod
-    def abspath(cls, path):
-        drive, path = cls.__normalize(path, expand_user=True)
-        cwddrive, cwdpath = cls.__normalize(os.getcwd())
+    def abspath(cls, path, directory=None):
+        drive, path, isdir = cls.__normalize(path, expand_user=True)
+        cwddrive, cwdpath, _ = cls.__normalize(os.getcwd())
 
         if not drive:
             drive = cwddrive
-        path = cls.__join(cwdpath, path)
-        return cls(drive + path, Root.absolute)
+        path, _ = cls.__join(cwdpath, path)
+        if directory is False and isdir:
+            raise ValueError('expected a non-directory path')
+        return cls(drive + path, Root.absolute, directory=directory or isdir)
 
     @classmethod
-    def ensure(cls, path, root=Root.builddir, destdir=False, base=None,
-               strict=False):
-        result = objectify(path, base or cls, cls, root=root, destdir=destdir)
+    def ensure(cls, path, root=Root.builddir, destdir=False, directory=None, *,
+               base=None, strict=False):
+        result = objectify(path, base or cls, cls, root=root, destdir=destdir,
+                           directory=directory)
         raw_root = root.root if isinstance(root, cls) else root
         if strict and result.root != raw_root:
             raise ValueError('expected root of {!r}, but got {!r}'
@@ -72,7 +78,19 @@ class BasePath(safe_str.safe_string):
         return result
 
     @staticmethod
-    def __normalize(path, expand_user=False):
+    def __normpath(path):
+        # A path counts as a directory if either its raw form or its normalized
+        # form ends with `\` or `/`.
+        path = path.replace('\\', '/')
+        isdir = path.endswith(posixpath.sep)
+        path = posixpath.normpath(path)
+        isdir = isdir or path.endswith(posixpath.sep)
+        if path == posixpath.curdir:
+            path = ''
+        return path, isdir
+
+    @classmethod
+    def __normalize(cls, path, expand_user=False):
         if expand_user:
             path = os.path.expanduser(path)
         drive, path = ntpath.splitdrive(path)
@@ -80,15 +98,12 @@ class BasePath(safe_str.safe_string):
             raise ValueError('relative paths with drives not supported')
 
         drive = drive.replace('\\', '/')
-        path = posixpath.normpath(path.replace('\\', '/'))
-        if path == posixpath.curdir:
-            path = ''
-        return drive, path
+        path, isdir = cls.__normpath(path)
+        return drive, path, isdir
 
-    @staticmethod
-    def __join(path1, path2):
-        path = posixpath.normpath(posixpath.join(path1, path2))
-        return '' if path == posixpath.curdir else path
+    @classmethod
+    def __join(cls, path1, path2):
+        return cls.__normpath(posixpath.join(path1, path2))
 
     def __localize(self, thing):
         if isinstance(thing, str):
@@ -97,31 +112,37 @@ class BasePath(safe_str.safe_string):
 
     def cross(self, env):
         cls = env.target_platform.Path
-        return cls(self.suffix, self.root)
+        return cls(self.suffix, self.root, False, self.directory)
+
+    def as_directory(self):
+        if self.directory:
+            return self
+        return type(self)(self.suffix, self.root, self.destdir, True)
 
     def parent(self):
         if not self.suffix:
             raise ValueError('already at root')
         return type(self)(posixpath.dirname(self.suffix), self.root,
-                          self.destdir)
+                          self.destdir, directory=True)
 
     def append(self, path):
-        drive, path = self.__normalize(path, expand_user=True)
+        drive, path, isdir = self.__normalize(path, expand_user=True)
         if not posixpath.isabs(path):
-            path = self.__join(self.suffix, path)
-        return type(self)(drive + path, self.root, self.destdir)
+            path, _ = self.__join(self.suffix, path or '.')
+        return type(self)(drive + path, self.root, self.destdir, isdir)
 
     def ext(self):
         return posixpath.splitext(self.suffix)[1]
 
     def addext(self, ext):
-        return type(self)(self.suffix + ext, self.root, self.destdir)
+        return type(self)(self.suffix + ext, self.root, self.destdir,
+                          self.directory)
 
     def stripext(self, replace=None):
         name = posixpath.splitext(self.suffix)[0]
         if replace:
             name += replace
-        return type(self)(name, self.root, self.destdir)
+        return type(self)(name, self.root, self.destdir, self.directory)
 
     def splitleaf(self):
         return self.parent(), self.basename()
@@ -147,10 +168,16 @@ class BasePath(safe_str.safe_string):
         return self.__localize(result) if localize else result
 
     def reroot(self, root=Root.builddir):
-        return type(self)(self.suffix, root, self.destdir)
+        return type(self)(self.suffix, root, self.destdir, self.directory)
 
     def to_json(self):
-        return (self.suffix, self.root.name, self.destdir)
+        suffix = self.suffix
+        if self.directory and not suffix.endswith(posixpath.sep):
+            if suffix:
+                suffix += posixpath.sep
+            else:
+                suffix = posixpath.curdir + posixpath.sep
+        return (suffix, self.root.name, self.destdir)
 
     @classmethod
     def from_json(cls, data):
@@ -205,7 +232,10 @@ class BasePath(safe_str.safe_string):
         return result
 
     def __repr__(self):
-        return '`{}`'.format(self.realize(self.__repr_variables))
+        s = self.realize(self.__repr_variables)
+        if self.directory and not s.endswith(posixpath.sep):
+            s += posixpath.sep
+        return '`{}`'.format(s)
 
     def __hash__(self):
         return hash(self.suffix)

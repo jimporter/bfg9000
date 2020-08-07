@@ -17,6 +17,10 @@ will be translated to a standard internal representation before being emitted to
 build scripts in their platform-specific form. Thus, `foo/bar` and `foo\bar` are
 equivalent to bfg9000.
 
+In addition, you can terminate a path with `/` (or `\`) to ensure that it's
+treated as a directory; this affects the behavior of some builtins, such as
+[*auto_file*](#auto_file).
+
 !!! note
     While absolute paths are rarely needed in a `build.bfg` script, it's still
     possible to use them. However, there are some caveats: 1) on Windows,
@@ -65,6 +69,9 @@ automatically determine the file's kind based on its extension:
 extension is not recognized, [*generic_file*](#generic_file). If *lang* is
 specified, files with an unrecognized extension will always be treated as
 [*source_file*](#source_file)s.
+
+If *name* ends with a `/`, *auto_file* will create a [*directory*](#directory)
+instead or, if *lang* is specified, a [*header_directory*](#header_directory).
 
 !!! note
     This function is primarily useful for writing generic code that works with

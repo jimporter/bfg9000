@@ -51,7 +51,7 @@ class BaseFile:
     pass
 
 
-class File(Node, BaseFile):
+class FileOrDirectory(Node, BaseFile):
     _clone_exclude = {'path', 'creator', 'post_install'}
     _clone_subfiles = {}
 
@@ -94,10 +94,17 @@ class File(Node, BaseFile):
         return clone
 
 
-@_clone_traits(exclude={'files'})
-class Directory(File):
-    def __init__(self, path, files=None):
+class File(FileOrDirectory):
+    def __init__(self, path):
+        if path.directory:
+            raise ValueError('expected a non-directory')
         super().__init__(path)
+
+
+@_clone_traits(exclude={'files'})
+class Directory(FileOrDirectory):
+    def __init__(self, path, files=None):
+        super().__init__(path.as_directory())
         self.files = files
 
     def _clone_args(self, pathfn, recursive):

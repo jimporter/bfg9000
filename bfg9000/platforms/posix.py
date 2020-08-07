@@ -42,14 +42,14 @@ class PosixPlatform(Platform):
 class PosixHostPlatform(HostPlatform, PosixPlatform):
     @property
     def include_dirs(self):
-        return [PosixPath('/usr/local/include', Root.absolute),
-                PosixPath('/usr/include', Root.absolute)]
+        return [PosixPath('/usr/local/include/', Root.absolute),
+                PosixPath('/usr/include/', Root.absolute)]
 
     @property
     def lib_dirs(self):
-        return [PosixPath('/usr/local/lib', Root.absolute),
-                PosixPath('/lib', Root.absolute),
-                PosixPath('/usr/lib', Root.absolute)]
+        return [PosixPath('/usr/local/lib/', Root.absolute),
+                PosixPath('/lib/', Root.absolute),
+                PosixPath('/usr/lib/', Root.absolute)]
 
     @property
     def destdir(self):
@@ -89,12 +89,13 @@ class PosixTargetPlatform(TargetPlatform, PosixPlatform):
 
     @property
     def install_dirs(self):
+        IRoot = InstallRoot
         return {
-            InstallRoot.prefix     : PosixPath('/usr/local', Root.absolute),
-            InstallRoot.exec_prefix: PosixPath('', InstallRoot.prefix),
-            InstallRoot.bindir     : PosixPath('bin', InstallRoot.exec_prefix),
-            InstallRoot.libdir     : PosixPath('lib', InstallRoot.exec_prefix),
-            InstallRoot.includedir : PosixPath('include', InstallRoot.prefix),
+            IRoot.prefix     : PosixPath('/usr/local/', Root.absolute),
+            IRoot.exec_prefix: PosixPath('', IRoot.prefix),
+            IRoot.bindir     : PosixPath('bin/', IRoot.exec_prefix),
+            IRoot.libdir     : PosixPath('lib/', IRoot.exec_prefix),
+            IRoot.includedir : PosixPath('include/', IRoot.prefix),
         }
 
 
