@@ -80,6 +80,18 @@ def xfail_if(xfail):
     return wrap
 
 
+class _StrictPath:
+    def __init__(self, path):
+        self.path = path
+
+    def __eq__(self, rhs):
+        return (self.path == rhs.path and
+                self.path.directory == rhs.path.directory)
+
+    def __repr__(self):
+        return repr(self.path)
+
+
 class TestCase(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         self._args = args
@@ -96,9 +108,16 @@ class TestCase(unittest.TestCase):
     def parameterize(self):
         return [] if self._hideTest() else [self]
 
-    def assertPathsEqual(self, a, b):
-        self.assertEqual(a, b)
-        self.assertEqual(a.directory, b.directory)
+    def assertPathEqual(self, a, b, msg=None):
+        self.assertEqual(_StrictPath(a), _StrictPath(b), msg)
+
+    def assertPathListEqual(self, a, b, msg=None):
+        self.assertListEqual([_StrictPath(i) for i in a],
+                             [_StrictPath(i) for i in b], msg)
+
+    def assertPathDictEqual(self, a, b, msg=None):
+        self.assertDictEqual({k: _StrictPath(v) for k, v in a.items()},
+                             {k: _StrictPath(v) for k, v in b.items()}, msg)
 
 
 def parameterize_tests(tests, **kwargs):

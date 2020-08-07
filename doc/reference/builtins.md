@@ -1195,7 +1195,7 @@ Availability: `build.bfg` and `options.bfg`
 Within a [submodule](#submodule), export a list of keyword arguments to be
 returned to the calling module.
 
-### filter_by_platform(*name*, *path*, *type*) { #filter_by_platform }
+### filter_by_platform(*path*) { #filter_by_platform }
 Availability: `build.bfg`
 {: .subtitle}
 
@@ -1206,7 +1206,8 @@ known platform name that *doesn't* match the target platform. Known platform
 names are: `'posix'`,`'linux'`, `'darwin'`, `'cygwin'`, `'windows'`, `'winnt'`,
 `'win9x'`, `'msdos'`.
 
-This is the default *filter* for [*find_files*](#find_files).
+This can be used as the *filter* for [*find_files*](#find_files) or
+[*find_path*](#find_path).
 
 ### FindResult
 Availability: `build.bfg`
@@ -1241,7 +1242,7 @@ specified:
   default, `.#*`, `*~`, and `#*#` are exluded
 * *flat*: If true, *find_files* will not recurse into subdirectories; otherwise,
   (the default) it will
-* *filter*: A predicate taking a path object file type, and returning a
+* *filter*: A predicate taking a [*Path*](#Path) object and returning a
   [*FindResult*](#FindResult) which will filter the results
 * *file_type*: The type of object to return for matching files; if specified,
   this should be a function taking a path object and a boolean (the *dist*

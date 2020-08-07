@@ -228,12 +228,12 @@ class TestPath(PathTestCase):
                 self.assertRaises(ValueError, self.Path, '../..', base)
 
     def test_ensure(self):
-        self.assertPathsEqual(self.Path.ensure('foo'), self.Path('foo'))
-        self.assertPathsEqual(self.Path.ensure('foo', path.Root.srcdir),
-                              self.Path('foo', path.Root.srcdir))
-        self.assertPathsEqual(self.Path.ensure('foo', directory=True),
-                              self.Path('foo/'))
-        self.assertPathsEqual(
+        self.assertPathEqual(self.Path.ensure('foo'), self.Path('foo'))
+        self.assertPathEqual(self.Path.ensure('foo', path.Root.srcdir),
+                             self.Path('foo', path.Root.srcdir))
+        self.assertPathEqual(self.Path.ensure('foo', directory=True),
+                             self.Path('foo/'))
+        self.assertPathEqual(
             self.Path.ensure('foo', path.InstallRoot.bindir, True),
             self.Path('foo', path.InstallRoot.bindir, True)
         )
@@ -248,12 +248,11 @@ class TestPath(PathTestCase):
                           path.Root.srcdir, strict=True)
 
         base = self.Path('base')
-        self.assertPathsEqual(self.Path.ensure('foo', base),
-                              self.Path('base/foo'))
-        self.assertPathsEqual(self.Path.ensure('foo', base),
-                              self.Path('base/foo'))
-        self.assertPathsEqual(self.Path.ensure('/foo', base),
-                              self.Path('/foo'))
+        self.assertPathEqual(self.Path.ensure('foo', base),
+                             self.Path('base/foo'))
+        self.assertPathEqual(self.Path.ensure('foo', base),
+                             self.Path('base/foo'))
+        self.assertPathEqual(self.Path.ensure('/foo', base), self.Path('/foo'))
         self.assertIs(self.Path.ensure(p, base), p)
         self.assertRaises(ValueError, self.Path.ensure,
                           self.Path('foo', path.Root.srcdir), strict=True)
@@ -301,15 +300,15 @@ class TestPath(PathTestCase):
             env = MockEnv(platform)
 
             p = self.Path('foo/bar', path.Root.srcdir)
-            self.assertPathsEqual(p.cross(env),
-                                  platform.Path('foo/bar', path.Root.srcdir))
+            self.assertPathEqual(p.cross(env),
+                                 platform.Path('foo/bar', path.Root.srcdir))
 
             p = self.Path('foo/bar/', path.Root.srcdir)
-            self.assertPathsEqual(p.cross(env),
-                                  platform.Path('foo/bar/', path.Root.srcdir))
+            self.assertPathEqual(p.cross(env),
+                                 platform.Path('foo/bar/', path.Root.srcdir))
 
             p = self.Path('foo/bar', path.InstallRoot.bindir, destdir=True)
-            self.assertPathsEqual(
+            self.assertPathEqual(
                 p.cross(env),
                 platform.Path('foo/bar', path.InstallRoot.bindir)
             )
@@ -317,58 +316,57 @@ class TestPath(PathTestCase):
     def test_as_directory(self):
         f = self.Path('foo', path.Root.srcdir)
         d = self.Path('foo/', path.Root.srcdir)
-        self.assertPathsEqual(f.as_directory(), d)
+        self.assertPathEqual(f.as_directory(), d)
         self.assertIs(d.as_directory(), d)
 
     def test_parent(self):
         p = self.Path('foo/bar', path.Root.srcdir)
-        self.assertPathsEqual(p.parent(), self.Path('foo/', path.Root.srcdir))
+        self.assertPathEqual(p.parent(), self.Path('foo/', path.Root.srcdir))
 
         p = self.Path('bar', path.Root.srcdir)
-        self.assertPathsEqual(p.parent(), self.Path('./', path.Root.srcdir))
+        self.assertPathEqual(p.parent(), self.Path('./', path.Root.srcdir))
 
         p = self.Path('', path.Root.srcdir)
         self.assertRaises(ValueError, p.parent)
 
         p = self.Path('foo/bar', path.InstallRoot.bindir, True)
-        self.assertPathsEqual(
+        self.assertPathEqual(
             p.parent(), self.Path('foo/', path.InstallRoot.bindir, True)
         )
 
     def test_append(self):
         Root = path.Root
         p = self.Path('foo', Root.srcdir)
-        self.assertPathsEqual(p.append('bar'),
-                              self.Path('foo/bar', Root.srcdir))
-        self.assertPathsEqual(p.append('bar/baz'),
-                              self.Path('foo/bar/baz', Root.srcdir))
-        self.assertPathsEqual(p.append(r'bar\baz'),
-                              self.Path('foo/bar/baz', Root.srcdir))
+        self.assertPathEqual(p.append('bar'),
+                             self.Path('foo/bar', Root.srcdir))
+        self.assertPathEqual(p.append('bar/baz'),
+                             self.Path('foo/bar/baz', Root.srcdir))
+        self.assertPathEqual(p.append(r'bar\baz'),
+                             self.Path('foo/bar/baz', Root.srcdir))
 
-        self.assertPathsEqual(p.append('.'), self.Path('foo', Root.srcdir))
-        self.assertPathsEqual(p.append('..'), self.Path('', Root.srcdir))
-        self.assertPathsEqual(p.append('../bar'),
-                              self.Path('bar', Root.srcdir))
-        self.assertPathsEqual(p.append(r'..\bar'),
-                              self.Path('bar', Root.srcdir))
+        self.assertPathEqual(p.append('.'), self.Path('foo', Root.srcdir))
+        self.assertPathEqual(p.append('..'), self.Path('', Root.srcdir))
+        self.assertPathEqual(p.append('../bar'), self.Path('bar', Root.srcdir))
+        self.assertPathEqual(p.append(r'..\bar'),
+                             self.Path('bar', Root.srcdir))
 
-        self.assertPathsEqual(p.append('bar/'),
-                              self.Path('foo/bar/', Root.srcdir))
-        self.assertPathsEqual(p.append('./'), self.Path('foo/', Root.srcdir))
+        self.assertPathEqual(p.append('bar/'),
+                             self.Path('foo/bar/', Root.srcdir))
+        self.assertPathEqual(p.append('./'), self.Path('foo/', Root.srcdir))
 
-        self.assertPathsEqual(p.append('/bar'),
-                              self.Path('/bar', Root.absolute))
-        self.assertPathsEqual(p.append('C:/bar'),
-                              self.Path('C:/bar', Root.absolute))
-        self.assertPathsEqual(p.append(r'C:\bar'),
-                              self.Path('C:/bar', Root.absolute))
-        self.assertPathsEqual(p.append('//server/mount/bar'),
-                              self.Path('//server/mount/bar', Root.absolute))
-        self.assertPathsEqual(p.append(r'\\server\mount\bar'),
-                              self.Path('//server/mount/bar', Root.absolute))
+        self.assertPathEqual(p.append('/bar'),
+                             self.Path('/bar', Root.absolute))
+        self.assertPathEqual(p.append('C:/bar'),
+                             self.Path('C:/bar', Root.absolute))
+        self.assertPathEqual(p.append(r'C:\bar'),
+                             self.Path('C:/bar', Root.absolute))
+        self.assertPathEqual(p.append('//server/mount/bar'),
+                             self.Path('//server/mount/bar', Root.absolute))
+        self.assertPathEqual(p.append(r'\\server\mount\bar'),
+                             self.Path('//server/mount/bar', Root.absolute))
 
         p = self.Path('foo', path.InstallRoot.bindir, True)
-        self.assertPathsEqual(
+        self.assertPathEqual(
             p.append('bar'),
             self.Path('foo/bar', path.InstallRoot.bindir, True)
         )
@@ -382,47 +380,47 @@ class TestPath(PathTestCase):
 
     def test_addext(self):
         p = self.Path('foo', path.Root.srcdir)
-        self.assertPathsEqual(p.addext('.txt'),
-                              self.Path('foo.txt', path.Root.srcdir))
+        self.assertPathEqual(p.addext('.txt'),
+                             self.Path('foo.txt', path.Root.srcdir))
 
         p = self.Path('foo/', path.Root.srcdir)
-        self.assertPathsEqual(p.addext('.txt'),
-                              self.Path('foo.txt/', path.Root.srcdir))
+        self.assertPathEqual(p.addext('.txt'),
+                             self.Path('foo.txt/', path.Root.srcdir))
 
         p = self.Path('foo', path.InstallRoot.bindir, True)
-        self.assertPathsEqual(
+        self.assertPathEqual(
             p.addext('.txt'),
             self.Path('foo.txt', path.InstallRoot.bindir, True)
         )
 
     def test_stripext(self):
         p = self.Path('foo.txt', path.Root.srcdir)
-        self.assertPathsEqual(p.stripext(), self.Path('foo', path.Root.srcdir))
+        self.assertPathEqual(p.stripext(), self.Path('foo', path.Root.srcdir))
         p = self.Path('foo.txt', path.Root.srcdir)
-        self.assertPathsEqual(p.stripext('.cpp'),
-                              self.Path('foo.cpp', path.Root.srcdir))
+        self.assertPathEqual(p.stripext('.cpp'),
+                             self.Path('foo.cpp', path.Root.srcdir))
 
         p = self.Path('foo.txt/', path.Root.srcdir)
-        self.assertPathsEqual(p.stripext(),
-                              self.Path('foo/', path.Root.srcdir))
+        self.assertPathEqual(p.stripext(),
+                             self.Path('foo/', path.Root.srcdir))
         p = self.Path('foo.txt/', path.Root.srcdir)
-        self.assertPathsEqual(p.stripext('.cpp'),
-                              self.Path('foo.cpp/', path.Root.srcdir))
+        self.assertPathEqual(p.stripext('.cpp'),
+                             self.Path('foo.cpp/', path.Root.srcdir))
 
         p = self.Path('foo', path.Root.srcdir)
-        self.assertPathsEqual(p.stripext(), self.Path('foo', path.Root.srcdir))
+        self.assertPathEqual(p.stripext(), self.Path('foo', path.Root.srcdir))
         p = self.Path('foo', path.Root.srcdir)
-        self.assertPathsEqual(p.stripext('.cpp'),
-                              self.Path('foo.cpp', path.Root.srcdir))
+        self.assertPathEqual(p.stripext('.cpp'),
+                             self.Path('foo.cpp', path.Root.srcdir))
 
         p = self.Path('foo.txt', path.InstallRoot.bindir, True)
-        self.assertPathsEqual(p.stripext(),
-                              self.Path('foo', path.InstallRoot.bindir, True))
+        self.assertPathEqual(p.stripext(),
+                             self.Path('foo', path.InstallRoot.bindir, True))
 
     def test_splitleaf(self):
         p = self.Path('foo/bar/baz', path.Root.srcdir)
         par, leaf = p.splitleaf()
-        self.assertPathsEqual(par, self.Path('foo/bar/', path.Root.srcdir))
+        self.assertPathEqual(par, self.Path('foo/bar/', path.Root.srcdir))
         self.assertEqual(leaf, 'baz')
 
     def test_split(self):
@@ -516,15 +514,15 @@ class TestPath(PathTestCase):
 
     def test_reroot(self):
         p = self.Path('foo/bar', path.Root.srcdir)
-        self.assertPathsEqual(p.reroot(path.Root.builddir),
-                              self.Path('foo/bar', path.Root.builddir))
+        self.assertPathEqual(p.reroot(path.Root.builddir),
+                             self.Path('foo/bar', path.Root.builddir))
 
         p = self.Path('foo/bar/', path.Root.srcdir)
-        self.assertPathsEqual(p.reroot(path.Root.builddir),
-                              self.Path('foo/bar/', path.Root.builddir))
+        self.assertPathEqual(p.reroot(path.Root.builddir),
+                             self.Path('foo/bar/', path.Root.builddir))
 
         p = self.Path('foo/bar', path.InstallRoot.bindir, True)
-        self.assertPathsEqual(
+        self.assertPathEqual(
             p.reroot(path.InstallRoot.libdir),
             self.Path('foo/bar', path.InstallRoot.libdir, True)
         )
@@ -547,10 +545,10 @@ class TestPath(PathTestCase):
 
     def test_from_json(self):
         p = self.Path.from_json(['foo', 'srcdir', False])
-        self.assertPathsEqual(p, self.Path('foo', path.Root.srcdir))
+        self.assertPathEqual(p, self.Path('foo', path.Root.srcdir))
 
         p = self.Path.from_json(['foo', 'bindir', True])
-        self.assertPathsEqual(
+        self.assertPathEqual(
             p, self.Path('foo', path.InstallRoot.bindir, True)
         )
 
@@ -666,29 +664,29 @@ class TestPath(PathTestCase):
 class TestAbsPath(TestCase):
     def test_abspath(self):
         with mock.patch('os.getcwd', return_value=r'/base'):
-            self.assertPathsEqual(path.abspath('foo'),
-                                  path.Path('/base/foo', path.Root.absolute))
-            self.assertPathsEqual(path.abspath('/foo/bar'),
-                                  path.Path('/foo/bar', path.Root.absolute))
+            self.assertPathEqual(path.abspath('foo'),
+                                 path.Path('/base/foo', path.Root.absolute))
+            self.assertPathEqual(path.abspath('/foo/bar'),
+                                 path.Path('/foo/bar', path.Root.absolute))
 
-            self.assertPathsEqual(path.abspath('foo/'),
-                                  path.Path('/base/foo/', path.Root.absolute))
-            self.assertPathsEqual(path.abspath('/foo/bar/'),
-                                  path.Path('/foo/bar/', path.Root.absolute))
+            self.assertPathEqual(path.abspath('foo/'),
+                                 path.Path('/base/foo/', path.Root.absolute))
+            self.assertPathEqual(path.abspath('/foo/bar/'),
+                                 path.Path('/foo/bar/', path.Root.absolute))
 
-            self.assertPathsEqual(path.abspath('foo', directory=True),
-                                  path.Path('/base/foo/', path.Root.absolute))
+            self.assertPathEqual(path.abspath('foo', directory=True),
+                                 path.Path('/base/foo/', path.Root.absolute))
             self.assertRaises(ValueError, path.abspath, 'foo/',
                               directory=False)
 
     def test_drive(self):
         with mock.patch('os.getcwd', return_value=r'C:\base'):
-            self.assertPathsEqual(path.abspath('foo'),
-                                  path.Path('C:/base/foo', path.Root.absolute))
-            self.assertPathsEqual(path.abspath('/foo/bar'),
-                                  path.Path('C:/foo/bar', path.Root.absolute))
-            self.assertPathsEqual(path.abspath('D:/foo/bar'),
-                                  path.Path('D:/foo/bar', path.Root.absolute))
+            self.assertPathEqual(path.abspath('foo'),
+                                 path.Path('C:/base/foo', path.Root.absolute))
+            self.assertPathEqual(path.abspath('/foo/bar'),
+                                 path.Path('C:/foo/bar', path.Root.absolute))
+            self.assertPathEqual(path.abspath('D:/foo/bar'),
+                                 path.Path('D:/foo/bar', path.Root.absolute))
 
 
 class TestCommonPrefix(TestCase):
@@ -697,26 +695,26 @@ class TestCommonPrefix(TestCase):
 
     def test_single(self):
         p = path.Path('foo/bar')
-        self.assertPathsEqual(path.commonprefix([p]), p)
+        self.assertPathEqual(path.commonprefix([p]), p)
 
     def test_multi_same(self):
         p = path.Path('foo/bar')
-        self.assertPathsEqual(path.commonprefix([p, p]), p)
+        self.assertPathEqual(path.commonprefix([p, p]), p)
 
     def test_multi_partial_match(self):
         p = path.Path('foo/bar')
         q = path.Path('foo/baz')
-        self.assertPathsEqual(path.commonprefix([p, q]), path.Path('foo/'))
+        self.assertPathEqual(path.commonprefix([p, q]), path.Path('foo/'))
 
     def test_multi_subset(self):
         p = path.Path('foo/bar')
         q = path.Path('foo/bar/baz')
-        self.assertPathsEqual(path.commonprefix([p, q]), path.Path('foo/bar/'))
+        self.assertPathEqual(path.commonprefix([p, q]), path.Path('foo/bar/'))
 
     def test_multi_no_match(self):
         p = path.Path('foo/bar')
         q = path.Path('baz/quux')
-        self.assertPathsEqual(path.commonprefix([p, q]), path.Path(''))
+        self.assertPathEqual(path.commonprefix([p, q]), path.Path(''))
 
 
 class TestWrappedOsPath(TestCase):

@@ -223,7 +223,7 @@ class TestBoostPackage(TestCase):
 
         def mock_walk(top, variables=None):
             yield (top,) + (
-                [top.append('boost-1.23')],
+                [top.append('boost-1.23/')],
                 []
             )
 

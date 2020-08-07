@@ -4,7 +4,7 @@ import re
 from enum import IntEnum
 
 from . import builtin
-from ..file_types import FileOrDirectory
+from ..file_types import Directory, File
 from ..iterutils import iterate
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
@@ -52,7 +52,7 @@ def _listdir(path, variables=None):
         for name in names:
             curpath = path.append(name)
             if isdir(curpath, variables):
-                dirs.append(curpath)
+                dirs.append(curpath.as_directory())
             else:
                 nondirs.append(curpath)
     except OSError:
@@ -76,14 +76,18 @@ def _walk_recursive(top, variables=None):
                 yield i
 
 
+def _path_type(path):
+    return 'd' if path.directory else 'f'
+
+
 def _make_filter_from_glob(match_type, matches, extra, exclude):
     matches = [re.compile(fnmatch.translate(i)) for i in iterate(matches)]
     extra = [re.compile(fnmatch.translate(i)) for i in iterate(extra)]
     exclude = [re.compile(fnmatch.translate(i)) for i in iterate(exclude)]
 
-    def fn(path, type):
+    def fn(path):
         name = path.basename()
-        if match_type in {type, '*'}:
+        if match_type in {_path_type(path), '*'}:
             if any(ex.match(name) for ex in exclude):
                 return FindResult.exclude
             if any(ex.match(name) for ex in matches):
@@ -95,7 +99,7 @@ def _make_filter_from_glob(match_type, matches, extra, exclude):
 
 
 @builtin.function()
-def filter_by_platform(context, path, type):
+def filter_by_platform(context, path):
     env = context.env
     my_plat = {env.target_platform.genus, env.target_platform.family}
 
@@ -106,7 +110,7 @@ def filter_by_platform(context, path, type):
 
 
 def _combine_filters(*args):
-    return lambda path, type: max(f(path, type) for f in args)
+    return lambda path: max(f(path) for f in args)
 
 
 def _find_files(env, paths, filter, flat, seen_dirs=None):
@@ -114,28 +118,38 @@ def _find_files(env, paths, filter, flat, seen_dirs=None):
     walker = _walk_flat if flat else _walk_recursive
 
     for p in paths:
-        yield p, 'd', filter(p, 'd')
+        yield p, filter(p)
     for p in paths:
         for base, dirs, files in walker(p, env.base_dirs):
             if seen_dirs is not None:
                 seen_dirs.append(base)
 
             for p in dirs:
-                yield p, 'd', filter(p, 'd')
+                yield p, filter(p)
             for p in files:
-                yield p, 'f', filter(p, 'f')
+                yield p, filter(p)
 
 
 def find(env, path='.', name='*', type='*', extra=None, exclude=exclude_globs,
          flat=False):
     glob_filter = _make_filter_from_glob(type, name, extra, exclude)
-    paths = [Path.ensure(i, Root.srcdir) for i in iterate(path)]
+    paths = [Path.ensure(i, Root.srcdir, directory=True)
+             for i in iterate(path)]
 
     results = []
-    for path, type, matched in _find_files(env, paths, glob_filter, flat):
+    for path, matched in _find_files(env, paths, glob_filter, flat):
         if matched == FindResult.include:
             results.append(path)
     return results
+
+
+def _make_path(context, thing):
+    if isinstance(thing, File):
+        raise ValueError('{!r} is not a directory')
+    elif isinstance(thing, Directory):
+        return thing.path
+    else:
+        return context['relpath'](thing).as_directory()
 
 
 @builtin.function()
@@ -150,16 +164,15 @@ def find_files(context, path='.', name='*', type='*', *, extra=None,
              'd': dir_type or context['directory']}
     extra_types = {'f': context['generic_file'], 'd': context['directory']}
 
-    paths = [i.path if isinstance(i, FileOrDirectory) else
-             context['relpath'](i) for i in iterate(path)]
+    paths = [_make_path(context, i) for i in iterate(path)]
 
     found, seen_dirs = [], []
-    for path, type, matched in _find_files(context.env, paths, final_filter,
-                                           flat, seen_dirs):
+    for path, matched in _find_files(context.env, paths, final_filter, flat,
+                                     seen_dirs):
         if matched == FindResult.include:
-            found.append(types[type](path, dist=dist))
+            found.append(types[_path_type(path)](path, dist=dist))
         elif matched == FindResult.not_now and dist:
-            extra_types[type](path, dist=dist)
+            extra_types[_path_type(path)](path, dist=dist)
 
     if cache:
         context.build['find_dirs'].update(seen_dirs)

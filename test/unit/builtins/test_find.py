@@ -43,16 +43,18 @@ def mock_context():
 class TestListdir(TestCase):
     def test_listdir(self):
         with mock_context():
-            self.assertEqual(find._listdir(Path('.'), path_vars), (
-                [Path('dir')], [Path('file.cpp')],
-            ))
+            dirs, nondirs = find._listdir(Path('.'), path_vars)
+            self.assertPathListEqual(dirs, [Path('dir/')])
+            self.assertPathListEqual(nondirs, [Path('file.cpp')])
 
     def test_not_found(self):
         def mock_listdir(path):
             raise OSError()
 
         with mock.patch('os.listdir', mock_listdir):
-            self.assertEqual(find._listdir(Path('.'), path_vars), ([], []))
+            dirs, nondirs = find._listdir(Path('.'), path_vars)
+            self.assertEqual(dirs, [])
+            self.assertEqual(nondirs, [])
 
 
 class TestWalkFlat(TestCase):
@@ -98,45 +100,45 @@ class TestWalkRecursive(TestCase):
 class TestMakeFilterFromGlob(TestCase):
     def test_file(self):
         f = find._make_filter_from_glob('f', '*', None, None)
-        self.assertEqual(f(Path('foo'), 'f'), find.FindResult.include)
-        self.assertEqual(f(Path('foo'), 'd'), find.FindResult.exclude)
+        self.assertEqual(f(Path('foo')), find.FindResult.include)
+        self.assertEqual(f(Path('foo/')), find.FindResult.exclude)
 
     def test_dir(self):
         f = find._make_filter_from_glob('d', '*', None, None)
-        self.assertEqual(f(Path('foo'), 'f'), find.FindResult.exclude)
-        self.assertEqual(f(Path('foo'), 'd'), find.FindResult.include)
+        self.assertEqual(f(Path('foo')), find.FindResult.exclude)
+        self.assertEqual(f(Path('foo/')), find.FindResult.include)
 
     def test_either(self):
         f = find._make_filter_from_glob('*', '*', None, None)
-        self.assertEqual(f(Path('foo'), 'f'), find.FindResult.include)
-        self.assertEqual(f(Path('foo'), 'd'), find.FindResult.include)
+        self.assertEqual(f(Path('foo')), find.FindResult.include)
+        self.assertEqual(f(Path('foo/')), find.FindResult.include)
 
     def test_match(self):
         f = find._make_filter_from_glob('*', '*.hpp', None, None)
-        self.assertEqual(f(Path('foo.hpp'), 'f'), find.FindResult.include)
-        self.assertEqual(f(Path('foo.cpp'), 'f'), find.FindResult.exclude)
+        self.assertEqual(f(Path('foo.hpp')), find.FindResult.include)
+        self.assertEqual(f(Path('foo.cpp')), find.FindResult.exclude)
 
     def test_extra(self):
         f = find._make_filter_from_glob('*', None, '*.hpp', None)
-        self.assertEqual(f(Path('foo.hpp'), 'f'), find.FindResult.not_now)
-        self.assertEqual(f(Path('foo.cpp'), 'f'), find.FindResult.exclude)
+        self.assertEqual(f(Path('foo.hpp')), find.FindResult.not_now)
+        self.assertEqual(f(Path('foo.cpp')), find.FindResult.exclude)
 
     def test_match_extra(self):
         f = find._make_filter_from_glob('*', '*.hpp', '*.?pp', None)
-        self.assertEqual(f(Path('foo.hpp'), 'f'), find.FindResult.include)
-        self.assertEqual(f(Path('foo.cpp'), 'f'), find.FindResult.not_now)
-        self.assertEqual(f(Path('foo.cxx'), 'f'), find.FindResult.exclude)
+        self.assertEqual(f(Path('foo.hpp')), find.FindResult.include)
+        self.assertEqual(f(Path('foo.cpp')), find.FindResult.not_now)
+        self.assertEqual(f(Path('foo.cxx')), find.FindResult.exclude)
 
     def test_exclude(self):
         f = find._make_filter_from_glob('*', '*.?pp', None, '*.cpp')
-        self.assertEqual(f(Path('foo.hpp'), 'f'), find.FindResult.include)
-        self.assertEqual(f(Path('foo.cpp'), 'f'), find.FindResult.exclude)
+        self.assertEqual(f(Path('foo.hpp')), find.FindResult.include)
+        self.assertEqual(f(Path('foo.cpp')), find.FindResult.exclude)
 
     def test_match_extra_exclude(self):
         f = find._make_filter_from_glob('*', '*.c??', '*.?pp', '*.hpp')
-        self.assertEqual(f(Path('foo.hpp'), 'f'), find.FindResult.exclude)
-        self.assertEqual(f(Path('foo.cpp'), 'f'), find.FindResult.include)
-        self.assertEqual(f(Path('foo.ipp'), 'f'), find.FindResult.not_now)
+        self.assertEqual(f(Path('foo.hpp')), find.FindResult.exclude)
+        self.assertEqual(f(Path('foo.cpp')), find.FindResult.include)
+        self.assertEqual(f(Path('foo.ipp')), find.FindResult.not_now)
 
 
 class TestFilterByPlatform(BuiltinTest):
@@ -145,7 +147,7 @@ class TestFilterByPlatform(BuiltinTest):
         self.filter = self.context['filter_by_platform']
 
     def test_normal(self):
-        self.assertEqual(self.filter(Path('file.txt'), 'f'),
+        self.assertEqual(self.filter(Path('file.txt')),
                          find.FindResult.include)
 
     def do_test_platform(self, platform, result):
@@ -156,7 +158,7 @@ class TestFilterByPlatform(BuiltinTest):
             Path('dir_{}/file.txt'.format(platform)),
         ]
         for p in paths:
-            self.assertEqual(self.filter(p, 'f'), result, repr(p))
+            self.assertEqual(self.filter(p), result, repr(p))
 
     def test_current_platform(self):
         self.do_test_platform(self.env.target_platform.genus,
@@ -316,7 +318,7 @@ class TestFindFiles(BuiltinTest):
             self.assertFound(self.find(flat=True), expected)
 
     def test_filter(self):
-        def my_filter(path, type):
+        def my_filter(path):
             if path.basename() == 'dir':
                 return find.FindResult.not_now
             elif path.ext() == '.cpp':
@@ -331,9 +333,9 @@ class TestFindFiles(BuiltinTest):
             ] + expected)
 
     def test_combine_filters(self):
-        def my_filter(path, type):
-            return (find.FindResult.include if type == 'f' else
-                    find.FindResult.exclude)
+        def my_filter(path):
+            return (find.FindResult.exclude if path.directory else
+                    find.FindResult.include)
 
         expected = [SourceFile(srcpath('file.cpp'), 'c++')]
         with mock_context():
