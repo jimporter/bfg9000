@@ -1,16 +1,15 @@
-import fnmatch
-import os
 import re
 from enum import IntEnum
+from functools import reduce
 
 from . import builtin
-from ..file_types import Directory, File
+from ..glob import NameGlob, PathGlob
 from ..iterutils import iterate
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..backends.make.syntax import Writer, Syntax
 from ..build_inputs import build_input
-from ..path import exists, isdir, islink, Path, Root
+from ..path import Path, Root, walk, uniquetrees
 from ..platforms import known_platforms
 
 build_input('find_dirs')(lambda build_inputs, env: set())
@@ -23,6 +22,44 @@ class FindResult(IntEnum):
     include = 0
     not_now = 1
     exclude = 2
+    exclude_recursive = 3
+
+
+class FileFilter:
+    def __init__(self, include, type=None, extra=None, exclude=None,
+                 filter_fn=None):
+        self.include = [PathGlob(i, type) for i in iterate(include)]
+        if not self.include:
+            raise ValueError('at least one pattern required')
+        self.extra = [NameGlob(i, type) for i in iterate(extra)]
+        self.exclude = [NameGlob(i, type) for i in iterate(exclude)]
+        self.filter_fn = filter_fn
+
+    def bases(self):
+        return uniquetrees([i.base for i in self.include])
+
+    def _match_globs(self, path):
+        if any(i.match(path) for i in self.exclude):
+            return FindResult.exclude_recursive
+
+        skip_base = len(self.include) == 1
+        result = reduce(lambda a, b: a | b,
+                        (i.match(path, skip_base) for i in self.include))
+        if result:
+            return FindResult.include
+
+        if any(i.match(path) for i in self.extra):
+            return FindResult.not_now
+
+        if result.recursive:
+            return FindResult.exclude_recursive
+        return FindResult.exclude
+
+    def match(self, path):
+        result = self._match_globs(path)
+        if self.filter_fn:
+            return max(result, self.filter_fn(path))
+        return result
 
 
 def write_depfile(env, path, output, seen_dirs, makeify=False):
@@ -45,57 +82,8 @@ def write_depfile(env, path, output, seen_dirs, makeify=False):
                 out.write_literal(':\n')
 
 
-def _listdir(path, variables=None):
-    dirs, nondirs = [], []
-    try:
-        names = os.listdir(path.string(variables))
-        for name in names:
-            curpath = path.append(name)
-            if isdir(curpath, variables):
-                dirs.append(curpath.as_directory())
-            else:
-                nondirs.append(curpath)
-    except OSError:
-        pass
-    return dirs, nondirs
-
-
-def _walk_flat(top, variables=None):
-    if exists(top, variables):
-        yield (top,) + _listdir(top, variables)
-
-
-def _walk_recursive(top, variables=None):
-    if not exists(top, variables):
-        return
-    dirs, nondirs = _listdir(top, variables)
-    yield top, dirs, nondirs
-    for d in dirs:
-        if not islink(d, variables):
-            for i in _walk_recursive(d, variables):
-                yield i
-
-
 def _path_type(path):
     return 'd' if path.directory else 'f'
-
-
-def _make_filter_from_glob(match_type, matches, extra, exclude):
-    matches = [re.compile(fnmatch.translate(i)) for i in iterate(matches)]
-    extra = [re.compile(fnmatch.translate(i)) for i in iterate(extra)]
-    exclude = [re.compile(fnmatch.translate(i)) for i in iterate(exclude)]
-
-    def fn(path):
-        name = path.basename()
-        if match_type in {_path_type(path), '*'}:
-            if any(ex.match(name) for ex in exclude):
-                return FindResult.exclude
-            if any(ex.match(name) for ex in matches):
-                return FindResult.include
-            elif any(ex.match(name) for ex in extra):
-                return FindResult.not_now
-        return FindResult.exclude
-    return fn
 
 
 @builtin.function()
@@ -109,66 +97,53 @@ def filter_by_platform(context, path):
             else FindResult.include)
 
 
-def _combine_filters(*args):
-    return lambda path: max(f(path) for f in args)
-
-
-def _find_files(env, paths, filter, flat, seen_dirs=None):
-    # "Does the walker choose the path, or the path the walker?" - Garth Nix
-    walker = _walk_flat if flat else _walk_recursive
+def _find_files(env, filter, seen_dirs=None):
+    paths = filter.bases()
 
     for p in paths:
-        yield p, filter(p)
+        yield p, filter.match(p)
     for p in paths:
-        for base, dirs, files in walker(p, env.base_dirs):
+        for base, dirs, files in walk(p, env.base_dirs):
             if seen_dirs is not None:
                 seen_dirs.append(base)
+            to_remove = []
 
-            for p in dirs:
-                yield p, filter(p)
+            for i, p in enumerate(dirs):
+                m = filter.match(p)
+                if m == FindResult.exclude_recursive:
+                    to_remove.append(i)
+                yield p, m
             for p in files:
-                yield p, filter(p)
+                yield p, filter.match(p)
+
+            for i in to_remove:
+                del dirs[i]
 
 
-def find(env, path='.', name='*', type='*', extra=None, exclude=exclude_globs,
-         flat=False):
-    glob_filter = _make_filter_from_glob(type, name, extra, exclude)
-    paths = [Path.ensure(i, Root.srcdir, directory=True)
-             for i in iterate(path)]
+def find(env, pattern, type=None, extra=None, exclude=exclude_globs):
+    pattern = [Path.ensure(i, Root.srcdir) for i in iterate(pattern)]
+    file_filter = FileFilter(pattern, type, extra, exclude)
 
     results = []
-    for path, matched in _find_files(env, paths, glob_filter, flat):
+    for path, matched in _find_files(env, file_filter):
         if matched == FindResult.include:
             results.append(path)
     return results
 
 
-def _make_path(context, thing):
-    if isinstance(thing, File):
-        raise ValueError('{!r} is not a directory')
-    elif isinstance(thing, Directory):
-        return thing.path
-    else:
-        return context['relpath'](thing).as_directory()
-
-
 @builtin.function()
-def find_files(context, path='.', name='*', type='*', *, extra=None,
-               exclude=exclude_globs, filter=None, flat=False, file_type=None,
+def find_files(context, pattern, *, type=None, extra=None,
+               exclude=exclude_globs, filter=None, file_type=None,
                dir_type=None, dist=True, cache=True):
-    final_filter = _make_filter_from_glob(type, name, extra, exclude)
-    if filter:
-        final_filter = _combine_filters(final_filter, filter)
+    pattern = [context['relpath'](i) for i in iterate(pattern)]
+    file_filter = FileFilter(pattern, type, extra, exclude, filter)
 
     types = {'f': file_type or context['auto_file'],
              'd': dir_type or context['directory']}
     extra_types = {'f': context['generic_file'], 'd': context['directory']}
 
-    paths = [_make_path(context, i) for i in iterate(path)]
-
     found, seen_dirs = [], []
-    for path, matched in _find_files(context.env, paths, final_filter, flat,
-                                     seen_dirs):
+    for path, matched in _find_files(context.env, file_filter, seen_dirs):
         if matched == FindResult.include:
             found.append(types[_path_type(path)](path, dist=dist))
         elif matched == FindResult.not_now and dist:

@@ -1,6 +1,6 @@
 import itertools
 import re
-from collections import MutableSequence
+from collections.abc import MutableSequence
 from enum import Enum
 
 from .list import shell_list

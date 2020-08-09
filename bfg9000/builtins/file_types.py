@@ -3,7 +3,6 @@ import warnings
 from contextlib import contextmanager
 
 from . import builtin
-from .find import exclude_globs
 from ..file_types import *
 from ..iterutils import iterate, uniques
 from ..languages import known_langs
@@ -125,10 +124,11 @@ def auto_file(context, name, lang=None, *, dist=True):
 # files.
 
 
-def _find(context, path, include, type, *, extra, **kwargs):
-    if not include and not extra:
+def _find(context, path, include, **kwargs):
+    if not include:
         return None
-    return context['find_files'](path, include, type, extra=extra, **kwargs)
+    patterns = [path.append(i) for i in iterate(include)]
+    return context['find_files'](patterns, **kwargs)
 
 
 def _directory_path(context, thing):
@@ -140,19 +140,16 @@ def _directory_path(context, thing):
 
 @builtin.function()
 @builtin.type(Directory, extra_in_type=File)
-def directory(context, name, include=None, *, extra=None,
-              exclude=exclude_globs, filter=None, dist=True, cache=True):
+def directory(context, name, include=None, *, dist=True, **kwargs):
     path = _directory_path(context, name)
-    files = _find(context, path, include, '*', extra=extra, exclude=exclude,
-                  filter=filter, dist=dist, cache=cache)
+    files = _find(context, path, include, type='*', dist=dist, **kwargs)
     return static_file(context, Directory, path, dist, [('files', files)])
 
 
 @builtin.function()
 @builtin.type(HeaderDirectory, extra_in_type=CodeFile)
-def header_directory(context, name, include=None, lang=None, *, extra=None,
-                     exclude=exclude_globs, filter=None, system=False,
-                     dist=True, cache=True):
+def header_directory(context, name, include=None, lang=None, *, system=False,
+                     dist=True, **kwargs):
     def header_file(*args, **kwargs):
         return context['header_file'](*args, lang=lang, **kwargs)
 
@@ -160,8 +157,7 @@ def header_directory(context, name, include=None, lang=None, *, extra=None,
         lang = name.lang
 
     path = _directory_path(context, name)
-    files = _find(context, path, include, 'f', extra=extra, exclude=exclude,
-                  filter=filter, file_type=header_file, dist=dist, cache=cache)
+    files = _find(context, path, include, type='f', dist=dist, **kwargs)
     langs = uniques(i.lang for i in files if i.lang) if files else lang
 
     params = [('files', files), ('system', system), ('langs', langs)]

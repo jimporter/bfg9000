@@ -5,10 +5,10 @@
 # file. (If you need to reference a file outside of the submodule's
 # directory, you can simply prefix your path with `../`).
 
-includes = header_directory('.', include='*.hpp')
+includes = header_directory('.', include='**/*.hpp')
 
 lib = library(
-    'library', find_files('.', '*.cpp'),
+    'library', find_files('*.cpp'),
     compile_options=[opts.define('ENTHUSIASM', str(argv.enthusiasm))]
 )
 

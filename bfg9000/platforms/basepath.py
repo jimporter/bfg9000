@@ -149,7 +149,7 @@ class BasePath(safe_str.safe_string):
 
     def split(self):
         # This is guaranteed to work since `suffix` is normalized.
-        return self.suffix.split(posixpath.sep)
+        return self.suffix.split(posixpath.sep) if self.suffix else []
 
     def basename(self):
         return posixpath.basename(self.suffix)

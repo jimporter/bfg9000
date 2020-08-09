@@ -1217,31 +1217,44 @@ An enum to be used as the result of a filter function for
 [*find_files*](#find_files). The possible enum values are:
 
 * *include*: Include this file in the results
-* *exclude*: Don't include this file in the results
 * *not_now*: Don't include this file in the results, but do include it in the
   [source distribution](../user/writing.md#distributing-your-source)
+* *exclude*: Don't include this file in the results
+* *exclude_recursive*: Don't include this directory or any of its contents in
+  the results
 
-### find_files([*path*], [*name*], [*type*], \*, [*extra*], [*exclude*], *...*) { #find_files }
+### find_files([*pattern*], \*, [*type*], [*extra*], [*exclude*], *...*) { #find_files }
 Availability: `build.bfg`
 {: .subtitle}
 
-Find files in *path* whose name matches the glob (or list of globs) *name*,
-returning them as [file objects](#file-objects). The following arguments may be
-specified:
+Find files that match the glob (or list of globs) *pattern*, returning them as
+[file objects](#file-objects). Globs work much the same as in POSIX shells, with
+support for the following patterns:
 
-* *path*: A path (or list of paths) to start the search in; if omitted, search
-  in the root of the source directory
-* *name*: A glob (or list of globs) to match files; if omitted, all files match
-  (equivalent to `'*'`)
+* `*`: 0 or more of any character
+* `?`: 1 of any character
+* `[abc]`: any one character in *abc*
+* `[!abc]`: any one character not in *abc*
+* `**`: 0 or more path components (subdirectories, files)
+
+By default, globs that end with a `/` will match only directories, while globs
+not ending with `/` will match only files. In addition, globs may be passed as
+[path objects](#Path), allowing you to specify a different root to find files
+in (e.g. the build directory).
+
+"Simple" globs, used for *extra* and *exclude* (see below) support all of the
+above except for `**`, and are matched against only the basename of each file.
+
+The following arguments may also be specified:
+
 * *type*: A filter for the type of file: `'f'` to find only files, `'d'` to find
-  only directories, or `'*'` to find either
-* *extra*: A glob (or list of globs) to match extra files (which will not be
-  returned from *find_files* but will be added to the
+  only directories, or `'*'` to find either; if not specified, the type will be
+  inferred by the glob itself, as described above
+* *extra*: A simple glob (or list thereof) to match "extra" files; these will
+  not be returned from *find_files* but will be added to the
   [source distribution](../user/writing.md#distributing-your-source))
-* *exclude*: A glob (or list of globs) of files to exclude from results; by
-  default, `.#*`, `*~`, and `#*#` are exluded
-* *flat*: If true, *find_files* will not recurse into subdirectories; otherwise,
-  (the default) it will
+* *exclude*: A simple glob (or list thereof) of files to exclude from results;
+  by default, `.#*`, `*~`, and `#*#` are excluded
 * *filter*: A predicate taking a [*Path*](#Path) object and returning a
   [*FindResult*](#FindResult) which will filter the results
 * *file_type*: The type of object to return for matching files; if specified,
@@ -1257,13 +1270,13 @@ specified:
 The *cache* argument is particularly important. It allows you to add or remove
 source files and not have to worry about manually rerunning bfg9000.
 
-### find_paths([*path*], [*name*], [*type*], \*, [*extra*], [*exclude*], *...*) { #find_paths }
+### find_paths([*pattern*], \*, [*type*], [*extra*], [*exclude*], *...*) { #find_paths }
 Availability: `build.bfg`
 {: .subtitle}
 
-Find files in *path* whose name matches the glob (or list of globs) *name*,
-returning them as [path objects](#Path). The arguments to this function are the
-same as for [*find_files*](#find_files).
+Find files that match the glob (or list of globs) *pattern*, returning them as
+[path objects](#Path). The arguments to this function are the same as for
+[*find_files*](#find_files).
 
 ### info(*message*, [*show_stack*]) { #info }
 Availability: `build.bfg`, `options.bfg`, and `<toolchain>.bfg`

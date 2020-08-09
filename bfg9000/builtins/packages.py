@@ -104,8 +104,7 @@ def boost_package(context, name=None, version=None):
         # On Windows, check the default install location, which is structured
         # differently from other install locations.
         if not incdir and env.host_platform.family == 'windows':
-            dirs = find(env, r'C:\Boost\include', 'boost-*', type='d',
-                        flat=True)
+            dirs = find(env, 'C:\\Boost\\include\\boost-*\\')
             if dirs:
                 try:
                     header = pkg.header(version_hpp, [max(dirs)])

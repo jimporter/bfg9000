@@ -37,11 +37,13 @@ in progress
 
 ### Breaking changes
 - Drop support for Python 2
+- `find_files()` and `find_paths()` have been redesigned to support recursive
+  globs
 - `resource_file()` has been deprecated; use `source_file()` instead
 - `show_stack` for `info()` and `debug()` must now be specified as a keyword
   argument
-- `find_files`, `find_paths`, `directory`, and `header_directory` now require
-  uncommon arguments to be specified as keyword arguments
+- `directory`, and `header_directory` now require uncommon arguments to be
+  specified as keyword arguments
 - Adding to existing environment variables in `env.execute()` and `env.run()`
   is now done via `extra_env`, not `env`/`env_update`
 

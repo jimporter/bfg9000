@@ -28,12 +28,9 @@ class TestFindFiles(IntegrationTest):
                 '06_find_files/src/hello/hello.cpp',
                 '06_find_files/src/hello/hello.hpp',
                 '06_find_files/src/hello/main.cpp',
-                '06_find_files/src/goodbye',
                 '06_find_files/src/goodbye/main.cpp',
-                '06_find_files/src/goodbye/english',
                 '06_find_files/src/goodbye/english/goodbye.cpp',
                 '06_find_files/src/goodbye/english/goodbye.hpp',
-                '06_find_files/src/goodbye/german',
                 '06_find_files/src/goodbye/german/goodbye.cpp',
                 '06_find_files/src/goodbye/german/goodbye.hpp',
             })

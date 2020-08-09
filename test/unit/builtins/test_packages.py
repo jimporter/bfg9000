@@ -222,10 +222,7 @@ class TestBoostPackage(TestCase):
         boost_incdir = r'C:\Boost\include\boost-1.23'
 
         def mock_walk(top, variables=None):
-            yield (top,) + (
-                [top.append('boost-1.23/')],
-                []
-            )
+            yield top, [top.append('boost-1.23/')], []
 
         def mock_execute(*args, **kwargs):
             if args[0][1] == '/?':
@@ -235,7 +232,7 @@ class TestBoostPackage(TestCase):
         def mock_exists(x):
             return bool(re.search(r'[/\\]boost[/\\]version.hpp$', x.string()))
 
-        with mock.patch('bfg9000.builtins.find._walk_flat', mock_walk), \
+        with mock.patch('bfg9000.builtins.find.walk', mock_walk), \
              mock.patch('bfg9000.builtins.packages._boost_version',
                         return_value=Version('1.23')), \
              mock.patch('bfg9000.shell.which', return_value=['command']), \
@@ -256,10 +253,7 @@ class TestBoostPackage(TestCase):
         context = self._make_context(env)
 
         def mock_walk(top, variables=None):
-            yield (top,) + (
-                [top.append('boost-1.23')],
-                []
-            )
+            yield top, [top.append('boost-1.23')], []
 
         def mock_execute(*args, **kwargs):
             if args[0][1] == '/?':
@@ -269,7 +263,7 @@ class TestBoostPackage(TestCase):
         def mock_exists(x):
             return False
 
-        with mock.patch('bfg9000.builtins.find._walk_flat', mock_walk), \
+        with mock.patch('bfg9000.builtins.find.walk', mock_walk), \
              mock.patch('bfg9000.shell.which', return_value=['command']), \
              mock.patch('bfg9000.shell.execute', mock_execute), \
              mock.patch('bfg9000.tools.msvc.exists', mock_exists):  # noqa

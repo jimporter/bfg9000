@@ -88,6 +88,9 @@ class _StrictPath:
         return (self.path == rhs.path and
                 self.path.directory == rhs.path.directory)
 
+    def __hash__(self):
+        return hash(self.path)
+
     def __repr__(self):
         return repr(self.path)
 
@@ -118,6 +121,10 @@ class TestCase(unittest.TestCase):
     def assertPathDictEqual(self, a, b, msg=None):
         self.assertDictEqual({k: _StrictPath(v) for k, v in a.items()},
                              {k: _StrictPath(v) for k, v in b.items()}, msg)
+
+    def assertPathSetEqual(self, a, b, msg=None):
+        self.assertSetEqual({_StrictPath(i) for i in a},
+                            {_StrictPath(i) for i in b}, msg)
 
 
 def parameterize_tests(tests, **kwargs):

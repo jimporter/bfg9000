@@ -234,19 +234,19 @@ Python's standard library to examine the file system and build the list.
 However, there's a better way: bfg9000 provides a
 [*find_files()*](../reference/builtins.md#find_files) function to fetch the
 list; if the list ever changes, the build files will be regenerated
-*automatically* the next time they're run.
+automatically the next time they're run.
 
 *find_files()* starts at a base directory and searches recursively for any files
 matching a particular glob:
 
 ```python
-hello_files = find_files('src/hello', '*.cpp')
+hello_files = find_files('src/hello/**/*.cpp')
 executable('hello', files=hello_files)
 ```
 
 There are lots of options you can pass to *find_files()* to tweak its behavior.
-For instance, you can search only for files or only for directories by passing
-`'f'` or `'d'`, respectively to the *type* argument.
+For instance, you can exclude certain files or directories by passing a glob to
+the *exclude* argument.
 
 ## Default targets
 

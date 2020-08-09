@@ -4,7 +4,7 @@ project('hello', '1.0')
 
 ogg = package('ogg')
 
-include = header_directory('include', include='*.hpp')
+include = header_directory('include', include='**/*.hpp')
 inner = library('inner', files=['src/inner.cpp'], packages=[ogg])
 lib = library('hello', files=['src/hello.cpp'], includes=[include],
               libs=[inner])

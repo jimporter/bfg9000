@@ -126,6 +126,13 @@ def recursive_walk(thing, attr, children_attr=None):
             yield j
 
 
+def find_index(fn, seq):
+    for i, elem in enumerate(seq):
+        if fn(elem):
+            return i
+    return None
+
+
 def merge_into_dict(dst, *args):
     for d in args:
         for k, v in d.items():

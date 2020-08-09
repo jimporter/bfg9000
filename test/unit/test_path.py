@@ -1,5 +1,6 @@
 import os
 from collections import namedtuple
+from contextlib import contextmanager
 from unittest import mock
 
 from . import *
@@ -16,6 +17,32 @@ path_variables = {
     path.InstallRoot.prefix: '$(prefix)',
     path.InstallRoot.bindir: '$(bindir)',
 }
+
+
+@contextmanager
+def mock_filesystem(*, listdir=None, exists=None, isdir=None, islink=None):
+    def mock_listdir(path):
+        basename = os.path.basename(path)
+        if basename == 'dir':
+            return ['file2.txt', 'sub']
+        elif basename == 'sub':
+            return []
+        return ['file.cpp', 'dir']
+
+    def mock_exists(path, variables=None):
+        return True
+
+    def mock_isdir(path, variables=None):
+        return not path.basename().startswith('file')
+
+    def mock_islink(path, variables=None):
+        return False
+
+    with mock.patch('os.listdir', listdir or mock_listdir) as a, \
+         mock.patch('bfg9000.path.exists', exists or mock_exists) as b, \
+         mock.patch('bfg9000.path.isdir', isdir or mock_isdir) as c, \
+         mock.patch('bfg9000.path.islink', islink or mock_islink) as d:  # noqa
+        yield a, b, c, d
 
 
 class TestPath(PathTestCase):
@@ -424,6 +451,9 @@ class TestPath(PathTestCase):
         self.assertEqual(leaf, 'baz')
 
     def test_split(self):
+        p = self.Path('', path.Root.srcdir)
+        self.assertEqual(p.split(), [])
+
         p = self.Path('foo/bar/baz', path.Root.srcdir)
         self.assertEqual(p.split(), ['foo', 'bar', 'baz'])
 
@@ -717,6 +747,38 @@ class TestCommonPrefix(TestCase):
         self.assertPathEqual(path.commonprefix([p, q]), path.Path(''))
 
 
+class TestUniqueTrees(TestCase):
+    def test_empty(self):
+        self.assertEqual(path.uniquetrees([]), [])
+
+    def test_disjoint(self):
+        a = path.Path('a')
+        bcd = path.Path('b/c/d')
+        ef = path.Path('e/f')
+        self.assertEqual(path.uniquetrees([bcd, ef, a]), [a, bcd, ef])
+
+    def test_common_base(self):
+        a = path.Path('a')
+        ab = path.Path('a/b')
+        abc = path.Path('a/b/c')
+        aca = path.Path('a/c/a')
+        self.assertEqual(path.uniquetrees([abc, aca, a, ab]), [a])
+
+    def test_mixed(self):
+        ab = path.Path('a/b')
+        abc = path.Path('a/b/c')
+        ad = path.Path('a/d')
+        cab = path.Path('c/a/b')
+        self.assertEqual(path.uniquetrees([abc, ab, cab, ad]), [ab, ad, cab])
+
+    def test_different_roots(self):
+        sab = path.Path('a/b', path.Root.srcdir)
+        sabc = path.Path('a/b/c', path.Root.srcdir)
+        bab = path.Path('a/b', path.Root.builddir)
+        babc = path.Path('a/b/c', path.Root.builddir)
+        self.assertEqual(path.uniquetrees([sabc, bab, babc, sab]), [sab, bab])
+
+
 class TestWrappedOsPath(TestCase):
     def test_wrap(self):
         mocked = mock.MagicMock(return_value=True)
@@ -731,6 +793,53 @@ class TestSamefile(TestCase):
         with mock.patch('os.path.samefile', lambda x, y: x == y, create=True):
             self.assertEqual(path.samefile(path.Path('/foo/bar'),
                                            path.Path('/foo/bar')), True)
+
+
+class TestListdir(TestCase):
+    path_vars = {path.Root.builddir: None}
+
+    def test_listdir(self):
+        with mock_filesystem():
+            dirs, nondirs = path.listdir(path.Path('.'), self.path_vars)
+            self.assertPathListEqual(dirs, [path.Path('dir/')])
+            self.assertPathListEqual(nondirs, [path.Path('file.cpp')])
+
+    def test_not_found(self):
+        def mock_listdir(path):
+            raise OSError()
+
+        with mock.patch('os.listdir', mock_listdir):
+            dirs, nondirs = path.listdir(path.Path('.'), self.path_vars)
+            self.assertEqual(dirs, [])
+            self.assertEqual(nondirs, [])
+
+
+class TestWalk(TestCase):
+    path_vars = {path.Root.builddir: None}
+
+    def test_exists(self):
+        Path = path.Path
+        with mock_filesystem():
+            self.assertEqual(list(path.walk(Path('.'), self.path_vars)), [
+                (Path('.'), [Path('dir')], [Path('file.cpp')]),
+                (Path('dir'), [Path('dir/sub')], [Path('dir/file2.txt')]),
+                (Path('dir/sub'), [], []),
+            ])
+
+    def test_not_exists(self):
+        with mock.patch('bfg9000.path.exists', return_value=False):
+            self.assertEqual(list(path.walk(path.Path('.'), self.path_vars)),
+                             [])
+
+    def test_link(self):
+        def mock_islink(path, variables=None):
+            return path.basename() == 'dir'
+
+        Path = path.Path
+        with mock_filesystem(islink=mock_islink):
+            self.assertEqual(list(path.walk(Path('.'), self.path_vars)), [
+                (Path('.'), [Path('dir')], [Path('file.cpp')]),
+            ])
 
 
 class TestPushd(TestCase):
