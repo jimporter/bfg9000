@@ -4,7 +4,7 @@ from functools import reduce
 
 from . import builtin
 from ..glob import NameGlob, PathGlob
-from ..iterutils import iterate
+from ..iterutils import iterate, listify
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..backends.make.syntax import Writer, Syntax
@@ -14,7 +14,6 @@ from ..platforms import known_platforms
 
 build_input('find_dirs')(lambda build_inputs, env: set())
 depfile_name = '.bfg_find_deps'
-exclude_globs = ['.*#', '*~', '#*#']
 
 
 @builtin.default()
@@ -120,7 +119,7 @@ def _find_files(env, filter, seen_dirs=None):
                 del dirs[i]
 
 
-def find(env, pattern, type=None, extra=None, exclude=exclude_globs):
+def find(env, pattern, type=None, extra=None, exclude=None):
     pattern = [Path.ensure(i, Root.srcdir) for i in iterate(pattern)]
     file_filter = FileFilter(pattern, type, extra, exclude)
 
@@ -133,9 +132,10 @@ def find(env, pattern, type=None, extra=None, exclude=exclude_globs):
 
 @builtin.function()
 def find_files(context, pattern, *, type=None, extra=None,
-               exclude=exclude_globs, filter=None, file_type=None,
+               exclude=None, filter=None, file_type=None,
                dir_type=None, dist=True, cache=True):
     pattern = [context['relpath'](i) for i in iterate(pattern)]
+    exclude = context.build['project']['find_exclude'] + listify(exclude)
     file_filter = FileFilter(pattern, type, extra, exclude, filter)
 
     types = {'f': file_type or context['auto_file'],

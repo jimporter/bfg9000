@@ -1244,6 +1244,8 @@ in (e.g. the build directory).
 
 "Simple" globs, used for *extra* and *exclude* (see below) support all of the
 above except for `**`, and are matched against only the basename of each file.
+By default, several globs (`.#*`, `*~`, and `#*#`) are excluded; this can be
+customized via the `find_exclude` argument to [*project*](#project).
 
 The following arguments may also be specified:
 
@@ -1254,7 +1256,7 @@ The following arguments may also be specified:
   not be returned from *find_files* but will be added to the
   [source distribution](../user/writing.md#distributing-your-source))
 * *exclude*: A simple glob (or list thereof) of files to exclude from results;
-  by default, `.#*`, `*~`, and `#*#` are excluded
+  if a directory is matched, it and all of its children will be excluded
 * *filter*: A predicate taking a [*Path*](#Path) object and returning a
   [*FindResult*](#FindResult) which will filter the results
 * *file_type*: The type of object to return for matching files; if specified,
@@ -1385,6 +1387,9 @@ In addition, you can set a number of project-wide options with this function:
 * *lang*: (Default `'c'`) The default language to use for objects that can't
   infer their language from a file extension (e.g. [packages](#package),
   [object files](#object_file), [libraries](#library))
+* *find_exclude*: (Default `['.*#', '*~', '#*#']`) A list of "simple" globs to
+  exclude by default when calling [*find_files*](#find_files) or
+  [*find_paths*](#find_paths)
 
 ### Root
 Availability: `build.bfg`, `options.bfg`, and `<toolchain>.bfg`

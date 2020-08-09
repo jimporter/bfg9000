@@ -11,6 +11,7 @@ class ProjectInfo:
         self._options = {
             'intermediate_dirs': True,
             'lang': 'c',
+            'find_exclude': ['.*#', '*~', '#*#'],
         }
 
     def __getitem__(self, key):

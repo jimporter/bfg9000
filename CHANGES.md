@@ -27,6 +27,8 @@
   to `auto_file()` will create a directory object
 - Add support for compiling Windows `.rc` files
 - Add support for setting the entry point for native binaries (C, C++, etc)
+- The default list of excluded globs for `find_files()` can now be customized
+  via `project(find_exclude=[...])`
 - Try to find the right compiler to use for C-family languages by guessing based
   on other compilers in the family (e.g. if `CXX=g++`, guess that the C compiler
   is `gcc`)
