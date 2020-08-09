@@ -189,6 +189,9 @@ representation of paths. Both POSIX- and Windows-style paths are supported and
 will be translated to a standard internal representation before being emitted to
 build scripts in their platform-specific form. Thus, <code>foo/bar</code> and <code>foo\bar</code> are
 equivalent to bfg9000.</p>
+<p>In addition, you can terminate a path with <code>/</code> (or <code>\</code>) to ensure that it's
+treated as a directory; this affects the behavior of some builtins, such as
+<a href="#auto_file"><em>auto_file</em></a>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>While absolute paths are rarely needed in a <code>build.bfg</code> script, it's still
@@ -232,6 +235,8 @@ automatically determine the file's kind based on its extension:
 extension is not recognized, <a href="#generic_file"><em>generic_file</em></a>. If <em>lang</em> is
 specified, files with an unrecognized extension will always be treated as
 <a href="#source_file"><em>source_file</em></a>s.</p>
+<p>If <em>name</em> ends with a <code>/</code>, <em>auto_file</em> will create a <a href="#directory"><em>directory</em></a>
+instead or, if <em>lang</em> is specified, a <a href="#header_directory"><em>header_directory</em></a>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>This function is primarily useful for writing generic code that works with
@@ -1100,7 +1105,7 @@ them.</p>
 <p class="subtitle">Availability: <code>build.bfg</code> and <code>options.bfg</code></p>
 <p>Within a <a href="#submodule">submodule</a>, export a list of keyword arguments to be
 returned to the calling module.</p>
-<h3 id="filter_by_platform">filter_by_platform(<em>name</em>, <em>path</em>, <em>type</em>)<a class="headerlink" href="#filter_by_platform" title="Permanent link">§</a></h3>
+<h3 id="filter_by_platform">filter_by_platform(<em>path</em>)<a class="headerlink" href="#filter_by_platform" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Return <em>FindResult.include</em> if <em>path</em> is a filename that should be included for
 the target platform, and <em>FindResult.not_now</em> otherwise. File (or directory)
@@ -1108,37 +1113,51 @@ names like <code>PLATFORM</code> or <code>foo_PLATFORM.cpp</code> are excluded i
 known platform name that <em>doesn't</em> match the target platform. Known platform
 names are: <code>'posix'</code>,<code>'linux'</code>, <code>'darwin'</code>, <code>'cygwin'</code>, <code>'windows'</code>, <code>'winnt'</code>,
 <code>'win9x'</code>, <code>'msdos'</code>.</p>
-<p>This is the default <em>filter</em> for <a href="#find_files"><em>find_files</em></a>.</p>
+<p>This can be used as the <em>filter</em> for <a href="#find_files"><em>find_files</em></a> or
+<a href="#find_path"><em>find_path</em></a>.</p>
 <h3 id="findresult">FindResult<a class="headerlink" href="#findresult" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>An enum to be used as the result of a filter function for
 <a href="#find_files"><em>find_files</em></a>. The possible enum values are:</p>
 <ul>
 <li><em>include</em>: Include this file in the results</li>
-<li><em>exclude</em>: Don't include this file in the results</li>
 <li><em>not_now</em>: Don't include this file in the results, but do include it in the
   <a href="../../user/writing/#distributing-your-source">source distribution</a></li>
+<li><em>exclude</em>: Don't include this file in the results</li>
+<li><em>exclude_recursive</em>: Don't include this directory or any of its contents in
+  the results</li>
 </ul>
-<h3 id="find_files">find_files([<em>path</em>], [<em>name</em>], [<em>type</em>], *, [<em>extra</em>], [<em>exclude</em>], <em>...</em>)<a class="headerlink" href="#find_files" title="Permanent link">§</a></h3>
+<h3 id="find_files">find_files([<em>pattern</em>], *, [<em>type</em>], [<em>extra</em>], [<em>exclude</em>], <em>...</em>)<a class="headerlink" href="#find_files" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
-<p>Find files in <em>path</em> whose name matches the glob (or list of globs) <em>name</em>,
-returning them as <a href="#file-objects">file objects</a>. The following arguments may be
-specified:</p>
+<p>Find files that match the glob (or list of globs) <em>pattern</em>, returning them as
+<a href="#file-objects">file objects</a>. Globs work much the same as in POSIX shells, with
+support for the following patterns:</p>
 <ul>
-<li><em>path</em>: A path (or list of paths) to start the search in; if omitted, search
-  in the root of the source directory</li>
-<li><em>name</em>: A glob (or list of globs) to match files; if omitted, all files match
-  (equivalent to <code>'*'</code>)</li>
+<li><code>*</code>: 0 or more of any character</li>
+<li><code>?</code>: 1 of any character</li>
+<li><code>[abc]</code>: any one character in <em>abc</em></li>
+<li><code>[!abc]</code>: any one character not in <em>abc</em></li>
+<li><code>**</code>: 0 or more path components (subdirectories, files)</li>
+</ul>
+<p>By default, globs that end with a <code>/</code> will match only directories, while globs
+not ending with <code>/</code> will match only files. In addition, globs may be passed as
+<a href="#Path">path objects</a>, allowing you to specify a different root to find files
+in (e.g. the build directory).</p>
+<p>"Simple" globs, used for <em>extra</em> and <em>exclude</em> (see below) support all of the
+above except for <code>**</code>, and are matched against only the basename of each file.
+By default, several globs (<code>.#*</code>, <code>*~</code>, and <code>#*#</code>) are excluded; this can be
+customized via the <code>find_exclude</code> argument to <a href="#project"><em>project</em></a>.</p>
+<p>The following arguments may also be specified:</p>
+<ul>
 <li><em>type</em>: A filter for the type of file: <code>'f'</code> to find only files, <code>'d'</code> to find
-  only directories, or <code>'*'</code> to find either</li>
-<li><em>extra</em>: A glob (or list of globs) to match extra files (which will not be
-  returned from <em>find_files</em> but will be added to the
+  only directories, or <code>'*'</code> to find either; if not specified, the type will be
+  inferred by the glob itself, as described above</li>
+<li><em>extra</em>: A simple glob (or list thereof) to match "extra" files; these will
+  not be returned from <em>find_files</em> but will be added to the
   <a href="../../user/writing/#distributing-your-source">source distribution</a>)</li>
-<li><em>exclude</em>: A glob (or list of globs) of files to exclude from results; by
-  default, <code>.#*</code>, <code>*~</code>, and <code>#*#</code> are exluded</li>
-<li><em>flat</em>: If true, <em>find_files</em> will not recurse into subdirectories; otherwise,
-  (the default) it will</li>
-<li><em>filter</em>: A predicate taking a path object file type, and returning a
+<li><em>exclude</em>: A simple glob (or list thereof) of files to exclude from results;
+  if a directory is matched, it and all of its children will be excluded</li>
+<li><em>filter</em>: A predicate taking a <a href="#Path"><em>Path</em></a> object and returning a
   <a href="#FindResult"><em>FindResult</em></a> which will filter the results</li>
 <li><em>file_type</em>: The type of object to return for matching files; if specified,
   this should be a function taking a path object and a boolean (the <em>dist</em>
@@ -1152,11 +1171,11 @@ specified:</p>
 </ul>
 <p>The <em>cache</em> argument is particularly important. It allows you to add or remove
 source files and not have to worry about manually rerunning bfg9000.</p>
-<h3 id="find_paths">find_paths([<em>path</em>], [<em>name</em>], [<em>type</em>], *, [<em>extra</em>], [<em>exclude</em>], <em>...</em>)<a class="headerlink" href="#find_paths" title="Permanent link">§</a></h3>
+<h3 id="find_paths">find_paths([<em>pattern</em>], *, [<em>type</em>], [<em>extra</em>], [<em>exclude</em>], <em>...</em>)<a class="headerlink" href="#find_paths" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
-<p>Find files in <em>path</em> whose name matches the glob (or list of globs) <em>name</em>,
-returning them as <a href="#Path">path objects</a>. The arguments to this function are the
-same as for <a href="#find_files"><em>find_files</em></a>.</p>
+<p>Find files that match the glob (or list of globs) <em>pattern</em>, returning them as
+<a href="#Path">path objects</a>. The arguments to this function are the same as for
+<a href="#find_files"><em>find_files</em></a>.</p>
 <h3 id="info">info(<em>message</em>, [<em>show_stack</em>])<a class="headerlink" href="#info" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code>, <code>options.bfg</code>, and <code>&lt;toolchain&gt;.bfg</code></p>
 <p>Log an informational message with the specified arguments separated by spaces
@@ -1229,6 +1248,9 @@ distributions</a>.</p>
 <li><em>lang</em>: (Default <code>'c'</code>) The default language to use for objects that can't
   infer their language from a file extension (e.g. <a href="#package">packages</a>,
   <a href="#object_file">object files</a>, <a href="#library">libraries</a>)</li>
+<li><em>find_exclude</em>: (Default <code>['.*#', '*~', '#*#']</code>) A list of "simple" globs to
+  exclude by default when calling <a href="#find_files"><em>find_files</em></a> or
+  <a href="#find_paths"><em>find_paths</em></a></li>
 </ul>
 <h3 id="root">Root<a class="headerlink" href="#root" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code>, <code>options.bfg</code>, and <code>&lt;toolchain&gt;.bfg</code></p>

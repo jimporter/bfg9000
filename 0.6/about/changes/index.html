@@ -196,8 +196,12 @@
   to print</li>
 <li><code>generated_source()</code> steps are now automatically created as necessary for
   files passed to <code>object_file()</code>, if possible</li>
+<li>Paths with a trailing <code>/</code> are now treated as directory paths, and when passed
+  to <code>auto_file()</code> will create a directory object</li>
 <li>Add support for compiling Windows <code>.rc</code> files</li>
 <li>Add support for setting the entry point for native binaries (C, C++, etc)</li>
+<li>The default list of excluded globs for <code>find_files()</code> can now be customized
+  via <code>project(find_exclude=[...])</code></li>
 <li>Try to find the right compiler to use for C-family languages by guessing based
   on other compilers in the family (e.g. if <code>CXX=g++</code>, guess that the C compiler
   is <code>gcc</code>)</li>
@@ -207,11 +211,13 @@
 <h3 id="breaking-changes">Breaking changes<a class="headerlink" href="#breaking-changes" title="Permanent link">§</a></h3>
 <ul>
 <li>Drop support for Python 2</li>
+<li><code>find_files()</code> and <code>find_paths()</code> have been redesigned to support recursive
+  globs</li>
 <li><code>resource_file()</code> has been deprecated; use <code>source_file()</code> instead</li>
 <li><code>show_stack</code> for <code>info()</code> and <code>debug()</code> must now be specified as a keyword
   argument</li>
-<li><code>find_files</code>, <code>find_paths</code>, <code>directory</code>, and <code>header_directory</code> now require
-  uncommon arguments to be specified as keyword arguments</li>
+<li><code>directory</code>, and <code>header_directory</code> now require uncommon arguments to be
+  specified as keyword arguments</li>
 <li>Adding to existing environment variables in <code>env.execute()</code> and <code>env.run()</code>
   is now done via <code>extra_env</code>, not <code>env</code>/<code>env_update</code></li>
 </ul>
