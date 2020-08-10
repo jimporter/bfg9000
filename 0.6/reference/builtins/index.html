@@ -1235,6 +1235,9 @@ to <code>(path.parent(), path.basename())</code>.</p>
 <h4 id="Path-stripext"><em>Path</em>.stripext([<em>replace</em>])<a class="headerlink" href="#Path-stripext" title="Permanent link">§</a></h4>
 <p>Remove the extension from this path and replace it with an optional new
 extension specified in <em>replace</em>, returning the newly-created <em>Path</em> object.</p>
+<h3 id="path_exists">path_exists(<em>name</em>)<a class="headerlink" href="#path_exists" title="Permanent link">§</a></h3>
+<p>Return whether the path named <em>name</em> exists on the filesystem. <em>name</em> can be
+either a string or a <a href="#Path">path object</a>.</p>
 <h3 id="project">project([<em>name</em>], [<em>version</em>], ...)<a class="headerlink" href="#project" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Set the name and/or version of the project. If you don't call this function to
