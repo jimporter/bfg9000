@@ -11,6 +11,11 @@ builtin.default(context='*', name='Path')(_path.Path)
 
 
 @builtin.function(context=('build', 'options'))
+def path_exists(context, path):
+    return _path.exists(context['relpath'](path), context.env.base_dirs)
+
+
+@builtin.function(context=('build', 'options'))
 def relpath(context, path, strict=False):
     return _path.Path.ensure(path, context.path.parent(), strict=strict)
 

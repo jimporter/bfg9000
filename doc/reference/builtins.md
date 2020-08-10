@@ -1371,6 +1371,11 @@ Return the suffix of this path (the portion that would be appended to the path's
 Remove the extension from this path and replace it with an optional new
 extension specified in *replace*, returning the newly-created *Path* object.
 
+### path_exists(*name*) { #path_exists }
+
+Return whether the path named *name* exists on the filesystem. *name* can be
+either a string or a [path object](#Path).
+
 ### project([*name*], [*version*], ...) { #project }
 Availability: `build.bfg`
 {: .subtitle}

@@ -1,3 +1,5 @@
+from unittest import mock
+
 from .common import BuiltinTest
 from bfg9000.builtins import path
 from bfg9000.path import Path, Root, InstallRoot
@@ -8,6 +10,19 @@ class TestPath(BuiltinTest):
         self.assertIs(self.context['Path'], Path)
         self.assertIs(self.context['Root'], Root)
         self.assertIs(self.context['InstallRoot'], InstallRoot)
+
+    def test_path_exists(self):
+        def mock_exists(p, variables=None):
+            return p.suffix == 'exists.txt'
+
+        with mock.patch('bfg9000.path.exists', mock_exists):
+            self.assertTrue(self.context['path_exists']('exists.txt'))
+            self.assertFalse(self.context['path_exists']('nonexist.txt'))
+
+            with self.context.push_path(Path('foo/build.bfg', Root.srcdir)):
+                self.assertTrue(self.context['path_exists']('../exists.txt'))
+                self.assertFalse(self.context['path_exists']('exists.txt'))
+                self.assertFalse(self.context['path_exists']('nonexist.txt'))
 
     def test_relpath(self):
         src = Path('foo/bar', Root.srcdir)
