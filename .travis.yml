@@ -12,31 +12,33 @@ env:
     - PIP=pip3
     - CPPFLAGS="-Wall -Werror"
     - BFG_EXTRA_TESTS="gcj mingw-cross"
-  matrix:
-    - CC=gcc CXX=g++
-    - CC=clang CXX=clang++
+    - CC=gcc
+    - CXX=g++
 
 matrix:
   include:
 
-    # Python 3.7 builds
+    # Python 3.7
 
-    # gcj is busted in xenial
     - python: 3.7
       os: linux
       dist: xenial
+      # gcj is busted in xenial
       env: CC=gcc CXX=g++ BFG_EXTRA_TESTS="mingw-cross"
       before_install: &xenial-before-install
         - set -e
         - export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
         - unset _JAVA_OPTIONS
-    - python: 3.7
+
+    # Python 3.8
+
+    - python: 3.8
       os: linux
       dist: xenial
-      env: CC=clang CXX=clang++ BFG_EXTRA_TESTS="mingw-cross"
+      env: CC=gcc CXX=g++ BFG_EXTRA_TESTS="mingw-cross"
       before_install: *xenial-before-install
 
-    # macOS builds
+    # macOS
 
     - language: generic
       python: 3.7
@@ -54,7 +56,15 @@ matrix:
         - brew link qt5 --force
         - cp test/scripts/sitecustomize.py .
 
-    # bdist_wheel builds
+    # clang
+
+    - python: 3.8
+      os: linux
+      dist: xenial
+      env: CC=clang CXX=clang++ BFG_EXTRA_TESTS="mingw-cross"
+      before_install: *xenial-before-install
+
+    # bdist_wheel tests
 
     - python: 3.7
       os: linux
@@ -74,7 +84,7 @@ matrix:
 
     # Linting
 
-    - python: 3.7
+    - python: 3.8
       os: linux
       dist: xenial
       env: JOB=lint
