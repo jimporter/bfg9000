@@ -212,6 +212,7 @@ def ninja_install_rule(build_inputs, buildfile, env):
         output='install',
         inputs=['all'],
         command=shell.join_lines(install_files),
+        console=True,
         phony=True
     )
     ninja.command_build(
