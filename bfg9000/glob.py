@@ -116,17 +116,21 @@ class PathGlob(Glob):
                     yield seq[i]
             path_iter = iter_from(path.split(), self._base_depth())
         else:
+            # This code should only run when we have multiple `PathGlob`s for a
+            # given filter.
             if path.root != self.base.root:
-                return self.Result(False, recursive=False)
+                return self.Result(False)
 
             path_iter = iter(path.split())
             for i in self.base.split():
                 p = next(path_iter, None)
-                if p is None or p != i:
-                    # `path` is either a parent of or diverges from our
-                    # pattern. This should only occur when we have multiple
-                    # `PathGlob`s for a given filter.
-                    return self.Result(False, recursive=False)
+                if p is None:
+                    # `path` is a parent of our pattern.
+                    return self.Result(False)
+                elif p != i:
+                    # `path` diverges from our pattern, so no children of
+                    # `path` could ever match.
+                    return self.Result(False, recursive=True)
 
         recursing = False
         for i in self.bits:
@@ -140,14 +144,14 @@ class PathGlob(Glob):
                     if i(p):
                         break
                 else:
-                    return self.Result(False, recursive=False)
+                    return self.Result(False)
                 recursing = False
                 continue
 
             p = next(path_iter, None)
             if p is None:
                 # `path` is a parent of our pattern.
-                return self.Result(False, recursive=False)
+                return self.Result(False)
             if not i(p):
                 # `path` diverges from our pattern, so no children of `path`
                 # could ever match.
@@ -163,7 +167,7 @@ class PathGlob(Glob):
         found_type = self.Type.dir if path.directory else self.Type.file
         if self.type & found_type:
             return self.Result(True)
-        return self.Result(False, recursive=False)
+        return self.Result(False)
 
 
 class NameGlob(Glob):

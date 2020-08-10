@@ -115,7 +115,7 @@ def _find_files(env, filter, seen_dirs=None):
             for p in files:
                 yield p, filter.match(p)
 
-            for i in to_remove:
+            for i in reversed(to_remove):
                 del dirs[i]
 
 

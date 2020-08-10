@@ -27,9 +27,9 @@ def mock_filesystem():
         basename = os.path.basename(path)
         if basename == 'dir':
             return ['file2.txt', 'sub']
-        elif basename == 'sub':
+        elif basename in ['dir2', 'sub']:
             return []
-        return ['file.cpp', 'file.cpp~', 'dir']
+        return ['file.cpp', 'file.cpp~', 'dir', 'dir2']
 
     def mock_isdir(path, variables=None):
         return not path.basename().startswith('file')
@@ -174,7 +174,8 @@ class TestFind(FindTestCase):
         )
         self.assertPathListEqual(
             find.find(self.env, '**/'),
-            [srcpath('./'), srcpath('dir/'), srcpath('dir/sub/')]
+            [srcpath('./'), srcpath('dir/'), srcpath('dir2/'),
+             srcpath('dir/sub/')]
         )
 
     def test_file(self):
@@ -187,14 +188,15 @@ class TestFind(FindTestCase):
     def test_dir(self):
         self.assertPathListEqual(
             find.find(self.env, '**', type='d'),
-            [srcpath('./'), srcpath('dir/'), srcpath('dir/sub/')]
+            [srcpath('./'), srcpath('dir/'), srcpath('dir2/'),
+             srcpath('dir/sub/')]
         )
 
     def test_any(self):
         self.assertPathListEqual(
             find.find(self.env, '**', type='*'),
-            [srcpath('./'), srcpath('dir/'), srcpath('file.cpp'),
-             srcpath('file.cpp~'), srcpath('dir/sub/'),
+            [srcpath('./'), srcpath('dir/'),  srcpath('dir2/'),
+             srcpath('file.cpp'), srcpath('file.cpp~'), srcpath('dir/sub/'),
              srcpath('dir/file2.txt')]
         )
 
@@ -266,14 +268,15 @@ class TestFindFiles(FindTestCase):
                         File(srcpath('dir/file2.txt'))]
             self.assertFound(self.find('../**'), expected)
             self.assertFindDirs({srcpath('./'), srcpath('dir/'),
-                                 srcpath('dir/sub/')})
+                                 srcpath('dir2/'), srcpath('dir/sub/')})
 
             expected = [Directory(srcpath('./')),
                         Directory(srcpath('dir/')),
+                        Directory(srcpath('dir2')),
                         Directory(srcpath('dir/sub'))]
             self.assertFound(self.find('../**/'), expected)
             self.assertFindDirs({srcpath('./'), srcpath('dir/'),
-                                 srcpath('dir/sub/')})
+                                 srcpath('dir2/'), srcpath('dir/sub/')})
 
     def test_submodule_path_object(self):
         with self.context.push_path(Path('dir/build.bfg', Root.srcdir)):
@@ -281,38 +284,41 @@ class TestFindFiles(FindTestCase):
                         File(srcpath('dir/file2.txt'))]
             self.assertFound(self.find(srcpath('**')), expected)
             self.assertFindDirs({srcpath('./'), srcpath('dir/'),
-                                 srcpath('dir/sub/')})
+                                 srcpath('dir2/'), srcpath('dir/sub/')})
 
             expected = [Directory(srcpath('.')),
                         Directory(srcpath('dir')),
+                        Directory(srcpath('dir2')),
                         Directory(srcpath('dir/sub'))]
             self.assertFound(self.find(srcpath('**/')), expected)
             self.assertFindDirs({srcpath('./'), srcpath('dir/'),
-                                 srcpath('dir/sub/')})
+                                 srcpath('dir2/'), srcpath('dir/sub/')})
 
     def test_type_file(self):
         expected = [SourceFile(srcpath('file.cpp'), 'c++'),
                     File(srcpath('dir/file2.txt'))]
         self.assertFound(self.find('**', type='f'), expected)
-        self.assertFindDirs({srcpath('./'), srcpath('dir/'),
+        self.assertFindDirs({srcpath('./'), srcpath('dir/'), srcpath('dir2/'),
                              srcpath('dir/sub/')})
 
     def test_type_dir(self):
         expected = [Directory(srcpath('.')),
                     Directory(srcpath('dir')),
+                    Directory(srcpath('dir2')),
                     Directory(srcpath('dir/sub'))]
         self.assertFound(self.find('**', type='d'), expected)
-        self.assertFindDirs({srcpath('./'), srcpath('dir/'),
+        self.assertFindDirs({srcpath('./'), srcpath('dir/'), srcpath('dir2/'),
                              srcpath('dir/sub/')})
 
     def test_type_all(self):
         expected = [Directory(srcpath('.')),
                     Directory(srcpath('dir')),
+                    Directory(srcpath('dir2')),
                     SourceFile(srcpath('file.cpp'), 'c++'),
                     Directory(srcpath('dir/sub')),
                     File(srcpath('dir/file2.txt'))]
         self.assertFound(self.find('**', type='*'), expected)
-        self.assertFindDirs({srcpath('./'), srcpath('dir/'),
+        self.assertFindDirs({srcpath('./'), srcpath('dir/'), srcpath('dir2/'),
                              srcpath('dir/sub/')})
 
     def test_extra(self):
@@ -320,7 +326,7 @@ class TestFindFiles(FindTestCase):
         extra = [File(srcpath('dir/file2.txt'))]
         self.assertFound(self.find('**/*.cpp', extra='*.txt'), expected,
                          post=extra)
-        self.assertFindDirs({srcpath('./'), srcpath('dir/'),
+        self.assertFindDirs({srcpath('./'), srcpath('dir/'), srcpath('dir2/'),
                              srcpath('dir/sub/')})
 
     def test_multiple_extra(self):
@@ -329,19 +335,24 @@ class TestFindFiles(FindTestCase):
                  File(srcpath('dir/file2.txt'))]
         self.assertFound(self.find('**/*.cpp', extra=['*.txt', 'su?/']),
                          expected, post=extra)
-        self.assertFindDirs({srcpath('./'), srcpath('dir/'),
+        self.assertFindDirs({srcpath('./'), srcpath('dir/'), srcpath('dir2/'),
                              srcpath('dir/sub/')})
 
     def test_exclude(self):
         expected = [SourceFile(srcpath('file.cpp'), 'c++')]
         self.assertFound(self.find('**/file*', exclude='dir/'), expected)
-        self.assertFindDirs({srcpath('./')})
+        self.assertFindDirs({srcpath('./'), srcpath('dir2/')})
 
     def test_multiple_exclude(self):
         expected = [SourceFile(srcpath('file.cpp'), 'c++')]
         self.assertFound(self.find('**/file*', exclude=['*.txt', 'sub/']),
                          expected)
-        self.assertFindDirs({srcpath('./'), srcpath('dir/')})
+        self.assertFindDirs({srcpath('./'), srcpath('dir/'), srcpath('dir2/')})
+
+    def test_exclude_all_files(self):
+        self.assertFound(self.find('**', exclude=['*']), [])
+        self.assertFindDirs({srcpath('./'), srcpath('dir/'), srcpath('dir2/'),
+                             srcpath('dir/sub/')})
 
     def test_no_default_exclude(self):
         self.context['project'](find_exclude=[])
@@ -349,7 +360,7 @@ class TestFindFiles(FindTestCase):
                     File(srcpath('file.cpp~')),
                     File(srcpath('dir/file2.txt'))]
         self.assertFound(self.find('**/file*'), expected)
-        self.assertFindDirs({srcpath('./'), srcpath('dir/'),
+        self.assertFindDirs({srcpath('./'), srcpath('dir/'), srcpath('dir2/'),
                              srcpath('dir/sub/')})
 
     def test_custom_default_exclude(self):
@@ -357,7 +368,7 @@ class TestFindFiles(FindTestCase):
         expected = [SourceFile(srcpath('file.cpp'), 'c++'),
                     File(srcpath('file.cpp~'))]
         self.assertFound(self.find('**/file*'), expected)
-        self.assertFindDirs({srcpath('./'), srcpath('dir/'),
+        self.assertFindDirs({srcpath('./'), srcpath('dir/'), srcpath('dir2/'),
                              srcpath('dir/sub/')})
 
     def test_filter(self):
@@ -370,11 +381,13 @@ class TestFindFiles(FindTestCase):
                 return find.FindResult.exclude
 
         expected = [SourceFile(srcpath('file.cpp'), 'c++')]
-        pre = [Directory(srcpath('./')), Directory(srcpath('dir/'))]
+        pre = [Directory(srcpath('./')),
+               Directory(srcpath('dir/')),
+               Directory(srcpath('dir2/'))]
         post = [Directory(srcpath('dir/sub/'))]
         self.assertFound(self.find('**', type='*', filter=my_filter), expected,
                          pre=pre, post=post)
-        self.assertFindDirs({srcpath('./'), srcpath('dir/'),
+        self.assertFindDirs({srcpath('./'), srcpath('dir/'), srcpath('dir2/'),
                              srcpath('dir/sub/')})
 
     def test_glob_with_filters(self):
@@ -392,24 +405,26 @@ class TestFindFiles(FindTestCase):
         expected = [File(srcpath('file.cpp')),
                     File(srcpath('dir/file2.txt'))]
         self.assertFound(self.find('**', file_type=f), expected)
-        self.assertFindDirs({srcpath('./'), srcpath('dir/'),
+        self.assertFindDirs({srcpath('./'), srcpath('dir/'), srcpath('dir2/'),
                              srcpath('dir/sub/')})
 
         expected = [HeaderDirectory(srcpath('.')),
                     HeaderDirectory(srcpath('dir')),
+                    HeaderDirectory(srcpath('dir2')),
                     HeaderDirectory(srcpath('dir/sub'))]
         self.assertFound(self.find('**/', dir_type=d), expected)
-        self.assertFindDirs({srcpath('./'), srcpath('dir/'),
+        self.assertFindDirs({srcpath('./'), srcpath('dir/'), srcpath('dir2/'),
                              srcpath('dir/sub/')})
 
         expected = [HeaderDirectory(srcpath('.')),
                     HeaderDirectory(srcpath('dir')),
+                    HeaderDirectory(srcpath('dir2')),
                     File(srcpath('file.cpp')),
                     HeaderDirectory(srcpath('dir/sub')),
                     File(srcpath('dir/file2.txt'))]
         self.assertFound(self.find('**', type='*', file_type=f,
                                    dir_type=d), expected)
-        self.assertFindDirs({srcpath('./'), srcpath('dir/'),
+        self.assertFindDirs({srcpath('./'), srcpath('dir/'), srcpath('dir2/'),
                              srcpath('dir/sub/')})
 
     def test_no_dist(self):
@@ -417,7 +432,7 @@ class TestFindFiles(FindTestCase):
                     File(srcpath('dir/file2.txt'))]
         self.assertFoundResult(self.find('**', dist=False), expected)
         self.assertEqual(list(self.build.sources()), [self.bfgfile])
-        self.assertFindDirs({srcpath('./'), srcpath('dir/'),
+        self.assertFindDirs({srcpath('./'), srcpath('dir/'), srcpath('dir2/'),
                              srcpath('dir/sub/')})
 
     def test_no_cache(self):

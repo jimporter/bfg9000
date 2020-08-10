@@ -88,7 +88,7 @@ class TestPathGlob(TestCase):
     def test_base_dir(self):
         g = PathGlob('dir/*')
         self.assertPathEqual(g.base, Path('dir/', Root.srcdir))
-        self.assertMatch(g, src_file_txt, [False, False])
+        self.assertMatch(g, src_file_txt, [False, True])
         self.assertMatch(g, src_dir, [False, False])
         self.assertMatch(g, src_dir_file_txt, [True])
         self.assertMatch(g, build_file_txt, [False, False])
