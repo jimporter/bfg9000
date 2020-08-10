@@ -10,133 +10,105 @@ build_file_txt = Path('file.txt', Root.builddir)
 
 
 class TestPathGlobResult(TestCase):
-    def test_eq(self):
-        R = PathGlob.Result
-        self.assertTrue(R(True) == R(True))
-        self.assertFalse(R(True) != R(True))
-        self.assertTrue(R(False) == R(False))
-        self.assertFalse(R(False) != R(False))
-
-        self.assertFalse(R(True) == R(False))
-        self.assertTrue(R(True) != R(False))
-        self.assertFalse(R(False) == R(True))
-        self.assertTrue(R(False) != R(True))
-
-        self.assertTrue(R(False, False) == R(False))
-        self.assertFalse(R(False, False) != R(False))
-        self.assertTrue(R(False) == R(False, False))
-        self.assertFalse(R(False) != R(False, False))
-
-        self.assertTrue(R(False, True) == R(False, True))
-        self.assertFalse(R(False, True) != R(False, True))
-        self.assertTrue(R(False, False) == R(False, False))
-        self.assertFalse(R(False, False) != R(False, False))
-
-        self.assertFalse(R(False, True) == R(False, False))
-        self.assertTrue(R(False, True) != R(False, False))
-        self.assertFalse(R(False, False) == R(False, True))
-        self.assertTrue(R(False, False) != R(False, True))
-
     def test_bool(self):
         R = PathGlob.Result
-        self.assertTrue(bool(R(True)))
-        self.assertFalse(bool(R(False)))
-        self.assertFalse(bool(R(False, True)))
-        self.assertFalse(bool(R(False, False)))
+        self.assertTrue(bool(R.yes))
+        self.assertFalse(bool(R.no))
+        self.assertFalse(bool(R.never))
 
     def test_and(self):
         R = PathGlob.Result
-        self.assertEqual(R(False) & R(False), R(False))
-        self.assertEqual(R(False) & R(True), R(False))
-        self.assertEqual(R(True) & R(False), R(False))
-        self.assertEqual(R(True) & R(True), R(True))
+        self.assertEqual(R.yes & R.yes, R.yes)
+        self.assertEqual(R.yes & R.no, R.no)
+        self.assertEqual(R.yes & R.never, R.never)
 
-        self.assertEqual(R(False) & R(False, True), R(False, True))
-        self.assertEqual(R(False, True) & R(False), R(False, True))
-        self.assertEqual(R(False, True) & R(False, True), R(False, True))
+        self.assertEqual(R.no & R.yes, R.no)
+        self.assertEqual(R.no & R.no, R.no)
+        self.assertEqual(R.no & R.never, R.never)
 
-        self.assertEqual(R(True) & R(False, True), R(False, True))
-        self.assertEqual(R(False, True) & R(True), R(False, True))
+        self.assertEqual(R.never & R.yes, R.never)
+        self.assertEqual(R.never & R.no, R.never)
+        self.assertEqual(R.never & R.never, R.never)
 
     def test_or(self):
         R = PathGlob.Result
-        self.assertEqual(R(False) | R(False), R(False))
-        self.assertEqual(R(False) | R(True), R(True))
-        self.assertEqual(R(True) | R(False), R(True))
-        self.assertEqual(R(True) | R(True), R(True))
+        self.assertEqual(R.yes | R.yes, R.yes)
+        self.assertEqual(R.yes | R.no, R.yes)
+        self.assertEqual(R.yes | R.never, R.yes)
 
-        self.assertEqual(R(False) | R(False, True), R(False))
-        self.assertEqual(R(False, True) | R(False), R(False))
-        self.assertEqual(R(False, True) | R(False, True), R(False, True))
+        self.assertEqual(R.no | R.yes, R.yes)
+        self.assertEqual(R.no | R.no, R.no)
+        self.assertEqual(R.no | R.never, R.no)
 
-        self.assertEqual(R(True) | R(False, True), R(True))
-        self.assertEqual(R(False, True) | R(True), R(True))
+        self.assertEqual(R.never | R.yes, R.yes)
+        self.assertEqual(R.never | R.no, R.no)
+        self.assertEqual(R.never | R.never, R.never)
 
 
 class TestPathGlob(TestCase):
     def assertMatch(self, glob, path, result, skip_base=False):
-        self.assertEqual(glob.match(path, skip_base), PathGlob.Result(*result))
+        self.assertEqual(glob.match(path, skip_base), PathGlob.Result[result])
 
     def test_simple(self):
         g = PathGlob('file*')
         self.assertPathEqual(g.base, Path('', Root.srcdir))
-        self.assertMatch(g, src_file_txt, [True])
-        self.assertMatch(g, src_dir, [False, True])
-        self.assertMatch(g, src_dir_file_txt, [False, True])
-        self.assertMatch(g, build_file_txt, [False, False])
+        self.assertMatch(g, src_file_txt, 'yes')
+        self.assertMatch(g, src_dir, 'never')
+        self.assertMatch(g, src_dir_file_txt, 'never')
+        self.assertMatch(g, build_file_txt, 'no')
 
     def test_base_dir(self):
         g = PathGlob('dir/*')
         self.assertPathEqual(g.base, Path('dir/', Root.srcdir))
-        self.assertMatch(g, src_file_txt, [False, True])
-        self.assertMatch(g, src_dir, [False, False])
-        self.assertMatch(g, src_dir_file_txt, [True])
-        self.assertMatch(g, build_file_txt, [False, False])
+        self.assertMatch(g, src_file_txt, 'never')
+        self.assertMatch(g, src_dir, 'no')
+        self.assertMatch(g, src_dir_file_txt, 'yes')
+        self.assertMatch(g, build_file_txt, 'no')
 
     def test_star(self):
         g = PathGlob('*')
-        self.assertMatch(g, src_file_txt, [True])
-        self.assertMatch(g, src_dir, [False, False])
-        self.assertMatch(g, src_dir_file_txt, [False, True])
-        self.assertMatch(g, build_file_txt, [False, False])
+        self.assertMatch(g, src_file_txt, 'yes')
+        self.assertMatch(g, src_dir, 'no')
+        self.assertMatch(g, src_dir_file_txt, 'never')
+        self.assertMatch(g, build_file_txt, 'no')
 
         g = PathGlob('*/')
-        self.assertMatch(g, src_file_txt, [False, False])
-        self.assertMatch(g, src_dir, [True])
-        self.assertMatch(g, src_dir_file_txt, [False, True])
-        self.assertMatch(g, build_file_txt, [False, False])
+        self.assertMatch(g, src_file_txt, 'no')
+        self.assertMatch(g, src_dir, 'yes')
+        self.assertMatch(g, src_dir_file_txt, 'never')
+        self.assertMatch(g, build_file_txt, 'no')
 
         g = PathGlob('*', type='*')
-        self.assertMatch(g, src_file_txt, [True])
-        self.assertMatch(g, src_dir, [True])
-        self.assertMatch(g, src_dir_file_txt, [False, True])
-        self.assertMatch(g, build_file_txt, [False, False])
+        self.assertMatch(g, src_file_txt, 'yes')
+        self.assertMatch(g, src_dir, 'yes')
+        self.assertMatch(g, src_dir_file_txt, 'never')
+        self.assertMatch(g, build_file_txt, 'no')
 
     def test_starstar(self):
         g = PathGlob('**')
-        self.assertMatch(g, src_file_txt, [True])
-        self.assertMatch(g, src_dir, [False, False])
-        self.assertMatch(g, src_dir_file_txt, [True])
-        self.assertMatch(g, build_file_txt, [False, False])
+        self.assertMatch(g, src_file_txt, 'yes')
+        self.assertMatch(g, src_dir, 'no')
+        self.assertMatch(g, src_dir_file_txt, 'yes')
+        self.assertMatch(g, build_file_txt, 'no')
 
         g = PathGlob('**/')
-        self.assertMatch(g, src_file_txt, [False, False])
-        self.assertMatch(g, src_dir, [True])
-        self.assertMatch(g, src_dir_file_txt, [False, False])
-        self.assertMatch(g, build_file_txt, [False, False])
+        self.assertMatch(g, src_file_txt, 'no')
+        self.assertMatch(g, src_dir, 'yes')
+        self.assertMatch(g, src_dir_file_txt, 'no')
+        self.assertMatch(g, build_file_txt, 'no')
 
         g = PathGlob('**', type='*')
-        self.assertMatch(g, src_file_txt, [True])
-        self.assertMatch(g, src_dir, [True])
-        self.assertMatch(g, src_dir_file_txt, [True])
-        self.assertMatch(g, build_file_txt, [False, False])
+        self.assertMatch(g, src_file_txt, 'yes')
+        self.assertMatch(g, src_dir, 'yes')
+        self.assertMatch(g, src_dir_file_txt, 'yes')
+        self.assertMatch(g, build_file_txt, 'no')
 
     def test_starstar_prefix(self):
         g = PathGlob('**/file.txt')
-        self.assertMatch(g, src_file_txt, [True])
-        self.assertMatch(g, src_dir, [False, False])
-        self.assertMatch(g, src_dir_file_txt, [True])
-        self.assertMatch(g, build_file_txt, [False, False])
+        self.assertMatch(g, src_file_txt, 'yes')
+        self.assertMatch(g, src_dir, 'no')
+        self.assertMatch(g, src_dir_file_txt, 'yes')
+        self.assertMatch(g, build_file_txt, 'no')
 
     def test_type(self):
         self.assertEqual(PathGlob('*').type, Glob.Type.file)
@@ -153,21 +125,21 @@ class TestPathGlob(TestCase):
             return Path(p, Root.srcdir)
 
         g = PathGlob('dir/sub/*')
-        self.assertMatch(g, srcpath('dir/sub/file.txt'), [True], True)
-        self.assertMatch(g, srcpath('foo/bar/file.txt'), [True], True)
-        self.assertMatch(g, srcpath('file.txt'), [False, False], True)
+        self.assertMatch(g, srcpath('dir/sub/file.txt'), 'yes', True)
+        self.assertMatch(g, srcpath('foo/bar/file.txt'), 'yes', True)
+        self.assertMatch(g, srcpath('file.txt'), 'no', True)
 
-        self.assertMatch(g, Path('dir/sub/file.txt'), [True], True)
-        self.assertMatch(g, Path('foo/bar/file.txt'), [True], True)
-        self.assertMatch(g, Path('file.txt'), [False, False], True)
+        self.assertMatch(g, Path('dir/sub/file.txt'), 'yes', True)
+        self.assertMatch(g, Path('foo/bar/file.txt'), 'yes', True)
+        self.assertMatch(g, Path('file.txt'), 'no', True)
 
     def test_normalize(self):
         g = PathGlob('**/**')
         self.assertEqual(len(g.bits), 1)
-        self.assertMatch(g, src_file_txt, [True])
-        self.assertMatch(g, src_dir, [False, False])
-        self.assertMatch(g, src_dir_file_txt, [True])
-        self.assertMatch(g, build_file_txt, [False, False])
+        self.assertMatch(g, src_file_txt, 'yes')
+        self.assertMatch(g, src_dir, 'no')
+        self.assertMatch(g, src_dir_file_txt, 'yes')
+        self.assertMatch(g, build_file_txt, 'no')
 
     def test_nonglob(self):
         self.assertRaises(ValueError, PathGlob, 'foo/bar.hpp')

@@ -41,6 +41,61 @@ def mock_filesystem():
         yield a, b, c, d
 
 
+class TestFindResult(TestCase):
+    def test_bool(self):
+        R = find.FindResult
+        self.assertTrue(bool(R.include))
+        self.assertFalse(bool(R.not_now))
+        self.assertFalse(bool(R.exclude))
+        self.assertFalse(bool(R.exclude_recursive))
+
+    def test_and(self):
+        R = find.FindResult
+        self.assertEqual(R.include & R.include, R.include)
+        self.assertEqual(R.include & R.not_now, R.not_now)
+        self.assertEqual(R.include & R.exclude, R.exclude)
+        self.assertEqual(R.include & R.exclude_recursive, R.exclude_recursive)
+
+        self.assertEqual(R.not_now & R.include, R.not_now)
+        self.assertEqual(R.not_now & R.not_now, R.not_now)
+        self.assertEqual(R.not_now & R.exclude, R.exclude)
+        self.assertEqual(R.not_now & R.exclude_recursive, R.exclude_recursive)
+
+        self.assertEqual(R.exclude & R.include, R.exclude)
+        self.assertEqual(R.exclude & R.not_now, R.exclude)
+        self.assertEqual(R.exclude & R.exclude, R.exclude)
+        self.assertEqual(R.exclude & R.exclude_recursive, R.exclude_recursive)
+
+        self.assertEqual(R.exclude_recursive & R.include, R.exclude_recursive)
+        self.assertEqual(R.exclude_recursive & R.not_now, R.exclude_recursive)
+        self.assertEqual(R.exclude_recursive & R.exclude, R.exclude_recursive)
+        self.assertEqual(R.exclude_recursive & R.exclude_recursive,
+                         R.exclude_recursive)
+
+    def test_or(self):
+        R = find.FindResult
+        self.assertEqual(R.include | R.include, R.include)
+        self.assertEqual(R.include | R.not_now, R.include)
+        self.assertEqual(R.include | R.exclude, R.include)
+        self.assertEqual(R.include | R.exclude_recursive, R.include)
+
+        self.assertEqual(R.not_now | R.include, R.include)
+        self.assertEqual(R.not_now | R.not_now, R.not_now)
+        self.assertEqual(R.not_now | R.exclude, R.not_now)
+        self.assertEqual(R.not_now | R.exclude_recursive, R.not_now)
+
+        self.assertEqual(R.exclude | R.include, R.include)
+        self.assertEqual(R.exclude | R.not_now, R.not_now)
+        self.assertEqual(R.exclude | R.exclude, R.exclude)
+        self.assertEqual(R.exclude | R.exclude_recursive, R.exclude)
+
+        self.assertEqual(R.exclude_recursive | R.include, R.include)
+        self.assertEqual(R.exclude_recursive | R.not_now, R.not_now)
+        self.assertEqual(R.exclude_recursive | R.exclude, R.exclude)
+        self.assertEqual(R.exclude_recursive | R.exclude_recursive,
+                         R.exclude_recursive)
+
+
 class TestFileFilter(TestCase):
     def test_file(self):
         f = find.FileFilter('*')

@@ -1,5 +1,6 @@
 import fnmatch
 import re
+from enum import Enum
 
 try:
     from enum import Flag
@@ -41,29 +42,19 @@ class PathGlob(Glob):
     _glob_ex = re.compile(r'[*?[]')
     _starstar = object()
 
-    class Result:
-        def __init__(self, matched, recursive=False):
-            self.matched = matched
-            self.recursive = False if matched else recursive
+    class Result(Enum):
+        yes = 0
+        no = 1
+        never = 2
 
         def __bool__(self):
-            return self.matched
-
-        def __eq__(self, rhs):
-            return (self.matched == rhs.matched and
-                    self.recursive == rhs.recursive)
+            return self == self.yes
 
         def __and__(self, rhs):
-            return type(self)(self.matched and rhs.matched,
-                              self.recursive or rhs.recursive)
+            return type(self)(max(self.value, rhs.value))
 
         def __or__(self, rhs):
-            return type(self)(self.matched or rhs.matched,
-                              self.recursive and rhs.recursive)
-
-        def __repr__(self):
-            return '<{}({}, {})>'.format(type(self).__name__, self.matched,
-                                         self.recursive)
+            return type(self)(min(self.value, rhs.value))
 
     def __init__(self, pattern, type=None, root=Root.srcdir):
         path = Path.ensure(pattern, root)
@@ -119,18 +110,18 @@ class PathGlob(Glob):
             # This code should only run when we have multiple `PathGlob`s for a
             # given filter.
             if path.root != self.base.root:
-                return self.Result(False)
+                return self.Result.no
 
             path_iter = iter(path.split())
             for i in self.base.split():
                 p = next(path_iter, None)
                 if p is None:
                     # `path` is a parent of our pattern.
-                    return self.Result(False)
+                    return self.Result.no
                 elif p != i:
                     # `path` diverges from our pattern, so no children of
                     # `path` could ever match.
-                    return self.Result(False, recursive=True)
+                    return self.Result.never
 
         recursing = False
         for i in self.bits:
@@ -144,30 +135,30 @@ class PathGlob(Glob):
                     if i(p):
                         break
                 else:
-                    return self.Result(False)
+                    return self.Result.no
                 recursing = False
                 continue
 
             p = next(path_iter, None)
             if p is None:
                 # `path` is a parent of our pattern.
-                return self.Result(False)
+                return self.Result.no
             if not i(p):
                 # `path` diverges from our pattern, so no children of `path`
                 # could ever match.
-                return self.Result(False, recursive=True)
+                return self.Result.never
 
         if next(path_iter, None) is not None:
             if not recursing:
                 # `path` is a child of our pattern, and we're not looking for
                 # children.
-                return self.Result(False, recursive=True)
+                return self.Result.never
 
         # `path` matches our pattern. Check if it's the right file type.
         found_type = self.Type.dir if path.directory else self.Type.file
         if self.type & found_type:
-            return self.Result(True)
-        return self.Result(False)
+            return self.Result.yes
+        return self.Result.no
 
 
 class NameGlob(Glob):

@@ -1,5 +1,5 @@
 import re
-from enum import IntEnum
+from enum import Enum
 from functools import reduce
 
 from . import builtin
@@ -17,11 +17,20 @@ depfile_name = '.bfg_find_deps'
 
 
 @builtin.default()
-class FindResult(IntEnum):
+class FindResult(Enum):
     include = 0
     not_now = 1
     exclude = 2
     exclude_recursive = 3
+
+    def __bool__(self):
+        return self == self.include
+
+    def __and__(self, rhs):
+        return type(self)(max(self.value, rhs.value))
+
+    def __or__(self, rhs):
+        return type(self)(min(self.value, rhs.value))
 
 
 class FileFilter:
@@ -50,14 +59,14 @@ class FileFilter:
         if any(i.match(path) for i in self.extra):
             return FindResult.not_now
 
-        if result.recursive:
+        if result == PathGlob.Result.never:
             return FindResult.exclude_recursive
         return FindResult.exclude
 
     def match(self, path):
         result = self._match_globs(path)
         if self.filter_fn:
-            return max(result, self.filter_fn(path))
+            return result & self.filter_fn(path)
         return result
 
 
