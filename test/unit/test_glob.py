@@ -65,6 +65,11 @@ class TestPathGlob(TestCase):
         self.assertMatch(g, src_dir_file_txt, 'yes')
         self.assertMatch(g, build_file_txt, 'no')
 
+        g = PathGlob('dir/sub/*')
+        self.assertPathEqual(g.base, Path('dir/sub/', Root.srcdir))
+        self.assertMatch(g, src_file_txt, 'never')
+        self.assertMatch(g, src_dir, 'no')
+
     def test_star(self):
         g = PathGlob('*')
         self.assertMatch(g, src_file_txt, 'yes')
@@ -110,6 +115,22 @@ class TestPathGlob(TestCase):
         self.assertMatch(g, src_dir_file_txt, 'yes')
         self.assertMatch(g, build_file_txt, 'no')
 
+        g = PathGlob('**/*')
+        self.assertMatch(g, src_file_txt, 'yes')
+        self.assertMatch(g, src_dir, 'no')
+        self.assertMatch(g, src_dir_file_txt, 'yes')
+        self.assertMatch(g, build_file_txt, 'no')
+
+    def test_complicated(self):
+        g = PathGlob('**/*a*/**/*.txt')
+        self.assertMatch(g, Path('bar/file.txt', Root.srcdir), 'yes')
+        self.assertMatch(g, Path('foo/bar/file.txt', Root.srcdir), 'yes')
+
+        g = PathGlob('**/*a*/baz/**/*.txt')
+        self.assertMatch(g, Path('foo/bar/baz/file.txt', Root.srcdir), 'yes')
+        self.assertMatch(g, Path('a/foo/bar/baz/file.txt', Root.srcdir), 'yes')
+        self.assertMatch(g, Path('baz/bar/file.txt', Root.srcdir), 'no')
+
     def test_type(self):
         self.assertEqual(PathGlob('*').type, Glob.Type.file)
         self.assertEqual(PathGlob('*/').type, Glob.Type.dir)
@@ -135,7 +156,7 @@ class TestPathGlob(TestCase):
 
     def test_normalize(self):
         g = PathGlob('**/**')
-        self.assertEqual(len(g.bits), 1)
+        self.assertEqual(g.glob, [([], 0), ([], 0)])
         self.assertMatch(g, src_file_txt, 'yes')
         self.assertMatch(g, src_dir, 'no')
         self.assertMatch(g, src_dir_file_txt, 'yes')

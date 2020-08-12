@@ -1,10 +1,10 @@
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Sequence
 from functools import reduce
 
-__all__ = ['default_sentinel', 'first', 'flatten', 'isiterable', 'ismapping',
-           'iterate', 'iterate_each', 'listify', 'map_iterable', 'merge_dicts',
-           'merge_into_dict', 'partition', 'recursive_walk', 'slice_dict',
-           'tween', 'uniques', 'unlistify']
+__all__ = ['default_sentinel', 'first', 'find_index', 'flatten', 'isiterable',
+           'ismapping', 'iterate', 'iterate_each', 'listify', 'list_view',
+           'map_iterable', 'merge_dicts', 'merge_into_dict', 'partition',
+           'recursive_walk', 'slice_dict', 'tween', 'uniques', 'unlistify']
 
 # This could go in a funcutils module if we ever create one...
 default_sentinel = object()
@@ -131,6 +131,42 @@ def find_index(fn, seq):
         if fn(elem):
             return i
     return None
+
+
+class list_view(Sequence):
+    def __init__(self, container, start=None, stop=None):
+        length = len(container)
+
+        def clamp(n):
+            return max(0, min(n, length))
+
+        start = 0 if start is None else clamp(start)
+        stop = length if stop is None else clamp(stop)
+
+        if isinstance(container, list_view):
+            self.data = container.data
+            self.start = container.start + start
+            self.stop = container.start + stop
+        else:
+            self.data = container
+            self.start = start
+            self.stop = stop
+
+    def __getitem__(self, i):
+        if isinstance(i, slice):
+            if i.step != 1 and i.step is not None:
+                raise ValueError(i)
+            return list_view(self, i.start, i.stop)
+
+        if i < 0 or i >= len(self):
+            raise IndexError(i)
+        return self.data[self.start + i]
+
+    def __len__(self):
+        return self.stop - self.start
+
+    def split_at(self, i):
+        return list_view(self, 0, i), list_view(self, i)
 
 
 def merge_into_dict(dst, *args):
