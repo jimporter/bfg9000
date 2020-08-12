@@ -5,7 +5,7 @@ from unittest import mock
 from .. import TestCase
 from .common import BuiltinTest
 
-from bfg9000.builtins import find, project, regenerate  # noqa
+from bfg9000.builtins import find, project, regenerate, version  # noqa
 from bfg9000.file_types import Directory, File, HeaderDirectory, SourceFile
 from bfg9000.iterutils import uniques
 from bfg9000.path import Path, Root
@@ -31,14 +31,22 @@ def mock_filesystem():
             return []
         return ['file.cpp', 'file.cpp~', 'dir', 'dir2']
 
+    def mock_exists(path, variables=None):
+        if path.suffix == '':
+            return True
+        paths = mock_listdir(path.parent().suffix)
+        return path.basename() in paths
+
     def mock_isdir(path, variables=None):
         return not path.basename().startswith('file')
 
     with mock.patch('os.listdir', mock_listdir) as a, \
-         mock.patch('bfg9000.path.exists', return_value=True) as b, \
-         mock.patch('bfg9000.path.isdir', mock_isdir) as c, \
-         mock.patch('bfg9000.path.islink', return_value=False) as d:  # noqa
-        yield a, b, c, d
+         mock.patch('bfg9000.path.exists', mock_exists) as b, \
+         mock.patch('bfg9000.builtins.find.exists', mock_exists) as c, \
+         mock.patch('bfg9000.path.isdir', mock_isdir) as d, \
+         mock.patch('bfg9000.builtins.find.isdir', mock_isdir) as e, \
+         mock.patch('bfg9000.path.islink', return_value=False) as f:  # noqa
+        yield a, b, c, d, e, f
 
 
 class TestFindResult(TestCase):
@@ -265,6 +273,7 @@ class TestFind(FindTestCase):
 class TestFindFiles(FindTestCase):
     def setUp(self):
         super().setUp()
+        self.context['bfg9000_required_version']('>=0.6.0.dev0')
         self.find = self.context['find_files']
         self.dist = []
 
@@ -504,3 +513,46 @@ class TestFindPaths(TestFindFiles):
 
     def assertFoundResult(self, result, expected):
         self.assertPathListEqual(result, [i.path for i in expected])
+
+
+class TestFindFilesOld(FindTestCase):
+    def setUp(self):
+        super().setUp()
+        self.find = self.context['find_files']
+        self.dist = []
+
+    def assertFoundResult(self, result, expected):
+        self.assertEqual(result, expected)
+
+    def assertFound(self, result, expected, *, pre=[], post=[]):
+        self.assertFoundResult(result, expected)
+        self.dist = uniques(self.dist + pre + expected + post)
+        self.assertEqual(list(self.build.sources()),
+                         [self.bfgfile] + self.dist)
+
+    def test_default(self):
+        expected = [Directory(srcpath('.')),
+                    Directory(srcpath('dir')),
+                    Directory(srcpath('dir2')),
+                    SourceFile(srcpath('file.cpp'), 'c++'),
+                    Directory(srcpath('dir/sub')),
+                    File(srcpath('dir/file2.txt'))]
+        self.assertFound(self.find(), expected)
+
+    def test_path(self):
+        expected = [Directory(srcpath('dir')),
+                    Directory(srcpath('dir/sub')),
+                    File(srcpath('dir/file2.txt'))]
+        self.assertFound(self.find('dir'), expected)
+
+    def test_name(self):
+        expected = [SourceFile(srcpath('file.cpp'), 'c++'),
+                    File(srcpath('dir/file2.txt'))]
+        self.assertFound(self.find(name='file*'), expected)
+
+    def test_non_glob(self):
+        self.assertFound(self.find('dir', 'file2.txt', flat=True),
+                         [File(srcpath('dir/file2.txt'))])
+        self.assertFound(self.find('dir', 'file3.txt', flat=True), [])
+        self.assertFound(self.find('dir', 'sub', flat=True),
+                         [Directory(srcpath('dir/sub'))])

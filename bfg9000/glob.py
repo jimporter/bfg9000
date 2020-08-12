@@ -14,6 +14,11 @@ from .objutils import objectify
 from .path import Path, Root
 
 
+# TODO: Remove this after 0.6 is released?
+class NonGlobError(ValueError):
+    pass
+
+
 class Glob:
     class Type(Flag):
         file = 1
@@ -66,7 +71,7 @@ class PathGlob(Glob):
 
         first_glob = find_index(self._is_glob, bits)
         if first_glob is None:
-            raise ValueError('{!r} is not a glob'.format(pattern))
+            raise NonGlobError('{!r} is not a glob'.format(pattern))
         base, glob = bits.split_at(first_glob)
 
         self.base = Path(Path.sep.join(base), path.root, directory=True)

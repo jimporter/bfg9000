@@ -2,7 +2,7 @@ from unittest import mock
 
 from .common import AttrDict, BuiltinTest
 
-from bfg9000.builtins import regenerate  # noqa
+from bfg9000.builtins import regenerate, version  # noqa
 from bfg9000.builtins.file_types import FileList, static_file
 from bfg9000.file_types import *
 from bfg9000.path import Path, Root
@@ -272,6 +272,7 @@ class TestDirectory(TestGenericFile):
                 (p('dir/sub'), [], [p('dir/sub/file2.txt')]),
             ]
 
+        self.context['bfg9000_required_version']('>=0.6.0.dev0')
         expected = self.type(srcpath(self.filename), [
             File(srcpath('dir/file.txt')),
             File(srcpath('dir/sub/file2.txt')),
@@ -298,6 +299,7 @@ class TestHeaderDirectory(TestDirectory):
                 (p('include/sub'), [], [p('include/sub/file2.hpp')]),
             ]
 
+        self.context['bfg9000_required_version']('>=0.6.0.dev0')
         expected = self.type(srcpath(self.filename), [
             HeaderFile(srcpath('include/file.hpp'), 'c++'),
             HeaderFile(srcpath('include/sub/file2.hpp'), 'c++'),

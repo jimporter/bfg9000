@@ -1,11 +1,13 @@
 # -*- python -*-
 
+bfg9000_required_version('>=0.6.0.dev0')
+project('hello', '1.0')
+
 # When creating libraries for other projects to use, it's common to generate
 # pkg-config info to make it easier for users of the library to, well, use it.
 # Of course, you first have to define your build and specify the appropriate
 # files to install:
 
-project('hello', '1.0')
 
 ogg = package('ogg')
 

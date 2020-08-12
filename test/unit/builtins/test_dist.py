@@ -1,11 +1,15 @@
 from .common import BuiltinTest
 
-from bfg9000.builtins import dist, file_types, regenerate  # noqa
+from bfg9000.builtins import dist, file_types, regenerate, version  # noqa
 from bfg9000.path import Path, Root
 from bfg9000.file_types import File, Directory
 
 
 class TestExtraDist(BuiltinTest):
+    def setUp(self):
+        super().setUp()
+        self.context['bfg9000_required_version']('>=0.6.0.dev0')
+
     def test_file(self):
         self.context['extra_dist'](files='file')
         self.assertEqual(list(self.build.sources()), [

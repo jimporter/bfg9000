@@ -1,6 +1,11 @@
 from . import builtin
 from .. import versioning as v
+from ..build_inputs import build_input
 from ..objutils import objectify
+
+build_input('required_version')(
+    lambda build_inputs, env: v.PythonSpecifierSet('')
+)
 
 
 @builtin.function(context='*')
@@ -11,6 +16,7 @@ def bfg9000_required_version(context, version=None, python_version=None):
 
     v.check_version(v.bfg_version, version, kind='bfg9000')
     v.check_version(v.python_version, python_version, kind='python')
+    context.build['required_version'] &= version
 
 
 @builtin.getter(context='*')
