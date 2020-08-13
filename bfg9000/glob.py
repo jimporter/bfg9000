@@ -47,7 +47,6 @@ class Glob:
 
 class PathGlob(Glob):
     _glob_ex = re.compile(r'[*?[]')
-    _starstar = object()
     _glob_run = namedtuple('_glob_bit', ['matchers', 'length'])
 
     class Result(Enum):
