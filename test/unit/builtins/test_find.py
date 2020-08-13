@@ -537,22 +537,36 @@ class TestFindFilesOld(FindTestCase):
                     SourceFile(srcpath('file.cpp'), 'c++'),
                     Directory(srcpath('dir/sub')),
                     File(srcpath('dir/file2.txt'))]
-        self.assertFound(self.find(), expected)
+        with mock.patch('warnings.warn') as m:
+            self.assertFound(self.find(), expected)
+            self.assertEqual(m.call_count, 1)
 
     def test_path(self):
         expected = [Directory(srcpath('dir')),
                     Directory(srcpath('dir/sub')),
                     File(srcpath('dir/file2.txt'))]
-        self.assertFound(self.find('dir'), expected)
+        with mock.patch('warnings.warn') as m:
+            self.assertFound(self.find('dir'), expected)
+            self.assertEqual(m.call_count, 1)
 
     def test_name(self):
         expected = [SourceFile(srcpath('file.cpp'), 'c++'),
                     File(srcpath('dir/file2.txt'))]
-        self.assertFound(self.find(name='file*'), expected)
+        with mock.patch('warnings.warn') as m:
+            self.assertFound(self.find(name='file*'), expected)
+            self.assertEqual(m.call_count, 1)
 
     def test_non_glob(self):
-        self.assertFound(self.find('dir', 'file2.txt', flat=True),
-                         [File(srcpath('dir/file2.txt'))])
-        self.assertFound(self.find('dir', 'file3.txt', flat=True), [])
-        self.assertFound(self.find('dir', 'sub', flat=True),
-                         [Directory(srcpath('dir/sub'))])
+        with mock.patch('warnings.warn') as m:
+            self.assertFound(self.find('dir', 'file2.txt', flat=True),
+                             [File(srcpath('dir/file2.txt'))])
+            self.assertEqual(m.call_count, 1)
+
+        with mock.patch('warnings.warn') as m:
+            self.assertFound(self.find('dir', 'file3.txt', flat=True), [])
+            self.assertEqual(m.call_count, 1)
+
+        with mock.patch('warnings.warn') as m:
+            self.assertFound(self.find('dir', 'sub', flat=True),
+                             [Directory(srcpath('dir/sub'))])
+            self.assertEqual(m.call_count, 1)

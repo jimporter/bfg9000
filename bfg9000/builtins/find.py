@@ -1,4 +1,5 @@
 import re
+import warnings
 from enum import Enum
 from functools import reduce
 from itertools import product
@@ -172,11 +173,12 @@ def _find_files_new(context, pattern, *, type=None, extra=None, exclude=None,
 def _find_files_old(context, path='.', name='*', type='*', extra=None,
                     exclude=['.*#', '*~', '#*#'], filter=None, flat=False,
                     file_type=None, dir_type=None, dist=True, cache=True):
-    def make_pattern(path, name):
-        return path.append(name) if flat else path.append('**').append(name)
-
+    warnings.warn('using v0.5 compatibility mode for find_files API')
     types = {'f': file_type or context['auto_file'],
              'd': dir_type or context['directory']}
+
+    def make_pattern(path, name):
+        return path.append(name) if flat else path.append('**').append(name)
 
     def make_file(path):
         if isdir(path, context.env.base_dirs):

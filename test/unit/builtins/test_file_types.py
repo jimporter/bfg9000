@@ -297,7 +297,8 @@ class TestDirectory(TestGenericFile):
             File(srcpath('dir/file.txt')),
             File(srcpath('dir/sub/file2.txt')),
         ])
-        with mock.patch('bfg9000.builtins.find.walk', mock_walk):
+        with mock.patch('bfg9000.builtins.find.walk', mock_walk), \
+             mock.patch('warnings.warn'):  # noqa
             self.assertSameFile(
                 self.context[self.fn](self.filename, include='*.txt'),
                 expected
@@ -344,7 +345,8 @@ class TestHeaderDirectory(TestDirectory):
             HeaderFile(srcpath('include/file.hpp'), 'c++'),
             HeaderFile(srcpath('include/sub/file2.hpp'), 'c++'),
         ], langs=['c++'])
-        with mock.patch('bfg9000.builtins.find.walk', mock_walk):
+        with mock.patch('bfg9000.builtins.find.walk', mock_walk), \
+             mock.patch('warnings.warn'):  # noqa
             self.assertSameFile(
                 self.context[self.fn](self.filename, include='*.hpp'),
                 expected
