@@ -285,6 +285,26 @@ class TestDirectory(TestGenericFile):
             self.assertEqual(list(self.build.sources()),
                              [self.bfgfile] + expected.files + [expected])
 
+    def test_old_include(self):
+        def mock_walk(path, variables=None):
+            p = srcpath
+            return [
+                (p('dir'), [p('dir/sub')], [p('dir/file.txt')]),
+                (p('dir/sub'), [], [p('dir/sub/file2.txt')]),
+            ]
+
+        expected = self.type(srcpath(self.filename), [
+            File(srcpath('dir/file.txt')),
+            File(srcpath('dir/sub/file2.txt')),
+        ])
+        with mock.patch('bfg9000.builtins.find.walk', mock_walk):
+            self.assertSameFile(
+                self.context[self.fn](self.filename, include='*.txt'),
+                expected
+            )
+            self.assertEqual(list(self.build.sources()),
+                             [self.bfgfile] + expected.files + [expected])
+
 
 class TestHeaderDirectory(TestDirectory):
     type = HeaderDirectory
@@ -307,6 +327,26 @@ class TestHeaderDirectory(TestDirectory):
         with mock.patch('bfg9000.builtins.find.walk', mock_walk):
             self.assertSameFile(
                 self.context[self.fn](self.filename, include='**/*.hpp'),
+                expected
+            )
+            self.assertEqual(list(self.build.sources()),
+                             [self.bfgfile] + expected.files + [expected])
+
+    def test_old_include(self):
+        def mock_walk(path, variables=None):
+            p = srcpath
+            return [
+                (p('include'), [p('include/sub')], [p('include/file.hpp')]),
+                (p('include/sub'), [], [p('include/sub/file2.hpp')]),
+            ]
+
+        expected = self.type(srcpath(self.filename), [
+            HeaderFile(srcpath('include/file.hpp'), 'c++'),
+            HeaderFile(srcpath('include/sub/file2.hpp'), 'c++'),
+        ], langs=['c++'])
+        with mock.patch('bfg9000.builtins.find.walk', mock_walk):
+            self.assertSameFile(
+                self.context[self.fn](self.filename, include='*.hpp'),
                 expected
             )
             self.assertEqual(list(self.build.sources()),

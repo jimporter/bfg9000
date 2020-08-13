@@ -127,6 +127,11 @@ def auto_file(context, name, lang=None, *, dist=True):
 def _find(context, path, include, **kwargs):
     if not include:
         return None
+
+    # TODO: Remove this after 0.6 is released.
+    if '0.5.9' in context.build['required_version']:
+        return context['find_files'](path, include, **kwargs)
+
     patterns = [path.append(i) for i in iterate(include)]
     return context['find_files'](patterns, **kwargs)
 
