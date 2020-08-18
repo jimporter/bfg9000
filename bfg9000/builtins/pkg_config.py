@@ -238,6 +238,9 @@ class PkgConfigInfo:
                 return requires[0].copy(), requires[1].copy()
             return RequirementSet(), []
 
+        if self.name is None:
+            raise ValueError('pkg-config package has no name')
+
         desc_name = self.desc_name or self.name
         includes = self.includes or []
         libs = self.libs or []
@@ -280,7 +283,7 @@ class PkgConfigInfo:
             'desc': self.desc or '{} library'.format(desc_name),
             'lang': self.lang,
             'url': self.url,
-            'version': self.version,
+            'version': self.version or '0.0',
 
             'includes': includes,
             'options': self.options,
@@ -490,7 +493,7 @@ def finalize_pkg_config(context):
     install = build['install']
     defaults = {
         'name': build['project'].name,
-        'version': build['project'].version or '0.0',
+        'version': build['project'].version,
 
         # Get all the explicitly-installed headers/libraries.
         'includes': [i for i in install.explicit

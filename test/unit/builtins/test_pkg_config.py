@@ -149,8 +149,7 @@ class TestPkgConfig(BuiltinTest):
         self.context['bfg9000_required_version']('>=0.6.0.dev0')
 
     def test_minimal(self):
-        pkg = PkgConfigInfo(self.context, name='package',
-                            version='1.0')
+        pkg = PkgConfigInfo(self.context, name='package')
         data = pkg.finalize()
 
         out = StringIO()
@@ -158,7 +157,7 @@ class TestPkgConfig(BuiltinTest):
         self.assertRegex(out.getvalue(),
                          '\n\nName: package\n' +
                          'Description: package library\n' +
-                         'Version: 1.0\n$')
+                         'Version: 0.0\n$')
 
     def test_metadata(self):
         pkg = PkgConfigInfo(
@@ -231,3 +230,7 @@ class TestPkgConfig(BuiltinTest):
         self.assertIn("\nLibs: -L'${libdir}' -lpublic", out.getvalue())
         self.assertIn("\nLibs.private: -middle -inner -L'${libdir}' " +
                       "-lprivate -lmiddle -linner\n", out.getvalue())
+
+    def test_no_name(self):
+        pkg = PkgConfigInfo(self.context)
+        self.assertRaises(ValueError, pkg.finalize)
