@@ -564,10 +564,7 @@ if argv.bar:
 a common tool to simplify using the library. <code>pkg-config</code> allows users to look
 up a package and retrieve all the compiler and linker options required to use
 that package. You can generate a <code>pkg-config</code> <code>.pc</code> file using the
-<a href="../../reference/builtins/#pkg_config"><em>pkg_config()</em></a> function. By default (or
-if the <em>auto_fill</em> parameter is <em>True</em>), this function will automatically fill
-in the values for the package's name, version, installed include directories,
-and installed libraries:</p>
+<a href="../../reference/builtins/#pkg_config"><em>pkg_config()</em></a> function:</p>
 <pre><code class="python">project('my_project', '1.0')
 
 include = header_directory('include', include='*.hpp')
@@ -575,16 +572,18 @@ lib = library('hello', files=['src/hello.cpp'], includes=[include])
 
 install(lib, include)
 
-pkg_config()
-</code></pre>
-
-<p>You can also override any or all of the defaulted parameters:</p>
-<pre><code class="python">pkg_config(
+pkg_config(
     'my_pkgconfig_project',
     version='2.0',
     includes=[include],
     libs=[lib],
 )
+</code></pre>
+
+<p>If the <em>auto_fill</em> parameter is <em>True</em>, this function will automatically fill
+in the values for the package's name, version, installed include directories,
+and installed libraries:</p>
+<pre><code class="python">pkg_config(auto_fill=True)
 </code></pre>
 
 <p>You can even use the pkg-config package you just created when building other
@@ -593,7 +592,6 @@ bfg9000 won't know what an auto-filled <code>pkg-config</code> <code>.pc</code> 
 until after the build script is finished:</p>
 <pre><code class="python">my_pkg = pkg_config(
     # ...
-    auto_fill=False,
 )
 
 executable('prog', 'prog.cpp', packages=[my_pkg])
