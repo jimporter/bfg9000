@@ -904,8 +904,8 @@ correspond directly to the fields in the pkg-config `.pc` file.
 * *lang*: The language of the builder to use when generating option strings;
   by default, `'c'`
 
-If *auto_fill* is true (the default), this function will automatically fill in
-default values for the following fields:
+If *auto_fill* is true, this function will automatically fill in default values
+for the following fields:
 
 * *name*: The [project's name](#project) (this also fills in *desc_name* and
   *desc* with default values)

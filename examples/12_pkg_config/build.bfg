@@ -8,7 +8,6 @@ project('hello', '1.0')
 # Of course, you first have to define your build and specify the appropriate
 # files to install:
 
-
 ogg = package('ogg')
 
 include = header_directory('include', include='**/*.hpp')
@@ -34,12 +33,11 @@ hello_pkg = pkg_config(
     # Libraries are also a common part of packages; if a library listed here
     # depends on another library or a package, it will automatically be
     # included in the pkg-config info.
-    libs=[lib],
-    # By default, auto_fill is True and will automatically fill the above
-    # fields with sensible defaults. If False, only the values you explicitly
-    # specify will be used.
-    auto_fill=False
+    libs=[lib]
 )
+
+# You can also pass `auto_fill=True` to the pkg_config() function, and it will
+# automatically fill the above fields with sensible defaults.
 
 # You can even use the pkg-config package you just created when building other
 # binaries. However, this is only allowed when auto_fill is false, since

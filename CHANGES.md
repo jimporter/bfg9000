@@ -40,6 +40,7 @@
 - Drop support for Python 2
 - `find_files()` and `find_paths()` have been redesigned to support recursive
   globs
+- `pkg_config()` now defaults to `auto_fill=False`
 - `resource_file()` has been deprecated; use `source_file()` instead
 - `show_stack` for `info()` and `debug()` must now be specified as a keyword
   argument

@@ -159,8 +159,16 @@ class PkgConfigInfo:
                  url=None, version=None, requires=None, requires_private=None,
                  conflicts=None, includes=None, libs=None, libs_private=None,
                  options=None, link_options=None, link_options_private=None,
-                 lang=None, auto_fill=True):
+                 lang=None, auto_fill=None):
         self._builtins = context.builtins
+        # TODO: Remove this after 0.6 is released.
+        if auto_fill is None:  # pragma: no cover
+            if '0.5.9' in context.build['required_version']:
+                warnings.warn('auto_fill will default to False in v0.6 mode ' +
+                              '(defaulting to True this time)')
+                auto_fill = True
+            else:
+                auto_fill = False
         self.auto_fill = auto_fill
 
         self.name = name

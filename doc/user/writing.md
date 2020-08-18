@@ -487,10 +487,7 @@ When creating libraries for other projects to use, [`pkg-config`][pkg-config] is
 a common tool to simplify using the library. `pkg-config` allows users to look
 up a package and retrieve all the compiler and linker options required to use
 that package. You can generate a `pkg-config` `.pc` file using the
-[*pkg_config()*](../reference/builtins.md#pkg_config) function. By default (or
-if the *auto_fill* parameter is *True*), this function will automatically fill
-in the values for the package's name, version, installed include directories,
-and installed libraries:
+[*pkg_config()*](../reference/builtins.md#pkg_config) function:
 
 ```python
 project('my_project', '1.0')
@@ -500,18 +497,20 @@ lib = library('hello', files=['src/hello.cpp'], includes=[include])
 
 install(lib, include)
 
-pkg_config()
-```
-
-You can also override any or all of the defaulted parameters:
-
-```python
 pkg_config(
     'my_pkgconfig_project',
     version='2.0',
     includes=[include],
     libs=[lib],
 )
+```
+
+If the *auto_fill* parameter is *True*, this function will automatically fill
+in the values for the package's name, version, installed include directories,
+and installed libraries:
+
+```python
+pkg_config(auto_fill=True)
 ```
 
 You can even use the pkg-config package you just created when building other
@@ -522,7 +521,6 @@ until after the build script is finished:
 ```python
 my_pkg = pkg_config(
     # ...
-    auto_fill=False,
 )
 
 executable('prog', 'prog.cpp', packages=[my_pkg])

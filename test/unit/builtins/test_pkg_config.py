@@ -2,7 +2,7 @@ from io import StringIO
 
 from .common import BuiltinTest, TestCase
 
-from bfg9000.builtins import default, link, packages, project  # noqa
+from bfg9000.builtins import default, link, packages, project, version  # noqa
 from bfg9000.builtins.pkg_config import *
 from bfg9000.safe_str import safe_str, shell_literal
 
@@ -144,6 +144,10 @@ class TestSimpleProperty(TestCase):
 
 
 class TestPkgConfig(BuiltinTest):
+    def setUp(self):
+        super().setUp()
+        self.context['bfg9000_required_version']('>=0.6.0.dev0')
+
     def test_minimal(self):
         pkg = PkgConfigInfo(self.context, name='package',
                             version='1.0')

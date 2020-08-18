@@ -16,6 +16,5 @@ pkg_config(
     'hello',
     version='1.0',
     includes=[include],
-    libs=[lib],
-    auto_fill=False
+    libs=[lib]
 )
