@@ -5,6 +5,7 @@ from ... import *
 from bfg9000 import path
 from bfg9000 import safe_str
 from bfg9000.backends.make.syntax import *
+from bfg9000.backends.make.syntax import syntax_string
 from bfg9000.file_types import File
 from bfg9000.platforms.host import platform_info
 
@@ -17,188 +18,6 @@ def quoted(s):
 
 class my_safe_str(safe_str.safe_string):
     pass
-
-
-class TestPattern(TestCase):
-    def test_equality(self):
-        self.assertTrue(Pattern('%.c') == Pattern('%.c'))
-        self.assertFalse(Pattern('%.c') != Pattern('%.c'))
-
-        self.assertFalse(Pattern('%.c') == Pattern('%.h'))
-        self.assertTrue(Pattern('%.c') != Pattern('%.h'))
-
-        self.assertTrue(Pattern('%\\%.c') == Pattern('%\\%.c'))
-        self.assertFalse(Pattern('%\\%.c') != Pattern('%\\%.c'))
-
-    def test_concat_str(self):
-        self.assertEqual(Pattern('%.c') + 'bar', safe_str.jbos(
-            safe_str.literal('%'), '.cbar'
-        ))
-        self.assertEqual('foo' + Pattern('%.h'), safe_str.jbos(
-            'foo', safe_str.literal('%'), '.h'
-        ))
-
-    def test_concat_path(self):
-        self.assertEqual(Pattern('%.c') + path.Path('bar'), safe_str.jbos(
-            safe_str.literal('%'), '.c', path.Path('bar')
-        ))
-        self.assertEqual(path.Path('foo') + Pattern('%.h'), safe_str.jbos(
-            path.Path('foo'), safe_str.literal('%'), '.h'
-        ))
-
-    def test_concat_pattern(self):
-        self.assertEqual(Pattern('%.c') + Pattern('%.h'), safe_str.jbos(
-            safe_str.literal('%'), '.c', safe_str.literal('%'), '.h'
-        ))
-
-    def test_hash(self):
-        self.assertEqual(hash(Pattern('%.c')), hash(Pattern('%.c')))
-
-    def test_invalid(self):
-        self.assertRaises(ValueError, Pattern, '.c')
-        self.assertRaises(ValueError, Pattern, '%%.c')
-        self.assertRaises(ValueError, Pattern, '%\\\\%.c')
-
-
-class TestVariable(TestCase):
-    def test_equality(self):
-        self.assertTrue(Variable('foo') == Variable('foo'))
-        self.assertFalse(Variable('foo') != Variable('foo'))
-
-        self.assertFalse(Variable('foo') == Variable('bar'))
-        self.assertTrue(Variable('foo') != Variable('bar'))
-
-    def test_concat_str(self):
-        self.assertEqual(Variable('foo') + 'bar', safe_str.jbos(
-            safe_str.literal('$(foo)'), 'bar'
-        ))
-        self.assertEqual('foo' + Variable('bar'), safe_str.jbos(
-            'foo', safe_str.literal('$(bar)')
-        ))
-
-        self.assertEqual(Variable('foo', True) + 'bar', safe_str.jbos(
-            safe_str.literal("'$(foo)'"), 'bar'
-        ))
-        self.assertEqual('foo' + Variable('bar', True), safe_str.jbos(
-            'foo', safe_str.literal("'$(bar)'")
-        ))
-
-    def test_concat_path(self):
-        self.assertEqual(Variable('foo') + path.Path('bar'), safe_str.jbos(
-            safe_str.literal('$(foo)'), path.Path('bar')
-        ))
-        self.assertEqual(path.Path('foo') + Variable('bar'), safe_str.jbos(
-            path.Path('foo'), safe_str.literal('$(bar)')
-        ))
-
-        self.assertEqual(
-            Variable('foo', True) + path.Path('bar'),
-            safe_str.jbos(safe_str.literal("'$(foo)'"), path.Path('bar'))
-        )
-        self.assertEqual(
-            path.Path('foo') + Variable('bar', True),
-            safe_str.jbos(path.Path('foo'), safe_str.literal("'$(bar)'"))
-        )
-
-    def test_concat_var(self):
-        self.assertEqual(Variable('foo') + Variable('bar'), safe_str.jbos(
-            safe_str.literal('$(foo)'), safe_str.literal('$(bar)')
-        ))
-        self.assertEqual(
-            Variable('foo', True) + Variable('bar'),
-            safe_str.jbos(safe_str.literal("'$(foo)'"),
-                          safe_str.literal('$(bar)'))
-        )
-
-    def test_hash(self):
-        self.assertEqual(hash(Variable('foo')), hash(Variable('foo')))
-
-    def test_var(self):
-        self.assertFalse(var('foo').quoted)
-        self.assertEqual(Variable('foo'), var('foo'))
-        self.assertEqual(Variable('foo'), var(Variable('foo')))
-
-    def test_qvar(self):
-        self.assertTrue(qvar('foo').quoted)
-        self.assertEqual(Variable('foo'), qvar('foo'))
-        self.assertEqual(Variable('foo'), qvar(Variable('foo')))
-
-
-class TestFunction(TestCase):
-    def test_equality(self):
-        self.assertTrue(Function('fn') == Function('fn'))
-        self.assertFalse(Function('fn') != Function('fn'))
-        self.assertTrue(Function('fn', '1', '2') == Function('fn', '1', '2'))
-        self.assertFalse(Function('fn', '1', '2') != Function('fn', '1', '2'))
-
-        self.assertFalse(Function('fn') == Function('fn2'))
-        self.assertTrue(Function('fn') != Function('fn2'))
-        self.assertFalse(Function('fn', '1', '2') == Function('fn2', '1', '2'))
-        self.assertTrue(Function('fn', '1', '2') != Function('fn2', '1', '2'))
-        self.assertFalse(Function('fn', '1', '2') == Function('fn', '1', '3'))
-        self.assertTrue(Function('fn', '1', '2') != Function('fn', '1', '3'))
-        self.assertFalse(Function('fn', '1', '2') == Function('fn', '1'))
-        self.assertTrue(Function('fn', '1', '2') != Function('fn', '1'))
-
-    def test_call(self):
-        self.assertEqual(Call('fn', '1', '2'),
-                         Function('call', 'fn', '1', '2'))
-
-    def test_concat_str(self):
-        self.assertEqual(Function('fn', '1', '2') + 'foo',
-                         safe_str.jbos(safe_str.literal('$(fn 1,2)'), 'foo'))
-        self.assertEqual('foo' + Function('fn', '1', '2'),
-                         safe_str.jbos('foo', safe_str.literal('$(fn 1,2)')))
-
-        self.assertEqual(
-            Function('fn', '1', '2', quoted=True) + 'foo',
-            safe_str.jbos(safe_str.literal("'$(fn 1,2)'"), 'foo')
-        )
-        self.assertEqual(
-            'foo' + Function('fn', '1', '2', quoted=True),
-            safe_str.jbos('foo', safe_str.literal("'$(fn 1,2)'"))
-        )
-
-    def test_concat_path(self):
-        self.assertEqual(
-            Function('fn', '1', '2') + path.Path('foo'),
-            safe_str.jbos(safe_str.literal('$(fn 1,2)'), path.Path('foo'))
-        )
-        self.assertEqual(
-            path.Path('foo') + Function('fn', '1', '2'),
-            safe_str.jbos(path.Path('foo'), safe_str.literal('$(fn 1,2)'))
-        )
-
-        self.assertEqual(
-            Function('fn', '1', '2', quoted=True) + path.Path('foo'),
-            safe_str.jbos(safe_str.literal("'$(fn 1,2)'"), path.Path('foo'))
-        )
-        self.assertEqual(
-            path.Path('foo') + Function('fn', '1', '2', quoted=True),
-            safe_str.jbos(path.Path('foo'), safe_str.literal("'$(fn 1,2)'"))
-        )
-
-    def test_concat_var(self):
-        self.assertEqual(
-            Function('foo', '1', '2') + Function('bar', '3', '4'),
-            safe_str.jbos(safe_str.literal('$(foo 1,2)'),
-                          safe_str.literal('$(bar 3,4)'))
-        )
-        self.assertEqual(
-            Function('foo', '1', '2', quoted=True) + Function('bar', '3', '4'),
-            safe_str.jbos(safe_str.literal("'$(foo 1,2)'"),
-                          safe_str.literal('$(bar 3,4)'))
-        )
-
-    def test_invalid(self):
-        with self.assertRaises(TypeError):
-            Function('fn', kwarg=True)
-
-
-class TestSilent(TestCase):
-    def test_silent(self):
-        v = Variable('foo')
-        self.assertIs(Silent(v).data, v)
 
 
 class TestWriteString(TestCase):
@@ -391,6 +210,106 @@ class TestWritePath(PathTestCase):
                          self.ospath.join('$(srcdir)', 'foo'))
 
 
+class TestWriteSyntaxString(PathTestCase):
+    def make_writer(self):
+        return Writer(StringIO())
+
+    def test_target(self):
+        jbos, lit = safe_str.jbos, safe_str.literal
+
+        fn = syntax_string(jbos(lit('$(fn '), '1,2', lit(')')))
+        out = self.make_writer()
+        out.write(fn, Syntax.target)
+        self.assertEqual(out.stream.getvalue(), '$(fn 1,2)')
+
+        fn = syntax_string(jbos(lit('$(fn '), '1,2', lit(')')),
+                           Syntax.function)
+        out = self.make_writer()
+        out.write(fn, Syntax.target)
+        self.assertEqual(out.stream.getvalue(), '$(fn 1$,2)')
+
+        fn = syntax_string(jbos(lit('$(fn '), '1,2', lit(')')), quoted=True)
+        out = self.make_writer()
+        out.write(fn, Syntax.target)
+        self.assertEqual(out.stream.getvalue(), "'$(fn 1,2)'")
+
+    def test_dependency(self):
+        jbos, lit = safe_str.jbos, safe_str.literal
+
+        fn = syntax_string(jbos(lit('$(fn '), '1,2', lit(')')))
+        out = self.make_writer()
+        out.write(fn, Syntax.dependency)
+        self.assertEqual(out.stream.getvalue(), '$(fn 1,2)')
+
+        fn = syntax_string(jbos(lit('$(fn '), '1,2', lit(')')),
+                           Syntax.function)
+        out = self.make_writer()
+        out.write(fn, Syntax.dependency)
+        self.assertEqual(out.stream.getvalue(), '$(fn 1$,2)')
+
+        fn = syntax_string(jbos(lit('$(fn '), '1,2', lit(')')), quoted=True)
+        out = self.make_writer()
+        out.write(fn, Syntax.dependency)
+        self.assertEqual(out.stream.getvalue(), "'$(fn 1,2)'")
+
+    def test_function(self):
+        jbos, lit = safe_str.jbos, safe_str.literal
+
+        fn = syntax_string(jbos(lit('$(fn '), '1,2', lit(')')))
+        out = self.make_writer()
+        out.write(fn, Syntax.function)
+        self.assertEqual(out.stream.getvalue(), '$(fn 1$,2)')
+
+        fn = syntax_string(jbos(lit('$(fn '), '1,2', lit(')')),
+                           Syntax.function)
+        out = self.make_writer()
+        out.write(fn, Syntax.function)
+        self.assertEqual(out.stream.getvalue(), '$(fn 1$,2)')
+
+        fn = syntax_string(jbos(lit('$(fn '), '1,2', lit(')')), quoted=True)
+        out = self.make_writer()
+        out.write(fn, Syntax.function)
+        self.assertEqual(out.stream.getvalue(), "'$(fn 1$,2)'")
+
+    def test_shell(self):
+        jbos, lit = safe_str.jbos, safe_str.literal
+
+        fn = syntax_string(jbos(lit('$(fn '), '1,2', lit(')')))
+        out = self.make_writer()
+        out.write(fn, Syntax.shell)
+        self.assertEqual(out.stream.getvalue(), '$(fn 1,2)')
+
+        fn = syntax_string(jbos(lit('$(fn '), '1,2', lit(')')),
+                           Syntax.function)
+        out = self.make_writer()
+        out.write(fn, Syntax.shell)
+        self.assertEqual(out.stream.getvalue(), '$(fn 1$,2)')
+
+        fn = syntax_string(jbos(lit('$(fn '), '1,2', lit(')')), quoted=True)
+        out = self.make_writer()
+        out.write(fn, Syntax.shell)
+        self.assertEqual(out.stream.getvalue(), "'$(fn 1,2)'")
+
+    def test_clean(self):
+        jbos, lit = safe_str.jbos, safe_str.literal
+
+        fn = syntax_string(jbos(lit('$(fn '), '1,2', lit(')')))
+        out = self.make_writer()
+        out.write(fn, Syntax.clean)
+        self.assertEqual(out.stream.getvalue(), '$(fn 1,2)')
+
+        fn = syntax_string(jbos(lit('$(fn '), '1,2', lit(')')),
+                           Syntax.function)
+        out = self.make_writer()
+        out.write(fn, Syntax.clean)
+        self.assertEqual(out.stream.getvalue(), '$(fn 1$,2)')
+
+        fn = syntax_string(jbos(lit('$(fn '), '1,2', lit(')')), quoted=True)
+        out = self.make_writer()
+        out.write(fn, Syntax.clean)
+        self.assertEqual(out.stream.getvalue(), "'$(fn 1,2)'")
+
+
 class TestWriteInvalid(TestCase):
     def setUp(self):
         self.out = Writer(StringIO())
@@ -402,6 +321,241 @@ class TestWriteInvalid(TestCase):
     def test_invalid_escape(self):
         with self.assertRaises(ValueError):
             self.out.write('foo\nbar', Syntax.target)
+
+
+class TestPattern(TestCase):
+    def test_equality(self):
+        self.assertTrue(Pattern('%.c') == Pattern('%.c'))
+        self.assertFalse(Pattern('%.c') != Pattern('%.c'))
+
+        self.assertFalse(Pattern('%.c') == Pattern('%.h'))
+        self.assertTrue(Pattern('%.c') != Pattern('%.h'))
+
+        self.assertTrue(Pattern('%\\%.c') == Pattern('%\\%.c'))
+        self.assertFalse(Pattern('%\\%.c') != Pattern('%\\%.c'))
+
+    def test_use(self):
+        self.assertEqual(Pattern('%.c').use(),
+                         safe_str.jbos(safe_str.literal('%'), '.c'))
+
+    def test_write(self):
+        out = Writer(StringIO())
+        out.write(Pattern('%.c'), Syntax.shell)
+        self.assertEqual(out.stream.getvalue(), '%.c')
+
+    def test_concat_str(self):
+        self.assertEqual(Pattern('%.c') + 'bar', safe_str.jbos(
+            safe_str.literal('%'), '.cbar'
+        ))
+        self.assertEqual('foo' + Pattern('%.h'), safe_str.jbos(
+            'foo', safe_str.literal('%'), '.h'
+        ))
+
+    def test_concat_path(self):
+        self.assertEqual(Pattern('%.c') + path.Path('bar'), safe_str.jbos(
+            safe_str.literal('%'), '.c', path.Path('bar')
+        ))
+        self.assertEqual(path.Path('foo') + Pattern('%.h'), safe_str.jbos(
+            path.Path('foo'), safe_str.literal('%'), '.h'
+        ))
+
+    def test_concat_pattern(self):
+        self.assertEqual(Pattern('%.c') + Pattern('%.h'), safe_str.jbos(
+            safe_str.literal('%'), '.c', safe_str.literal('%'), '.h'
+        ))
+
+    def test_hash(self):
+        self.assertEqual(hash(Pattern('%.c')), hash(Pattern('%.c')))
+
+    def test_invalid(self):
+        self.assertRaises(ValueError, Pattern, '.c')
+        self.assertRaises(ValueError, Pattern, '%%.c')
+        self.assertRaises(ValueError, Pattern, '%\\\\%.c')
+
+
+class TestVariable(TestCase):
+    def test_equality(self):
+        self.assertTrue(Variable('foo') == Variable('foo'))
+        self.assertFalse(Variable('foo') != Variable('foo'))
+
+        self.assertFalse(Variable('foo') == Variable('bar'))
+        self.assertTrue(Variable('foo') != Variable('bar'))
+
+    def test_use(self):
+        self.assertEqual(Variable('foo').use(),
+                         safe_str.literal('$(foo)'))
+
+    def test_write(self):
+        out = Writer(StringIO())
+        out.write(Variable('foo'), Syntax.shell)
+        self.assertEqual(out.stream.getvalue(), '$(foo)')
+
+    def test_concat_str(self):
+        self.assertEqual(Variable('foo') + 'bar', safe_str.jbos(
+            safe_str.literal('$(foo)'), 'bar'
+        ))
+        self.assertEqual('foo' + Variable('bar'), safe_str.jbos(
+            'foo', safe_str.literal('$(bar)')
+        ))
+
+        self.assertEqual(Variable('foo', True) + 'bar', safe_str.jbos(
+            safe_str.literal("'$(foo)'"), 'bar'
+        ))
+        self.assertEqual('foo' + Variable('bar', True), safe_str.jbos(
+            'foo', safe_str.literal("'$(bar)'")
+        ))
+
+    def test_concat_path(self):
+        self.assertEqual(Variable('foo') + path.Path('bar'), safe_str.jbos(
+            safe_str.literal('$(foo)'), path.Path('bar')
+        ))
+        self.assertEqual(path.Path('foo') + Variable('bar'), safe_str.jbos(
+            path.Path('foo'), safe_str.literal('$(bar)')
+        ))
+
+        self.assertEqual(
+            Variable('foo', True) + path.Path('bar'),
+            safe_str.jbos(safe_str.literal("'$(foo)'"), path.Path('bar'))
+        )
+        self.assertEqual(
+            path.Path('foo') + Variable('bar', True),
+            safe_str.jbos(path.Path('foo'), safe_str.literal("'$(bar)'"))
+        )
+
+    def test_concat_var(self):
+        self.assertEqual(Variable('foo') + Variable('bar'), safe_str.jbos(
+            safe_str.literal('$(foo)'), safe_str.literal('$(bar)')
+        ))
+        self.assertEqual(
+            Variable('foo', True) + Variable('bar'),
+            safe_str.jbos(safe_str.literal("'$(foo)'"),
+                          safe_str.literal('$(bar)'))
+        )
+
+    def test_hash(self):
+        self.assertEqual(hash(Variable('foo')), hash(Variable('foo')))
+
+    def test_var(self):
+        self.assertFalse(var('foo').quoted)
+        self.assertEqual(Variable('foo'), var('foo'))
+        self.assertEqual(Variable('foo'), var(Variable('foo')))
+
+    def test_qvar(self):
+        self.assertTrue(qvar('foo').quoted)
+        self.assertEqual(Variable('foo'), qvar('foo'))
+        self.assertEqual(Variable('foo'), qvar(Variable('foo')))
+
+
+class TestFunction(TestCase):
+    def make_writer(self):
+        return Writer(StringIO())
+
+    def test_equality(self):
+        self.assertTrue(Function('fn') == Function('fn'))
+        self.assertFalse(Function('fn') != Function('fn'))
+        self.assertTrue(Function('fn', '1', '2') == Function('fn', '1', '2'))
+        self.assertFalse(Function('fn', '1', '2') != Function('fn', '1', '2'))
+
+        self.assertFalse(Function('fn') == Function('fn2'))
+        self.assertTrue(Function('fn') != Function('fn2'))
+        self.assertFalse(Function('fn', '1', '2') == Function('fn2', '1', '2'))
+        self.assertTrue(Function('fn', '1', '2') != Function('fn2', '1', '2'))
+        self.assertFalse(Function('fn', '1', '2') == Function('fn', '1', '3'))
+        self.assertTrue(Function('fn', '1', '2') != Function('fn', '1', '3'))
+        self.assertFalse(Function('fn', '1', '2') == Function('fn', '1'))
+        self.assertTrue(Function('fn', '1', '2') != Function('fn', '1'))
+
+    def test_call(self):
+        self.assertEqual(Call('fn', '1', '2'),
+                         Function('call', 'fn', '1', '2'))
+
+    def test_use(self):
+        jbos, lit = safe_str.jbos, safe_str.literal
+
+        self.assertEqual(Function('fn').use(), syntax_string(
+            jbos(lit('$(fn)')), Syntax.function
+        ))
+        self.assertEqual(Function('fn', '1', '2').use(), syntax_string(
+            jbos(lit('$(fn '), '1', lit(','), '2', lit(')')), Syntax.function
+        ))
+        self.assertEqual(
+            Function('fn', ['a', 'b'], ['1', '2']).use(),
+            syntax_string(jbos(lit('$(fn '), 'a', lit(' '), 'b', lit(','), '1',
+                               lit(' '), '2', lit(')')), Syntax.function)
+        )
+
+    def test_write(self):
+        out = self.make_writer()
+        out.write(Function('fn'), Syntax.shell)
+        self.assertEqual(out.stream.getvalue(), '$(fn)')
+
+        out = self.make_writer()
+        out.write(Function('fn', '1', '2'), Syntax.shell)
+        self.assertEqual(out.stream.getvalue(), '$(fn 1,2)')
+
+        out = self.make_writer()
+        out.write(Function('fn', ['a', 'b'], ['1', '2']), Syntax.shell)
+        self.assertEqual(out.stream.getvalue(), '$(fn a b,1 2)')
+
+    def test_concat_str(self):
+        jbos, lit = safe_str.jbos, safe_str.literal
+
+        fn = syntax_string(jbos(lit('$(fn '), '1', lit(','), '2', lit(')')),
+                           Syntax.function)
+        self.assertEqual(Function('fn', '1', '2') + 'foo', jbos(fn, 'foo'))
+        self.assertEqual('foo' + Function('fn', '1', '2'), jbos('foo', fn))
+
+        fn = syntax_string(jbos(lit('$(fn '), '1', lit(','), '2', lit(')')),
+                           Syntax.function, True)
+        self.assertEqual(Function('fn', '1', '2', quoted=True) + 'foo',
+                         jbos(fn, 'foo'))
+        self.assertEqual('foo' + Function('fn', '1', '2', quoted=True),
+                         jbos('foo', fn))
+
+    def test_concat_path(self):
+        jbos, lit = safe_str.jbos, safe_str.literal
+
+        fn = syntax_string(jbos(lit('$(fn '), '1', lit(','), '2', lit(')')),
+                           Syntax.function)
+        self.assertEqual(Function('fn', '1', '2') + path.Path('foo'),
+                         jbos(fn, path.Path('foo')))
+        self.assertEqual(path.Path('foo') + Function('fn', '1', '2'),
+                         jbos(path.Path('foo'), fn))
+
+        fn = syntax_string(jbos(lit('$(fn '), '1', lit(','), '2', lit(')')),
+                           Syntax.function, True)
+        self.assertEqual((Function('fn', '1', '2', quoted=True) +
+                          path.Path('foo')),
+                         jbos(fn, path.Path('foo')))
+        self.assertEqual((path.Path('foo') +
+                          Function('fn', '1', '2', quoted=True)),
+                         jbos(path.Path('foo'), fn))
+
+    def test_concat_var(self):
+        jbos, lit = safe_str.jbos, safe_str.literal
+
+        foo = syntax_string(jbos(lit('$(foo '), '1', lit(','), '2', lit(')')),
+                            Syntax.function)
+        bar = syntax_string(jbos(lit('$(bar '), '3', lit(','), '4', lit(')')),
+                            Syntax.function)
+        self.assertEqual(Function('foo', '1', '2') + Function('bar', '3', '4'),
+                         jbos(foo, bar))
+
+        foo = syntax_string(jbos(lit('$(foo '), '1', lit(','), '2', lit(')')),
+                            Syntax.function, True)
+        self.assertEqual((Function('foo', '1', '2', quoted=True) +
+                          Function('bar', '3', '4')),
+                         jbos(foo, bar))
+
+    def test_invalid(self):
+        with self.assertRaises(TypeError):
+            Function('fn', kwarg=True)
+
+
+class TestSilent(TestCase):
+    def test_silent(self):
+        v = Variable('foo')
+        self.assertIs(Silent(v).data, v)
 
 
 class TestMakefile(TestCase):

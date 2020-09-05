@@ -19,39 +19,6 @@ class my_safe_str(safe_str.safe_string):
     pass
 
 
-class TestVariable(TestCase):
-    def test_equality(self):
-        self.assertTrue(Variable('foo') == Variable('foo'))
-        self.assertFalse(Variable('foo') != Variable('foo'))
-
-        self.assertFalse(Variable('foo') == Variable('bar'))
-        self.assertTrue(Variable('foo') != Variable('bar'))
-
-    def test_concat_str(self):
-        self.assertEqual(Variable('foo') + 'bar', safe_str.jbos(
-            safe_str.literal('${foo}'), 'bar'
-        ))
-        self.assertEqual('foo' + Variable('bar'), safe_str.jbos(
-            'foo', safe_str.literal('${bar}')
-        ))
-
-    def test_concat_path(self):
-        self.assertEqual(Variable('foo') + path.Path('bar'), safe_str.jbos(
-            safe_str.literal('${foo}'), path.Path('bar')
-        ))
-        self.assertEqual(path.Path('foo') + Variable('bar'), safe_str.jbos(
-            path.Path('foo'), safe_str.literal('${bar}')
-        ))
-
-    def test_concat_var(self):
-        self.assertEqual(Variable('foo') + Variable('bar'), safe_str.jbos(
-            safe_str.literal('${foo}'), safe_str.literal('${bar}')
-        ))
-
-    def test_hash(self):
-        self.assertEqual(hash(Variable('foo')), hash(Variable('foo')))
-
-
 class TestWriteString(TestCase):
     def setUp(self):
         self.out = Writer(StringIO())
@@ -180,6 +147,48 @@ class TestWriteInvalid(TestCase):
     def test_invalid_escape(self):
         with self.assertRaises(ValueError):
             self.out.write('foo\nbar', Syntax.output)
+
+
+class TestVariable(TestCase):
+    def test_equality(self):
+        self.assertTrue(Variable('foo') == Variable('foo'))
+        self.assertFalse(Variable('foo') != Variable('foo'))
+
+        self.assertFalse(Variable('foo') == Variable('bar'))
+        self.assertTrue(Variable('foo') != Variable('bar'))
+
+    def test_use(self):
+        self.assertEqual(Variable('foo').use(),
+                         safe_str.literal('${foo}'))
+
+    def test_write(self):
+        out = Writer(StringIO())
+        out.write(Variable('foo'), Syntax.shell)
+        self.assertEqual(out.stream.getvalue(), '${foo}')
+
+    def test_concat_str(self):
+        self.assertEqual(Variable('foo') + 'bar', safe_str.jbos(
+            safe_str.literal('${foo}'), 'bar'
+        ))
+        self.assertEqual('foo' + Variable('bar'), safe_str.jbos(
+            'foo', safe_str.literal('${bar}')
+        ))
+
+    def test_concat_path(self):
+        self.assertEqual(Variable('foo') + path.Path('bar'), safe_str.jbos(
+            safe_str.literal('${foo}'), path.Path('bar')
+        ))
+        self.assertEqual(path.Path('foo') + Variable('bar'), safe_str.jbos(
+            path.Path('foo'), safe_str.literal('${bar}')
+        ))
+
+    def test_concat_var(self):
+        self.assertEqual(Variable('foo') + Variable('bar'), safe_str.jbos(
+            safe_str.literal('${foo}'), safe_str.literal('${bar}')
+        ))
+
+    def test_hash(self):
+        self.assertEqual(hash(Variable('foo')), hash(Variable('foo')))
 
 
 class TestNinjaFile(TestCase):

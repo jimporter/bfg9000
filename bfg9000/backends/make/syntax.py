@@ -30,6 +30,22 @@ _comment_tmpl = """
 """.strip()
 
 
+class syntax_string(safe_str.safe_string):
+    def __init__(self, data, syntax=None, quoted=False):
+        self.data = data
+        self.syntax = syntax
+        self.quoted = quoted
+
+    def __eq__(self, rhs):
+        return (type(self) == type(rhs) and self.data == rhs.data and
+                self.syntax == rhs.syntax and self.quoted == rhs.quoted)
+
+    def __repr__(self):
+        syntax = getattr(self.syntax, 'name', repr(self.syntax))
+        return '<{}({!r}, {}, {!r})>'.format(type(self).__name__, self.data,
+                                             syntax, self.quoted)
+
+
 class Writer:
     # For targets and deps, we want to backslash-escape glob characters,
     # whitespace, '#' (comments), and '%' (patterns), plus '~' if it's at the
@@ -84,6 +100,14 @@ class Writer:
             if shelly and shell_quote:
                 thing, escaped = shell_quote(thing)
             self.write_literal(self.escape_str(thing, syntax))
+        elif isinstance(thing, syntax_string):
+            out = Writer(StringIO())
+            escaped = out.write(thing.data, thing.syntax or syntax,
+                                None if thing.quoted else shell_quote)
+            result = out.stream.getvalue()
+            if thing.quoted:
+                result = pshell.wrap_quotes(result)
+            self.write_literal(result)
         elif isinstance(thing, safe_str.jbos):
             for i in thing.bits:
                 escaped |= self.write(i, syntax, shell_quote)
@@ -190,17 +214,15 @@ class Function(NamedEntity):
 
     def use(self):
         lit = safe_str.literal
-        kwargs = {'shell_quote': None} if self.quoted else {}
 
-        out = Writer(StringIO())
-        prefix = '$(' + self.name + ' '
-        for i in iterutils.tween(self.args, lit(','), lit(prefix), lit(')')):
-            out.write_each(iterutils.iterate(i), Syntax.function, **kwargs)
-        result = out.stream.getvalue()
-
-        if self.quoted:
-            result = pshell.wrap_quotes(result)
-        return safe_str.literal(result)
+        prefix = lit('$(' + self.name)
+        suffix = lit(')')
+        data = prefix + safe_str.jbos.from_iterable(
+            safe_str.safe_str(j)
+            for i in iterutils.tween(self.args, lit(','), lit(' '))
+            for j in iterutils.tween(iterutils.iterate(i), lit(' '))
+        ) + suffix
+        return syntax_string(data, Syntax.function, self.quoted)
 
     def __eq__(self, rhs):
         return super().__eq__(rhs) and self.args == rhs.args

@@ -72,6 +72,12 @@ class jbos(safe_string):  # Just a Bunch of Strings
     def __init__(self, *args):
         self.__bits = tuple(self.__canonicalize(args))
 
+    @classmethod
+    def from_iterable(cls, iterable):
+        result = object.__new__(cls)
+        result.__bits = tuple(cls.__canonicalize(iterable))
+        return result.simplify()
+
     @staticmethod
     def __canonicalize(value):
         def flatten_bits(value):
@@ -128,7 +134,7 @@ class jbos(safe_string):  # Just a Bunch of Strings
 def join(iterable, delim):
     if delim:
         iterable = iterutils.tween(iterable, delim)
-    return sum(iterable, jbos()).simplify()
+    return jbos.from_iterable(iterable)
 
 
 def format_field(value, format_spec):

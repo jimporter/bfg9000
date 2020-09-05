@@ -125,6 +125,14 @@ class TestJbos(TestCase):
     def test_construct_invalid(self):
         self.assertRaises(TypeError, jbos, 123)
 
+    def test_from_iterable(self):
+        s = jbos.from_iterable(['foo', literal('bar'), shell_literal('baz')])
+        self.assertEqual(s.bits, ('foo', literal('bar'), shell_literal('baz')))
+
+    def test_from_iterable_simple(self):
+        s = jbos.from_iterable(['foo', 'bar'])
+        self.assertEqual(s, 'foobar')
+
     def test_concatenate(self):
         s = jbos('foo') + literal('bar')
         self.assertEqual(s.bits, ('foo', literal('bar')))
