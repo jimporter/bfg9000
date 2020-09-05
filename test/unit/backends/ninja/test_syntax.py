@@ -21,7 +21,7 @@ class my_safe_str(safe_str.safe_string):
 
 class TestWriteString(TestCase):
     def setUp(self):
-        self.out = Writer(StringIO())
+        self.out = Writer(StringIO(), {})
 
     def test_output(self):
         self.out.write('foo: $bar', Syntax.output)
@@ -42,7 +42,7 @@ class TestWriteString(TestCase):
 
 class TestWriteLiteral(TestCase):
     def setUp(self):
-        self.out = Writer(StringIO())
+        self.out = Writer(StringIO(), {})
 
     def test_output(self):
         self.out.write(safe_str.literal('foo: $bar'), Syntax.output)
@@ -63,7 +63,7 @@ class TestWriteLiteral(TestCase):
 
 class TestWriteShellLiteral(TestCase):
     def setUp(self):
-        self.out = Writer(StringIO())
+        self.out = Writer(StringIO(), {})
 
     def test_output(self):
         self.out.write(safe_str.shell_literal('foo: $bar'), Syntax.output)
@@ -84,7 +84,7 @@ class TestWriteShellLiteral(TestCase):
 
 class TestWriteJbos(TestCase):
     def setUp(self):
-        self.out = Writer(StringIO())
+        self.out = Writer(StringIO(), {})
 
     def test_output(self):
         s = safe_str.jbos('$foo', safe_str.literal('$bar'))
@@ -113,7 +113,7 @@ class TestWriteJbos(TestCase):
 
 class TestWritePath(PathTestCase):
     def setUp(self):
-        self.out = Writer(StringIO())
+        self.out = Writer(StringIO(), {path.Root.srcdir: Variable('srcdir')})
 
     def test_output(self):
         self.out.write(self.Path('foo', path.Root.srcdir), Syntax.output)
@@ -138,7 +138,7 @@ class TestWritePath(PathTestCase):
 
 class TestWriteInvalid(TestCase):
     def setUp(self):
-        self.out = Writer(StringIO())
+        self.out = Writer(StringIO(), {})
 
     def test_invalid_type(self):
         with self.assertRaises(TypeError):
@@ -162,7 +162,7 @@ class TestVariable(TestCase):
                          safe_str.literal('${foo}'))
 
     def test_write(self):
-        out = Writer(StringIO())
+        out = Writer(StringIO(), {})
         out.write(Variable('foo'), Syntax.shell)
         self.assertEqual(out.stream.getvalue(), '${foo}')
 
@@ -208,7 +208,7 @@ class TestNinjaFile(TestCase):
     def test_variable(self):
         var = self.ninjafile.variable('name', 'value')
         self.assertEqual(var, Variable('name'))
-        out = Writer(StringIO())
+        out = self.ninjafile.writer(StringIO())
         self.ninjafile._write_variable(out, var, 'value')
         self.assertEqual(out.stream.getvalue(), 'name = value\n')
 
@@ -225,13 +225,13 @@ class TestNinjaFile(TestCase):
 
         var = self.ninjafile.cmd_var(MockCommand())
         self.assertEqual(var, Variable('cmd'))
-        out = Writer(StringIO())
+        out = self.ninjafile.writer(StringIO())
         self.ninjafile._write_variable(out, var, ['command'])
         self.assertEqual(out.stream.getvalue(), 'cmd = command\n')
 
     def test_rule(self):
         self.ninjafile.rule('my_rule', ['cmd'])
-        out = Writer(StringIO())
+        out = self.ninjafile.writer(StringIO())
         self.ninjafile._write_rule(out, 'my_rule',
                                    self.ninjafile._rules['my_rule'])
         self.assertEqual(out.stream.getvalue(),
@@ -239,7 +239,7 @@ class TestNinjaFile(TestCase):
                          '  command = cmd\n')
 
         self.ninjafile.rule('deps_rule', ['cmd'], depfile='out.d', deps='gcc')
-        out = Writer(StringIO())
+        out = self.ninjafile.writer(StringIO())
         self.ninjafile._write_rule(out, 'deps_rule',
                                    self.ninjafile._rules['deps_rule'])
         self.assertEqual(out.stream.getvalue(),
@@ -250,7 +250,7 @@ class TestNinjaFile(TestCase):
 
         self.ninjafile.rule('misc_rule', ['cmd'], description='desc',
                             generator=True, pool='console', restat=True)
-        out = Writer(StringIO())
+        out = self.ninjafile.writer(StringIO())
         self.ninjafile._write_rule(out, 'misc_rule',
                                    self.ninjafile._rules['misc_rule'])
         self.assertEqual(out.stream.getvalue(),
@@ -273,19 +273,19 @@ class TestNinjaFile(TestCase):
         self.ninjafile.rule('my_rule', ['cmd'])
 
         self.ninjafile.build('output', 'my_rule')
-        out = Writer(StringIO())
+        out = self.ninjafile.writer(StringIO())
         self.ninjafile._write_build(out, self.ninjafile._builds[-1])
         self.assertEqual(out.stream.getvalue(), 'build output: my_rule\n')
 
         self.ninjafile.build('doutput', 'my_rule', inputs='input',
                              implicit='implicit', order_only='order')
-        out = Writer(StringIO())
+        out = self.ninjafile.writer(StringIO())
         self.ninjafile._write_build(out, self.ninjafile._builds[-1])
         self.assertEqual(out.stream.getvalue(),
                          'build doutput: my_rule input | implicit || order\n')
 
         self.ninjafile.build('voutput', 'my_rule', variables={'var': 'value'})
-        out = Writer(StringIO())
+        out = self.ninjafile.writer(StringIO())
         self.ninjafile._write_build(out, self.ninjafile._builds[-1])
         self.assertEqual(out.stream.getvalue(),
                          'build voutput: my_rule\n'

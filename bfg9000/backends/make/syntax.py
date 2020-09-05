@@ -13,8 +13,7 @@ from ...tools.common import Command
 from ...shell import posix as pshell
 
 __all__ = ['Call', 'Entity', 'Function', 'Makefile', 'NamedEntity', 'Pattern',
-           'Section', 'Syntax', 'Writer', 'Variable', 'var', 'qvar', 'Silent',
-           'path_vars']
+           'qvar', 'Section', 'Silent', 'Syntax', 'Variable', 'var', 'Writer']
 
 Rule = namedtuple('Rule', ['targets', 'deps', 'order_only', 'recipe',
                            'variables', 'phony'])
@@ -57,8 +56,9 @@ class Writer:
     __target_ex = re.compile(r'(\\*)(^~|[' + __escape_chars + '])')
     __dep_ex = re.compile(r'(\\*)(^~|[|' + __escape_chars + '])')
 
-    def __init__(self, stream):
+    def __init__(self, stream, path_vars):
         self.stream = stream
+        self.path_vars = path_vars
 
     @classmethod
     def escape_str(cls, string, syntax):
@@ -82,6 +82,9 @@ class Writer:
             "unknown syntax '{}'".format(syntax)
         )  # pragma: no cover
 
+    def quote(self, string):
+        return pshell.quote(string)
+
     def write_literal(self, string):
         self.stream.write(string)
 
@@ -101,7 +104,7 @@ class Writer:
                 thing, escaped = shell_quote(thing)
             self.write_literal(self.escape_str(thing, syntax))
         elif isinstance(thing, syntax_string):
-            out = Writer(StringIO())
+            out = Writer(StringIO(), self.path_vars)
             escaped = out.write(thing.data, thing.syntax or syntax,
                                 None if thing.quoted else shell_quote)
             result = out.stream.getvalue()
@@ -112,8 +115,8 @@ class Writer:
             for i in thing.bits:
                 escaped |= self.write(i, syntax, shell_quote)
         elif isinstance(thing, path.BasePath):
-            out = Writer(StringIO())
-            thing = thing.realize(path_vars, shelly)
+            out = Writer(StringIO(), self.path_vars)
+            thing = thing.realize(self.path_vars, shelly)
             escaped = out.write(thing, syntax, pshell.inner_quote_info)
 
             thing = out.stream.getvalue()
@@ -237,21 +240,21 @@ class Silent:
         self.data = data
 
 
-path_vars = {
-    path.Root.srcdir  : Variable('srcdir'),
-    path.Root.builddir: None,
-}
-path_vars.update({i: Variable(i.name) for i in path.InstallRoot})
-
-# Only use destdir on platforms that actually support it (e.g. not Windows).
-if platform_info().destdir:
-    path_vars[path.DestDir.destdir] = Variable('DESTDIR')
-
-
 class Makefile:
     Section = Section
 
     def __init__(self, bfgfile, gnu=False):
+        self.path_vars = {
+            path.Root.srcdir  : Variable('srcdir'),
+            path.Root.builddir: None,
+        }
+        self.path_vars.update({i: Variable(i.name) for i in path.InstallRoot})
+
+        # Only use destdir on platforms that actually support it (e.g. not
+        # Windows).
+        if platform_info().destdir:
+            self.path_vars[path.DestDir.destdir] = Variable('DESTDIR')
+
         self._bfgfile = bfgfile
         self._gnu = gnu
 
@@ -304,9 +307,8 @@ class Makefile:
     def include(self, name, optional=False):
         self._includes.append(Include(name, optional))
 
-    @staticmethod
-    def _target_str(name):
-        out = Writer(StringIO())
+    def _target_str(self, name):
+        out = self.writer(StringIO())
         out.write(name, Syntax.target)
         return out.stream.getvalue()
 
@@ -387,8 +389,11 @@ class Makefile:
                 out.write_shell(cmd)
         out.write_literal('\n\n')
 
+    def writer(self, out):
+        return Writer(out, self.path_vars)
+
     def write(self, out):
-        out = Writer(out)
+        out = self.writer(out)
         out.write_literal(_comment_tmpl.format(self._bfgfile) + '\n\n')
 
         # Don't let make use built-in rules/variables.

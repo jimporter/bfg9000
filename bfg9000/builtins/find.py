@@ -79,7 +79,7 @@ def write_depfile(env, path, output, seen_dirs, makeify=False):
         roots = env.base_dirs.copy()
         roots[Root.builddir] = None
 
-        out = Writer(f)
+        out = Writer(f, None)
         out.write(output.string(roots), Syntax.target)
         out.write_literal(':')
         for i in seen_dirs:

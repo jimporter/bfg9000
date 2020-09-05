@@ -5,7 +5,7 @@ from .common import BuiltinTest
 
 from bfg9000.backends.ninja import writer as ninja
 from bfg9000.builtins import default, file_types, tests  # noqa
-from bfg9000.path import Path
+from bfg9000.path import Path, Root
 from bfg9000.platforms.posix import PosixPath
 from bfg9000.platforms.windows import WindowsPath
 from bfg9000.safe_str import jbos, literal, safe_str, shell_literal
@@ -197,6 +197,10 @@ class TestTestDeps(BuiltinTest):
 
 
 class TestBuildCommandsBase(BuiltinTest):
+    path_vars = {
+        Root.builddir: None,
+    }
+
     def make_basic(self):
         test_exe = file_types.Executable(self.Path('test'), None)
         self.context['test'](test_exe)
@@ -259,7 +263,9 @@ class TestBuildCommandsPosix(TestBuildCommandsBase):
 
     def _build_commands(self):
         return tests._build_commands(
-            self.build['tests'].tests, ninja.Writer, pshell, pshell.local_env
+            self.build['tests'].tests,
+            lambda x: ninja.Writer(x, self.path_vars, pshell),
+            pshell.local_env
         )
 
     def test_basic(self):
@@ -347,8 +353,9 @@ class TestBuildCommandsWindows(TestBuildCommandsBase):
             return env_vars + wshell.escape_line(line, listify=True)
 
         return tests._build_commands(
-            self.build['tests'].tests, lambda x: ninja.Writer(x, wshell),
-            wshell, mock_local_env
+            self.build['tests'].tests,
+            lambda x: ninja.Writer(x, self.path_vars, wshell),
+            mock_local_env
         )
 
     def test_basic(self):

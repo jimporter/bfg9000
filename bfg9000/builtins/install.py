@@ -161,6 +161,16 @@ def _uninstall_files(install_outputs, env):
     return []
 
 
+def _add_install_paths(buildfile, env):
+    for i in path.InstallRoot:
+        buildfile.variable(buildfile.path_vars[i], env.install_dirs[i],
+                           buildfile.Section.path)
+    if path.DestDir.destdir in buildfile.path_vars:
+        buildfile.variable(buildfile.path_vars[path.DestDir.destdir],
+                           env.variables.get('DESTDIR', ''),
+                           buildfile.Section.path)
+
+
 @make.post_rule
 def make_install_rule(build_inputs, buildfile, env):
     install_outputs = build_inputs['install']
@@ -169,13 +179,7 @@ def make_install_rule(build_inputs, buildfile, env):
 
     install_files = _install_files(install_outputs, buildfile, env)
     uninstall_files = _uninstall_files(install_outputs, env)
-
-    for i in path.InstallRoot:
-        buildfile.variable(make.path_vars[i], env.install_dirs[i],
-                           make.Section.path)
-    if path.DestDir.destdir in make.path_vars:
-        buildfile.variable(make.path_vars[path.DestDir.destdir],
-                           env.variables.get('DESTDIR', ''), make.Section.path)
+    _add_install_paths(buildfile, env)
 
     buildfile.rule(
         target='install',
@@ -198,14 +202,7 @@ def ninja_install_rule(build_inputs, buildfile, env):
 
     install_files = _install_files(install_outputs, buildfile, env)
     uninstall_files = _uninstall_files(install_outputs, env)
-
-    for i in path.InstallRoot:
-        buildfile.variable(ninja.path_vars[i], env.install_dirs[i],
-                           ninja.Section.path)
-    if path.DestDir.destdir in ninja.path_vars:
-        buildfile.variable(ninja.path_vars[path.DestDir.destdir],
-                           env.variables.get('DESTDIR', ''),
-                           ninja.Section.path)
+    _add_install_paths(buildfile, env)
 
     ninja.command_build(
         buildfile, env,

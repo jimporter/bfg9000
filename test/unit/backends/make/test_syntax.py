@@ -22,7 +22,7 @@ class my_safe_str(safe_str.safe_string):
 
 class TestWriteString(TestCase):
     def make_writer(self):
-        return Writer(StringIO())
+        return Writer(StringIO(), {})
 
     def test_target(self):
         out = self.make_writer()
@@ -94,7 +94,7 @@ class TestWriteString(TestCase):
 
 class TestWriteLiteral(TestCase):
     def setUp(self):
-        self.out = Writer(StringIO())
+        self.out = Writer(StringIO(), {})
 
     def test_target(self):
         self.out.write(safe_str.literal('foo: $bar|baz,quux'), Syntax.target)
@@ -120,7 +120,7 @@ class TestWriteLiteral(TestCase):
 
 class TestWriteShellLiteral(TestCase):
     def setUp(self):
-        self.out = Writer(StringIO())
+        self.out = Writer(StringIO(), {})
 
     def test_target(self):
         self.out.write(safe_str.shell_literal('foo: $bar|baz,quux'),
@@ -152,7 +152,7 @@ class TestWriteShellLiteral(TestCase):
 
 class TestWriteJbos(TestCase):
     def setUp(self):
-        self.out = Writer(StringIO())
+        self.out = Writer(StringIO(), {})
 
     def test_target(self):
         s = safe_str.jbos('$foo', safe_str.literal('$bar'))
@@ -182,7 +182,7 @@ class TestWriteJbos(TestCase):
 
 class TestWritePath(PathTestCase):
     def setUp(self):
-        self.out = Writer(StringIO())
+        self.out = Writer(StringIO(), {path.Root.srcdir: Variable('srcdir')})
 
     def test_target(self):
         self.out.write(self.Path('foo', path.Root.srcdir), Syntax.target)
@@ -212,7 +212,7 @@ class TestWritePath(PathTestCase):
 
 class TestWriteSyntaxString(PathTestCase):
     def make_writer(self):
-        return Writer(StringIO())
+        return Writer(StringIO(), {})
 
     def test_target(self):
         jbos, lit = safe_str.jbos, safe_str.literal
@@ -312,7 +312,7 @@ class TestWriteSyntaxString(PathTestCase):
 
 class TestWriteInvalid(TestCase):
     def setUp(self):
-        self.out = Writer(StringIO())
+        self.out = Writer(StringIO(), {})
 
     def test_invalid_type(self):
         with self.assertRaises(TypeError):
@@ -339,7 +339,7 @@ class TestPattern(TestCase):
                          safe_str.jbos(safe_str.literal('%'), '.c'))
 
     def test_write(self):
-        out = Writer(StringIO())
+        out = Writer(StringIO(), {})
         out.write(Pattern('%.c'), Syntax.shell)
         self.assertEqual(out.stream.getvalue(), '%.c')
 
@@ -386,7 +386,7 @@ class TestVariable(TestCase):
                          safe_str.literal('$(foo)'))
 
     def test_write(self):
-        out = Writer(StringIO())
+        out = Writer(StringIO(), {})
         out.write(Variable('foo'), Syntax.shell)
         self.assertEqual(out.stream.getvalue(), '$(foo)')
 
@@ -448,7 +448,7 @@ class TestVariable(TestCase):
 
 class TestFunction(TestCase):
     def make_writer(self):
-        return Writer(StringIO())
+        return Writer(StringIO(), {})
 
     def test_equality(self):
         self.assertTrue(Function('fn') == Function('fn'))
@@ -565,7 +565,7 @@ class TestMakefile(TestCase):
     def test_variable(self):
         var = self.makefile.variable('name', 'value')
         self.assertEqual(var, Variable('name'))
-        out = Writer(StringIO())
+        out = self.makefile.writer(StringIO())
         self.makefile._write_variable(out, var, 'value')
         self.assertEqual(out.stream.getvalue(), 'name := value\n')
 
@@ -581,7 +581,7 @@ class TestMakefile(TestCase):
     def test_target_variable(self):
         var = self.makefile.target_variable('name', 'value')
         self.assertEqual(var, Variable('name'))
-        out = Writer(StringIO())
+        out = self.makefile.writer(StringIO())
         self.makefile._write_variable(out, var, 'value', target=Pattern('%'))
         self.assertEqual(out.stream.getvalue(), '%: name := value\n')
 
@@ -597,7 +597,7 @@ class TestMakefile(TestCase):
     def test_define(self):
         var = self.makefile.define('name', 'value')
         self.assertEqual(var, Variable('name'))
-        out = Writer(StringIO())
+        out = self.makefile.writer(StringIO())
         self.makefile._write_define(out, *self.makefile._defines[0])
         self.assertEqual(out.stream.getvalue(),
                          'define name\nvalue\nendef\n\n')
@@ -607,7 +607,7 @@ class TestMakefile(TestCase):
 
         var = self.makefile.define('multi', ['value1', 'value2'])
         self.assertEqual(var, Variable('multi'))
-        out = Writer(StringIO())
+        out = self.makefile.writer(StringIO())
         self.makefile._write_define(out, *self.makefile._defines[1])
         self.assertEqual(out.stream.getvalue(),
                          'define multi\nvalue1\nvalue2\nendef\n\n')
@@ -625,14 +625,14 @@ class TestMakefile(TestCase):
 
         var = self.makefile.cmd_var(MockCommand())
         self.assertEqual(var, Variable('CMD'))
-        out = Writer(StringIO())
+        out = self.makefile.writer(StringIO())
         self.makefile._write_variable(out, var, ['command'])
         self.assertEqual(out.stream.getvalue(), 'CMD := command\n')
 
     def test_rule(self):
         self.makefile.rule('target', variables={'name': 'value'},
                            recipe=['cmd'])
-        out = Writer(StringIO())
+        out = self.makefile.writer(StringIO())
         self.makefile._write_rule(out, self.makefile._rules[-1])
         self.assertEqual(out.stream.getvalue(),
                          'target: name := value\n'
@@ -640,7 +640,7 @@ class TestMakefile(TestCase):
                          '\tcmd\n\n')
 
         self.makefile.rule('silent-target', recipe=[Silent('cmd')], phony=True)
-        out = Writer(StringIO())
+        out = self.makefile.writer(StringIO())
         self.makefile._write_rule(out, self.makefile._rules[-1])
         self.assertEqual(out.stream.getvalue(),
                          '.PHONY: silent-target\n'
@@ -648,13 +648,13 @@ class TestMakefile(TestCase):
                          '\t@cmd\n\n')
 
         self.makefile.rule('call-target', recipe=Call('fn', '1', '2'))
-        out = Writer(StringIO())
+        out = self.makefile.writer(StringIO())
         self.makefile._write_rule(out, self.makefile._rules[-1])
         self.assertEqual(out.stream.getvalue(),
                          'call-target: ; $(call fn,1,2)\n\n')
 
         self.makefile.rule('empty-target')
-        out = Writer(StringIO())
+        out = self.makefile.writer(StringIO())
         self.makefile._write_rule(out, self.makefile._rules[-1])
         self.assertEqual(out.stream.getvalue(),
                          'empty-target:\n\n')

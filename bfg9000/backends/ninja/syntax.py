@@ -11,8 +11,8 @@ from ...platforms.host import platform_info
 from ...tools.common import Command
 from ...versioning import SpecifierSet, Version
 
-__all__ = ['features', 'NinjaFile', 'path_vars', 'Section', 'Syntax', 'var',
-           'Variable', 'Writer']
+__all__ = ['features', 'NinjaFile', 'Section', 'Syntax', 'var', 'Variable',
+           'Writer']
 
 Rule = namedtuple('Rule', ['command', 'depfile', 'deps', 'description',
                            'generator', 'pool', 'restat'])
@@ -30,8 +30,9 @@ _comment_tmpl = """
 
 
 class Writer:
-    def __init__(self, stream, shell=shell):
+    def __init__(self, stream, path_vars, shell=shell):
         self.stream = stream
+        self.path_vars = path_vars
         self.shell = shell
 
     @staticmethod
@@ -49,6 +50,9 @@ class Writer:
         raise ValueError(
             'unknown syntax {!r}'.format(syntax)
         )  # pragma: no cover
+
+    def quote(self, string):
+        return self.shell.quote(string)
 
     def write_literal(self, string):
         self.stream.write(string)
@@ -74,8 +78,8 @@ class Writer:
             for i in thing.bits:
                 escaped |= self.write(i, syntax, shell_quote)
         elif isinstance(thing, path.BasePath):
-            out = Writer(StringIO())
-            thing = thing.realize(path_vars, shelly)
+            out = Writer(StringIO(), self.path_vars, self.shell)
+            thing = thing.realize(self.path_vars, shelly)
             escaped = out.write(thing, syntax, self.shell.inner_quote_info)
 
             thing = out.stream.getvalue()
@@ -133,17 +137,6 @@ def var(v):
     return v if isinstance(v, Variable) else Variable(v)
 
 
-path_vars = {
-    path.Root.srcdir  : Variable('srcdir'),
-    path.Root.builddir: None,
-}
-path_vars.update({i: Variable(i.name) for i in path.InstallRoot})
-
-# Only use destdir on platforms that actually support it (e.g. not Windows).
-if platform_info().destdir:
-    path_vars[path.DestDir.destdir] = Variable('DESTDIR')
-
-
 class _NinjaFeatures:
     _features = {
         'console': '1.5',
@@ -165,6 +158,17 @@ class NinjaFile:
     Section = Section
 
     def __init__(self, bfgfile):
+        self.path_vars = {
+            path.Root.srcdir  : Variable('srcdir'),
+            path.Root.builddir: None,
+        }
+        self.path_vars.update({i: Variable(i.name) for i in path.InstallRoot})
+
+        # Only use destdir on platforms that actually support it (e.g. not
+        # Windows).
+        if platform_info().destdir:
+            self.path_vars[path.DestDir.destdir] = Variable('DESTDIR')
+
         self._bfgfile = bfgfile
 
         self._min_version = None
@@ -222,9 +226,8 @@ class NinjaFile:
     def has_rule(self, name):
         return name in self._rules
 
-    @staticmethod
-    def _output_str(name):
-        out = Writer(StringIO())
+    def _output_str(self, name):
+        out = self.writer(StringIO())
         out.write(name, Syntax.output)
         return out.stream.getvalue()
 
@@ -301,8 +304,11 @@ class NinjaFile:
                 syntax = Syntax.clean if k == desc_var else Syntax.shell
                 self._write_variable(out, k, v, indent=1, syntax=syntax)
 
+    def writer(self, out, *args, **kwargs):
+        return Writer(out, self.path_vars, *args, **kwargs)
+
     def write(self, out):
-        out = Writer(out)
+        out = self.writer(out)
         out.write_literal(_comment_tmpl.format(self._bfgfile) + '\n\n')
 
         if self._min_version:

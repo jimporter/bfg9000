@@ -77,7 +77,7 @@ def test_deps(context, *args):
     context.build['tests'].extra_deps.extend(args)
 
 
-def _build_commands(tests, writer, shell, local_env, collapse=False):
+def _build_commands(tests, writer, local_env, collapse=False):
     def command(test, args=[]):
         subcmd = local_env(test.env, test.cmd) + args
 
@@ -86,7 +86,7 @@ def _build_commands(tests, writer, shell, local_env, collapse=False):
             out.write_shell(subcmd)
             s = out.stream.getvalue()
             if len(subcmd) > 1:
-                s = shell.quote(s)
+                s = out.quote(s)
             return safe_str.literal(s)
         return subcmd
 
@@ -94,9 +94,7 @@ def _build_commands(tests, writer, shell, local_env, collapse=False):
     for i in tests:
         deps.extend(i.inputs)
         if isinstance(i, TestDriver):
-            args, more_deps = _build_commands(
-                i.tests, writer, shell, local_env, True
-            )
+            args, more_deps = _build_commands(i.tests, writer, local_env, True)
             cmd.append(command(i, args))
             deps.extend(more_deps)
         else:
@@ -110,9 +108,8 @@ def make_test_rule(build_inputs, buildfile, env):
     if not tests:
         return
 
-    recipe, deps = _build_commands(
-        tests.tests, make.Writer, pshell, pshell.local_env
-    )
+    recipe, deps = _build_commands(tests.tests, buildfile.writer,
+                                   pshell.local_env)
 
     buildfile.rule(
         target='tests',
@@ -138,9 +135,7 @@ def ninja_test_rule(build_inputs, buildfile, env):
     except AttributeError:
         local_env = env.tool('setenv')
 
-    commands, deps = _build_commands(
-        tests.tests, ninja.Writer, shell, local_env
-    )
+    commands, deps = _build_commands(tests.tests, buildfile.writer, local_env)
 
     buildfile.build(
         output='tests',
