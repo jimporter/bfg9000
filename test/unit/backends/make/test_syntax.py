@@ -202,207 +202,206 @@ class TestSilent(TestCase):
 
 
 class TestWriteString(TestCase):
+    def make_writer(self):
+        return Writer(StringIO())
+
     def test_target(self):
-        out = Writer(StringIO())
+        out = self.make_writer()
         out.write('foo: $bar|baz,quux', Syntax.target)
         self.assertEqual(out.stream.getvalue(),
                          'foo' + esc_colon + '\\ $$bar|baz,quux')
 
-        out = Writer(StringIO())
+        out = self.make_writer()
         out.write('~foo', Syntax.target)
         self.assertEqual(out.stream.getvalue(), '\\~foo')
 
-        out = Writer(StringIO())
+        out = self.make_writer()
         out.write('foo~bar ~ baz', Syntax.target)
         self.assertEqual(out.stream.getvalue(), 'foo~bar\\ ~\\ baz')
 
     def test_dependency(self):
-        out = Writer(StringIO())
+        out = self.make_writer()
         out.write('foo: $bar|baz,quux', Syntax.dependency)
         self.assertEqual(out.stream.getvalue(),
                          'foo' + esc_colon + '\\ $$bar\\|baz,quux')
 
-        out = Writer(StringIO())
+        out = self.make_writer()
         out.write('~foo', Syntax.dependency)
         self.assertEqual(out.stream.getvalue(), '\\~foo')
 
-        out = Writer(StringIO())
+        out = self.make_writer()
         out.write('foo~bar ~ baz', Syntax.dependency)
         self.assertEqual(out.stream.getvalue(), 'foo~bar\\ ~\\ baz')
 
     def test_function(self):
-        out = Writer(StringIO())
+        out = self.make_writer()
         out.write('foo: $bar|baz,quux', Syntax.function)
         self.assertEqual(out.stream.getvalue(), quoted('foo: $$bar|baz$,quux'))
 
-        out = Writer(StringIO())
+        out = self.make_writer()
         out.write('~foo', Syntax.function)
         self.assertEqual(out.stream.getvalue(), quoted('~foo'))
 
-        out = Writer(StringIO())
+        out = self.make_writer()
         out.write('foo~bar ~ baz', Syntax.function)
         self.assertEqual(out.stream.getvalue(), quoted('foo~bar ~ baz'))
 
     def test_shell(self):
-        out = Writer(StringIO())
+        out = self.make_writer()
         out.write('foo: $bar|baz,quux', Syntax.shell)
         self.assertEqual(out.stream.getvalue(), quoted('foo: $$bar|baz,quux'))
 
-        out = Writer(StringIO())
+        out = self.make_writer()
         out.write('~foo', Syntax.shell)
         self.assertEqual(out.stream.getvalue(), quoted('~foo'))
 
-        out = Writer(StringIO())
+        out = self.make_writer()
         out.write('foo~bar ~ baz', Syntax.shell)
         self.assertEqual(out.stream.getvalue(), quoted('foo~bar ~ baz'))
 
     def test_clean(self):
-        out = Writer(StringIO())
+        out = self.make_writer()
         out.write('foo: $bar|baz,quux', Syntax.clean)
         self.assertEqual(out.stream.getvalue(), 'foo: $$bar|baz,quux')
 
-        out = Writer(StringIO())
+        out = self.make_writer()
         out.write('~foo', Syntax.clean)
         self.assertEqual(out.stream.getvalue(), '~foo')
 
-        out = Writer(StringIO())
+        out = self.make_writer()
         out.write('foo~bar ~ baz', Syntax.clean)
         self.assertEqual(out.stream.getvalue(), 'foo~bar ~ baz')
 
 
 class TestWriteLiteral(TestCase):
+    def setUp(self):
+        self.out = Writer(StringIO())
+
     def test_target(self):
-        out = Writer(StringIO())
-        out.write(safe_str.literal('foo: $bar|baz,quux'), Syntax.target)
-        self.assertEqual(out.stream.getvalue(), 'foo: $bar|baz,quux')
+        self.out.write(safe_str.literal('foo: $bar|baz,quux'), Syntax.target)
+        self.assertEqual(self.out.stream.getvalue(), 'foo: $bar|baz,quux')
 
     def test_dependency(self):
-        out = Writer(StringIO())
-        out.write(safe_str.literal('foo: $bar|baz,quux'),
-                  Syntax.dependency)
-        self.assertEqual(out.stream.getvalue(), 'foo: $bar|baz,quux')
+        self.out.write(safe_str.literal('foo: $bar|baz,quux'),
+                       Syntax.dependency)
+        self.assertEqual(self.out.stream.getvalue(), 'foo: $bar|baz,quux')
 
     def test_function(self):
-        out = Writer(StringIO())
-        out.write(safe_str.literal('foo: $bar|baz,quux'), Syntax.function)
-        self.assertEqual(out.stream.getvalue(), 'foo: $bar|baz,quux')
+        self.out.write(safe_str.literal('foo: $bar|baz,quux'), Syntax.function)
+        self.assertEqual(self.out.stream.getvalue(), 'foo: $bar|baz,quux')
 
     def test_shell(self):
-        out = Writer(StringIO())
-        out.write(safe_str.literal('foo: $bar|baz,quux'), Syntax.shell)
-        self.assertEqual(out.stream.getvalue(), 'foo: $bar|baz,quux')
+        self.out.write(safe_str.literal('foo: $bar|baz,quux'), Syntax.shell)
+        self.assertEqual(self.out.stream.getvalue(), 'foo: $bar|baz,quux')
 
     def test_clean(self):
-        out = Writer(StringIO())
-        out.write(safe_str.literal('foo: $bar|baz,quux'), Syntax.clean)
-        self.assertEqual(out.stream.getvalue(), 'foo: $bar|baz,quux')
+        self.out.write(safe_str.literal('foo: $bar|baz,quux'), Syntax.clean)
+        self.assertEqual(self.out.stream.getvalue(), 'foo: $bar|baz,quux')
 
 
 class TestWriteShellLiteral(TestCase):
+    def setUp(self):
+        self.out = Writer(StringIO())
+
     def test_target(self):
-        out = Writer(StringIO())
-        out.write(safe_str.shell_literal('foo: $bar|baz,quux'), Syntax.target)
-        self.assertEqual(out.stream.getvalue(),
+        self.out.write(safe_str.shell_literal('foo: $bar|baz,quux'),
+                       Syntax.target)
+        self.assertEqual(self.out.stream.getvalue(),
                          'foo' + esc_colon + '\\ $$bar|baz,quux')
 
     def test_dependency(self):
-        out = Writer(StringIO())
-        out.write(safe_str.shell_literal('foo: $bar|baz,quux'),
-                  Syntax.dependency)
-        self.assertEqual(out.stream.getvalue(),
+        self.out.write(safe_str.shell_literal('foo: $bar|baz,quux'),
+                       Syntax.dependency)
+        self.assertEqual(self.out.stream.getvalue(),
                          'foo' + esc_colon + '\\ $$bar\\|baz,quux')
 
     def test_function(self):
-        out = Writer(StringIO())
-        out.write(safe_str.shell_literal('foo: $bar|baz,quux'),
-                  Syntax.function)
-        self.assertEqual(out.stream.getvalue(), 'foo: $$bar|baz$,quux')
+        self.out.write(safe_str.shell_literal('foo: $bar|baz,quux'),
+                       Syntax.function)
+        self.assertEqual(self.out.stream.getvalue(), 'foo: $$bar|baz$,quux')
 
     def test_shell(self):
-        out = Writer(StringIO())
-        out.write(safe_str.shell_literal('foo: $bar|baz,quux'), Syntax.shell)
-        self.assertEqual(out.stream.getvalue(), 'foo: $$bar|baz,quux')
+        self.out.write(safe_str.shell_literal('foo: $bar|baz,quux'),
+                       Syntax.shell)
+        self.assertEqual(self.out.stream.getvalue(), 'foo: $$bar|baz,quux')
 
     def test_clean(self):
-        out = Writer(StringIO())
-        out.write(safe_str.shell_literal('foo: $bar|baz,quux'), Syntax.clean)
-        self.assertEqual(out.stream.getvalue(), 'foo: $$bar|baz,quux')
+        self.out.write(safe_str.shell_literal('foo: $bar|baz,quux'),
+                       Syntax.clean)
+        self.assertEqual(self.out.stream.getvalue(), 'foo: $$bar|baz,quux')
 
 
 class TestWriteJbos(TestCase):
+    def setUp(self):
+        self.out = Writer(StringIO())
+
     def test_target(self):
-        out = Writer(StringIO())
         s = safe_str.jbos('$foo', safe_str.literal('$bar'))
-        out.write(s, Syntax.target)
-        self.assertEqual(out.stream.getvalue(), '$$foo$bar')
+        self.out.write(s, Syntax.target)
+        self.assertEqual(self.out.stream.getvalue(), '$$foo$bar')
 
     def test_dependency(self):
-        out = Writer(StringIO())
         s = safe_str.jbos('$foo', safe_str.literal('$bar'))
-        out.write(s, Syntax.dependency)
-        self.assertEqual(out.stream.getvalue(), '$$foo$bar')
+        self.out.write(s, Syntax.dependency)
+        self.assertEqual(self.out.stream.getvalue(), '$$foo$bar')
 
     def test_function(self):
-        out = Writer(StringIO())
         s = safe_str.jbos('$foo', safe_str.literal('$bar'))
-        out.write(s, Syntax.function)
-        self.assertEqual(out.stream.getvalue(), quoted('$$foo') + '$bar')
+        self.out.write(s, Syntax.function)
+        self.assertEqual(self.out.stream.getvalue(), quoted('$$foo') + '$bar')
 
     def test_shell(self):
-        out = Writer(StringIO())
         s = safe_str.jbos('$foo', safe_str.literal('$bar'))
-        out.write(s, Syntax.shell)
-        self.assertEqual(out.stream.getvalue(), quoted('$$foo') + '$bar')
+        self.out.write(s, Syntax.shell)
+        self.assertEqual(self.out.stream.getvalue(), quoted('$$foo') + '$bar')
 
     def test_clean(self):
-        out = Writer(StringIO())
         s = safe_str.jbos('$foo', safe_str.literal('$bar'))
-        out.write(s, Syntax.clean)
-        self.assertEqual(out.stream.getvalue(), '$$foo$bar')
+        self.out.write(s, Syntax.clean)
+        self.assertEqual(self.out.stream.getvalue(), '$$foo$bar')
 
 
 class TestWritePath(PathTestCase):
+    def setUp(self):
+        self.out = Writer(StringIO())
+
     def test_target(self):
-        out = Writer(StringIO())
-        out.write(self.Path('foo', path.Root.srcdir), Syntax.target)
-        self.assertEqual(out.stream.getvalue(),
+        self.out.write(self.Path('foo', path.Root.srcdir), Syntax.target)
+        self.assertEqual(self.out.stream.getvalue(),
                          self.ospath.join('$(srcdir)', 'foo'))
 
     def test_dependency(self):
-        out = Writer(StringIO())
-        out.write(self.Path('foo', path.Root.srcdir), Syntax.dependency)
-        self.assertEqual(out.stream.getvalue(),
+        self.out.write(self.Path('foo', path.Root.srcdir), Syntax.dependency)
+        self.assertEqual(self.out.stream.getvalue(),
                          self.ospath.join('$(srcdir)', 'foo'))
 
     def test_function(self):
-        out = Writer(StringIO())
-        out.write(self.Path('foo', path.Root.srcdir), Syntax.function)
-        self.assertEqual(out.stream.getvalue(),
+        self.out.write(self.Path('foo', path.Root.srcdir), Syntax.function)
+        self.assertEqual(self.out.stream.getvalue(),
                          quoted(self.ospath.join('$(srcdir)', 'foo')))
 
     def test_shell(self):
-        out = Writer(StringIO())
-        out.write(self.Path('foo', path.Root.srcdir), Syntax.shell)
-        self.assertEqual(out.stream.getvalue(),
+        self.out.write(self.Path('foo', path.Root.srcdir), Syntax.shell)
+        self.assertEqual(self.out.stream.getvalue(),
                          quoted(self.ospath.join('$(srcdir)', 'foo')))
 
     def test_clean(self):
-        out = Writer(StringIO())
-        out.write(self.Path('foo', path.Root.srcdir), Syntax.clean)
-        self.assertEqual(out.stream.getvalue(),
+        self.out.write(self.Path('foo', path.Root.srcdir), Syntax.clean)
+        self.assertEqual(self.out.stream.getvalue(),
                          self.ospath.join('$(srcdir)', 'foo'))
 
 
 class TestWriteInvalid(TestCase):
+    def setUp(self):
+        self.out = Writer(StringIO())
+
     def test_invalid_type(self):
-        out = Writer(StringIO())
         with self.assertRaises(TypeError):
-            out.write(my_safe_str(), Syntax.target)
+            self.out.write(my_safe_str(), Syntax.target)
 
     def test_invalid_escape(self):
-        out = Writer(StringIO())
         with self.assertRaises(ValueError):
-            out.write('foo\nbar', Syntax.target)
+            self.out.write('foo\nbar', Syntax.target)
 
 
 class TestMakefile(TestCase):
