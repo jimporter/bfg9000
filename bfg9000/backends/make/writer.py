@@ -50,7 +50,8 @@ def post_rule(fn):
 
 def write(env, build_inputs):
     buildfile = Makefile(build_inputs.bfgpath.string(env.base_dirs),
-                         env.backend_version is not None)
+                         env.supports_destdir,
+                         gnu=env.backend_version is not None)
     buildfile.variable(buildfile.path_vars[path.Root.srcdir], env.srcdir,
                        Section.path)
 

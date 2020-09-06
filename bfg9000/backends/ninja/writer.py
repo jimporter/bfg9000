@@ -45,7 +45,8 @@ def post_rule(fn):
 
 
 def write(env, build_inputs):
-    buildfile = NinjaFile(build_inputs.bfgpath.string(env.base_dirs))
+    buildfile = NinjaFile(build_inputs.bfgpath.string(env.base_dirs),
+                          env.supports_destdir)
     buildfile.variable(buildfile.path_vars[path.Root.srcdir], env.srcdir,
                        Section.path)
 

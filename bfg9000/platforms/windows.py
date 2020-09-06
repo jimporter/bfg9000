@@ -39,10 +39,6 @@ class WindowsHostPlatform(HostPlatform, WindowsPlatform):
         return []
 
     @property
-    def destdir(self):
-        return False
-
-    @property
     def has_path_ext(self):
         return True
 

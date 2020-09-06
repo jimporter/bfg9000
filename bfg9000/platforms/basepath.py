@@ -55,11 +55,11 @@ class BasePath(safe_str.safe_string):
         self.destdir = bool(destdir)
 
     @classmethod
-    def abspath(cls, path, directory=None):
+    def abspath(cls, path, directory=None, absdrive=True):
         drive, path, isdir = cls.__normalize(path, expand_user=True)
         cwddrive, cwdpath, _ = cls.__normalize(os.getcwd())
 
-        if not drive:
+        if not drive and absdrive:
             drive = cwddrive
         path, _ = cls.__join(cwdpath, path)
         if directory is False and isdir:
@@ -118,6 +118,10 @@ class BasePath(safe_str.safe_string):
         if self.directory:
             return self
         return type(self)(self.suffix, self.root, self.destdir, True)
+
+    def has_drive(self):
+        return (self.root == Root.absolute and
+                ntpath.splitdrive(self.suffix)[0] != '')
 
     def parent(self):
         if not self.suffix:

@@ -52,24 +52,28 @@ class TestPath(PathTestCase):
         self.assertEqual(p.root, path.Root.srcdir)
         self.assertEqual(p.directory, False)
         self.assertEqual(p.destdir, False)
+        self.assertEqual(p.has_drive(), False)
 
         p = self.Path(r'foo\bar', path.Root.srcdir)
         self.assertEqual(p.suffix, 'foo/bar')
         self.assertEqual(p.root, path.Root.srcdir)
         self.assertEqual(p.directory, False)
         self.assertEqual(p.destdir, False)
+        self.assertEqual(p.has_drive(), False)
 
         p = self.Path('foo/bar/../.', path.Root.srcdir)
         self.assertEqual(p.suffix, 'foo')
         self.assertEqual(p.root, path.Root.srcdir)
         self.assertEqual(p.directory, False)
         self.assertEqual(p.destdir, False)
+        self.assertEqual(p.has_drive(), False)
 
         p = self.Path('foo/.././bar', path.Root.srcdir)
         self.assertEqual(p.suffix, 'bar')
         self.assertEqual(p.root, path.Root.srcdir)
         self.assertEqual(p.directory, False)
         self.assertEqual(p.destdir, False)
+        self.assertEqual(p.has_drive(), False)
 
         self.assertRaises(ValueError, self.Path, '..', path.Root.srcdir)
         self.assertRaises(ValueError, self.Path, 'foo/../..', path.Root.srcdir)
@@ -85,36 +89,42 @@ class TestPath(PathTestCase):
         self.assertEqual(p.root, path.Root.absolute)
         self.assertEqual(p.directory, False)
         self.assertEqual(p.destdir, False)
+        self.assertEqual(p.has_drive(), False)
 
         p = self.Path('/foo/bar', path.Root.srcdir)
         self.assertEqual(p.suffix, '/foo/bar')
         self.assertEqual(p.root, path.Root.absolute)
         self.assertEqual(p.directory, False)
         self.assertEqual(p.destdir, False)
+        self.assertEqual(p.has_drive(), False)
 
         p = self.Path('C:/foo/bar', path.Root.srcdir)
         self.assertEqual(p.suffix, 'C:/foo/bar')
         self.assertEqual(p.root, path.Root.absolute)
         self.assertEqual(p.directory, False)
         self.assertEqual(p.destdir, False)
+        self.assertEqual(p.has_drive(), True)
 
         p = self.Path(r'C:\foo\bar', path.Root.srcdir)
         self.assertEqual(p.suffix, 'C:/foo/bar')
         self.assertEqual(p.root, path.Root.absolute)
         self.assertEqual(p.directory, False)
         self.assertEqual(p.destdir, False)
+        self.assertEqual(p.has_drive(), True)
 
         p = self.Path('//server/mount/foo/bar', path.Root.srcdir)
         self.assertEqual(p.suffix, '//server/mount/foo/bar')
         self.assertEqual(p.root, path.Root.absolute)
         self.assertEqual(p.directory, False)
         self.assertEqual(p.destdir, False)
+        self.assertEqual(p.has_drive(), True)
 
         p = self.Path(r'\\server\mount\foo\bar', path.Root.srcdir)
         self.assertEqual(p.suffix, '//server/mount/foo/bar')
         self.assertEqual(p.root, path.Root.absolute)
         self.assertEqual(p.directory, False)
         self.assertEqual(p.destdir, False)
+        self.assertEqual(p.has_drive(), True)
 
         self.assertRaises(ValueError, self.Path, 'foo/bar', path.Root.absolute)
         self.assertRaises(ValueError, self.Path, 'c:foo')
@@ -125,66 +135,77 @@ class TestPath(PathTestCase):
         self.assertEqual(p.root, path.Root.srcdir)
         self.assertEqual(p.directory, True)
         self.assertEqual(p.destdir, False)
+        self.assertEqual(p.has_drive(), False)
 
         p = self.Path('foo\\bar\\', path.Root.srcdir)
         self.assertEqual(p.suffix, 'foo/bar')
         self.assertEqual(p.root, path.Root.srcdir)
         self.assertEqual(p.directory, True)
         self.assertEqual(p.destdir, False)
+        self.assertEqual(p.has_drive(), False)
 
         p = self.Path('.', path.Root.srcdir)
         self.assertEqual(p.suffix, '')
         self.assertEqual(p.root, path.Root.srcdir)
         self.assertEqual(p.directory, True)
         self.assertEqual(p.destdir, False)
+        self.assertEqual(p.has_drive(), False)
 
         p = self.Path('./', path.Root.srcdir)
         self.assertEqual(p.suffix, '')
         self.assertEqual(p.root, path.Root.srcdir)
         self.assertEqual(p.directory, True)
         self.assertEqual(p.destdir, False)
+        self.assertEqual(p.has_drive(), False)
 
         p = self.Path('foo/../.', path.Root.srcdir)
         self.assertEqual(p.suffix, '')
         self.assertEqual(p.root, path.Root.srcdir)
         self.assertEqual(p.directory, True)
         self.assertEqual(p.destdir, False)
+        self.assertEqual(p.has_drive(), False)
 
         p = self.Path('foo/bar', path.Root.srcdir, directory=True)
         self.assertEqual(p.suffix, 'foo/bar')
         self.assertEqual(p.root, path.Root.srcdir)
         self.assertEqual(p.directory, True)
         self.assertEqual(p.destdir, False)
+        self.assertEqual(p.has_drive(), False)
 
         p = self.Path('/foo/bar/', path.Root.absolute)
         self.assertEqual(p.suffix, '/foo/bar')
         self.assertEqual(p.root, path.Root.absolute)
         self.assertEqual(p.directory, True)
         self.assertEqual(p.destdir, False)
+        self.assertEqual(p.has_drive(), False)
 
         p = self.Path('/', path.Root.absolute)
         self.assertEqual(p.suffix, '/')
         self.assertEqual(p.root, path.Root.absolute)
         self.assertEqual(p.directory, True)
         self.assertEqual(p.destdir, False)
+        self.assertEqual(p.has_drive(), False)
 
         p = self.Path('/.', path.Root.absolute)
         self.assertEqual(p.suffix, '/')
         self.assertEqual(p.root, path.Root.absolute)
         self.assertEqual(p.directory, True)
         self.assertEqual(p.destdir, False)
+        self.assertEqual(p.has_drive(), False)
 
         p = self.Path('C:/', path.Root.srcdir)
         self.assertEqual(p.suffix, 'C:/')
         self.assertEqual(p.root, path.Root.absolute)
         self.assertEqual(p.directory, True)
         self.assertEqual(p.destdir, False)
+        self.assertEqual(p.has_drive(), True)
 
         p = self.Path('C:/.', path.Root.srcdir)
         self.assertEqual(p.suffix, 'C:/')
         self.assertEqual(p.root, path.Root.absolute)
         self.assertEqual(p.directory, True)
         self.assertEqual(p.destdir, False)
+        self.assertEqual(p.has_drive(), True)
 
         self.assertRaises(ValueError, self.Path, 'foo/', path.Root.srcdir,
                           directory=False)
@@ -195,18 +216,21 @@ class TestPath(PathTestCase):
         self.assertEqual(p.root, path.InstallRoot.bindir)
         self.assertEqual(p.directory, False)
         self.assertEqual(p.destdir, True)
+        self.assertEqual(p.has_drive(), False)
 
         p = self.Path('/foo/bar', path.Root.absolute, True)
         self.assertEqual(p.suffix, '/foo/bar')
         self.assertEqual(p.root, path.Root.absolute)
         self.assertEqual(p.directory, False)
         self.assertEqual(p.destdir, True)
+        self.assertEqual(p.has_drive(), False)
 
         p = self.Path('/foo/bar', path.InstallRoot.bindir, True)
         self.assertEqual(p.suffix, '/foo/bar')
         self.assertEqual(p.root, path.Root.absolute)
         self.assertEqual(p.directory, False)
         self.assertEqual(p.destdir, True)
+        self.assertEqual(p.has_drive(), False)
 
         self.assertRaises(ValueError, self.Path, 'foo/bar', path.Root.srcdir,
                           True)
@@ -220,36 +244,42 @@ class TestPath(PathTestCase):
             self.assertEqual(p.root, base.root)
             self.assertEqual(p.directory, False)
             self.assertEqual(p.destdir, base.destdir)
+            self.assertEqual(p.has_drive(), False)
 
             p = self.Path('bar/', base)
             self.assertEqual(p.suffix, base.suffix + '/bar')
             self.assertEqual(p.root, base.root)
             self.assertEqual(p.directory, True)
             self.assertEqual(p.destdir, base.destdir)
+            self.assertEqual(p.has_drive(), False)
 
             p = self.Path('..', base)
             self.assertEqual(p.suffix, base.suffix.replace('foo', ''))
             self.assertEqual(p.root, base.root)
             self.assertEqual(p.directory, True)
             self.assertEqual(p.destdir, base.destdir)
+            self.assertEqual(p.has_drive(), False)
 
             p = self.Path('bar', base, True)
             self.assertEqual(p.suffix, base.suffix + '/bar')
             self.assertEqual(p.root, base.root)
             self.assertEqual(p.directory, False)
             self.assertEqual(p.destdir, True)
+            self.assertEqual(p.has_drive(), False)
 
             p = self.Path('bar', base, False)
             self.assertEqual(p.suffix, base.suffix + '/bar')
             self.assertEqual(p.root, base.root)
             self.assertEqual(p.directory, False)
             self.assertEqual(p.destdir, False)
+            self.assertEqual(p.has_drive(), False)
 
             p = self.Path('/bar', base)
             self.assertEqual(p.suffix, '/bar')
             self.assertEqual(p.root, path.Root.absolute)
             self.assertEqual(p.directory, False)
             self.assertEqual(p.destdir, False)
+            self.assertEqual(p.has_drive(), False)
 
             if base.root != path.Root.absolute:
                 self.assertRaises(ValueError, self.Path, '../..', base)
@@ -716,6 +746,15 @@ class TestAbsPath(TestCase):
             self.assertPathEqual(path.abspath('/foo/bar'),
                                  path.Path('C:/foo/bar', path.Root.absolute))
             self.assertPathEqual(path.abspath('D:/foo/bar'),
+                                 path.Path('D:/foo/bar', path.Root.absolute))
+
+    def test_rel_drive(self):
+        with mock.patch('os.getcwd', return_value=r'C:\base'):
+            self.assertPathEqual(path.abspath('foo', absdrive=False),
+                                 path.Path('/base/foo', path.Root.absolute))
+            self.assertPathEqual(path.abspath('/foo/bar', absdrive=False),
+                                 path.Path('/foo/bar', path.Root.absolute))
+            self.assertPathEqual(path.abspath('D:/foo/bar', absdrive=False),
                                  path.Path('D:/foo/bar', path.Root.absolute))
 
 

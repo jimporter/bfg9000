@@ -93,9 +93,9 @@ class TestDirectory(TestCase):
         with mock.patch('bfg9000.path.exists', return_value=True), \
              mock.patch('bfg9000.path.isdir', return_value=True):  # noqa
             self.assertPathEqual(parser.Directory()('foo'),
-                                 path.abspath('foo/'))
+                                 path.abspath('foo/', absdrive=False))
             self.assertPathEqual(parser.Directory(True)('foo'),
-                                 path.abspath('foo/'))
+                                 path.abspath('foo/', absdrive=False))
 
     def test_not_dir(self):
         with mock.patch('bfg9000.path.exists', return_value=True), \
@@ -108,7 +108,7 @@ class TestDirectory(TestCase):
     def test_nonexistent(self):
         with mock.patch('bfg9000.path.exists', return_value=False):
             self.assertPathEqual(parser.Directory()('foo'),
-                                 path.abspath('foo/'))
+                                 path.abspath('foo/', absdrive=False))
             with self.assertRaises(parser.ArgumentTypeError):
                 parser.Directory(True)('foo')
 
@@ -117,9 +117,10 @@ class TestFile(TestCase):
     def test_existent(self):
         with mock.patch('bfg9000.path.exists', return_value=True), \
              mock.patch('bfg9000.path.isfile', return_value=True):  # noqa
-            self.assertPathEqual(parser.File()('foo'), path.abspath('foo'))
+            self.assertPathEqual(parser.File()('foo'),
+                                 path.abspath('foo', absdrive=False))
             self.assertPathEqual(parser.File(True)('foo'),
-                                 path.abspath('foo'))
+                                 path.abspath('foo', absdrive=False))
 
     def test_not_file(self):
         with mock.patch('bfg9000.path.exists', return_value=True), \
@@ -131,7 +132,8 @@ class TestFile(TestCase):
 
     def test_nonexistent(self):
         with mock.patch('bfg9000.path.exists', return_value=False):
-            self.assertPathEqual(parser.File()('foo'), path.abspath('foo'))
+            self.assertPathEqual(parser.File()('foo'),
+                                 path.abspath('foo', absdrive=False))
             with self.assertRaises(parser.ArgumentTypeError):
                 parser.File(True)('foo')
 

@@ -171,10 +171,10 @@ class BasicIntegrationTest(SubprocessTestCase):
         else:
             self.orig_srcdir = None
 
+        if install is True:
+            install = os.path.join(test_stage_dir, srcname + '-install')
         if install:
-            self.installdir = os.path.join(test_stage_dir,
-                                           srcname + '-install')
-
+            self.installdir = install
             install_dirs = default_env.target_platform.install_dirs.copy()
             install_dirs[InstallRoot.prefix] = Path(
                 self.installdir, Root.absolute

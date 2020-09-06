@@ -52,10 +52,6 @@ class PosixHostPlatform(HostPlatform, PosixPlatform):
                 PosixPath('/usr/lib/', Root.absolute)]
 
     @property
-    def destdir(self):
-        return True
-
-    @property
     def has_path_ext(self):
         return False
 

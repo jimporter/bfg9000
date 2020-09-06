@@ -243,16 +243,13 @@ class Silent:
 class Makefile:
     Section = Section
 
-    def __init__(self, bfgfile, gnu=False):
+    def __init__(self, bfgfile, destdir=False, *, gnu=False):
         self.path_vars = {
             path.Root.srcdir  : Variable('srcdir'),
             path.Root.builddir: None,
         }
         self.path_vars.update({i: Variable(i.name) for i in path.InstallRoot})
-
-        # Only use destdir on platforms that actually support it (e.g. not
-        # Windows).
-        if platform_info().destdir:
+        if destdir:
             self.path_vars[path.DestDir.destdir] = Variable('DESTDIR')
 
         self._bfgfile = bfgfile

@@ -25,6 +25,37 @@ class TestEnvironment(TestCase):
         env.install_dirs[InstallRoot.exec_prefix] = Path('/exec-prefix/')
         return env
 
+    def test_supports_destdir(self):
+        env = self.make_env()
+        env.install_dirs = {
+            InstallRoot.prefix: Path('/root/prefix/'),
+            InstallRoot.exec_prefix: Path('', InstallRoot.prefix),
+            InstallRoot.bindir: Path('bin/', InstallRoot.exec_prefix),
+            InstallRoot.libdir: Path('lib/', InstallRoot.exec_prefix),
+            InstallRoot.includedir: Path('include/', InstallRoot.prefix),
+        }
+        self.assertTrue(env.supports_destdir)
+
+        env = self.make_env()
+        env.install_dirs = {
+            InstallRoot.prefix: Path('C:/root/prefix/'),
+            InstallRoot.exec_prefix: Path('', InstallRoot.prefix),
+            InstallRoot.bindir: Path('bin/', InstallRoot.exec_prefix),
+            InstallRoot.libdir: Path('lib/', InstallRoot.exec_prefix),
+            InstallRoot.includedir: Path('include/', InstallRoot.prefix),
+        }
+        self.assertFalse(env.supports_destdir)
+
+        env = self.make_env()
+        env.install_dirs = {
+            InstallRoot.prefix: None,
+            InstallRoot.exec_prefix: Path('', InstallRoot.prefix),
+            InstallRoot.bindir: Path('bin/', InstallRoot.exec_prefix),
+            InstallRoot.libdir: Path('lib/', InstallRoot.exec_prefix),
+            InstallRoot.includedir: Path('include/', InstallRoot.prefix),
+        }
+        self.assertFalse(env.supports_destdir)
+
     def test_builder(self):
         env = self.make_env()
         self.assertIsInstance(env.builder('lex'), lex.LexBuilder)

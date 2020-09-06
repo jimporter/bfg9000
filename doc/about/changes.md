@@ -35,6 +35,8 @@ in progress
 - Try to find the right compiler to use for C-family languages by guessing based
   on other compilers in the family (e.g. if `CXX=g++`, guess that the C compiler
   is `gcc`)
+- Add support for `DESTDIR` on Windows when installation paths don't include a
+  drive letter
 - Regenerating build files with the Ninja backend now uses the `console` pool,
   allowing realtime output and colored text
 

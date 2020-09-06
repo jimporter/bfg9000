@@ -90,10 +90,12 @@ class Environment:
         # toolchain file) with defaults from the target platform, but skip
         # absolute paths if this is a cross-compilation build.
         for k, v in self.target_platform.install_dirs.items():
-            if ( (self.is_cross and v and v.root == Root.absolute) or
-                 self.install_dirs.get(k) ):
+            if self.install_dirs.get(k):
                 continue
-            self.install_dirs[k] = try_as_directory(v)
+            elif self.is_cross and v and v.root == Root.absolute:
+                self.install_dirs[k] = None
+            else:
+                self.install_dirs[k] = try_as_directory(v)
 
         for k, v in install_dirs.items():
             if v:
@@ -117,6 +119,11 @@ class Environment:
         }
         dirs.update(self.install_dirs)
         return dirs
+
+    @property
+    def supports_destdir(self):
+        return all(i and (i.root != Root.absolute or not i.has_drive())
+                   for i in self.install_dirs.values())
 
     def getvar(self, key, default=None):
         return self.variables.get(key, default)

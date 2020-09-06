@@ -79,7 +79,7 @@ class Directory(BaseFile):
 
     @staticmethod
     def _abspath(p):
-        return _path.abspath(p, directory=True)
+        return _path.abspath(p, directory=True, absdrive=False)
 
     @staticmethod
     def _check_type(p):
@@ -91,7 +91,7 @@ class File(BaseFile):
 
     @staticmethod
     def _abspath(p):
-        return _path.abspath(p, directory=False)
+        return _path.abspath(p, directory=False, absdrive=False)
 
     @staticmethod
     def _check_type(p):

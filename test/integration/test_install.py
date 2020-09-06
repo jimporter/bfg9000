@@ -72,11 +72,11 @@ class TestInstall(IntegrationTest):
         self.assertDirectory(self.installdir, [])
 
 
-# No DESTDIR on Windows.
-@skip_if(env.host_platform.family == 'windows', hide=True)
 class TestDestDir(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        super().__init__('install', install=True, configure=False, *args,
+        install = os.path.join(os.path.splitdrive(test_stage_dir)[1],
+                               'destdir-install')
+        super().__init__('install', install=install, configure=False, *args,
                          **kwargs)
 
     def setUp(self):
@@ -86,6 +86,12 @@ class TestDestDir(IntegrationTest):
         cleandir(self.destdir, recreate=False)
 
     def _check_installed(self):
+        extra = []
+        if env.target_platform.has_import_library:
+            extra = [self.destdir + pjoin(
+                self.libdir, import_library('shared_a').path
+            )]
+
         self.assertDirectory(self.destdir + self.installdir, [
             self.destdir + pjoin(self.includedir, 'myproject', 'shared_a.hpp'),
             self.destdir + pjoin(self.includedir, 'myproject', 'static_a.hpp'),
@@ -93,7 +99,7 @@ class TestDestDir(IntegrationTest):
             self.destdir + pjoin(self.libdir, shared_library('shared_a').path),
             self.destdir + pjoin(self.libdir, shared_library('shared_b').path),
             self.destdir + pjoin(self.libdir, static_library('static_a').path),
-        ])
+        ] + extra)
 
     def _check_run(self):
         path = os.path.normpath(self.destdir + self.installdir)
@@ -112,18 +118,12 @@ class TestDestDir(IntegrationTest):
         self._check_installed()
         self._check_run()
 
+        self.build('uninstall')
+        self.assertDirectory(self.destdir + self.installdir, [])
+
     @only_if_backend('make', hide=True)
     def test_install_override_destdir(self):
         self.configure()
         self.build('install', extra_args=['DESTDIR={}'.format(self.destdir)])
         self._check_installed()
         self._check_run()
-
-    @skip_if_backend('msbuild')
-    def test_uninstall_destdir(self):
-        self.configure(extra_env={'DESTDIR': self.destdir})
-        self.build('install')
-        self._check_installed()
-
-        self.build('uninstall')
-        self.assertDirectory(self.destdir + self.installdir, [])
