@@ -2,8 +2,8 @@ from unittest import mock
 
 from .common import AttrDict, BuiltinTest
 
-from bfg9000.builtins import regenerate, version  # noqa
-from bfg9000.builtins.file_types import FileList, static_file
+from bfg9000.builtins import find, project, regenerate, version  # noqa
+from bfg9000.builtins.file_types import make_file_list, static_file
 from bfg9000.file_types import *
 from bfg9000.path import Path, Root
 
@@ -77,7 +77,7 @@ class TestFileList(BuiltinTest):
             return obj
 
         files = [SourceFile(srcpath(i), 'c++') for i in args]
-        return FileList(self.context, make_file, files, format='elf')
+        return make_file_list(self.context, make_file, files, format='elf')
 
     def test_len(self):
         self.assertEqual(len(self.make_file_list()), 0)
@@ -96,11 +96,18 @@ class TestFileList(BuiltinTest):
         f = self.make_file_list('foo.cpp', 'bar.cpp')
         self.assertSameFile(f[srcpath('foo.cpp')],
                             ObjectFile(Path('foo.o'), 'elf', 'c++'))
+        self.assertSameFile(f[srcpath('bar.cpp')],
+                            ObjectFile(Path('bar.o'), 'elf', 'c++'))
 
     def test_index_file(self):
         f = self.make_file_list('foo.cpp', 'bar.cpp')
         src = SourceFile(srcpath('foo.cpp'), 'c++')
         self.assertEqual(f[src], ObjectFile(Path('foo.o'), 'elf', 'c++'))
+
+    def test_index_path_not_found(self):
+        f = self.make_file_list('foo.cpp', 'bar.cpp')
+        with self.assertRaises(IndexError):
+            f[srcpath('goofy.cpp')]
 
     def test_submodule(self):
         f = self.make_file_list('dir/foo.cpp', 'dir/bar.cpp')
@@ -108,6 +115,42 @@ class TestFileList(BuiltinTest):
         with self.context.push_path(Path('dir/build.bfg', Root.srcdir)):
             self.assertSameFile(f['foo.cpp'], obj)
         self.assertSameFile(f['dir/foo.cpp'], obj)
+
+    def test_eq(self):
+        f1 = self.make_file_list('foo.cpp', 'bar.cpp')
+        f2 = self.make_file_list('foo.cpp', 'bar.cpp')
+        f3 = self.make_file_list('baz.cpp', 'quux.cpp')
+        s = list(f1)
+
+        self.assertTrue(f1 == f1)
+        self.assertFalse(f1 != f1)
+
+        self.assertTrue(f1 == f2)
+        self.assertFalse(f1 != f2)
+
+        self.assertFalse(f1 == f3)
+        self.assertTrue(f1 != f3)
+
+        self.assertTrue(f1 == s)
+        self.assertFalse(f1 != s)
+
+    def test_add(self):
+        f = self.make_file_list('foo.cpp', 'bar.cpp')
+        self.assertIsInstance(f + ['blah.cpp'], list)
+        self.assertEqual(f + ['blah.cpp'], [
+            ObjectFile(Path('foo.o'), 'elf', 'c++'),
+            ObjectFile(Path('bar.o'), 'elf', 'c++'),
+            'blah.cpp'
+        ])
+
+    def test_radd(self):
+        f = self.make_file_list('foo.cpp', 'bar.cpp')
+        self.assertIsInstance(['blah.cpp'] + f, list)
+        self.assertEqual(['blah.cpp'] + f, [
+            'blah.cpp',
+            ObjectFile(Path('foo.o'), 'elf', 'c++'),
+            ObjectFile(Path('bar.o'), 'elf', 'c++'),
+        ])
 
 
 class TestAutoFile(BuiltinTest):

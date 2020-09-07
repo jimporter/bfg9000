@@ -1,7 +1,7 @@
 import os
 
 from . import builtin
-from .file_types import FileList
+from .file_types import FileList, make_file_list
 from .path import buildpath, relname, within_directory
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
@@ -58,7 +58,7 @@ def copy_file(context, name, file, **kwargs):
 @builtin.function()
 @builtin.type(FileList, in_type=object)
 def copy_files(context, files, **kwargs):
-    return FileList(context, context['copy_file'], files, **kwargs)
+    return make_file_list(context, context['copy_file'], files, **kwargs)
 
 
 @make.rule_handler(CopyFile)

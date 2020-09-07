@@ -3,7 +3,7 @@ from collections import defaultdict
 from . import builtin
 from .. import options as opts
 from .path import buildpath, relname, within_directory
-from .file_types import FileList, static_file
+from .file_types import FileList, make_file_list, static_file
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..build_inputs import build_input, Edge
@@ -236,7 +236,7 @@ def object_files(context, files, **kwargs):
         file, kwargs = CompileSource.convert_args(context, file, kwargs)
         return CompileSource(context, None, file, **kwargs).public_output
 
-    return FileList(context, make_object_file, files, **kwargs)
+    return make_file_list(context, make_object_file, files, **kwargs)
 
 
 @builtin.function()
@@ -263,7 +263,8 @@ def generated_source(context, name, file, **kwargs):
 @builtin.function()
 @builtin.type(FileList, in_type=object)
 def generated_sources(context, files, **kwargs):
-    return FileList(context, context['generated_source'], files, **kwargs)
+    return make_file_list(context, context['generated_source'], files,
+                          **kwargs)
 
 
 @builtin.function()
