@@ -3,6 +3,7 @@ import posixpath
 
 from .common import BuiltinTest
 
+from bfg9000.backends.make import writer as make
 from bfg9000.backends.ninja import writer as ninja
 from bfg9000.builtins import default, file_types, tests  # noqa
 from bfg9000.path import Path, Root
@@ -254,7 +255,7 @@ class TestBuildCommandsBase(BuiltinTest):
                 inner_driver_exe, inner_test_exe)
 
 
-class TestBuildCommandsPosix(TestBuildCommandsBase):
+class TestBuildCommandsPosixNinja(TestBuildCommandsBase):
     Path = PosixPath
 
     @staticmethod
@@ -335,7 +336,7 @@ class TestBuildCommandsPosix(TestBuildCommandsBase):
         ])
 
 
-class TestBuildCommandsWindows(TestBuildCommandsBase):
+class TestBuildCommandsWindowsNinja(TestBuildCommandsBase):
     Path = WindowsPath
 
     @staticmethod
@@ -423,3 +424,12 @@ class TestBuildCommandsWindows(TestBuildCommandsBase):
             p('inner_driver'),
             p('inner_test') + ' --foo'
         ])
+
+
+class TestBuildCommandsPosixMake(TestBuildCommandsPosixNinja):
+    def _build_commands(self):
+        return tests._build_commands(
+            self.build['tests'].tests,
+            lambda x: make.Writer(x, self.path_vars),
+            pshell.local_env
+        )

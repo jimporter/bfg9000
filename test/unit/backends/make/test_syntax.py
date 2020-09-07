@@ -562,6 +562,26 @@ class TestMakefile(TestCase):
     def setUp(self):
         self.makefile = Makefile('build.bfg')
 
+    def test_destdir(self):
+        out = self.makefile.writer(StringIO())
+        self.makefile._write_variable(
+            out, Variable('name'),
+            path.Path('foo', path.InstallRoot.bindir, destdir=True)
+        )
+        self.assertEqual(out.stream.getvalue(), 'name := {}\n'.format(
+            quoted(os.path.join('$(bindir)', 'foo'))
+        ))
+
+        makefile = Makefile('build.bfg', destdir=True)
+        out = makefile.writer(StringIO())
+        makefile._write_variable(
+            out, Variable('name'),
+            path.Path('foo', path.InstallRoot.bindir, destdir=True)
+        )
+        self.assertEqual(out.stream.getvalue(), 'name := {}\n'.format(
+            quoted(os.path.join('$(DESTDIR)$(bindir)', 'foo'))
+        ))
+
     def test_variable(self):
         var = self.makefile.variable('name', 'value')
         self.assertEqual(var, Variable('name'))

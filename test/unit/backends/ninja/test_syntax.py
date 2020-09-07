@@ -205,6 +205,26 @@ class TestNinjaFile(TestCase):
         self.ninjafile.min_version('1.0')
         self.assertEqual(str(self.ninjafile._min_version), '1.1')
 
+    def test_destdir(self):
+        out = self.ninjafile.writer(StringIO())
+        self.ninjafile._write_variable(
+            out, Variable('name'),
+            path.Path('foo', path.InstallRoot.bindir, destdir=True)
+        )
+        self.assertEqual(out.stream.getvalue(), 'name = {}\n'.format(
+            quoted(os.path.join('${bindir}', 'foo'))
+        ))
+
+        ninjafile = NinjaFile('build.bfg', destdir=True)
+        out = ninjafile.writer(StringIO())
+        ninjafile._write_variable(
+            out, Variable('name'),
+            path.Path('foo', path.InstallRoot.bindir, destdir=True)
+        )
+        self.assertEqual(out.stream.getvalue(), 'name = {}\n'.format(
+            quoted(os.path.join('${DESTDIR}${bindir}', 'foo'))
+        ))
+
     def test_variable(self):
         var = self.ninjafile.variable('name', 'value')
         self.assertEqual(var, Variable('name'))
