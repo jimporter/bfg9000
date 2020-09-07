@@ -298,13 +298,13 @@ class Environment:
         for i in ('bfgdir', 'srcdir', 'builddir'):
             setattr(env, i, Path.from_json(data[i]).as_directory())
 
-        env.variables = EnvVarDict(data['variables'])
         env.backend_version = Version(data['backend_version'])
         env.install_dirs = {
             InstallRoot[k]: Path.from_json(v).as_directory() if v else None
             for k, v in data['install_dirs'].items()
         }
         env.toolchain = Toolchain.from_json(data['toolchain'])
+        env.variables = EnvVarDict(data['variables'])
         env.library_mode = LibraryMode(*data['library_mode'])
 
         return env
