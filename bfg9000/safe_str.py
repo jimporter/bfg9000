@@ -74,7 +74,7 @@ class jbos(safe_string):  # Just a Bunch of Strings
 
     @classmethod
     def from_iterable(cls, iterable):
-        result = object.__new__(cls)
+        result = cls.__new__(cls)
         result.__bits = tuple(cls.__canonicalize(iterable))
         return result.simplify()
 
