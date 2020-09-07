@@ -9,7 +9,7 @@ from . import shell
 from .backends import list_backends
 from .file_types import Executable, Node
 from .iterutils import first, isiterable, listify
-from .path import InstallRoot, Path, Root
+from .path import abspath, InstallRoot, Path, Root
 from .tools.common import Command
 from .versioning import Version
 
@@ -38,6 +38,10 @@ class EnvVarDict(dict):
              not isinstance(value, str) ):  # pragma: no cover
             raise TypeError('expected a string')
         super().__setitem__(key, value)
+
+    def getpaths(self, key, default=None, **kwargs):
+        return [abspath(i) for i in
+                shell.split_paths(self.get(key, default), **kwargs)]
 
 
 class Toolchain:
@@ -288,12 +292,13 @@ class Environment:
             data['target_platform']
         )
 
-        for i in ('backend', 'extra_args', 'initial_variables', 'variables'):
+        for i in ('backend', 'extra_args', 'initial_variables'):
             setattr(env, i, data[i])
 
         for i in ('bfgdir', 'srcdir', 'builddir'):
             setattr(env, i, Path.from_json(data[i]).as_directory())
 
+        env.variables = EnvVarDict(data['variables'])
         env.backend_version = Version(data['backend_version'])
         env.install_dirs = {
             InstallRoot[k]: Path.from_json(v).as_directory() if v else None

@@ -6,12 +6,23 @@ from .. import *
 from bfg9000.path import Root
 from bfg9000.safe_str import jbos
 from bfg9000.shell import (CalledProcessError, convert_args, execute, Mode,
-                           which)
+                           split_paths, which)
 
 base_dirs = {
     Root.srcdir: '$(srcdir)',
     Root.builddir: None,
 }
+
+
+class TestSplitPaths(TestCase):
+    def test_empty(self):
+        self.assertEqual(split_paths(''), [])
+
+    def test_single(self):
+        self.assertEqual(split_paths('foo'), ['foo'])
+
+    def test_multiple(self):
+        self.assertEqual(split_paths('foo:bar', ':'), ['foo', 'bar'])
 
 
 class TestWhich(TestCase):

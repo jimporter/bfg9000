@@ -1,4 +1,3 @@
-import os
 from itertools import chain
 
 from ... import options as opts, safe_str
@@ -10,7 +9,7 @@ from ...file_types import (HeaderDirectory, MsvcPrecompiledHeader, ObjectFile,
 from ...iterutils import iterate, listify
 from ...languages import known_langs
 from ...objutils import memoize
-from ...path import abspath, Path
+from ...path import Path
 
 _warning_flags = {
     opts.WarningValue.disable: '/w',
@@ -41,10 +40,8 @@ class MsvcBaseCompiler(BuildCommand):
         return True
 
     def search_dirs(self, strict=False):
-        cpath = [abspath(i) for i in
-                 self.env.getvar('CPATH', '').split(os.pathsep)]
-        include = [abspath(i) for i in
-                   self.env.getvar('INCLUDE', '').split(os.pathsep)]
+        cpath = self.env.variables.getpaths('CPATH')
+        include = self.env.variables.getpaths('INCLUDE')
         return cpath + include
 
     def _call(self, cmd, input, output, deps=None, flags=None):

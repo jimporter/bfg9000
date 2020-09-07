@@ -4,9 +4,11 @@ from unittest import mock
 from .. import *
 
 from bfg9000 import file_types, options as opts
+from bfg9000.file_types import (Executable, ObjectFile, ObjectFileList,
+                                SourceFile)
 from bfg9000.languages import Languages
 from bfg9000.path import Path, Root
-from bfg9000.tools.jvm import JvmBuilder
+from bfg9000.tools.jvm import JvmBuilder, JvmRunner
 from bfg9000.versioning import Version
 
 known_langs = Languages()
@@ -20,16 +22,17 @@ def mock_which(*args, **kwargs):
     return ['command']
 
 
+def default_mock_execute(*args, **kwargs):
+    return 'version'
+
+
 class TestJvmBuilder(CrossPlatformTestCase):
     def __init__(self, *args, **kwargs):
         super().__init__(clear_variables=True, *args, **kwargs)
 
     def test_properties(self):
-        def mock_execute(*args, **kwargs):
-            return 'version'
-
         with mock.patch('bfg9000.shell.which', mock_which), \
-             mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
+             mock.patch('bfg9000.shell.execute', default_mock_execute):  # noqa
             jvm = JvmBuilder(self.env, known_langs['java'], ['javac'],
                              'version')
 
@@ -160,11 +163,8 @@ class TestJvmCompiler(CrossPlatformTestCase):
         super().__init__(clear_variables=True, *args, **kwargs)
 
     def setUp(self):
-        def mock_execute(*args, **kwargs):
-            return 'version'
-
         with mock.patch('bfg9000.shell.which', mock_which), \
-             mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
+             mock.patch('bfg9000.shell.execute', default_mock_execute):  # noqa
             self.compiler = JvmBuilder(self.env, known_langs['java'],
                                        ['javac'], 'version').compiler
 
@@ -301,11 +301,8 @@ class TestJvmLinker(CrossPlatformTestCase):
         super().__init__(clear_variables=True, *args, **kwargs)
 
     def setUp(self):
-        def mock_execute(*args, **kwargs):
-            return 'version'
-
         with mock.patch('bfg9000.shell.which', mock_which), \
-             mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
+             mock.patch('bfg9000.shell.execute', default_mock_execute):  # noqa
             self.linker = JvmBuilder(self.env, known_langs['java'], ['javac'],
                                      'version').linker('executable')
 
@@ -354,3 +351,72 @@ class TestJvmLinker(CrossPlatformTestCase):
     def test_flags_invalid(self):
         with self.assertRaises(TypeError):
             self.linker.flags(opts.option_list(123))
+
+
+class TestJvmRunnerJava(CrossPlatformTestCase):
+    lang = 'java'
+    jar_args = ['-jar']
+
+    def setUp(self):
+        with mock.patch('bfg9000.shell.which', mock_which), \
+             mock.patch('bfg9000.shell.execute', default_mock_execute):  # noqa
+            self.runner = JvmBuilder(self.env, known_langs[self.lang],
+                                     ['javac'], 'version').runner
+
+    def test_call(self):
+        self.assertEqual(self.runner('file'), [self.runner, 'file'])
+
+    def test_run_arguments_executable(self):
+        exe = Executable(self.Path('file', Root.srcdir), 'jvm', lang=self.lang)
+        self.assertEqual(self.runner.run_arguments(exe),
+                         [self.runner] + self.jar_args + [exe])
+
+        with mock.patch('bfg9000.shell.which', return_value=['command']), \
+             mock.patch('bfg9000.shell.execute', default_mock_execute):  # noqa
+            args = self.env.run_arguments(exe)
+        self.assertEqual(len(args), len(self.jar_args) + 2)
+        self.assertEqual(type(args[0]), JvmRunner)
+        self.assertEqual(args[1:], self.jar_args + [exe])
+
+    def test_run_arguments_object_file(self):
+        obj = ObjectFile(self.Path('file', Root.srcdir), 'jvm', lang=self.lang)
+        self.assertEqual(self.runner.run_arguments(obj), [
+            self.runner, '-cp', obj.path.parent(), obj.path.basename()
+        ])
+
+        with mock.patch('bfg9000.shell.which', return_value=['command']), \
+             mock.patch('bfg9000.shell.execute', default_mock_execute):  # noqa
+            args = self.env.run_arguments(obj)
+        self.assertEqual(len(args), 4)
+        self.assertEqual(type(args[0]), JvmRunner)
+        self.assertEqual(args[1:], ['-cp', obj.path.parent(),
+                                    obj.path.basename()])
+
+    def test_run_arguments_object_file_list(self):
+        objlist = ObjectFileList(self.Path('filelist'), self.Path('file'),
+                                 'jvm', self.lang)
+        self.assertEqual(self.runner.run_arguments(objlist), [
+            self.runner, objlist.object_file.path.basename()
+        ])
+
+        with mock.patch('bfg9000.shell.which', return_value=['command']), \
+             mock.patch('bfg9000.shell.execute', default_mock_execute):  # noqa
+            args = self.env.run_arguments(objlist)
+        self.assertEqual(len(args), 2)
+        self.assertEqual(type(args[0]), JvmRunner)
+        self.assertEqual(args[1], objlist.object_file.path.basename())
+
+    def test_invalid_run_arguments(self):
+        bad_file = SourceFile(self.Path('file', Root.srcdir), lang=self.lang)
+        with self.assertRaises(TypeError):
+            self.runner.run_arguments(bad_file)
+
+        with mock.patch('bfg9000.shell.which', return_value=['command']), \
+             mock.patch('bfg9000.shell.execute', default_mock_execute), \
+             self.assertRaises(TypeError):  # noqa
+            self.env.run_arguments(bad_file)
+
+
+class TestJvmRunnerScala(TestJvmRunnerJava):
+    lang = 'scala'
+    jar_args = []

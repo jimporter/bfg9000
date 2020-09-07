@@ -1,5 +1,3 @@
-import sys
-
 from . import *
 
 from bfg9000.tools import scripts
@@ -10,7 +8,6 @@ from bfg9000.path import Root
 class TestPython(ToolTestCase):
     tool_type = scripts.Python
     lang = 'python'
-    default_cmd = sys.executable
 
     def test_env(self):
         with mock.patch('bfg9000.shell.which', return_value=['command']):
@@ -42,17 +39,14 @@ class TestPython(ToolTestCase):
 
 class TestLua(TestPython):
     tool_type = scripts.Lua
-    default_cmd = 'lua'
     lang = 'lua'
 
 
 class TestPerl(TestPython):
     tool_type = scripts.Perl
     lang = 'perl'
-    default_cmd = 'perl'
 
 
 class TestRuby(TestPython):
     tool_type = scripts.Ruby
     lang = 'ruby'
-    default_cmd = 'ruby'

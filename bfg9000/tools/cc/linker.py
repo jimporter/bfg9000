@@ -1,4 +1,3 @@
-import os
 import re
 from functools import partial
 from itertools import chain
@@ -89,18 +88,18 @@ class CcLinker(BuildCommand):
                 stdout=shell.Mode.pipe, stderr=shell.Mode.devnull
             )
             m = re.search(r'^libraries: =(.*)', output, re.MULTILINE)
-            search_dirs = re.split(os.pathsep, m.group(1))
+            search_dirs = [abspath(i) for i in shell.split_paths(m.group(1))]
 
             # clang doesn't respect LIBRARY_PATH with -print-search-dirs;
             # see <https://bugs.llvm.org//show_bug.cgi?id=23877>.
             if self.brand == 'clang':
-                search_dirs = (self.env.getvar('LIBRARY_PATH', '')
-                               .split(os.pathsep)) + search_dirs
+                search_dirs = (self.env.variables.getpaths('LIBRARY_PATH') +
+                               search_dirs)
         except (OSError, shell.CalledProcessError):
             if strict:
                 raise
-            search_dirs = self.env.getvar('LIBRARY_PATH', '').split(os.pathsep)
-        return [abspath(i) for i in search_dirs]
+            search_dirs = self.env.variables.getpaths('LIBRARY_PATH')
+        return search_dirs
 
     def _call(self, cmd, input, output, libs=None, flags=None):
         return list(chain(

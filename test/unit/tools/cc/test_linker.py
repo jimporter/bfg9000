@@ -57,6 +57,26 @@ class TestCcLinker(CrossPlatformTestCase):
         self.assertFalse(self.linker.can_link('goofy', ['c']))
         self.assertFalse(self.linker.can_link(fmt, ['objc++']))
 
+    def test_sysroot(self):
+        def mock_execute(*args, **kwargs):
+            raise OSError()
+
+        with mock.patch('bfg9000.shell.execute', mock_execute):
+            self.assertRegex(self.linker.sysroot(), '/?')
+        with mock.patch('bfg9000.shell.execute', mock_execute), \
+             self.assertRaises(OSError):
+            self.linker.sysroot(True)
+
+    def test_search_dirs(self):
+        def mock_execute(*args, **kwargs):
+            raise OSError()
+
+        with mock.patch('bfg9000.shell.execute', mock_execute):
+            self.assertEqual(self.linker.search_dirs(), [])
+        with mock.patch('bfg9000.shell.execute', mock_execute), \
+             self.assertRaises(OSError):
+            self.linker.search_dirs(True)
+
     def test_flags_empty(self):
         self.assertEqual(self.linker.flags(opts.option_list()), [])
 

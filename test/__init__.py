@@ -2,7 +2,7 @@ import functools
 import itertools
 import unittest
 
-from bfg9000.environment import Environment
+from bfg9000.environment import Environment, EnvVarDict
 from bfg9000.path import abspath, InstallRoot
 
 __all__ = ['load_tests', 'make_env', 'parameterize_tests', 'skip_if',
@@ -21,7 +21,7 @@ def make_env(platform=None, clear_variables=False, variables={}):
     env.finalize({InstallRoot.prefix: abspath('prefix')}, (False, False))
 
     if clear_variables:
-        env.variables = {}
+        env.variables = EnvVarDict()
     env.variables.update(variables)
     return env
 

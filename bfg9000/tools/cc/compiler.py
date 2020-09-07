@@ -1,4 +1,3 @@
-import os
 from itertools import chain
 
 from ... import options as opts, safe_str
@@ -6,7 +5,7 @@ from .flags import optimize_flags
 from ..common import BuildCommand
 from ...file_types import ObjectFile, PrecompiledHeader
 from ...iterutils import iterate
-from ...path import abspath, Path
+from ...path import Path
 from ...versioning import SpecifierSet
 
 
@@ -24,8 +23,7 @@ class CcBaseCompiler(BuildCommand):
         return True
 
     def search_dirs(self, strict=False):
-        return [abspath(i) for i in
-                self.env.getvar('CPATH', '').split(os.pathsep)]
+        return self.env.variables.getpaths('CPATH')
 
     def _call(self, cmd, input, output, deps=None, flags=None):
         result = list(chain(

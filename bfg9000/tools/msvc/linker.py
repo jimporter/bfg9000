@@ -1,4 +1,3 @@
-import os
 import re
 from itertools import chain
 
@@ -9,7 +8,7 @@ from ...file_types import DllBinary, Executable, StaticLibrary, WholeArchive
 from ...iterutils import iterate, merge_into_dict, uniques
 from ...objutils import memoize
 from ...packages import Framework
-from ...path import abspath, Path
+from ...path import Path
 from ...versioning import SpecifierSet
 
 
@@ -49,10 +48,8 @@ class MsvcLinker(BuildCommand):
         return True
 
     def search_dirs(self, strict=False):
-        lib_path = [abspath(i) for i in
-                    self.env.getvar('LIBRARY_PATH', '').split(os.pathsep)]
-        lib = [abspath(i) for i in
-               self.env.getvar('LIB', '').split(os.pathsep)]
+        lib_path = self.env.variables.getpaths('LIBRARY_PATH')
+        lib = self.env.variables.getpaths('LIB')
         return lib_path + lib
 
     def _call(self, cmd, input, output, libs=None, flags=None):

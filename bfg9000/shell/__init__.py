@@ -23,16 +23,22 @@ class Mode(Enum):
     devnull = subprocess.DEVNULL
 
 
+def split_paths(s, sep=os.pathsep):
+    if not s:
+        return []
+    return s.split(sep)
+
+
 def which(names, env=os.environ, base_dirs=None, resolve=False,
           kind='executable'):
     names = listify(names)
     if len(names) == 0:
         raise TypeError('must supply at least one name')
 
-    paths = env.get('PATH', os.defpath).split(os.pathsep)
+    paths = split_paths(env.get('PATH', os.defpath))
     exts = ['']
-    if platform_info().has_path_ext and env.get('PATHEXT'):
-        exts.extend(env.get('PATHEXT', '').split(os.pathsep))
+    if platform_info().has_path_ext:
+        exts.extend(split_paths(env.get('PATHEXT', '')))
 
     for name in names:
         name = listify(name)
