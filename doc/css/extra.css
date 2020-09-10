@@ -13,23 +13,20 @@ h1 {
   color: #bbb;
 }
 
-/* Lay out definition lists list tables. */
+/* Display definition lists in grid form. */
 
 dl {
-  display: flex;
-  flex-flow: row wrap;
+  display: grid;
+  grid-template-columns: fit-content(25%) auto
 }
 
 dt {
-  flex-basis: 20%;
   font-weight: normal;
   text-align: right;
   padding: 2px 4px;
 }
 
 dd {
-  flex-basis: 70%;
-  flex-grow: 1;
   margin: 0;
   padding: 2px 4px;
 }
