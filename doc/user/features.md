@@ -9,10 +9,11 @@ bfg9000 supports building code written in the following languages:
 
 * C
 * C++
-* Fortran (partial)
+* Fortran
 * Java
 * Objective C/C++
 * Scala
+* ... [and more](../reference/languages.md)
 
 Finally, bfg supports generating build files for [Make][make], [Ninja][ninja],
 and [MSBuild][msbuild], defaulting to Ninja.
@@ -30,6 +31,13 @@ to some external scripts in your build process.
 Projects can specify their own options, complete with help instructions, in the
 [`options.bfg`](writing.md#options), making it easy to help users get your
 project configured for their system.
+
+## Semantic options
+
+To simplify building your software with different compilers, many common
+compiler flags can be represented with [semantic
+options](../reference/builtins.md#semantic-options). These will then be
+translated to the appropriate syntax for the selected compiler.
 
 ## Toolchains for cross-compilation
 
