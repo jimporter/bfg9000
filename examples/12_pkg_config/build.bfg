@@ -1,6 +1,6 @@
 # -*- python -*-
 
-bfg9000_required_version('>=0.6.0.dev0')
+bfg9000_required_version('>=0.6.0')
 project('hello', '1.0')
 
 # When creating libraries for other projects to use, it's common to generate

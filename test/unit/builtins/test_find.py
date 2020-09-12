@@ -273,7 +273,7 @@ class TestFind(FindTestCase):
 class TestFindFiles(FindTestCase):
     def setUp(self):
         super().setUp()
-        self.context['bfg9000_required_version']('>=0.6.0.dev0')
+        self.context['bfg9000_required_version']('>=0.6.0')
         self.find = self.context['find_files']
         self.dist = []
 

@@ -1,6 +1,6 @@
 # -*- python -*-
 
-bfg9000_required_version('>=0.6.0.dev0')
+bfg9000_required_version('>=0.6.0')
 
 # Many projects have their code split up into multiple directories. For source
 # files, this is easy: just write out the relative path to the file. For header

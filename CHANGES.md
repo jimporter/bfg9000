@@ -1,6 +1,6 @@
 # Changes
 
-## v0.6.0 (in progress)
+## v0.6.0 (2020-09-12)
 
 ### New features
 - Add support for including multiple `build.bfg` (and `options.bfg`) files from

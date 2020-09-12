@@ -1,6 +1,6 @@
 # -*- python -*-
 
-bfg9000_required_version('>=0.6.0.dev0')
+bfg9000_required_version('>=0.6.0')
 
 # Within a submodule, all paths for inputs (source files) and outputs (built
 # files) are relative to the directory containing the submodule's `build.bfg`

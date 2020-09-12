@@ -146,7 +146,7 @@ class TestSimpleProperty(TestCase):
 class TestPkgConfig(BuiltinTest):
     def setUp(self):
         super().setUp()
-        self.context['bfg9000_required_version']('>=0.6.0.dev0')
+        self.context['bfg9000_required_version']('>=0.6.0')
 
     def test_minimal(self):
         pkg = PkgConfigInfo(self.context, name='package')
