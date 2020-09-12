@@ -10,142 +10,154 @@
         <link rel="shortcut icon" href="../../img/favicon.ico">
         <title>Changes - bfg9000</title>
         <link href="../../css/bootstrap-custom.min.css" rel="stylesheet">
-        <link href="../../css/font-awesome-4.5.0.css" rel="stylesheet">
+        <link href="../../css/font-awesome.min.css" rel="stylesheet">
         <link href="../../css/base.css" rel="stylesheet">
-        <link rel="stylesheet" href="../../css/highlight.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/color-brewer.min.css">
         <link href="../../css/extra.css" rel="stylesheet">
         <link href="../../css/version-select.css" rel="stylesheet">
         <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
         <!--[if lt IE 9]>
             <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
-            <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
         <![endif]-->
 
-        <script src="../../js/jquery-1.10.2.min.js"></script>
-        <script src="../../js/bootstrap-3.0.3.min.js"></script>
-        <script src="../../js/highlight.pack.js"></script> 
+        <script src="../../js/jquery-1.10.2.min.js" defer></script>
+        <script src="../../js/bootstrap-3.0.3.min.js" defer></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+        <script>hljs.initHighlightingOnLoad();</script> 
     </head>
 
     <body>
 
         <div class="navbar navbar-default navbar-fixed-top" role="navigation">
-    <div class="container">
+            <div class="container">
 
-        <!-- Collapsed navigation -->
-        <div class="navbar-header">
-            <!-- Expander button -->
-            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="../..">bfg9000</a>
-        </div>
+                <!-- Collapsed navigation -->
+                <div class="navbar-header">
+                    <!-- Expander button -->
+                    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="../..">bfg9000</a>
+                </div>
 
-        <!-- Expanded navigation -->
-        <div class="navbar-collapse collapse">
-                <!-- Main navigation -->
-                <ul class="nav navbar-nav">
-                    <li >
-                        <a href="../..">Home</a>
-                    </li>
-                    <li >
-                        <a href="../../getting-started/">Getting Started</a>
-                    </li>
-                    <li class="dropdown">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">User Guide <b class="caret"></b></a>
-                        <ul class="dropdown-menu">
-                            
+                <!-- Expanded navigation -->
+                <div class="navbar-collapse collapse">
+                        <!-- Main navigation -->
+                        <ul class="nav navbar-nav">
+                            <li >
+                                <a href="../..">Home</a>
+                            </li>
+                            <li class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">User Guide <b class="caret"></b></a>
+                                <ul class="dropdown-menu">
+                                    
 <li >
     <a href="../../user/features/">Features</a>
 </li>
-                            
+                                    
+<li >
+    <a href="../../user/getting-started/">Getting Started</a>
+</li>
+                                    
 <li >
     <a href="../../user/building/">Building with bfg9000</a>
 </li>
-                            
+                                    
 <li >
     <a href="../../user/writing/">Writing a Build File</a>
 </li>
-                            
-<li >
-    <a href="../../user/reference/">Reference</a>
-</li>
-                            
-<li >
-    <a href="../../user/command-line/">Command-Line Reference</a>
-</li>
-                            
-<li >
-    <a href="../../user/environment-vars/">Environment Variables</a>
-</li>
-                        </ul>
-                    </li>
-                    <li class="dropdown">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Developer Guide <b class="caret"></b></a>
-                        <ul class="dropdown-menu">
-                            
-<li >
-    <a href="../../developer/backends/">Build Backends</a>
-</li>
-                            
-<li >
-    <a href="../../developer/tools/">Build Tools</a>
-</li>
-                            
-<li >
-    <a href="../../developer/builtins/">Builtins</a>
-</li>
-                            
+                                </ul>
+                            </li>
+                            <li class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">Developer Guide <b class="caret"></b></a>
+                                <ul class="dropdown-menu">
+                                    
 <li >
     <a href="../../developer/contributing/">Contributing</a>
 </li>
-                        </ul>
-                    </li>
-                    <li class="dropdown active">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">About <b class="caret"></b></a>
-                        <ul class="dropdown-menu">
-                            
+                                    
+<li >
+    <a href="../../developer/backends/">Build Backends</a>
+</li>
+                                    
+<li >
+    <a href="../../developer/tools/">Build Tools</a>
+</li>
+                                    
+<li >
+    <a href="../../developer/builtins/">Builtins</a>
+</li>
+                                </ul>
+                            </li>
+                            <li class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">Reference <b class="caret"></b></a>
+                                <ul class="dropdown-menu">
+                                    
+<li >
+    <a href="../../reference/builtins/">Builtin Functions</a>
+</li>
+                                    
+<li >
+    <a href="../../reference/command-line/">Command-Line Interface</a>
+</li>
+                                    
+<li >
+    <a href="../../reference/languages/">Supported Languages</a>
+</li>
+                                    
+<li >
+    <a href="../../reference/environment-vars/">Environment Variables</a>
+</li>
+                                </ul>
+                            </li>
+                            <li class="dropdown active">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">About <b class="caret"></b></a>
+                                <ul class="dropdown-menu">
+                                    
 <li class="active">
     <a href="./">Changes</a>
 </li>
-                            
+                                    
 <li >
     <a href="../license/">License</a>
 </li>
+                                </ul>
+                            </li>
                         </ul>
-                    </li>
-                </ul>
 
-            <ul class="nav navbar-nav navbar-right">
-                <li>
-                    <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
-                        <i class="fa fa-search"></i> Search
-                    </a>
-                </li>
-                    <li >
-                        <a rel="next" href="../../developer/contributing/">
-                            <i class="fa fa-arrow-left"></i> Previous
-                        </a>
-                    </li>
-                    <li >
-                        <a rel="prev" href="../license/">
-                            Next <i class="fa fa-arrow-right"></i>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="https://github.com/jimporter/bfg9000/"><i class="fa fa-github"></i> GitHub</a>
-                    </li>
-            </ul>
+                    <ul class="nav navbar-nav navbar-right">
+                        <li>
+                            <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                            <li >
+                                <a rel="next" href="../../reference/environment-vars/">
+                                    <i class="fa fa-arrow-left"></i> Previous
+                                </a>
+                            </li>
+                            <li >
+                                <a rel="prev" href="../license/">
+                                    Next <i class="fa fa-arrow-right"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="https://github.com/jimporter/bfg9000/"><i class="fa fa-github"></i> GitHub</a>
+                            </li>
+                    </ul>
+                </div>
+            </div>
         </div>
-    </div>
-</div>
 
         <div class="container">
                 <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
         <li class="main active"><a href="#changes">Changes</a></li>
+            <li><a href="#v060">v0.6.0</a></li>
             <li><a href="#v051">v0.5.1</a></li>
             <li><a href="#v050">v0.5.0</a></li>
             <li><a href="#v041">v0.4.1</a></li>
@@ -160,19 +172,94 @@
                 <div class="col-md-9" role="main">
 
 <h1 id="changes">Changes<a class="headerlink" href="#changes" title="Permanent link">§</a></h1>
+<h2 id="v060">v0.6.0<a class="headerlink" href="#v060" title="Permanent link">§</a></h2>
+<p class="subtitle">2020-09-12</p>
+<h3 id="new-features">New features<a class="headerlink" href="#new-features" title="Permanent link">§</a></h3>
+<ul>
+<li>Add support for including multiple <code>build.bfg</code> (and <code>options.bfg</code>) files from
+  subdirectories via <code>submodule()</code></li>
+<li>Create <code>-uninstalled</code> variants of generated <em>pkg-config</em> <code>.pc</code> files and
+  allow build scripts to use them internally</li>
+<li>Add <code>opts.gui</code> to generate graphical programs (important on Windows)</li>
+<li>Add <code>opts.static</code> to request static linking of libraries</li>
+<li>MSVC's runtime can now be selected by using a combination of <code>opts.static</code>
+  and <code>opts.debug</code></li>
+<li>MSVC linker now automatically links to default Windows libraries
+  (<code>kernel32.lib</code>, etc)</li>
+<li>Link steps (<code>executable</code>, <code>library</code>, etc) now accept an <code>extra_compile_deps</code>
+  argument to forward on to the compilation step</li>
+<li>Allow customizing <code>install</code> locations for specific files via the <code>directory</code>
+  argument</li>
+<li>Iterables passed to <code>default</code> or <code>install</code> will include each element of the
+  iterable in the appropriate build target</li>
+<li><code>info()</code>, <code>debug()</code>, and <code>warning()</code> now take a variable number of arguments
+  to print</li>
+<li><code>generated_source()</code> steps are now automatically created as necessary for
+  files passed to <code>object_file()</code>, if possible</li>
+<li>Add <code>path_exists()</code> builtin</li>
+<li>Paths with a trailing <code>/</code> are now treated as directory paths, and when passed
+  to <code>auto_file()</code> will create a directory object</li>
+<li>Add support for compiling Windows <code>.rc</code> files</li>
+<li>Add support for setting the entry point for native binaries (C, C++, etc)</li>
+<li>The default list of excluded globs for <code>find_files()</code> can now be customized
+  via <code>project(find_exclude=[...])</code></li>
+<li>Try to find the right compiler to use for C-family languages by guessing based
+  on other compilers in the family (e.g. if <code>CXX=g++</code>, guess that the C compiler
+  is <code>gcc</code>)</li>
+<li>Add support for <code>DESTDIR</code> on Windows when installation paths don't include a
+  drive letter</li>
+<li>Regenerating build files with the Ninja backend now uses the <code>console</code> pool,
+  allowing realtime output and colored text</li>
+</ul>
+<h3 id="breaking-changes">Breaking changes<a class="headerlink" href="#breaking-changes" title="Permanent link">§</a></h3>
+<ul>
+<li>Drop support for Python 2</li>
+<li><code>find_files()</code> and <code>find_paths()</code> have been redesigned to support recursive
+  globs</li>
+<li><code>pkg_config()</code> now defaults to <code>auto_fill=False</code></li>
+<li><code>resource_file()</code> has been deprecated; use <code>source_file()</code> instead</li>
+<li><code>show_stack</code> for <code>info()</code> and <code>debug()</code> must now be specified as a keyword
+  argument</li>
+<li><code>directory</code>, and <code>header_directory</code> now require uncommon arguments to be
+  specified as keyword arguments</li>
+<li>Adding to existing environment variables in <code>env.execute()</code> and <code>env.run()</code>
+  is now done via <code>extra_env</code>, not <code>env</code>/<code>env_update</code></li>
+</ul>
+<h3 id="bug-fixes">Bug fixes<a class="headerlink" href="#bug-fixes" title="Permanent link">§</a></h3>
+<ul>
+<li><code>copy_file()</code> now works correctly when copying into a subdirectory on the
+  Make backend</li>
+<li><code>extra_deps</code> now works with <code>copy_file()</code></li>
+<li>Calling <code>exit()</code> with a non-zero return code from a <code>build.bfg</code> file now
+  causes configuration to fail</li>
+<li>Automatically-generated PCH source files (for MSVC compilers) are now placed
+  in the same directory as the resulting PCH</li>
+<li>The contents of header directories in the build directory are now installed to
+  the base include directory</li>
+<li>The <code>install_name</code> for libraries on macOS is now always an absolute path,
+  instead of using <code>@rpath</code>-based paths prior to installation</li>
+<li>MSBuild backend can now build libraries with no source files that link to a
+  whole-archive library</li>
+<li>Object files with unrecognized source languages can now be linked with the
+  default linker for their object format</li>
+<li><code>.stamp</code> files generated by the Make backend are now properly removed when
+  running <code>make clean</code></li>
+<li>Fix <code>sudo</code> prompt when installing to a system directory with the Ninja backend</li>
+</ul>
+<hr />
 <h2 id="v051">v0.5.1<a class="headerlink" href="#v051" title="Permanent link">§</a></h2>
 <p class="subtitle">2019-12-07</p>
-<h3 id="bug-fixes">Bug fixes<a class="headerlink" href="#bug-fixes" title="Permanent link">§</a></h3>
+<h3 id="bug-fixes_1">Bug fixes<a class="headerlink" href="#bug-fixes_1" title="Permanent link">§</a></h3>
 <ul>
 <li>Depfiles generated by compile steps are now properly included into Makefiles</li>
 <li>Include directories passed to via <code>include</code> and libraries passed via <code>libs</code>
   are now listed before those from <code>packages</code> when building</li>
-<li>Fixed linking to shared libraries located in the source directory</li>
+<li>Fix linking to shared libraries located in the source directory</li>
 </ul>
 <hr />
 <h2 id="v050">v0.5.0<a class="headerlink" href="#v050" title="Permanent link">§</a></h2>
 <p class="subtitle">2019-11-25</p>
-<h3 id="new-features">New features<a class="headerlink" href="#new-features" title="Permanent link">§</a></h3>
+<h3 id="new-features_1">New features<a class="headerlink" href="#new-features_1" title="Permanent link">§</a></h3>
 <ul>
 <li>Add <code>generated_source()</code> to allow generating source code from domain-specific
   languages</li>
@@ -192,7 +279,7 @@
   project-wide settings</li>
 <li>Add <code>srcdir</code> builtin to toolchain files</li>
 </ul>
-<h3 id="breaking-changes">Breaking changes<a class="headerlink" href="#breaking-changes" title="Permanent link">§</a></h3>
+<h3 id="breaking-changes_1">Breaking changes<a class="headerlink" href="#breaking-changes_1" title="Permanent link">§</a></h3>
 <ul>
 <li><code>find_files()</code> redesigned and split into <code>find_files()</code> and <code>find_paths()</code>;
   simple cases should still work, but more complex uses will need adjusted</li>
@@ -207,7 +294,7 @@
   placed in an intermediate directory; call <code>project(intermediate_dirs=False)</code>
   to disable this</li>
 </ul>
-<h3 id="bug-fixes_1">Bug fixes<a class="headerlink" href="#bug-fixes_1" title="Permanent link">§</a></h3>
+<h3 id="bug-fixes_2">Bug fixes<a class="headerlink" href="#bug-fixes_2" title="Permanent link">§</a></h3>
 <ul>
 <li>Include <code>options.bfg</code> in dist tarballs</li>
 <li>Fix escaping of <code>~</code> in Makefiles</li>
@@ -222,14 +309,14 @@
 <hr />
 <h2 id="v041">v0.4.1<a class="headerlink" href="#v041" title="Permanent link">§</a></h2>
 <p class="subtitle">2019-07-05</p>
-<h3 id="bug-fixes_2">Bug fixes<a class="headerlink" href="#bug-fixes_2" title="Permanent link">§</a></h3>
+<h3 id="bug-fixes_3">Bug fixes<a class="headerlink" href="#bug-fixes_3" title="Permanent link">§</a></h3>
 <ul>
 <li>Fix using semantic options in <code>global_options</code></li>
 </ul>
 <hr />
 <h2 id="v040">v0.4.0<a class="headerlink" href="#v040" title="Permanent link">§</a></h2>
 <p class="subtitle">2019-07-05</p>
-<h3 id="new-features_1">New features<a class="headerlink" href="#new-features_1" title="Permanent link">§</a></h3>
+<h3 id="new-features_2">New features<a class="headerlink" href="#new-features_2" title="Permanent link">§</a></h3>
 <ul>
 <li>Compilers and linkers now support semantic options, abstracting away the
   differences between compiler flavors</li>
@@ -244,7 +331,7 @@
   Ninja backend</li>
 <li>Makefiles generated by bfg now have a <code>clean</code> target</li>
 </ul>
-<h3 id="breaking-changes_1">Breaking changes<a class="headerlink" href="#breaking-changes_1" title="Permanent link">§</a></h3>
+<h3 id="breaking-changes_2">Breaking changes<a class="headerlink" href="#breaking-changes_2" title="Permanent link">§</a></h3>
 <ul>
 <li>MSVC builds now automatically set <code>/EHsc</code> to improve standards-compliance and
   mimic Visual Studio's default MSBuild configuration</li>
@@ -256,7 +343,7 @@
 <li>Platform names are reworked; <code>'windows'</code> is now <code>'winnt'</code> and <code>'darwin'</code> is
   <code>'macos'</code></li>
 </ul>
-<h3 id="bug-fixes_3">Bug fixes<a class="headerlink" href="#bug-fixes_3" title="Permanent link">§</a></h3>
+<h3 id="bug-fixes_4">Bug fixes<a class="headerlink" href="#bug-fixes_4" title="Permanent link">§</a></h3>
 <ul>
 <li>Fix support for packaging as a Python Wheel</li>
 <li>Default options for <code>ar</code> are now <code>cr</code> instead of <code>cru</code> to support versions of
@@ -269,7 +356,7 @@
 <hr />
 <h2 id="v031">v0.3.1<a class="headerlink" href="#v031" title="Permanent link">§</a></h2>
 <p class="subtitle">2018-06-01</p>
-<h3 id="bug-fixes_4">Bug fixes<a class="headerlink" href="#bug-fixes_4" title="Permanent link">§</a></h3>
+<h3 id="bug-fixes_5">Bug fixes<a class="headerlink" href="#bug-fixes_5" title="Permanent link">§</a></h3>
 <ul>
 <li>Fix an issue with creating the build directory during the configuration
   process</li>
@@ -277,7 +364,7 @@
 <hr />
 <h2 id="v030">v0.3.0<a class="headerlink" href="#v030" title="Permanent link">§</a></h2>
 <p class="subtitle">2018-06-01</p>
-<h3 id="new-features_2">New features<a class="headerlink" href="#new-features_2" title="Permanent link">§</a></h3>
+<h3 id="new-features_3">New features<a class="headerlink" href="#new-features_3" title="Permanent link">§</a></h3>
 <ul>
 <li>Replace <code>system_package()</code> and <code>pkgconfig_package()</code> with a generic package
   resolver: <code>package()</code></li>
@@ -305,7 +392,7 @@
 <li>Automatically request sudo elevation when installing builds to a system
   directory</li>
 </ul>
-<h3 id="breaking-changes_2">Breaking changes<a class="headerlink" href="#breaking-changes_2" title="Permanent link">§</a></h3>
+<h3 id="breaking-changes_3">Breaking changes<a class="headerlink" href="#breaking-changes_3" title="Permanent link">§</a></h3>
 <ul>
 <li><code>directory()</code> and <code>header_directory()</code> no longer automatically include all
   files within them (pass <code>include='*'</code> for the old behavior)</li>
@@ -320,7 +407,7 @@
 <li>Splitting POSIX shell strings (used for compile and link options as well as
   environment vars on POSIX like <code>CPPFLAGS</code>) no longer parses escape characters</li>
 </ul>
-<h3 id="bug-fixes_5">Bug fixes<a class="headerlink" href="#bug-fixes_5" title="Permanent link">§</a></h3>
+<h3 id="bug-fixes_6">Bug fixes<a class="headerlink" href="#bug-fixes_6" title="Permanent link">§</a></h3>
 <ul>
 <li>Improve logging of syntax errors in <code>build.bfg</code> files</li>
 <li>Fix usage of nested shared libraries when linking with GNU ld (via
@@ -337,7 +424,7 @@
 <hr />
 <h2 id="v020">v0.2.0<a class="headerlink" href="#v020" title="Permanent link">§</a></h2>
 <p class="subtitle">2016-06-26</p>
-<h3 id="new-features_3">New features<a class="headerlink" href="#new-features_3" title="Permanent link">§</a></h3>
+<h3 id="new-features_4">New features<a class="headerlink" href="#new-features_4" title="Permanent link">§</a></h3>
 <ul>
 <li>Support Objective C/C++</li>
 <li>Partially support Fortran (simple projects work, but more complex things
@@ -357,7 +444,7 @@
 <li>Add support for building a distribution of the sources (<code>make dist</code>)</li>
 <li>Allow running custom build steps via <code>build_step()</code></li>
 </ul>
-<h3 id="breaking-changes_3">Breaking changes<a class="headerlink" href="#breaking-changes_3" title="Permanent link">§</a></h3>
+<h3 id="breaking-changes_4">Breaking changes<a class="headerlink" href="#breaking-changes_4" title="Permanent link">§</a></h3>
 <ul>
 <li>Configuring a build is now performed by <code>bfg9000 configure DIRECTORY</code></li>
 <li><code>header()</code> renamed to <code>header_file()</code></li>
@@ -365,7 +452,7 @@
 <li><code>env.linker(lang, mode)</code> replaced by <code>env.builder(lang).linker(mode)</code></li>
 <li><code>env.compiler(lang).flavor</code> replaced by <code>env.builder(lang).flavor</code></li>
 </ul>
-<h3 id="bug-fixes_6">Bug fixes<a class="headerlink" href="#bug-fixes_6" title="Permanent link">§</a></h3>
+<h3 id="bug-fixes_7">Bug fixes<a class="headerlink" href="#bug-fixes_7" title="Permanent link">§</a></h3>
 <ul>
 <li>Fix fetching <code>CFLAGS</code> from the environment (it used to try <code>CCFLAGS</code>)</li>
 <li>Fix execution context of <code>build.bfg</code> files; this caused strange issues with
@@ -389,13 +476,16 @@
 
         <footer class="col-md-12">
             <hr>
-                <p>Copyright &copy; 2015-2019 Jim Porter</p>
-            <p>Documentation built with <a href="http://www.mkdocs.org/">MkDocs</a>.</p>
+                <p>Copyright &copy; 2015-2020 Jim Porter</p>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
         </footer>
-        <script>var base_url = '../..';</script>
-        <script src="../../js/base.js"></script>
-        <script src="../../js/version-select.js"></script>
-        <script src="../../search/main.js"></script>
+        <script>
+            var base_url = "../..",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="../../js/base.js" defer></script>
+        <script src="../../js/version-select.js" defer></script>
+        <script src="../../search/main.js" defer></script>
 
         <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
     <div class="modal-dialog">
@@ -411,7 +501,7 @@
                 </p>
                 <form role="form">
                     <div class="form-group">
-                        <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query">
+                        <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
                     </div>
                 </form>
                 <div id="mkdocs-search-results"></div>
@@ -437,19 +527,19 @@
                 </thead>
                 <tbody>
                   <tr>
-                    <td><kbd>?</kbd></td>
+                    <td class="help shortcut"><kbd>?</kbd></td>
                     <td>Open this help</td>
                   </tr>
                   <tr>
-                    <td><kbd>&larr;</kbd></td>
-                    <td>Previous page</td>
-                  </tr>
-                  <tr>
-                    <td><kbd>&rarr;</kbd></td>
+                    <td class="next shortcut"><kbd>n</kbd></td>
                     <td>Next page</td>
                   </tr>
                   <tr>
-                    <td><kbd>s</kbd></td>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
                     <td>Search</td>
                   </tr>
                 </tbody>
@@ -460,7 +550,6 @@
         </div>
     </div>
 </div>
-
 
     </body>
 </html>

@@ -12,3 +12,21 @@ h1 {
   margin-top: -10.5px;
   color: #bbb;
 }
+
+/* Display definition lists in grid form. */
+
+dl {
+  display: grid;
+  grid-template-columns: fit-content(25%) auto
+}
+
+dt {
+  font-weight: normal;
+  text-align: right;
+  padding: 2px 4px;
+}
+
+dd {
+  margin: 0;
+  padding: 2px 4px;
+}
