@@ -5,6 +5,8 @@ in progress
 {: .subtitle}
 
 ### New features
+- Add `bfg9000 run` command to allow executing other commands using the
+  environment variables for a given build
 - `pkg-config` executable can now be found by guessing based on other compilers
 
 ### Breaking changes

@@ -103,6 +103,20 @@ Print the environment variables stored by the build configuration in *BUILDDIR*.
 
 Only show environment variables that differ from the current environment.
 
+### bfg9000 run *COMMAND* { #run }
+
+Run an arbitrary *COMMAND* with the environment variables set for the current
+build.
+
+#### -I, --initial { #run-initial }
+
+Use the *initial* environment variables, before any modification by toolchain
+files.
+
+#### -B, --builddir { #run-builddir }
+
+Set the build directory to pull environment variable state from.
+
 ## 9k shorthand
 
 `9k` is a special shorthand to make it easier to configure your build. It's
