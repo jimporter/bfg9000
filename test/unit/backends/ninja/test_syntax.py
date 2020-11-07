@@ -29,7 +29,7 @@ class TestWriteString(TestCase):
 
     def test_input(self):
         self.out.write('foo: $bar', Syntax.input)
-        self.assertEqual(self.out.stream.getvalue(), 'foo:$ $$bar')
+        self.assertEqual(self.out.stream.getvalue(), 'foo$:$ $$bar')
 
     def test_shell(self):
         self.out.write('foo: $bar', Syntax.shell)
@@ -71,7 +71,7 @@ class TestWriteShellLiteral(TestCase):
 
     def test_input(self):
         self.out.write(safe_str.shell_literal('foo: $bar'), Syntax.input)
-        self.assertEqual(self.out.stream.getvalue(), 'foo:$ $$bar')
+        self.assertEqual(self.out.stream.getvalue(), 'foo$:$ $$bar')
 
     def test_shell(self):
         self.out.write(safe_str.shell_literal('foo: $bar'), Syntax.shell)

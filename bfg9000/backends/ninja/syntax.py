@@ -40,10 +40,8 @@ class Writer:
         if '\n' in string:
             raise ValueError('illegal newline')
 
-        if syntax == Syntax.output:
+        if syntax in [Syntax.output, Syntax.input]:
             return re.sub(r'([:$ ])', r'$\1', string)
-        elif syntax == Syntax.input:
-            return re.sub(r'([$ ])', r'$\1', string)
         elif syntax in [Syntax.shell, Syntax.clean]:
             return string.replace('$', '$$')
 
