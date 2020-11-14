@@ -37,7 +37,8 @@ class TestJava(IntegrationTest):
 class TestGcj(IntegrationTest):
     def __init__(self, *args, **kwargs):
         super().__init__(os.path.join('languages', 'java'),
-                         extra_env={'JAVAC': 'gcj'}, *args, **kwargs)
+                         extra_env={'JAVAC': os.getenv('GCJ', 'gcj')},
+                         *args, **kwargs)
 
     def test_build(self):
         self.build('program')

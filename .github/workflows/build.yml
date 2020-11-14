@@ -1,0 +1,232 @@
+name: build
+on: [push]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: [3.5, 3.6, 3.7, 3.8]
+        compiler: [default]
+
+        include:
+          - {os: ubuntu-latest, extra-tests: [mingw-cross],
+             backends: [ninja, make], flags: -Wall -Werror}
+          - {os: windows-latest, msvc-version: '14.27', win-sdk: '10.0.18362.0',
+             qt-version: '5.12.9', skipped-tests: [fortran, objc, scala],
+             backends: [ninja, make, msbuild], flags: /WX}
+          - {os: macos-latest, skipped-tests: [scala], backends: [ninja, make],
+             flags: -Wall -Werror -DGL_SILENCE_DEPRECATION}
+
+          # Clang builds
+          - {os: ubuntu-latest, python-version: 3.8, extra-tests: [mingw-cross],
+             # Install gfortran-10 and gobjc++-10 since clang will try to link
+             # to GCC 10 libs and will get confused otherwise.
+             extra-packages: [clang, gfortran-10, gobjc++-10],
+             compiler: clang, backends: [ninja, make], flags: -Wall -Werror}
+
+          # Xenial builds (for testing GCJ)
+          - {os: ubuntu-16.04, python-version: 3.8, compiler: default,
+             extra-packages: [gcj-4.9, gcj-4.9-jdk],
+             extra-tests: [mingw-cross, gcj], backends: [ninja, make]}
+
+          # VS 2017 builds
+          - {os: windows-2016, python-version: 3.8, compiler: default,
+             msvc-version: '14.16', win-sdk: '10.0.17763.0',
+             qt-version: '5.12.9', skipped-tests: [fortran, objc, scala],
+             backends: [ninja, make, msbuild], flags: /WX}
+
+          # VS 2019 x86 builds
+          - {os: windows-latest, python-version: 3.8, compiler: default-x86,
+             msvc-version: '14.27', msvc-arch: 'x86', win-sdk: '10.0.18362.0',
+             skipped-tests: [fortran, objc, qt, scala],
+             backends: [ninja, make, msbuild], flags: /WX}
+
+          # MinGW builds
+          - {os: windows-latest, python-version: 3.8, compiler: mingw,
+             msvc-version: '14.27', win-sdk: '10.0.18362.0',
+             qt-version: '5.15.1', qt-arch: 'win64_mingw81',
+             skipped-tests: [fortran, objc, scala], backends: [ninja, make],
+             flags: -Wall -Werror}
+        exclude:
+          # Can't install Qt with Python 3.5
+          - {os: windows-latest, python-version: 3.5}
+          - {os: macos-latest, python-version: 3.5}
+      fail-fast: false
+    env:
+      GCJ: gcj-4.9
+      BACKENDS: ${{ join(matrix.backends, ' ') }}
+      BFG_EXTRA_TESTS: ${{ join(matrix.extra-tests, ' ') }}
+      BFG_SKIPPED_TESTS: ${{ join(matrix.skipped-tests, ' ') }}
+      CPPFLAGS: ${{ matrix.flags }}
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install Python dependencies
+        run: |
+          pip install codecov '.[test]'
+      - name: Initialize MSVC ${{ matrix.msvc-version }}
+        if: startsWith(matrix.os, 'windows-')
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          toolset: ${{ matrix.msvc-version }}
+          arch: ${{ matrix.msvc-arch || 'x64' }}
+          sdk: ${{ matrix.win-sdk }}
+      - name: Install Qt ${{ matrix.qt-version }}
+        if: matrix.qt-version
+        uses: jurplel/install-qt-action@v2.9.0
+        with:
+          version: ${{ matrix.qt-version || '5.12.9' }}
+          arch: ${{ matrix.qt-arch }}
+      - name: Install Linux dependencies
+        if: startsWith(matrix.os, 'ubuntu-')
+        run: >
+          sudo apt-get update && sudo apt-get install
+          bison
+          default-jdk
+          flex
+          freeglut3-dev
+          gcc-multilib
+          gfortran
+          gobjc++
+          libboost-dev
+          libboost-program-options-dev
+          libgl1-mesa-dev
+          libogg-dev
+          mingw-w64
+          ninja-build
+          qt5-default
+          qtdeclarative5-dev
+          scala
+          ${{ join(matrix.extra-packages, ' ') }}
+      - name: Install Windows dependencies
+        if: startsWith(matrix.os, 'windows-')
+        run: |
+          cinst ninja winflexbison3
+
+          # Fetch and install pkg-config.
+          ${gnomebase} = "https://ftp.gnome.org/pub/gnome/binaries/win32"
+          curl -LO ${gnomebase}/dependencies/pkg-config_0.26-1_win32.zip
+          curl -LO ${gnomebase}/glib/2.28/glib_2.28.8-1_win32.zip
+          curl -LO ${gnomebase}/dependencies/gettext-runtime_0.18.1.1-2_win32.zip
+          7z x -y pkg-config_0.26-1_win32.zip -oC:\pkg-config
+          7z x -y glib_2.28.8-1_win32.zip -oC:\pkg-config
+          7z x -y gettext-runtime_0.18.1.1-2_win32.zip -oC:\pkg-config
+          echo "PKG_CONFIG=C:\pkg-config\bin\pkg-config.exe" >> ${env:GITHUB_ENV}
+
+          # Build and install libogg.
+          curl -LO http://downloads.xiph.org/releases/ogg/libogg-1.3.4.zip
+          7z x -y libogg-1.3.4.zip
+          ${arch} = "${{ matrix.msvc-arch || 'x64' }}"
+          if(${arch} -eq 'x86') { ${arch} = "Win32" }
+          msbuild libogg-1.3.4\win32\VS2015\libogg.sln /p:Configuration=ReleaseDLL /p:Platform=${arch} /p:WindowsTargetPlatformVersion=${{ matrix.win-sdk }}
+          mkdir lib
+          ${liboggbase} = "libogg-1.3.4\win32\VS2015\${arch}\ReleaseDLL"
+          copy ${liboggbase}\libogg.lib lib\ogg.lib
+          copy ${liboggbase}\libogg.dll lib\ogg.dll
+          robocopy libogg-1.3.4\include include *.h /E
+          if(${LastExitCode} -le 7) { ${LastExitCode} = 0 }
+
+          ${boostroot} = "${env:BOOST_ROOT_1_72_0}"
+          echo "BOOST_INCLUDEDIR=${boostroot}\include" >> ${env:GITHUB_ENV}
+          echo "BOOST_LIBRARYDIR=${boostroot}\lib" >> ${env:GITHUB_ENV}
+          echo "CPPFLAGS=-I${pwd}\include ${env:CPPFLAGS}" >> ${env:GITHUB_ENV}
+          echo "CPATH=${env:Qt5_DIR}\include;${env:Qt5_DIR}\include\QtWidgets;${env:Qt5_DIR}\include\QtQml;${env:CPATH}" >> ${env:GITHUB_ENV}
+          echo "LIBRARY_PATH=${pwd}\lib;${env:Qt5_DIR}\lib;${env:LIBRARY_PATH}" >> ${env:GITHUB_ENV}
+          echo "PATH=${env:PATH};${pwd}\lib;${env:Qt5_DIR}\lib" >> ${env:GITHUB_ENV}
+      - name: Install macOS dependencies
+        if: startsWith(matrix.os, 'macos-')
+        run: |
+          brew install bison boost gfortran ninja pkg-config qt5
+          brew link qt5 --force
+          echo "YACC=/usr/local/opt/bison/bin/bison" >> ${GITHUB_ENV}
+      - name: Set up clang
+        if: matrix.compiler == 'clang'
+        run: |
+          echo "CC=clang" >> ${GITHUB_ENV}
+          echo "CXX=clang++" >> ${GITHUB_ENV}
+      - name: Set up mingw
+        if: matrix.compiler == 'mingw'
+        run: |
+          echo "PATH=C:\msys64\mingw64\bin;${env:PATH}" >> ${env:GITHUB_ENV}
+          echo "CC=gcc" >> ${env:GITHUB_ENV}
+          echo "CXX=g++" >> ${env:GITHUB_ENV}
+      - name: Run tests
+        run: |
+          python setup.py coverage -q
+      - name: Upload coverage
+        if: "!startsWith(matrix.os, 'windows-')"
+        run: |
+          codecov
+      - name: Upload coverage (Windows)
+        if: startsWith(matrix.os, 'windows-')
+        run: |
+          coverage xml
+          curl -s https://codecov.io/bash | bash -s -- -U "-s" -A "-s"
+  build-cygwin:
+    runs-on: windows-latest
+    env:
+      CYGROOT: C:\cygwin
+      CYGCACHE: C:\cygwin\var\cache\setup
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Cygwin
+        shell: cmd
+        run: >
+          curl -LO https://cygwin.com/setup-x86_64.exe
+
+          .\setup-x86_64.exe -qgnNdO -R %CYGROOT% -l %CYGCACHE%
+          -s http://mirrors.kernel.org/sourceware/cygwin/
+          -P gcc-g++,make,ninja,python38,python38-pip,python38-setuptools
+      - name: Copy bfg9000 to Cygwin
+        run: |
+          robocopy . ${env:CYGROOT}\home\runneradmin\bfg9000 /E
+          if(${LastExitCode} -le 7) { ${LastExitCode} = 0 }
+      - name: Install Python dependencies
+        run: >
+          C:\cygwin\bin\bash -lc
+          "cd bfg9000 && pip3.8 install codecov coverage mock ."
+      - name: Run tests
+        run: >
+          C:\cygwin\bin\bash -lc
+          "cd bfg9000 && python3.8 setup.py coverage -s
+          test.integration.test_executable"
+      - name: Upload coverage
+        run: >
+          C:\cygwin\bin\bash -lc "cd bfg9000 && codecov"
+  bdist-wheel:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.8
+      - name: Test bdist_wheel
+        run: |
+          pip install wheel
+          python setup.py bdist_wheel
+          pip install dist/*.whl
+          ! pip show pysetenv && pip show patchelf-wrapper
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.8
+      - name: Install dependencies
+        run: |
+          pip install '.[test]'
+      - name: Run lint
+        run: |
+          python setup.py lint

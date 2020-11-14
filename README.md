@@ -2,7 +2,7 @@
 
 [![PyPi version][pypi-image]][pypi-link]
 [![Documentation][documentation-image]][documentation-link]
-[![Travis build status][travis-image]][travis-link]
+[![Github build status][gh-actions-image]][gh-actions-link]
 [![Appveyor build status][appveyor-image]][appveyor-link]
 [![Coverage status][codecov-image]][codecov-link]
 
@@ -75,8 +75,8 @@ This project is licensed under the [BSD 3-clause license](LICENSE).
 [pypi-link]: https://pypi.python.org/pypi/bfg9000
 [documentation-image]: https://img.shields.io/badge/docs-bfg9000-blue.svg
 [documentation-link]: https://jimporter.github.io/bfg9000/
-[travis-image]: https://travis-ci.org/jimporter/bfg9000.svg?branch=master
-[travis-link]: https://travis-ci.org/jimporter/bfg9000
+[gh-actions-image]: https://github.com/jimporter/bfg9000/workflows/build/badge.svg
+[gh-actions-link]: https://github.com/jimporter/bfg9000/actions?query=branch%3Amaster+workflow%3Abuild
 [appveyor-image]: https://ci.appveyor.com/api/projects/status/hxvbggf6exq8i2k6/branch/master?svg=true
 [appveyor-link]: https://ci.appveyor.com/project/jimporter/bfg9000/branch/master
 [codecov-image]: https://codecov.io/gh/jimporter/bfg9000/branch/master/graph/badge.svg

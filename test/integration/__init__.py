@@ -29,7 +29,7 @@ else:
         backends.remove('msbuild')
 
 # Also supported: 'gcj', 'mingw-cross'
-test_features = {'fortran', 'java', 'objc', 'scala'}
+test_features = {'fortran', 'java', 'objc', 'qt', 'scala'}
 for i in os.getenv('BFG_EXTRA_TESTS', '').split(' '):
     if i:
         test_features.add(i)
@@ -88,13 +88,14 @@ class SubprocessTestCase(TestCase):
                 target = target.path
             return target
 
-    def target_path(self, target):
+    def target_path(self, target, prefix=''):
         if isinstance(target, Target):
-            prefix = '.'
             if self.backend == 'msbuild':
-                prefix = 'Default'
                 if os.getenv('PLATFORM') == 'x64':
-                    prefix = os.path.join('x64', prefix)
+                    prefix = os.path.join(prefix, 'x64')
+                prefix = os.path.join(prefix, 'Default')
+            elif not prefix:
+                prefix = '.'
             return os.path.join(prefix, target.path)
         return target
 
@@ -134,12 +135,15 @@ class SubprocessTestCase(TestCase):
                 '{!r} exists'.format(os.path.normpath(realpath))
             )
 
-    def assertDirectory(self, path, contents):
+    def assertDirectory(self, path, contents, optional=[]):
         path = os.path.normpath(path)
         actual = set(os.path.normpath(os.path.join(path, base, f))
                      for base, dirs, files in os.walk(path) for f in files)
         expected = set(os.path.normpath(os.path.join(path, i))
                        for i in contents)
+        optional = set(os.path.normpath(os.path.join(path, i))
+                       for i in optional)
+        actual -= optional
         if actual != expected:
             missing = [os.path.relpath(i, path) for i in (expected - actual)]
             extra = [os.path.relpath(i, path) for i in (actual - expected)]

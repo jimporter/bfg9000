@@ -3,6 +3,7 @@ from . import *
 
 # MSBuild backend doesn't support generated_source yet.
 @skip_if_backend('msbuild')
+@skip_if('qt' not in test_features, 'skipping qt tests')
 class TestQt(IntegrationTest):
     def run_executable(self, exe):
         if env.host_platform.genus == 'linux':

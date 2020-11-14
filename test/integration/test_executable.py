@@ -19,21 +19,27 @@ class TestExecutable(IntegrationTest):
         self.assertOutput([executable('simple')], 'hello, world!\n')
 
     def test_default_and_clean(self):
+        def target_path(p, prefix=''):
+            return self.target_path(output_file(p), prefix)
+
         self.build()
         self.assertOutput([executable('simple')], 'hello, world!\n')
 
         self.clean()
+        common = {'.bfg_environ'}
         files = {
-            'ninja': {'.bfg_environ', '.ninja_deps', '.ninja_log',
-                      'build.ninja'},
-            'make': {'.bfg_environ', 'Makefile', pjoin('simple.int', '.dir')},
-            'msbuild': {
-                '.bfg_environ', '.bfg_uuid', 'simple.sln',
-                pjoin('simple', 'simple.vcxproj'),
-                pjoin('simple', 'Default', 'simple.Build.CppClean.log')
-            },
+            'ninja': [common | {'.ninja_deps', '.ninja_log', 'build.ninja'}],
+            'make': [common | {'Makefile', pjoin('simple.int', '.dir')}],
+            'msbuild': [common | {
+                '.bfg_uuid', 'simple.sln', pjoin('simple', 'simple.vcxproj'),
+                target_path('simple.Build.CppClean.log', prefix='simple'),
+            }, {
+                target_path('simple.exe.recipe', prefix='simple'),
+                target_path('simple.vcxproj.FileListAbsolute.txt',
+                            prefix='simple'),
+            }],
         }
-        self.assertDirectory('.', files[self.backend])
+        self.assertDirectory('.', *files[self.backend])
 
     @skip_if_backend('msbuild')
     def test_dist(self):
