@@ -8,31 +8,42 @@ from logging import getLogger, CRITICAL, ERROR, WARNING, INFO, DEBUG  # noqa
 
 from .safe_str import safe_string
 from .iterutils import tween
+from .platforms.host import platform_info
 
 
 class UserDeprecationWarning(DeprecationWarning):
     pass
 
 
-def _is_bfg_src(filename):
+def _path_within(path, parent):
     try:
-        rel = os.path.relpath(filename, os.path.dirname(__file__))
+        rel = os.path.relpath(path, parent)
     except ValueError:
         return False
     return not rel.startswith(os.pardir + os.sep)
+
+
+def _is_user_src(filename):
+    # On Windows, always treat paths within Python's exec_prefix as non-user
+    # paths. This lets us correctly identify things like runpy.py and
+    # setuptools wrappers as non-user.
+    if ( platform_info().family == 'windows' and
+         _path_within(filename, sys.exec_prefix) ):
+        return False
+    return not _path_within(filename, os.path.dirname(__file__))
 
 
 def _filter_stack(stack):
     # Find where the user's stack frames begin and end.
     gen = enumerate(stack)
     for start, line in gen:
-        if not _is_bfg_src(line[0]):
+        if _is_user_src(line[0]):
             break
     else:
         start = len(stack)
 
     for end, line in gen:
-        if _is_bfg_src(line[0]):
+        if not _is_user_src(line[0]):
             break
     else:
         end = len(stack)

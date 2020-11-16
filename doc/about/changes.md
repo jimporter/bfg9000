@@ -1,5 +1,14 @@
 # Changes
 
+## v0.7.0
+in progress
+{: .subtitle}
+
+### Bug fixes
+- Error reporting now shows the proper stack frames on Windows
+
+---
+
 ## v0.6.0
 2020-09-12
 {: .subtitle}

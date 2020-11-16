@@ -1,9 +1,11 @@
 import inspect
 import logging
+import ntpath
 import sys
 import traceback
 import warnings
 from io import StringIO
+from collections import namedtuple
 from unittest import mock
 
 from . import *
@@ -12,12 +14,39 @@ from bfg9000 import log, iterutils
 from bfg9000.path import Path
 from bfg9000.safe_str import safe_string
 
+MockPlatform = namedtuple('MockPlatform', ['family'])
+
 # Make sure we're referring to the .py file, not the .pyc file.
 this_file = __file__.rstrip('c')
 
 
 def current_lineno():
     return inspect.stack()[1][2]
+
+
+class TestIsUserSrc(TestCase):
+    def test_user(self):
+        self.assertTrue(log._is_user_src(this_file))
+
+    def test_internal(self):
+        iterutils_file = iterutils.__file__.rstrip('c')
+        self.assertFalse(log._is_user_src(iterutils_file))
+
+    def test_runpy(self):
+        with mock.patch('bfg9000.log.platform_info',
+                        return_value=MockPlatform('windows')), \
+             mock.patch('sys.exec_prefix', r'C:\Python'), \
+             mock.patch('os.path', ntpath):  # noqa
+            self.assertFalse(log._is_user_src(r'C:\Python\lib\runpy.py'))
+
+    def test_setuptools_wrapper(self):
+        with mock.patch('bfg9000.log.platform_info',
+                        return_value=MockPlatform('windows')), \
+             mock.patch('sys.exec_prefix', r'C:\Python'), \
+             mock.patch('os.path', ntpath):  # noqa
+            self.assertFalse(log._is_user_src(
+                r'C:\Python\Scripts\9k.exe\__main__.py'
+            ))
 
 
 class TestColoredStreamHandler(TestCase):
