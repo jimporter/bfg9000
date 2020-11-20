@@ -46,9 +46,6 @@ def mock_execute_requires(args, **kwargs):
 class TestPkgConfigPackage(ToolTestCase):
     tool_type = PkgConfig
 
-    def tearDown(self):
-        PkgConfigPackage._call._reset()
-
     def test_create(self):
         specifier = SpecifierSet('')
         with mock.patch('bfg9000.shell.execute', mock_execute):

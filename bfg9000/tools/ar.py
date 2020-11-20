@@ -5,13 +5,13 @@ from .. import options as opts, safe_str, shell
 from .common import library_macro, SimpleBuildCommand
 from ..file_types import StaticLibrary
 from ..iterutils import iterate
-from ..objutils import memoize
+from ..objutils import memoize_method
 from ..path import Path
 from ..versioning import detect_version
 
 
 class ArLinker(SimpleBuildCommand):
-    @memoize
+    @memoize_method
     def _check_version(self):
         try:
             output = self.env.execute(

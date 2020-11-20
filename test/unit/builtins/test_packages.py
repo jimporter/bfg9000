@@ -36,14 +36,18 @@ def mock_execute_cc(args, **kwargs):
         return '1.2.3\n'
     elif args[-1] == '--variable=pcfiledir':
         return '/path/to/pkg-config'
-    raise OSError('bad option')
+    raise OSError('bad option {}'.format(args))
 
 
 def mock_execute_msvc(args, **kwargs):
     if args[-1] == '-?':
         return ('Microsoft (R) C/C++ Optimizing Compiler Version ' +
                 '19.12.25831 for x86')
-    raise OSError('bad option')
+    elif args[-1] == '--modversion':
+        return '1.2.3\n'
+    elif args[-1] == '--variable=pcfiledir':
+        return '/path/to/pkg-config'
+    raise OSError('bad option {}'.format(args))
 
 
 class TestFramework(TestCase):

@@ -6,7 +6,7 @@ from . import tool
 from .common import SimpleCommand
 from .. import log, options as opts, shell
 from ..exceptions import PackageResolutionError, PackageVersionError
-from ..objutils import memoize
+from ..objutils import memoize_method
 from ..packages import Package, PackageKind
 from ..path import Path, Root
 from ..shell import posix as pshell
@@ -83,7 +83,7 @@ class PkgConfigPackage(Package):
         self.specifier = specifier
         self.static = kind == PackageKind.static
 
-    @memoize
+    @memoize_method
     def _call(self, *args, extra_env=None, **kwargs):
         final_env = dict(**self._env, **extra_env) if extra_env else self._env
         return self._pkg_config.run(*args, extra_env=final_env, **kwargs)
