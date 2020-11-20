@@ -29,7 +29,7 @@ else:
         backends.remove('msbuild')
 
 # Also supported: 'gcj', 'mingw-cross'
-test_features = {'fortran', 'java', 'objc', 'qt', 'scala'}
+test_features = {'boost', 'fortran', 'java', 'objc', 'qt', 'scala'}
 for i in os.getenv('BFG_EXTRA_TESTS', '').split(' '):
     if i:
         test_features.add(i)

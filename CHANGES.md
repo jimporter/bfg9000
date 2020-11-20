@@ -4,6 +4,7 @@
 
 ### Bug fixes
 - Error reporting now shows the proper stack frames on Windows
+- Fix detection of `clang-cl` compiler
 
 ---
 

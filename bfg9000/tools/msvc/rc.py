@@ -30,7 +30,7 @@ class MsvcRcBuilder(Builder):
 
     @staticmethod
     def check_command(env, command):
-        return env.execute(command + ['/?'], stdout=shell.Mode.pipe,
+        return env.execute(command + ['-?'], stdout=shell.Mode.pipe,
                            stderr=shell.Mode.devnull)
 
     @property

@@ -20,7 +20,7 @@ def mock_which(*args, **kwargs):
     return [os.path.abspath('/command')]
 
 
-def mock_execute(args, **kwargs):
+def mock_execute_cc(args, **kwargs):
     if args[-1] == '--version':
         return ('gcc (Ubuntu 5.4.0-6ubuntu1~16.04.9) 5.4.0 20160609\n' +
                 'Copyright (C) 2015 Free Software Foundation, Inc.\n')
@@ -32,13 +32,18 @@ def mock_execute(args, **kwargs):
         return '/\n'
     elif args[-1] == '--verbose':
         return 'SEARCH_DIR("/usr")\n'
-    elif args[-1] == '/?':
-        return ('Microsoft (R) C/C++ Optimizing Compiler Version ' +
-                '19.12.25831 for x86')
     elif args[-1] == '--modversion':
         return '1.2.3\n'
     elif args[-1] == '--variable=pcfiledir':
         return '/path/to/pkg-config'
+    raise OSError('bad option')
+
+
+def mock_execute_msvc(args, **kwargs):
+    if args[-1] == '-?':
+        return ('Microsoft (R) C/C++ Optimizing Compiler Version ' +
+                '19.12.25831 for x86')
+    raise OSError('bad option')
 
 
 class TestFramework(TestCase):
@@ -82,9 +87,11 @@ class TestFramework(TestCase):
             context['framework']('name', 'suffix')
 
 
-class TestPackage(BuiltinTest):
+class TestPackageCc(BuiltinTest):
+    mock_execute = staticmethod(mock_execute_cc)
+
     def test_name(self):
-        with mock.patch('bfg9000.shell.execute', mock_execute), \
+        with mock.patch('bfg9000.shell.execute', self.mock_execute), \
              mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('logging.log'):  # noqa
             pkg = self.context['package']('name')
@@ -94,7 +101,7 @@ class TestPackage(BuiltinTest):
             self.assertEqual(pkg.static, False)
 
     def test_version(self):
-        with mock.patch('bfg9000.shell.execute', mock_execute), \
+        with mock.patch('bfg9000.shell.execute', self.mock_execute), \
              mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('logging.log'):  # noqa
             pkg = self.context['package']('name', version='>1.0')
@@ -104,7 +111,7 @@ class TestPackage(BuiltinTest):
             self.assertEqual(pkg.static, False)
 
     def test_lang(self):
-        with mock.patch('bfg9000.shell.execute', mock_execute), \
+        with mock.patch('bfg9000.shell.execute', self.mock_execute), \
              mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('logging.log'):  # noqa
             pkg = self.context['package']('name', lang='c++')
@@ -114,7 +121,7 @@ class TestPackage(BuiltinTest):
             self.assertEqual(pkg.static, False)
 
     def test_kind(self):
-        with mock.patch('bfg9000.shell.execute', mock_execute), \
+        with mock.patch('bfg9000.shell.execute', self.mock_execute), \
              mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('logging.log'):  # noqa
             pkg = self.context['package']('name', kind='static')
@@ -128,7 +135,7 @@ class TestPackage(BuiltinTest):
         def mock_context():
             mock_obj = mock.patch.object
             with mock_obj(self.env, 'builder', wraps=self.env.builder) as m, \
-                 mock.patch('bfg9000.shell.execute', mock_execute), \
+                 mock.patch('bfg9000.shell.execute', self.mock_execute), \
                  mock.patch('bfg9000.shell.which', mock_which), \
                  mock.patch('logging.log'):  # noqa
                 yield m
@@ -171,6 +178,10 @@ class TestPackage(BuiltinTest):
             self.context['package']('name', kind='bad')
 
 
+class TestPackageMsvc(TestPackageCc):
+    mock_execute = staticmethod(mock_execute_msvc)
+
+
 class TestBoostPackage(TestCase):
     def _make_context(self, env):
         build = BuildInputs(env, Path('build.bfg', Root.srcdir))
@@ -210,7 +221,7 @@ class TestBoostPackage(TestCase):
         with mock.patch('bfg9000.builtins.packages._boost_version',
                         return_value=Version('1.23')), \
              mock.patch('bfg9000.shell.which', return_value=['command']), \
-             mock.patch('bfg9000.shell.execute', mock_execute), \
+             mock.patch('bfg9000.shell.execute', mock_execute_cc), \
              mock.patch('bfg9000.tools.cc.exists', mock_exists):  # noqa
             pkg = context['boost_package']('thread')
             self.assertEqual(pkg.name, 'boost(thread)')
@@ -224,11 +235,6 @@ class TestBoostPackage(TestCase):
         def mock_walk(top, variables=None):
             yield top, [top.append('boost-1.23/')], []
 
-        def mock_execute(*args, **kwargs):
-            if args[0][1] == '/?':
-                return 'cl.exe'
-            raise ValueError()
-
         def mock_exists(x):
             return bool(re.search(r'[/\\]boost[/\\]version.hpp$', x.string()))
 
@@ -236,7 +242,7 @@ class TestBoostPackage(TestCase):
              mock.patch('bfg9000.builtins.packages._boost_version',
                         return_value=Version('1.23')), \
              mock.patch('bfg9000.shell.which', return_value=['command']), \
-             mock.patch('bfg9000.shell.execute', mock_execute), \
+             mock.patch('bfg9000.shell.execute', mock_execute_msvc), \
              mock.patch('bfg9000.tools.msvc.exists', mock_exists):  # noqa
             pkg = context['boost_package']('thread')
             self.assertEqual(pkg.name, 'boost(thread)')
@@ -256,7 +262,7 @@ class TestBoostPackage(TestCase):
             yield top, [top.append('boost-1.23')], []
 
         def mock_execute(*args, **kwargs):
-            if args[0][1] == '/?':
+            if args[0][1] == '-?':
                 return 'cl.exe'
             raise ValueError()
 
@@ -265,7 +271,7 @@ class TestBoostPackage(TestCase):
 
         with mock.patch('bfg9000.builtins.find.walk', mock_walk), \
              mock.patch('bfg9000.shell.which', return_value=['command']), \
-             mock.patch('bfg9000.shell.execute', mock_execute), \
+             mock.patch('bfg9000.shell.execute', mock_execute_msvc), \
              mock.patch('bfg9000.tools.msvc.exists', mock_exists):  # noqa
             self.assertRaises(PackageResolutionError, context['boost_package'],
                               'thread')

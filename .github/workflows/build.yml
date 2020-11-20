@@ -17,7 +17,7 @@ jobs:
         include:
           - {os: ubuntu-latest, extra-tests: [mingw-cross],
              backends: [ninja, make], flags: -Wall -Werror}
-          - {os: windows-latest, msvc-version: '14.27', win-sdk: '10.0.18362.0',
+          - {os: windows-latest, msvc-version: '14.28', win-sdk: '10.0.18362.0',
              qt-version: '5.12.9', skipped-tests: [fortran, objc, scala],
              backends: [ninja, make, msbuild], flags: /WX}
           - {os: macos-latest, skipped-tests: [scala], backends: [ninja, make],
@@ -43,16 +43,23 @@ jobs:
 
           # VS 2019 x86 builds
           - {os: windows-latest, python-version: 3.8, compiler: default-x86,
-             msvc-version: '14.27', msvc-arch: 'x86', win-sdk: '10.0.18362.0',
+             msvc-version: '14.28', msvc-arch: 'x86', win-sdk: '10.0.18362.0',
              skipped-tests: [fortran, objc, qt, scala],
              backends: [ninja, make, msbuild], flags: /WX}
 
+          # VS 2019 clang-cl builds
+          - {os: windows-latest, python-version: 3.8, compiler: clang-cl,
+             msvc-version: '14.28', win-sdk: '10.0.18362.0',
+             qt-version: '5.12.9', skipped-tests: [boost, fortran, objc, scala],
+             backends: [ninja, make], flags: /WX -Wno-microsoft-include
+               -Wno-unused-command-line-argument -D_CRT_SECURE_NO_WARNINGS}
+
           # MinGW builds
           - {os: windows-latest, python-version: 3.8, compiler: mingw,
-             msvc-version: '14.27', win-sdk: '10.0.18362.0',
+             msvc-version: '14.28', win-sdk: '10.0.18362.0',
              qt-version: '5.15.1', qt-arch: 'win64_mingw81',
-             skipped-tests: [fortran, objc, scala], backends: [ninja, make],
-             flags: -Wall -Werror}
+             skipped-tests: [boost, fortran, objc, scala],
+             backends: [ninja, make], flags: -Wall -Werror}
         exclude:
           # Can't install Qt with Python 3.5
           - {os: windows-latest, python-version: 3.5}
@@ -136,12 +143,19 @@ jobs:
           robocopy libogg-1.3.4\include include *.h /E
           if(${LastExitCode} -le 7) { ${LastExitCode} = 0 }
 
+          # Set up environment variables.
           ${boostroot} = "${env:BOOST_ROOT_1_72_0}"
           echo "BOOST_INCLUDEDIR=${boostroot}\include" >> ${env:GITHUB_ENV}
           echo "BOOST_LIBRARYDIR=${boostroot}\lib" >> ${env:GITHUB_ENV}
+
+          if(${env:Qt5_DIR}) {
+            echo "CPATH=${env:Qt5_DIR}\include;${env:Qt5_DIR}\include\QtWidgets;${env:Qt5_DIR}\include\QtQml;${env:CPATH}" >> ${env:GITHUB_ENV}
+            ${env:LIBRARY_PATH} = "${env:LIBRARY_PATH};${env:Qt5_DIR}\lib"
+            ${env:PATH} = "${env:PATH};${env:Qt5_DIR}\lib"
+          }
+
           echo "CPPFLAGS=-I${pwd}\include ${env:CPPFLAGS}" >> ${env:GITHUB_ENV}
-          echo "CPATH=${env:Qt5_DIR}\include;${env:Qt5_DIR}\include\QtWidgets;${env:Qt5_DIR}\include\QtQml;${env:CPATH}" >> ${env:GITHUB_ENV}
-          echo "LIBRARY_PATH=${pwd}\lib;${env:Qt5_DIR}\lib;${env:LIBRARY_PATH}" >> ${env:GITHUB_ENV}
+          echo "LIBRARY_PATH=${env:LIBRARY_PATH};${pwd}\lib" >> ${env:GITHUB_ENV}
           echo "PATH=${env:PATH};${pwd}\lib;${env:Qt5_DIR}\lib" >> ${env:GITHUB_ENV}
       - name: Install macOS dependencies
         if: startsWith(matrix.os, 'macos-')
@@ -154,6 +168,11 @@ jobs:
         run: |
           echo "CC=clang" >> ${GITHUB_ENV}
           echo "CXX=clang++" >> ${GITHUB_ENV}
+      - name: Set up clang-cl
+        if: matrix.compiler == 'clang-cl'
+        run: |
+          echo "CC=clang-cl" >> ${env:GITHUB_ENV}
+          echo "CXX=clang-cl" >> ${env:GITHUB_ENV}
       - name: Set up mingw
         if: matrix.compiler == 'mingw'
         run: |

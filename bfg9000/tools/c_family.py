@@ -64,7 +64,7 @@ _windows_cmds = {
     'objc++': ['c++', 'g++', 'clang++'],
 }
 
-_builders = (cc.CcBuilder, msvc.MsvcBuilder)
+_builders = (msvc.MsvcBuilder, cc.CcBuilder)
 
 
 def _guess_candidates(env, lang):

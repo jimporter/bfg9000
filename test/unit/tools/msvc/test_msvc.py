@@ -71,6 +71,31 @@ class TestMsvcBuilder(CrossPlatformTestCase):
         self.assertEqual(cc.linker('shared_library').version,
                          Version('19.12.25831'))
 
+    def test_clang(self):
+        def mock_execute(args, **kwargs):
+            if args[-1] == '--version':
+                return 'clang version 10.0.0'
+
+        version = 'OVERVIEW: clang LLVM compiler'
+
+        with mock.patch('bfg9000.shell.which', mock_which), \
+             mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
+            cc = MsvcBuilder(self.env, known_langs['c++'], ['cl'], version)
+
+        self.assertEqual(cc.brand, 'clang')
+        self.assertEqual(cc.compiler.brand, 'clang')
+        self.assertEqual(cc.pch_compiler.brand, 'clang')
+        self.assertEqual(cc.linker('executable').brand, 'clang')
+        self.assertEqual(cc.linker('shared_library').brand, 'clang')
+
+        self.assertEqual(cc.version, Version('10.0.0'))
+        self.assertEqual(cc.compiler.version, Version('10.0.0'))
+        self.assertEqual(cc.pch_compiler.version, Version('10.0.0'))
+        self.assertEqual(cc.linker('executable').version,
+                         Version('10.0.0'))
+        self.assertEqual(cc.linker('shared_library').version,
+                         Version('10.0.0'))
+
     def test_unknown_brand(self):
         version = 'unknown'
 

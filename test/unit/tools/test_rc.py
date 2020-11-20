@@ -9,7 +9,7 @@ from bfg9000.tools import rc
 MockPlatform = namedtuple('MockPlatform', ['family'])
 
 
-def mock_execute(args, **kwargs):
+def mock_execute_cc(args, **kwargs):
     if args[-1] == '--version':
         return 'version\n'
     elif args[-1] == '-Wl,--version':
@@ -21,6 +21,13 @@ def mock_execute(args, **kwargs):
         return '/'
     elif args[-1] == '--verbose':
         return 'SEARCH_DIR("/usr")\n'
+    raise OSError('bad option')
+
+
+def mock_execute_msvc(args, **kwargs):
+    if args[-1] == '-?':
+        return 'Microsoft (R) Windows (R) Resource Compiler Version 10.0'
+    raise OSError('bad option')
 
 
 class TestRcBuilder(TestCase):
@@ -28,7 +35,7 @@ class TestRcBuilder(TestCase):
         env = make_env(platform='linux', clear_variables=True)
         with mock.patch('bfg9000.tools.rc.choose_builder') as m, \
              mock.patch('bfg9000.shell.which', return_value=['cmd']), \
-             mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
+             mock.patch('bfg9000.shell.execute', mock_execute_cc):  # noqa
             rc.rc_builder(env)
             m.assert_called_once_with(env, known_langs['rc'], rc._builders,
                                       candidates=['windres'])
@@ -37,7 +44,7 @@ class TestRcBuilder(TestCase):
         env = make_env(platform='winnt', clear_variables=True)
         with mock.patch('bfg9000.tools.rc.choose_builder') as m, \
              mock.patch('bfg9000.shell.which', return_value=['cmd']), \
-             mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
+             mock.patch('bfg9000.shell.execute', mock_execute_msvc):  # noqa
             rc.rc_builder(env)
             m.assert_called_once_with(env, known_langs['rc'], rc._builders,
                                       candidates=['rc', 'windres'])
@@ -55,7 +62,7 @@ class TestRcBuilder(TestCase):
                        variables={'CC': 'gcc-99'})
         with mock.patch('bfg9000.tools.rc.choose_builder') as m, \
              mock.patch('bfg9000.shell.which', return_value=['gcc-99']), \
-             mock.patch('bfg9000.shell.execute', mock_execute), \
+             mock.patch('bfg9000.shell.execute', mock_execute_cc), \
              mock.patch('bfg9000.log.info'):  # noqa
             rc.rc_builder(env)
             m.assert_called_once_with(env, known_langs['rc'], rc._builders,
@@ -77,7 +84,7 @@ class TestRcBuilder(TestCase):
                        variables={'CXX': 'g++-99'})
         with mock.patch('bfg9000.tools.rc.choose_builder') as m, \
              mock.patch('bfg9000.shell.which', return_value=['gcc-99']), \
-             mock.patch('bfg9000.shell.execute', mock_execute), \
+             mock.patch('bfg9000.shell.execute', mock_execute_cc), \
              mock.patch('bfg9000.log.info'):  # noqa
             rc.rc_builder(env)
             m.assert_called_once_with(env, known_langs['rc'], rc._builders,
@@ -88,7 +95,7 @@ class TestRcBuilder(TestCase):
                        variables={'CC': 'gcc'})
         with mock.patch('bfg9000.tools.rc.choose_builder') as m, \
              mock.patch('bfg9000.shell.which', return_value=['gcc']), \
-             mock.patch('bfg9000.shell.execute', mock_execute), \
+             mock.patch('bfg9000.shell.execute', mock_execute_cc), \
              mock.patch('bfg9000.log.info'):  # noqa
             rc.rc_builder(env)
             m.assert_called_once_with(env, known_langs['rc'], rc._builders,

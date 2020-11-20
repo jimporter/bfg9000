@@ -19,7 +19,8 @@ from ...versioning import detect_version
 
 class MsvcBuilder(Builder):
     def __init__(self, env, langinfo, command, version_output):
-        super().__init__(langinfo.name, *self._parse_brand(version_output))
+        brand, version = self._parse_brand(env, command, version_output)
+        super().__init__(langinfo.name, brand, version)
         self.object_format = env.target_platform.object_format
 
         name = langinfo.var('compiler').lower()
@@ -78,15 +79,21 @@ class MsvcBuilder(Builder):
         self.runner = None
 
     @staticmethod
-    def _parse_brand(version_output):
+    def _parse_brand(env, command, version_output):
         if 'Microsoft (R)' in version_output:
             return 'msvc', detect_version(version_output)
-        # XXX: Detect clang-cl.
+        elif 'clang LLVM compiler' in version_output:
+            real_version = env.execute(
+                command + ['--version'], stdout=shell.Mode.pipe,
+                stderr=shell.Mode.stdout
+            )
+            return 'clang', detect_version(real_version)
+
         return 'unknown', None
 
     @staticmethod
     def check_command(env, command):
-        return env.execute(command + ['/?'], stdout=shell.Mode.pipe,
+        return env.execute(command + ['-?'], stdout=shell.Mode.pipe,
                            stderr=shell.Mode.stdout)
 
     @property
