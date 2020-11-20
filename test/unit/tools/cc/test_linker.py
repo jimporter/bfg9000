@@ -147,13 +147,20 @@ class TestCcLinker(CrossPlatformTestCase):
             opts.lib(Library(lib, 'native'))
         )), ['-L' + libdir])
 
-        mingw_lib = self.Path('/path/to/lib/foo.lib')
+        if self.env.target_platform.family == 'windows':
+            mingw_lib = self.Path('/path/to/lib/foo.lib')
+            self.assertEqual(self.linker.flags(opts.option_list(
+                opts.lib(Library(mingw_lib, 'native'))
+            )), ['-L' + libdir])
+
+        # Non-standard library name
+        goofy_lib = self.Path('/path/to/lib/foo.goofy')
         self.assertEqual(self.linker.flags(opts.option_list(
-            opts.lib(Library(mingw_lib, 'native'))
+            opts.lib(Library(goofy_lib, 'native'))
         )), [])
         with self.assertRaises(ValueError):
             self.linker.flags(opts.option_list(
-                opts.lib(Library(mingw_lib, 'native'))
+                opts.lib(Library(goofy_lib, 'native'))
             ), mode='pkg-config')
 
         # Framework
@@ -330,13 +337,20 @@ class TestCcLinker(CrossPlatformTestCase):
             opts.lib(Library(lib, 'native'))
         )), ['-lfoo'])
 
-        mingw_lib = self.Path('/path/to/lib/foo.lib')
+        if self.env.target_platform.family == 'windows':
+            mingw_lib = self.Path('/path/to/lib/foo.lib')
+            self.assertEqual(self.linker.lib_flags(opts.option_list(
+                opts.lib(Library(mingw_lib, 'native'))
+            )), ['-lfoo'])
+
+        # Non-standard library name
+        goofy_lib = self.Path('/path/to/lib/foo.goofy')
         self.assertEqual(self.linker.lib_flags(opts.option_list(
-            opts.lib(Library(mingw_lib, 'native'))
-        )), [mingw_lib])
+            opts.lib(Library(goofy_lib, 'native'))
+        )), [goofy_lib])
         with self.assertRaises(ValueError):
             self.linker.lib_flags(opts.option_list(
-                opts.lib(Library(mingw_lib, 'native'))
+                opts.lib(Library(goofy_lib, 'native'))
             ), mode='pkg-config')
 
         # Framework

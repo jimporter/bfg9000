@@ -5,6 +5,7 @@
 ### Bug fixes
 - Error reporting now shows the proper stack frames on Windows
 - Fix detection of `clang-cl` compiler
+- MinGW can now use libraries of the form `name.lib`
 
 ---
 

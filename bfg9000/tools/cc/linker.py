@@ -35,6 +35,8 @@ class CcLinker(BuildCommand):
         if not self.env.target_platform.has_import_library:
             so_ext = re.escape(self.env.target_platform.shared_library_ext)
             lib_formats.append(r'lib(.*)' + so_ext)
+        if self.env.target_platform.family == 'windows':
+            lib_formats.append(r'(.*)\.lib')
         self._lib_re = re.compile('(?:' + '|'.join(lib_formats) + ')$')
 
     def _extract_lib_name(self, library):

@@ -31,6 +31,8 @@ def readPcFile(filename, field):
 
 
 class PkgConfigTest(IntegrationTest):
+    lib_suffix = '.dll' if is_mingw else ''
+
     def assertPkgConfig(self, args, result, **kwargs):
         self.assertEqual(pkg_config(args, **kwargs), result)
 
@@ -54,7 +56,6 @@ class PkgConfigTest(IntegrationTest):
 
 
 @skip_if_backend('msbuild')
-@skip_if(is_mingw, 'no libogg on mingw (yet)')
 class TestPkgConfig(PkgConfigTest):
     src_include = 'include'
 
@@ -75,9 +76,10 @@ class TestPkgConfig(PkgConfigTest):
                             '-I' + paths['include'] + extra_cflags)
 
             assertPkgConfig(['hello', '--libs-only-L'], '-L' + paths['lib'])
-            assertPkgConfig(['hello', '--libs-only-l'], '-lhello')
+            assertPkgConfig(['hello', '--libs-only-l'],
+                            '-lhello{}'.format(self.lib_suffix))
             assertPkgConfig(['hello', '--libs-only-l', '--static'],
-                            '-lhello -logg')
+                            '-lhello{} -logg'.format(self.lib_suffix))
             assertPkgConfig(['hello', '--libs-only-other'], '')
 
         self.build('pkg-config-hello')
@@ -92,12 +94,13 @@ class TestPkgConfig(PkgConfigTest):
 
         hello = os.path.join('pkgconfig', 'hello.pc')
         self.assertExists(hello)
-        self.assertEqual(readPcFile(hello, 'Libs'), "-L'${libdir}' -lhello")
+        self.assertEqual(readPcFile(hello, 'Libs'),
+                         "-L'${{libdir}}' -lhello{}".format(self.lib_suffix))
 
         hello_uninst = os.path.join('pkgconfig', 'hello-uninstalled.pc')
         self.assertExists(hello_uninst)
         self.assertEqual(readPcFile(hello_uninst, 'Libs'),
-                         "-L'${builddir}' -lhello")
+                         "-L'${{builddir}}' -lhello{}".format(self.lib_suffix))
 
         for u, paths in self._paths().items():
             assertPkgConfig = partial(self.assertPkgConfig, uninstalled=u)
@@ -107,9 +110,11 @@ class TestPkgConfig(PkgConfigTest):
                             '-I' + paths['include'] + extra_cflags)
 
             assertPkgConfig(['hello', '--libs-only-L'], '-L' + paths['lib'])
-            assertPkgConfig(['hello', '--libs-only-l'], '-lhello')
+            assertPkgConfig(['hello', '--libs-only-l'],
+                            '-lhello{}'.format(self.lib_suffix))
             assertPkgConfig(['hello', '--libs-only-l', '--static'],
-                            '-lhello -linner -logg')
+                            '-lhello{} -linner -logg'
+                            .format(self.lib_suffix))
             assertPkgConfig(['hello', '--libs-only-other'], '')
 
         self.build('pkg-config-hello')
@@ -183,7 +188,6 @@ class TestPkgConfig(PkgConfigTest):
 
 
 @skip_if_backend('msbuild')
-@skip_if(is_mingw, 'no libogg on mingw (yet)')
 class TestPkgConfigUsingSystemPkg(PkgConfigTest):
     src_include = 'include'
 
@@ -204,14 +208,14 @@ class TestPkgConfigUsingSystemPkg(PkgConfigTest):
             assertPkgConfig(['hello', '--cflags'], '-I' + paths['include'])
 
             assertPkgConfig(['hello', '--libs-only-L'], '-L' + paths['lib'])
-            assertPkgConfig(['hello', '--libs-only-l'], '-lhello')
+            assertPkgConfig(['hello', '--libs-only-l'],
+                            '-lhello{}'.format(self.lib_suffix))
             assertPkgConfig(['hello', '--libs-only-l', '--static'],
-                            '-lhello -logg')
+                            '-lhello{} -logg'.format(self.lib_suffix))
             assertPkgConfig(['hello', '--libs-only-other'], '')
 
 
 @skip_if_backend('msbuild')
-@skip_if(is_mingw, 'no libogg on mingw (yet)')
 class TestPkgConfigAuto(PkgConfigTest):
     src_include = ''
 
@@ -232,9 +236,10 @@ class TestPkgConfigAuto(PkgConfigTest):
                             '-I' + paths['include'] + extra_cflags)
 
             assertPkgConfig(['hello', '--libs-only-L'], '-L' + paths['lib'])
-            assertPkgConfig(['hello', '--libs-only-l'], '-lhello')
+            assertPkgConfig(['hello', '--libs-only-l'],
+                            '-lhello{}'.format(self.lib_suffix))
             assertPkgConfig(['hello', '--libs-only-l', '--static'],
-                            '-lhello -logg')
+                            '-lhello{} -logg'.format(self.lib_suffix))
             assertPkgConfig(['hello', '--libs-only-other'], '')
 
     # Dual-use libraries collide on MSVC.
@@ -244,12 +249,13 @@ class TestPkgConfigAuto(PkgConfigTest):
 
         hello = os.path.join('pkgconfig', 'hello.pc')
         self.assertExists(hello)
-        self.assertEqual(readPcFile(hello, 'Libs'), "-L'${libdir}' -lhello")
+        self.assertEqual(readPcFile(hello, 'Libs'),
+                         "-L'${{libdir}}' -lhello{}".format(self.lib_suffix))
 
         hello_uninst = os.path.join('pkgconfig', 'hello-uninstalled.pc')
         self.assertExists(hello_uninst)
         self.assertEqual(readPcFile(hello_uninst, 'Libs'),
-                         "-L'${builddir}' -lhello")
+                         "-L'${{builddir}}' -lhello{}".format(self.lib_suffix))
 
         for u, paths in self._paths().items():
             assertPkgConfig = partial(self.assertPkgConfig, uninstalled=u)
@@ -259,9 +265,11 @@ class TestPkgConfigAuto(PkgConfigTest):
                             '-I' + paths['include'] + extra_cflags)
 
             assertPkgConfig(['hello', '--libs-only-L'], '-L' + paths['lib'])
-            assertPkgConfig(['hello', '--libs-only-l'], '-lhello')
+            assertPkgConfig(['hello', '--libs-only-l'],
+                            '-lhello{}'.format(self.lib_suffix))
             assertPkgConfig(['hello', '--libs-only-l', '--static'],
-                            '-lhello -linner -logg')
+                            '-lhello{} -linner -logg'
+                            .format(self.lib_suffix))
             assertPkgConfig(['hello', '--libs-only-other'], '')
 
     def test_configure_static(self):
