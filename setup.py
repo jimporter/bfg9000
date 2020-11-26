@@ -108,7 +108,7 @@ try:
 
     class LintCommand(Flake8):
         def distribution_files(self):
-            return ['setup.py', 'bfg9000', 'examples', 'test']
+            return ['mkdocs.py', 'setup.py', 'bfg9000', 'examples', 'test']
 
     custom_cmds['lint'] = LintCommand
 except ImportError:
