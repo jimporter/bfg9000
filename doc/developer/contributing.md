@@ -53,5 +53,5 @@ command like so:
 $ python setup.py lint
 ```
 
-[new-issue]: https://github.com/jimporter/bfg9000/issues/new
+[new-issue]: {{ config.repo_url }}issues/new
 [flake8]: https://flake8.readthedocs.org/en/latest/

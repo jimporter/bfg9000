@@ -65,5 +65,5 @@ Context objects contain all the necessary data to manage the internal state
 corresponding to a bfg script. These can be used by builtins to work with the
 environment, add build steps to the graph, etc.
 
-[github-issue-48]: https://github.com/jimporter/bfg9000/issues/48
-[builtins]: https://github.com/jimporter/bfg9000/tree/master/bfg9000/builtins
+[github-issue-48]: {{ config.repo_url }}issues/48
+[builtins]: {{ repo_src_url }}bfg9000/builtins

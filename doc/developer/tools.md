@@ -37,5 +37,5 @@ Get the tool named *name*, passing *env* to the tool type.
 
 Get the name of the tool specified to run files with language *lang*.
 
-[github-issue-48]: https://github.com/jimporter/bfg9000/issues/48
-[tools]: https://github.com/jimporter/bfg9000/tree/master/bfg9000/tools
+[github-issue-48]: {{ config.repo_url }}issues/48
+[tools]: {{ repo_src_url }}bfg9000/tools
