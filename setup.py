@@ -156,16 +156,16 @@ setup(
         'License :: OSI Approved :: BSD License',
 
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
     ],
 
     packages=find_packages(exclude=['test', 'test.*']),
 
     install_requires=(
-        ['colorama', 'packaging >= 17.0', 'setuptools'] + more_requires
+        ['colorama', 'setuptools', 'verspec'] + more_requires
     ),
     extras_require={
         'dev': ['coverage', 'flake8 >= 3.7', 'lxml', 'mike >= 0.3.1',

@@ -11,7 +11,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: [3.5, 3.6, 3.7, 3.8]
+        python-version: [3.6, 3.7, 3.8, 3.9]
         compiler: [default]
 
         include:
@@ -60,10 +60,6 @@ jobs:
              qt-version: '5.15.1', qt-arch: 'win64_mingw81',
              skipped-tests: [boost, fortran, objc, scala],
              backends: [ninja, make], flags: -Wall -Werror}
-        exclude:
-          # Can't install Qt with Python 3.5
-          - {os: windows-latest, python-version: 3.5}
-          - {os: macos-latest, python-version: 3.5}
       fail-fast: false
     env:
       GCJ: gcj-4.9
@@ -243,10 +239,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - name: Set up Python 3.8
+      - name: Set up Python 3.9
         uses: actions/setup-python@v1
         with:
-          python-version: 3.8
+          python-version: 3.9
       - name: Install dependencies
         run: |
           pip install '.[test]'

@@ -2,10 +2,14 @@
 
 ## v0.7.0 (in progress)
 
+### Breaking changes
+- Require Python 3.6+
+
 ### Bug fixes
 - Error reporting now shows the proper stack frames on Windows
 - Fix detection of `clang-cl` compiler
 - MinGW can now use libraries of the form `name.lib`
+- Replace `packaging` dependency with `verspec` for future stability
 
 ---
 

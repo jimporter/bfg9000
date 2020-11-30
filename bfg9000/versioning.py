@@ -1,13 +1,8 @@
 import platform
 import re
 from itertools import chain
-from packaging.specifiers import (
-    LegacySpecifier as Specifier, Specifier as PythonSpecifier,
-    SpecifierSet as PythonSpecifierSet
-)
-from packaging.version import (
-    Version as PythonVersion, LegacyVersion as Version
-)
+from verspec.loose import Version, Specifier, SpecifierSet
+from verspec.python import PythonVersion, PythonSpecifier, PythonSpecifierSet
 
 from .app_version import version as bfg_version
 from .exceptions import VersionError
@@ -21,18 +16,6 @@ __all__ = ['bfg_version', 'check_version', 'detect_version', 'python_version',
 bfg_version = PythonVersion(bfg_version)
 # Strip trailing "+" from Python version. Some versions in distros have this...
 python_version = PythonVersion(re.sub(r'\+$', '', platform.python_version()))
-
-
-# Use a LegacySpecifierSet instead once packaging.specifiers has it. See
-# <https://github.com/pypa/packaging/pull/92>.
-class SpecifierSet(PythonSpecifierSet):
-    def __init__(self, specifiers=''):
-        specifiers = [s.strip() for s in specifiers.split(',') if s.strip()]
-        parsed = set()
-        for specifier in specifiers:
-            parsed.add(Specifier(specifier))
-        self._specs = frozenset(parsed)
-        self._prereleases = None
 
 
 def simplify_specifiers(spec):
