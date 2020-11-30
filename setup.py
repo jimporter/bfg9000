@@ -128,18 +128,13 @@ with open(os.path.join(root_dir, 'README.md'), 'r') as f:
     # Read from the file and strip out the badges.
     long_desc = re.sub(r'(^# bfg9000.*)\n\n(.+\n)*', r'\1', f.read())
 
-try:
-    import pypandoc
-    long_desc = pypandoc.convert_text(long_desc, 'rst', format='md')
-except ImportError:
-    pass
-
 setup(
     name='bfg9000',
     version=version,
 
     description='A cross-platform build file generator',
     long_description=long_desc,
+    long_description_content_type='text/markdown',
     keywords='build file generator',
     url='https://jimporter.github.io/bfg9000/',
 
@@ -169,8 +164,7 @@ setup(
     ),
     extras_require={
         'dev': ['coverage', 'flake8 >= 3.7', 'lxml', 'mike >= 0.3.1',
-                'mkdocs-bootswatch', 'mkdocs-macros-plugin', 'pypandoc >= 1.4',
-                'stdeb'],
+                'mkdocs-bootswatch', 'mkdocs-macros-plugin', 'stdeb'],
         'test': ['coverage', 'flake8 >= 3.7', 'lxml'],
         'msbuild': ['lxml'],
     },
