@@ -24,38 +24,38 @@ jobs:
              flags: -Wall -Werror -DGL_SILENCE_DEPRECATION}
 
           # Clang builds
-          - {os: ubuntu-latest, python-version: 3.8, extra-tests: [mingw-cross],
+          - {os: ubuntu-latest, python-version: 3.9, extra-tests: [mingw-cross],
              # Install gfortran-10 and gobjc++-10 since clang will try to link
              # to GCC 10 libs and will get confused otherwise.
              extra-packages: [clang, gfortran-10, gobjc++-10],
              compiler: clang, backends: [ninja, make], flags: -Wall -Werror}
 
           # Xenial builds (for testing GCJ)
-          - {os: ubuntu-16.04, python-version: 3.8, compiler: default,
+          - {os: ubuntu-16.04, python-version: 3.9, compiler: default,
              extra-packages: [gcj-4.9, gcj-4.9-jdk],
              extra-tests: [mingw-cross, gcj], backends: [ninja, make]}
 
           # VS 2017 builds
-          - {os: windows-2016, python-version: 3.8, compiler: default,
+          - {os: windows-2016, python-version: 3.9, compiler: default,
              msvc-version: '14.16', win-sdk: '10.0.17763.0',
              qt-version: '5.12.9', skipped-tests: [fortran, objc, scala],
              backends: [ninja, make, msbuild], flags: /WX}
 
           # VS 2019 x86 builds
-          - {os: windows-latest, python-version: 3.8, compiler: default-x86,
+          - {os: windows-latest, python-version: 3.9, compiler: default-x86,
              msvc-version: '14.28', msvc-arch: 'x86', win-sdk: '10.0.18362.0',
              skipped-tests: [fortran, objc, qt, scala],
              backends: [ninja, make, msbuild], flags: /WX}
 
           # VS 2019 clang-cl builds
-          - {os: windows-latest, python-version: 3.8, compiler: clang-cl,
+          - {os: windows-latest, python-version: 3.9, compiler: clang-cl,
              msvc-version: '14.28', win-sdk: '10.0.18362.0',
              qt-version: '5.12.9', skipped-tests: [boost, fortran, objc, scala],
              backends: [ninja, make], flags: /WX -Wno-microsoft-include
                -Wno-unused-command-line-argument -D_CRT_SECURE_NO_WARNINGS}
 
           # MinGW builds
-          - {os: windows-latest, python-version: 3.8, compiler: mingw,
+          - {os: windows-latest, python-version: 3.9, compiler: mingw,
              msvc-version: '14.28', win-sdk: '10.0.18362.0',
              qt-version: '5.15.1', qt-arch: 'win64_mingw81',
              skipped-tests: [boost, fortran, objc, scala],
@@ -224,10 +224,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - name: Set up Python 3.8
+      - name: Set up Python 3.9
         uses: actions/setup-python@v1
         with:
-          python-version: 3.8
+          python-version: 3.9
       - name: Test bdist_wheel
         run: |
           pip install wheel
