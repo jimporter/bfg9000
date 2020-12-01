@@ -48,7 +48,7 @@ custom_cmds = {
 }
 
 try:
-    from packaging.version import Version
+    from verspec.python import Version
 
     class DocServe(Command):
         description = 'serve the documentation locally'

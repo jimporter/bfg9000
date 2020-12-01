@@ -57,10 +57,9 @@ The default is the backend with the highest priority that's also "valid" (i.e.
 
 ### backend.version() { #backend-version }
 
-Return the version (as a [*packaging.LegacyVersion*][packaging-legacy-version]
-object -- also aliased as `bfg9000.versioning.Version`) of this build backend's
-underlying tool. If the tool can't be found (or is otherwise broken), this
-returns *None*.
+Return the version (as a [*verspec.loose.Version*][verspec] object -- also
+aliased as `bfg9000.versioning.Version`) of this build backend's underlying
+tool. If the tool can't be found (or is otherwise broken), this returns *None*.
 
 [entry-point]: https://setuptools.readthedocs.io/en/latest/setuptools.html#dynamic-discovery-of-services-and-plugins
-[packaging-legacy-version]: https://packaging.pypa.io/en/latest/version/#packaging.version.LegacyVersion
+[verspec]: https://github.com/jimporter/verspec/
