@@ -1,5 +1,4 @@
 import os
-import warnings
 from collections import abc
 from contextlib import contextmanager
 from itertools import chain
@@ -97,14 +96,6 @@ def source_file(context, name, lang=None, *, dist=True):
     return static_file(context, SourceFile, path, dist, [('lang', lang)])
 
 
-# TODO: remove this after 0.6 is released.
-@builtin.function()
-@builtin.type(SourceFile)
-def resource_file(context, name, lang=None, *, dist=True):  # pragma: no cover
-    warnings.warn("'resource_file' is deprecated; use 'source_file' instead")
-    return source_file(context, name, lang, dist=dist)
-
-
 @builtin.function()
 @builtin.type(HeaderFile)
 def header_file(context, name, lang=None, *, dist=True):
@@ -149,10 +140,6 @@ def auto_file(context, name, lang=None, *, dist=True):
 def _find(context, path, include, **kwargs):
     if not include:
         return None
-
-    # TODO: Remove this after 0.6 is released.
-    if '0.5.9' in context.build['required_version']:
-        return context['find_files'](path, include, **kwargs)
 
     patterns = [path.append(i) for i in iterate(include)]
     return context['find_files'](patterns, **kwargs)

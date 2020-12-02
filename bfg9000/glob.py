@@ -1,22 +1,13 @@
 import fnmatch
 import re
 from collections import namedtuple
-from enum import Enum
+from enum import Enum, Flag
 from itertools import zip_longest
 
-try:
-    from enum import Flag
-except ImportError:
-    from enum import IntEnum as Flag
-
+from .exceptions import NonGlobError
 from .iterutils import find_index, list_view
 from .objutils import objectify
 from .path import Path, Root
-
-
-# TODO: Remove this after 0.6 is released?
-class NonGlobError(ValueError):
-    pass
 
 
 class Glob:

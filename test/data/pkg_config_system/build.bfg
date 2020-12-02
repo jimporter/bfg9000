@@ -1,6 +1,5 @@
 # -*- python -*-
 
-bfg9000_required_version('>=0.6.0')
 project('hello', '1.0')
 
 ogg = package('ogg')

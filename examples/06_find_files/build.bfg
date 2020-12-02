@@ -1,10 +1,5 @@
 # -*- python -*-
 
-# In order to use the new-style find_files() API, we need to declare that our
-# script requires bfg9000 v0.6 or greater. Otherwise, we'll get the old API.
-
-bfg9000_required_version('>=0.6.0')
-
 # For projects with many files (or lazy developers!), it can be bothersome to
 # have to list every source file explicitly. In cases like this, the
 # find_files() function comes in handy. It takes a glob pattern and searches

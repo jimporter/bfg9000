@@ -1,11 +1,6 @@
 import enum
 from collections import namedtuple
 
-try:
-    from enum import Flag
-except ImportError:
-    from enum import IntEnum as Flag
-
 from . import path, safe_str
 from .iterutils import isiterable
 from .file_types import *
@@ -200,7 +195,7 @@ class OptionEnum(enum.Enum):
         return self.name
 
 
-class OptionFlag(Flag):
+class OptionFlag(enum.Flag):
     def __repr__(self):
         return self.name
 

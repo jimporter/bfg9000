@@ -1,7 +1,5 @@
 # -*- python -*-
 
-bfg9000_required_version('>=0.6.0')
-
 opts = ['-s'] if env.target_platform.genus == 'linux' else []
 ogg = package('ogg')
 

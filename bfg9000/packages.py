@@ -1,7 +1,4 @@
-try:
-    from enum import EnumMeta as _EnumMeta, Flag as _Flag
-except ImportError:
-    from enum import EnumMeta as _EnumMeta, IntEnum as _Flag
+from enum import EnumMeta as _EnumMeta, Flag as _Flag
 
 from .iterutils import listify as _listify
 from .options import option_list as _option_list

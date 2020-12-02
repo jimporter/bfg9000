@@ -1,17 +1,15 @@
 import re
-import warnings
 from enum import Enum
 from functools import reduce
-from itertools import product
 
 from . import builtin
-from ..glob import NameGlob, NonGlobError, PathGlob
+from ..glob import NameGlob, PathGlob
 from ..iterutils import iterate, listify
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..backends.make.syntax import Writer, Syntax
 from ..build_inputs import build_input
-from ..path import exists, isdir, Path, Root, walk, uniquetrees
+from ..path import Path, Root, walk, uniquetrees
 from ..platforms import known_platforms
 
 build_input('find_dirs')(lambda build_inputs, env: set())
@@ -141,11 +139,17 @@ def find(env, pattern, type=None, extra=None, exclude=None):
     return results
 
 
-def _find_files_common(context, file_filter, file_type=None, dir_type=None,
-                       dist=True, cache=True):
+@builtin.function()
+def find_files(context, pattern, *, type=None, extra=None, exclude=None,
+               filter=None, file_type=None, dir_type=None, dist=True,
+               cache=True):
     types = {'f': file_type or context['auto_file'],
              'd': dir_type or context['directory']}
     extra_types = {'f': context['generic_file'], 'd': context['directory']}
+
+    pattern = [context['relpath'](i) for i in iterate(pattern)]
+    exclude = context.build['project']['find_exclude'] + listify(exclude)
+    file_filter = FileFilter(pattern, type, extra, exclude, filter)
 
     found, seen_dirs = [], []
     for path, matched in _find_files(context.env, file_filter, seen_dirs):
@@ -158,60 +162,6 @@ def _find_files_common(context, file_filter, file_type=None, dir_type=None,
         context.build['find_dirs'].update(seen_dirs)
         context.build['regenerate'].depfile = depfile_name
     return found
-
-
-def _find_files_new(context, pattern, *, type=None, extra=None, exclude=None,
-                    filter=None, **kwargs):
-    pattern = [context['relpath'](i) for i in iterate(pattern)]
-    exclude = context.build['project']['find_exclude'] + listify(exclude)
-    file_filter = FileFilter(pattern, type, extra, exclude, filter)
-
-    return _find_files_common(context, file_filter, **kwargs)
-
-
-# TODO: Remove this after 0.6 is released.
-def _find_files_old(context, path='.', name='*', type='*', extra=None,
-                    exclude=['.*#', '*~', '#*#'], filter=None, flat=False,
-                    file_type=None, dir_type=None, dist=True, cache=True):
-    warnings.warn('using v0.5 compatibility mode for find_files API')
-    types = {'f': file_type or context['auto_file'],
-             'd': dir_type or context['directory']}
-
-    def make_pattern(path, name):
-        return path.append(name) if flat else path.append('**').append(name)
-
-    def make_file(path):
-        if isdir(path, context.env.base_dirs):
-            return types['d'](path, dist=dist)
-        return types['f'](path, dist=dist)
-
-    path = [context['relpath'](i) for i in iterate(path)]
-    pattern = [make_pattern(p, n) for p, n in product(path, iterate(name))]
-    try:
-        file_filter = FileFilter(pattern, type, extra, exclude, filter)
-    except NonGlobError:
-        return [make_file(i) for i in pattern
-                if exists(i, context.env.base_dirs)]
-
-    # Match against the root paths we're searching, since the old
-    # implementation did that.
-    name_glob = NameGlob(name, type)
-    found = []
-    for i in path:
-        i = i.as_directory()
-        if name_glob.match(i):
-            found.append(make_file(i))
-
-    found.extend(_find_files_common(context, file_filter, file_type, dir_type,
-                                    dist, cache))
-    return found
-
-
-@builtin.function()
-def find_files(context, *args, **kwargs):
-    if '0.5.9' in context.build['required_version']:
-        return _find_files_old(context, *args, **kwargs)
-    return _find_files_new(context, *args, **kwargs)
 
 
 @builtin.function()

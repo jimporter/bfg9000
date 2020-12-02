@@ -42,11 +42,9 @@ def mock_filesystem():
 
     with mock.patch('os.listdir', mock_listdir) as a, \
          mock.patch('bfg9000.path.exists', mock_exists) as b, \
-         mock.patch('bfg9000.builtins.find.exists', mock_exists) as c, \
-         mock.patch('bfg9000.path.isdir', mock_isdir) as d, \
-         mock.patch('bfg9000.builtins.find.isdir', mock_isdir) as e, \
-         mock.patch('bfg9000.path.islink', return_value=False) as f:  # noqa
-        yield a, b, c, d, e, f
+         mock.patch('bfg9000.path.isdir', mock_isdir) as c, \
+         mock.patch('bfg9000.path.islink', return_value=False) as d:  # noqa
+        yield a, b, c, d
 
 
 class TestFindResult(TestCase):
@@ -273,7 +271,6 @@ class TestFind(FindTestCase):
 class TestFindFiles(FindTestCase):
     def setUp(self):
         super().setUp()
-        self.context['bfg9000_required_version']('>=0.6.0')
         self.find = self.context['find_files']
         self.dist = []
 
@@ -513,60 +510,3 @@ class TestFindPaths(TestFindFiles):
 
     def assertFoundResult(self, result, expected):
         self.assertPathListEqual(result, [i.path for i in expected])
-
-
-class TestFindFilesOld(FindTestCase):
-    def setUp(self):
-        super().setUp()
-        self.find = self.context['find_files']
-        self.dist = []
-
-    def assertFoundResult(self, result, expected):
-        self.assertEqual(result, expected)
-
-    def assertFound(self, result, expected, *, pre=[], post=[]):
-        self.assertFoundResult(result, expected)
-        self.dist = uniques(self.dist + pre + expected + post)
-        self.assertEqual(list(self.build.sources()),
-                         [self.bfgfile] + self.dist)
-
-    def test_default(self):
-        expected = [Directory(srcpath('.')),
-                    Directory(srcpath('dir')),
-                    Directory(srcpath('dir2')),
-                    SourceFile(srcpath('file.cpp'), 'c++'),
-                    Directory(srcpath('dir/sub')),
-                    File(srcpath('dir/file2.txt'))]
-        with mock.patch('warnings.warn') as m:
-            self.assertFound(self.find(), expected)
-            self.assertEqual(m.call_count, 1)
-
-    def test_path(self):
-        expected = [Directory(srcpath('dir')),
-                    Directory(srcpath('dir/sub')),
-                    File(srcpath('dir/file2.txt'))]
-        with mock.patch('warnings.warn') as m:
-            self.assertFound(self.find('dir'), expected)
-            self.assertEqual(m.call_count, 1)
-
-    def test_name(self):
-        expected = [SourceFile(srcpath('file.cpp'), 'c++'),
-                    File(srcpath('dir/file2.txt'))]
-        with mock.patch('warnings.warn') as m:
-            self.assertFound(self.find(name='file*'), expected)
-            self.assertEqual(m.call_count, 1)
-
-    def test_non_glob(self):
-        with mock.patch('warnings.warn') as m:
-            self.assertFound(self.find('dir', 'file2.txt', flat=True),
-                             [File(srcpath('dir/file2.txt'))])
-            self.assertEqual(m.call_count, 1)
-
-        with mock.patch('warnings.warn') as m:
-            self.assertFound(self.find('dir', 'file3.txt', flat=True), [])
-            self.assertEqual(m.call_count, 1)
-
-        with mock.patch('warnings.warn') as m:
-            self.assertFound(self.find('dir', 'sub', flat=True),
-                             [Directory(srcpath('dir/sub'))])
-            self.assertEqual(m.call_count, 1)

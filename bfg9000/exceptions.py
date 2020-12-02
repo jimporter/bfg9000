@@ -15,3 +15,7 @@ class PackageVersionError(PackageResolutionError, VersionError):
 
 class ToolNotFoundError(LookupError):
     pass
+
+
+class NonGlobError(ValueError):
+    pass
