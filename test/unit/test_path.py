@@ -64,7 +64,7 @@ class TestPath(PathTestCase):
         p = self.Path('foo/bar/../.', path.Root.srcdir)
         self.assertEqual(p.suffix, 'foo')
         self.assertEqual(p.root, path.Root.srcdir)
-        self.assertEqual(p.directory, False)
+        self.assertEqual(p.directory, True)
         self.assertEqual(p.destdir, False)
         self.assertEqual(p.has_drive(), False)
 
@@ -401,7 +401,7 @@ class TestPath(PathTestCase):
         self.assertPathEqual(p.append(r'bar\baz'),
                              self.Path('foo/bar/baz', Root.srcdir))
 
-        self.assertPathEqual(p.append('.'), self.Path('foo', Root.srcdir))
+        self.assertPathEqual(p.append('.'), self.Path('foo/', Root.srcdir))
         self.assertPathEqual(p.append('..'), self.Path('', Root.srcdir))
         self.assertPathEqual(p.append('../bar'), self.Path('bar', Root.srcdir))
         self.assertPathEqual(p.append(r'..\bar'),

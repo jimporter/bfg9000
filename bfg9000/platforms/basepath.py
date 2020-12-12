@@ -79,12 +79,10 @@ class BasePath(safe_str.safe_string):
 
     @staticmethod
     def __normpath(path):
-        # A path counts as a directory if either its raw form or its normalized
-        # form ends with `\` or `/`.
         path = path.replace('\\', '/')
-        isdir = path.endswith(posixpath.sep)
+        isdir = posixpath.basename(path) in ('', posixpath.curdir,
+                                             posixpath.pardir)
         path = posixpath.normpath(path)
-        isdir = isdir or path.endswith(posixpath.sep)
         if path == posixpath.curdir:
             path = ''
         return path, isdir

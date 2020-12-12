@@ -10,6 +10,7 @@
 - Fix detection of `clang-cl` compiler
 - MinGW can now use libraries of the form `name.lib`
 - Replace `packaging` dependency with `verspec` for future stability
+- Paths with basenames of `.` or `..` are now treated as directories
 
 ---
 
