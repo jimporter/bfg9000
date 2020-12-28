@@ -159,6 +159,7 @@ setup(
 
     packages=find_packages(exclude=['test', 'test.*']),
 
+    python_requires='>=3.6',
     install_requires=(
         ['colorama', 'setuptools', 'verspec'] + more_requires
     ),
