@@ -59,36 +59,41 @@ class TestRcBuilder(TestCase):
 
     def test_guess_sibling(self):
         env = make_env(platform='linux', clear_variables=True,
-                       variables={'CC': 'gcc-99'})
+                       variables={'CC': 'i686-w64-mingw32-gcc-99'})
         with mock.patch('bfg9000.tools.rc.choose_builder') as m, \
-             mock.patch('bfg9000.shell.which', return_value=['gcc-99']), \
+             mock.patch('bfg9000.shell.which',
+                        return_value=['i686-w64-mingw32-gcc-99']), \
              mock.patch('bfg9000.shell.execute', mock_execute_cc), \
              mock.patch('bfg9000.log.info'):  # noqa
             rc.rc_builder(env)
             m.assert_called_once_with(env, known_langs['rc'], rc._builders,
-                                      candidates='windres-99', strict=True)
+                                      candidates='i686-w64-mingw32-windres',
+                                      strict=True)
 
     def test_guess_sibling_nonexist(self):
         env = make_env(platform='linux', clear_variables=True,
-                       variables={'CC': 'gcc-99'})
+                       variables={'CC': 'i686-w64-mingw32-gcc-99'})
         with mock.patch('bfg9000.tools.rc.choose_builder') as m, \
              mock.patch('bfg9000.shell.which', side_effect=IOError()), \
              mock.patch('bfg9000.log.info'), \
              mock.patch('warnings.warn'):  # noqa
             rc.rc_builder(env)
             m.assert_called_once_with(env, known_langs['rc'], rc._builders,
-                                      candidates='windres-99', strict=True)
+                                      candidates='i686-w64-mingw32-windres',
+                                      strict=True)
 
     def test_guess_sibling_indirect(self):
         env = make_env(platform='linux', clear_variables=True,
-                       variables={'CXX': 'g++-99'})
+                       variables={'CXX': 'i686-w64-mingw32-g++-99'})
         with mock.patch('bfg9000.tools.rc.choose_builder') as m, \
-             mock.patch('bfg9000.shell.which', return_value=['gcc-99']), \
+             mock.patch('bfg9000.shell.which',
+                        return_value=['i686-w64-mingw32-gcc-99']), \
              mock.patch('bfg9000.shell.execute', mock_execute_cc), \
              mock.patch('bfg9000.log.info'):  # noqa
             rc.rc_builder(env)
             m.assert_called_once_with(env, known_langs['rc'], rc._builders,
-                                      candidates='windres-99', strict=True)
+                                      candidates='i686-w64-mingw32-windres',
+                                      strict=True)
 
     def test_guess_sibling_matches_default(self):
         env = make_env(platform='linux', clear_variables=True,
@@ -108,7 +113,7 @@ class TestRcBuilder(TestCase):
             return mock.MagicMock()
 
         env = make_env(platform='linux', clear_variables=True,
-                       variables={'CC': 'gcc-99'})
+                       variables={'CC': 'i686-w64-mingw32-gcc-99'})
         with mock.patch('bfg9000.tools.rc.choose_builder',
                         side_effect=mock_choose_builder) as m, \
              mock.patch('bfg9000.log.info'), \
@@ -116,7 +121,7 @@ class TestRcBuilder(TestCase):
             rc.rc_builder(env)
             self.assertEqual(m.mock_calls, [
                 mock.call(env, known_langs['rc'], rc._builders,
-                          candidates='windres-99', strict=True),
+                          candidates='i686-w64-mingw32-windres', strict=True),
                 mock.call(env, known_langs['rc'], rc._builders,
                           candidates=['windres']),
             ])

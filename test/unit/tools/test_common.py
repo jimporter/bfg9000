@@ -1,3 +1,4 @@
+import re
 from unittest import mock
 
 from .. import *
@@ -53,6 +54,71 @@ class TestLibraryMacro(TestCase):
                          'LIB_1_LIBFOO_EXPORTS')
         self.assertEqual(common.library_macro('1/libfoo', 'static_library'),
                          'LIB_1_LIBFOO_STATIC')
+
+
+class TestMakeCommandConverter(TestCase):
+    def test_simple(self):
+        converter = common.make_command_converter([('gcc', 'g++')])
+        self.assertEqual(converter('gcc'), 'g++')
+        self.assertEqual(converter('foo-gcc'), 'foo-g++')
+        self.assertEqual(converter('gcc-foo'), 'g++-foo')
+
+        self.assertEqual(converter('foo'), None)
+        self.assertEqual(converter('foogcc'), None)
+        self.assertEqual(converter('gccfoo'), None)
+
+    def test_order(self):
+        converter = common.make_command_converter([
+            ('clang-cl', 'clang-cl++'),
+            ('clang', 'clang++'),
+        ])
+
+        self.assertEqual(converter('clang'), 'clang++')
+        self.assertEqual(converter('foo-clang'), 'foo-clang++')
+        self.assertEqual(converter('clang-foo'), 'clang++-foo')
+
+        self.assertEqual(converter('clang-cl'), 'clang-cl++')
+        self.assertEqual(converter('foo-clang-cl'), 'foo-clang-cl++')
+        self.assertEqual(converter('clang-cl-foo'), 'clang-cl++-foo')
+
+        self.assertEqual(converter('foo'), None)
+
+    def test_regex(self):
+        converter = common.make_command_converter([
+            (re.compile(r'gcc(?:-[\d.]+)?(?:-(?:posix|win32))?'), 'windres'),
+        ])
+
+        self.assertEqual(converter('gcc'), 'windres')
+        self.assertEqual(converter('gcc-9.1'), 'windres')
+        self.assertEqual(converter('gcc-posix'), 'windres')
+        self.assertEqual(converter('gcc-win32'), 'windres')
+        self.assertEqual(converter('gcc-9.1-posix'), 'windres')
+        self.assertEqual(converter('gcc-9.1-win32'), 'windres')
+        self.assertEqual(converter('i686-w64-mingw32-gcc-9.1-win32'),
+                         'i686-w64-mingw32-windres')
+
+    def test_pair(self):
+        c_to_cxx, cxx_to_c = common.make_command_converter_pair([
+            ('gcc', 'g++'),
+        ])
+
+        self.assertEqual(c_to_cxx('gcc'), 'g++')
+        self.assertEqual(c_to_cxx('foo-gcc'), 'foo-g++')
+        self.assertEqual(c_to_cxx('gcc-foo'), 'g++-foo')
+        self.assertEqual(c_to_cxx('foo'), None)
+        self.assertEqual(c_to_cxx('foogcc'), None)
+        self.assertEqual(c_to_cxx('gccfoo'), None)
+
+        self.assertEqual(cxx_to_c('g++'), 'gcc')
+        self.assertEqual(cxx_to_c('foo-g++'), 'foo-gcc')
+        self.assertEqual(cxx_to_c('g++-foo'), 'gcc-foo')
+        self.assertEqual(cxx_to_c('foo'), None)
+        self.assertEqual(cxx_to_c('foog++'), None)
+        self.assertEqual(cxx_to_c('g++foo'), None)
+
+    def test_invalid_regex(self):
+        with self.assertRaises(re.error):
+            common.make_command_converter([(re.compile(r'([\d.]+)'), '')])
 
 
 class TestNotBuildroot(CrossPlatformTestCase):

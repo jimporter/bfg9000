@@ -28,12 +28,18 @@ def library_macro(name, mode):
 # the same family (e.g. # `gcc` => `g++`). If no entry in the mapping matches
 # the command, we return None to indicate that the conversion has failed.
 def make_command_converter(mapping):
-    sub = '|'.join(re.escape(i[0]) for i in mapping)
-    ex = re.compile(r'(?:^|(?<=\W))({})(?:$|(?=\W))'.format(sub))
-    d = dict(mapping)
+    def escape(i):
+        if isinstance(i, str):
+            return '({})'.format(re.escape(i))
+        if i.groups:
+            raise re.error('capturing groups not allowed')
+        return '({})'.format(i.pattern)
+
+    sub = '|'.join(escape(i[0]) for i in mapping)
+    ex = re.compile(r'(?:^|(?<=\W))(?:{})(?:$|(?=\W))'.format(sub))
 
     def fn(cmd):
-        s, n = ex.subn(lambda m: d[m.group(1)], cmd)
+        s, n = ex.subn(lambda m: mapping[m.lastindex - 1][1], cmd)
         return s if n > 0 else None
 
     return fn

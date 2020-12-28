@@ -1,3 +1,5 @@
+import re
+
 from . import builder, cc, msvc
 from .. import log, shell
 from .common import choose_builder, make_command_converter
@@ -8,9 +10,7 @@ with known_langs.make('rc') as x:
     x.exts(source=['.rc'])
 
 _c_to_rc = make_command_converter([
-    ('gcc-posix', 'windres'),
-    ('gcc-win32', 'windres'),
-    ('gcc', 'windres'),
+    (re.compile(r'gcc(?:-[\d.]+)?(?:-(?:posix|win32))?'), 'windres'),
 ])
 
 _posix_cmds = ['windres']
