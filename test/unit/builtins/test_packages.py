@@ -149,33 +149,33 @@ class TestPackageCc(BuiltinTest):
         with mock_context() as m:
             pkg = package('name')
             self.assertEqual(pkg.name, 'name')
-            m.assert_called_once_with('c')
+            m.assert_called_with('c')
 
         with mock_context() as m:
             pkg = package('name', headers='foo.hpp')
             self.assertEqual(pkg.name, 'name')
-            m.assert_called_once_with('c++')
+            m.assert_called_with('c++')
 
         with mock_context() as m:
             pkg = package('name', headers='foo.goofy')
             self.assertEqual(pkg.name, 'name')
-            m.assert_called_once_with('c')
+            m.assert_called_with('c')
 
         with mock_context() as m:
             pkg = package('name', headers=['foo.hpp', 'foo.goofy'])
             self.assertEqual(pkg.name, 'name')
-            m.assert_called_once_with('c')
+            m.assert_called_with('c')
 
         with mock_context() as m:
             pkg = package('name', lang='c', headers='foo.hpp')
             self.assertEqual(pkg.name, 'name')
-            m.assert_called_once_with('c')
+            m.assert_called_with('c')
 
         self.context['project'](lang='c++')
         with mock_context() as m:
             pkg = package('name')
             self.assertEqual(pkg.name, 'name')
-            m.assert_called_once_with('c++')
+            m.assert_called_with('c++')
 
     def test_invalid_kind(self):
         with self.assertRaises(ValueError):

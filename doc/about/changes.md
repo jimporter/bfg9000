@@ -4,6 +4,9 @@
 in progress
 {: .subtitle}
 
+### New features
+- `pkg-config` executable can now be found by guessing based on other compilers
+
 ### Breaking changes
 - Require Python 3.6+
 

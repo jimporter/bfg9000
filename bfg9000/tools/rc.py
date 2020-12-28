@@ -2,7 +2,7 @@ import re
 
 from . import builder, cc, msvc
 from .. import log, shell
-from .common import choose_builder, make_command_converter
+from .common import choose_builder, guess_command, make_command_converter
 from ..languages import known_langs
 
 with known_langs.make('rc') as x:
@@ -27,17 +27,10 @@ def rc_builder(env):
 
     # We don't have an explicitly-set command from the environment, so try to
     # guess what the right command would be based on the C compiler command.
-
     candidates = (_windows_cmds if env.host_platform.family == 'windows'
                   else _posix_cmds)
-    sibling_cmd = env.builder('c').compiler.command
-
-    for i in sibling_cmd:
-        guessed_cmd = _c_to_rc(i)
-        if guessed_cmd is not None:
-            break
-    else:
-        guessed_cmd = None
+    sibling = env.builder('c').compiler
+    guessed_cmd = guess_command(sibling, _c_to_rc)
 
     # If the guessed command is the same as the first default command
     # candidate, remove it. This will keep us from logging a useless info
@@ -47,7 +40,7 @@ def rc_builder(env):
             builder = choose_builder(env, langinfo, _builders,
                                      candidates=guessed_cmd, strict=True)
             log.info('guessed windows rc compiler {!r} from c compiler {!r}'
-                     .format(guessed_cmd, shell.join(sibling_cmd)))
+                     .format(guessed_cmd, shell.join(sibling.command)))
             return builder
         except IOError:
             pass

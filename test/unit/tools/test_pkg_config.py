@@ -1,6 +1,7 @@
 from . import *
 
 from bfg9000 import options as opts
+from bfg9000.iterutils import first
 from bfg9000.path import Path
 from bfg9000.shell import CalledProcessError
 from bfg9000.tools.pkg_config import PkgConfig, PkgConfigPackage
@@ -43,8 +44,107 @@ def mock_execute_requires(args, **kwargs):
     return mock_execute_uninst(args, **kwargs)
 
 
+def mock_execute_cc(args, **kwargs):
+    if args[-1] == '--version':
+        return 'version\n'
+    raise OSError('bad option')
+
+
+class TestPkgConfig(TestCase):
+    def test_implicit(self):
+        env = make_env(platform='linux', clear_variables=True)
+        with mock.patch('bfg9000.tools.pkg_config.which') as mwhich, \
+             mock.patch('bfg9000.tools.pkg_config.check_which',
+                        lambda names, env: [first(names)]), \
+             mock.patch('bfg9000.shell.which', return_value=['cc']), \
+             mock.patch('bfg9000.shell.execute', mock_execute_cc):  # noqa
+            self.assertEqual(PkgConfig(env).command, ['pkg-config'])
+            mwhich.assert_not_called()
+
+    def test_explicit(self):
+        env = make_env(platform='linux', clear_variables=True,
+                       variables={'PKG_CONFIG': 'pkgconf'})
+        with mock.patch('bfg9000.tools.pkg_config.which') as mwhich, \
+             mock.patch('bfg9000.tools.pkg_config.check_which',
+                        lambda names, env: [first(names)]), \
+             mock.patch('bfg9000.shell.which', return_value=['cc']), \
+             mock.patch('bfg9000.shell.execute', mock_execute_cc):  # noqa
+            self.assertEqual(PkgConfig(env).command, ['pkgconf'])
+            mwhich.assert_not_called()
+
+    def test_guess_sibling(self):
+        env = make_env(platform='linux', clear_variables=True,
+                       variables={'CC': 'i686-w64-mingw32-gcc-99'})
+        with mock.patch('bfg9000.tools.pkg_config.which',
+                        lambda names, env: [first(names)]), \
+             mock.patch('bfg9000.tools.pkg_config.check_which') as mcwhich, \
+             mock.patch('bfg9000.shell.which',
+                        return_value=['i686-w64-mingw32-gcc-99']), \
+             mock.patch('bfg9000.shell.execute', mock_execute_cc), \
+             mock.patch('bfg9000.log.info'):  # noqa
+            self.assertEqual(PkgConfig(env).command,
+                             ['i686-w64-mingw32-pkg-config'])
+            mcwhich.assert_not_called()
+
+    def test_guess_sibling_nonexist(self):
+        env = make_env(platform='linux', clear_variables=True,
+                       variables={'CC': 'i686-w64-mingw32-gcc-99'})
+        with mock.patch('bfg9000.tools.pkg_config.which',
+                        lambda names, env: [first(names)]), \
+             mock.patch('bfg9000.tools.pkg_config.check_which') as mcwhich, \
+             mock.patch('bfg9000.shell.which', side_effect=IOError()), \
+             mock.patch('bfg9000.log.info'), \
+             mock.patch('warnings.warn'):  # noqa
+            self.assertEqual(PkgConfig(env).command,
+                             ['i686-w64-mingw32-pkg-config'])
+            mcwhich.assert_not_called()
+
+    def test_guess_sibling_indirect(self):
+        env = make_env(platform='linux', clear_variables=True,
+                       variables={'CXX': 'i686-w64-mingw32-g++-99'})
+        with mock.patch('bfg9000.tools.pkg_config.which',
+                        lambda names, env: [first(names)]), \
+             mock.patch('bfg9000.tools.pkg_config.check_which') as mcwhich, \
+             mock.patch('bfg9000.shell.which',
+                        return_value=['i686-w64-mingw32-gcc-99']), \
+             mock.patch('bfg9000.shell.execute', mock_execute_cc), \
+             mock.patch('bfg9000.log.info'):  # noqa
+            self.assertEqual(PkgConfig(env).command,
+                             ['i686-w64-mingw32-pkg-config'])
+            mcwhich.assert_not_called()
+
+    def test_guess_sibling_matches_default(self):
+        env = make_env(platform='linux', clear_variables=True,
+                       variables={'CC': 'gcc'})
+        with mock.patch('bfg9000.tools.pkg_config.which') as mwhich, \
+             mock.patch('bfg9000.tools.pkg_config.check_which',
+                        lambda names, env: [first(names)]), \
+             mock.patch('bfg9000.shell.which', return_value=['cc']), \
+             mock.patch('bfg9000.shell.execute', mock_execute_cc):  # noqa
+            self.assertEqual(PkgConfig(env).command, ['pkg-config'])
+            mwhich.assert_not_called()
+
+    def test_guess_sibling_error(self):
+        def mock_check_which(*args, **kwargs):
+            raise IOError('bad')
+
+        env = make_env(platform='linux', clear_variables=True,
+                       variables={'CC': 'i686-w64-mingw32-gcc-99'})
+        with mock.patch('bfg9000.tools.pkg_config.which',
+                        mock_check_which), \
+             mock.patch('bfg9000.tools.pkg_config.check_which',
+                        return_value=['pkgconf']), \
+             mock.patch('bfg9000.log.info'), \
+             mock.patch('warnings.warn'):  # noqa
+            self.assertEqual(PkgConfig(env).command, ['pkgconf'])
+
+
 class TestPkgConfigPackage(ToolTestCase):
     tool_type = PkgConfig
+
+    def setUp(self):
+        with mock.patch('bfg9000.shell.execute', mock_execute_cc):
+            super().setUp()
 
     def test_create(self):
         specifier = SpecifierSet('')

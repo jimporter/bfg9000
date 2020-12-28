@@ -1,19 +1,24 @@
 import argparse
 import os
+import re
 import subprocess
 
 from . import tool
-from .common import SimpleCommand
+from .common import check_which, Command, guess_command, make_command_converter
 from .. import log, options as opts, shell
 from ..exceptions import PackageResolutionError, PackageVersionError
 from ..objutils import memoize_method
 from ..packages import Package, PackageKind
 from ..path import Path, Root
-from ..shell import posix as pshell
+from ..shell import posix as pshell, which
 from ..versioning import check_version, Version
 
 _lib_dirs_parser = argparse.ArgumentParser()
 _lib_dirs_parser.add_argument('-L', action='append', dest='lib_dirs')
+
+_c_to_pkgconf = make_command_converter([
+    (re.compile(r'gcc(?:-[\d.]+)?(?:-(?:posix|win32))?'), 'pkg-config'),
+])
 
 
 def _shell_split(output):
@@ -25,7 +30,7 @@ def _requires_split(output):
 
 
 @tool('pkg_config')
-class PkgConfig(SimpleCommand):
+class PkgConfig(Command):
     # Map command names to pkg-config flags and whether they should be treated
     # as shell arguments.
     _options = {
@@ -39,9 +44,36 @@ class PkgConfig(SimpleCommand):
         'ldlibs': (['--libs-only-l'], _shell_split),
     }
 
+    @staticmethod
+    def _get_command(env):
+        cmd = env.getvar('PKG_CONFIG')
+        if cmd:
+            return check_which(cmd, env.variables)
+
+        # We don't have an explicitly-set command from the environment, so try
+        # to guess what the right command would be based on the C compiler
+        # command.
+        default = 'pkg-config'
+        sibling = env.builder('c').compiler
+        guessed_cmd = guess_command(sibling, _c_to_pkgconf)
+
+        # If the guessed command is the same as the default command candidate,
+        # skip it. This will keep us from logging a useless info message that
+        # we guessed the default value for the command.
+        if guessed_cmd is not None and guessed_cmd != default:
+            try:
+                cmd = which(guessed_cmd, env.variables)
+                log.info('guessed pkg-config {!r} from c compiler {!r}'
+                         .format(guessed_cmd, shell.join(sibling.command)))
+                return cmd
+            except IOError:
+                pass
+
+        # Try the default command candidate.
+        return check_which(default, env.variables)
+
     def __init__(self, env):
-        super().__init__(env, name='pkg_config', env_var='PKG_CONFIG',
-                         default='pkg-config')
+        super().__init__(env, command=('pkg_config', self._get_command(env)))
 
     def _call(self, cmd, name, type, static=False, msvc_syntax=False):
         result = cmd + [name] + self._options[type][0]

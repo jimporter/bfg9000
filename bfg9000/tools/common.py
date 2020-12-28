@@ -161,6 +161,14 @@ class SimpleBuildCommand(BuildCommand):
         super().__init__(builder, env, command=command, flags=flags)
 
 
+def guess_command(sibling, converter):
+    for i in sibling.command:
+        guessed_cmd = converter(i)
+        if guessed_cmd is not None:
+            return guessed_cmd
+    return None
+
+
 def check_which(names, *args, **kwargs):
     names = listify(names)
     try:
