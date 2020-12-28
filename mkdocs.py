@@ -1,4 +1,4 @@
-from verspec.loose import Version
+from verspec.python import Version
 
 from bfg9000.app_version import version as version_str
 
