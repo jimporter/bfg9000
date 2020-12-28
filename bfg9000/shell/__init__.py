@@ -2,8 +2,8 @@ import os
 import subprocess
 from enum import Enum
 
+from .. import iterutils
 from .list import shell_list  # noqa
-from ..iterutils import listify
 from ..path import BasePath, Path
 from ..platforms.host import platform_info
 from ..safe_str import jbos, safe_str
@@ -31,7 +31,7 @@ def split_paths(s, sep=os.pathsep):
 
 def which(names, env=os.environ, base_dirs=None, resolve=False,
           kind='executable'):
-    names = listify(names)
+    names = iterutils.listify(names)
     if len(names) == 0:
         raise TypeError('must supply at least one name')
 
@@ -90,7 +90,7 @@ def execute(args, *, shell=False, env=None, base_dirs=None, stdout=Mode.normal,
     )
     if not (returncode == 'any' or
             (returncode == 'fail' and proc.returncode != 0) or
-            proc.returncode in listify(returncode)):
+            proc.returncode in iterutils.listify(returncode)):
         raise CalledProcessError(proc.returncode, proc.args, proc.stdout,
                                  proc.stderr)
 

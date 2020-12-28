@@ -33,6 +33,11 @@ class TestWhich(TestCase):
         with mock.patch('os.path.exists', return_value=True):
             self.assertEqual(which('python', env=self.env), ['python'])
 
+    def test_multiword(self):
+        with mock.patch('os.path.exists', return_value=True):
+            self.assertEqual(which('python --foo', env=self.env),
+                             ['python', '--foo'])
+
     def test_abs(self):
         with mock.patch('os.path.exists', return_value=True):
             self.assertEqual(which('/path/to/python', env=self.env),
