@@ -7,11 +7,15 @@ from ...iterutils import listify, uniques
 from ...versioning import Version
 
 
+def executable(env=os.environ):
+    return shell.which(env.get('MAKE', ['make', 'gmake']), env)
+
+
 def version(env=os.environ):
     try:
-        make = shell.which(env.get('MAKE', ['make', 'gmake']), env)
+        make = executable(env)
         output = shell.execute(make + ['--version'], stdout=shell.Mode.pipe,
-                               stderr=shell.Mode.devnull)
+                               stderr=shell.Mode.devnull, env=env)
         m = re.match(r'GNU Make ([\d\.]+)', output)
         if m:
             return Version(m.group(1))

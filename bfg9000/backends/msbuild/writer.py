@@ -8,11 +8,15 @@ from .syntax import *  # noqa
 from ...versioning import Version
 
 
+def executable(env=os.environ):
+    return shell.which(env.get('MSBUILD', ['msbuild', 'xbuild']), env)
+
+
 def version(env=os.environ):
     try:
-        msbuild = shell.which(env.get('MSBUILD', ['msbuild', 'xbuild']), env)
+        msbuild = executable(env)
         output = shell.execute(msbuild + ['/version'], stdout=shell.Mode.pipe,
-                               stderr=shell.Mode.devnull)
+                               stderr=shell.Mode.devnull, env=env)
         m = re.search(r'([\d\.]+)$', output)
         if m:
             return Version(m.group(1))

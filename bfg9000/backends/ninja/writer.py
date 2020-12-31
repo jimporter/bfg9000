@@ -7,11 +7,15 @@ from .syntax import *
 from ...versioning import Version
 
 
+def executable(env=os.environ):
+    return shell.which(env.get('NINJA', ['ninja', 'ninja-build']), env)
+
+
 def version(env=os.environ):
     try:
-        ninja = shell.which(env.get('NINJA', ['ninja', 'ninja-build']), env)
+        ninja = executable(env)
         output = shell.execute(ninja + ['--version'], stdout=shell.Mode.pipe,
-                               stderr=shell.Mode.devnull)
+                               stderr=shell.Mode.devnull, env=env)
         return Version(output.strip())
     except (IOError, OSError, shell.CalledProcessError):
         pass
