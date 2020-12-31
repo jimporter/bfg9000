@@ -228,6 +228,14 @@ out of date.</p>
 <p>Print the environment variables stored by the build configuration in <em>BUILDDIR</em>.</p>
 <h4 id="env-unique">-u, --unique<a class="headerlink" href="#env-unique" title="Permanent link">§</a></h4>
 <p>Only show environment variables that differ from the current environment.</p>
+<h3 id="run">bfg9000 run <em>COMMAND</em><a class="headerlink" href="#run" title="Permanent link">§</a></h3>
+<p>Run an arbitrary <em>COMMAND</em> with the environment variables set for the current
+build.</p>
+<h4 id="run-initial">-I, --initial<a class="headerlink" href="#run-initial" title="Permanent link">§</a></h4>
+<p>Use the <em>initial</em> environment variables, before any modification by toolchain
+files.</p>
+<h4 id="run-builddir">-B, --builddir<a class="headerlink" href="#run-builddir" title="Permanent link">§</a></h4>
+<p>Set the build directory to pull environment variable state from.</p>
 <h2 id="9k-shorthand">9k shorthand<a class="headerlink" href="#9k-shorthand" title="Permanent link">§</a></h2>
 <p><code>9k</code> is a special shorthand to make it easier to configure your build. It's
 equivalent to <a href="#configure"><code>bfg9000 configure</code></a>.</p></div>
