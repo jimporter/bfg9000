@@ -29,7 +29,7 @@ class TestRegenerate(IntegrationTest):
 class TestRegenerateGlob(IntegrationTest):
     def __init__(self, *args, **kwargs):
         self.extradir = pjoin(test_data_dir, 'regenerate_glob')
-        super().__init__(pjoin(examples_dir, '06_find_files'), stage_src=True,
+        super().__init__(pjoin(examples_dir, '05_find_files'), stage_src=True,
                          *args, **kwargs)
 
     def copyfile(self, src, dest=None):

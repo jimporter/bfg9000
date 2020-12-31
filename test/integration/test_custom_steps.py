@@ -3,7 +3,7 @@ from . import *
 
 class TestCustomSteps(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        super().__init__(os.path.join(examples_dir, '09_custom_steps'), *args,
+        super().__init__(os.path.join(examples_dir, '10_custom_steps'), *args,
                          **kwargs)
 
     def test_hello(self):

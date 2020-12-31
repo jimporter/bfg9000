@@ -5,7 +5,7 @@ from . import *
 
 class TestUserArgs(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        super().__init__(os.path.join(examples_dir, '10_custom_args'),
+        super().__init__(os.path.join(examples_dir, '11_custom_args'),
                          configure=False, *args, **kwargs)
 
     def _check_help(self, args):
@@ -36,13 +36,13 @@ class TestUserArgs(IntegrationTest):
 
     @skip_if_backend('msbuild')
     def test_dist(self):
-        dist = output_file('10_custom_args.tar.gz')
+        dist = output_file('11_custom_args.tar.gz')
         self.configure()
         self.build('dist')
         self.assertExists(dist)
         with tarfile.open(self.target_path(dist)) as t:
             self.assertEqual(set(t.getnames()), {
-                '10_custom_args/build.bfg',
-                '10_custom_args/options.bfg',
-                '10_custom_args/simple.cpp',
+                '11_custom_args/build.bfg',
+                '11_custom_args/options.bfg',
+                '11_custom_args/simple.cpp',
             })

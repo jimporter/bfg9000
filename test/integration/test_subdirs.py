@@ -7,7 +7,7 @@ pjoin = os.path.join
 
 class TestSubdirs(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        super().__init__(pjoin(examples_dir, '05_subdirs'), install=True,
+        super().__init__(pjoin(examples_dir, '04_subdirs'), install=True,
                          *args, **kwargs)
 
     def setUp(self):
@@ -32,17 +32,17 @@ class TestSubdirs(IntegrationTest):
 
     @skip_if_backend('msbuild')
     def test_dist(self):
-        dist = output_file('05_subdirs.tar.gz')
+        dist = output_file('04_subdirs.tar.gz')
         self.build('dist')
         self.assertExists(dist)
         with tarfile.open(self.target_path(dist)) as t:
             self.assertEqual(set(t.getnames()), {
-                '05_subdirs/build.bfg',
-                '05_subdirs/include',
-                '05_subdirs/include/library.hpp',
-                '05_subdirs/include/detail/export.hpp',
-                '05_subdirs/src/library.cpp',
-                '05_subdirs/src/program.cpp',
+                '04_subdirs/build.bfg',
+                '04_subdirs/include',
+                '04_subdirs/include/library.hpp',
+                '04_subdirs/include/detail/export.hpp',
+                '04_subdirs/src/library.cpp',
+                '04_subdirs/src/program.cpp',
             })
 
     @only_if_backend('make', hide=True)

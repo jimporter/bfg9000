@@ -5,7 +5,7 @@ from . import *
 
 class TestPackage(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        super().__init__(os.path.join(examples_dir, '04_package'), *args,
+        super().__init__(os.path.join(examples_dir, '06_package'), *args,
                          **kwargs)
 
     def test_build(self):
@@ -15,7 +15,7 @@ class TestPackage(IntegrationTest):
 
 class TestSystemPackage(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        super().__init__(os.path.join(examples_dir, '04_package'),
+        super().__init__(os.path.join(examples_dir, '06_package'),
                          extra_env={'PKG_CONFIG': 'nonexist'}, *args, **kwargs)
 
     def test_build(self):

@@ -5,7 +5,7 @@ from . import *
 
 class TestFindFiles(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        super().__init__(os.path.join(examples_dir, '06_find_files'), *args,
+        super().__init__(os.path.join(examples_dir, '05_find_files'), *args,
                          **kwargs)
 
     def test_hello(self):
@@ -19,18 +19,18 @@ class TestFindFiles(IntegrationTest):
 
     @skip_if_backend('msbuild')
     def test_dist(self):
-        dist = output_file('06_find_files.tar.gz')
+        dist = output_file('05_find_files.tar.gz')
         self.build('dist')
         self.assertExists(dist)
         with tarfile.open(self.target_path(dist)) as t:
             self.assertEqual(set(t.getnames()), {
-                '06_find_files/build.bfg',
-                '06_find_files/src/hello/hello.cpp',
-                '06_find_files/src/hello/hello.hpp',
-                '06_find_files/src/hello/main.cpp',
-                '06_find_files/src/goodbye/main.cpp',
-                '06_find_files/src/goodbye/english/goodbye.cpp',
-                '06_find_files/src/goodbye/english/goodbye.hpp',
-                '06_find_files/src/goodbye/german/goodbye.cpp',
-                '06_find_files/src/goodbye/german/goodbye.hpp',
+                '05_find_files/build.bfg',
+                '05_find_files/src/hello/hello.cpp',
+                '05_find_files/src/hello/hello.hpp',
+                '05_find_files/src/hello/main.cpp',
+                '05_find_files/src/goodbye/main.cpp',
+                '05_find_files/src/goodbye/english/goodbye.cpp',
+                '05_find_files/src/goodbye/english/goodbye.hpp',
+                '05_find_files/src/goodbye/german/goodbye.cpp',
+                '05_find_files/src/goodbye/german/goodbye.hpp',
             })

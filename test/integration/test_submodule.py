@@ -5,7 +5,7 @@ from . import *
 
 class TestSubmodule(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        super().__init__(os.path.join(examples_dir, '11_submodules'),
+        super().__init__(os.path.join(examples_dir, '12_submodules'),
                          configure=False, *args, **kwargs)
 
     def _check_help(self, args):
@@ -52,18 +52,18 @@ class TestSubmodule(IntegrationTest):
 
     @skip_if_backend('msbuild')
     def test_dist(self):
-        dist = output_file('11_submodules.tar.gz')
+        dist = output_file('12_submodules.tar.gz')
         self.configure()
         self.build('dist')
         self.assertExists(dist)
         with tarfile.open(self.target_path(dist)) as t:
             self.assertEqual(set(t.getnames()), {
-                '11_submodules/build.bfg',
-                '11_submodules/options.bfg',
-                '11_submodules/program.cpp',
-                '11_submodules/lib',
-                '11_submodules/lib/build.bfg',
-                '11_submodules/lib/options.bfg',
-                '11_submodules/lib/library.cpp',
-                '11_submodules/lib/library.hpp',
+                '12_submodules/build.bfg',
+                '12_submodules/options.bfg',
+                '12_submodules/program.cpp',
+                '12_submodules/lib',
+                '12_submodules/lib/build.bfg',
+                '12_submodules/lib/options.bfg',
+                '12_submodules/lib/library.cpp',
+                '12_submodules/lib/library.hpp',
             })

@@ -60,7 +60,7 @@ class TestPkgConfig(PkgConfigTest):
     src_include = 'include'
 
     def __init__(self, *args, **kwargs):
-        super().__init__(os.path.join(examples_dir, '12_pkg_config'),
+        super().__init__(os.path.join(examples_dir, '09_pkg_config'),
                          configure=False, install=True, *args, **kwargs)
 
     def test_configure_default(self):
