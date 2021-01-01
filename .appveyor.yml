@@ -70,7 +70,8 @@ install:
   - set LIBRARY_PATH=%QT_ROOT%\lib;%LIBRARY_PATH%
   - set PATH=%PYTHON_PATH%;%PYTHON_PATH%\Scripts;%LIBRARY_PATH%;%PATH%
 build_script:
-  - pip install .[test]
+  - git clone https://github.com/jimporter/mopack.git
+  - pip install ./mopack .[test]
 test_script:
   - python setup.py coverage -q
 on_success:

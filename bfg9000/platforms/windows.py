@@ -44,12 +44,6 @@ class WindowsHostPlatform(HostPlatform, WindowsPlatform):
 
 
 class WindowsTargetPlatform(TargetPlatform, WindowsPlatform):
-    _package_map = {
-        'gl': 'opengl32',
-        'glu': 'glu32',
-        'glut': 'glut32',
-    }
-
     @property
     def executable_ext(self):
         return '.exe'

@@ -4,7 +4,7 @@ from collections import namedtuple
 from . import path, safe_str
 from .iterutils import isiterable
 from .file_types import *
-from .platforms.framework import Framework
+from .packages import Framework
 
 
 class option_list:

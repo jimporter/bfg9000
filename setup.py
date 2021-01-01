@@ -161,7 +161,7 @@ setup(
 
     python_requires='>=3.6',
     install_requires=(
-        ['colorama', 'setuptools', 'verspec'] + more_requires
+        ['colorama', 'pyyaml', 'setuptools', 'verspec'] + more_requires
     ),
     extras_require={
         'dev': ['coverage', 'flake8 >= 3.7', 'lxml', 'mike >= 0.3.1',

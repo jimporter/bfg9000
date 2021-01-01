@@ -10,8 +10,17 @@ class Bfg9000(SimpleCommand):
         super().__init__(env, name='bfg9000', env_var='BFG9000',
                          default=env.bfgdir.append('bfg9000'))
 
-    def _call(self, cmd, builddir):
+    def _call_refresh(self, cmd, builddir):
         return cmd + ['refresh', builddir]
+
+    def _call_run(self, cmd, *, args, initial=False):
+        result = cmd + ['run']
+        if initial:
+            result.append('-I')
+        return result + ['--'] + args
+
+    def _call(self, cmd, subcmd, *args, **kwargs):
+        return getattr(self, '_call_' + subcmd)(cmd, *args, **kwargs)
 
 
 @tool('depfixer')

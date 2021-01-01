@@ -1,0 +1,5 @@
+packages:
+  hello:
+    source: tarball
+    path: hello.tar.gz
+    build: bfg9000

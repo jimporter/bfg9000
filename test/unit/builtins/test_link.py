@@ -166,7 +166,8 @@ class TestExecutable(LinkTest):
         pkg_libdir = opts.lib_dir(file_types.Directory(
             Path('/usr/lib', Root.absolute)
         ))
-        pkg = CommonPackage('pkg', fmt, None, opts.option_list(pkg_libdir))
+        pkg = CommonPackage('pkg', format=fmt,
+                            link_options=opts.option_list(pkg_libdir))
 
         result = self.context['executable']('exe', ['main.cpp'], libs='libfoo',
                                             packages=pkg)
@@ -376,7 +377,8 @@ class TestSharedLibrary(LinkTest):
         pkg_libdir = opts.lib_dir(file_types.Directory(
             Path('/usr/lib', Root.absolute)
         ))
-        pkg = CommonPackage('pkg', fmt, None, opts.option_list(pkg_libdir))
+        pkg = CommonPackage('pkg', format=fmt,
+                            link_options=opts.option_list(pkg_libdir))
 
         result = self.context['shared_library']('shared', ['main.cpp'],
                                                 libs='libfoo', packages=pkg)

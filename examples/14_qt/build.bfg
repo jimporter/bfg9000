@@ -7,10 +7,8 @@ if env.target_platform.family == 'posix':
 # Qt provides two main ways to build user interfaces: Qt Quick, which uses QML,
 # or the Qt Designer, which works directly with Qt widgets.
 
-widgets = package('Qt5Widgets', headers=['QApplication', 'QtCore'],
-                  libs=['Qt5Widgets', 'Qt5Core'])
-
-qml = package('Qt5Qml', headers=['QQmlApplicationEngine'])
+widgets = package('Qt5Widgets')
+qml = package('Qt5Qml')
 
 # To build cross-platform graphical applications, you can use the `opts.gui`
 # link option. For Windows targets, this sets the subsystem to "windows" so no

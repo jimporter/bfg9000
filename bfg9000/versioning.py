@@ -1,17 +1,17 @@
 import platform
 import re
 from itertools import chain
-from verspec.loose import Version, Specifier, SpecifierSet
+from verspec.loose import Version, Specifier, SpecifierSet, InvalidSpecifier
 from verspec.python import PythonVersion, PythonSpecifier, PythonSpecifierSet
 
 from .app_version import version as bfg_version
 from .exceptions import VersionError
 from .iterutils import iterate
 
-__all__ = ['bfg_version', 'check_version', 'detect_version', 'python_version',
-           'PythonSpecifier', 'PythonSpecifierSet', 'PythonVersion',
-           'simplify_specifiers', 'Specifier', 'SpecifierSet', 'Version',
-           'VersionError']
+__all__ = ['bfg_version', 'check_version', 'detect_version',
+           'InvalidSpecifier', 'python_version', 'PythonSpecifier',
+           'PythonSpecifierSet', 'PythonVersion', 'simplify_specifiers',
+           'Specifier', 'SpecifierSet', 'Version', 'VersionError']
 
 bfg_version = PythonVersion(bfg_version)
 # Strip trailing "+" from Python version. Some versions in distros have this...

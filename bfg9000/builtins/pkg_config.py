@@ -10,7 +10,7 @@ from ..build_inputs import build_input
 from ..file_types import *
 from ..iterutils import flatten, iterate, uniques, recursive_walk
 from ..objutils import objectify, identity
-from ..packages import CommonPackage, PackageKind
+from ..packages import CommonPackage
 from ..safe_str import literal, shell_literal
 from ..shell import posix as pshell
 from ..shell.syntax import Syntax, Writer
@@ -304,7 +304,8 @@ class PkgConfigInfo:
             elif isinstance(i, (tuple, list)):
                 pkg_config.add(Requirement(*i))
             elif isinstance(i, PkgConfigPackage):
-                pkg_config.add(Requirement(i.name, i.specifier))
+                pkg_config.add(Requirement(i.pcfiles[0], i.specifier))
+                pkg_config.update(Requirement(i) for i in i.pcfiles[1:])
                 if i.deps:
                     deps.append(i)
             elif isinstance(i, CommonPackage):
@@ -468,10 +469,9 @@ def pkg_config(context, name=None, **kwargs):
         search_path = PkgConfigWriter.directory.string(context.env.base_dirs)
         try:
             return PkgConfigPackage(
-                info.name, context.env.target_platform.object_format,
-                SpecifierSet(), PackageKind.any,
-                context.env.tool('pkg_config'), dep_alias,
-                search_path=search_path
+                context.env.tool('pkg_config'), info.name,
+                format=context.env.target_platform.object_format,
+                deps=dep_alias, search_path=search_path
             )
         except FileNotFoundError:
             warnings.warn('unable to load local pkg-config package {!r}'

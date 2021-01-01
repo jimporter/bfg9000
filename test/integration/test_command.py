@@ -5,7 +5,7 @@ from . import *
 
 class TestCommand(IntegrationTest):
     def __init__(self, *args, **kwargs):
-        super().__init__(os.path.join(examples_dir, '08_commands'), *args,
+        super().__init__(os.path.join(examples_dir, '09_commands'), *args,
                          **kwargs)
 
     def test_hello(self):

@@ -2,7 +2,7 @@ import os
 
 from . import *
 
-from bfg9000.environment import Environment, LibraryMode
+from bfg9000.environment import Environment, EnvVarDict, LibraryMode
 from bfg9000.exceptions import ToolNotFoundError
 from bfg9000.file_types import SourceFile
 from bfg9000.path import Path, Root, InstallRoot
@@ -10,6 +10,133 @@ from bfg9000.tools import rm, lex, scripts  # noqa
 
 this_dir = os.path.abspath(os.path.dirname(__file__))
 test_data_dir = os.path.join(this_dir, '..', 'data')
+
+
+class TestEnvVarDict(TestCase):
+    def test_setitem(self):
+        d = EnvVarDict()
+        d['foo'] = 'fooval'
+        self.assertEqual(d, {'foo': 'fooval'})
+        self.assertEqual(d.initial, {})
+        self.assertEqual(d.changes, {'foo': 'fooval'})
+
+        d = EnvVarDict(foo='fooval', bar='barval')
+        d['foo'] = 'foochange'
+        self.assertEqual(d, {'foo': 'foochange', 'bar': 'barval'})
+        self.assertEqual(d.initial, {'foo': 'fooval', 'bar': 'barval'})
+        self.assertEqual(d.changes, {'foo': 'foochange'})
+
+        with self.assertRaises(TypeError):
+            d['foo'] = None
+
+    def test_delitem(self):
+        d = EnvVarDict(foo='fooval', bar='barval')
+        del d['foo']
+        self.assertEqual(d, {'bar': 'barval'})
+        self.assertEqual(d.initial, {'foo': 'fooval', 'bar': 'barval'})
+        self.assertEqual(d.changes, {'foo': None})
+
+    def test_clear(self):
+        d = EnvVarDict(foo='fooval', bar='barval')
+        d.clear()
+        self.assertEqual(d, {})
+        self.assertEqual(d.initial, {'foo': 'fooval', 'bar': 'barval'})
+        self.assertEqual(d.changes, {'foo': None, 'bar': None})
+
+    def test_pop(self):
+        d = EnvVarDict(foo='fooval', bar='barval')
+        self.assertEqual(d.pop('foo'), 'fooval')
+        self.assertEqual(d, {'bar': 'barval'})
+        self.assertEqual(d.initial, {'foo': 'fooval', 'bar': 'barval'})
+        self.assertEqual(d.changes, {'foo': None})
+
+        self.assertEqual(d.pop('foo', 'default'), 'default')
+        self.assertEqual(d, {'bar': 'barval'})
+        self.assertEqual(d.initial, {'foo': 'fooval', 'bar': 'barval'})
+        self.assertEqual(d.changes, {'foo': None})
+
+        with self.assertRaises(KeyError):
+            self.assertEqual(d.pop('foo'))
+
+        self.assertEqual(d.pop('bar', 'default'), 'barval')
+        self.assertEqual(d, {})
+        self.assertEqual(d.initial, {'foo': 'fooval', 'bar': 'barval'})
+        self.assertEqual(d.changes, {'foo': None, 'bar': None})
+
+    def test_popitem(self):
+        d = EnvVarDict(foo='fooval')
+        self.assertEqual(d.popitem(), ('foo', 'fooval'))
+        self.assertEqual(d, {})
+        self.assertEqual(d.initial, {'foo': 'fooval'})
+        self.assertEqual(d.changes, {'foo': None})
+
+        with self.assertRaises(KeyError):
+            self.assertEqual(d.popitem())
+
+    def test_setdefault(self):
+        d = EnvVarDict()
+        self.assertEqual(d.setdefault('foo', 'fooval'), 'fooval')
+        self.assertEqual(d, {'foo': 'fooval'})
+        self.assertEqual(d.initial, {})
+        self.assertEqual(d.changes, {'foo': 'fooval'})
+
+        self.assertEqual(d.setdefault('foo', 'foo2'), 'fooval')
+        self.assertEqual(d, {'foo': 'fooval'})
+        self.assertEqual(d.initial, {})
+        self.assertEqual(d.changes, {'foo': 'fooval'})
+
+        with self.assertRaises(TypeError):
+            d.setdefault('bar', None)
+
+    def test_update(self):
+        d = EnvVarDict(foo='fooval', bar='barval')
+        d.update(foo='foochange', baz='bazval')
+        self.assertEqual(d, {'foo': 'foochange', 'bar': 'barval',
+                             'baz': 'bazval'})
+        self.assertEqual(d.initial, {'foo': 'fooval', 'bar': 'barval'})
+        self.assertEqual(d.changes, {'foo': 'foochange', 'baz': 'bazval'})
+
+        d.update({'foo': 'foochange2'})
+        self.assertEqual(d, {'foo': 'foochange2', 'bar': 'barval',
+                             'baz': 'bazval'})
+        self.assertEqual(d.initial, {'foo': 'fooval', 'bar': 'barval'})
+        self.assertEqual(d.changes, {'foo': 'foochange2', 'baz': 'bazval'})
+
+    def test_to_json(self):
+        d = EnvVarDict(foo='fooval', bar='barval')
+        d.update(foo='foochange', baz='bazval')
+        self.assertEqual(d.to_json(), {
+            'initial': {'foo': 'fooval', 'bar': 'barval'},
+            'current': {'foo': 'foochange', 'bar': 'barval',
+                        'baz': 'bazval'},
+        })
+
+    def test_from_json(self):
+        d = EnvVarDict.from_json({
+            'initial': {'foo': 'fooval', 'bar': 'barval'},
+            'current': {'foo': 'foochange', 'bar': 'barval',
+                        'baz': 'bazval'},
+        })
+        self.assertEqual(d, {'foo': 'foochange', 'bar': 'barval',
+                             'baz': 'bazval'})
+        self.assertEqual(d.initial, {'foo': 'fooval', 'bar': 'barval'})
+        self.assertEqual(d.changes, {'foo': 'foochange', 'baz': 'bazval'})
+
+        d = EnvVarDict.from_json({
+            'initial': {'foo': 'fooval', 'bar': 'barval'},
+            'current': {'bar': 'barval', 'baz': 'bazval'},
+        })
+        self.assertEqual(d, {'bar': 'barval', 'baz': 'bazval'})
+        self.assertEqual(d.initial, {'foo': 'fooval', 'bar': 'barval'})
+        self.assertEqual(d.changes, {'foo': None, 'baz': 'bazval'})
+
+    def test_reset(self):
+        d = EnvVarDict(foo='fooval', bar='barval')
+        d.update(foo='foochange', baz='bazval')
+        d.reset()
+        self.assertEqual(d, {'foo': 'fooval', 'bar': 'barval'})
+        self.assertEqual(d.initial, {'foo': 'fooval', 'bar': 'barval'})
+        self.assertEqual(d.changes, {})
 
 
 class TestEnvironment(TestCase):

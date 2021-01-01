@@ -268,7 +268,7 @@ class JarMaker(SimpleBuildCommand):
 
 class JvmPackage(Package):
     def __init__(self, name, format, libs=None):
-        super().__init__(name, format)
+        super().__init__(name, format=format)
         self.libs = libs or []
 
     def compile_options(self, compiler):
@@ -329,7 +329,8 @@ class JvmPackageResolver:
         raise PackageResolutionError("unable to find library '{}'"
                                      .format(name))
 
-    def resolve(self, name, version, kind, headers, libs):
+    def resolve(self, name, submodules, version, kind, *, get_version=None,
+                headers=None, libs=None):
         lib = self._library(name)
         log.info('found package {!r} via path-search in {!r}'
                  .format(name, lib.path.parent().string()))

@@ -3,7 +3,6 @@ from unittest import mock
 from .. import *
 
 from bfg9000.platforms import platform_name, target, posix
-from bfg9000.platforms.framework import Framework
 
 
 class TestTargetPlatform(TestCase):
@@ -51,8 +50,6 @@ class TestTargetPlatform(TestCase):
         self.assertEqual(platform.family, 'posix')
         self.assertEqual(platform.triplet, 'x86_64-apple-darwin')
         self.assertEqual(platform.object_format, 'mach-o')
-        self.assertEqual(platform.transform_package('gl'),
-                         Framework('OpenGL'))
 
     def test_linux(self):
         with mock.patch('platform.machine', return_value='x86_64'):
@@ -63,7 +60,6 @@ class TestTargetPlatform(TestCase):
         self.assertEqual(platform.family, 'posix')
         self.assertEqual(platform.triplet, 'x86_64-unknown-linux-gnu')
         self.assertEqual(platform.object_format, 'elf')
-        self.assertEqual(platform.transform_package('gl'), 'GL')
 
     def test_android(self):
         with mock.patch('platform.machine', return_value='arm'):
@@ -74,7 +70,6 @@ class TestTargetPlatform(TestCase):
         self.assertEqual(platform.family, 'posix')
         self.assertEqual(platform.triplet, 'arm-unknown-linux-android')
         self.assertEqual(platform.object_format, 'elf')
-        self.assertEqual(platform.transform_package('gl'), 'GL')
 
     def test_windows(self):
         with mock.patch('platform.machine', return_value='x86_64'):
@@ -85,7 +80,6 @@ class TestTargetPlatform(TestCase):
         self.assertEqual(platform.family, 'windows')
         self.assertEqual(platform.triplet, 'x86_64-unknown-win32')
         self.assertEqual(platform.object_format, 'coff')
-        self.assertEqual(platform.transform_package('gl'), 'opengl32')
 
     def test_unknown(self):
         with mock.patch('platform.machine', return_value='x86_64'):
