@@ -65,6 +65,8 @@ _windows_cmds = {
 }
 
 _builders = (msvc.MsvcBuilder, cc.CcBuilder)
+_fallback_posix_builder = cc.CcBuilder
+_fallback_windows_builder = msvc.MsvcBuilder
 
 
 def _guess_candidates(env, lang):
@@ -88,16 +90,21 @@ def _guess_candidates(env, lang):
 
 @builder('c', 'c++', 'objc', 'objc++')
 def c_family_builder(env, lang):
+    if env.host_platform.family == 'windows':
+        candidates = _windows_cmds[lang]
+        fallback = _fallback_windows_builder
+    else:
+        candidates = _posix_cmds[lang]
+        fallback = _fallback_posix_builder
+
     langinfo = known_langs[lang]
     cmd = env.getvar(langinfo.var('compiler'))
     if cmd:
-        return choose_builder(env, langinfo, _builders, candidates=cmd)
+        return choose_builder(env, langinfo, _builders, candidates=cmd,
+                              fallback_builder=fallback)
 
     # We don't have an explicitly-set command from the environment, so try to
     # guess what the right command would be.
-
-    candidates = (_windows_cmds[lang] if env.host_platform.family == 'windows'
-                  else _posix_cmds[lang])
     guessed_info = _guess_candidates(env, lang)
 
     # If the last guessed command is the same as the first default command
@@ -109,7 +116,8 @@ def c_family_builder(env, lang):
     for sibling_lang, sibling_cmd, guessed_cmd in guessed_info:
         try:
             builder = choose_builder(env, langinfo, _builders,
-                                     candidates=guessed_cmd, strict=True)
+                                     candidates=guessed_cmd,
+                                     fallback_builder=fallback, strict=True)
             log.info('guessed {} compiler {!r} from {} compiler {!r}'.format(
                 lang, guessed_cmd, sibling_lang, sibling_cmd
             ))
@@ -121,4 +129,5 @@ def c_family_builder(env, lang):
     guesses = [i.guessed_cmd for i in guessed_info]
     untried_candidates = [i for i in candidates if i not in guesses]
     return choose_builder(env, langinfo, _builders,
-                          candidates=untried_candidates)
+                          candidates=untried_candidates,
+                          fallback_builder=fallback)

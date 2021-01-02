@@ -180,7 +180,8 @@ def check_which(names, *args, **kwargs):
 
 
 def choose_builder(env, langinfo, builders, *, candidates=None,
-                   default_candidates=None, strict=False):
+                   default_candidates=None, fallback_builder=None,
+                   strict=False):
     if candidates is None:
         candidates = env.getvar(langinfo.var('compiler'), default_candidates)
     candidates = listify(candidates)
@@ -193,7 +194,7 @@ def choose_builder(env, langinfo, builders, *, candidates=None,
             raise
         warnings.warn(str(e))
         cmd = shell.listify(candidates[0])
-        builder_type = first(builders)
+        builder_type = fallback_builder or first(builders)
         output = ''
     else:
         for builder_type in builders:

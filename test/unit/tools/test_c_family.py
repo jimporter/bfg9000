@@ -133,38 +133,57 @@ class TestGuessCandidates(TestCase):
         self.assertEqual(guess_candidates(MockEnv(CXX='goofy'), 'c'), [])
 
 
-class TestCFamilyBuilder(TestCase):
+class TestCFamilyBuilder(CrossPlatformTestCase):
+    def __init__(self, *args, **kwargs):
+        super().__init__(clear_variables=True, *args, **kwargs)
+        if self.platform_name and self.env.host_platform.family == 'windows':
+            self.cmds = c_family._windows_cmds
+            self.fallback = c_family._fallback_windows_builder
+        else:
+            self.cmds = c_family._posix_cmds
+            self.fallback = c_family._fallback_posix_builder
+
+    def test_fallback_builder(self):
+        with mock.patch('bfg9000.shell.which', side_effect=IOError()), \
+             mock.patch('warnings.warn'):
+            self.assertIsInstance(c_family.c_family_builder(self.env, 'c++'),
+                                  self.fallback)
+
     def test_implicit(self):
-        env = MockEnv()
         with mock.patch('bfg9000.tools.c_family.choose_builder') as m:
-            c_family.c_family_builder(env, 'c++')
-            m.assert_called_once_with(env, known_langs['c++'],
-                                      c_family._builders, candidates=['c++'])
+            c_family.c_family_builder(self.env, 'c++')
+            m.assert_called_once_with(
+                self.env, known_langs['c++'], c_family._builders,
+                candidates=self.cmds['c++'], fallback_builder=self.fallback
+            )
 
     def test_explicit(self):
-        env = MockEnv(CXX='g++')
+        self.env.variables['CXX'] = 'g++'
         with mock.patch('bfg9000.tools.c_family.choose_builder') as m:
-            c_family.c_family_builder(env, 'c++')
-            m.assert_called_once_with(env, known_langs['c++'],
-                                      c_family._builders, candidates='g++')
+            c_family.c_family_builder(self.env, 'c++')
+            m.assert_called_once_with(
+                self.env, known_langs['c++'], c_family._builders,
+                candidates='g++', fallback_builder=self.fallback
+            )
 
     def test_guess_sibling(self):
-        env = MockEnv(CC='gcc')
+        self.env.variables['CC'] = 'gcc'
         with mock.patch('bfg9000.tools.c_family.choose_builder') as m, \
              mock.patch('bfg9000.log.info'):  # noqa
-            c_family.c_family_builder(env, 'c++')
+            c_family.c_family_builder(self.env, 'c++')
             m.assert_called_once_with(
-                env, known_langs['c++'], c_family._builders, candidates='g++',
-                strict=True
+                self.env, known_langs['c++'], c_family._builders,
+                candidates='g++', fallback_builder=self.fallback, strict=True
             )
 
     def test_guess_sibling_matches_default(self):
-        env = MockEnv(CC='cc')
+        self.env.variables['CC'] = self.cmds['c'][0]
         with mock.patch('bfg9000.tools.c_family.choose_builder') as m, \
              mock.patch('bfg9000.log.info'):  # noqa
-            c_family.c_family_builder(env, 'c++')
+            c_family.c_family_builder(self.env, 'c++')
             m.assert_called_once_with(
-                env, known_langs['c++'], c_family._builders, candidates=['c++']
+                self.env, known_langs['c++'], c_family._builders,
+                candidates=self.cmds['c++'], fallback_builder=self.fallback
             )
 
     def test_guess_sibling_error(self):
@@ -173,14 +192,16 @@ class TestCFamilyBuilder(TestCase):
                 raise IOError('bad')
             return mock.MagicMock()
 
-        env = MockEnv(CC='gcc')
+        self.env.variables['CC'] = 'gcc'
         with mock.patch('bfg9000.tools.c_family.choose_builder',
                         side_effect=mock_choose_builder) as m, \
              mock.patch('bfg9000.log.info'):  # noqa
-            c_family.c_family_builder(env, 'c++')
+            c_family.c_family_builder(self.env, 'c++')
+            cmds = [i for i in self.cmds['c++'] if i != 'g++']
             self.assertEqual(m.mock_calls, [
-                mock.call(env, known_langs['c++'], c_family._builders,
-                          candidates='g++', strict=True),
-                mock.call(env, known_langs['c++'], c_family._builders,
-                          candidates=['c++']),
+                mock.call(self.env, known_langs['c++'], c_family._builders,
+                          candidates='g++', fallback_builder=self.fallback,
+                          strict=True),
+                mock.call(self.env, known_langs['c++'], c_family._builders,
+                          candidates=cmds, fallback_builder=self.fallback),
             ])
