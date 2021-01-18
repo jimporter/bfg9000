@@ -1,6 +1,5 @@
 #include "window.hpp"
 
-#include <iostream>
 #include <QPushButton>
 
 #include "ui_widget.h"
