@@ -156,8 +156,9 @@ jobs:
       - name: Install macOS dependencies
         if: startsWith(matrix.os, 'macos-')
         run: |
-          brew install bison boost gfortran ninja pkg-config qt5
+          brew install bison boost ninja pkg-config qt5
           brew link qt5 --force
+          echo "FC=gfortran-10" >> ${GITHUB_ENV}
           echo "YACC=/usr/local/opt/bison/bin/bison" >> ${GITHUB_ENV}
       - name: Set up clang
         if: matrix.compiler == 'clang'
