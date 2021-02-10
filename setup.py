@@ -86,10 +86,14 @@ try:
             title = '{} ({})'.format(v.base_version, alias)
             short_version = '{}.{}'.format(*v.release[:2])
 
-            info = json.loads(subprocess.check_output(
-                ['mike', 'list', '-j', alias],
-                universal_newlines=True
-            ))
+            try:
+                info = json.loads(subprocess.check_output(
+                    ['mike', 'list', '-j', alias],
+                    universal_newlines=True
+                ))
+            except subprocess.CalledProcessError:
+                info = None
+
             if info['version'] != short_version:
                 t = re.sub(r' \({}\)$'.format(re.escape(alias)), '',
                            info['title'])
