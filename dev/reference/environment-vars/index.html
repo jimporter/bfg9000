@@ -455,11 +455,21 @@ variables for tests.</p>
 <p>The command to use when creating symlinks.</p>
 <h2 id="system-variables">System variables<a class="headerlink" href="#system-variables" title="Permanent link">§</a></h2>
 <hr />
+<h4 id="clicolor"><em>CLICOLOR</em><a class="headerlink" href="#clicolor" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <em>none</em></p>
+<p>If set to <code>0</code>, disable colors in terminal output, overriding the <code>--color</code>
+option and tty detection. If set to non-zero, enable colors if outputting to a
+tty.</p>
+<h4 id="clicolor_force"><em>CLICOLOR_FORCE</em><a class="headerlink" href="#clicolor_force" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <em>none</em></p>
+<p>If set to non-zero, enable colors in the terminal output regardless of whether
+the destination is a tty. This overrides <a href="#CLICOLOR"><em>CLICOLOR</em></a>.</p>
 <h4 id="destdir"><em>DESTDIR</em><a class="headerlink" href="#destdir" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <em>none</em></p>
-<p><em>POSIX-only</em>. A directory to prepend to the install location for the project,
-used in performing staged installs. For more information, see the <a href="https://www.gnu.org/prep/standards/html_node/DESTDIR.html">GNU coding
-standards</a>.</p>
+<p>A directory to prepend to the install location for the project, used in
+performing staged installs. For more information, see the <a href="https://www.gnu.org/prep/standards/html_node/DESTDIR.html">GNU coding
+standards</a>. On Windows, this can be used so long as the installation
+prefixes are drive-relative (e.g. <code>\path\to\install</code>).</p>
 <h4 id="platform"><em>PLATFORM</em><a class="headerlink" href="#platform" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <code>Win32</code></p>
 <p><em>Windows-only</em>. The platform type to use when generating MSBuild files.</p>
