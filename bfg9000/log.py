@@ -132,6 +132,14 @@ class StackfulStreamHandler(ColoredStreamHandler):
         logging.root.handle(record)
 
 
+def _clicolor(environ):
+    if environ.get('CLICOLOR_FORCE', '0') != '0':
+        return 'always'
+    if 'CLICOLOR' in environ:
+        return 'never' if environ['CLICOLOR'] == '0' else 'auto'
+    return None
+
+
 def _init_logging(logger, debug, stream=None):
     logger.setLevel(logging.DEBUG if debug else logging.INFO)
 
@@ -157,7 +165,8 @@ def _init_logging(logger, debug, stream=None):
     logger.addHandler(stackful)
 
 
-def init(color='auto', debug=False, warn_once=False):
+def init(color='auto', debug=False, warn_once=False, environ=os.environ):
+    color = _clicolor(environ) or color
     if color == 'always':
         colorama.init(strip=False)
     elif color == 'never':

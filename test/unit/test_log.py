@@ -49,6 +49,27 @@ class TestIsUserSrc(TestCase):
             ))
 
 
+class TestCliColor(TestCase):
+    def test_clicolor(self):
+        self.assertEqual(log._clicolor({'CLICOLOR': '0'}), 'never')
+        self.assertEqual(log._clicolor({'CLICOLOR': '1'}), 'auto')
+        self.assertEqual(log._clicolor({'CLICOLOR': '2'}), 'auto')
+
+    def test_clicolor_force(self):
+        self.assertEqual(log._clicolor({'CLICOLOR_FORCE': '0'}), None)
+        self.assertEqual(log._clicolor({'CLICOLOR_FORCE': '1'}), 'always')
+
+    def test_neither(self):
+        self.assertEqual(log._clicolor({}), None)
+
+    def test_both(self):
+        c = log._clicolor
+        self.assertEqual(c({'CLICOLOR': '0', 'CLICOLOR_FORCE': '0'}), 'never')
+        self.assertEqual(c({'CLICOLOR': '0', 'CLICOLOR_FORCE': '1'}), 'always')
+        self.assertEqual(c({'CLICOLOR': '1', 'CLICOLOR_FORCE': '0'}), 'auto')
+        self.assertEqual(c({'CLICOLOR': '1', 'CLICOLOR_FORCE': '1'}), 'always')
+
+
 class TestColoredStreamHandler(TestCase):
     def setUp(self):
         self.handler = log.ColoredStreamHandler()

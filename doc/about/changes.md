@@ -8,6 +8,8 @@ in progress
 - Add `bfg9000 run` command to allow executing other commands using the
   environment variables for a given build
 - `pkg-config` executable can now be found by guessing based on other compilers
+- Add support for `CLICOLOR` and `CLICOLOR_FORCE` environment variables to
+  control whether to display colors in terminal output
 
 ### Breaking changes
 - Require Python 3.6+

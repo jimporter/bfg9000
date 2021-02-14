@@ -496,13 +496,29 @@ The command to use when creating symlinks.
 ## System variables
 ---
 
+#### *CLICOLOR*
+Default: *none*
+{: .subtitle}
+
+If set to `0`, disable colors in terminal output, overriding the `--color`
+option and tty detection. If set to non-zero, enable colors if outputting to a
+tty.
+
+#### *CLICOLOR_FORCE*
+Default: *none*
+{: .subtitle}
+
+If set to non-zero, enable colors in the terminal output regardless of whether
+the destination is a tty. This overrides [*CLICOLOR*](#CLICOLOR).
+
 #### *DESTDIR*
 Default: *none*
 {: .subtitle}
 
-*POSIX-only*. A directory to prepend to the install location for the project,
-used in performing staged installs. For more information, see the [GNU coding
-standards][destdir].
+A directory to prepend to the install location for the project, used in
+performing staged installs. For more information, see the [GNU coding
+standards][destdir]. On Windows, this can be used so long as the installation
+prefixes are drive-relative (e.g. `\path\to\install`).
 
 #### *PLATFORM*
 Default: `Win32`
