@@ -33,15 +33,18 @@ def main():
                         help='the command to execute')
     args = parser.parse_args()
 
-    if len(args.command) == 0:
+    cmd = args.command
+    if cmd and cmd[0] == '--':
+        cmd = cmd[1:]
+    if len(cmd) == 0:
         parser.error('command required')
 
     try:
-        p = subprocess.Popen(args.command, universal_newlines=True,
+        p = subprocess.Popen(cmd, universal_newlines=True,
                              stderr=subprocess.PIPE)
     except OSError as e:
         if e.errno == errno.ENOENT:
-            parser.exit(66, 'command not found: {}\n'.format(args.command[0]))
+            parser.exit(66, 'command not found: {}\n'.format(cmd[0]))
         raise  # pragma: no cover
 
     for line in p.stderr:

@@ -7,11 +7,12 @@ from . import tool
 from .common import check_which, Command, guess_command, make_command_converter
 from .. import log, options as opts, shell
 from ..exceptions import PackageResolutionError, PackageVersionError
+from ..iterutils import iterate, listify
 from ..objutils import memoize_method
 from ..packages import Package, PackageKind
 from ..path import Path, Root
 from ..shell import posix as pshell, which
-from ..versioning import check_version, Version
+from ..versioning import check_version, SpecifierSet, Version
 
 _lib_dirs_parser = argparse.ArgumentParser()
 _lib_dirs_parser.add_argument('-L', action='append', dest='lib_dirs')
@@ -75,22 +76,24 @@ class PkgConfig(Command):
     def __init__(self, env):
         super().__init__(env, command=('pkg_config', self._get_command(env)))
 
-    def _call(self, cmd, name, type, static=False, msvc_syntax=False):
-        result = cmd + [name] + self._options[type][0]
+    def _call(self, cmd, names, type, static=False, msvc_syntax=False,
+              options=[]):
+        result = cmd + listify(names) + self._options[type][0] + options
         if static:
             result.append('--static')
         if msvc_syntax:
             result.append('--msvc-syntax')
         return result
 
-    def run(self, name, type, *args, extra_env=None, installed=None, **kwargs):
+    def run(self, names, type, *args, extra_env=None, installed=None,
+            **kwargs):
         if installed is True:
             extra_env = dict(PKG_CONFIG_DISABLE_UNINSTALLED='1',
                              **(extra_env or {}))
         elif installed is False:
-            name += '-uninstalled'
+            names = [i + '-uninstalled' for i in iterate(names)]
 
-        result = super().run(name, type, *args, extra_env=extra_env,
+        result = super().run(names, type, *args, extra_env=extra_env,
                              **kwargs).strip()
         if self._options[type][1]:
             return self._options[type][1](result)
@@ -98,14 +101,19 @@ class PkgConfig(Command):
 
 
 class PkgConfigPackage(Package):
-    def __init__(self, name, format, specifier, kind, pkg_config, deps=None,
-                 search_path=None):
-        super().__init__(name, format, deps)
+    def __init__(self, pkg_config, name, submodules=None,
+                 specifier=SpecifierSet(), pcfiles=None, *, format,
+                 kind=PackageKind.any, deps=None, search_path=None,
+                 extra_options=[]):
+        super().__init__(name, submodules, format=format, deps=deps)
+
         self._pkg_config = pkg_config
         self._env = {'PKG_CONFIG_PATH': search_path} if search_path else {}
+        self._extra_options = extra_options
+        self.pcfiles = pcfiles if pcfiles is not None else [name]
 
         try:
-            version = Version(self._call(name, 'version'))
+            version = Version(self._call(self.pcfiles[0], 'version'))
         except subprocess.CalledProcessError:
             raise PackageResolutionError("unable to find package '{}'"
                                          .format(name))
@@ -118,14 +126,15 @@ class PkgConfigPackage(Package):
     @memoize_method
     def _call(self, *args, extra_env=None, **kwargs):
         final_env = dict(**self._env, **extra_env) if extra_env else self._env
-        return self._pkg_config.run(*args, extra_env=final_env, **kwargs)
+        return self._pkg_config.run(*args, extra_env=final_env,
+                                    options=self._extra_options, **kwargs)
 
     def _get_rpaths(self):
         extra_env = {'PKG_CONFIG_ALLOW_SYSTEM_LIBS': '1'}
 
         def rpaths_for(installed):
             try:
-                args = self._call(self.name, 'lib_dirs', self.static,
+                args = self._call(self.pcfiles, 'lib_dirs', self.static,
                                   extra_env=extra_env, installed=installed)
             except shell.CalledProcessError:
                 return None
@@ -143,13 +152,13 @@ class PkgConfigPackage(Package):
                 (opts.rpath_dir(i, 'installed') for i in installed or []),
             )
 
-    def _get_install_name_changes(self, name=None):
-        if name is None:
-            name = self.name
+    def _get_install_name_changes(self, pcfiles=None):
+        if pcfiles is None:
+            pcfiles = self.pcfiles
 
         def install_names_for(installed):
             try:
-                return self._call(name, 'install_names', self.static,
+                return self._call(pcfiles, 'install_names', self.static,
                                   installed=installed)
             except shell.CalledProcessError:
                 return None
@@ -164,23 +173,23 @@ class PkgConfigPackage(Package):
                                       for i, j in zip(uninstalled, installed))
 
         # Recursively get install_name changes for public requirements.
-        requires = self._call(name, 'requires')
+        requires = self._call(pcfiles, 'requires')
         for i in requires:
             result.extend(self._get_install_name_changes(i))
 
         return result
 
     def compile_options(self, compiler):
-        return self._call(self.name, 'cflags', self.static,
+        return self._call(self.pcfiles, 'cflags', self.static,
                           compiler.flavor == 'msvc')
 
     def link_options(self, linker):
-        flags = self._call(self.name, 'ldflags', self.static,
+        flags = self._call(self.pcfiles, 'ldflags', self.static,
                            linker.flavor == 'msvc')
 
         # XXX: How should we ensure that these libs are linked statically when
         # necessary?
-        libs = self._call(self.name, 'ldlibs', self.static,
+        libs = self._call(self.pcfiles, 'ldlibs', self.static,
                           linker.flavor == 'msvc')
         libs = opts.option_list(opts.lib_literal(i) for i in libs)
 
@@ -201,7 +210,7 @@ class PkgConfigPackage(Package):
         return flags + libs + extra_opts
 
     def path(self):
-        return self._call(self.name, 'path')
+        return self._call(self.pcfiles[0], 'path')
 
     def __repr__(self):
         return '<PkgConfigPackage({!r}, {!r})>'.format(
@@ -209,9 +218,8 @@ class PkgConfigPackage(Package):
         )
 
 
-def resolve(env, name, format, version=None, kind=PackageKind.any):
-    package = PkgConfigPackage(name, format, version, kind,
-                               env.tool('pkg_config'))
+def resolve(env, name, *args, **kwargs):
+    package = PkgConfigPackage(env.tool('pkg_config'), name, *args, **kwargs)
     log.info('found package {!r} version {} via pkg-config in {}'
              .format(name, package.version, os.path.normpath(package.path())))
     return package

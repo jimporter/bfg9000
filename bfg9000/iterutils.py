@@ -6,8 +6,17 @@ __all__ = ['default_sentinel', 'first', 'find_index', 'flatten', 'isiterable',
            'map_iterable', 'merge_dicts', 'merge_into_dict', 'partition',
            'recursive_walk', 'slice_dict', 'tween', 'uniques', 'unlistify']
 
+
 # This could go in a funcutils module if we ever create one...
-default_sentinel = object()
+class _DefaultType:
+    def __bool__(self):
+        return False
+
+    def __repr__(self):
+        return '<default_sentinel>'
+
+
+default_sentinel = _DefaultType()
 
 
 def isiterable(thing):

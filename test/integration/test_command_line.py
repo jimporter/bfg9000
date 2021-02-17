@@ -196,6 +196,11 @@ class TestRun(BasicIntegrationTest):
                                   returncode=1)
         self.assertRegex(output, 'unable to reload environment')
 
+    def test_no_args(self):
+        self.configure(backend=backends[0])
+        self.assertPopen(['bfg9000', 'run'], returncode=2)
+        self.assertPopen(['bfg9000', 'run', '--'], returncode=2)
+
 
 class TestDepfixer(SubprocessTestCase):
     def test_empty_deps(self):

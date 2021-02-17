@@ -32,7 +32,7 @@ def _dist_command(format, build_inputs, buildfile, env):
 
     return doppel(
         'archive', [i.path.relpath(srcdir) for i in build_inputs.sources()],
-        Path(dstname + _exts[format]), directory=srcdir, format=format,
+        Path(dstname + _exts[format]), format=format, directory=srcdir,
         dest_prefix=dstname
     )
 

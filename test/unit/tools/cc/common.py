@@ -12,12 +12,16 @@ def mock_which(*args, **kwargs):
 
 
 def mock_execute(args, **kwargs):
-    if args[-1] == '-Wl,--version':
+    if '--version' in args:
+        return ('g++ (Ubuntu 5.4.0-6ubuntu1~16.04.6) 5.4.0 20160609\n' +
+                'Copyright (C) 2015 Free Software Foundation, Inc.')
+    if '-Wl,--version' in args:
         return '', ('COLLECT_GCC=g++\n/usr/bin/collect2 --version\n' +
                     '/usr/bin/ld --version\n')
-    elif args[-1] == '-print-search-dirs':
+    elif '-print-search-dirs' in args:
         return 'libraries: =/lib/search/dir1:/lib/search/dir2\n'
-    elif args[-1] == '-print-sysroot':
+    elif '-print-sysroot' in args:
         return '/'
-    elif args[-1] == '--verbose':
+    elif '--verbose' in args:
         return 'SEARCH_DIR("/usr")\n'
+    raise OSError('unknown command: {}'.format(args))

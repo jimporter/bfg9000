@@ -174,11 +174,12 @@ class TestJvmCompiler(CrossPlatformTestCase):
             jvmout = self.env.tool('jvmoutput')
             self.assertEqual(
                 self.compiler('in', 'out'),
-                [jvmout, '-o', 'out', self.compiler] + extra + ['in']
+                [jvmout, '-o', 'out', '--', self.compiler] + extra + ['in']
             )
             self.assertEqual(
                 self.compiler('in', 'out', ['flags']),
-                [jvmout, '-o', 'out', self.compiler] + extra + ['flags', 'in']
+                [jvmout, '-o', 'out', '--', self.compiler] + extra +
+                ['flags', 'in']
             )
 
     def test_default_name(self):

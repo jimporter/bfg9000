@@ -10,24 +10,24 @@ MockPlatform = namedtuple('MockPlatform', ['family'])
 
 
 def mock_execute_cc(args, **kwargs):
-    if args[-1] == '--version':
+    if '--version' in args:
         return 'version\n'
-    elif args[-1] == '-Wl,--version':
+    elif '-Wl,--version' in args:
         return '', ('COLLECT_GCC=g++\n/usr/bin/collect2 --version\n' +
                     '/usr/bin/ld --version\n')
-    elif args[-1] == '-print-search-dirs':
+    elif '-print-search-dirs' in args:
         return 'libraries: =/lib/search/dir1:/lib/search/dir2\n'
-    elif args[-1] == '-print-sysroot':
+    elif '-print-sysroot' in args:
         return '/'
-    elif args[-1] == '--verbose':
+    elif '--verbose' in args:
         return 'SEARCH_DIR("/usr")\n'
-    raise OSError('bad option')
+    raise OSError('unknown command: {}'.format(args))
 
 
 def mock_execute_msvc(args, **kwargs):
-    if args[-1] == '-?':
+    if '-?' in args:
         return 'Microsoft (R) Windows (R) Resource Compiler Version 10.0'
-    raise OSError('bad option')
+    raise OSError('unknown command: {}'.format(args))
 
 
 class TestRcBuilder(TestCase):

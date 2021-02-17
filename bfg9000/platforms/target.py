@@ -2,10 +2,7 @@ from .core import _get_platform_info, _platform_info, Platform
 
 
 class TargetPlatform(Platform):
-    _package_map = {}
-
-    def transform_package(self, name):
-        return self._package_map.get(name, name)
+    pass
 
 
 def platform_info(*args, **kwargs):

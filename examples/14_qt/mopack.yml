@@ -1,0 +1,10 @@
+packages:
+  Qt5Widgets:
+    - if: host_platform == 'windows'
+      source: system
+      headers: [QApplication, QtCore]
+      libraries: [Qt5Widgets, Qt5Core]
+  Qt5Qml:
+    - if: host_platform == 'windows'
+      source: system
+      headers: [QQmlApplicationEngine]

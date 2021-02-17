@@ -123,6 +123,7 @@ more_requires = []
 if os.getenv('STDEB_BUILD') not in ['1', 'true']:
     more_requires.extend([
         'doppel >= 0.4.0',
+        'mopack',
         'pysetenv;platform_system=="Windows"'
     ])
     if os.getenv('NO_PATCHELF') not in ['1', 'true']:
@@ -165,7 +166,7 @@ setup(
 
     python_requires='>=3.6',
     install_requires=(
-        ['colorama', 'setuptools', 'verspec'] + more_requires
+        ['colorama', 'pyyaml', 'setuptools', 'verspec'] + more_requires
     ),
     extras_require={
         'dev': ['coverage', 'flake8 >= 3.7', 'lxml', 'mike >= 0.3.1',

@@ -784,49 +784,24 @@ to modify [static libraries](#static_library).
 
 ## Package resolvers
 
-### boost_package([*name*], [*version*]) { #boost_package }
-Availability: `build.bfg`
-{: .subtitle}
-
-Search for a [Boost][boost] library. You can specify *name* (as a string or a
-list) to specify a specific Boost library (or libraries); for instance,
-`'program_options'`. For header-only libraries, you can omit *name*. If
-*version* is specified, it will ensure that the installed version of Boost meets
-the version requirement; it must be formatted as a Python [version
-specifier][version-specifier].
-
-If this function is unable to find the specified Boost library, it will raise a
-[*PackageResolutionError*](#packageresolutionerror). If the library is found but
-doesn't match the required version, a
-[*PackageVersionError*](#packageversionerror) will be raised instead.
-
-This function recognizes the following environment variables:
-[`BOOST_ROOT`](environment-vars.md#boost_root),
-[`BOOST_INCLUDEDIR`](environment-vars.md#boost_includedir),
-[`BOOST_LIBRARYDIR`](environment-vars.md#boost_librarydir),
-[`CPATH`](environment-vars.md#cpath),
-[`INCLUDE`](environment-vars.md#include),
-[`LIB`](environment-vars.md#lib),
-[`LIBRARY_PATH`](environment-vars.md#library_path).
-
 ### framework(*name*, [*suffix*]) { #framework }
 
 Reference a macOS [framework][framework] named *name* with the optional suffix
 *suffix*. Though not a "package" in name, this can be used wherever packages are
 accepted.
 
-### package(*name*, [*version*], \*, [*lang*], [*kind*], [*headers*], [*libs*]) { #package }
+### package(*name*, [*submodules*], [*version*], \*, [*lang*], [*kind*]) { #package }
 Availability: `build.bfg`
 {: .subtitle}
 
-Search for a package named *name*. *lang* is the source language of the library
-(if not specified, this will guess the language based on the extensions in
-*headers*, or use `'c'` as a fallback); this will affect how the package is
-resolved. For native libraries (C, C++, Fortran, etc), this will use
-[`pkg-config`][pkg-config] to resolve the package if it's installed. Otherwise
-(or if pkg-config can't find the package), this will check the system's default
-library locations. If this function is unable to find the package, it will raise
-a [*PackageResolutionError*](#packageresolutionerror).
+Search for a package named *name* optionally containing one or more
+*submodules*. *lang* is the source language of the package (if not specified,
+this will use the [default language](#project) for the project); this will
+affect how the package is resolved. For native packages (C, C++, Fortran, etc),
+this will use [mopack][mopack] to resolve the package; otherwise, this will use
+a language-specific check to find packages on the system. If this function is
+unable to find the package, it will raise a
+[*PackageResolutionError*](#packageresolutionerror).
 
 You can also specify *kind* to one of `'any'` (the default), `'shared'`, or
 `'static'`. This allows you to restrict the search to find only static versions
@@ -837,14 +812,9 @@ version of the package meets the version requirement; it must be formatted as a
 Python [version specifier][version-specifier]. If this check fails, a
 [*PackageVersionError*](#packageversionerror) will be raised.
 
-The *headers* and *libs* arguments can be used as fallbacks when pkg-config
-fails to resolve the package. *headers* allows you to specify a header file (or
-list thereof) that you need to use in your source files. This will search for
-the header files and add the appropriate include directories to your build
-configuration. *libs* lets you list any library names that are part of this
-package; by default, this is set to the package's *name*. You can also pass
-*None* to *libs* in order to explicitly indicate that the library is
-header-only.
+When calling this function, you can exclude the *submodules* argument and pass
+a *version* as the second positional argument if it's parseable as a version
+specifier. For example, `package('pkg', '>=1.0')`.
 
 This function recognizes the following environment variables:
 [`CLASSPATH`](environment-vars.md#classpath),
@@ -1594,6 +1564,7 @@ specifier.
 [msvc-pch]: https://msdn.microsoft.com/en-us/library/szfdksca.aspx
 [whole-archive]: http://linux.die.net/man/1/ld
 [boost]: https://www.boost.org/
+[mopack]: https://jimporter.github.io/mopack/
 [version-specifier]: https://www.python.org/dev/peps/pep-0440/#version-specifiers
 [framework]: https://developer.apple.com/library/content/documentation/MacOSX/Conceptual/OSX_Technology_Overview/SystemFrameworks/SystemFrameworks.html
 [pkg-config]: https://www.freedesktop.org/wiki/Software/pkg-config/

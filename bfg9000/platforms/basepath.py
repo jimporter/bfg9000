@@ -235,8 +235,8 @@ class BasePath(safe_str.safe_string):
 
     def __repr__(self):
         s = self.realize(self.__repr_variables)
-        if self.directory and not s.endswith(posixpath.sep):
-            s += posixpath.sep
+        if self.directory and not s.endswith(self._localized_sep):
+            s += self._localized_sep
         return '`{}`'.format(s)
 
     def __hash__(self):

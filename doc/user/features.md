@@ -26,6 +26,14 @@ your build scripts. This allows you to perform complex operations in your build
 scripts without having to roll everything yourself or provide a layer of "glue"
 to some external scripts in your build process.
 
+## Flexible package dependencies
+
+bfg9000 integrates with [`mopack`][mopack] to provide support for getting
+external package dependencies from multiple sources and allowing people building
+your project to easily override how packages are found. It's also easy to
+[generate](../reference/builtins.md#pkg_config) [`pkg-config`][pkg-config] `.pc`
+files for your own packages to simplify using them elsewhere.
+
 ## Project-defined arguments
 
 Projects can specify their own options, complete with help instructions, in the
@@ -71,8 +79,8 @@ packages.
 [ninja]: https://ninja-build.org/
 [make]: https://www.gnu.org/software/make/
 [msbuild]: https://msdn.microsoft.com/en-us/library/dd393574(v=vs.120).aspx
+[mopack]: https://jimporter.github.io/mopack/
+[pkg-config]: https://www.freedesktop.org/wiki/Software/pkg-config/
 [patchelf]: https://nixos.org/patchelf.html
 [install_name_tool]: https://www.unix.com/man-page/osx/1/install_name_tool/
-[doppel]: https://github.com/jimporter/doppel
-[pkg-config]: https://www.freedesktop.org/wiki/Software/pkg-config/
-
+[doppel]: https://github.com/jimporter/doppel/

@@ -14,40 +14,42 @@ def mock_execute(args, **kwargs):
     if name.endswith('-uninstalled'):
         raise CalledProcessError(1, args)
 
-    if args[2] == '--modversion':
+    if '--modversion' in args:
         return '1.0\n'
-    elif args[2] == '--print-requires':
+    elif '--print-requires' in args:
         return '\n'
-    elif args[2] == '--variable=install_names':
+    elif '--variable=install_names' in args:
         return '/usr/lib/lib{}.dylib'.format(name)
-    elif args[2] == '--cflags':
+    elif '--cflags' in args:
         return '-I/usr/include\n'
-    elif args[2] == '--libs-only-L':
+    elif '--libs-only-L' in args:
         return '-L/usr/lib\n'
-    elif args[2] == '--libs-only-l':
+    elif '--libs-only-l' in args:
+        if '--static' in args:
+            return '-l{}\n -lstatic'.format(name)
         return '-l{}\n'.format(name)
 
 
 def mock_execute_uninst(args, *, env=None, **kwargs):
     if not env or env.get('PKG_CONFIG_DISABLE_UNINSTALLED') != '1':
         name = args[1].replace('-uninstalled', '')
-        if args[2] == '--libs-only-L':
+        if '--libs-only-L' in args:
             return '-L/path/to/build/{}\n'.format(name)
-        elif args[2] == '--variable=install_names':
+        elif '--variable=install_names' in args:
             return '/path/to/build/{0}/lib{0}.dylib'.format(name)
     return mock_execute(args, **kwargs)
 
 
 def mock_execute_requires(args, **kwargs):
-    if args[1].startswith('foo') and args[2] == '--print-requires':
+    if args[1].startswith('foo') and '--print-requires' in args:
         return 'bar\nbaz >= 1.0\n'
     return mock_execute_uninst(args, **kwargs)
 
 
 def mock_execute_cc(args, **kwargs):
-    if args[-1] == '--version':
+    if '--version' in args:
         return 'version\n'
-    raise OSError('bad option')
+    raise OSError('unknown command: {}'.format(args))
 
 
 class TestPkgConfig(TestCase):
@@ -149,8 +151,8 @@ class TestPkgConfigPackage(ToolTestCase):
     def test_create(self):
         specifier = SpecifierSet('')
         with mock.patch('bfg9000.shell.execute', mock_execute):
-            pkg = PkgConfigPackage('foo', 'elf', specifier, PackageKind.shared,
-                                   self.tool)
+            pkg = PkgConfigPackage(self.tool, 'foo', specifier=specifier,
+                                   format='elf')
             self.assertEqual(pkg.name, 'foo')
             self.assertEqual(pkg.format, 'elf')
             self.assertEqual(pkg.version, Version('1.0'))
@@ -160,8 +162,7 @@ class TestPkgConfigPackage(ToolTestCase):
     def test_compile_options(self):
         compiler = AttrDict(flavor='gcc')
         with mock.patch('bfg9000.shell.execute', mock_execute):
-            pkg = PkgConfigPackage('foo', 'elf', SpecifierSet(''),
-                                   PackageKind.shared, self.tool)
+            pkg = PkgConfigPackage(self.tool, 'foo', format='elf')
 
             self.assertEqual(pkg.compile_options(compiler),
                              opts.option_list(['-I/usr/include']))
@@ -169,8 +170,7 @@ class TestPkgConfigPackage(ToolTestCase):
     def test_link_options_coff(self):
         linker = AttrDict(flavor='gcc', builder=AttrDict(object_format='coff'))
         with mock.patch('bfg9000.shell.execute', mock_execute):
-            pkg = PkgConfigPackage('foo', 'elf', SpecifierSet(''),
-                                   PackageKind.shared, self.tool)
+            pkg = PkgConfigPackage(self.tool, 'foo', format='elf')
 
             self.assertEqual(pkg.link_options(linker), opts.option_list(
                 '-L/usr/lib', opts.lib_literal('-lfoo')
@@ -179,8 +179,7 @@ class TestPkgConfigPackage(ToolTestCase):
     def test_link_options_elf(self):
         linker = AttrDict(flavor='gcc', builder=AttrDict(object_format='elf'))
         with mock.patch('bfg9000.shell.execute', mock_execute):
-            pkg = PkgConfigPackage('foo', 'elf', SpecifierSet(''),
-                                   PackageKind.shared, self.tool)
+            pkg = PkgConfigPackage(self.tool, 'foo', format='elf')
 
             self.assertEqual(pkg.link_options(linker), opts.option_list(
                 '-L/usr/lib', opts.lib_literal('-lfoo'),
@@ -190,8 +189,7 @@ class TestPkgConfigPackage(ToolTestCase):
     def test_link_options_elf_uninst(self):
         linker = AttrDict(flavor='gcc', builder=AttrDict(object_format='elf'))
         with mock.patch('bfg9000.shell.execute', mock_execute_uninst):
-            pkg = PkgConfigPackage('foo', 'elf', SpecifierSet(''),
-                                   PackageKind.shared, self.tool)
+            pkg = PkgConfigPackage(self.tool, 'foo', format='elf')
 
             self.assertEqual(pkg.link_options(linker), opts.option_list(
                 '-L/path/to/build/foo', opts.lib_literal('-lfoo'),
@@ -203,8 +201,7 @@ class TestPkgConfigPackage(ToolTestCase):
         linker = AttrDict(flavor='gcc',
                           builder=AttrDict(object_format='mach-o'))
         with mock.patch('bfg9000.shell.execute', mock_execute):
-            pkg = PkgConfigPackage('foo', 'elf', SpecifierSet(''),
-                                   PackageKind.shared, self.tool)
+            pkg = PkgConfigPackage(self.tool, 'foo', format='elf')
 
             self.assertEqual(pkg.link_options(linker), opts.option_list(
                 '-L/usr/lib', opts.lib_literal('-lfoo')
@@ -214,8 +211,7 @@ class TestPkgConfigPackage(ToolTestCase):
         linker = AttrDict(flavor='gcc',
                           builder=AttrDict(object_format='mach-o'))
         with mock.patch('bfg9000.shell.execute', mock_execute_uninst):
-            pkg = PkgConfigPackage('foo', 'elf', SpecifierSet(''),
-                                   PackageKind.shared, self.tool)
+            pkg = PkgConfigPackage(self.tool, 'foo', format='elf')
 
             self.assertEqual(pkg.link_options(linker), opts.option_list(
                 '-L/path/to/build/foo', opts.lib_literal('-lfoo'),
@@ -227,8 +223,7 @@ class TestPkgConfigPackage(ToolTestCase):
         linker = AttrDict(flavor='gcc',
                           builder=AttrDict(object_format='mach-o'))
         with mock.patch('bfg9000.shell.execute', mock_execute_requires):
-            pkg = PkgConfigPackage('foo', 'elf', SpecifierSet(''),
-                                   PackageKind.shared, self.tool)
+            pkg = PkgConfigPackage(self.tool, 'foo', format='elf')
 
             self.assertEqual(pkg.link_options(linker), opts.option_list(
                 '-L/path/to/build/foo', opts.lib_literal('-lfoo'),
@@ -238,4 +233,15 @@ class TestPkgConfigPackage(ToolTestCase):
                                          '/usr/lib/libbar.dylib'),
                 opts.install_name_change('/path/to/build/baz/libbaz.dylib',
                                          '/usr/lib/libbaz.dylib'),
+            ))
+
+    def test_link_options_static(self):
+        linker = AttrDict(flavor='gcc')
+        with mock.patch('bfg9000.shell.execute', mock_execute):
+            pkg = PkgConfigPackage(self.tool, 'foo', format='elf',
+                                   kind=PackageKind.static)
+            self.assertEqual(pkg.static, True)
+            self.assertEqual(pkg.link_options(linker), opts.option_list(
+                '-L/usr/lib', opts.lib_literal('-lfoo'),
+                opts.lib_literal('-lstatic')
             ))

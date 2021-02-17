@@ -1,11 +1,12 @@
 from .basepath import BasePath, Root, InstallRoot
 from .core import Platform
-from .framework import Framework
 from .host import HostPlatform
 from .target import TargetPlatform
 
 
 class PosixPath(BasePath):
+    _localized_sep = BasePath.sep
+
     def _localize_path(self, path):
         return path
 
@@ -57,12 +58,6 @@ class PosixHostPlatform(HostPlatform, PosixPlatform):
 
 
 class PosixTargetPlatform(TargetPlatform, PosixPlatform):
-    _package_map = {
-        'gl': 'GL',
-        'glu': 'GLU',
-        'zlib': 'z',
-    }
-
     @property
     def executable_ext(self):
         return ''
@@ -106,12 +101,6 @@ class DarwinHostPlatform(PosixHostPlatform, DarwinPlatform):
 
 
 class DarwinTargetPlatform(PosixTargetPlatform, DarwinPlatform):
-    _package_map = {
-        'gl': Framework('OpenGL'),
-        'glu': Framework('OpenGL'),
-        'glut': Framework('GLUT'),
-    }
-
     @property
     def shared_library_ext(self):
         return '.dylib'

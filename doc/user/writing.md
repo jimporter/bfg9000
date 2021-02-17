@@ -261,23 +261,35 @@ and none they don't.
 
 ## External packages
 
-Most projects have external packages that they depend on. There are lots of
-different ways these packages are organized, and bfg9000 currently supports
-two of them: ["ordinary" packages](../reference/builtins.md#package) (resolved
-using either [`pkg-config`][pkg-config] or searched for in the default location
-for your system) and [Boost packages](../reference/builtins.md#boost_package):
+Most non-trivial projects have external package dependencies. These can be
+specified in a `build.bfg` file via
+[*package()*](../reference/builtins.md#package) and used when building binaries
+by passing them in the *packages* argument:
 
 ```python
 ogg = package('ogg', kind='static')
 prog_opts = boost_package('program_options', version='>=1.55')
-```
 
-Each of these returns an object representing the package that can be used when
-building binaries by passing them in the *packages* argument:
-
-```python
 executable('program', files=['main.cpp'], packages=[ogg, prog_opts])
 ```
+
+There are many different ways external packages are distributed, but for native
+packages (C, C++, Fortran, etc), this is handled via [mopack][mopack]. mopack
+provides a variety of ways to resolve external packages, and bfg9000 will
+automatically invoke mopack during configuration. You can specify how each
+package dependency should be resolved via an `mopack.yml` file:
+
+```yaml
+packages:
+  foobar:
+    source: tarball
+    path: foobar-1.0.tar.gz
+    build: bfg9000
+```
+
+By keeping the package resolution metadata separate from the `build.bfg` file,
+it's much easier for people building your project to override how package
+dependencies are resolved.
 
 ## Installation
 
@@ -533,6 +545,7 @@ automatically be included in the `pkg-config` info.
 There are several other options available to tweak the output of this function,
 detailed in the [reference guide](../reference/builtins.md#pkg_config).
 
+[mopack]: https://jimporter.github.io/mopack/
 [pkg-config]: https://www.freedesktop.org/wiki/Software/pkg-config/
 [argparse]: https://docs.python.org/library/argparse.html
 [add_argument]: https://docs.python.org/library/argparse.html#the-add-argument-method

@@ -1,5 +1,5 @@
 # -*- python -*-
 
-popts = boost_package('program_options')
+popts = package('boost', 'program_options')
 
 executable('program', files=['program.cpp'], packages=[popts])

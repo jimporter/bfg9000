@@ -74,9 +74,14 @@ jobs:
         uses: actions/setup-python@v1
         with:
           python-version: ${{ matrix.python-version }}
+      - name: Clone mopack
+        uses: actions/checkout@v2
+        with:
+          repository: jimporter/mopack
+          path: mopack
       - name: Install Python dependencies
         run: |
-          pip install codecov '.[test]'
+          pip install codecov ./mopack '.[test]'
       - name: Initialize MSVC ${{ matrix.msvc-version }}
         if: startsWith(matrix.os, 'windows-')
         uses: ilammy/msvc-dev-cmd@v1
@@ -196,6 +201,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+      - name: Clone mopack
+        uses: actions/checkout@v2
+        with:
+          repository: jimporter/mopack
+          path: mopack
       - name: Install Cygwin
         shell: cmd
         run: >
@@ -211,7 +221,7 @@ jobs:
       - name: Install Python dependencies
         run: >
           C:\cygwin\bin\bash -lc
-          "cd bfg9000 && pip3.8 install codecov coverage mock ."
+          "cd bfg9000 && pip3.8 install codecov coverage mock ./mopack ."
       - name: Run tests
         run: >
           C:\cygwin\bin\bash -lc

@@ -6,6 +6,11 @@ from bfg9000 import iterutils
 from bfg9000.shell.list import shell_list
 
 
+class TestDefaultSentinel(TestCase):
+    def test_false(self):
+        self.assertFalse(bool(iterutils.default_sentinel))
+
+
 class TestIsIterable(TestCase):
     def test_list(self):
         self.assertTrue(iterutils.isiterable([]))

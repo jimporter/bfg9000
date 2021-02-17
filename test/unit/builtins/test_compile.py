@@ -193,13 +193,15 @@ class TestObjectFile(CompileTest):
         self.assertEqual(result.creator.include_deps, [inc])
 
     def test_include_order(self):
+        fmt = self.env.target_platform.object_format
         incdir = opts.include_dir(file_types.HeaderDirectory(
             Path('include', Root.srcdir)
         ))
         pkg_incdir = opts.include_dir(file_types.HeaderDirectory(
             Path('/usr/include', Root.absolute)
         ))
-        pkg = CommonPackage('pkg', None, opts.option_list(pkg_incdir))
+        pkg = CommonPackage('pkg', format=fmt,
+                            compile_options=opts.option_list(pkg_incdir))
 
         result = self.context['object_file'](file='main.cpp',
                                              includes='include', packages=pkg)

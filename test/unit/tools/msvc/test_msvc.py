@@ -1,12 +1,34 @@
 from unittest import mock
 
 from ... import *
-from .common import known_langs, mock_which
+from .common import known_langs, mock_execute, mock_which
 
+from bfg9000 import options as opts
 from bfg9000.exceptions import PackageResolutionError
-from bfg9000.path import Path, Root
+from bfg9000.file_types import Directory, HeaderDirectory, Library
+from bfg9000.options import option_list
+from bfg9000.packages import PackageKind
+from bfg9000.path import abspath, Path, Root
 from bfg9000.tools.msvc import MsvcBuilder
-from bfg9000.versioning import Version
+from bfg9000.versioning import SpecifierSet, Version
+
+
+def mock_execute_pkgconf(args, **kwargs):
+    if '--modversion' in args:
+        return '1.2.3\n'
+    elif '--variable=pcfiledir' in args:
+        return '/path/to/pkg-config\n'
+    elif '--cflags' in args:
+        return '/Ipath\n'
+    elif '--libs-only-L' in args:
+        return '/LIBPATH:path\n'
+    elif '--libs-only-l' in args:
+        return 'foo.lib\n'
+    elif '--variable=install_names' in args:
+        return '\n'
+    elif '--print-requires' in args:
+        return '\n'
+    raise OSError('unknown command: {}'.format(args))
 
 
 class TestMsvcBuilder(CrossPlatformTestCase):
@@ -73,7 +95,7 @@ class TestMsvcBuilder(CrossPlatformTestCase):
 
     def test_clang(self):
         def mock_execute(args, **kwargs):
-            if args[-1] == '--version':
+            if '--version' in args:
                 return 'clang version 10.0.0'
 
         version = 'OVERVIEW: clang LLVM compiler'
@@ -121,8 +143,20 @@ class TestMsvcPackageResolver(CrossPlatformTestCase):
 
     def setUp(self):
         with mock.patch('bfg9000.shell.which', mock_which):
-            self.packages = MsvcBuilder(self.env, known_langs['c++'], ['cl'],
-                                        'version').packages
+            self.builder = MsvcBuilder(self.env, known_langs['c++'], ['cl'],
+                                       'version')
+            self.packages = self.builder.packages
+            self.compiler = self.builder.compiler
+            self.linker = self.builder.linker('executable')
+
+    def test_lang(self):
+        self.assertEqual(self.packages.lang, 'c++')
+
+    def test_header(self):
+        with mock.patch('bfg9000.tools.msvc.exists', return_value=True):
+            p = abspath('/path/to/include')
+            hdr = self.packages.header('foo.hpp', [p])
+            self.assertEqual(hdr, HeaderDirectory(p))
 
     def test_header_not_found(self):
         with mock.patch('bfg9000.tools.msvc.exists', return_value=False):
@@ -133,6 +167,13 @@ class TestMsvcPackageResolver(CrossPlatformTestCase):
         with self.assertRaises(ValueError):
             self.packages.header('foo.hpp', [Path('dir', Root.srcdir)])
 
+    def test_library(self):
+        p = Path('/path/to/lib')
+        with mock.patch('bfg9000.tools.msvc.exists', return_value=True):
+            lib = self.packages.library('foo', search_dirs=[p])
+            fmt = self.packages.builder.object_format
+            self.assertEqual(lib, Library(p.append('foo.lib'), format=fmt))
+
     def test_library_not_found(self):
         with mock.patch('bfg9000.tools.msvc.exists', return_value=False):
             with self.assertRaises(PackageResolutionError):
@@ -142,3 +183,76 @@ class TestMsvcPackageResolver(CrossPlatformTestCase):
         with self.assertRaises(ValueError):
             p = Path('dir', Root.srcdir)
             self.packages.library('foo', search_dirs=[p])
+
+    def test_resolve_pkg_config(self):
+        with mock.patch('bfg9000.shell.which', mock_which), \
+             mock.patch('bfg9000.shell.execute', mock_execute):
+            self.env.tool('pkg_config')
+
+        usage = {'type': 'pkg_config', 'pcfiles': ['foo'],
+                 'path': ['/path/to/include'], 'extra_args': []}
+        with mock.patch('bfg9000.shell.execute', mock_execute_pkgconf), \
+             mock.patch('bfg9000.tools.msvc.exists', return_value=True), \
+             mock.patch('bfg9000.tools.mopack.get_usage',
+                        return_value=usage), \
+             mock.patch('bfg9000.log.info'):  # noqa
+            pkg = self.packages.resolve('foo', None, SpecifierSet(),
+                                        PackageKind.any)
+            self.assertEqual(pkg.name, 'foo')
+            self.assertEqual(pkg.compile_options(self.compiler),
+                             option_list('/Ipath'))
+            self.assertEqual(pkg.link_options(self.linker), option_list(
+                '/LIBPATH:path', opts.lib_literal('foo.lib')
+            ))
+
+    def test_resolve_path(self):
+        usage = {'type': 'path', 'headers': ['foo.hpp'],
+                 'include_path': ['/path/to/include'],
+                 'libraries': ['foo'], 'library_path': ['/path/to/lib']}
+        with mock.patch('bfg9000.tools.msvc.exists', return_value=True), \
+             mock.patch('bfg9000.tools.mopack.get_usage',
+                        return_value=usage), \
+             mock.patch('bfg9000.log.info'):  # noqa
+            pkg = self.packages.resolve('foo', None, SpecifierSet(),
+                                        PackageKind.any)
+            self.assertEqual(pkg.name, 'foo')
+            self.assertEqual(pkg.compile_options(self.compiler), option_list(
+                opts.include_dir(HeaderDirectory(abspath('/path/to/include')))
+            ))
+            self.assertEqual(pkg.link_options(self.linker), option_list(
+                opts.lib(Library(abspath('/path/to/lib/foo.lib'),
+                                 format=self.builder.object_format))
+            ))
+
+    def test_resolve_path_include_path(self):
+        usage = {'type': 'path', 'include_path': ['/path/to/include']}
+        with mock.patch('bfg9000.tools.mopack.get_usage',
+                        return_value=usage), \
+             mock.patch('bfg9000.log.info'):  # noqa
+            pkg = self.packages.resolve('foo', None, SpecifierSet(),
+                                        PackageKind.any)
+            self.assertEqual(pkg.name, 'foo')
+            self.assertEqual(pkg.compile_options(self.compiler), option_list(
+                opts.include_dir(HeaderDirectory(abspath('/path/to/include')))
+            ))
+            self.assertEqual(pkg.link_options(self.linker), option_list())
+
+    def test_resolve_path_auto_link(self):
+        usage = {'type': 'path', 'auto_link': True, 'libraries': ['foo'],
+                 'library_path': ['/path/to/lib']}
+        with mock.patch('bfg9000.tools.mopack.get_usage',
+                        return_value=usage), \
+             mock.patch('bfg9000.log.info'):  # noqa
+            pkg = self.packages.resolve('foo', None, SpecifierSet(),
+                                        PackageKind.any)
+            self.assertEqual(pkg.name, 'foo')
+            self.assertEqual(pkg.compile_options(self.compiler), option_list())
+            self.assertEqual(pkg.link_options(self.linker), option_list(
+                opts.lib_dir(Directory(abspath('/path/to/lib')))
+            ))
+
+    def test_resolve_invalid(self):
+        with mock.patch('bfg9000.tools.mopack.get_usage',
+                        return_value={'type': 'unknown'}), \
+             self.assertRaises(PackageResolutionError):  # noqa
+            self.packages.resolve('foo', None, SpecifierSet(), PackageKind.any)

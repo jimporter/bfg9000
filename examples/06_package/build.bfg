@@ -1,7 +1,7 @@
 # -*- python -*-
 
-# Most significant projects require the use of external libraries. You can find
-# these libraries on the system with the package() function:
+# Most significant projects require the use of external packages. You can refer
+# to these packages with the package() function:
 
 ogg = package('ogg')
 

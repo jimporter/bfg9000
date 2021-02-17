@@ -139,7 +139,7 @@ def add_configure_args(parser):
                         help='show this help message and exit')
 
     build = parser.add_argument_group('build arguments')
-    build.add_argument('--backend', metavar='BACKEND',
+    build.add_argument('-B', '--backend', metavar='BACKEND',
                        choices=list(backends.keys()),
                        default=list(backends.keys())[0],
                        help=('build backend (one of %(choices)s; default: ' +
@@ -152,6 +152,16 @@ def add_configure_args(parser):
                        help='build shared libraries (default: enabled)')
     build.add_argument('--static', action='enable', default=False,
                        help='build static libraries (default: disabled)')
+
+    pkg = parser.add_argument_group('packaging arguments')
+    pkg.add_argument('-p', '--package-file', action='append', metavar='FILE',
+                     dest='package_files',
+                     help='additional package files to resolve')
+    pkg.add_argument('-P', '--package-flag', action='append',
+                     metavar='FLAG', dest='package_flags',
+                     help='additional package flags')
+    pkg.add_argument('--no-resolve-packages', action='store_true',
+                     help='skip resolution of packages')
 
     common_path_help = 'installation path for {} (default: {{}})'
     path_help = {
@@ -190,6 +200,11 @@ def configure(parser, subparser, args, extra):
         if args.toolchain:
             build.load_toolchain(env, args.toolchain)
         finalize_environment(env, args, extra)
+
+        if not args.no_resolve_packages:
+            env.mopack = build.resolve_packages(env, args.package_files,
+                                                args.package_flags)
+
         env.save(args.builddir.string())
 
         build_inputs = build.configure_build(env)
@@ -211,6 +226,7 @@ def refresh(parser, subparser, args, extra):
         env = Environment.load(args.builddir.string())
         if env.toolchain.path:
             build.load_toolchain(env, env.toolchain.path, reload=True)
+
         env.save(args.builddir.string())
 
         backend = list_backends()[env.backend]
@@ -248,9 +264,11 @@ def run(parser, subparser, args, extra):
 
     try:
         env = Environment.load(args.builddir.string())
-        cmd = args.args
-        if cmd[0] == '--':
+        cmd = args.command
+        if cmd and cmd[0] == '--':
             cmd = cmd[1:]
+        if len(cmd) == 0:
+            parser.error('command required')
 
         variables = env.variables.initial if args.initial else env.variables
         return subprocess.run(cmd, env=variables).returncode
@@ -329,7 +347,7 @@ def main():
     run_p.add_argument('-B', '--builddir',
                        type=argparse.Directory(must_exist=True),
                        metavar='BUILDDIR', default='.', help='build directory')
-    run_p.add_argument('args', metavar='ARGS', nargs=argparse.REMAINDER,
+    run_p.add_argument('command', metavar='COMMAND', nargs=argparse.REMAINDER,
                        help='command argument')
 
     e1m1_p = subparsers.add_parser('e1m1', description=e1m1_desc)

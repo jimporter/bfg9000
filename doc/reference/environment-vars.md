@@ -336,27 +336,6 @@ The command to use when running Scala `.class` files or `.jar`s.
 ## Packaging variables
 ---
 
-#### *BOOST_ROOT*
-Default: *none*
-{: .subtitle}
-
-The root directory where Boost headers and libraries are stored (as
-`$BOOST_ROOT/include` and `$BOOST_ROOT/lib`, respectively).
-
-#### *BOOST_INCLUDEDIR*
-Default: *none*
-{: .subtitle}
-
-The root directory where Boost headers are stored. This takes precedence over
-[*BOOST_ROOT*](#boost_root).
-
-#### *BOOST_LIBRARYDIR*
-Default: *none*
-{: .subtitle}
-
-The root directory where Boost libraries are stored. This takes precedence over
-[*BOOST_ROOT*](#boost_root).
-
 #### *CLASSPATH*
 Default: *none*
 {: .subtitle}
@@ -391,6 +370,12 @@ Default: *none*
 A list of additional directories to search for [system
 libraries](builtins.md#package). On POSIX systems, this is delimited by
 `:`; on Windows, by `;`.
+
+#### *MOPACK*
+Default: `mopack`
+{: .subtitle}
+
+The command to use when resolving package dependencies via [mopack][mopack].
 
 #### *PATH*
 Default: *none*
@@ -533,5 +518,6 @@ Default: `14.0`
 *Windows-only*. The version of Visual Studio to target when generating MSBuild
 files.
 
-[doppel]: https://github.com/jimporter/doppel
+[mopack]: https://jimporter.github.io/mopack/
+[doppel]: https://github.com/jimporter/doppel/
 [destdir]: https://www.gnu.org/prep/standards/html_node/DESTDIR.html

@@ -260,7 +260,7 @@ class BasicIntegrationTest(SubprocessTestCase):
 
     def clean(self):
         if self.backend == 'ninja':
-            return self.build(extra_args=['-t', 'clean'])
+            return self.build(extra_args=['clean'])
         elif self.backend == 'make':
             return self.build('clean')
         else:  # self.backend == 'msbuild'

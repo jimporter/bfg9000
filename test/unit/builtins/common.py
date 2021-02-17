@@ -34,6 +34,8 @@ class FileTest(TestCase):
 
 
 class BuiltinTest(FileTest):
+    clear_variables = False
+
     def setUp(self):
         self.env = make_env()
         self.build, self.context = self._make_context(self.env)

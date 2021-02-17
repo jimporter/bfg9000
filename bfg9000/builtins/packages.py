@@ -1,47 +1,65 @@
-import os.path
 import re
+import warnings
 
 from . import builtin
-from .find import find
 from .. import options as opts
 from ..exceptions import PackageResolutionError, PackageVersionError
-from ..file_types import Directory, Executable
-from ..iterutils import default_sentinel, iterate, uniques
-from ..languages import known_langs
+from ..file_types import Executable
+from ..iterutils import default_sentinel, listify
 from ..objutils import objectify
 from ..packages import CommonPackage, Framework, Package, PackageKind
 from ..path import Path, Root
 from ..shell import which
-from ..versioning import check_version, SpecifierSet, Version
+from ..versioning import check_version, InvalidSpecifier, SpecifierSet, Version
 
 
-class BoostPackage(CommonPackage):
-    def __init__(self, name, format, version, *args, **kwargs):
-        name = 'boost({})'.format(','.join(iterate(name)))
-        super().__init__(name, format, *args, **kwargs)
-        self.version = version
+def _boost_version(headers, required_version):
+    for header in headers:
+        version_hpp = header.path.append('boost').append('version.hpp')
+        with open(version_hpp.string()) as f:
+            for line in f:
+                m = re.match(r'#\s*define\s+BOOST_LIB_VERSION\s+"([\d_]+)"',
+                             line)
+                if m:
+                    version = Version(m.group(1).replace('_', '.'))
+                    check_version(version, required_version, 'boost',
+                                  PackageVersionError)
+                    return version
+    raise PackageVersionError('unable to parse "boost/version.hpp"')
 
 
 @builtin.function()
 @builtin.type(Package)
-def package(context, name, version=None, *, lang=default_sentinel,
-            kind=PackageKind.any.name, headers=None, libs=default_sentinel):
-    version = objectify(version or '', SpecifierSet)
+def package(context, name, submodules=None, version=default_sentinel, *,
+            lang=None, kind=PackageKind.any.name, headers=default_sentinel,
+            libs=default_sentinel):
+    if version is default_sentinel:
+        version = SpecifierSet()
+        if submodules and isinstance(submodules, (str, SpecifierSet)):
+            try:
+                version = objectify(submodules, SpecifierSet)
+                submodules = None
+            except InvalidSpecifier:
+                pass
+    else:
+        version = objectify(version or '', SpecifierSet)
+
     kind = PackageKind[kind]
 
-    if lang is default_sentinel:
-        guessed_langs = uniques(
-            known_langs.fromext(os.path.splitext(i)[1], 'header')
-            for i in iterate(headers)
-        )
-        if len(guessed_langs) == 1 and guessed_langs[0] is not None:
-            lang = guessed_langs[0]
-        else:
-            lang = context.build['project']['lang']
+    if ( headers is not default_sentinel or
+         libs is not default_sentinel ):  # pragma: no cover
+        # TODO: Remove this after 0.7 is released.
+        warnings.warn('"headers" and "libs" are deprecated; use mopack.yml ' +
+                      'file instead')
 
-    return context.env.builder(lang).packages.resolve(
-        name, version, kind, headers, libs
-    )
+    if lang is None:
+        lang = context.build['project']['lang']
+
+    resolver = context.env.builder(lang).packages
+    get_version = _boost_version if name == 'boost' else None
+    return resolver.resolve(name, listify(submodules), version, kind,
+                            get_version=get_version, headers=headers or None,
+                            libs=libs or None)
 
 
 @builtin.function()
@@ -63,80 +81,13 @@ def framework(context, name, suffix=None):
 
     framework = Framework(name, suffix)
     return CommonPackage(framework.full_name,
-                         env.target_platform.object_format,
+                         format=env.target_platform.object_format,
                          link_options=opts.option_list(opts.lib(framework)))
-
-
-def _boost_version(header, required_version):
-    version_hpp = header.path.append('boost').append('version.hpp')
-    with open(version_hpp.string()) as f:
-        for line in f:
-            m = re.match(r'#\s*define\s+BOOST_LIB_VERSION\s+"([\d_]+)"', line)
-            if m:
-                version = Version(m.group(1).replace('_', '.'))
-                check_version(version, required_version, 'boost',
-                              PackageVersionError)
-                return version
-    raise PackageVersionError('unable to parse "boost/version.hpp"')
 
 
 @builtin.function()
 def boost_package(context, name=None, version=None):
-    def getdir(name, root, default):
-        d = env.getvar(name, os.path.join(root, default) if root else None)
-        return Path(d, Root.absolute) if d else None
-
-    env = context.env
-    version = objectify(version or '', SpecifierSet)
-    pkg = env.builder('c++').packages
-    version_hpp = 'boost/version.hpp'
-
-    root = env.getvar('BOOST_ROOT')
-    incdir = getdir('BOOST_INCLUDEDIR', root, 'include')
-    libdir = getdir('BOOST_LIBRARYDIR', root, 'lib')
-    header = None
-
-    if env.target_platform.family == 'windows':
-        if not env.builder('c++').auto_link:  # pragma: no cover
-            # XXX: Don't require auto-link.
-            raise PackageResolutionError('Boost on Windows requires auto-link')
-
-        # On Windows, check the default install location, which is structured
-        # differently from other install locations.
-        if not incdir and env.host_platform.family == 'windows':
-            dirs = find(env, 'C:\\Boost\\include\\boost-*\\')
-            if dirs:
-                try:
-                    header = pkg.header(version_hpp, [max(dirs)])
-                    libdir = Path(r'C:\Boost\lib', Root.absolute)
-                except PackageResolutionError:
-                    pass
-
-        if header is None:
-            header = pkg.header(version_hpp, [incdir] if incdir else None)
-
-        compile_options = opts.option_list(opts.include_dir(header))
-        link_options = opts.option_list()
-        if libdir:
-            link_options.append(opts.lib_dir( Directory(libdir) ))
-    else:
-        header = pkg.header(version_hpp, [incdir] if incdir else None)
-
-        dirs = [libdir] if libdir else None
-        libs = (pkg.library('boost_' + i, search_dirs=dirs)
-                for i in iterate(name))
-
-        compile_options = opts.option_list()
-        link_options = opts.option_list()
-        if env.target_platform.family == 'posix' and 'thread' in iterate(name):
-            compile_options.append(opts.pthread())
-            link_options.append(opts.pthread())
-
-        compile_options.append(opts.include_dir(header))
-        link_options.extend(opts.lib(i) for i in libs)
-
-    return BoostPackage(
-        name, env.builder('c++').object_format,
-        _boost_version(header, version),
-        compile_options, link_options
-    )
+    # TODO: Remove this after 0.7 is released.
+    warnings.warn('"boost_package(...) is deprecated; use ' +
+                  '"package(\'boost\', ...) instead')
+    return package(context, 'boost', name, version)

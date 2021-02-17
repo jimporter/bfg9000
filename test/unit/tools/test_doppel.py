@@ -45,4 +45,4 @@ class TestDoppel(ToolTestCase):
         )
 
     def test_call_invalid(self):
-        self.assertRaises(ValueError, self.tool, 'unknown', 'src', 'dst')
+        self.assertRaises(TypeError, self.tool, 'unknown', 'src', 'dst')

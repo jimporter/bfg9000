@@ -3,6 +3,7 @@ from unittest import mock
 
 from .. import *
 
+from bfg9000 import shell
 from bfg9000.languages import Languages
 from bfg9000.path import Root
 from bfg9000.tools import cc, common
@@ -17,17 +18,18 @@ def mock_which(*args, **kwargs):
 
 
 def mock_execute(args, **kwargs):
-    if args[-1] == '--version':
+    if '--version' in args:
         return ('g++ (Ubuntu 5.4.0-6ubuntu1~16.04.6) 5.4.0 20160609\n' +
                 'Copyright (C) 2015 Free Software Foundation, Inc.')
-    elif args[-1] == '-Wl,--version':
+    elif '-Wl,--version' in args:
         return '', '/usr/bin/ld --version\n'
-    elif args[-1] == '-print-search-dirs':
+    elif '-print-search-dirs' in args:
         return 'libraries: =/lib/search/dir1:/lib/search/dir2\n'
-    elif args[-1] == '-print-sysroot':
+    elif '-print-sysroot' in args:
         return '/'
-    elif args[-1] == '--verbose':
+    elif '--verbose' in args:
         return 'SEARCH_DIR("/usr")\n'
+    raise OSError('unknown command: {}'.format(args))
 
 
 class TestLibraryMacro(TestCase):
@@ -132,6 +134,50 @@ class TestNotBuildroot(CrossPlatformTestCase):
 
     def test_misc(self):
         self.assertTrue(common.not_buildroot('foo'))
+
+
+class TestCommand(TestCase):
+    class MyCommand(common.Command):
+        def _call(self, cmd, *args):
+            return cmd + list(args)
+
+    def setUp(self):
+        self.env = make_env(platform='linux')
+        self.cmd = self.MyCommand(self.env, command=['mycmd', ['command']])
+
+    def test_call(self):
+        self.assertEqual(self.cmd(), [self.cmd])
+        self.assertEqual(self.cmd('--foo'), [self.cmd, '--foo'])
+        self.assertEqual(self.cmd(cmd='cmd'), ['cmd'])
+        self.assertEqual(self.cmd('--foo', cmd='cmd'), ['cmd', '--foo'])
+
+    def test_run(self):
+        M = shell.Mode
+
+        def assert_called(mock, command, **kwargs):
+            kwargs.update({'env': self.env.variables,
+                           'base_dirs': self.env.base_dirs})
+            mock.assert_called_once_with(command, **kwargs)
+
+        with mock.patch('bfg9000.shell.execute') as e:
+            self.cmd.run()
+            assert_called(e, ['command'], stdout=M.pipe, stderr=M.devnull)
+        with mock.patch('bfg9000.shell.execute') as e:
+            self.cmd.run('--foo')
+            assert_called(e, ['command', '--foo'], stdout=M.pipe,
+                          stderr=M.devnull)
+        with mock.patch('bfg9000.shell.execute') as e:
+            self.cmd.run(stdout=M.normal)
+            assert_called(e, ['command'], stdout=M.normal)
+        with mock.patch('bfg9000.shell.execute') as e:
+            self.cmd.run(stdout=M.normal, stderr='err')
+            assert_called(e, ['command'], stdout=M.normal, stderr='err')
+        with mock.patch('bfg9000.shell.execute') as e:
+            self.cmd.run(stdout='out')
+            assert_called(e, ['command'], stdout='out', stderr=M.devnull)
+        with mock.patch('bfg9000.shell.execute') as e:
+            self.cmd.run(stdout='out', stderr='err')
+            assert_called(e, ['command'], stdout='out', stderr='err')
 
 
 class TestChooseBuilder(CrossPlatformTestCase):

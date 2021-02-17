@@ -5,6 +5,7 @@ in progress
 {: .subtitle}
 
 ### New features
+- Add support for resolving external package dependencies via [mopack][mopack]
 - Add `bfg9000 run` command to allow executing other commands using the
   environment variables for a given build
 - `pkg-config` executable can now be found by guessing based on other compilers
@@ -20,6 +21,8 @@ in progress
 - MinGW can now use libraries of the form `name.lib`
 - Replace `packaging` dependency with `verspec` for future stability
 - Paths with basenames of `.` or `..` are now treated as directories
+
+[mopack]: https://jimporter.github.io/mopack/
 
 ---
 

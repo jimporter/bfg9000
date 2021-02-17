@@ -11,12 +11,6 @@ def print_stderr_args(message):
 
 
 class TestJvmOutput(SubprocessTestCase):
-    def test_no_args(self):
-        self.assertPopen(['bfg9000-jvmoutput'], returncode=2)
-
-    def test_nonexistent_command(self):
-        self.assertPopen(['bfg9000-jvmoutput', 'nonexist'], returncode=66)
-
     def test_jdk_8(self):
         self.assertOutput(
             ['bfg9000-jvmoutput'] + print_stderr_args(
@@ -66,3 +60,18 @@ class TestJvmOutput(SubprocessTestCase):
             ),
             'bleep\n'
         )
+
+    def test_dash(self):
+        self.assertOutput(
+            ['bfg9000-jvmoutput', '--'] + print_stderr_args(
+                '[wrote RegularFileObject[foo/bar.class]]\n'
+            ),
+            'foo/bar.class\n'
+        )
+
+    def test_no_args(self):
+        self.assertPopen(['bfg9000-jvmoutput'], returncode=2)
+        self.assertPopen(['bfg9000-jvmoutput', '--'], returncode=2)
+
+    def test_nonexistent_command(self):
+        self.assertPopen(['bfg9000-jvmoutput', 'nonexist'], returncode=66)

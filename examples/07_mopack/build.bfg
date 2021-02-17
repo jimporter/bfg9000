@@ -1,0 +1,12 @@
+# -*- python -*-
+
+# When using external packages, you may want to specify how to get them from a
+# remote source (e.g. a package manager). To do this, you use the package()
+# function as normal, but also specify how to resolve the package dependency in
+# mopack.yml. This makes it easier for people building your project to override
+# how package dependencies are resolved.
+
+hello = package('hello')
+
+prog = executable('prog', 'prog.cpp', packages=hello)
+install(prog)

@@ -91,12 +91,13 @@ class Command:
         return self._call(cmd, *args, **kwargs)
 
     def run(self, *args, **kwargs):
-        run_kwargs = slice_dict(kwargs, ('env', 'extra_env'))
+        run_kwargs = slice_dict(kwargs, ('env', 'extra_env', 'stdout',
+                                         'stderr'))
+        run_kwargs.setdefault('stdout', shell.Mode.pipe)
+        if run_kwargs['stdout'] != shell.Mode.normal:
+            run_kwargs.setdefault('stderr', shell.Mode.devnull)
 
-        return self.env.execute(
-            self(*args, **kwargs), stdout=shell.Mode.pipe,
-            stderr=shell.Mode.devnull, **run_kwargs
-        )
+        return self.env.execute(self(*args, **kwargs), **run_kwargs)
 
     def __repr__(self):
         return '<{}({})>'.format(

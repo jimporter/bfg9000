@@ -5,14 +5,14 @@ from bfg9000 import packages
 
 class TestPackage(TestCase):
     def test_equality(self):
-        Package = packages.Package
-        self.assertTrue(Package('foo', 'elf') == Package('foo', 'elf'))
-        self.assertFalse(Package('foo', 'elf') != Package('foo', 'elf'))
+        P = packages.Package
+        self.assertTrue(P('foo', format='elf') == P('foo', format='elf'))
+        self.assertFalse(P('foo', format='elf') != P('foo', format='elf'))
 
-        self.assertFalse(Package('foo', 'elf') == Package('bar', 'elf'))
-        self.assertTrue(Package('foo', 'elf') != Package('bar', 'elf'))
-        self.assertFalse(Package('foo', 'elf') == Package('foo', 'coff'))
-        self.assertTrue(Package('foo', 'elf') != Package('foo', 'coff'))
+        self.assertFalse(P('foo', format='elf') == P('bar', format='elf'))
+        self.assertTrue(P('foo', format='elf') != P('bar', format='elf'))
+        self.assertFalse(P('foo', format='elf') == P('foo', format='coff'))
+        self.assertTrue(P('foo', format='elf') != P('foo', format='coff'))
 
 
 class TestFramework(TestCase):

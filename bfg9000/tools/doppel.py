@@ -17,27 +17,30 @@ class Doppel(SimpleCommand):
             return []
         raise ValueError('unknown kind {!r}'.format(kind))
 
-    def _call(self, cmd, mode, src, dst, directory=None, format=None,
-              dest_prefix=None):
-        if mode == 'onto':
-            return cmd + ['-p', src, dst]
+    def _call_onto(self, cmd, src, dst):
+        return cmd + ['-p', src, dst]
 
-        elif mode == 'into':
-            result = cmd + ['-ipN']
-            if not_buildroot(directory):
-                result.extend(['-C', directory])
-            result.extend(iterate(src))
-            result.append(dst)
-            return result
+    def _call_into(self, cmd, src, dst, *, directory=None):
+        result = cmd + ['-ipN']
+        if not_buildroot(directory):
+            result.extend(['-C', directory])
+        result.extend(iterate(src))
+        result.append(dst)
+        return result
 
-        elif mode == 'archive':
-            result = cmd + ['-ipN', '-f', format]
-            if not_buildroot(directory):
-                result.extend(['-C', directory])
-            if dest_prefix:
-                result.extend(['-P', dest_prefix])
-            result.extend(iterate(src))
-            result.append(dst)
-            return result
+    def _call_archive(self, cmd, src, dst, *, format, directory=None,
+                      dest_prefix=None):
+        result = cmd + ['-ipN', '-f', format]
+        if not_buildroot(directory):
+            result.extend(['-C', directory])
+        if dest_prefix:
+            result.extend(['-P', dest_prefix])
+        result.extend(iterate(src))
+        result.append(dst)
+        return result
 
-        raise ValueError('unknown mode {!r}'.format(mode))
+    def _call(self, cmd, mode, *args, **kwargs):
+        try:
+            return getattr(self, '_call_' + mode)(cmd, *args, **kwargs)
+        except AttributeError:
+            raise TypeError('unknown mode {!r}'.format(mode))

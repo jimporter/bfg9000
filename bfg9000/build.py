@@ -1,12 +1,14 @@
 import errno
 from itertools import chain
 
+from . import log
 from .arguments.parser import ArgumentParser
 from .builtins import builtin, init as builtin_init
 from .build_inputs import BuildInputs
-from .path import exists, Path, pushd, Root
 from .iterutils import listify
-from .tools import init as tools_init
+from .path import exists, Path, pushd, Root
+from .shell import Mode
+from .tools import init as tools_init, mopack
 
 bfgfile = 'build.bfg'
 optsfile = 'options.bfg'
@@ -55,13 +57,12 @@ def load_toolchain(env, path, reload=False):
     builtin_init()
     tools_init()
     if reload:
-        env.init_variables()
+        env.reload()
+    else:
+        env.toolchain.path = path
 
     context = builtin.ToolchainContext(env, reload)
     execute_file(context, path, run_post=True)
-
-    if not reload:
-        env.toolchain.path = path
 
 
 def _execute_options(env, parent=None, usage='parse'):
@@ -82,6 +83,24 @@ def _execute_options(env, parent=None, usage='parse'):
         if e.errno != errno.ENOENT:
             raise
         return parser, []
+
+
+def resolve_packages(env, files, flags):
+    if env.variables.initial.get('MOPACK_NESTED_INVOCATION'):
+        return []
+
+    log.info('resolving package dependencies...')
+    mopack_files = ( [Path('.', Root.srcdir)] +
+                     listify(mopack.make_options_yml(env)) +
+                     (files or []) )
+    env.tool('mopack').run(
+        'resolve', mopack_files, directory=env.builddir, flags=flags,
+        env=env.variables.initial, stdout=Mode.normal
+    )
+    # TODO: Would it make sense to convert these paths into ones relative to
+    # the source/build directories if possible?
+    return [Path(i, Root.absolute) for i in
+            env.tool('mopack').run('list_files', directory=env.builddir)]
 
 
 def fill_user_help(env, parent):

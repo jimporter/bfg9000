@@ -34,7 +34,7 @@ source directory (i.e. it contains a build.bfg file), the build files will be
 created in the current directory. Otherwise, *DIRECTORY* is treated as the build
 directory, and bfg9000 will look for a build.bfg file in the current directory.
 
-#### --backend *BACKEND* { #configure-backend }
+#### -B *BACKEND*, --backend *BACKEND* { #configure-backend }
 
 The kind of build files to generate; one of `ninja`, `make`, or `msbuild`. The
 default value depends on what build backends you have installed, but if `ninja`
@@ -54,6 +54,18 @@ Enable/disable building shared libraries when using
 
 Enable/disable building static libraries when using
 [*library*()](builtins.md#library) in your build.bfg files. Defaults to enabled.
+
+#### -p *FILE*, --package-file *FILE* { #configure-package-file }
+
+Additional [mopack][mopack] package files to consult when resolving packages.
+
+#### -P *FLAG*, --package-flag *FLAG* { #configure-package-flag }
+
+Additional [mopack][mopack] flags to use when resolving packages.
+
+#### --no-resolve-packages { #configure-no-resolve-packages }
+
+Disable resolution of package dependencies via [mopack][mopack].
 
 #### --prefix *PATH* { #configure-prefix }
 
@@ -113,7 +125,7 @@ build.
 Use the *initial* environment variables, before any modification by toolchain
 files.
 
-#### -B, --builddir { #run-builddir }
+#### -B *BUILDDIR*, --builddir *BUILDDIR* { #run-builddir }
 
 Set the build directory to pull environment variable state from.
 
@@ -121,3 +133,5 @@ Set the build directory to pull environment variable state from.
 
 `9k` is a special shorthand to make it easier to configure your build. It's
 equivalent to [`bfg9000 configure`](#configure).
+
+[mopack]: https://jimporter.github.io/mopack/
