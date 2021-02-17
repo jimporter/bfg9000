@@ -185,7 +185,7 @@ subcommand.</p>
 source directory (i.e. it contains a build.bfg file), the build files will be
 created in the current directory. Otherwise, <em>DIRECTORY</em> is treated as the build
 directory, and bfg9000 will look for a build.bfg file in the current directory.</p>
-<h4 id="configure-backend">--backend <em>BACKEND</em><a class="headerlink" href="#configure-backend" title="Permanent link">§</a></h4>
+<h4 id="configure-backend">-B <em>BACKEND</em>, --backend <em>BACKEND</em><a class="headerlink" href="#configure-backend" title="Permanent link">§</a></h4>
 <p>The kind of build files to generate; one of <code>ninja</code>, <code>make</code>, or <code>msbuild</code>. The
 default value depends on what build backends you have installed, but if <code>ninja</code>
 is present on your system, it will be the default.</p>
@@ -198,6 +198,12 @@ can be used to easily set all the options required for a certain build.</p>
 <h4 id="configure-enable-static">--enable-static, --disable-static<a class="headerlink" href="#configure-enable-static" title="Permanent link">§</a></h4>
 <p>Enable/disable building static libraries when using
 <a href="../builtins/#library"><em>library</em>()</a> in your build.bfg files. Defaults to enabled.</p>
+<h4 id="configure-package-file">-p <em>FILE</em>, --package-file <em>FILE</em><a class="headerlink" href="#configure-package-file" title="Permanent link">§</a></h4>
+<p>Additional <a href="https://jimporter.github.io/mopack/">mopack</a> package files to consult when resolving packages.</p>
+<h4 id="configure-package-flag">-P <em>FLAG</em>, --package-flag <em>FLAG</em><a class="headerlink" href="#configure-package-flag" title="Permanent link">§</a></h4>
+<p>Additional <a href="https://jimporter.github.io/mopack/">mopack</a> flags to use when resolving packages.</p>
+<h4 id="configure-no-resolve-packages">--no-resolve-packages<a class="headerlink" href="#configure-no-resolve-packages" title="Permanent link">§</a></h4>
+<p>Disable resolution of package dependencies via <a href="https://jimporter.github.io/mopack/">mopack</a>.</p>
 <h4 id="configure-prefix">--prefix <em>PATH</em><a class="headerlink" href="#configure-prefix" title="Permanent link">§</a></h4>
 <p>The installation prefix to use when installing built files. On Linux and macOS,
 this defaults to <code>/usr/local</code>; on Windows, there is no default (thus, to
@@ -234,7 +240,7 @@ build.</p>
 <h4 id="run-initial">-I, --initial<a class="headerlink" href="#run-initial" title="Permanent link">§</a></h4>
 <p>Use the <em>initial</em> environment variables, before any modification by toolchain
 files.</p>
-<h4 id="run-builddir">-B, --builddir<a class="headerlink" href="#run-builddir" title="Permanent link">§</a></h4>
+<h4 id="run-builddir">-B <em>BUILDDIR</em>, --builddir <em>BUILDDIR</em><a class="headerlink" href="#run-builddir" title="Permanent link">§</a></h4>
 <p>Set the build directory to pull environment variable state from.</p>
 <h2 id="9k-shorthand">9k shorthand<a class="headerlink" href="#9k-shorthand" title="Permanent link">§</a></h2>
 <p><code>9k</code> is a special shorthand to make it easier to configure your build. It's

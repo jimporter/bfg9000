@@ -159,6 +159,7 @@
         <li class="main active"><a href="#features">Features</a></li>
             <li><a href="#supported-languagesplatforms">Supported languages/platforms</a></li>
             <li><a href="#rich-scripting">Rich scripting</a></li>
+            <li><a href="#flexible-package-dependencies">Flexible package dependencies</a></li>
             <li><a href="#project-defined-arguments">Project-defined arguments</a></li>
             <li><a href="#semantic-options">Semantic options</a></li>
             <li><a href="#toolchains-for-cross-compilation">Toolchains for cross-compilation</a></li>
@@ -192,6 +193,12 @@ extra builtins, it's possible to use the entirety of the Python ecosystem in
 your build scripts. This allows you to perform complex operations in your build
 scripts without having to roll everything yourself or provide a layer of "glue"
 to some external scripts in your build process.</p>
+<h2 id="flexible-package-dependencies">Flexible package dependencies<a class="headerlink" href="#flexible-package-dependencies" title="Permanent link">§</a></h2>
+<p>bfg9000 integrates with <a href="https://jimporter.github.io/mopack/"><code>mopack</code></a> to provide support for getting
+external package dependencies from multiple sources and allowing people building
+your project to easily override how packages are found. It's also easy to
+<a href="../../reference/builtins/#pkg_config">generate</a> <a href="https://www.freedesktop.org/wiki/Software/pkg-config/"><code>pkg-config</code></a> <code>.pc</code>
+files for your own packages to simplify using them elsewhere.</p>
 <h2 id="project-defined-arguments">Project-defined arguments<a class="headerlink" href="#project-defined-arguments" title="Permanent link">§</a></h2>
 <p>Projects can specify their own options, complete with help instructions, in the
 <a href="../writing/#options"><code>options.bfg</code></a>, making it easy to help users get your
@@ -214,7 +221,7 @@ directory without breaking things; however, when installing your build, these
 rpaths are modified to absolute paths (using <a href="https://nixos.org/patchelf.html"><code>patchelf</code></a> on Linux and
 <a href="https://www.unix.com/man-page/osx/1/install_name_tool/"><code>install_name_tool</code></a> on macOS).</p>
 <h2 id="auto-sudo-during-installation">Auto-sudo during installation<a class="headerlink" href="#auto-sudo-during-installation" title="Permanent link">§</a></h2>
-<p>When installing your builds, the install tool (<a href="https://github.com/jimporter/doppel"><code>doppel</code></a>) will
+<p>When installing your builds, the install tool (<a href="https://github.com/jimporter/doppel/"><code>doppel</code></a>) will
 automatically request sudo priveleges if the installation directory requires it.
 This allows you to run <code>ninja install</code> as a non-root user, preventing
 permissions issues with intermediate files as well as being more secure.</p>

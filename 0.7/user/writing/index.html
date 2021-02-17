@@ -382,20 +382,31 @@ be set as the default, overriding the normal behavior. This makes it easy to
 provide your users with a standard build that gets them all the bits they need,
 and none they don't.</p>
 <h2 id="external-packages">External packages<a class="headerlink" href="#external-packages" title="Permanent link">§</a></h2>
-<p>Most projects have external packages that they depend on. There are lots of
-different ways these packages are organized, and bfg9000 currently supports
-two of them: <a href="../../reference/builtins/#package">"ordinary" packages</a> (resolved
-using either <a href="https://www.freedesktop.org/wiki/Software/pkg-config/"><code>pkg-config</code></a> or searched for in the default location
-for your system) and <a href="../../reference/builtins/#boost_package">Boost packages</a>:</p>
+<p>Most non-trivial projects have external package dependencies. These can be
+specified in a <code>build.bfg</code> file via
+<a href="../../reference/builtins/#package"><em>package()</em></a> and used when building binaries
+by passing them in the <em>packages</em> argument:</p>
 <pre><code class="python">ogg = package('ogg', kind='static')
 prog_opts = boost_package('program_options', version='&gt;=1.55')
+
+executable('program', files=['main.cpp'], packages=[ogg, prog_opts])
 </code></pre>
 
-<p>Each of these returns an object representing the package that can be used when
-building binaries by passing them in the <em>packages</em> argument:</p>
-<pre><code class="python">executable('program', files=['main.cpp'], packages=[ogg, prog_opts])
+<p>There are many different ways external packages are distributed, but for native
+packages (C, C++, Fortran, etc), this is handled via <a href="https://jimporter.github.io/mopack/">mopack</a>. mopack
+provides a variety of ways to resolve external packages, and bfg9000 will
+automatically invoke mopack during configuration. You can specify how each
+package dependency should be resolved via an <code>mopack.yml</code> file:</p>
+<pre><code class="yaml">packages:
+  foobar:
+    source: tarball
+    path: foobar-1.0.tar.gz
+    build: bfg9000
 </code></pre>
 
+<p>By keeping the package resolution metadata separate from the <code>build.bfg</code> file,
+it's much easier for people building your project to override how package
+dependencies are resolved.</p>
 <h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">§</a></h2>
 <p>After building, you might want to allow your project to be installed onto the
 user's system somewhere. Most files (headers, executables, libraries) can be

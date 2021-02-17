@@ -805,40 +805,20 @@ your project, any linker options that need to be forwarded on to <code>ld</code>
 be prepended with <code>'-Wl,'</code>.</p>
 </div>
 <h2 id="package-resolvers">Package resolvers<a class="headerlink" href="#package-resolvers" title="Permanent link">§</a></h2>
-<h3 id="boost_package">boost_package([<em>name</em>], [<em>version</em>])<a class="headerlink" href="#boost_package" title="Permanent link">§</a></h3>
-<p class="subtitle">Availability: <code>build.bfg</code></p>
-<p>Search for a <a href="https://www.boost.org/">Boost</a> library. You can specify <em>name</em> (as a string or a
-list) to specify a specific Boost library (or libraries); for instance,
-<code>'program_options'</code>. For header-only libraries, you can omit <em>name</em>. If
-<em>version</em> is specified, it will ensure that the installed version of Boost meets
-the version requirement; it must be formatted as a Python <a href="https://www.python.org/dev/peps/pep-0440/#version-specifiers">version
-specifier</a>.</p>
-<p>If this function is unable to find the specified Boost library, it will raise a
-<a href="#packageresolutionerror"><em>PackageResolutionError</em></a>. If the library is found but
-doesn't match the required version, a
-<a href="#packageversionerror"><em>PackageVersionError</em></a> will be raised instead.</p>
-<p>This function recognizes the following environment variables:
-<a href="../environment-vars/#boost_root"><code>BOOST_ROOT</code></a>,
-<a href="../environment-vars/#boost_includedir"><code>BOOST_INCLUDEDIR</code></a>,
-<a href="../environment-vars/#boost_librarydir"><code>BOOST_LIBRARYDIR</code></a>,
-<a href="../environment-vars/#cpath"><code>CPATH</code></a>,
-<a href="../environment-vars/#include"><code>INCLUDE</code></a>,
-<a href="../environment-vars/#lib"><code>LIB</code></a>,
-<a href="../environment-vars/#library_path"><code>LIBRARY_PATH</code></a>.</p>
 <h3 id="framework">framework(<em>name</em>, [<em>suffix</em>])<a class="headerlink" href="#framework" title="Permanent link">§</a></h3>
 <p>Reference a macOS <a href="https://developer.apple.com/library/content/documentation/MacOSX/Conceptual/OSX_Technology_Overview/SystemFrameworks/SystemFrameworks.html">framework</a> named <em>name</em> with the optional suffix
 <em>suffix</em>. Though not a "package" in name, this can be used wherever packages are
 accepted.</p>
-<h3 id="package">package(<em>name</em>, [<em>version</em>], *, [<em>lang</em>], [<em>kind</em>], [<em>headers</em>], [<em>libs</em>])<a class="headerlink" href="#package" title="Permanent link">§</a></h3>
+<h3 id="package">package(<em>name</em>, [<em>submodules</em>], [<em>version</em>], *, [<em>lang</em>], [<em>kind</em>])<a class="headerlink" href="#package" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
-<p>Search for a package named <em>name</em>. <em>lang</em> is the source language of the library
-(if not specified, this will guess the language based on the extensions in
-<em>headers</em>, or use <code>'c'</code> as a fallback); this will affect how the package is
-resolved. For native libraries (C, C++, Fortran, etc), this will use
-<a href="https://www.freedesktop.org/wiki/Software/pkg-config/"><code>pkg-config</code></a> to resolve the package if it's installed. Otherwise
-(or if pkg-config can't find the package), this will check the system's default
-library locations. If this function is unable to find the package, it will raise
-a <a href="#packageresolutionerror"><em>PackageResolutionError</em></a>.</p>
+<p>Search for a package named <em>name</em> optionally containing one or more
+<em>submodules</em>. <em>lang</em> is the source language of the package (if not specified,
+this will use the <a href="#project">default language</a> for the project); this will
+affect how the package is resolved. For native packages (C, C++, Fortran, etc),
+this will use <a href="https://jimporter.github.io/mopack/">mopack</a> to resolve the package; otherwise, this will use
+a language-specific check to find packages on the system. If this function is
+unable to find the package, it will raise a
+<a href="#packageresolutionerror"><em>PackageResolutionError</em></a>.</p>
 <p>You can also specify <em>kind</em> to one of <code>'any'</code> (the default), <code>'shared'</code>, or
 <code>'static'</code>. This allows you to restrict the search to find only static versions
 of a library, for example.</p>
@@ -846,14 +826,9 @@ of a library, for example.</p>
 version of the package meets the version requirement; it must be formatted as a
 Python <a href="https://www.python.org/dev/peps/pep-0440/#version-specifiers">version specifier</a>. If this check fails, a
 <a href="#packageversionerror"><em>PackageVersionError</em></a> will be raised.</p>
-<p>The <em>headers</em> and <em>libs</em> arguments can be used as fallbacks when pkg-config
-fails to resolve the package. <em>headers</em> allows you to specify a header file (or
-list thereof) that you need to use in your source files. This will search for
-the header files and add the appropriate include directories to your build
-configuration. <em>libs</em> lets you list any library names that are part of this
-package; by default, this is set to the package's <em>name</em>. You can also pass
-<em>None</em> to <em>libs</em> in order to explicitly indicate that the library is
-header-only.</p>
+<p>When calling this function, you can exclude the <em>submodules</em> argument and pass
+a <em>version</em> as the second positional argument if it's parseable as a version
+specifier. For example, <code>package('pkg', '&gt;=1.0')</code>.</p>
 <p>This function recognizes the following environment variables:
 <a href="../environment-vars/#classpath"><code>CLASSPATH</code></a>,
 <a href="../environment-vars/#cpath"><code>CPATH</code></a>,

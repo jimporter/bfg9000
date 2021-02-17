@@ -363,18 +363,6 @@ interpreter used to run bfg9000.</p>
 <p>The command to use when running Scala <code>.class</code> files or <code>.jar</code>s.</p>
 <h2 id="packaging-variables">Packaging variables<a class="headerlink" href="#packaging-variables" title="Permanent link">§</a></h2>
 <hr />
-<h4 id="boost_root"><em>BOOST_ROOT</em><a class="headerlink" href="#boost_root" title="Permanent link">§</a></h4>
-<p class="subtitle">Default: <em>none</em></p>
-<p>The root directory where Boost headers and libraries are stored (as
-<code>$BOOST_ROOT/include</code> and <code>$BOOST_ROOT/lib</code>, respectively).</p>
-<h4 id="boost_includedir"><em>BOOST_INCLUDEDIR</em><a class="headerlink" href="#boost_includedir" title="Permanent link">§</a></h4>
-<p class="subtitle">Default: <em>none</em></p>
-<p>The root directory where Boost headers are stored. This takes precedence over
-<a href="#boost_root"><em>BOOST_ROOT</em></a>.</p>
-<h4 id="boost_librarydir"><em>BOOST_LIBRARYDIR</em><a class="headerlink" href="#boost_librarydir" title="Permanent link">§</a></h4>
-<p class="subtitle">Default: <em>none</em></p>
-<p>The root directory where Boost libraries are stored. This takes precedence over
-<a href="#boost_root"><em>BOOST_ROOT</em></a>.</p>
 <h4 id="classpath"><em>CLASSPATH</em><a class="headerlink" href="#classpath" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <em>none</em></p>
 <p>A list of additional directories to search for Java class files. On POSIX
@@ -395,6 +383,9 @@ libraries</a>, delimited by <code>;</code>.</p>
 <p>A list of additional directories to search for <a href="../builtins/#package">system
 libraries</a>. On POSIX systems, this is delimited by
 <code>:</code>; on Windows, by <code>;</code>.</p>
+<h4 id="mopack"><em>MOPACK</em><a class="headerlink" href="#mopack" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <code>mopack</code></p>
+<p>The command to use when resolving package dependencies via <a href="https://jimporter.github.io/mopack/">mopack</a>.</p>
 <h4 id="path"><em>PATH</em><a class="headerlink" href="#path" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <em>none</em></p>
 <p>A list of directories to search for <a href="../builtins/#system_executable">system
@@ -424,7 +415,7 @@ Make backend. In general, you shouldn't need to touch this.</p>
 <h4 id="doppel"><em>DOPPEL</em><a class="headerlink" href="#doppel" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <code>doppel</code></p>
 <p>The command to use when installing files and building source distributions. For
-more information about doppel, see its <a href="https://github.com/jimporter/doppel">documentation</a>.</p>
+more information about doppel, see its <a href="https://github.com/jimporter/doppel/">documentation</a>.</p>
 <h4 id="hardlink"><em>HARDLINK</em><a class="headerlink" href="#hardlink" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <code>ln -f</code> (POSIX), <code>cmd /c mklink /H</code> (Windows)</p>
 <p>The command to use when creating hard links.</p>
