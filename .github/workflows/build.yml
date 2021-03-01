@@ -60,6 +60,10 @@ jobs:
              qt-version: '5.15.1', qt-arch: 'win64_mingw81',
              skipped-tests: [boost, fortran, objc, scala],
              backends: [ninja, make], flags: -Wall -Werror}
+        exclude:
+          # aqtinstall fails on Python 3.6
+          - os: windows-latest
+            python-version: 3.6
       fail-fast: false
     env:
       GCJ: gcj-4.9
