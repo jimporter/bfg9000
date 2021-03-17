@@ -137,7 +137,7 @@ class SubprocessTestCase(TestCase):
 
     def assertDirectory(self, path, contents, optional=[]):
         path = os.path.normpath(path)
-        actual = set(os.path.normpath(os.path.join(path, base, f))
+        actual = set(os.path.normpath(os.path.join(base, f))
                      for base, dirs, files in os.walk(path) for f in files)
         expected = set(os.path.normpath(os.path.join(path, i))
                        for i in contents)

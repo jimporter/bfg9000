@@ -40,6 +40,11 @@ env_desc = """
 Print the environment variables stored by this build configuration.
 """
 
+run_desc = """
+Run an arbitrary COMMAND with the environment variables set for the current
+build.
+"""
+
 e1m1_desc = """
 You find yourself standing at Doom's gate.
 """
@@ -339,7 +344,7 @@ def main():
                        help='build directory')
 
     run_p = subparsers.add_parser(
-        'run', description=env_desc, help='FIXME'
+        'run', description=run_desc, help='run a shell command'
     )
     run_p.set_defaults(func=run, parser=run_p)
     run_p.add_argument('-I', '--initial', action='store_true',
