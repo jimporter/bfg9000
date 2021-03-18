@@ -79,8 +79,12 @@ jobs:
         id: cache-boost
         with:
           # Use a POSIX-style path here to make `tar` happy when saving.
-          path: boost-${{ matrix.boost-version }}
-          key: ${{ matrix.os }}-boost-${{ matrix.boost-version }}-msvc-${{ matrix.msvc-version }}-${{ matrix.msvc-arch || 'x64' }}-${{ hashFiles('.github/workflows/build.yml') }}
+          path: ~/boost-${{ matrix.boost-version }}
+          key: >
+            ${{ matrix.os }}-boost-${{ matrix.boost-version }}-msvc-${{
+            matrix.msvc-version }}-${{ matrix.msvc-arch || 'x64' }}-compiler-${{
+            matrix.compiler }}-python-${{ matrix.python-version }}-${{
+            hashFiles('.github/workflows/build.yml') }}
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v1
         with:
@@ -109,7 +113,7 @@ jobs:
       - name: Install Boost ${{ matrix.boost-version }} from binaries
         if: startsWith(matrix.os, 'windows-') && matrix.boost-version
         run: |
-          ${boostroot} = "${pwd}\boost-${{ matrix.boost-version }}"
+          ${boostroot} = "$(Resolve-Path ~)\boost-${{ matrix.boost-version }}"
           ${msvcver} = "${{ matrix.msvc-version }}" -replace '(\d+\.\d).*','$1'
           ${arch} = if ("${{ matrix.msvc-arch }}" -eq "x86") {"32"} else {"64"}
           if ("${{ steps.cache-boost.outputs.cache-hit }}" -ne "true" ) {
