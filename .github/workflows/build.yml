@@ -18,7 +18,8 @@ jobs:
           - {os: ubuntu-latest, extra-tests: [mingw-cross],
              backends: [ninja, make], flags: -Wall -Werror}
           - {os: windows-latest, msvc-version: '14.28', win-sdk: '10.0.18362.0',
-             qt-version: '5.12.9', skipped-tests: [fortran, objc, scala],
+             boost-version: '1.72.0', qt-version: '5.12.9',
+             skipped-tests: [fortran, objc, scala],
              backends: [ninja, make, msbuild], flags: /WX}
           - {os: macos-latest, skipped-tests: [scala], backends: [ninja, make],
              flags: -Wall -Werror -DGL_SILENCE_DEPRECATION}
@@ -38,19 +39,21 @@ jobs:
           # VS 2017 builds
           - {os: windows-2016, python-version: 3.9, compiler: default,
              msvc-version: '14.16', win-sdk: '10.0.17763.0',
-             qt-version: '5.12.9', skipped-tests: [fortran, objc, scala],
+             boost-version: '1.72.0', qt-version: '5.12.9',
+             skipped-tests: [fortran, objc, scala],
              backends: [ninja, make, msbuild], flags: /WX}
 
           # VS 2019 x86 builds
           - {os: windows-latest, python-version: 3.9, compiler: default-x86,
              msvc-version: '14.28', msvc-arch: 'x86', win-sdk: '10.0.18362.0',
-             skipped-tests: [fortran, objc, qt, scala],
+             boost-version: '1.72.0', skipped-tests: [fortran, objc, qt, scala],
              backends: [ninja, make, msbuild], flags: /WX}
 
           # VS 2019 clang-cl builds
           - {os: windows-latest, python-version: 3.9, compiler: clang-cl,
              msvc-version: '14.28', win-sdk: '10.0.18362.0',
-             qt-version: '5.12.9', skipped-tests: [boost, fortran, objc, scala],
+             boost-version: '1.72.0', qt-version: '5.12.9',
+             skipped-tests: [boost, fortran, objc, scala],
              backends: [ninja, make], flags: /WX -Wno-microsoft-include
                -Wno-unused-command-line-argument -D_CRT_SECURE_NO_WARNINGS}
 
@@ -60,10 +63,6 @@ jobs:
              qt-version: '5.15.1', qt-arch: 'win64_mingw81',
              skipped-tests: [boost, fortran, objc, scala],
              backends: [ninja, make], flags: -Wall -Werror}
-        exclude:
-          # aqtinstall fails on Python 3.6
-          - os: windows-latest
-            python-version: 3.6
       fail-fast: false
     env:
       GCJ: gcj-4.9
@@ -74,6 +73,14 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+      - name: Cache Boost binaries
+        if: startsWith(matrix.os, 'windows-') && matrix.boost-version
+        uses: actions/cache@v2
+        id: cache-boost
+        with:
+          # Use a POSIX-style path here to make `tar` happy when saving.
+          path: boost-${{ matrix.boost-version }}
+          key: ${{ matrix.os }}-boost-${{ matrix.boost-version }}-msvc-${{ matrix.msvc-version }}-${{ matrix.msvc-arch || 'x64' }}-${{ hashFiles('.github/workflows/build.yml') }}
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v1
         with:
@@ -95,10 +102,25 @@ jobs:
           sdk: ${{ matrix.win-sdk }}
       - name: Install Qt ${{ matrix.qt-version }}
         if: matrix.qt-version
-        uses: jurplel/install-qt-action@v2.9.0
+        uses: jurplel/install-qt-action@v2
         with:
           version: ${{ matrix.qt-version || '5.12.9' }}
           arch: ${{ matrix.qt-arch }}
+      - name: Install Boost ${{ matrix.boost-version }} from binaries
+        if: startsWith(matrix.os, 'windows-') && matrix.boost-version
+        run: |
+          ${boostroot} = "${pwd}\boost-${{ matrix.boost-version }}"
+          ${msvcver} = "${{ matrix.msvc-version }}" -replace '(\d+\.\d).*','$1'
+          ${arch} = if ("${{ matrix.msvc-arch }}" -eq "x86") {"32"} else {"64"}
+          if ("${{ steps.cache-boost.outputs.cache-hit }}" -ne "true" ) {
+            ${boostbase} = "https://sourceforge.net/projects/boost/files/boost-binaries"
+            ${boost_ver} = "${{ matrix.boost-version }}" -replace '\.','_'
+            ${boostexe} = "boost_${boost_ver}-msvc-${msvcver}-${arch}.exe"
+            curl -LO ${boostbase}/${{ matrix.boost-version }}/${boostexe}
+            Start-Process -Wait -FilePath ".\${boostexe}" "/SILENT","/SP-","/SUPPRESSMSGBOXES","/DIR=${boostroot}"
+          }
+          echo "BOOST_INCLUDEDIR=${boostroot}" >> ${env:GITHUB_ENV}
+          echo "BOOST_LIBRARYDIR=${boostroot}\lib${arch}-msvc-${msvcver}" >> ${env:GITHUB_ENV}
       - name: Install Linux dependencies
         if: startsWith(matrix.os, 'ubuntu-')
         run: >
@@ -149,10 +171,6 @@ jobs:
           if(${LastExitCode} -le 7) { ${LastExitCode} = 0 }
 
           # Set up environment variables.
-          ${boostroot} = "${env:BOOST_ROOT_1_72_0}"
-          echo "BOOST_INCLUDEDIR=${boostroot}\include" >> ${env:GITHUB_ENV}
-          echo "BOOST_LIBRARYDIR=${boostroot}\lib" >> ${env:GITHUB_ENV}
-
           if(${env:Qt5_DIR}) {
             echo "CPATH=${env:Qt5_DIR}\include;${env:Qt5_DIR}\include\QtWidgets;${env:Qt5_DIR}\include\QtQml;${env:CPATH}" >> ${env:GITHUB_ENV}
             ${env:LIBRARY_PATH} = "${env:LIBRARY_PATH};${env:Qt5_DIR}\lib"
