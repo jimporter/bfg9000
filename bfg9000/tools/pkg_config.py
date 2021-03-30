@@ -219,7 +219,7 @@ class PkgConfigPackage(Package):
 
 
 def resolve(env, name, *args, **kwargs):
-    package = PkgConfigPackage(env.tool('pkg_config'), name, *args, **kwargs)
+    pkg = PkgConfigPackage(env.tool('pkg_config'), name, *args, **kwargs)
     log.info('found package {!r} version {} via pkg-config in {}'
-             .format(name, package.version, os.path.normpath(package.path())))
-    return package
+             .format(pkg.name, pkg.version, os.path.normpath(pkg.path())))
+    return pkg

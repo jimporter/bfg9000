@@ -332,9 +332,10 @@ class JvmPackageResolver:
     def resolve(self, name, submodules, version, kind, *, get_version=None,
                 headers=None, libs=None):
         lib = self._library(name)
+        pkg = JvmPackage(name, self.builder.object_format, libs=[lib])
         log.info('found package {!r} via path-search in {!r}'
-                 .format(name, lib.path.parent().string()))
-        return JvmPackage(name, self.builder.object_format, libs=[lib])
+                 .format(pkg.name, lib.path.parent().string()))
+        return pkg
 
 
 class JvmRunner(BuildCommand):

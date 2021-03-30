@@ -279,14 +279,15 @@ class CcPackageResolver:
                            if isinstance(i, opts.include_dir)]
             found_ver = get_version(header_dirs, version)
 
-        version_note = ' version {}'.format(found_ver) if found_ver else ''
-        path_note = ' in {}'.format(found_lib_path) if found_lib_path else ''
-        log.info('found package {!r}{} via path-search{}'
-                 .format(name, version_note, path_note))
-        return CommonPackage(
+        pkg = CommonPackage(
             name, submodules, found_ver, format=format,
             compile_options=compile_options, link_options=link_options
         )
+        version_note = ' version {}'.format(found_ver) if found_ver else ''
+        path_note = ' in {}'.format(found_lib_path) if found_lib_path else ''
+        log.info('found package {!r}{} via path-search{}'
+                 .format(pkg.name, version_note, path_note))
+        return pkg
 
     def resolve(self, name, submodules, version, kind, *, get_version=None,
                 headers=None, libs=None):
