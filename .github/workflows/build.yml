@@ -17,7 +17,7 @@ jobs:
         include:
           - {os: ubuntu-latest, extra-tests: [mingw-cross],
              backends: [ninja, make], flags: -Wall -Werror}
-          - {os: windows-latest, msvc-version: '14.28', win-sdk: '10.0.18362.0',
+          - {os: windows-latest, msvc-version: '14.29', win-sdk: '10.0.18362.0',
              boost-version: '1.72.0', qt-version: '5.12.9',
              skipped-tests: [fortran, objc, scala],
              backends: [ninja, make, msbuild], flags: /WX}
@@ -45,13 +45,13 @@ jobs:
 
           # VS 2019 x86 builds
           - {os: windows-latest, python-version: 3.9, compiler: default-x86,
-             msvc-version: '14.28', msvc-arch: 'x86', win-sdk: '10.0.18362.0',
+             msvc-version: '14.29', msvc-arch: 'x86', win-sdk: '10.0.18362.0',
              boost-version: '1.72.0', skipped-tests: [fortran, objc, qt, scala],
              backends: [ninja, make, msbuild], flags: /WX}
 
           # VS 2019 clang-cl builds
           - {os: windows-latest, python-version: 3.9, compiler: clang-cl,
-             msvc-version: '14.28', win-sdk: '10.0.18362.0',
+             msvc-version: '14.29', win-sdk: '10.0.18362.0',
              boost-version: '1.72.0', qt-version: '5.12.9',
              skipped-tests: [boost, fortran, objc, scala],
              backends: [ninja, make], flags: /WX -Wno-microsoft-include
@@ -59,7 +59,7 @@ jobs:
 
           # MinGW builds
           - {os: windows-latest, python-version: 3.9, compiler: mingw,
-             msvc-version: '14.28', win-sdk: '10.0.18362.0',
+             msvc-version: '14.29', win-sdk: '10.0.18362.0',
              qt-version: '5.15.1', qt-arch: 'win64_mingw81',
              skipped-tests: [boost, fortran, objc, scala],
              backends: [ninja, make], flags: -Wall -Werror}

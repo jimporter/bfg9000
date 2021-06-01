@@ -149,7 +149,7 @@ class CcLinker(BuildCommand):
         libs = opts.option_list()
         if self.lang in ('c++', 'objc++') and not primary:
             libs.append(opts.lib('stdc++'))
-        if self.lang in ('objc', 'objc++'):
+        if self.lang in ('objc', 'objc++') and self.brand == 'gcc':
             libs.append(opts.lib('objc'))
         if self.lang in ('f77', 'f95') and not primary:
             libs.append(opts.lib('gfortran'))
