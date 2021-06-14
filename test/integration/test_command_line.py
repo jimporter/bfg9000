@@ -45,6 +45,16 @@ class TestConfigure(IntegrationTest):
             ['9k', '--debug', self.builddir, '--backend', self.backend]
         )
         self.checkBuild()
+        self.assertExists('compile_commands.json')
+
+    def test_no_comp_db(self):
+        os.chdir(self.srcdir)
+        self.assertPopen(
+            ['9k', '--debug', self.builddir, '--disable-compdb', '--backend',
+             self.backend]
+        )
+        self.checkBuild()
+        self.assertNotExists('compile_commands.json')
 
 
 class TestConfigureErrors(BasicIntegrationTest):
@@ -131,6 +141,14 @@ class TestRefresh(BasicIntegrationTest):
         output = self.assertPopen(['bfg9000', 'refresh'], returncode=2)
         self.assertRegex(output,
                          'build directory must not contain a build.bfg file')
+
+    def test_no_comp_db(self):
+        os.chdir(self.srcdir)
+        self.configure(extra_args=['--disable-compdb'], backend=backends[0])
+        self.assertNotExists('compile_commands.json')
+        os.chdir(self.builddir)
+        self.assertPopen(['bfg9000', 'refresh'])
+        self.assertNotExists('compile_commands.json')
 
 
 class TestEnv(BasicIntegrationTest):

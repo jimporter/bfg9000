@@ -125,7 +125,7 @@ class Toolchain:
 
 
 class Environment:
-    version = 15
+    version = 16
     envfile = '.bfg_environ'
 
     Mode = shell.Mode
@@ -153,7 +153,7 @@ class Environment:
 
         self.variables = EnvVarDict(dict(os.environ))
 
-    def finalize(self, install_dirs, library_mode, extra_args=None):
+    def finalize(self, install_dirs, library_mode, compdb, extra_args=None):
         # Fill in any install dirs that aren't already set (e.g. by a
         # toolchain file) with defaults from the target platform, but skip
         # absolute paths if this is a cross-compilation build.
@@ -170,6 +170,7 @@ class Environment:
                 self.install_dirs[k] = v.as_directory()
 
         self.library_mode = LibraryMode(*library_mode)
+        self.compdb = compdb
         self.extra_args = extra_args
 
     def reload(self):
@@ -275,6 +276,7 @@ class Environment:
                     'mopack': [i.to_json() for i in self.mopack],
 
                     'library_mode': self.library_mode,
+                    'compdb': self.compdb,
                     'extra_args': self.extra_args,
 
                     'variables': self.variables.to_json(),
@@ -356,6 +358,10 @@ class Environment:
                 'current': data.pop('variables'),
             }
 
+        # v16 adds support for emitting compile_commands.json.
+        if version < 16:
+            data['compdb'] = True
+
         # Now that we've upgraded, initialize the Environment object.
         env = cls.__new__(cls)
 
@@ -379,5 +385,6 @@ class Environment:
         env.mopack = [Path.from_json(i) for i in data['mopack']]
         env.variables = EnvVarDict.from_json(data['variables'])
         env.library_mode = LibraryMode(*data['library_mode'])
+        env.compdb = data['compdb']
 
         return env

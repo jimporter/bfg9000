@@ -37,9 +37,13 @@ def listify(thing, type=list):
 
 
 def inner_quote_info(s):
-    if _bad_chars.search(s):
-        return s.replace("'", r"'\''"), True
-    return s, False
+    if isinstance(s, shell_literal):
+        return s.string, False
+    elif isinstance(s, str):
+        if _bad_chars.search(s):
+            return s.replace("'", r"'\''"), True
+        return s, False
+    raise TypeError(type(s))
 
 
 def inner_quote(s):
@@ -62,6 +66,13 @@ def wrap_quotes(s):
 
 
 def quote_info(s):
+    if isinstance(s, jbos):
+        result, escaped = '', False
+        for i in s.bits:
+            r, e = quote_info(i)
+            result += r
+            escaped |= e
+        return result, escaped
     s, quoted = inner_quote_info(s)
     return (wrap_quotes(s), True) if quoted else (s, False)
 

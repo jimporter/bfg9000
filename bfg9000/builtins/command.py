@@ -2,11 +2,12 @@ from itertools import chain, repeat
 
 from . import builtin
 from .. import shell
+from ..backends.compdb import writer as compdb
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..build_inputs import Edge
 from ..file_types import FileOrDirectory, Node, Phony
-from ..iterutils import isiterable, iterate, listify
+from ..iterutils import first, isiterable, iterate, listify
 from ..objutils import convert_each
 from ..path import Path, Root
 from ..safe_str import jbos, safe_str, safe_string
@@ -182,6 +183,17 @@ def ninja_command(rule, build_inputs, buildfile, env):
         phony=rule.phony,
         description=rule.description
     )
+
+
+@compdb.rule_handler(BuildStep)
+def compdb_copy_file(rule, build_inputs, buildfile, env):
+    # Only add this step if there's an input file; otherwise, tools consuming
+    # `compile_commands.json` won't have any use for it.
+    if len(rule.files):
+        buildfile.append(
+            arguments=shell.global_env(rule.env, rule.cmds),
+            file=rule.files[0], output=first(rule.public_output)
+        )
 
 
 try:

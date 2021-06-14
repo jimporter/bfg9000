@@ -231,8 +231,9 @@ class TestEnvironment(TestCase):
 
     def test_finalize(self):
         env = self.make_env()
-        env.finalize({}, (True, False))
+        env.finalize({}, (True, False), True)
         self.assertEqual(env.library_mode, LibraryMode(True, False))
+        self.assertEqual(env.compdb, True)
         self.assertPathEqual(env.install_dirs[InstallRoot.prefix],
                              Path('/prefix/'))
         self.assertPathEqual(env.install_dirs[InstallRoot.exec_prefix],
@@ -242,7 +243,7 @@ class TestEnvironment(TestCase):
         env.finalize({
             InstallRoot.prefix: Path('/foo'),
             InstallRoot.exec_prefix: None,
-        }, (True, False))
+        }, (True, False), True)
         self.assertPathEqual(env.install_dirs[InstallRoot.prefix],
                              Path('/foo/'))
         self.assertPathEqual(env.install_dirs[InstallRoot.exec_prefix],

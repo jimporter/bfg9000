@@ -10,6 +10,10 @@ class TestCustomSteps(IntegrationTest):
         self.build(executable('hello'))
         self.assertOutput([executable('hello')], 'hello from python!\n')
 
+    def test_intro(self):
+        self.build(executable('intro'))
+        self.assertOutput([executable('intro')], 'my name is coco!\n')
+
     def test_goodbye(self):
         self.build(executable('goodbye'))
         self.assertOutput([executable('goodbye')], 'goodbye from python!\n')
@@ -18,6 +22,6 @@ class TestCustomSteps(IntegrationTest):
         if self.backend == 'make':
             self.clean()
             self.assertDirectory('.', {
-                '.bfg_environ', 'Makefile',
+                '.bfg_environ', 'compile_commands.json', 'Makefile',
                 os.path.join('goodbye.int', '.dir'),
             })

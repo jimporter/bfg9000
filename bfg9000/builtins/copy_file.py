@@ -3,10 +3,12 @@ import os
 from . import builtin
 from .file_types import FileList, make_file_list
 from .path import buildpath, relname, within_directory
+from ..backends.compdb import writer as compdb
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..build_inputs import Edge
 from ..file_types import File
+from ..iterutils import first, unlistify
 from ..path import Path
 from ..versioning import SpecifierSet
 
@@ -114,6 +116,19 @@ def ninja_copy_file(rule, build_inputs, buildfile, env):
         inputs=rule.file,
         implicit=rule.extra_deps,
         variables=variables
+    )
+
+
+@compdb.rule_handler(CopyFile)
+def compdb_copy_file(rule, build_inputs, buildfile, env):
+    copier = rule.copier
+
+    in_file = rule.file
+    if hasattr(copier, 'transform_input'):
+        in_file = copier.transform_input(rule.file, rule.raw_output)
+    buildfile.append(
+        arguments=copier(in_file, unlistify(rule.output)),
+        file=rule.file, output=first(rule.public_output)
     )
 
 

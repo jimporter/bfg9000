@@ -49,6 +49,12 @@ class TestJoin(TestCase):
     def test_multiple(self):
         self.assertEqual(windows.join(['foo bar', 'baz']), '"foo bar" baz')
 
+    def test_literal(self):
+        self.assertEqual(windows.join(['foo bar', shell_literal('>'), 'baz']),
+                         '"foo bar" > baz')
+        self.assertEqual(windows.join(['foo bar' + shell_literal('>'), 'baz']),
+                         '"foo bar"> baz')
+
 
 class TestListify(TestCase):
     def test_string(self):
@@ -107,6 +113,24 @@ class TestQuote(TestCase):
                          escape_percent=True)
         self.assertQuote(r'"100%"', True, r'\"100%%\"', r'"\"100%%\""',
                          escape_percent=True)
+
+    def test_shell_chars(self):
+        self.assertQuote('&&', True, '&&', '"&&"')
+        self.assertQuote('>', True, '>', '">"')
+        self.assertQuote('|', True, '|', '"|"')
+
+    def test_literal(self):
+        self.assertQuote(shell_literal('>'), False, '>', '>')
+
+        s = shell_literal('>') + 'foo bar'
+        self.assertEqual(windows.quote(s), '>"foo bar"')
+        self.assertEqual(windows.quote_info(s), ('>"foo bar"', True))
+
+    def test_invalid(self):
+        for fn in (windows.quote, windows.quote_info, windows.inner_quote,
+                   windows.inner_quote_info):
+            with self.assertRaises(TypeError):
+                fn(1)
 
 
 class TestWrapQuotes(TestCase):

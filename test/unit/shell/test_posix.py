@@ -43,6 +43,12 @@ class TestJoin(TestCase):
     def test_multiple(self):
         self.assertEqual(posix.join(['foo bar', 'baz']), "'foo bar' baz")
 
+    def test_literal(self):
+        self.assertEqual(posix.join(['foo bar', shell_literal('>'), 'baz']),
+                         "'foo bar' > baz")
+        self.assertEqual(posix.join(['foo bar' + shell_literal('>'), 'baz']),
+                         "'foo bar'> baz")
+
 
 class TestListify(TestCase):
     def test_string(self):
@@ -94,6 +100,19 @@ class TestQuote(TestCase):
         self.assertQuote('&&', True, '&&', "'&&'")
         self.assertQuote('>', True, '>', "'>'")
         self.assertQuote('|', True, '|', "'|'")
+
+    def test_literal(self):
+        self.assertQuote(shell_literal('>'), False, '>', '>')
+
+        s = shell_literal('>') + 'foo bar'
+        self.assertEqual(posix.quote(s), ">'foo bar'")
+        self.assertEqual(posix.quote_info(s), (">'foo bar'", True))
+
+    def test_invalid(self):
+        for fn in (posix.quote, posix.quote_info, posix.inner_quote,
+                   posix.inner_quote_info):
+            with self.assertRaises(TypeError):
+                fn(1)
 
 
 class TestWrapQuotes(TestCase):

@@ -4,11 +4,12 @@ from . import builtin
 from .. import options as opts
 from .path import buildpath, relname, within_directory
 from .file_types import FileList, make_file_list, static_file
+from ..backends.compdb import writer as compdb
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..build_inputs import build_input, Edge
 from ..file_types import *
-from ..iterutils import first, flatten, iterate
+from ..iterutils import first, flatten, iterate, unlistify
 from ..objutils import convert_each, convert_one
 from ..path import Path
 from ..shell import posix as pshell
@@ -419,6 +420,31 @@ def ninja_compile(rule, build_inputs, buildfile, env):
         inputs=inputs,
         implicit=implicit_deps + rule.extra_deps,
         variables=variables
+    )
+
+
+@compdb.rule_handler(CompileSource, CompileHeader, GenerateSource)
+def compdb_compile(rule, build_inputs, buildfile, env):
+    compiler = rule.compiler
+    cmd_kwargs = {}
+
+    if hasattr(compiler, 'flags_var'):
+        gopts = build_inputs['compile_options'][compiler.lang]
+        cmd_kwargs['flags'] = (compiler.global_flags +
+                               compiler.flags(gopts, mode='global') +
+                               rule.flags(gopts))
+
+    if compiler.deps_flavor == 'gcc':
+        cmd_kwargs['deps'] = (first(rule.output).path.addext('.d')
+                              if compiler.deps_flavor == 'gcc' else None)
+    elif compiler.deps_flavor == 'msvc':
+        cmd_kwargs['deps'] = True
+
+    output = unlistify(rule.output if compiler.num_outputs == 'all'
+                       else rule.output[0:compiler.num_outputs])
+    buildfile.append(
+        arguments=compiler(rule.file, output, **cmd_kwargs),
+        file=rule.file, output=first(rule.public_output)
     )
 
 

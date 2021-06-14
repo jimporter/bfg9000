@@ -7,12 +7,14 @@ from . import builtin
 from .. import options as opts
 from .file_types import static_file
 from .path import relname
+from ..backends.compdb import writer as compdb
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..build_inputs import build_input, Edge
 from ..exceptions import ToolNotFoundError
 from ..file_types import *
-from ..iterutils import first, flatten, iterate, listify, slice_dict, uniques
+from ..iterutils import (first, flatten, iterate, listify, slice_dict, uniques,
+                         unlistify)
 from ..languages import known_formats
 from ..objutils import convert_each, convert_one
 from ..platforms import known_native_object_formats
@@ -519,6 +521,36 @@ def ninja_link(rule, build_inputs, buildfile, env):
         implicit=(rule.libs + package_build_deps + module_defs + manifest +
                   rule.extra_deps),
         variables=variables
+    )
+
+
+@compdb.rule_handler(StaticLink, DynamicLink, SharedLink)
+def compdb_link(rule, build_inputs, buildfile, env):
+    linker = rule.linker
+    cmd_kwargs = {}
+
+    if hasattr(linker, 'flags_var') or hasattr(linker, 'libs_var'):
+        gopts = build_inputs['link_options'][rule.base_mode][linker.family]
+    if hasattr(linker, 'flags_var'):
+        cmd_kwargs['flags'] = (linker.global_flags +
+                               linker.flags(gopts, mode='global') +
+                               rule.flags(gopts))
+    if hasattr(linker, 'libs_var'):
+        cmd_kwargs['libs'] = (linker.global_libs +
+                              linker.lib_flags(gopts, mode='global') +
+                              rule.lib_flags(gopts))
+    if hasattr(rule, 'manifest'):
+        cmd_kwargs['manifest'] = rule.manifest
+
+    file = rule.files[0] if len(rule.files) else rule.user_libs[0]
+    in_files = rule.files
+    if hasattr(linker, 'transform_input'):
+        in_files = linker.transform_input(in_files)
+    output = unlistify(rule.output if linker.num_outputs == 'all'
+                       else rule.output[0:linker.num_outputs])
+    buildfile.append(
+        arguments=linker(in_files, output, **cmd_kwargs),
+        file=file, output=first(rule.public_output)
     )
 
 

@@ -26,6 +26,7 @@ class TestEnvironmentFromArgs(TestCase):
 
             shared=True,
             static=False,
+            compdb=True,
         )
 
     def test_basic(self):

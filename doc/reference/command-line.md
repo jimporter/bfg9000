@@ -55,6 +55,11 @@ Enable/disable building shared libraries when using
 Enable/disable building static libraries when using
 [*library*()](builtins.md#library) in your build.bfg files. Defaults to enabled.
 
+#### --enable-compdb, --disable-compdb { #configure-enable-compdb }
+
+Enable/disable generation of `compile_commands.json` when generating build
+files. Defaults to enabled.
+
 #### -p *FILE*, --package-file *FILE* { #configure-package-file }
 
 Additional [mopack][mopack] package files to consult when resolving packages.

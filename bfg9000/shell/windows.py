@@ -12,7 +12,7 @@ __all__ = ['split', 'join', 'listify', 'inner_quote', 'inner_quote_info',
            'join_lines', 'global_env']
 
 # XXX: We need a way to escape cmd.exe-specific characters.
-_bad_chars = re.compile(r'(\s|"|\\$)')
+_bad_chars = re.compile(r'(\s|["&<>|]|\\$)')
 _replace = re.compile(r'(\\*)("|$)')
 _ends_unescaped_quote = re.compile(r'(^|[^\\])(\\\\)*"$')
 
@@ -80,19 +80,23 @@ def listify(thing, type=list):
 
 
 def inner_quote_info(s, escape_percent=False):
-    # In some contexts (mainly certain uses of the Windows shell), we want to
-    # escape percent signs. This doesn't count as "escaping" for the purposes
-    # of quoting the result though.
-    if escape_percent:
-        s = s.replace('%', '%%')
+    if isinstance(s, shell_literal):
+        return s.string, False
+    elif isinstance(s, str):
+        # In some contexts (mainly certain uses of the Windows shell), we want
+        # to escape percent signs. This doesn't count as "escaping" for the
+        # purposes of quoting the result though.
+        if escape_percent:
+            s = s.replace('%', '%%')
 
-    if not _bad_chars.search(s):
-        return s, False
+        if not _bad_chars.search(s):
+            return s, False
 
-    def repl(m):
-        quote = '\\' + m.group(2) if len(m.group(2)) else ''
-        return m.group(1) * 2 + quote
-    return _replace.sub(repl, s), True
+        def repl(m):
+            quote = '\\' + m.group(2) if len(m.group(2)) else ''
+            return m.group(1) * 2 + quote
+        return _replace.sub(repl, s), True
+    raise TypeError(type(s))
 
 
 def inner_quote(s, escape_percent=False):
@@ -107,6 +111,13 @@ def wrap_quotes(s):
 
 
 def quote_info(s, escape_percent=False):
+    if isinstance(s, jbos):
+        result, escaped = '', False
+        for i in s.bits:
+            r, e = quote_info(i)
+            result += r
+            escaped |= e
+        return result, escaped
     s, quoted = inner_quote_info(s, escape_percent)
     return (wrap_quotes(s), True) if quoted else (s, False)
 

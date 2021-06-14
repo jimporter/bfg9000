@@ -26,7 +26,7 @@ class TestExecutable(IntegrationTest):
         self.assertOutput([executable('simple')], 'hello, world!\n')
 
         self.clean()
-        common = {'.bfg_environ'}
+        common = {'.bfg_environ', 'compile_commands.json'}
         files = {
             'ninja': [common | {'.ninja_deps', '.ninja_log', 'build.ninja'}],
             'make': [common | {'Makefile', pjoin('simple.int', '.dir')}],

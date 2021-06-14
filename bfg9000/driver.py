@@ -6,6 +6,7 @@ from . import build, log, path
 from .app_version import version
 from .arguments import parser as argparse
 from .backends import list_backends
+from .backends.compdb import writer as compdb
 from .environment import Environment, EnvVersionError
 from .platforms.target import platform_info
 
@@ -80,6 +81,7 @@ def finalize_environment(env, args, extra_args=None):
     env.finalize(
         install_dirs={i: getattr(args, i.name) for i in path.InstallRoot},
         library_mode=(args.shared, args.static),
+        compdb=args.compdb,
         extra_args=extra_args,
     )
 
@@ -157,6 +159,9 @@ def add_configure_args(parser):
                        help='build shared libraries (default: enabled)')
     build.add_argument('--static', action='enable', default=False,
                        help='build static libraries (default: disabled)')
+    build.add_argument('--compdb', action='enable', default=True,
+                       help=('generate compile_commands.json ' +
+                             '(default: enabled)'))
 
     pkg = parser.add_argument_group('packaging arguments')
     pkg.add_argument('-p', '--package-file', action='append', metavar='FILE',
@@ -214,6 +219,8 @@ def configure(parser, subparser, args, extra):
 
         build_inputs = build.configure_build(env)
         backend.write(env, build_inputs)
+        if env.compdb:
+            compdb.write(env, build_inputs)
     except Exception as e:
         logger.exception(e)
         return e.code if isinstance(e, build.ScriptExitError) else 1
@@ -237,6 +244,8 @@ def refresh(parser, subparser, args, extra):
         backend = list_backends()[env.backend]
         build_inputs = build.configure_build(env)
         backend.write(env, build_inputs)
+        if env.compdb:
+            compdb.write(env, build_inputs)
     except Exception as e:
         return handle_reload_exception(e, suggest_rerun=True)
 
@@ -361,7 +370,7 @@ def main():
     tempo = 100 if platform_info().family == 'windows' else 120
     e1m1_p.add_argument('-t', '--tempo', metavar='BPM', type=int,
                         default=tempo,
-                        help='playback speed (default:  %(default)s)')
+                        help='playback speed (default: %(default)s)')
     e1m1_p.add_argument('-L', '--long', action='store_true',
                         help='play for longer')
 

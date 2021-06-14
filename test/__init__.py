@@ -18,7 +18,8 @@ def make_env(platform=None, clear_variables=False, variables={}):
             env = Environment(*args)
     else:
         env = Environment(*args)
-    env.finalize({InstallRoot.prefix: abspath('prefix')}, (False, False))
+    env.finalize({InstallRoot.prefix: abspath('prefix')}, (False, False),
+                 False)
 
     if clear_variables:
         env.variables = EnvVarDict()
