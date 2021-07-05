@@ -27,7 +27,7 @@ Default: `cc` (POSIX), `cl` (Windows)
 The command to use when compiling C source files. Also the command to use with
 cc-style toolchains when linking object files whose source is in C. If not
 defined, bfg9000 will try to guess the command to use by checking
-[`OBJC`](#objc), [`CXX`](#cxx), and [`OBJCXX`](#objcxx), in that order.
+[`$OBJC`](#objc), [`$CXX`](#cxx), and [`$OBJCXX`](#objcxx), in that order.
 
 #### *CFLAGS*
 Default: *none*
@@ -45,7 +45,7 @@ Default: `c++` (POSIX), `cl` (Windows)
 The command to use when compiling C++ source files. Also the command to use with
 cc-style toolchains when linking object files whose source is in C++. If not
 defined, bfg9000 will try to guess the command to use by checking
-[`OBJCXX`](#objcxx), [`CC`](#cc), and [`OBJC`](#objc), in that order.
+[`$OBJCXX`](#objcxx), [`$CC`](#cc), and [`$OBJC`](#objc), in that order.
 
 #### *CXXFLAGS*
 Default: *none*
@@ -113,7 +113,7 @@ Default: `cc`
 The command to use when compiling Objective C source files. Also the command to
 use with cc-style toolchains when linking object files whose source is in
 Objective C. If not defined, bfg9000 will try to guess the command to use by
-checking [`CC`](#cc), [`OBJCXX`](#objcxx), and [`CXX`](#cxx), in that order.
+checking [`$CC`](#cc), [`$OBJCXX`](#objcxx), and [`$CXX`](#cxx), in that order.
 
 #### *OBJCFLAGS*
 Default: *none*
@@ -132,7 +132,7 @@ Default: `c++`
 The command to use when compiling Objective C++ source files. Also the command
 to use with cc-style toolchains when linking object files whose source is in
 Objective C++. If not defined, bfg9000 will try to guess the command to use by
-checking [`CXX`](#cxx), [`OBJC`](#objc), and [`CC`](#cc), in that order.
+checking [`$CXX`](#cxx), [`$OBJC`](#objc), and [`$CC`](#cc), in that order.
 
 #### *OBJCXXFLAGS*
 Default: *none*
@@ -252,8 +252,8 @@ The command to use when creating (native) static libraries from object files
 Default: `cru` (POSIX)
 {: .subtitle}
 
-The arguments to pass to the static library builder (specified in `AR`) for
-native libraries.
+The arguments to pass to the static library builder (specified in [`$AR`](#ar))
+for native libraries.
 
 #### *JAR*
 Default: `jar`
@@ -494,7 +494,7 @@ Default: *none*
 {: .subtitle}
 
 If set to non-zero, enable colors in the terminal output regardless of whether
-the destination is a tty. This overrides [*CLICOLOR*](#CLICOLOR).
+the destination is a tty. This overrides [`$CLICOLOR`](#CLICOLOR).
 
 #### *DESTDIR*
 Default: *none*

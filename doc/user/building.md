@@ -29,10 +29,10 @@ $ 9k builddir/
 
 !!! note
     On Windows, using bfg9000 requires a bit more care. Since the MSVC tools
-    aren't in the `PATH` by default, you can't just open any command prompt.
+    aren't in the `$PATH` by default, you can't just open any command prompt.
     You need to pick the *correct* prompt. Thankfully, Visual Studio provides
     Start Menu items such as "VS2015 Developer Command Prompt". These add the
-    appropiate directories to the `PATH`, allowing you to use whichever version
+    appropiate directories to the `$PATH`, allowing you to use whichever version
     of the MSVC tools that you'd like.
 
 ## Build directories
@@ -76,7 +76,7 @@ see the [Command-line Reference](../reference/command-line.md) chapter.
 
 Many options for building can be set via the environment. These generally follow
 the UNIX naming conventions, so you can use, say,
-[`CXX`](../reference/environment-vars.md#cxx) to change the C++ compiler that
+[`$CXX`](../reference/environment-vars.md#cxx) to change the C++ compiler that
 bfg9000 uses. For a full listing of the recognized environment variables, see
 the [Environment Variables](../reference/environment-vars.md) chapter.
 
@@ -143,7 +143,7 @@ and include directories individually, using `--bindir`, `--libdir`, and
 
 You can additionally specify the `$DESTDIR` environment variable to perform a
 staged installation (useful when creating a binary package, for example). For
-more information about $DESTDIR, see the [GNU coding standards][destdir].
+more information about `$DESTDIR`, see the [GNU coding standards][destdir].
 
 !!! note
     On Windows, `$DESTDIR` can be used provided the installation prefixes are

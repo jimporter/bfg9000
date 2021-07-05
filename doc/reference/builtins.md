@@ -318,7 +318,7 @@ This build step recognizes the [dynamic linking environment
 variables](environment-vars.md#dynamic-linking) or the [static
 linking environment variables](environment-vars.md#static-linking), as well as
 the [compiler environment
-variable](environment-vars.md#compilation-variables) (e.g. `CC`) for the
+variable](environment-vars.md#compilation-variables) (e.g. `$CC`) for the
 relevant language.
 
 !!! warning
@@ -599,11 +599,11 @@ one argument is passed, or a tuple if multiple are passed.
     library will install the DLL *and* the import library.
 
 This step recognizes the following environment variables:
-[`DESTDIR`](environment-vars.md#destdir),
-[`INSTALL`](environment-vars.md#install),
-[`INSTALL_NAME_TOOL`](environment-vars.md#install_name_tool),
-[`MKDIR_P`](environment-vars.md#mkdir_p),
-[`PATCHELF`](environment-vars.md#patchelf).
+[`$DESTDIR`](environment-vars.md#destdir),
+[`$INSTALL`](environment-vars.md#install),
+[`$INSTALL_NAME_TOOL`](environment-vars.md#install_name_tool),
+[`$MKDIR_P`](environment-vars.md#mkdir_p),
+[`$PATCHELF`](environment-vars.md#patchelf).
 
 ## User-defined steps
 
@@ -817,12 +817,12 @@ a *version* as the second positional argument if it's parseable as a version
 specifier. For example, `package('pkg', '>=1.0')`.
 
 This function recognizes the following environment variables:
-[`CLASSPATH`](environment-vars.md#classpath),
-[`CPATH`](environment-vars.md#cpath),
-[`INCLUDE`](environment-vars.md#include),
-[`LIB`](environment-vars.md#lib),
-[`LIBRARY_PATH`](environment-vars.md#library_path),
-[`PKG_CONFIG`](environment-vars.md#pkg_config).
+[`$CLASSPATH`](environment-vars.md#classpath),
+[`$CPATH`](environment-vars.md#cpath),
+[`$INCLUDE`](environment-vars.md#include),
+[`$LIB`](environment-vars.md#lib),
+[`$LIBRARY_PATH`](environment-vars.md#library_path),
+[`$PKG_CONFIG`](environment-vars.md#pkg_config).
 
 !!! note
     This function can also be used to refer to the pthread library. On many
@@ -890,12 +890,12 @@ object that can be used in other build steps as normal.
 Availability: `build.bfg`
 {: .subtitle}
 
-Search for an executable named *name* somewhere in the system's `PATH`. If
+Search for an executable named *name* somewhere in the system's `$PATH`. If
 *format* is unset, the executable's object format will be set to the default
 for the host platform.
 
 This function recognizes the following environment variables:
-[`PATH`](environment-vars.md#path), [`PATHEXT`](environment-vars.md#pathext).
+[`$PATH`](environment-vars.md#path), [`$PATHEXT`](environment-vars.md#pathext).
 
 ## Environment
 
@@ -1514,7 +1514,7 @@ Availability: `<toolchain>.bfg`
 {: .subtitle}
 
 Find the best option for an executable named by *names*. *names* can be a
-string resolved as with the `PATH` environment variable in the shell, or else a
+string resolved as with the `$PATH` environment variable in the shell, or else a
 list of names (as strings or lists of strings). If *names* contains a
 list-of-lists, the inner list represents a series of arguments to pass to the
 executable when running it.
