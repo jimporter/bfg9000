@@ -433,7 +433,7 @@ version of the library).</p>
 variables</a> or the <a href="../environment-vars/#static-linking">static
 linking environment variables</a>, as well as
 the <a href="../environment-vars/#compilation-variables">compiler environment
-variable</a> (e.g. <code>CC</code>) for the
+variable</a> (e.g. <code>$CC</code>) for the
 relevant language.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
@@ -665,11 +665,11 @@ installed. For instance, on Windows, this means that passing in a shared
 library will install the DLL <em>and</em> the import library.</p>
 </div>
 <p>This step recognizes the following environment variables:
-<a href="../environment-vars/#destdir"><code>DESTDIR</code></a>,
-<a href="../environment-vars/#install"><code>INSTALL</code></a>,
-<a href="../environment-vars/#install_name_tool"><code>INSTALL_NAME_TOOL</code></a>,
-<a href="../environment-vars/#mkdir_p"><code>MKDIR_P</code></a>,
-<a href="../environment-vars/#patchelf"><code>PATCHELF</code></a>.</p>
+<a href="../environment-vars/#destdir"><code>$DESTDIR</code></a>,
+<a href="../environment-vars/#install"><code>$INSTALL</code></a>,
+<a href="../environment-vars/#install_name_tool"><code>$INSTALL_NAME_TOOL</code></a>,
+<a href="../environment-vars/#mkdir_p"><code>$MKDIR_P</code></a>,
+<a href="../environment-vars/#patchelf"><code>$PATCHELF</code></a>.</p>
 <h2 id="user-defined-steps">User-defined steps<a class="headerlink" href="#user-defined-steps" title="Permanent link">§</a></h2>
 <p>While the standard build steps cover the most common tasks in a build, many
 projects need to run more-specialized commands. A build script can define custom
@@ -830,12 +830,12 @@ Python <a href="https://www.python.org/dev/peps/pep-0440/#version-specifiers">ve
 a <em>version</em> as the second positional argument if it's parseable as a version
 specifier. For example, <code>package('pkg', '&gt;=1.0')</code>.</p>
 <p>This function recognizes the following environment variables:
-<a href="../environment-vars/#classpath"><code>CLASSPATH</code></a>,
-<a href="../environment-vars/#cpath"><code>CPATH</code></a>,
-<a href="../environment-vars/#include"><code>INCLUDE</code></a>,
-<a href="../environment-vars/#lib"><code>LIB</code></a>,
-<a href="../environment-vars/#library_path"><code>LIBRARY_PATH</code></a>,
-<a href="../environment-vars/#pkg_config"><code>PKG_CONFIG</code></a>.</p>
+<a href="../environment-vars/#classpath"><code>$CLASSPATH</code></a>,
+<a href="../environment-vars/#cpath"><code>$CPATH</code></a>,
+<a href="../environment-vars/#include"><code>$INCLUDE</code></a>,
+<a href="../environment-vars/#lib"><code>$LIB</code></a>,
+<a href="../environment-vars/#library_path"><code>$LIBRARY_PATH</code></a>,
+<a href="../environment-vars/#pkg_config"><code>$PKG_CONFIG</code></a>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>This function can also be used to refer to the pthread library. On many
@@ -897,11 +897,11 @@ for the following fields:</p>
 object that can be used in other build steps as normal.</p>
 <h3 id="system_executable">system_executable(<em>name</em>, [<em>format</em>])<a class="headerlink" href="#system_executable" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
-<p>Search for an executable named <em>name</em> somewhere in the system's <code>PATH</code>. If
+<p>Search for an executable named <em>name</em> somewhere in the system's <code>$PATH</code>. If
 <em>format</em> is unset, the executable's object format will be set to the default
 for the host platform.</p>
 <p>This function recognizes the following environment variables:
-<a href="../environment-vars/#path"><code>PATH</code></a>, <a href="../environment-vars/#pathext"><code>PATHEXT</code></a>.</p>
+<a href="../environment-vars/#path"><code>$PATH</code></a>, <a href="../environment-vars/#pathext"><code>$PATHEXT</code></a>.</p>
 <h2 id="environment">Environment<a class="headerlink" href="#environment" title="Permanent link">§</a></h2>
 <p>Occasionally, build scripts need to directly query aspects of the environment.
 In bfg9000, this is performed with the
@@ -1332,7 +1332,7 @@ used.</p>
 <h3 id="which">which(<em>names</em>, [<em>resolve</em>], [<em>strict</em>])<a class="headerlink" href="#which" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>&lt;toolchain&gt;.bfg</code></p>
 <p>Find the best option for an executable named by <em>names</em>. <em>names</em> can be a
-string resolved as with the <code>PATH</code> environment variable in the shell, or else a
+string resolved as with the <code>$PATH</code> environment variable in the shell, or else a
 list of names (as strings or lists of strings). If <em>names</em> contains a
 list-of-lists, the inner list represents a series of arguments to pass to the
 executable when running it.</p>

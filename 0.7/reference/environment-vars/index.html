@@ -186,7 +186,7 @@ compiling any C-family source file (C, C++, Objective C/C++).</p>
 <p>The command to use when compiling C source files. Also the command to use with
 cc-style toolchains when linking object files whose source is in C. If not
 defined, bfg9000 will try to guess the command to use by checking
-<a href="#objc"><code>OBJC</code></a>, <a href="#cxx"><code>CXX</code></a>, and <a href="#objcxx"><code>OBJCXX</code></a>, in that order.</p>
+<a href="#objc"><code>$OBJC</code></a>, <a href="#cxx"><code>$CXX</code></a>, and <a href="#objcxx"><code>$OBJCXX</code></a>, in that order.</p>
 <h4 id="cflags"><em>CFLAGS</em><a class="headerlink" href="#cflags" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <em>none</em></p>
 <p>Command line arguments to pass to the compiler when compiling any C source file.</p>
@@ -197,7 +197,7 @@ defined, bfg9000 will try to guess the command to use by checking
 <p>The command to use when compiling C++ source files. Also the command to use with
 cc-style toolchains when linking object files whose source is in C++. If not
 defined, bfg9000 will try to guess the command to use by checking
-<a href="#objcxx"><code>OBJCXX</code></a>, <a href="#cc"><code>CC</code></a>, and <a href="#objc"><code>OBJC</code></a>, in that order.</p>
+<a href="#objcxx"><code>$OBJCXX</code></a>, <a href="#cc"><code>$CC</code></a>, and <a href="#objc"><code>$OBJC</code></a>, in that order.</p>
 <h4 id="cxxflags"><em>CXXFLAGS</em><a class="headerlink" href="#cxxflags" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <em>none</em></p>
 <p>Command line arguments to pass to the compiler when compiling any C++ source
@@ -237,7 +237,7 @@ file.</p>
 <p>The command to use when compiling Objective C source files. Also the command to
 use with cc-style toolchains when linking object files whose source is in
 Objective C. If not defined, bfg9000 will try to guess the command to use by
-checking <a href="#cc"><code>CC</code></a>, <a href="#objcxx"><code>OBJCXX</code></a>, and <a href="#cxx"><code>CXX</code></a>, in that order.</p>
+checking <a href="#cc"><code>$CC</code></a>, <a href="#objcxx"><code>$OBJCXX</code></a>, and <a href="#cxx"><code>$CXX</code></a>, in that order.</p>
 <h4 id="objcflags"><em>OBJCFLAGS</em><a class="headerlink" href="#objcflags" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <em>none</em></p>
 <p>Command line arguments to pass to the compiler when compiling any Objective C
@@ -249,7 +249,7 @@ source file.</p>
 <p>The command to use when compiling Objective C++ source files. Also the command
 to use with cc-style toolchains when linking object files whose source is in
 Objective C++. If not defined, bfg9000 will try to guess the command to use by
-checking <a href="#cxx"><code>CXX</code></a>, <a href="#objc"><code>OBJC</code></a>, and <a href="#cc"><code>CC</code></a>, in that order.</p>
+checking <a href="#cxx"><code>$CXX</code></a>, <a href="#objc"><code>$OBJC</code></a>, and <a href="#cc"><code>$CC</code></a>, in that order.</p>
 <h4 id="objcxxflags"><em>OBJCXXFLAGS</em><a class="headerlink" href="#objcxxflags" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <em>none</em></p>
 <p>Command line arguments to pass to the compiler when compiling any Objective C++
@@ -316,8 +316,8 @@ file.</p>
 (typically <code>ar</code> on POSIX and <code>lib</code> on Windows).</p>
 <h4 id="arflags"><em>ARFLAGS</em><a class="headerlink" href="#arflags" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <code>cru</code> (POSIX)</p>
-<p>The arguments to pass to the static library builder (specified in <code>AR</code>) for
-native libraries.</p>
+<p>The arguments to pass to the static library builder (specified in <a href="#ar"><code>$AR</code></a>)
+for native libraries.</p>
 <h4 id="jar"><em>JAR</em><a class="headerlink" href="#jar" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <code>jar</code></p>
 <p>The command to use when creating <code>.jar</code> files for JVM-based binaries.</p>
@@ -454,7 +454,7 @@ tty.</p>
 <h4 id="clicolor_force"><em>CLICOLOR_FORCE</em><a class="headerlink" href="#clicolor_force" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <em>none</em></p>
 <p>If set to non-zero, enable colors in the terminal output regardless of whether
-the destination is a tty. This overrides <a href="#CLICOLOR"><em>CLICOLOR</em></a>.</p>
+the destination is a tty. This overrides <a href="#CLICOLOR"><code>$CLICOLOR</code></a>.</p>
 <h4 id="destdir"><em>DESTDIR</em><a class="headerlink" href="#destdir" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <em>none</em></p>
 <p>A directory to prepend to the install location for the project, used in

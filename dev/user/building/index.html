@@ -193,10 +193,10 @@ bfg9000, you can use the following shorthand instead of
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>On Windows, using bfg9000 requires a bit more care. Since the MSVC tools
-aren't in the <code>PATH</code> by default, you can't just open any command prompt.
+aren't in the <code>$PATH</code> by default, you can't just open any command prompt.
 You need to pick the <em>correct</em> prompt. Thankfully, Visual Studio provides
 Start Menu items such as "VS2015 Developer Command Prompt". These add the
-appropiate directories to the <code>PATH</code>, allowing you to use whichever version
+appropiate directories to the <code>$PATH</code>, allowing you to use whichever version
 of the MSVC tools that you'd like.</p>
 </div>
 <h2 id="build-directories">Build directories<a class="headerlink" href="#build-directories" title="Permanent link">§</a></h2>
@@ -231,7 +231,7 @@ see the <a href="../../reference/command-line/">Command-line Reference</a> chapt
 <h2 id="setting-build-options">Setting build options<a class="headerlink" href="#setting-build-options" title="Permanent link">§</a></h2>
 <p>Many options for building can be set via the environment. These generally follow
 the UNIX naming conventions, so you can use, say,
-<a href="../../reference/environment-vars/#cxx"><code>CXX</code></a> to change the C++ compiler that
+<a href="../../reference/environment-vars/#cxx"><code>$CXX</code></a> to change the C++ compiler that
 bfg9000 uses. For a full listing of the recognized environment variables, see
 the <a href="../../reference/environment-vars/">Environment Variables</a> chapter.</p>
 <h2 id="using-toolchain-files">Using toolchain files<a class="headerlink" href="#using-toolchain-files" title="Permanent link">§</a></h2>
@@ -284,7 +284,7 @@ and include directories individually, using <code>--bindir</code>, <code>--libdi
 <code>--includedir</code>, respectively.</p>
 <p>You can additionally specify the <code>$DESTDIR</code> environment variable to perform a
 staged installation (useful when creating a binary package, for example). For
-more information about $DESTDIR, see the <a href="https://www.gnu.org/prep/standards/html_node/DESTDIR.html">GNU coding standards</a>.</p>
+more information about <code>$DESTDIR</code>, see the <a href="https://www.gnu.org/prep/standards/html_node/DESTDIR.html">GNU coding standards</a>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>On Windows, <code>$DESTDIR</code> can be used provided the installation prefixes are
