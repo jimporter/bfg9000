@@ -274,6 +274,14 @@ directory</a> for compilers that support this.</p>
 <p>Create a reference to an existing header named <em>name</em>. This is useful if you'd
 like to <a href="#install">install</a> a single header file for your project. If <em>lang</em> is
 not specified, the language of the file is inferred from its extension.</p>
+<h3 id="man_page">man_page(<em>name</em>, *, [<em>level</em>], [<em>compress</em>], [<em>dist</em>], [<em>extra_deps</em>], [<em>description</em>])<a class="headerlink" href="#man_page" title="Permanent link">§</a></h3>
+<p class="subtitle">Availability: <code>build.bfg</code></p>
+<p>Create a reference to an existing man page named <em>name</em> at the specified
+<em>level</em>; if <em>level</em> is unspecified, guess it by the first character of the
+extension of <em>name</em>.</p>
+<p>If <em>compress</em> is true, add a build step to gzip the man page and return the
+compressed file. If <em>compress</em> is <code>'auto'</code> (the default), gzip the man page only
+if the <a href="environment-variables.md#gzip"><code>gzip</code></a> command is found on the system.</p>
 <h3 id="module_def_file">module_def_file(<em>name</em>, *, [<em>dist</em>])<a class="headerlink" href="#module_def_file" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Create a reference to an existing module-definition file named <em>name</em>.
@@ -961,6 +969,8 @@ language will be determined by the language of <em>args</em>'s first element.</p
 Equivalent to <code>env.execute(env.run_arguments(arg, lang), ...)</code>.</p>
 <h4 id="env-host_platform">env.target_platform<a class="headerlink" href="#env-host_platform" title="Permanent link">§</a></h4>
 <p>Return the target <a href="#platforms">platform</a> used for the build.</p>
+<h4 id="env-tool">env.tool(<em>name</em>)<a class="headerlink" href="#env-tool" title="Permanent link">§</a></h4>
+<p>Return the <a href="#tools">tool</a> named <em>name</em>.</p>
 <h4 id="env-variables">env.variables<a class="headerlink" href="#env-variables" title="Permanent link">§</a></h4>
 <p>A dict of all the environment variables as they were defined when the build was
 first configured.</p>
@@ -1001,9 +1011,11 @@ representing the actual linker, such as <code>ld</code>.</p>
 <p>The runner used with files built by this builder (e.g. <code>java</code>). This may be
 <em>None</em> for languages which have no runner, such as C and C++.</p>
 <hr />
-<h3 id="compilers">Compilers<a class="headerlink" href="#compilers" title="Permanent link">§</a></h3>
-<p>Builder objects represent the specific used to compile a
-<a href="#source_file">source file</a> (generally into an <a href="#object_file">object file</a>).</p>
+<h3 id="compilers">Compilers/linkers<a class="headerlink" href="#compilers" title="Permanent link">§</a></h3>
+<p>Compiler and linker objects represent the specific tool used to compile a
+<a href="#source_file">source file</a> (generally into an <a href="#object_file">object file</a>) or
+to link a set of object files (generally into an <a href="#executable">executable</a> or
+<a href="#library">library</a>).</p>
 <h4 id="compiler-flavor"><em>compiler</em>.flavor<a class="headerlink" href="#compiler-flavor" title="Permanent link">§</a></h4>
 <p>The "flavor" of the compiler, i.e. the kind of command-line interface it has;
 e.g. <code>'cc'</code>, <code>'msvc'</code>.</p>
@@ -1017,7 +1029,21 @@ e.g. <code>'cc'</code>, <code>'msvc'</code>.</p>
 <p>The language of the compiler; typically the same as
 <a href="#builder-language"><em>builder.language</em></a>.</p>
 <h4 id="compiler-command"><em>compiler</em>.command<a class="headerlink" href="#compiler-command" title="Permanent link">§</a></h4>
-<p>The command to run when invoking this compiler, e.g. <code>g++-4.9</code>.</p>
+<p>The command to run when invoking this compiler, represented as a list, e.g.
+<code>['g++']</code>.</p>
+<h4 id="compiler-found"><em>compiler</em>.found<a class="headerlink" href="#compiler-found" title="Permanent link">§</a></h4>
+<p>Whether the command for this compiler was found on the system.</p>
+<hr />
+<h3 id="tools">Tools<a class="headerlink" href="#tools" title="Permanent link">§</a></h3>
+<p>Tool objects represent a specific command used to perform some task (usually
+during a build), such as <code>'copy'</code> or <code>'rm'</code>. They can be retrieved via
+<a href="#env-tool"><em>env.tool</em></a>. While tool objects are primarily suited to bfg's
+internals, there are still a few useful properties for <code>build.bfg</code> files:</p>
+<h4 id="tool-command"><em>tool</em>.command<a class="headerlink" href="#tool-command" title="Permanent link">§</a></h4>
+<p>The command to run when invoking this tool, represented as a list, e.g.
+<code>['cp', '-f']</code>.</p>
+<h4 id="tool-found"><em>tool</em>.found<a class="headerlink" href="#tool-found" title="Permanent link">§</a></h4>
+<p>Whether this tool was found on the system.</p>
 <hr />
 <h3 id="platforms">Platforms<a class="headerlink" href="#platforms" title="Permanent link">§</a></h3>
 <p>Platform objects represent the platform that the project is being compiled for.</p>
@@ -1167,6 +1193,8 @@ during installation. Possible values are:</p>
 <li><em>bindir</em>: A path relative to where binaries will be installed</li>
 <li><em>libdir</em>: A path relative to where libraries will be installed</li>
 <li><em>includedir</em>: A path relative to where header files will be installed</li>
+<li><em>datadir</em>: A path relative to where data files will be installed</li>
+<li><em>mandir</em>: A path relative to where man pages will be installed</li>
 </ul>
 <h3 id="Path">Path(<em>path</em>, [<em>root</em>], [<em>destdir</em>])<a class="headerlink" href="#Path" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code>, <code>options.bfg</code>, and <code>&lt;toolchain&gt;.bfg</code></p>

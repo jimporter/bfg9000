@@ -217,14 +217,19 @@ other install path options below).</p>
 (e.g. executables). This defaults to the value of
 <a href="#configure-prefix"><code>--prefix</code></a>.</p>
 <h4 id="configure-bindir">--bindir <em>PATH</em><a class="headerlink" href="#configure-bindir" title="Permanent link">§</a></h4>
-<p>The installation prefix to use for executables. Defaults to <code>&lt;prefix&gt;/bin</code> on
-Linux and macOS, and <code>&lt;prefix&gt;</code> on Windows.</p>
+<p>The installation prefix to use for executables. Defaults to <code>&lt;exec-prefix&gt;/bin</code>
+on Linux and macOS, and <code>&lt;exec-prefix&gt;</code> on Windows.</p>
 <h4 id="configure-libdir">--libdir <em>PATH</em><a class="headerlink" href="#configure-libdir" title="Permanent link">§</a></h4>
-<p>The installation prefix to use for libraries. Defaults to <code>&lt;prefix&gt;/lib</code> on
-Linux and macOS, and <code>&lt;prefix&gt;</code> on Windows.</p>
+<p>The installation prefix to use for libraries. Defaults to <code>&lt;exec-prefix&gt;/lib</code> on
+Linux and macOS, and <code>&lt;exec-prefix&gt;</code> on Windows.</p>
 <h4 id="configure-includedir">--includedir <em>PATH</em><a class="headerlink" href="#configure-includedir" title="Permanent link">§</a></h4>
 <p>The installation prefix to use for headers. Defaults to <code>&lt;prefix&gt;/include</code> on
 Linux and macOS, and <code>&lt;prefix&gt;</code> on Windows.</p>
+<h4 id="configure-includedir">--datadir <em>PATH</em><a class="headerlink" href="#configure-includedir" title="Permanent link">§</a></h4>
+<p>The installation prefix to use for data files. Defaults to <code>&lt;prefix&gt;/share</code> on
+Linux and macOS, and <code>&lt;prefix&gt;</code> on Windows.</p>
+<h4 id="configure-mandir">--mandir <em>PATH</em><a class="headerlink" href="#configure-mandir" title="Permanent link">§</a></h4>
+<p>The installation prefix to use for man pages. Defaults to <code>&lt;datadir&gt;/man</code>.</p>
 <h3 id="configure-into">bfg9000 configure-into <em>SRCDIR</em> <em>BUILDDIR</em><a class="headerlink" href="#configure-into" title="Permanent link">§</a></h3>
 <p>Generate the necessary build files (as with <a href="#configure"><code>bfg9000 configure</code></a>)
 to perform actual builds from a build.bfg file in <em>SRCDIR</em>, and place them in
