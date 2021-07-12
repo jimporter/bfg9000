@@ -1,5 +1,7 @@
 # -*- python -*-
 
+install(man_page('myproject.1'))
+
 shared_a = shared_library('shared_a', files=['shared_a.cpp'])
 shared_b = shared_library('shared_b', files=['shared_b.cpp'])
 static_a = static_library('static_a', files=['static_a.cpp'])

@@ -218,6 +218,8 @@ class TestEnvironment(TestCase):
             InstallRoot.bindir: Path('bin/', InstallRoot.exec_prefix),
             InstallRoot.libdir: Path('lib/', InstallRoot.exec_prefix),
             InstallRoot.includedir: Path('include/', InstallRoot.prefix),
+            InstallRoot.datadir: Path('share/', InstallRoot.prefix),
+            InstallRoot.mandir: Path('man/', InstallRoot.datadir),
         })
 
         self.assertEqual(env.library_mode, LibraryMode(True, False))

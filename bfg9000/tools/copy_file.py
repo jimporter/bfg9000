@@ -1,5 +1,7 @@
 from . import tool
 from .common import SimpleCommand
+from ..safe_str import shell_literal
+from ..shell import shell_list
 
 
 class LinkCommand(SimpleCommand):
@@ -47,3 +49,12 @@ class Copy(SimpleCommand):
 
     def _call(self, cmd, input, output):
         return cmd + [input, output]
+
+
+@tool('gzip')
+class Gzip(SimpleCommand):
+    def __init__(self, env):
+        super().__init__(env, name='gzip', env_var='GZIP', default='gzip')
+
+    def _call(self, cmd, input, output):
+        return shell_list(cmd + ['-c', input, shell_literal('>'), output])

@@ -74,4 +74,6 @@ class WindowsTargetPlatform(TargetPlatform, WindowsPlatform):
             InstallRoot.bindir     : WindowsPath('', InstallRoot.exec_prefix),
             InstallRoot.libdir     : WindowsPath('', InstallRoot.exec_prefix),
             InstallRoot.includedir : WindowsPath('', InstallRoot.prefix),
+            InstallRoot.datadir    : WindowsPath('', InstallRoot.prefix),
+            InstallRoot.mandir     : WindowsPath('man/', InstallRoot.datadir),
         }

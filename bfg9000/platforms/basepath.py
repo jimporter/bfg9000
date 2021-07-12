@@ -9,7 +9,7 @@ from ..objutils import objectify
 
 Root = Enum('Root', ['srcdir', 'builddir', 'absolute'])
 InstallRoot = Enum('InstallRoot', ['prefix', 'exec_prefix', 'bindir', 'libdir',
-                                   'includedir'])
+                                   'includedir', 'datadir', 'mandir'])
 DestDir = Enum('DestDir', ['destdir'])
 
 
@@ -179,7 +179,7 @@ class BasePath(safe_str.safe_string):
                 suffix += posixpath.sep
             else:
                 suffix = posixpath.curdir + posixpath.sep
-        return (suffix, self.root.name, self.destdir)
+        return [suffix, self.root.name, self.destdir]
 
     @classmethod
     def from_json(cls, data):

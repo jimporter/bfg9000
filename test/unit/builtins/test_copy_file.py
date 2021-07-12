@@ -153,6 +153,70 @@ class TestCopyFiles(BuiltinTest):
         )])
 
 
+class TestManPage(BuiltinTest):
+    def test_identity(self):
+        expected = file_types.ManPage(Path('myprogram.1', Root.srcdir), '1')
+        self.assertIs(self.context['man_page'](expected, compress=False),
+                      expected)
+
+    def test_compress(self):
+        expected = file_types.ManPage(Path('myprogram.1.gz'), '1')
+        result = self.context['man_page']('myprogram.1', compress=True)
+        self.assertSameFile(result, expected)
+
+        man_page = file_types.ManPage(Path('myprogram.1', Root.srcdir), '1')
+        result = self.context['man_page'](man_page, compress=True)
+        self.assertSameFile(result, expected)
+
+        expected = file_types.ManPage(Path('myprogram.1s.gz'), '1')
+        result = self.context['man_page']('myprogram.1s', compress=True)
+        self.assertSameFile(result, expected)
+
+        expected = file_types.ManPage(Path('myprogram.1.gz'), '2')
+        result = self.context['man_page']('myprogram.1', level='2',
+                                          compress=True)
+        self.assertSameFile(result, expected)
+
+    def test_no_compress(self):
+        expected = file_types.ManPage(Path('myprogram.1', Root.srcdir), '1')
+        result = self.context['man_page']('myprogram.1', compress=False)
+        self.assertSameFile(result, expected)
+
+        expected = file_types.ManPage(Path('myprogram.1s', Root.srcdir), '1')
+        result = self.context['man_page']('myprogram.1s', compress=False)
+        self.assertSameFile(result, expected)
+
+        expected = file_types.ManPage(Path('myprogram.1', Root.srcdir), '2')
+        result = self.context['man_page']('myprogram.1', level='2',
+                                          compress=False)
+        self.assertSameFile(result, expected)
+
+    def test_auto_compress_enabled(self):
+        with mock.patch('bfg9000.shell.which', return_value=['command']):
+            self.env.tool('gzip')
+
+        expected = file_types.ManPage(Path('myprogram.1.gz'), '1')
+        result = self.context['man_page']('myprogram.1')
+        self.assertSameFile(result, expected)
+
+    def test_auto_compress_disabled(self):
+        with mock.patch('bfg9000.shell.which', side_effect=OSError('bad')), \
+             mock.patch('warnings.warn'):
+            self.env.tool('gzip')
+
+        expected = file_types.ManPage(Path('myprogram.1', Root.srcdir), '1')
+        result = self.context['man_page']('myprogram.1')
+        self.assertSameFile(result, expected)
+
+    def test_invalid(self):
+        with self.assertRaises(ValueError):
+            self.context['man_page']('myprogram.foo')
+
+        man_page = file_types.ManPage(Path('myprogram.1', Root.srcdir), '1')
+        with self.assertRaises(TypeError):
+            self.context['man_page'](man_page, level='2')
+
+
 class TestMakeBackend(BuiltinTest):
     def test_simple(self):
         makefile = mock.Mock()

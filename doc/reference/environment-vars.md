@@ -429,6 +429,12 @@ Default: `doppel`
 The command to use when installing files and building source distributions. For
 more information about doppel, see its [documentation][doppel].
 
+#### *GZIP*
+Default: `gzip`
+{: .subtitle}
+
+The command to use when gzipping files.
+
 #### *HARDLINK*
 Default: `ln -f` (POSIX), `cmd /c mklink /H` (Windows)
 {: .subtitle}

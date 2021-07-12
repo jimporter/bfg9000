@@ -87,6 +87,8 @@ class PosixTargetPlatform(TargetPlatform, PosixPlatform):
             IRoot.bindir     : PosixPath('bin/', IRoot.exec_prefix),
             IRoot.libdir     : PosixPath('lib/', IRoot.exec_prefix),
             IRoot.includedir : PosixPath('include/', IRoot.prefix),
+            IRoot.datadir    : PosixPath('share/', IRoot.prefix),
+            IRoot.mandir     : PosixPath('man/', IRoot.datadir),
         }
 
 

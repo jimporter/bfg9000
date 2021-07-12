@@ -178,9 +178,11 @@ def add_configure_args(parser):
         'prefix': 'installation prefix (default: {})',
         'exec_prefix': ('installation prefix for architecture-dependent ' +
                         'files (default: {})'),
-        'bindir': common_path_help.format('executables'),
-        'libdir': common_path_help.format('libraries'),
+        'bindir'    : common_path_help.format('executables'),
+        'libdir'    : common_path_help.format('libraries'),
         'includedir': common_path_help.format('headers'),
+        'datadir'   : common_path_help.format('data files'),
+        'mandir'    : common_path_help.format('man pages'),
     }
 
     install_dirs = platform_info().install_dirs

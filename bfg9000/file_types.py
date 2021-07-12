@@ -172,6 +172,18 @@ class ModuleDefFile(File):
     pass
 
 
+class ManPage(File):
+    install_root = _path.InstallRoot.mandir
+
+    def __init__(self, path, level):
+        super().__init__(path)
+        self.level = level
+
+    @property
+    def install_suffix(self):
+        return 'man{}/{}'.format(self.level, self.path.basename())
+
+
 class Binary(File):
     install_root = _path.InstallRoot.libdir
 

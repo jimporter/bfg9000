@@ -20,6 +20,7 @@ class TestInstall(IntegrationTest):
 
     def _check_installed(self):
         self.build('install')
+        manext = '.gz' if env.tool('gzip').found else ''
 
         extra = []
         if env.target_platform.has_import_library:
@@ -32,6 +33,7 @@ class TestInstall(IntegrationTest):
             pjoin(self.libdir, shared_library('shared_a').path),
             pjoin(self.libdir, shared_library('shared_b').path),
             pjoin(self.libdir, static_library('static_a').path),
+            pjoin(self.mandir, 'man1', 'myproject.1' + manext),
         ] + extra)
 
     @skip_if_backend('msbuild')
@@ -46,6 +48,10 @@ class TestInstall(IntegrationTest):
             'hello from shared a!\nhello from shared b!\n' +
             'hello from static a!\nhello from static b!\n'
         )
+
+        if env.target_platform.family == 'posix':
+            self.assertPopen(['man', 'myproject'],
+                             extra_env={'MANPATH': self.mandir})
 
     @skip_if_backend('msbuild')
     def test_install_existing_paths(self):
@@ -86,6 +92,8 @@ class TestDestDir(IntegrationTest):
         cleandir(self.destdir, recreate=False)
 
     def _check_installed(self):
+        manext = '.gz' if env.tool('gzip').found else ''
+
         extra = []
         if env.target_platform.has_import_library:
             extra = [self.destdir + pjoin(
@@ -99,6 +107,7 @@ class TestDestDir(IntegrationTest):
             self.destdir + pjoin(self.libdir, shared_library('shared_a').path),
             self.destdir + pjoin(self.libdir, shared_library('shared_b').path),
             self.destdir + pjoin(self.libdir, static_library('static_a').path),
+            self.destdir + pjoin(self.mandir, 'man1', 'myproject.1' + manext),
         ] + extra)
 
     def _check_run(self):

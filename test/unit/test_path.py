@@ -589,19 +589,19 @@ class TestPath(PathTestCase):
 
     def test_to_json(self):
         p = self.Path('foo', path.Root.srcdir)
-        self.assertEqual(p.to_json(), ('foo', 'srcdir', False))
+        self.assertEqual(p.to_json(), ['foo', 'srcdir', False])
 
         p = self.Path('foo/', path.Root.srcdir)
-        self.assertEqual(p.to_json(), ('foo/', 'srcdir', False))
+        self.assertEqual(p.to_json(), ['foo/', 'srcdir', False])
 
         p = self.Path('./', path.Root.srcdir)
-        self.assertEqual(p.to_json(), ('./', 'srcdir', False))
+        self.assertEqual(p.to_json(), ['./', 'srcdir', False])
 
         p = self.Path('/', path.Root.absolute)
-        self.assertEqual(p.to_json(), ('/', 'absolute', False))
+        self.assertEqual(p.to_json(), ['/', 'absolute', False])
 
         p = self.Path('foo', path.InstallRoot.bindir, True)
-        self.assertEqual(p.to_json(), ('foo', 'bindir', True))
+        self.assertEqual(p.to_json(), ['foo', 'bindir', True])
 
     def test_from_json(self):
         p = self.Path.from_json(['foo', 'srcdir', False])

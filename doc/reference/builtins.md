@@ -125,6 +125,18 @@ Create a reference to an existing header named *name*. This is useful if you'd
 like to [install](#install) a single header file for your project. If *lang* is
 not specified, the language of the file is inferred from its extension.
 
+### man_page(*name*, \*, [*level*], [*compress*], [*dist*], [*extra_deps*], [*description*]) { #man_page }
+Availability: `build.bfg`
+{: .subtitle}
+
+Create a reference to an existing man page named *name* at the specified
+*level*; if *level* is unspecified, guess it by the first character of the
+extension of *name*.
+
+If *compress* is true, add a build step to gzip the man page and return the
+compressed file. If *compress* is `'auto'` (the default), gzip the man page only
+if the [`gzip`](environment-variables.md#gzip) command is found on the system.
+
 ### module_def_file(*name*, \*, [*dist*]) { #module_def_file }
 Availability: `build.bfg`
 {: .subtitle}
@@ -1300,6 +1312,8 @@ during installation. Possible values are:
 * *bindir*: A path relative to where binaries will be installed
 * *libdir*: A path relative to where libraries will be installed
 * *includedir*: A path relative to where header files will be installed
+* *datadir*: A path relative to where data files will be installed
+* *mandir*: A path relative to where man pages will be installed
 
 ### Path(*path*, [*root*], [*destdir*]) { #Path }
 Availability: `build.bfg`, `options.bfg`, and `<toolchain>.bfg`

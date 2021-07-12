@@ -87,18 +87,27 @@ The installation prefix to use when installing architecture-dependent files
 
 #### --bindir *PATH* { #configure-bindir }
 
-The installation prefix to use for executables. Defaults to `<prefix>/bin` on
-Linux and macOS, and `<prefix>` on Windows.
+The installation prefix to use for executables. Defaults to `<exec-prefix>/bin`
+on Linux and macOS, and `<exec-prefix>` on Windows.
 
 #### --libdir *PATH* { #configure-libdir }
 
-The installation prefix to use for libraries. Defaults to `<prefix>/lib` on
-Linux and macOS, and `<prefix>` on Windows.
+The installation prefix to use for libraries. Defaults to `<exec-prefix>/lib` on
+Linux and macOS, and `<exec-prefix>` on Windows.
 
 #### --includedir *PATH* { #configure-includedir }
 
 The installation prefix to use for headers. Defaults to `<prefix>/include` on
 Linux and macOS, and `<prefix>` on Windows.
+
+#### --datadir *PATH* { #configure-includedir }
+
+The installation prefix to use for data files. Defaults to `<prefix>/share` on
+Linux and macOS, and `<prefix>` on Windows.
+
+#### --mandir *PATH* { #configure-mandir }
+
+The installation prefix to use for man pages. Defaults to `<datadir>/man`.
 
 ### bfg9000 configure-into *SRCDIR* *BUILDDIR* { #configure-into }
 

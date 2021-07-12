@@ -23,6 +23,8 @@ class TestEnvironmentFromArgs(TestCase):
             bindir=path.abspath('bin'),
             libdir=path.abspath('lib'),
             includedir=path.abspath('include'),
+            datadir=path.abspath('share'),
+            mandir=path.abspath('man'),
 
             shared=True,
             static=False,

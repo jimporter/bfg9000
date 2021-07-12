@@ -125,7 +125,7 @@ class Toolchain:
 
 
 class Environment:
-    version = 16
+    version = 17
     envfile = '.bfg_environ'
 
     Mode = shell.Mode
@@ -307,7 +307,7 @@ class Environment:
 
         # v7 replaces bfgpath with bfgdir.
         if version < 7:
-            bfgdir = Path.from_json(data['bfgpath'] + (False,)).parent()
+            bfgdir = Path.from_json(data['bfgpath'] + [False]).parent()
             data['bfgdir'] = bfgdir.to_json()
             del data['bfgpath']
 
@@ -329,9 +329,9 @@ class Environment:
         # v11 adds $(DESTDIR) support to Path objects.
         if version < 11:
             for i in ('bfgdir', 'srcdir', 'builddir'):
-                data[i] += (False,)
+                data[i] += [False]
             for i in data['install_dirs']:
-                data['install_dirs'][i] += (False,)
+                data['install_dirs'][i] += [False]
 
         # v12 splits platform into host_platform and target_platform.
         if version < 12:
@@ -361,6 +361,13 @@ class Environment:
         # v16 adds support for emitting compile_commands.json.
         if version < 16:
             data['compdb'] = True
+
+        # v17 adds datadir and mandir to install_dirs.
+        if version < 17:
+            target_plat = platforms.target.from_json(data['target_platform'])
+            for i in ('datadir', 'mandir'):
+                p = target_plat.install_dirs[InstallRoot[i]].to_json()
+                data['install_dirs'][i] = p
 
         # Now that we've upgraded, initialize the Environment object.
         env = cls.__new__(cls)

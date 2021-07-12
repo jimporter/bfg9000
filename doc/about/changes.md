@@ -8,6 +8,8 @@ in progress
 - Add support for resolving external package dependencies via [mopack][mopack]
 - Add `bfg9000 run` command to allow executing other commands using the
   environment variables for a given build
+- Add support for installing man pages
+- Add `--datadir` and `--mandir` configuration options
 - Create `compile_commands.json` when generating build scripts
 - `pkg-config` executable can now be found by guessing based on other compilers
 - Compiler and tool objects now have a `found` property to indicate if they were
