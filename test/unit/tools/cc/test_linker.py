@@ -22,7 +22,7 @@ class TestCcLinker(CrossPlatformTestCase):
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
             return CcBuilder(self.env, known_langs[lang], ['c++'],
-                             'version').linker('executable')
+                             True, 'version').linker('executable')
 
     def _get_output_file(self):
         return Executable(self.Path('program'), 'native')
@@ -467,7 +467,7 @@ class TestCcSharedLinker(TestCcLinker):
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
             return CcBuilder(self.env, known_langs[lang], ['c++'],
-                             'version').linker('shared_library')
+                             True, 'version').linker('shared_library')
 
     def _get_output_file(self):
         return SharedLibrary(self.Path('liboutput.so'), 'native')

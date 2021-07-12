@@ -38,7 +38,8 @@ class TestCcBuilder(CrossPlatformTestCase):
     def test_properties(self):
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
-            cc = CcBuilder(self.env, known_langs['c++'], ['c++'], 'version')
+            cc = CcBuilder(self.env, known_langs['c++'], ['c++'], True,
+                           'version')
 
         self.assertEqual(cc.flavor, 'cc')
         self.assertEqual(cc.compiler.flavor, 'cc')
@@ -46,6 +47,13 @@ class TestCcBuilder(CrossPlatformTestCase):
         self.assertEqual(cc.linker('executable').flavor, 'cc')
         self.assertEqual(cc.linker('shared_library').flavor, 'cc')
         self.assertEqual(cc.linker('raw').flavor, 'ld')
+
+        self.assertEqual(cc.compiler.found, True)
+        self.assertEqual(cc.pch_compiler.found, True)
+        self.assertEqual(cc.linker('executable').found, True)
+        self.assertEqual(cc.linker('shared_library').found, True)
+        self.assertEqual(cc.linker('static_library').found, True)
+        self.assertEqual(cc.linker('raw').found, True)
 
         self.assertEqual(cc.family, 'native')
         self.assertEqual(cc.auto_link, False)
@@ -81,7 +89,8 @@ class TestCcBuilder(CrossPlatformTestCase):
 
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
-            cc = CcBuilder(self.env, known_langs['c++'], ['g++'], version)
+            cc = CcBuilder(self.env, known_langs['c++'], ['g++'], True,
+                           version)
 
         self.assertEqual(cc.brand, 'gcc')
         self.assertEqual(cc.compiler.brand, 'gcc')
@@ -126,7 +135,8 @@ class TestCcBuilder(CrossPlatformTestCase):
 
             with mock.patch('bfg9000.shell.which', mock_which), \
                  mock.patch('bfg9000.shell.execute', mock_cross_exec):  # noqa
-                cc = CcBuilder(self.env, known_langs['c++'], ['g++'], version)
+                cc = CcBuilder(self.env, known_langs['c++'], ['g++'], True,
+                               version)
             self.assertEqual(cc.compiler.global_flags, flags)
 
     def test_clang(self):
@@ -134,7 +144,8 @@ class TestCcBuilder(CrossPlatformTestCase):
 
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
-            cc = CcBuilder(self.env, known_langs['c++'], ['clang++'], version)
+            cc = CcBuilder(self.env, known_langs['c++'], ['clang++'], True,
+                           version)
 
         self.assertEqual(cc.brand, 'clang')
         self.assertEqual(cc.compiler.brand, 'clang')
@@ -156,7 +167,8 @@ class TestCcBuilder(CrossPlatformTestCase):
         version = 'clang version 3.8.0-2ubuntu4 (tags/RELEASE_380/final)'
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
-            cc = CcBuilder(self.env, known_langs['c++'], ['g++'], version)
+            cc = CcBuilder(self.env, known_langs['c++'], ['g++'], True,
+                           version)
         self.assertEqual(cc.compiler.global_flags,
                          ['-target', self.env.target_platform.triplet]
                          if self.env.host_platform.name != 'linux' else [])
@@ -166,7 +178,8 @@ class TestCcBuilder(CrossPlatformTestCase):
 
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
-            cc = CcBuilder(self.env, known_langs['c++'], ['c++'], version)
+            cc = CcBuilder(self.env, known_langs['c++'], ['c++'], True,
+                           version)
 
         self.assertEqual(cc.brand, 'unknown')
         self.assertEqual(cc.compiler.brand, 'unknown')
@@ -188,7 +201,8 @@ class TestCcBuilder(CrossPlatformTestCase):
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', mock_execute), \
              mock.patch('logging.log'):  # noqa
-            cc = CcBuilder(self.env, known_langs['c++'], ['g++'], version)
+            cc = CcBuilder(self.env, known_langs['c++'], ['g++'], True,
+                           version)
         self.assertEqual(cc.linker('executable').command,
                          ['g++', '-fuse-ld=gold'])
 
@@ -200,7 +214,8 @@ class TestCcBuilder(CrossPlatformTestCase):
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', mock_execute), \
              mock.patch('logging.log'):  # noqa
-            cc = CcBuilder(self.env, known_langs['c++'], ['g++'], version)
+            cc = CcBuilder(self.env, known_langs['c++'], ['g++'], True,
+                           version)
         self.assertEqual(cc.linker('executable').command, ['g++'])
 
     def test_execution_failure(self):
@@ -218,13 +233,15 @@ class TestCcBuilder(CrossPlatformTestCase):
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', bad_execute), \
              mock.patch('logging.log'):  # noqa
-            cc = CcBuilder(self.env, known_langs['c++'], ['g++'], version)
+            cc = CcBuilder(self.env, known_langs['c++'], ['g++'], True,
+                           version)
         self.assertRaises(KeyError, cc.linker, 'raw')
 
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', weird_execute), \
              mock.patch('logging.log'):  # noqa
-            cc = CcBuilder(self.env, known_langs['c++'], ['g++'], version)
+            cc = CcBuilder(self.env, known_langs['c++'], ['g++'], True,
+                           version)
         self.assertRaises(KeyError, cc.linker, 'raw')
 
 
@@ -242,7 +259,7 @@ class TestCcPackageResolver(CrossPlatformTestCase):
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
             self.builder = CcBuilder(self.env, known_langs['c++'], ['c++'],
-                                     'version')
+                                     True, 'version')
             self.packages = self.builder.packages
             self.compiler = self.builder.compiler
             self.linker = self.builder.linker('executable')

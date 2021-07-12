@@ -22,7 +22,7 @@ from ...versioning import detect_version
 
 
 class CcBuilder(Builder):
-    def __init__(self, env, langinfo, command, version_output):
+    def __init__(self, env, langinfo, command, found, version_output):
         brand, version, target_flags = self._parse_brand(env, command,
                                                          version_output)
         super().__init__(langinfo.name, brand, version)
@@ -55,8 +55,8 @@ class CcBuilder(Builder):
         ldlibs = shell.split(env.getvar(ldinfo.var('libs'), ''))
 
         ar_name = arinfo.var('linker').lower()
-        ar_command = check_which(env.getvar(arinfo.var('linker'), 'ar'),
-                                 env.variables, kind='static linker')
+        ar_which = check_which(env.getvar(arinfo.var('linker'), 'ar'),
+                               env.variables, kind='static linker')
         arflags_name = arinfo.var('flags').lower()
         arflags = shell.split(env.getvar(arinfo.var('flags'), 'cr'))
 
@@ -78,7 +78,7 @@ class CcBuilder(Builder):
         except (OSError, shell.CalledProcessError):
             pass
 
-        compile_kwargs = {'command': (name, command),
+        compile_kwargs = {'command': (name, command, found),
                           'flags': (cflags_name, cflags)}
         self.compiler = CcCompiler(self, env, **compile_kwargs)
         try:
@@ -86,14 +86,14 @@ class CcBuilder(Builder):
         except ValueError:
             self.pch_compiler = None
 
-        link_kwargs = {'command': (name, link_command),
+        link_kwargs = {'command': (name, link_command, found),
                        'flags': (ldflags_name, ldflags),
                        'libs': (ldlibs_name, ldlibs)}
         self._linkers = {
             'executable': CcExecutableLinker(self, env, **link_kwargs),
             'shared_library': CcSharedLibraryLinker(self, env, **link_kwargs),
             'static_library': ArLinker(
-                self, env, command=(ar_name, ar_command),
+                self, env, command=(ar_name,) + ar_which,
                 flags=(arflags_name, arflags)
             ),
         }

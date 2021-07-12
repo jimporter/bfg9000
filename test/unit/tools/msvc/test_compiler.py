@@ -18,7 +18,7 @@ class TestMsvcCompiler(CrossPlatformTestCase):
     def setUp(self):
         with mock.patch('bfg9000.shell.which', mock_which):
             self.compiler = MsvcBuilder(self.env, known_langs['c++'], ['cl'],
-                                        'version').compiler
+                                        True, 'version').compiler
 
     def test_call(self):
         extra = self.compiler._always_flags
@@ -205,7 +205,7 @@ class TestMsvcPchCompiler(TestMsvcCompiler):
     def setUp(self):
         with mock.patch('bfg9000.shell.which', mock_which):
             self.compiler = MsvcBuilder(self.env, known_langs['c++'], ['cl'],
-                                        'version').pch_compiler
+                                        True, 'version').pch_compiler
 
     def test_call(self):
         extra = self.compiler._always_flags

@@ -37,7 +37,8 @@ class TestMsvcBuilder(CrossPlatformTestCase):
 
     def test_properties(self):
         with mock.patch('bfg9000.shell.which', mock_which):
-            cc = MsvcBuilder(self.env, known_langs['c++'], ['cl'], 'version')
+            cc = MsvcBuilder(self.env, known_langs['c++'], ['cl'], True,
+                             'version')
 
         self.assertEqual(cc.flavor, 'msvc')
         self.assertEqual(cc.compiler.flavor, 'msvc')
@@ -45,6 +46,11 @@ class TestMsvcBuilder(CrossPlatformTestCase):
         self.assertEqual(cc.linker('executable').flavor, 'msvc')
         self.assertEqual(cc.linker('shared_library').flavor, 'msvc')
         self.assertEqual(cc.linker('static_library').flavor, 'msvc')
+
+        self.assertEqual(cc.compiler.found, True)
+        self.assertEqual(cc.pch_compiler.found, True)
+        self.assertEqual(cc.linker('executable').found, True)
+        self.assertEqual(cc.linker('shared_library').found, True)
 
         self.assertEqual(cc.family, 'native')
         self.assertEqual(cc.auto_link, True)
@@ -77,7 +83,8 @@ class TestMsvcBuilder(CrossPlatformTestCase):
                    '19.12.25831 for x86')
 
         with mock.patch('bfg9000.shell.which', mock_which):
-            cc = MsvcBuilder(self.env, known_langs['c++'], ['cl'], version)
+            cc = MsvcBuilder(self.env, known_langs['c++'], ['cl'], True,
+                             version)
 
         self.assertEqual(cc.brand, 'msvc')
         self.assertEqual(cc.compiler.brand, 'msvc')
@@ -102,7 +109,8 @@ class TestMsvcBuilder(CrossPlatformTestCase):
 
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
-            cc = MsvcBuilder(self.env, known_langs['c++'], ['cl'], version)
+            cc = MsvcBuilder(self.env, known_langs['c++'], ['cl'], True,
+                             version)
 
         self.assertEqual(cc.brand, 'clang')
         self.assertEqual(cc.compiler.brand, 'clang')
@@ -122,7 +130,8 @@ class TestMsvcBuilder(CrossPlatformTestCase):
         version = 'unknown'
 
         with mock.patch('bfg9000.shell.which', mock_which):
-            cc = MsvcBuilder(self.env, known_langs['c++'], ['c++'], version)
+            cc = MsvcBuilder(self.env, known_langs['c++'], ['c++'], True,
+                             version)
 
         self.assertEqual(cc.brand, 'unknown')
         self.assertEqual(cc.compiler.brand, 'unknown')
@@ -144,7 +153,7 @@ class TestMsvcPackageResolver(CrossPlatformTestCase):
     def setUp(self):
         with mock.patch('bfg9000.shell.which', mock_which):
             self.builder = MsvcBuilder(self.env, known_langs['c++'], ['cl'],
-                                       'version')
+                                       True, 'version')
             self.packages = self.builder.packages
             self.compiler = self.builder.compiler
             self.linker = self.builder.linker('executable')

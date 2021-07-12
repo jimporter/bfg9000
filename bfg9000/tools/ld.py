@@ -10,6 +10,9 @@ class LdLinker:
         self.builder = builder
         self.env = env
         self.command = command
+        # Currently, if we're constructing this object, we know the command has
+        # been found.
+        self.found = True
 
         if 'GNU ld' in version_output:
             self.brand = 'bfd'

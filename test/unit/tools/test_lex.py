@@ -16,7 +16,7 @@ class TestLexBuilder(CrossPlatformTestCase):
         super().__init__(clear_variables=True, *args, **kwargs)
 
     def setUp(self):
-        self.lex = LexBuilder(self.env, known_langs['lex'], ['lex'],
+        self.lex = LexBuilder(self.env, known_langs['lex'], ['lex'], True,
                               'version')
         self.compiler = self.lex.transpiler
 

@@ -22,7 +22,8 @@ class TestMsvcRcBuilder(CrossPlatformTestCase):
 
     def test_properties(self):
         with mock.patch('bfg9000.shell.which', mock_which):
-            rc = MsvcRcBuilder(self.env, known_langs['rc'], ['rc'], 'version')
+            rc = MsvcRcBuilder(self.env, known_langs['rc'], ['rc'], True,
+                               'version')
 
         self.assertEqual(rc.flavor, 'msvc')
         self.assertEqual(rc.compiler.flavor, 'msvc')
@@ -38,7 +39,8 @@ class TestMsvcRcBuilder(CrossPlatformTestCase):
                    '10.0.10011.16384\n')
 
         with mock.patch('bfg9000.shell.which', mock_which):
-            rc = MsvcRcBuilder(self.env, known_langs['rc'], ['rc'], version)
+            rc = MsvcRcBuilder(self.env, known_langs['rc'], ['rc'], True,
+                               version)
 
         self.assertEqual(rc.brand, 'msvc')
         self.assertEqual(rc.compiler.brand, 'msvc')
@@ -49,7 +51,8 @@ class TestMsvcRcBuilder(CrossPlatformTestCase):
         version = 'unknown'
 
         with mock.patch('bfg9000.shell.which', mock_which):
-            rc = MsvcRcBuilder(self.env, known_langs['rc'], ['rc'], version)
+            rc = MsvcRcBuilder(self.env, known_langs['rc'], ['rc'], True,
+                               version)
 
         self.assertEqual(rc.brand, 'unknown')
         self.assertEqual(rc.compiler.brand, 'unknown')
@@ -63,7 +66,7 @@ class TestMsvcRcCompiler(CrossPlatformTestCase):
 
     def setUp(self):
         self.compiler = MsvcRcBuilder(self.env, known_langs['rc'], ['rc'],
-                                      'version').compiler
+                                      True, 'version').compiler
 
     def test_call(self):
         self.assertEqual(self.compiler('in', 'out'),

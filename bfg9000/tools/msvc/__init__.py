@@ -18,7 +18,7 @@ from ...versioning import detect_version
 
 
 class MsvcBuilder(Builder):
-    def __init__(self, env, langinfo, command, version_output):
+    def __init__(self, env, langinfo, command, found, version_output):
         brand, version = self._parse_brand(env, command, version_output)
         super().__init__(langinfo.name, brand, version)
         self.object_format = env.target_platform.object_format
@@ -33,11 +33,11 @@ class MsvcBuilder(Builder):
         for i in reversed(command):
             if os.path.basename(i) in ('cl', 'cl.exe'):
                 origin = os.path.dirname(i)
-        link_command = check_which(
+        link_which = check_which(
             env.getvar(ldinfo.var('linker'), os.path.join(origin, 'link')),
             env.variables, kind='{} dynamic linker'.format(self.lang)
         )
-        lib_command = check_which(
+        lib_which = check_which(
             env.getvar(arinfo.var('linker'), os.path.join(origin, 'lib')),
             env.variables, kind='{} static linker'.format(self.lang)
         )
@@ -58,12 +58,12 @@ class MsvcBuilder(Builder):
         arflags_name = arinfo.var('flags').lower()
         arflags = shell.split(env.getvar(arinfo.var('flags'), ''))
 
-        compile_kwargs = {'command': (name, command),
+        compile_kwargs = {'command': (name, command, found),
                           'flags': (cflags_name, cflags)}
         self.compiler = MsvcCompiler(self, env, **compile_kwargs)
         self.pch_compiler = MsvcPchCompiler(self, env, **compile_kwargs)
 
-        link_kwargs = {'command': (ld_name, link_command),
+        link_kwargs = {'command': (ld_name,) + link_which,
                        'flags': (ldflags_name, ldflags),
                        'libs': (ldlibs_name, ldlibs)}
         self._linkers = {
@@ -71,7 +71,7 @@ class MsvcBuilder(Builder):
             'shared_library': MsvcSharedLibraryLinker(self, env, name,
                                                       **link_kwargs),
             'static_library': MsvcStaticLinker(
-                self, env, command=(ar_name, lib_command),
+                self, env, command=(ar_name,) + lib_which,
                 flags=(arflags_name, arflags)
             ),
         }

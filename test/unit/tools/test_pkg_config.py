@@ -57,7 +57,7 @@ class TestPkgConfig(TestCase):
         env = make_env(platform='linux', clear_variables=True)
         with mock.patch('bfg9000.tools.pkg_config.which') as mwhich, \
              mock.patch('bfg9000.tools.pkg_config.check_which',
-                        lambda names, env: [first(names)]), \
+                        lambda names, env: ([first(names)], True)), \
              mock.patch('bfg9000.shell.which', return_value=['cc']), \
              mock.patch('bfg9000.shell.execute', mock_execute_cc):  # noqa
             self.assertEqual(PkgConfig(env).command, ['pkg-config'])
@@ -68,7 +68,7 @@ class TestPkgConfig(TestCase):
                        variables={'PKG_CONFIG': 'pkgconf'})
         with mock.patch('bfg9000.tools.pkg_config.which') as mwhich, \
              mock.patch('bfg9000.tools.pkg_config.check_which',
-                        lambda names, env: [first(names)]), \
+                        lambda names, env: ([first(names)], True)), \
              mock.patch('bfg9000.shell.which', return_value=['cc']), \
              mock.patch('bfg9000.shell.execute', mock_execute_cc):  # noqa
             self.assertEqual(PkgConfig(env).command, ['pkgconf'])
@@ -120,7 +120,7 @@ class TestPkgConfig(TestCase):
                        variables={'CC': 'gcc'})
         with mock.patch('bfg9000.tools.pkg_config.which') as mwhich, \
              mock.patch('bfg9000.tools.pkg_config.check_which',
-                        lambda names, env: [first(names)]), \
+                        lambda names, env: ([first(names)], True)), \
              mock.patch('bfg9000.shell.which', return_value=['cc']), \
              mock.patch('bfg9000.shell.execute', mock_execute_cc):  # noqa
             self.assertEqual(PkgConfig(env).command, ['pkg-config'])
@@ -135,7 +135,7 @@ class TestPkgConfig(TestCase):
         with mock.patch('bfg9000.tools.pkg_config.which',
                         mock_check_which), \
              mock.patch('bfg9000.tools.pkg_config.check_which',
-                        return_value=['pkgconf']), \
+                        return_value=(['pkgconf'], True)), \
              mock.patch('bfg9000.log.info'), \
              mock.patch('warnings.warn'):  # noqa
             self.assertEqual(PkgConfig(env).command, ['pkgconf'])

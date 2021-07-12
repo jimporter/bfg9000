@@ -66,7 +66,7 @@ class PkgConfig(Command):
                 cmd = which(guessed_cmd, env.variables)
                 log.info('guessed pkg-config {!r} from c compiler {!r}'
                          .format(guessed_cmd, shell.join(sibling.command)))
-                return cmd
+                return cmd, True
             except IOError:
                 pass
 
@@ -74,7 +74,7 @@ class PkgConfig(Command):
         return check_which(default, env.variables)
 
     def __init__(self, env):
-        super().__init__(env, command=('pkg_config', self._get_command(env)))
+        super().__init__(env, command=('pkg_config',) + self._get_command(env))
 
     def _call(self, cmd, names, type, static=False, msvc_syntax=False,
               options=[]):

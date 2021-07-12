@@ -18,7 +18,7 @@ class TestCcCompiler(CrossPlatformTestCase):
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
             self.compiler = CcBuilder(self.env, known_langs['c++'], ['c++'],
-                                      'version').compiler
+                                      True, 'version').compiler
 
     def test_call(self):
         extra = self.compiler._always_flags
@@ -164,7 +164,7 @@ class TestCcPchCompiler(TestCcCompiler):
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
             self.compiler = CcBuilder(self.env, known_langs['c++'], ['c++'],
-                                      'version').pch_compiler
+                                      True, 'version').pch_compiler
 
     def test_default_name(self):
         hdr = HeaderFile(Path('file.hpp', Root.srcdir), 'c++')

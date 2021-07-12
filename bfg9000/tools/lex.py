@@ -26,15 +26,17 @@ def lex_builder(env):
 
 
 class LexBuilder(Builder):
-    def __init__(self, env, langinfo, command, version_output):
+    def __init__(self, env, langinfo, command, found, version_output):
         super().__init__(langinfo.name, *self._parse_brand(version_output))
 
         name = langinfo.var('compiler').lower()
         lflags_name = langinfo.var('flags').lower()
         lflags = shell.split(env.getvar(langinfo.var('flags'), ''))
 
-        self.transpiler = LexCompiler(self, env, command=(name, command),
-                                      flags=(lflags_name, lflags))
+        self.transpiler = LexCompiler(
+            self, env, command=(name, command, found),
+            flags=(lflags_name, lflags)
+        )
 
     @staticmethod
     def _parse_brand(version_output):

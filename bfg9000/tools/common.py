@@ -69,7 +69,7 @@ class Builder:
 class Command:
     def __init__(self, env, rule_name=None, *, command):
         self.env = env
-        self.command_var, self.command = command
+        self.command_var, self.command, self.found = command
         self.rule_name = rule_name or self.command_var
 
     @staticmethod
@@ -107,9 +107,9 @@ class Command:
 
 class SimpleCommand(Command):
     def __init__(self, env, name, env_var, default, kind='executable'):
-        cmd = check_which(env.getvar(env_var, default), env.variables,
-                          kind=kind)
-        super().__init__(env, command=(name, cmd))
+        cmd, found = check_which(env.getvar(env_var, default),
+                                 env.variables, kind=kind)
+        super().__init__(env, command=(name, cmd, found))
 
 
 class BuildCommand(Command):
@@ -173,11 +173,11 @@ def guess_command(sibling, converter):
 def check_which(names, *args, **kwargs):
     names = listify(names)
     try:
-        return shell.which(names, *args, **kwargs)
+        return shell.which(names, *args, **kwargs), True
     except IOError as e:
         warnings.warn(str(e))
         # Assume the first name is the best choice.
-        return shell.listify(names[0])
+        return shell.listify(names[0]), False
 
 
 def choose_builder(env, langinfo, builders, *, candidates=None,
@@ -190,6 +190,7 @@ def choose_builder(env, langinfo, builders, *, candidates=None,
     try:
         cmd = shell.which(candidates, env.variables,
                           kind='{} compiler'.format(langinfo.name))
+        found = True
     except IOError as e:
         if strict:
             raise
@@ -197,6 +198,7 @@ def choose_builder(env, langinfo, builders, *, candidates=None,
         cmd = shell.listify(candidates[0])
         builder_type = fallback_builder or first(builders)
         output = ''
+        found = False
     else:
         for builder_type in builders:
             try:
@@ -209,4 +211,4 @@ def choose_builder(env, langinfo, builders, *, candidates=None,
             raise IOError('no working {} compiler found; tried {}'
                           .format(langinfo.name, tried))
 
-    return builder_type(env, langinfo, cmd, output)
+    return builder_type(env, langinfo, cmd, found, output)

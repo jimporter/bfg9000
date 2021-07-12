@@ -29,11 +29,11 @@ _warning_flags = {
 
 
 class JvmBuilder(Builder):
-    def __init__(self, env, langinfo, command, version_output):
+    def __init__(self, env, langinfo, command, found, version_output):
         # The default command name to run JVM programs is (usually) the same as
         # the name of the language, so we'll just use that here as the default.
         run_name = langinfo.var('runner').lower()
-        run_command = check_which(
+        run_command, run_found = check_which(
             env.getvar(langinfo.var('runner'), langinfo.name),
             kind='{} runner'.format(langinfo.name)
         )
@@ -50,18 +50,24 @@ class JvmBuilder(Builder):
         flags = shell.split(env.getvar(langinfo.var('flags'), ''))
 
         jar_name = ldinfo.var('linker').lower()
-        jar_command = check_which(env.getvar(ldinfo.var('linker'), 'jar'),
-                                  kind='jar builder')
+        jar_which = check_which(env.getvar(ldinfo.var('linker'), 'jar'),
+                                kind='jar builder')
 
         jarflags_name = ldinfo.var('flags').lower()
         jarflags = shell.split(env.getvar(ldinfo.var('flags'), 'cfm'))
 
-        self.compiler = JvmCompiler(self, env, command=(name, command),
-                                    flags=(flags_name, flags))
-        self._linker = JarMaker(self, env, command=(jar_name, jar_command),
-                                flags=(jarflags_name, jarflags))
+        self.compiler = JvmCompiler(
+            self, env, command=(name, command, found),
+            flags=(flags_name, flags)
+        )
+        self._linker = JarMaker(
+            self, env, command=(jar_name,) + jar_which,
+            flags=(jarflags_name, jarflags)
+        )
         self.packages = JvmPackageResolver(self, env, run_command)
-        self.runner = JvmRunner(self, env, command=(run_name, run_command))
+        self.runner = JvmRunner(
+            self, env, command=(run_name, run_command, run_found)
+        )
 
     @staticmethod
     def _parse_brand(env, lang, version_output, run_command):

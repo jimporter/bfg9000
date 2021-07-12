@@ -26,7 +26,7 @@ class TestMocBuilder(CrossPlatformTestCase):
         super().__init__(clear_variables=True, *args, **kwargs)
 
     def setUp(self):
-        self.moc = MocBuilder(self.env, known_langs['qtmoc'], ['moc'],
+        self.moc = MocBuilder(self.env, known_langs['qtmoc'], ['moc'], True,
                               'version')
         self.compiler = self.moc.transpiler
 
@@ -90,7 +90,8 @@ class TestRccBuilder(CrossPlatformTestCase):
                          *args, **kwargs)
 
     def setUp(self):
-        self.rcc = RccBuilder(self.env, known_langs['qrc'], ['rcc'], 'version')
+        self.rcc = RccBuilder(self.env, known_langs['qrc'], ['rcc'], True,
+                              'version')
         self.compiler = self.rcc.transpiler
 
     def test_properties(self):
@@ -139,7 +140,7 @@ class TestUicBuilder(CrossPlatformTestCase):
         super().__init__(clear_variables=True, *args, **kwargs)
 
     def setUp(self):
-        self.uic = UicBuilder(self.env, known_langs['qtui'], ['uic'],
+        self.uic = UicBuilder(self.env, known_langs['qtui'], ['uic'], True,
                               'version')
         self.compiler = self.uic.transpiler
 

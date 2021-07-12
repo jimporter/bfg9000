@@ -143,7 +143,9 @@ class TestCommand(TestCase):
 
     def setUp(self):
         self.env = make_env(platform='linux')
-        self.cmd = self.MyCommand(self.env, command=['mycmd', ['command']])
+        self.cmd = self.MyCommand(
+            self.env, command=['mycmd', ['command'], True]
+        )
 
     def test_call(self):
         self.assertEqual(self.cmd(), [self.cmd])

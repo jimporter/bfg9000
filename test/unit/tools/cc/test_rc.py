@@ -21,7 +21,7 @@ class TestCcRcBuilder(CrossPlatformTestCase):
 
     def test_properties(self):
         with mock.patch('bfg9000.shell.which', mock_which):
-            rc = CcRcBuilder(self.env, known_langs['rc'], ['windres'],
+            rc = CcRcBuilder(self.env, known_langs['rc'], ['windres'], True,
                              'version')
 
         self.assertEqual(rc.flavor, 'cc')
@@ -38,7 +38,8 @@ class TestCcRcBuilder(CrossPlatformTestCase):
                    'Copyright (C) 2018 Free Software Foundation, Inc.')
 
         with mock.patch('bfg9000.shell.which', mock_which):
-            rc = CcRcBuilder(self.env, known_langs['rc'], ['windres'], version)
+            rc = CcRcBuilder(self.env, known_langs['rc'], ['windres'], True,
+                             version)
 
         self.assertEqual(rc.brand, 'gcc')
         self.assertEqual(rc.compiler.brand, 'gcc')
@@ -49,7 +50,8 @@ class TestCcRcBuilder(CrossPlatformTestCase):
         version = 'unknown'
 
         with mock.patch('bfg9000.shell.which', mock_which):
-            rc = CcRcBuilder(self.env, known_langs['rc'], ['windres'], version)
+            rc = CcRcBuilder(self.env, known_langs['rc'], ['windres'], True,
+                             version)
 
         self.assertEqual(rc.brand, 'unknown')
         self.assertEqual(rc.compiler.brand, 'unknown')
@@ -63,7 +65,7 @@ class TestCcRcCompiler(CrossPlatformTestCase):
 
     def setUp(self):
         self.compiler = CcRcBuilder(self.env, known_langs['rc'], ['windres'],
-                                    'version').compiler
+                                    True, 'version').compiler
 
     def test_call(self):
         self.assertEqual(self.compiler('in', 'out'),

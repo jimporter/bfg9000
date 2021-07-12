@@ -977,6 +977,10 @@ Equivalent to `env.execute(env.run_arguments(arg, lang), ...)`.
 
 Return the target [platform](#platforms) used for the build.
 
+#### env.tool(*name*) { #env-tool }
+
+Return the [tool](#tools) named *name*.
+
 #### env.variables { #env-variables }
 
 A dict of all the environment variables as they were defined when the build was
@@ -1042,10 +1046,12 @@ The runner used with files built by this builder (e.g. `java`). This may be
 
 ---
 
-### Compilers
+### Compilers/linkers { #compilers }
 
-Builder objects represent the specific used to compile a
-[source file](#source_file) (generally into an [object file](#object_file)).
+Compiler and linker objects represent the specific tool used to compile a
+[source file](#source_file) (generally into an [object file](#object_file)) or
+to link a set of object files (generally into an [executable](#executable) or
+[library](#library)).
 
 #### *compiler*.flavor { #compiler-flavor }
 
@@ -1069,7 +1075,30 @@ The language of the compiler; typically the same as
 
 #### *compiler*.command { #compiler-command }
 
-The command to run when invoking this compiler, e.g. `g++-4.9`.
+The command to run when invoking this compiler, represented as a list, e.g.
+`['g++']`.
+
+#### *compiler*.found { #compiler-found }
+
+Whether the command for this compiler was found on the system.
+
+---
+
+### Tools
+
+Tool objects represent a specific command used to perform some task (usually
+during a build), such as `'copy'` or `'rm'`. They can be retrieved via
+[*env.tool*](#env-tool). While tool objects are primarily suited to bfg's
+internals, there are still a few useful properties for `build.bfg` files:
+
+#### *tool*.command { #tool-command }
+
+The command to run when invoking this tool, represented as a list, e.g.
+`['cp', '-f']`.
+
+#### *tool*.found { #tool-found }
+
+Whether this tool was found on the system.
 
 ---
 

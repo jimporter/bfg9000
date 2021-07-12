@@ -9,7 +9,7 @@ from ...versioning import detect_version
 
 
 class CcRcBuilder(Builder):
-    def __init__(self, env, langinfo, command, version_output):
+    def __init__(self, env, langinfo, command, found, version_output):
         super().__init__(langinfo.name, *self._parse_brand(version_output))
 
         name = langinfo.var('compiler').lower()
@@ -17,7 +17,7 @@ class CcRcBuilder(Builder):
         lflags = shell.split(env.getvar(langinfo.var('flags'), ''))
 
         self.object_format = env.target_platform.object_format
-        self.compiler = CcRcCompiler(self, env, command=(name, command),
+        self.compiler = CcRcCompiler(self, env, command=(name, command, found),
                                      flags=(lflags_name, lflags))
 
     @staticmethod

@@ -16,7 +16,7 @@ class TestYaccBuilder(CrossPlatformTestCase):
         super().__init__(clear_variables=True, *args, **kwargs)
 
     def setUp(self):
-        self.yacc = YaccBuilder(self.env, known_langs['yacc'], ['yacc'],
+        self.yacc = YaccBuilder(self.env, known_langs['yacc'], ['yacc'], True,
                                 'version')
         self.compiler = self.yacc.transpiler
 

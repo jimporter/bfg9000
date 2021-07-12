@@ -33,7 +33,7 @@ class TestJvmBuilder(CrossPlatformTestCase):
     def test_properties(self):
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', default_mock_execute):  # noqa
-            jvm = JvmBuilder(self.env, known_langs['java'], ['javac'],
+            jvm = JvmBuilder(self.env, known_langs['java'], ['javac'], True,
                              'version')
 
         self.assertEqual(jvm.flavor, 'jvm')
@@ -66,7 +66,8 @@ class TestJvmBuilder(CrossPlatformTestCase):
         version = 'javac 1.7.0_55'
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
-            jvm = JvmBuilder(self.env, known_langs['java'], ['javac'], version)
+            jvm = JvmBuilder(self.env, known_langs['java'], ['javac'], True,
+                             version)
 
         self.assertEqual(jvm.brand, 'oracle')
         self.assertEqual(jvm.compiler.brand, 'oracle')
@@ -88,7 +89,8 @@ class TestJvmBuilder(CrossPlatformTestCase):
         version = 'javac 1.8.0_151'
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
-            jvm = JvmBuilder(self.env, known_langs['java'], ['javac'], version)
+            jvm = JvmBuilder(self.env, known_langs['java'], ['javac'], True,
+                             version)
 
         self.assertEqual(jvm.brand, 'openjdk')
         self.assertEqual(jvm.compiler.brand, 'openjdk')
@@ -105,7 +107,7 @@ class TestJvmBuilder(CrossPlatformTestCase):
         version = ('Scala code runner version 2.11.6 -- ' +
                    'Copyright 2002-2013, LAMP/EPFL')
         with mock.patch('bfg9000.shell.which', mock_which):
-            jvm = JvmBuilder(self.env, known_langs['scala'], ['scalac'],
+            jvm = JvmBuilder(self.env, known_langs['scala'], ['scalac'], True,
                              version)
 
         self.assertEqual(jvm.brand, 'epfl')
@@ -125,7 +127,7 @@ class TestJvmBuilder(CrossPlatformTestCase):
 
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
-            jvm = JvmBuilder(self.env, known_langs['java'], ['javac'],
+            jvm = JvmBuilder(self.env, known_langs['java'], ['javac'], True,
                              'unknown')
 
         self.assertEqual(jvm.brand, 'unknown')
@@ -144,7 +146,7 @@ class TestJvmBuilder(CrossPlatformTestCase):
 
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
-            jvm = JvmBuilder(self.env, known_langs['java'], ['javac'],
+            jvm = JvmBuilder(self.env, known_langs['java'], ['javac'], True,
                              'version')
 
         self.assertEqual(jvm.brand, 'unknown')
@@ -166,7 +168,7 @@ class TestJvmCompiler(CrossPlatformTestCase):
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', default_mock_execute):  # noqa
             self.compiler = JvmBuilder(self.env, known_langs['java'],
-                                       ['javac'], 'version').compiler
+                                       ['javac'], True, 'version').compiler
 
     def test_call(self):
         extra = self.compiler._always_flags
@@ -217,7 +219,7 @@ class TestJvmCompiler(CrossPlatformTestCase):
                    'Copyright 2002-2013, LAMP/EPFL')
         with mock.patch('bfg9000.shell.which', mock_which):
             scala_compiler = JvmBuilder(self.env, known_langs['scala'],
-                                        ['scalac'], version).compiler
+                                        ['scalac'], True, version).compiler
         self.assertEqual(scala_compiler.flags(opts.option_list(
             opts.debug()
         )), ['-g:vars'])
@@ -244,7 +246,7 @@ class TestJvmCompiler(CrossPlatformTestCase):
                    'Copyright 2002-2013, LAMP/EPFL')
         with mock.patch('bfg9000.shell.which', mock_which):
             self.compiler = JvmBuilder(self.env, known_langs['scala'],
-                                       ['scalac'], version).compiler
+                                       ['scalac'], True, version).compiler
 
         self.assertEqual(self.compiler.flags(opts.option_list(
             opts.warning('disable')
@@ -270,7 +272,7 @@ class TestJvmCompiler(CrossPlatformTestCase):
                    'Copyright 2002-2013, LAMP/EPFL')
         with mock.patch('bfg9000.shell.which', mock_which):
             self.compiler = JvmBuilder(self.env, known_langs['scala'],
-                                       ['scalac'], version).compiler
+                                       ['scalac'], True, version).compiler
 
         self.assertEqual(self.compiler.flags(opts.option_list(
             opts.optimize('disable')
@@ -305,7 +307,7 @@ class TestJvmLinker(CrossPlatformTestCase):
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', default_mock_execute):  # noqa
             self.linker = JvmBuilder(self.env, known_langs['java'], ['javac'],
-                                     'version').linker('executable')
+                                     True, 'version').linker('executable')
 
     def test_call(self):
         self.assertEqual(self.linker('in', 'out', 'manifest'),
@@ -362,7 +364,7 @@ class TestJvmRunnerJava(CrossPlatformTestCase):
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', default_mock_execute):  # noqa
             self.runner = JvmBuilder(self.env, known_langs[self.lang],
-                                     ['javac'], 'version').runner
+                                     ['javac'], True, 'version').runner
 
     def test_call(self):
         self.assertEqual(self.runner('file'), [self.runner, 'file'])

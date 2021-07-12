@@ -31,15 +31,17 @@ def moc_builder(env):
 
 
 class MocBuilder(Builder):
-    def __init__(self, env, langinfo, command, version_output):
+    def __init__(self, env, langinfo, command, found, version_output):
         super().__init__(langinfo.name, *self._parse_brand(version_output))
 
         name = langinfo.var('compiler').lower()
         mocflags_name = langinfo.var('flags').lower()
         mocflags = shell.split(env.getvar(langinfo.var('flags'), ''))
 
-        self.transpiler = MocCompiler(self, env, command=(name, command),
-                                      flags=(mocflags_name, mocflags))
+        self.transpiler = MocCompiler(
+            self, env, command=(name, command, found),
+            flags=(mocflags_name, mocflags)
+        )
 
     @staticmethod
     def _parse_brand(version_output):
@@ -105,15 +107,17 @@ def qrc_builder(env):
 
 
 class RccBuilder(Builder):
-    def __init__(self, env, langinfo, command, version_output):
+    def __init__(self, env, langinfo, command, found, version_output):
         super().__init__(langinfo.name, *self._parse_brand(version_output))
 
         name = langinfo.var('compiler').lower()
         rccflags_name = langinfo.var('flags').lower()
         rccflags = shell.split(env.getvar(langinfo.var('flags'), ''))
 
-        self.transpiler = RccCompiler(self, env, command=(name, command),
-                                      flags=(rccflags_name, rccflags))
+        self.transpiler = RccCompiler(
+            self, env, command=(name, command, found),
+            flags=(rccflags_name, rccflags)
+        )
 
     @staticmethod
     def _parse_brand(version_output):
@@ -163,15 +167,17 @@ def qtui_builder(env):
 
 
 class UicBuilder(Builder):
-    def __init__(self, env, langinfo, command, version_output):
+    def __init__(self, env, langinfo, command, found, version_output):
         super().__init__(langinfo.name, *self._parse_brand(version_output))
 
         name = langinfo.var('compiler').lower()
         uicflags_name = langinfo.var('flags').lower()
         uicflags = shell.split(env.getvar(langinfo.var('flags'), ''))
 
-        self.transpiler = UicCompiler(self, env, command=(name, command),
-                                      flags=(uicflags_name, uicflags))
+        self.transpiler = UicCompiler(
+            self, env, command=(name, command, found),
+            flags=(uicflags_name, uicflags)
+        )
 
     @staticmethod
     def _parse_brand(version_output):
