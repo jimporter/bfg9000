@@ -1,6 +1,5 @@
-from . import safe_str as _safe_str
+from . import path as _path, safe_str as _safe_str
 from .iterutils import listify as _listify
-from .path import InstallRoot as _InstallRoot
 
 
 def _clone_traits(exclude=set(), subfiles={}):
@@ -100,12 +99,22 @@ class File(FileOrDirectory):
             raise ValueError('expected a non-directory')
         super().__init__(path)
 
+    @property
+    def install_suffix(self):
+        if self.path.root == _path.Root.srcdir:
+            return self.path.basename()
+        return self.path.suffix
+
 
 @_clone_traits(exclude={'files'})
 class Directory(FileOrDirectory):
     def __init__(self, path, files=None):
         super().__init__(path.as_directory())
         self.files = files
+
+    @property
+    def install_suffix(self):
+        return ''
 
     def _clone_args(self, pathfn, recursive):
         args = super()._clone_args(pathfn, recursive)
@@ -129,7 +138,7 @@ class SourceFile(CodeFile):
 
 
 class HeaderFile(CodeFile):
-    install_root = _InstallRoot.includedir
+    install_root = _path.InstallRoot.includedir
 
 
 class PrecompiledHeader(HeaderFile):
@@ -151,7 +160,7 @@ class MsvcPrecompiledHeader(PrecompiledHeader):
 
 
 class HeaderDirectory(Directory):
-    install_root = _InstallRoot.includedir
+    install_root = _path.InstallRoot.includedir
 
     def __init__(self, path, files=None, system=False, langs=None):
         super().__init__(path, files)
@@ -164,7 +173,7 @@ class ModuleDefFile(File):
 
 
 class Binary(File):
-    install_root = _InstallRoot.libdir
+    install_root = _path.InstallRoot.libdir
 
     def __init__(self, path, format, lang=None):
         super().__init__(path)
@@ -204,7 +213,7 @@ class LinkedBinary(Binary):
 
 class Executable(LinkedBinary):
     install_kind = 'program'
-    install_root = _InstallRoot.bindir
+    install_root = _path.InstallRoot.bindir
 
 
 @_clone_traits(exclude={'parent'})
@@ -219,7 +228,7 @@ class Library(LinkedBinary):
 # system though...
 class ExecutableLibrary(Executable, Library):
     install_kind = 'program'
-    install_root = _InstallRoot.libdir
+    install_root = _path.InstallRoot.libdir
 
 
 class SharedLibrary(Library):
@@ -282,7 +291,7 @@ class ExportFile(File):
 @_clone_traits(subfiles={'import_lib': 'import_path',
                          'export_file': 'export_path'})
 class DllBinary(LinkedBinary):
-    install_root = _InstallRoot.bindir
+    install_root = _path.InstallRoot.bindir
     private = True
 
     def __init__(self, path, format, lang, import_path, export_path=None):
@@ -333,4 +342,4 @@ class DualUseLibrary(BaseFile):
 
 
 class PkgConfigPcFile(File):
-    install_root = _InstallRoot.libdir
+    install_root = _path.InstallRoot.libdir

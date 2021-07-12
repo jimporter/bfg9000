@@ -70,16 +70,8 @@ def installify(file, *, directory=None, cross=None):
         else:
             install_root = f.install_root
 
-        # Get the suffix.
-        if isinstance(f, Directory):
-            suffix = ''
-        elif f.path.root == path.Root.srcdir:
-            suffix = f.path.basename()
-        else:
-            suffix = f.path.suffix
-
         cls = cross.target_platform.Path if cross else type(f.path)
-        return cls(suffix, install_root, destdir=not cross)
+        return cls(f.install_suffix, install_root, destdir=not cross)
 
     if not isinstance(file, BaseFile):
         raise TypeError('expected a file or directory')
