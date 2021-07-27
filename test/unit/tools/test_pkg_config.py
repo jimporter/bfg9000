@@ -159,6 +159,16 @@ class TestPkgConfigPackage(ToolTestCase):
             self.assertEqual(pkg.specifier, specifier)
             self.assertEqual(pkg.static, False)
 
+    def test_empty_version(self):
+        def mock_execute_empty_version(args, **kwargs):
+            if '--modversion' in args:
+                return '\n'
+            return mock_execute(args, **kwargs)
+
+        with mock.patch('bfg9000.shell.execute', mock_execute_empty_version):
+            pkg = PkgConfigPackage(self.tool, 'foo', format='elf')
+            self.assertEqual(pkg.version, None)
+
     def test_compile_options(self):
         compiler = AttrDict(flavor='gcc')
         with mock.patch('bfg9000.shell.execute', mock_execute):

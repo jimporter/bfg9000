@@ -113,12 +113,14 @@ class PkgConfigPackage(Package):
         self.pcfiles = pcfiles if pcfiles is not None else [name]
 
         try:
-            version = Version(self._call(self.pcfiles[0], 'version'))
+            version = self._call(self.pcfiles[0], 'version')
+            version = Version(version) if version else None
         except subprocess.CalledProcessError:
             raise PackageResolutionError("unable to find package '{}'"
                                          .format(name))
 
-        check_version(version, specifier, name, PackageVersionError)
+        if version:
+            check_version(version, specifier, name, PackageVersionError)
         self.version = version
         self.specifier = specifier
         self.static = kind == PackageKind.static
