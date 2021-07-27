@@ -60,7 +60,7 @@ def wrap_quotes(s):
 
     start = 1 if s[0] == "'" else None
     # Thanks to `inner_quote_info` above, we can guarantee that any single-
-    # quotes are unescaped, so we can deduplicate them if they're at the end.
+    # quotes at the end are unescaped, so we can deduplicate them if so.
     end = -1 if s[-1] == "'" else None
     return q(start) + s[start:end] + q(end)
 
