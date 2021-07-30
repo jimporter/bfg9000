@@ -76,7 +76,7 @@ class TestQuote(TestCase):
                          posix.wrap_quotes(inner_quoted))
 
     def test_empty(self):
-        self.assertQuote('', False, '', '')
+        self.assertQuote('', True, '', "''")
 
     def test_simple(self):
         self.assertQuote('foo', False, 'foo', 'foo')
@@ -103,6 +103,7 @@ class TestQuote(TestCase):
 
     def test_literal(self):
         self.assertQuote(shell_literal('>'), False, '>', '>')
+        self.assertQuote(shell_literal(''), False, '', '')
 
         s = shell_literal('>') + 'foo bar'
         self.assertEqual(posix.quote(s), ">'foo bar'")

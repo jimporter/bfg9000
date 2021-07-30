@@ -24,6 +24,8 @@
 - MinGW can now use libraries of the form `name.lib`
 - Replace `packaging` dependency with `verspec` for future stability
 - Paths with basenames of `.` or `..` are now treated as directories
+- Empty strings as command-line arguments (e.g. in `command`) are now properly
+  quoted
 
 [mopack]: https://jimporter.github.io/mopack/
 

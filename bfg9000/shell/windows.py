@@ -83,6 +83,9 @@ def inner_quote_info(s, escape_percent=False):
     if isinstance(s, shell_literal):
         return s.string, False
     elif isinstance(s, str):
+        if s == '':
+            return '', True
+
         # In some contexts (mainly certain uses of the Windows shell), we want
         # to escape percent signs. This doesn't count as "escaping" for the
         # purposes of quoting the result though.

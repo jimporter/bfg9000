@@ -40,7 +40,9 @@ def inner_quote_info(s):
     if isinstance(s, shell_literal):
         return s.string, False
     elif isinstance(s, str):
-        if _bad_chars.search(s):
+        if s == '':
+            return '', True
+        elif _bad_chars.search(s):
             return s.replace("'", r"'\''"), True
         return s, False
     raise TypeError(type(s))
