@@ -109,8 +109,10 @@ class TestQuote(TestCase):
         self.assertQuote('foo\\bar\\', True, r'foo\bar\\', r'"foo\bar\\"')
 
     def test_escape_percent(self):
+        self.assertQuote(r'100%', False, r'100%', r'100%')
         self.assertQuote(r'100%', False, r'100%%', r'100%%',
                          escape_percent=True)
+        self.assertQuote(r'"100%"', True, r'\"100%\"', r'"\"100%\""')
         self.assertQuote(r'"100%"', True, r'\"100%%\"', r'"\"100%%\""',
                          escape_percent=True)
 
