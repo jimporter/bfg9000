@@ -31,8 +31,7 @@ def is_srcdir(path):
 
 
 def _execute_script(f, context, path, run_post=False):
-    builddir = context.env.builddir.string() if context.env.builddir else None
-    filename = path.realize({Root.srcdir: None, Root.builddir: builddir})
+    filename = path.string(context.env.base_dirs)
 
     with pushd(path.parent().string(context.env.base_dirs)), \
          context.push_path(path) as p:  # noqa

@@ -114,9 +114,9 @@ class TestStackfulStreamHandler(TestCase):
             '\n' +
             '  File "{}", line {}, in test_runtime_error\n' +
             "    raise RuntimeError('runtime error')"
-        ).format(this_file, lineno))
+        ).format(os.path.relpath(this_file), lineno))
         self.assertEqual(record.stack_post, '')
-        self.assertEqual(record.user_pathname, this_file)
+        self.assertEqual(record.user_pathname, os.path.relpath(this_file))
         self.assertEqual(record.user_lineno, lineno)
 
     def test_internal_error(self):
@@ -143,19 +143,19 @@ class TestStackfulStreamHandler(TestCase):
             '\n' +
             '  File "{}", line {}, in test_internal_error\n' +
             "    iterutils.first(None)"
-        ).format(this_file, lineno))
+        ).format(os.path.relpath(this_file), lineno))
         self.assertEqual(record.stack_post, (
             '\n' +
             '  File "{}", line 83, in first\n' +
             "    raise LookupError()"
         ).format(iterutils_file))
-        self.assertEqual(record.user_pathname, this_file)
+        self.assertEqual(record.user_pathname, os.path.relpath(this_file))
         self.assertEqual(record.user_lineno, lineno)
 
     def test_syntax_error(self):
         handler = log.StackfulStreamHandler()
         try:
-            raise SyntaxError('syntax error', ('file.py', 1, 4, 'line\n'))
+            raise SyntaxError('syntax error', ('file.py', 1, 4, 'line'))
         except SyntaxError:
             record = logging.LogRecord(
                 'name', 'level', 'pathname', 1, 'msg', [], sys.exc_info()
@@ -165,7 +165,8 @@ class TestStackfulStreamHandler(TestCase):
 
         self.assertEqual(record.msg, 'syntax error')
         self.assertEqual(record.full_stack, [
-            ('file.py', 1, '<module>', 'line\n       ^'),
+            traceback.FrameSummary('file.py', 1, '<module>',
+                                   line='line\n       ^'),
         ])
         self.assertEqual(record.stack_pre, '')
         self.assertEqual(record.stack,
@@ -199,9 +200,9 @@ class TestStackfulStreamHandler(TestCase):
             '\n' +
             '  File "{}", line {}, in test_empty_msg\n' +
             "    raise RuntimeError('runtime error')"
-        ).format(this_file, lineno))
+        ).format(os.path.relpath(this_file), lineno))
         self.assertEqual(record.stack_post, '')
-        self.assertEqual(record.user_pathname, this_file)
+        self.assertEqual(record.user_pathname, os.path.relpath(this_file))
         self.assertEqual(record.user_lineno, lineno)
 
     def test_debug(self):
@@ -226,9 +227,9 @@ class TestStackfulStreamHandler(TestCase):
             '\n' +
             '  File "{}", line {}, in test_debug\n' +
             "    raise RuntimeError('runtime error')"
-        ).format(this_file, lineno))
+        ).format(os.path.relpath(this_file), lineno))
         self.assertEqual(record.stack_post, '')
-        self.assertEqual(record.user_pathname, this_file)
+        self.assertEqual(record.user_pathname, os.path.relpath(this_file))
         self.assertEqual(record.user_lineno, lineno)
 
     def test_no_user_stack(self):
@@ -262,6 +263,13 @@ class TestStackfulStreamHandler(TestCase):
         self.assertEqual(record.user_lineno, record.lineno)
 
     def test_different_drives(self):
+        real_relpath = os.path.relpath
+
+        def mock_relpath(a, b=None):
+            if b is not None:
+                raise ValueError()
+            return real_relpath(a, b)
+
         handler = log.StackfulStreamHandler()
         try:
             lineno = current_lineno() + 1
@@ -274,7 +282,7 @@ class TestStackfulStreamHandler(TestCase):
         # Test with `os.path.relpath` raising a `ValueError` to match what
         # happens when the two paths passed to it are on different drives.
         with mock.patch.object(logging.StreamHandler, 'emit'), \
-             mock.patch('os.path.relpath', side_effect=ValueError()):  # noqa
+             mock.patch('os.path.relpath', mock_relpath):  # noqa
             handler.emit(record)
 
         self.assertEqual(record.full_stack, [
@@ -286,9 +294,9 @@ class TestStackfulStreamHandler(TestCase):
             '\n' +
             '  File "{}", line {}, in test_different_drives\n' +
             "    raise RuntimeError('runtime error')"
-        ).format(this_file, lineno))
+        ).format(os.path.relpath(this_file), lineno))
         self.assertEqual(record.stack_post, '')
-        self.assertEqual(record.user_pathname, this_file)
+        self.assertEqual(record.user_pathname, os.path.relpath(this_file))
         self.assertEqual(record.user_lineno, lineno)
 
 
@@ -480,7 +488,8 @@ class TestLogger(TestCase):
             '{level}: {file}:{line}: runtime error\n' +
             '  File "{file}", line {line}, in test_exception\n' +
             "    raise RuntimeError('runtime error')\n"
-        ).format(level=self._level(log.ERROR), file=this_file, line=lineno))
+        ).format(level=self._level(log.ERROR), file=os.path.relpath(this_file),
+                 line=lineno))
 
 
 class TestShowWarning(TestCase):

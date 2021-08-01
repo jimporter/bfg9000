@@ -28,6 +28,8 @@ in progress
 - Paths with basenames of `.` or `..` are now treated as directories
 - Empty strings as command-line arguments (e.g. in `command`) are now properly
   quoted
+- Fix display of the traceback in a bfg file when building from the build
+  directory
 
 [mopack]: https://jimporter.github.io/mopack/
 

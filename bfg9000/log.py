@@ -5,10 +5,11 @@ import sys
 import traceback
 import warnings
 from logging import getLogger, CRITICAL, ERROR, WARNING, INFO, DEBUG  # noqa
+from traceback import FrameSummary
 
-from .safe_str import safe_string
 from .iterutils import tween
 from .platforms.host import platform_info
+from .safe_str import safe_string
 
 
 class UserDeprecationWarning(DeprecationWarning):
@@ -51,9 +52,14 @@ def _filter_stack(stack):
     return stack[:start], stack[start:end], stack[end:]
 
 
-def _format_stack(stack):
+def _format_stack(stack, user=False):
     if len(stack) == 0:
         return ''
+
+    if user:
+        stack = [FrameSummary(os.path.relpath(i.filename), i.lineno, i.name,
+                              locals=i.locals, line=i.line) for i in stack]
+
     # Put the newline at the beginning, since this helps our formatting later.
     return '\n' + ''.join(traceback.format_list(stack)).rstrip()
 
@@ -97,12 +103,14 @@ class StackfulStreamHandler(ColoredStreamHandler):
                 record.msg = e.msg
 
                 # Figure out where to put the caret.
-                text = e.text.expandtabs()
+                text = e.text.expandtabs().rstrip()
                 dedent = len(text) - len(text.lstrip())
                 offset = 4 - dedent - 1 + e.offset
 
-                record.full_stack = [(e.filename, e.lineno, '<module>',
-                                      e.text + ' ' * offset + '^')]
+                record.full_stack = [
+                    FrameSummary(e.filename, e.lineno, '<module>',
+                                 line=e.text + '\n' + ' ' * offset + '^')
+                ]
             else:
                 if not record.msg:
                     record.msg = record.exc_info[0].__name__
@@ -115,11 +123,11 @@ class StackfulStreamHandler(ColoredStreamHandler):
         pre, stack, post = _filter_stack(record.full_stack)
 
         record.stack_pre = _format_stack(pre)
-        record.stack = _format_stack(stack)
+        record.stack = _format_stack(stack, user=True)
         record.stack_post = _format_stack(post)
 
         if len(stack):
-            record.user_pathname = stack[-1][0]
+            record.user_pathname = os.path.relpath(stack[-1][0])
             record.user_lineno = stack[-1][1]
         else:
             record.user_pathname = record.pathname
@@ -156,10 +164,10 @@ def _init_logging(logger, debug, stream=None):
 
     fmt = '%(coloredlevel)s: %(user_pathname)s:%(user_lineno)d: %(message)s'
     if debug:
-        fmt += '\033[2m%(stack_pre)s\033[0m'
+        fmt += '\033[90m%(stack_pre)s\033[0m'
     fmt += '%(stack)s'
     if debug:
-        fmt += '\033[2m%(stack_post)s\033[0m'
+        fmt += '\033[90m%(stack_post)s\033[0m'
 
     stackful.setFormatter(logging.Formatter(fmt))
     logger.addHandler(stackful)
