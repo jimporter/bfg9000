@@ -71,6 +71,7 @@ install:
   - set PATH=%PYTHON_PATH%;%PYTHON_PATH%\Scripts;%LIBRARY_PATH%;%PATH%
 build_script:
   - git clone https://github.com/jimporter/mopack.git
+  - cd mopack && git checkout bfbfd3867b41983dd0227b98e4d45bfd827987b5 && cd ..
   - pip install ./mopack .[test]
 test_script:
   - python setup.py coverage -q
