@@ -214,8 +214,7 @@ class TestVcxProject(ProjectTest):
 
         root = E.Element()
         proj._link_options(root, {'libs': ['foo', 'bar']})
-        self.assertXPath(root, './AdditionalDependencies/text()',
-                         ['foo;bar;%(AdditionalDependencies)'])
+        self.assertXPath(root, './AdditionalDependencies/text()', ['foo;bar'])
 
 
 class TestNoopProject(ProjectTest):

@@ -309,8 +309,10 @@ class VcxProject(Project):
 
         self._add_list_option(element, 'AdditionalOptions',
                               options.get('extra'), quoted=True)
+        # We already include all the default Win32 libraries from the linker,
+        # so don't inherit from the MSBuild default here.
         self._add_list_option(element, 'AdditionalDependencies',
-                              options.get('libs'))
+                              options.get('libs'), inherit=False)
 
     def _add_bool_option(self, element, name, value):
         if value is not None:
@@ -320,11 +322,13 @@ class VcxProject(Project):
         if value is not None:
             element.append(E(name, mapping[value]))
 
-    def _add_list_option(self, element, name, value, *, quoted=False):
+    def _add_list_option(self, element, name, value, *, quoted=False,
+                         inherit=True):
         if value:
             delim = ' ' if quoted else ';'
             element.append(E(name, delim.join(chain(
-                textify_each(value), ['%({})'.format(name)]
+                textify_each(value),
+                ['%({})'.format(name)] if inherit else []
             )) ))
 
 
