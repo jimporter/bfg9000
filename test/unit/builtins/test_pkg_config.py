@@ -1,10 +1,34 @@
 from io import StringIO
+from unittest import mock
 
 from .common import BuiltinTest, TestCase
 
 from bfg9000.builtins import default, link, packages, project, version  # noqa
 from bfg9000.builtins.pkg_config import *
 from bfg9000.safe_str import safe_str, shell_literal
+from bfg9000.shell import CalledProcessError
+from bfg9000.versioning import SpecifierSet
+
+
+def mock_execute(args, **kwargs):
+    name = args[1]
+    if name.endswith('-uninstalled'):
+        raise CalledProcessError(1, args)
+
+    if '--modversion' in args:
+        return '1.0\n'
+    elif '--print-requires' in args:
+        return '\n'
+    elif '--variable=install_names' in args:
+        return '/usr/lib/lib{}.dylib'.format(name)
+    elif '--cflags' in args:
+        return '-I/usr/include/{}\n'.format(name)
+    elif '--libs-only-L' in args:
+        return '-L/usr/lib/{}\n'.format(name)
+    elif '--libs-only-l' in args:
+        if '--static' in args:
+            return '-l{}\n -lstatic'.format(name)
+        return '-l{}\n'.format(name)
 
 
 class TestPkgConfigRequirement(TestCase):
@@ -147,6 +171,17 @@ class TestPkgConfig(BuiltinTest):
     def setUp(self):
         super().setUp()
 
+    def get_pkg_config(self):
+        def mock_execute_cc(args, **kwargs):
+            if '--version' in args:
+                return 'version\n'
+            raise OSError('unknown command: {}'.format(args))
+
+        with mock.patch('bfg9000.shell.which', return_value=['command']), \
+             mock.patch('bfg9000.shell.execute', mock_execute_cc):  # noqa
+            self.context.env.builder('c')
+        return self.context.env.tool('pkg_config')
+
     def test_minimal(self):
         pkg = PkgConfigInfo(self.context, name='package')
         data = pkg.finalize()
@@ -191,9 +226,69 @@ class TestPkgConfig(BuiltinTest):
     def test_requires(self):
         pkg = PkgConfigInfo(
             self.context, name='package', version='1.0',
-            requires=['req', ('vreq', '>=1.0')],
+            requires=['req', ('vreq', '>=1.0'),
+                      ('vreq2', SpecifierSet('>=1.1'))],
             requires_private=['preq'],
-            conflicts=['creq'],
+            conflicts=['creq']
+        )
+        data = pkg.finalize()
+
+        out = StringIO()
+        PkgConfigWriter(self.context)._write(out, data, installed=True)
+        self.assertIn('\nRequires: req, vreq >= 1.0, vreq2 >= 1.1\n',
+                      out.getvalue())
+        self.assertIn('\nRequires.private: preq\n', out.getvalue())
+        self.assertIn('\nConflicts: creq\n', out.getvalue())
+
+        with self.assertRaises(TypeError):
+            pkg = PkgConfigInfo(self.context, requires=[1])
+        with self.assertRaises(TypeError):
+            pkg = PkgConfigInfo(self.context, requires=[
+                Package('foo', format='elf'),
+            ])
+
+    def test_requires_common_package(self):
+        req = CommonPackage(pkg_config, 'req', format='elf',
+                            compile_options=['-Ireq'],
+                            link_options=['-lreq'])
+        preq = CommonPackage(pkg_config, 'preq', format='elf',
+                             compile_options=['-Ipreq'],
+                             link_options=['-lpreq'])
+        creq = CommonPackage(pkg_config, 'creq', format='elf',
+                             compile_options=['-Icreq'],
+                             link_options=['-lcreq'])
+
+        pkg = PkgConfigInfo(
+            self.context, name='package', version='1.0',
+            requires=[req],
+            requires_private=[preq],
+            conflicts=[creq]
+        )
+        data = pkg.finalize()
+
+        out = StringIO()
+        PkgConfigWriter(self.context)._write(out, data, installed=True)
+        self.assertIn('\nCflags: -Ireq -Ipreq\n', out.getvalue())
+        self.assertIn('\nLibs: -lreq\n', out.getvalue())
+        self.assertIn('\nLibs.private: -lpreq\n', out.getvalue())
+        self.assertNotIn('\nRequires:', out.getvalue())
+        self.assertNotIn('\nRequires.private:', out.getvalue())
+        self.assertNotIn('\nConflicts:', out.getvalue())
+
+    def test_requires_pkg_config_package(self):
+        pkg_config = self.get_pkg_config()
+        with mock.patch('bfg9000.shell.execute', mock_execute):
+            req = PkgConfigPackage(pkg_config, 'req', format='elf')
+            vreq = PkgConfigPackage(pkg_config, 'vreq', format='elf',
+                                    specifier=SpecifierSet('>=1.0'))
+            preq = PkgConfigPackage(pkg_config, 'preq', format='elf')
+            creq = PkgConfigPackage(pkg_config, 'creq', format='elf')
+
+        pkg = PkgConfigInfo(
+            self.context, name='package', version='1.0',
+            requires=[req, vreq],
+            requires_private=[preq],
+            conflicts=[creq]
         )
         data = pkg.finalize()
 
@@ -203,8 +298,32 @@ class TestPkgConfig(BuiltinTest):
         self.assertIn('\nRequires.private: preq\n', out.getvalue())
         self.assertIn('\nConflicts: creq\n', out.getvalue())
 
-        with self.assertRaises(TypeError):
-            pkg = PkgConfigInfo(self.context, requires=[1])
+    def test_requires_generated_pkg_config_package(self):
+        pkg_config = self.get_pkg_config()
+        with mock.patch('bfg9000.shell.execute', mock_execute):
+            req = GeneratedPkgConfigPackage(pkg_config, 'req', format='elf')
+            preq = GeneratedPkgConfigPackage(pkg_config, 'preq', format='elf')
+            creq = GeneratedPkgConfigPackage(pkg_config, 'creq', format='elf')
+
+            pkg = PkgConfigInfo(
+                self.context, name='package', version='1.0',
+                requires=[req],
+                requires_private=[preq],
+                conflicts=[creq]
+            )
+            data = pkg.finalize()
+
+            out = StringIO()
+            PkgConfigWriter(self.context)._write(out, data, installed=True)
+
+        self.assertIn('\nCflags: -I/usr/include/req -I/usr/include/preq\n',
+                      out.getvalue())
+        self.assertIn('\nLibs: -L/usr/lib/req -lreq\n', out.getvalue())
+        self.assertIn('\nLibs.private: -L/usr/lib/preq -lpreq\n',
+                      out.getvalue())
+        self.assertNotIn('\nRequires:', out.getvalue())
+        self.assertNotIn('\nRequires.private:', out.getvalue())
+        self.assertNotIn('\nConflicts:', out.getvalue())
 
     def test_includes_libs(self):
         public = self.context['shared_library']('public', 'public.cpp')

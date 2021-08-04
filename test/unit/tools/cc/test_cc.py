@@ -5,10 +5,9 @@ from .common import known_langs, mock_execute, mock_which
 
 from bfg9000 import options as opts, platforms
 from bfg9000.exceptions import PackageResolutionError
-from bfg9000.file_types import HeaderDirectory, Library, SharedLibrary
 from bfg9000.options import option_list
 from bfg9000.packages import PackageKind
-from bfg9000.path import abspath, Path, Root
+from bfg9000.path import Path
 from bfg9000.tools.cc import CcBuilder
 from bfg9000.versioning import SpecifierSet, Version
 
@@ -18,7 +17,7 @@ def mock_execute_pkgconf(args, **kwargs):
         return '1.2.3\n'
     elif '--variable=pcfiledir' in args:
         return '/path/to/pkg-config\n'
-    elif '--cflags' in args:
+    elif '--cflags' in args or '--cflags-only-I' in args:
         return '-I/path\n'
     elif '--libs-only-L' in args:
         return '-L/path\n'
@@ -249,12 +248,6 @@ class TestCcPackageResolver(CrossPlatformTestCase):
     def __init__(self, *args, **kwargs):
         super().__init__(clear_variables=True, *args, **kwargs)
 
-    def lib(self, path, name):
-        t = Library if self.platform_name == 'winnt' else SharedLibrary
-        ext = {'linux': '.so', 'winnt': '.dll.a', 'macos': '.dylib'}
-        return t(path.append('lib{}{}'.format(name, ext[self.platform_name])),
-                 format=self.packages.builder.object_format)
-
     def setUp(self):
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
@@ -264,42 +257,20 @@ class TestCcPackageResolver(CrossPlatformTestCase):
             self.compiler = self.builder.compiler
             self.linker = self.builder.linker('executable')
 
-    def test_header(self):
-        with mock.patch('bfg9000.tools.cc.exists', return_value=True):
-            p = abspath('/path/to/include')
-            hdr = self.packages.header('foo.hpp', [p])
-            self.assertEqual(hdr, HeaderDirectory(p))
-
-    def test_header_not_found(self):
-        with mock.patch('bfg9000.tools.cc.exists', return_value=False):
-            with self.assertRaises(PackageResolutionError):
-                self.packages.header('foo.hpp')
-
-    def test_header_relpath(self):
-        with self.assertRaises(ValueError):
-            self.packages.header('foo.hpp', [Path('dir', Root.srcdir)])
-
-    def test_library(self):
-        p = abspath('/path/to/lib')
-        with mock.patch('bfg9000.tools.cc.exists', return_value=True):
-            lib = self.packages.library('foo', search_dirs=[p])
-            self.assertEqual(lib, self.lib(p, 'foo'))
-
-    def test_library_not_found(self):
-        with mock.patch('bfg9000.tools.cc.exists', return_value=False):
-            with self.assertRaises(PackageResolutionError):
-                self.packages.library('foo')
-
-    def test_library_relpath(self):
-        with self.assertRaises(ValueError):
-            p = Path('dir', Root.srcdir)
-            self.packages.library('foo', search_dirs=[p])
-
-    def test_resolve_pkg_config(self):
-        with mock.patch('bfg9000.shell.which', mock_which), \
-             mock.patch('bfg9000.shell.execute', mock_execute):
+            # Instantiate pkg-config so tests below can find it.
             self.env.tool('pkg_config')
 
+    def check_package(self, pkg):
+        self.assertEqual(pkg.name, 'foo')
+        self.assertEqual(pkg.compile_options(self.compiler),
+                         option_list('-I/path'))
+        self.assertEqual(pkg.link_options(self.linker), option_list(
+            '-L/path', opts.lib_literal('-lfoo'),
+            (opts.rpath_dir(Path('/path')) if self.platform_name == 'linux'
+             else None)
+        ))
+
+    def test_resolve_pkg_config(self):
         usage = {'type': 'pkg_config', 'pcfiles': ['foo'],
                  'path': ['/path/to/include'], 'extra_args': []}
         with mock.patch('bfg9000.shell.execute', mock_execute_pkgconf), \
@@ -309,56 +280,24 @@ class TestCcPackageResolver(CrossPlatformTestCase):
              mock.patch('bfg9000.log.info'):  # noqa
             pkg = self.packages.resolve('foo', None, SpecifierSet(),
                                         PackageKind.any)
-            self.assertEqual(pkg.name, 'foo')
-            self.assertEqual(pkg.compile_options(self.compiler),
-                             option_list('-I/path'))
-
-            ldflags = option_list('-L/path', opts.lib_literal('-lfoo'))
-            if self.platform_name == 'linux':
-                ldflags.append(opts.rpath_dir(Path('/path')))
-            self.assertEqual(pkg.link_options(self.linker), ldflags)
+            self.check_package(pkg)
 
     def test_resolve_path(self):
-        usage = {'type': 'path', 'headers': ['foo.hpp'],
-                 'include_path': ['/path/to/include'],
-                 'libraries': ['foo'], 'library_path': ['/path/to/lib']}
-        with mock.patch('bfg9000.tools.cc.exists', return_value=True), \
+        usage = {'type': 'path', 'path': '/path/to/pkgconfig',
+                 'pcfiles': ['foo'], 'auto_link': False}
+        with mock.patch('bfg9000.shell.execute', mock_execute_pkgconf), \
+             mock.patch('bfg9000.tools.cc.exists', return_value=True), \
              mock.patch('bfg9000.tools.mopack.get_usage',
                         return_value=usage), \
              mock.patch('bfg9000.log.info'):  # noqa
             pkg = self.packages.resolve('foo', None, SpecifierSet(),
                                         PackageKind.any)
-            self.assertEqual(pkg.name, 'foo')
-            self.assertEqual(pkg.compile_options(None), opts.option_list(
-                opts.include_dir(HeaderDirectory(abspath('/path/to/include')))
-            ))
-            self.assertEqual(pkg.link_options(None), opts.option_list(
-                opts.lib(self.lib(abspath('/path/to/lib'), 'foo'))
-            ))
-
-    def test_resolve_path_include_path(self):
-        usage = {'type': 'path', 'include_path': ['/path/to/include']}
-        with mock.patch('bfg9000.tools.mopack.get_usage',
-                        return_value=usage), \
-             mock.patch('bfg9000.log.info'):  # noqa
-            pkg = self.packages.resolve('foo', None, SpecifierSet(),
-                                        PackageKind.any)
-            self.assertEqual(pkg.name, 'foo')
-            self.assertEqual(pkg.compile_options(None), opts.option_list(
-                opts.include_dir(HeaderDirectory(abspath('/path/to/include')))
-            ))
-            self.assertEqual(pkg.link_options(None), opts.option_list())
+            self.check_package(pkg)
 
     def test_resolve_path_auto_link(self):
-        usage = {'type': 'path', 'auto_link': True, 'libraries': ['foo'],
-                 'library_path': ['/path/to/lib']}
+        usage = {'type': 'path', 'path': '/path/to/pkgconfig',
+                 'pcfiles': ['foo'], 'auto_link': True}
         with mock.patch('bfg9000.tools.mopack.get_usage',
                         return_value=usage), \
-             self.assertRaises(PackageResolutionError):  # noqa
-            self.packages.resolve('foo', None, SpecifierSet(), PackageKind.any)
-
-    def test_resolve_invalid(self):
-        with mock.patch('bfg9000.tools.mopack.get_usage',
-                        return_value={'type': 'unknown'}), \
              self.assertRaises(PackageResolutionError):  # noqa
             self.packages.resolve('foo', None, SpecifierSet(), PackageKind.any)

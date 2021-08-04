@@ -10,7 +10,6 @@ from bfg9000 import file_types, options as opts
 from bfg9000.build_inputs import BuildInputs
 from bfg9000.builtins import builtin, packages, project  # noqa
 from bfg9000.exceptions import PackageResolutionError, PackageVersionError
-from bfg9000.file_types import HeaderDirectory
 from bfg9000.iterutils import first
 from bfg9000.packages import CommonPackage, Framework
 from bfg9000.path import abspath, Path, Root
@@ -26,21 +25,17 @@ def mock_execute_common(args, **kwargs):
     if prog == 'mopack':
         if args[1] == 'usage':
             pkg = args[5]
-            if pkg == 'boost':
-                return ('{"type": "path", "include_path": [], ' +
-                        '"library_path": [], "headers": [], ' +
-                        '"libraries": []}\n')
             if len(args) > 6 and args[6] == '-ssubmodule':
                 pkg = pkg + '_submodule'
             return ('{"type": "pkg_config", "path": null, ' +
                     '"pcfiles": ["' + pkg + '"], "extra_args": []}\n')
     elif prog == 'pkg-config':
-        if args[1] == 'boost':
-            raise OSError()
         if '--modversion' in args:
-            return '1.2.3\n'
+            return '\n' if args[1] == 'boost' else '1.2.3\n'
         elif '--variable=pcfiledir' in args:
             return '/path/to/pkg-config'
+        elif '--cflags-only-I' in args:
+            return '/path/to/include'
     raise OSError('unknown command: {}'.format(args))
 
 
@@ -226,21 +221,21 @@ class TestBoostPackage(TestCase):
     def test_boost_version(self):
         data = '#define BOOST_LIB_VERSION "1_23_4"\n'
         with mock.patch('builtins.open', mock_open(read_data=data)):
-            hdrs = [HeaderDirectory(abspath('path'))]
+            hdrs = [abspath('path')]
             self.assertEqual(packages._boost_version(hdrs, SpecifierSet('')),
                              Version('1.23.4'))
 
     def test_boost_version_too_old(self):
         data = '#define BOOST_LIB_VERSION "1_23_4"\n'
         with mock.patch('builtins.open', mock_open(read_data=data)):
-            hdrs = [HeaderDirectory(abspath('path'))]
+            hdrs = [abspath('path')]
             with self.assertRaises(PackageVersionError):
                 packages._boost_version(hdrs, SpecifierSet('>=1.30'))
 
     def test_boost_version_cant_parse(self):
         data = 'foobar\n'
         with mock.patch('builtins.open', mock_open(read_data=data)):
-            hdrs = [HeaderDirectory(abspath('path'))]
+            hdrs = [abspath('path')]
             with self.assertRaises(PackageVersionError):
                 packages._boost_version(hdrs, SpecifierSet(''))
 

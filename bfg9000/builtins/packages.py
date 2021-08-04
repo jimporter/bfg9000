@@ -13,18 +13,25 @@ from ..shell import which
 from ..versioning import check_version, InvalidSpecifier, SpecifierSet, Version
 
 
-def _boost_version(headers, required_version):
-    for header in headers:
-        version_hpp = header.path.append('boost').append('version.hpp')
-        with open(version_hpp.string()) as f:
-            for line in f:
-                m = re.match(r'#\s*define\s+BOOST_LIB_VERSION\s+"([\d_]+)"',
-                             line)
-                if m:
-                    version = Version(m.group(1).replace('_', '.'))
-                    check_version(version, required_version, 'boost',
-                                  PackageVersionError)
-                    return version
+# XXX: This is a bit of a hack. It would probably be better to put this in
+# mopack instead. However, this would require mopack to be able to do all the
+# work of finding header files.
+def _boost_version(include_dirs, required_version):
+    for path in include_dirs:
+        version_hpp = path.append('boost').append('version.hpp')
+        try:
+            with open(version_hpp.string()) as f:
+                for line in f:
+                    m = re.match(
+                        r'#\s*define\s+BOOST_LIB_VERSION\s+"([\d_]+)"', line
+                    )
+                    if m:
+                        version = Version(m.group(1).replace('_', '.'))
+                        check_version(version, required_version, 'boost',
+                                      PackageVersionError)
+                        return version
+        except FileNotFoundError:
+            pass
     raise PackageVersionError('unable to parse "boost/version.hpp"')
 
 

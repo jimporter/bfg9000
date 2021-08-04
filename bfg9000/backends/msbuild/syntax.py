@@ -327,7 +327,7 @@ class VcxProject(Project):
         if value:
             delim = ' ' if quoted else ';'
             element.append(E(name, delim.join(chain(
-                textify_each(value),
+                textify_each(value, quoted),
                 ['%({})'.format(name)] if inherit else []
             )) ))
 

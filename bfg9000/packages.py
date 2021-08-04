@@ -59,10 +59,10 @@ class CommonPackage(Package):
         self._compile_options = compile_options or option_list()
         self._link_options = link_options or option_list()
 
-    def compile_options(self, compiler):
+    def compile_options(self, compiler, *, raw=False):
         return self._compile_options
 
-    def link_options(self, linker):
+    def link_options(self, linker, *, raw=False):
         return self._link_options
 
 

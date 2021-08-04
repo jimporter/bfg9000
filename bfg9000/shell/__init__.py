@@ -24,9 +24,13 @@ class Mode(Enum):
 
 
 def split_paths(s, sep=os.pathsep):
-    if not s:
+    if s is None:
         return []
-    return s.split(sep)
+    return [i for i in s.split(sep) if i]
+
+
+def join_paths(paths, sep=os.pathsep):
+    return sep.join(paths)
 
 
 def which(names, env=os.environ, base_dirs=None, resolve=False,

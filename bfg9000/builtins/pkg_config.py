@@ -10,12 +10,12 @@ from ..build_inputs import build_input
 from ..file_types import *
 from ..iterutils import flatten, iterate, uniques, recursive_walk
 from ..objutils import objectify, identity
-from ..packages import CommonPackage
+from ..packages import CommonPackage, Package
 from ..safe_str import literal, shell_literal
 from ..shell import posix as pshell
 from ..shell.syntax import Syntax, Writer
 from ..tools.install_name_tool import darwin_install_name
-from ..tools.pkg_config import PkgConfigPackage
+from ..tools.pkg_config import GeneratedPkgConfigPackage, PkgConfigPackage
 from ..versioning import simplify_specifiers, Specifier, SpecifierSet
 
 build_input('pkg_config')(lambda build_inputs, env: [])
@@ -301,17 +301,23 @@ class PkgConfigInfo:
         for i in packages:
             if isinstance(i, str):
                 pkg_config.add(Requirement(i))
+                continue
             elif isinstance(i, (tuple, list)):
                 pkg_config.add(Requirement(*i))
-            elif isinstance(i, PkgConfigPackage):
-                pkg_config.add(Requirement(i.pcfiles[0], i.specifier))
-                pkg_config.update(Requirement(i) for i in i.pcfiles[1:])
+                continue
+            elif isinstance(i, Package):
                 if i.deps:
                     deps.append(i)
-            elif isinstance(i, CommonPackage):
-                system.append(i)
-            else:
-                raise TypeError('unsupported package type: {}'.format(type(i)))
+
+                if isinstance(i, (CommonPackage, GeneratedPkgConfigPackage)):
+                    system.append(i)
+                    continue
+                elif isinstance(i, PkgConfigPackage):
+                    pkg_config.add(Requirement(i.pcfiles[0], i.specifier))
+                    pkg_config.update(Requirement(i) for i in i.pcfiles[1:])
+                    continue
+
+            raise TypeError('unsupported package type: {}'.format(type(i)))
         return pkg_config, uniques(system), deps
 
 
@@ -379,11 +385,11 @@ class PkgConfigWriter:
 
         # Add the options from each of the system packages.
         for pkg in data['extra_pkgs']:
-            compile_options.extend(pkg.compile_options(compiler))
-            link_options.extend(pkg.link_options(linker))
+            compile_options.extend(pkg.compile_options(compiler, raw=True))
+            link_options.extend(pkg.link_options(linker, raw=True))
         for pkg in data['extra_pkgs_private']:
-            compile_options.extend(pkg.compile_options(compiler))
-            link_options_private.extend(pkg.link_options(linker))
+            compile_options.extend(pkg.compile_options(compiler, raw=True))
+            link_options_private.extend(pkg.link_options(linker, raw=True))
 
         cflags = compiler.flags(compile_options, mode='pkg-config')
         ldflags = (linker.flags(link_options, mode='pkg-config') +

@@ -92,7 +92,6 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: jimporter/mopack
-          ref: bfbfd3867b41983dd0227b98e4d45bfd827987b5
           path: mopack
       - name: Install Python dependencies
         run: |

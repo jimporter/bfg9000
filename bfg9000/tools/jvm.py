@@ -277,10 +277,10 @@ class JvmPackage(Package):
         super().__init__(name, format=format)
         self.libs = libs or []
 
-    def compile_options(self, compiler):
+    def compile_options(self, compiler, *, raw=False):
         return opts.option_list(opts.lib(i) for i in self.libs)
 
-    def link_options(self, linker):
+    def link_options(self, linker, *, raw=False):
         return opts.option_list()
 
 

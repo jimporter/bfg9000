@@ -2,8 +2,6 @@ import os
 from functools import partial
 from . import *
 
-from bfg9000 import shell
-
 norm = os.path.normpath
 pjoin = os.path.join
 
@@ -11,15 +9,6 @@ is_mingw = (env.host_platform.family == 'windows' and
             env.builder('c++').flavor == 'cc')
 is_msvc = env.builder('c++').flavor == 'msvc'
 pkg_config_cmd = os.getenv('PKG_CONFIG', 'pkg-config')
-
-
-def pkg_config(args, path='pkgconfig', uninstalled=True):
-    env = os.environ.copy()
-    env['PKG_CONFIG_PATH'] = os.path.abspath(path)
-    if not uninstalled:
-        env['PKG_CONFIG_DISABLE_UNINSTALLED'] = '1'
-    return shell.execute([pkg_config_cmd] + args, stdout=shell.Mode.pipe,
-                         env=env).rstrip().replace('\\\\', '\\')
 
 
 def readPcFile(filename, field):
@@ -33,8 +22,15 @@ def readPcFile(filename, field):
 class PkgConfigTest(IntegrationTest):
     lib_suffix = '.dll' if is_mingw else ''
 
+    def pkg_config(self, args, path='pkgconfig', uninstalled=True):
+        env = {'PKG_CONFIG_PATH': os.path.abspath(path)}
+        if not uninstalled:
+            env['PKG_CONFIG_DISABLE_UNINSTALLED'] = '1'
+        return (self.assertPopen([pkg_config_cmd] + args, extra_env=env)
+                .rstrip().replace('\\\\', '\\'))
+
     def assertPkgConfig(self, args, result, **kwargs):
-        self.assertEqual(pkg_config(args, **kwargs), result)
+        self.assertEqual(self.pkg_config(args, **kwargs), result)
 
     def _paths(self):
         pkgconfdir = norm(pjoin(self.builddir, 'pkgconfig')).replace('\\', '/')
@@ -46,11 +42,11 @@ class PkgConfigTest(IntegrationTest):
     def _check_requires(self, uninstalled):
         self.assertPkgConfig(['hello', '--print-requires'], '',
                              uninstalled=uninstalled)
-        reqs = pkg_config(['hello', '--print-requires-private'],
-                          uninstalled=uninstalled)
+        reqs = self.pkg_config(['hello', '--print-requires-private'],
+                               uninstalled=uninstalled)
         if reqs:
             self.assertEqual(reqs, 'ogg')
-            return (' ' + pkg_config(['ogg', '--cflags'])).rstrip()
+            return (' ' + self.pkg_config(['ogg', '--cflags'])).rstrip()
         else:
             return ''
 
@@ -185,34 +181,6 @@ class TestPkgConfig(PkgConfigTest):
                                  os.pathsep + os.environ['PATH'])}
         self.assertOutput([executable('program')], 'hello, library!\n',
                           extra_env=env_vars)
-
-
-@skip_if_backend('msbuild')
-class TestPkgConfigUsingSystemPkg(PkgConfigTest):
-    src_include = 'include'
-
-    def __init__(self, *args, **kwargs):
-        super().__init__('pkg_config_system', configure=False, install=True,
-                         *args, **kwargs)
-
-    def test_configure(self):
-        self.configure(extra_env={'PKG_CONFIG': 'nonexist'})
-        self.assertExists(os.path.join('pkgconfig', 'hello.pc'))
-        self.assertExists(os.path.join('pkgconfig', 'hello-uninstalled.pc'))
-
-        for u, paths in self._paths().items():
-            assertPkgConfig = partial(self.assertPkgConfig, uninstalled=u)
-            assertPkgConfig(['hello', '--print-requires'], '')
-            assertPkgConfig(['hello', '--print-requires-private'], '')
-
-            assertPkgConfig(['hello', '--cflags'], '-I' + paths['include'])
-
-            assertPkgConfig(['hello', '--libs-only-L'], '-L' + paths['lib'])
-            assertPkgConfig(['hello', '--libs-only-l'],
-                            '-lhello{}'.format(self.lib_suffix))
-            assertPkgConfig(['hello', '--libs-only-l', '--static'],
-                            '-lhello{} -logg'.format(self.lib_suffix))
-            assertPkgConfig(['hello', '--libs-only-other'], '')
 
 
 @skip_if_backend('msbuild')

@@ -188,9 +188,9 @@ class TestVcxProject(ProjectTest):
                          ['MultiThreadedDebugDLL'])
 
         root = E.Element()
-        proj._cl_compile_options(root, {'extra': ['foo', 'bar']})
+        proj._cl_compile_options(root, {'extra': ['foo', 'bar', 'red panda']})
         self.assertXPath(root, './AdditionalOptions/text()',
-                         ['foo bar %(AdditionalOptions)'])
+                         ['foo bar "red panda" %(AdditionalOptions)'])
 
     def test_link_options(self):
         proj = VcxProject(FakeEnv(), 'project')
@@ -208,13 +208,14 @@ class TestVcxProject(ProjectTest):
         self.assertXPath(root, './ImportLibrary/text()', ['foo'])
 
         root = E.Element()
-        proj._link_options(root, {'extra': ['foo', 'bar']})
+        proj._link_options(root, {'extra': ['foo', 'bar', 'red panda']})
         self.assertXPath(root, './AdditionalOptions/text()',
-                         ['foo bar %(AdditionalOptions)'])
+                         ['foo bar "red panda" %(AdditionalOptions)'])
 
         root = E.Element()
-        proj._link_options(root, {'libs': ['foo', 'bar']})
-        self.assertXPath(root, './AdditionalDependencies/text()', ['foo;bar'])
+        proj._link_options(root, {'libs': ['foo', 'bar', 'red panda']})
+        self.assertXPath(root, './AdditionalDependencies/text()',
+                         ['foo;bar;red panda'])
 
 
 class TestNoopProject(ProjectTest):

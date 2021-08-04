@@ -1,5 +1,4 @@
 import argparse
-import os
 import re
 import subprocess
 
@@ -16,6 +15,9 @@ from ..versioning import check_version, SpecifierSet, Version
 
 _lib_dirs_parser = argparse.ArgumentParser()
 _lib_dirs_parser.add_argument('-L', action='append', dest='lib_dirs')
+
+_include_dirs_parser = argparse.ArgumentParser()
+_include_dirs_parser.add_argument('-I', action='append', dest='include_dirs')
 
 _c_to_pkgconf = make_command_converter([
     (re.compile(r'gcc(?:-[\d.]+)?(?:-(?:posix|win32))?'), 'pkg-config'),
@@ -40,6 +42,7 @@ class PkgConfig(Command):
         'path': (['--variable=pcfiledir'], None),
         'install_names': (['--variable=install_names'], _shell_split),
         'cflags': (['--cflags'], _shell_split),
+        'include_dirs': (['--cflags-only-I'], _shell_split),
         'lib_dirs': (['--libs-only-L'], _shell_split),
         'ldflags': (['--libs-only-L', '--libs-only-other'], _shell_split),
         'ldlibs': (['--libs-only-l'], _shell_split),
@@ -131,17 +134,24 @@ class PkgConfigPackage(Package):
         return self._pkg_config.run(*args, extra_env=final_env,
                                     options=self._extra_options, **kwargs)
 
+    def include_dirs(self, **kwargs):
+        args = self._call(self.pcfiles, 'include_dirs', self.static)
+        inc_dirs = _include_dirs_parser.parse_known_args(args)[0].include_dirs
+        return [Path(i, Root.absolute) for i in inc_dirs or []]
+
+    def lib_dirs(self, **kwargs):
+        args = self._call(self.pcfiles, 'lib_dirs', self.static, **kwargs)
+        lib_dirs = _lib_dirs_parser.parse_known_args(args)[0].lib_dirs
+        return [Path(i, Root.absolute) for i in lib_dirs or []]
+
     def _get_rpaths(self):
         extra_env = {'PKG_CONFIG_ALLOW_SYSTEM_LIBS': '1'}
 
         def rpaths_for(installed):
             try:
-                args = self._call(self.pcfiles, 'lib_dirs', self.static,
-                                  extra_env=extra_env, installed=installed)
+                return self.lib_dirs(extra_env=extra_env, installed=installed)
             except shell.CalledProcessError:
                 return None
-            lib_dirs = _lib_dirs_parser.parse_known_args(args)[0].lib_dirs
-            return [Path(i, Root.absolute) for i in lib_dirs or []]
 
         uninstalled = rpaths_for(installed=False)
         installed = rpaths_for(installed=True)
@@ -181,23 +191,23 @@ class PkgConfigPackage(Package):
 
         return result
 
-    def compile_options(self, compiler):
+    def compile_options(self, compiler, *, raw=False):
         return self._call(self.pcfiles, 'cflags', self.static,
-                          compiler.flavor == 'msvc')
+                          not raw and compiler.flavor == 'msvc')
 
-    def link_options(self, linker):
+    def link_options(self, linker, *, raw=False):
         flags = self._call(self.pcfiles, 'ldflags', self.static,
-                           linker.flavor == 'msvc')
+                           not raw and linker.flavor == 'msvc')
 
         # XXX: How should we ensure that these libs are linked statically when
         # necessary?
         libs = self._call(self.pcfiles, 'ldlibs', self.static,
-                          linker.flavor == 'msvc')
+                          not raw and linker.flavor == 'msvc')
         libs = opts.option_list(opts.lib_literal(i) for i in libs)
 
         # Add extra link options as needed for platform-specific oddities.
         extra_opts = opts.option_list()
-        if not self.static:
+        if not raw and not self.static:
             if linker.builder.object_format == 'elf':
                 # pkg-config packages don't generally include rpath
                 # information, so we need to generate it ourselves.
@@ -215,13 +225,18 @@ class PkgConfigPackage(Package):
         return self._call(self.pcfiles[0], 'path')
 
     def __repr__(self):
-        return '<PkgConfigPackage({!r}, {!r})>'.format(
-            self.name, str(self.version)
+        return '<{}({!r}, {!r})>'.format(
+            type(self).__name__, self.name, str(self.version)
         )
 
 
-def resolve(env, name, *args, **kwargs):
-    pkg = PkgConfigPackage(env.tool('pkg_config'), name, *args, **kwargs)
-    log.info('found package {!r} version {} via pkg-config in {}'
-             .format(pkg.name, pkg.version, os.path.normpath(pkg.path())))
-    return pkg
+# A package automatically generated for us by mopack. This is useful when
+# generating our own pkg-config file, so that we don't add this one as a
+# requirement (it's only temporary, after all).
+class GeneratedPkgConfigPackage(PkgConfigPackage):
+    pass
+
+
+def resolve(env, name, *args, generated=False, **kwargs):
+    type = GeneratedPkgConfigPackage if generated else PkgConfigPackage
+    return type(env.tool('pkg_config'), name, *args, **kwargs)

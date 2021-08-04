@@ -61,13 +61,29 @@ class Mopack(SimpleCommand):
         return result
 
 
-def get_usage(env, name, submodules=None):
+def get_usage(env, name, submodules=None, include_path=None, lib_path=None,
+              lib_names=None):
+    extra_env = {}
+    if include_path:
+        extra_env['MOPACK_INCLUDE_PATH'] = shell.join_paths(
+            i.string() for i in include_path
+        )
+    if lib_path:
+        extra_env['MOPACK_LIB_PATH'] = shell.join_paths(
+            i.string() for i in lib_path
+        )
+    if lib_names:
+        extra_env['MOPACK_LIB_NAMES'] = shell.join_paths(lib_names)
+
     try:
         return env.tool('mopack').run('usage', name, submodules,
-                                      directory=env.builddir)
-    except (OSError, shell.CalledProcessError):
-        raise PackageResolutionError('unable to resolve package {!r}'
-                                     .format(name))
+                                      directory=env.builddir,
+                                      extra_env=extra_env)
+    except (OSError, shell.CalledProcessError) as e:
+        stdout = getattr(e, 'stdout', None)
+        msg = ((stdout and json.loads(stdout.strip()).get('error')) or
+               'unable to resolve package {!r}'.format(name))
+        raise PackageResolutionError(msg)
 
 
 def to_frameworks(libs):
