@@ -206,6 +206,23 @@ class TestWindowsArgParse(TestCase):
         self.assertEqual(parser.parse_known(['foo', '/a', 'bar']),
                          ({'a': True, 'libs': ['foo', 'bar']}, []))
 
+    def test_case(self):
+        parser = ArgumentParser()
+        parser.add('/s')
+        parser.add('/long')
+        self.assertEqual(parser.parse_known(['/s', '/long']),
+                         ({'s': True, 'long': True}, []))
+        self.assertEqual(parser.parse_known(['/S', '/LONG']),
+                         ({'s': None, 'long': None}, ['/S', '/LONG']))
+
+        parser = ArgumentParser(case_sensitive=False)
+        parser.add('/s')
+        parser.add('/long')
+        self.assertEqual(parser.parse_known(['/s', '/long']),
+                         ({'s': True, 'long': True}, []))
+        self.assertEqual(parser.parse_known(['/S', '/LONG']),
+                         ({'s': None, 'long': True}, ['/S']))
+
     def test_collision(self):
         parser = ArgumentParser()
         parser.add('/a', '/longa')

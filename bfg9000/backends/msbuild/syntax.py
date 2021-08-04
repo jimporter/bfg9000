@@ -307,6 +307,8 @@ class VcxProject(Project):
         if options.get('import_lib'):
             element.append(E.ImportLibrary( textify(options['import_lib']) ))
 
+        self._add_list_option(element, 'AdditionalLibraryDirectories',
+                              options.get('libdirs'))
         self._add_list_option(element, 'AdditionalOptions',
                               options.get('extra'), quoted=True)
         # We already include all the default Win32 libraries from the linker,

@@ -199,10 +199,11 @@ class TestMsvcLinker(CrossPlatformTestCase):
 
     def test_parse_flags(self):
         default = {
-            'debug': None,
-            'extra': [],
-            'libs': [],
             'nologo': None,
+            'debug': None,
+            'libdirs': [],
+            'libs': [],
+            'extra': [],
         }
 
         def assertFlags(flags, libflags, extra={}):
@@ -216,6 +217,9 @@ class TestMsvcLinker(CrossPlatformTestCase):
         assertFlags([], ['/nologo'], {'nologo': True})
         assertFlags(['/nologo'], ['/nologo'], {'nologo': True})
         assertFlags(['/DEBUG'], [], {'debug': True})
+        assertFlags(['/debug'], [], {'debug': True})
+        assertFlags(['/libpath:foo', '/LIBPATH:bar'], [],
+                    {'libdirs': ['foo', 'bar']})
 
 
 class TestMsvcSharedLinker(TestMsvcLinker):

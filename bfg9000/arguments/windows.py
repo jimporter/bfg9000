@@ -6,13 +6,18 @@
 class ArgumentParser:
     _argument_info = {}
 
-    def __init__(self, prefix_chars='/-', value_delim=':'):
+    def __init__(self, prefix_chars='/-', value_delim=':',
+                 case_sensitive=True):
         self.prefix_chars = prefix_chars
         self.value_delim = value_delim
+        self.case_sensitive = case_sensitive
         self._options = []
         self._short_names = {}
         self._long_names = {}
         self._unnamed_dest = None
+
+    def _normcase(self, s):
+        return s if self.case_sensitive else s.lower()
 
     @classmethod
     def handler(cls, type):
@@ -37,6 +42,8 @@ class ArgumentParser:
                 if i[:2] in self._short_names:
                     raise ValueError('{!r} collides with {!r}'
                                      .format(i, i[:2]))
+
+                i = self._normcase(i)
                 if i in self._long_names:
                     raise ValueError('{!r} already defined'.format(i))
                 self._long_names[i] = info
@@ -74,6 +81,7 @@ class ArgumentParser:
                         raise ValueError('no value expected for option')
                 else:
                     key, colon, value = i.partition(self.value_delim)
+                    key = self._normcase(key)
                     if key in self._long_names:
                         info = self._long_names[key]
                         if not info.takes_value and colon:

@@ -142,15 +142,16 @@ class MsvcLinker(BuildCommand):
     @staticmethod
     @memoize
     def __parser():
-        parser = ArgumentParser()
+        parser = ArgumentParser(case_sensitive=False)
         parser.add('/nologo')
-        parser.add('/DEBUG', dest='debug')
+        parser.add('/debug')
+        parser.add('/libpath', type=list, dest='libdirs')
         return parser
 
     @staticmethod
     @memoize
     def __lib_parser():
-        parser = ArgumentParser()
+        parser = ArgumentParser(case_sensitive=False)
         parser.add('/nologo')
         parser.add_unnamed('libs')
         return parser

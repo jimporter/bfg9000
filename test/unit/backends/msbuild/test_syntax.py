@@ -208,6 +208,11 @@ class TestVcxProject(ProjectTest):
         self.assertXPath(root, './ImportLibrary/text()', ['foo'])
 
         root = E.Element()
+        proj._link_options(root, {'libdirs': ['foo', 'bar']})
+        self.assertXPath(root, './AdditionalLibraryDirectories/text()',
+                         ['foo;bar;%(AdditionalLibraryDirectories)'])
+
+        root = E.Element()
         proj._link_options(root, {'extra': ['foo', 'bar', 'red panda']})
         self.assertXPath(root, './AdditionalOptions/text()',
                          ['foo bar "red panda" %(AdditionalOptions)'])
