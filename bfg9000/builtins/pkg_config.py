@@ -472,7 +472,7 @@ def pkg_config(context, name=None, **kwargs):
 
     if not info.auto_fill:
         dep_alias = _write_pkg_config(context, info)
-        search_path = PkgConfigWriter.directory.string(context.env.base_dirs)
+        search_path = [PkgConfigWriter.directory.string(context.env.base_dirs)]
         try:
             return PkgConfigPackage(
                 context.env.tool('pkg_config'), info.name,

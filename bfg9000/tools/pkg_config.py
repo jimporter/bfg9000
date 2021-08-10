@@ -111,7 +111,8 @@ class PkgConfigPackage(Package):
         super().__init__(name, submodules, format=format, deps=deps)
 
         self._pkg_config = pkg_config
-        self._env = {'PKG_CONFIG_PATH': search_path} if search_path else {}
+        self._env = ({'PKG_CONFIG_PATH': shell.join_paths(search_path)}
+                     if search_path else {})
         self._extra_options = extra_options
         self.pcfiles = pcfiles if pcfiles is not None else [name]
 
