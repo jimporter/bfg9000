@@ -147,5 +147,5 @@ class MsvcPackageResolver:
             self.env, name, submodules, version, usage['pcfiles'],
             format=format, kind=kind, search_path=usage['path'],
             extra_options=usage.get('extra_args', []),
-            generated='auto_link' in usage  # FIXME
+            generated=usage.get('generated', False)
         )
