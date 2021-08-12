@@ -335,8 +335,9 @@ class JvmPackageResolver:
         raise PackageResolutionError("unable to find library '{}'"
                                      .format(name))
 
-    def resolve(self, name, submodules, version, kind, *, get_version=None,
-                headers=None, libs=None):
+    # TODO: Remove headers/libs from arguments after 0.7 is released.
+    def resolve(self, name, submodules, version, kind, *, headers=None,
+                libs=None):
         lib = self._library(name)
         pkg = JvmPackage(name, self.builder.object_format, libs=[lib])
         log.info('found package {!r} via path-search in {!r}'

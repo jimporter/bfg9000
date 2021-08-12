@@ -2,7 +2,7 @@ import os.path
 from itertools import chain
 
 from .. import mopack, pkg_config
-from ... import log, shell
+from ... import shell
 from .compiler import MsvcCompiler, MsvcPchCompiler
 from .linker import (MsvcExecutableLinker, MsvcSharedLibraryLinker,
                      MsvcStaticLinker)
@@ -135,30 +135,17 @@ class MsvcPackageResolver:
         return self.builder.lang
 
     # TODO: Remove headers/libs from arguments after 0.7 is released.
-    def resolve(self, name, submodules, version, kind, *, get_version=None,
-                headers=None, libs=None):
+    def resolve(self, name, submodules, version, kind, *, headers=None,
+                libs=None):
         format = self.builder.object_format
         usage = mopack.get_usage(self.env, name, submodules, self.include_dirs,
                                  self.lib_dirs, self._lib_names)
 
         # XXX: Add headers/libs here somehow? Add them into PkgConfigPackage
         # directly?
-        pkg = pkg_config.resolve(
+        return pkg_config.resolve(
             self.env, name, submodules, version, usage['pcfiles'],
             format=format, kind=kind, search_path=usage['path'],
             extra_options=usage.get('extra_args', []),
             generated='auto_link' in usage  # FIXME
         )
-
-        if pkg.version is None and get_version:
-            pkg.version = get_version(
-                chain(pkg.include_dirs(), self.include_dirs), version
-            )
-
-        # XXX: Put this in tools/pkg_config.py when we remove the get_version
-        # hack.
-        version_note = ' version {}'.format(pkg.version) if pkg.version else ''
-        log.info('found package {!r}{} via pkg-config in {}'
-                 .format(pkg.name, version_note, os.path.normpath(pkg.path())))
-
-        return pkg

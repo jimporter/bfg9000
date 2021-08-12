@@ -1,38 +1,15 @@
-import re
 import warnings
 
 from . import builtin
 from .. import options as opts
-from ..exceptions import PackageResolutionError, PackageVersionError
+from ..exceptions import PackageResolutionError
 from ..file_types import Executable
 from ..iterutils import default_sentinel, listify
 from ..objutils import objectify
 from ..packages import CommonPackage, Framework, Package, PackageKind
 from ..path import Path, Root
 from ..shell import which
-from ..versioning import check_version, InvalidSpecifier, SpecifierSet, Version
-
-
-# XXX: This is a bit of a hack. It would probably be better to put this in
-# mopack instead. However, this would require mopack to be able to do all the
-# work of finding header files.
-def _boost_version(include_dirs, required_version):
-    for path in include_dirs:
-        version_hpp = path.append('boost').append('version.hpp')
-        try:
-            with open(version_hpp.string()) as f:
-                for line in f:
-                    m = re.match(
-                        r'#\s*define\s+BOOST_LIB_VERSION\s+"([\d_]+)"', line
-                    )
-                    if m:
-                        version = Version(m.group(1).replace('_', '.'))
-                        check_version(version, required_version, 'boost',
-                                      PackageVersionError)
-                        return version
-        except FileNotFoundError:
-            pass
-    raise PackageVersionError('unable to parse "boost/version.hpp"')
+from ..versioning import InvalidSpecifier, SpecifierSet
 
 
 @builtin.function()
@@ -63,10 +40,8 @@ def package(context, name, submodules=None, version=default_sentinel, *,
         lang = context.build['project']['lang']
 
     resolver = context.env.builder(lang).packages
-    get_version = _boost_version if name == 'boost' else None
     return resolver.resolve(name, listify(submodules), version, kind,
-                            get_version=get_version, headers=headers or None,
-                            libs=libs or None)
+                            headers=headers or None, libs=libs or None)
 
 
 @builtin.function()

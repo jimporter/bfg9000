@@ -22,15 +22,16 @@ def readPcFile(filename, field):
 class PkgConfigTest(IntegrationTest):
     lib_suffix = '.dll' if is_mingw else ''
 
-    def pkg_config(self, args, path='pkgconfig', uninstalled=True):
+    def pkg_config(self, args, path='pkgconfig', *, uninstalled=True):
         env = {'PKG_CONFIG_PATH': os.path.abspath(path)}
         if not uninstalled:
             env['PKG_CONFIG_DISABLE_UNINSTALLED'] = '1'
         return (self.assertPopen([pkg_config_cmd] + args, extra_env=env)
                 .rstrip().replace('\\\\', '\\'))
 
-    def assertPkgConfig(self, args, result, **kwargs):
-        self.assertEqual(self.pkg_config(args, **kwargs), result)
+    def assertPkgConfig(self, args, result, *, uninstalled=True):
+        self.assertEqual(self.pkg_config(args, uninstalled=uninstalled),
+                         result, '(uninstalled = {})'.format(uninstalled))
 
     def _paths(self):
         pkgconfdir = norm(pjoin(self.builddir, 'pkgconfig')).replace('\\', '/')

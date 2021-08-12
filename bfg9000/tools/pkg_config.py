@@ -1,4 +1,5 @@
 import argparse
+import os
 import re
 import subprocess
 
@@ -240,4 +241,7 @@ class GeneratedPkgConfigPackage(PkgConfigPackage):
 
 def resolve(env, name, *args, generated=False, **kwargs):
     type = GeneratedPkgConfigPackage if generated else PkgConfigPackage
-    return type(env.tool('pkg_config'), name, *args, **kwargs)
+    pkg = type(env.tool('pkg_config'), name, *args, **kwargs)
+    log.info('found package {!r} version {} via pkg-config in {}'
+             .format(pkg.name, pkg.version, os.path.normpath(pkg.path())))
+    return pkg
