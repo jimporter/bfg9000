@@ -193,6 +193,11 @@ you can start using bfg to build your software!</p>
 <p>If you're using Ubuntu, you can also install bfg9000 from the following PPA:
 <a href="https://launchpad.net/~jimporter/+archive/ubuntu/stable">ppa:jimporter/stable</a>.</p>
 </div>
+<p>Once you've installed bfg9000, you might also want to set up shell-completion
+for it. If you have <a href="https://github.com/iterative/shtab">shtab</a> installed, you can do this with
+<code>bfg9000 generate-completion</code>, which will print the shell-completion code for
+your shell to standard output. For more details on how to set this up, consult
+shtab's <a href="https://github.com/iterative/shtab#cli-usage">documentation</a>.</p>
 <h3 id="installing-patchelf">Installing patchelf<a class="headerlink" href="#installing-patchelf" title="Permanent link">§</a></h3>
 <p>On Linux, bfg9000 requires <a href="https://nixos.org/patchelf.html">patchelf</a> in order to modify
 <a href="https://en.wikipedia.org/wiki/Rpath">rpath</a>s of executables and shared libraries when installing. If you
