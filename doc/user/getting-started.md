@@ -34,6 +34,12 @@ you can start using bfg to build your software!
     If you're using Ubuntu, you can also install bfg9000 from the following PPA:
     [ppa:jimporter/stable][ppa].
 
+Once you've installed bfg9000, you might also want to set up shell-completion
+for it. If you have [shtab][shtab] installed, you can do this with
+`bfg9000 generate-completion`, which will print the shell-completion code for
+your shell to standard output. For more details on how to set this up, consult
+shtab's [documentation][shtab-setup].
+
 ### Installing patchelf
 
 On Linux, bfg9000 requires [patchelf][patchelf] in order to modify
@@ -62,6 +68,8 @@ $ pip install bfg9000[msbuild]
 ```
 
 [ppa]: https://launchpad.net/~jimporter/+archive/ubuntu/stable
+[shtab]: https://github.com/iterative/shtab
+[shtab-setup]: https://github.com/iterative/shtab#cli-usage
 [patchelf]: https://nixos.org/patchelf.html
 [rpath]: https://en.wikipedia.org/wiki/Rpath
 [patchelf-wrapper]: https://pypi.python.org/pypi/patchelf-wrapper

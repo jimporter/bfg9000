@@ -50,6 +50,11 @@ e1m1_desc = """
 You find yourself standing at Doom's gate.
 """
 
+generate_completion_desc = """
+Generate shell-completion functions for bfg9000 and write them to standard
+output. This requires the Python package `shtab`.
+"""
+
 
 def handle_reload_exception(e, suggest_rerun=False):
     msg = 'unable to reload environment'
@@ -194,6 +199,19 @@ def add_configure_args(parser):
                              help=help)
 
 
+def simple_parser():
+    parser = argparse.ArgumentParser(prog='9k', description=configure_desc,
+                                     add_help=False)
+    parser.add_argument(argparse.SUPPRESS,
+                        action=directory_pair('srcdir', 'builddir'),
+                        type=argparse.Directory(), metavar='DIRECTORY',
+                        help='source or build directory')
+    add_generic_args(parser)
+    add_configure_args(parser)
+
+    return parser
+
+
 def configure(parser, subparser, args, extra):
     if ( path.exists(args.builddir) and
          path.samefile(args.srcdir, args.builddir) ):
@@ -305,6 +323,19 @@ def help(parser, subparser, args, extra):
     parser.parse_args(extra + ['--help'])
 
 
+def generate_completion(parser, subparser, args, extra):
+    if extra:
+        subparser.error('unrecognized arguments: {}'.format(' '.join(extra)))
+
+    try:
+        import shtab
+        p = parser if args.program == 'bfg9000' else simple_parser()
+        print(shtab.complete(p, shell=args.shell))
+    except ImportError:  # pragma: no cover
+        print('shtab not found; install via `pip install shtab`')
+        return 1
+
+
 def main():
     parser = argparse.ArgumentParser(prog='bfg9000', description=description)
     subparsers = parser.add_subparsers(metavar='COMMAND')
@@ -381,6 +412,19 @@ def main():
     )
     help_p.set_defaults(func=help, parser=help_p)
 
+    completion_p = subparsers.add_parser(
+        'generate-completion', description=generate_completion_desc,
+        help='print shell completion script'
+    )
+    completion_p.set_defaults(func=generate_completion, parser=completion_p)
+    shell = (os.path.basename(os.environ['SHELL'])
+             if 'SHELL' in os.environ else None)
+    completion_p.add_argument('-p', '--program', metavar='PROG',
+                              default='bfg9000', choices=['bfg9000', '9k'],
+                              help='program to emit completion for')
+    completion_p.add_argument('-s', '--shell', metavar='SHELL', default=shell,
+                              help='shell type (default: %(default)s)')
+
     args, extra = parser.parse_known_args()
     log.init(args.color, debug=args.debug, warn_once=args.warn_once)
 
@@ -388,14 +432,7 @@ def main():
 
 
 def simple_main():
-    parser = argparse.ArgumentParser(prog='9k', description=configure_desc,
-                                     add_help=False)
-    parser.add_argument(argparse.SUPPRESS,
-                        action=directory_pair('srcdir', 'builddir'),
-                        type=argparse.Directory(), metavar='DIRECTORY',
-                        help='source or build directory')
-    add_generic_args(parser)
-    add_configure_args(parser)
+    parser = simple_parser()
 
     args, extra = parser.parse_known_args()
     log.init(args.color, debug=args.debug, warn_once=args.warn_once)

@@ -170,8 +170,8 @@ setup(
     ),
     extras_require={
         'dev': ['coverage', 'flake8 >= 3.7', 'lxml', 'mike >= 0.3.1',
-                'mkdocs-bootswatch', 'mkdocs-macros-plugin', 'stdeb'],
-        'test': ['coverage', 'flake8 >= 3.7', 'lxml'],
+                'mkdocs-bootswatch', 'mkdocs-macros-plugin', 'shtab', 'stdeb'],
+        'test': ['coverage', 'flake8 >= 3.7', 'lxml', 'shtab'],
         'msbuild': ['lxml'],
     },
 

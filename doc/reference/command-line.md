@@ -143,9 +143,24 @@ files.
 
 Set the build directory to pull environment variable state from.
 
+### bfg9000 generate-completion { #generate-completion }
+
+Generate shell-completion functions for bfg9000 and write them to standard
+output. This requires the Python package [shtab][shtab].
+
+#### -p *PROGRAM*, --program *PROGRAM* { #generate-completion-program }
+
+Specify the program to generate completion for: `bfg9000` (the default) or `9k`.
+
+#### -s *SHELL*, --shell *SHELL* { #generate-completion-shell }
+
+Specify the shell to generate completion for, e.g. `bash`. Defaults to the
+current shell's name.
+
 ## 9k shorthand
 
 `9k` is a special shorthand to make it easier to configure your build. It's
 equivalent to [`bfg9000 configure`](#configure).
 
 [mopack]: https://jimporter.github.io/mopack/
+[shtab]: https://github.com/iterative/shtab

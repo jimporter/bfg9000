@@ -182,6 +182,22 @@ class TestEnv(BasicIntegrationTest):
         self.assertRegex(output, 'unable to reload environment')
 
 
+class TestGenerateCompletion(SubprocessTestCase):
+    def test_completion_bfg9000(self):
+        output = self.assertPopen(['bfg9000', 'generate-completion', '-sbash'])
+        self.assertRegex(output, r'^#!/usr/bin/env bash')
+
+    def test_completion_9k(self):
+        output = self.assertPopen(['bfg9000', 'generate-completion', '-p9k',
+                                   '-sbash'])
+        self.assertRegex(output, r'^#!/usr/bin/env bash')
+
+    def test_completion_extra_args(self):
+        output = self.assertPopen(['bfg9000', 'generate-completion', '--foo'],
+                                  returncode=2)
+        self.assertRegex(output, 'unrecognized arguments: --foo')
+
+
 class TestRun(BasicIntegrationTest):
     def __init__(self, *args, **kwargs):
         super().__init__(os.path.join(examples_dir, '01_executable'),
