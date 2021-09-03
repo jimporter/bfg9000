@@ -135,7 +135,7 @@ extension of *name*.
 
 If *compress* is true, add a build step to gzip the man page and return the
 compressed file. If *compress* is `'auto'` (the default), gzip the man page only
-if the [`gzip`](environment-variables.md#gzip) command is found on the system.
+if the [`gzip`](environment-vars.md#gzip) command is found on the system.
 
 ### module_def_file(*name*, \*, [*dist*]) { #module_def_file }
 Availability: `build.bfg`
