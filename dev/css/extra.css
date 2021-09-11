@@ -17,7 +17,7 @@ h1 {
 
 dl {
   display: grid;
-  grid-template-columns: fit-content(25%) auto
+  grid-template-columns: fit-content(25%) auto;
 }
 
 dt {
