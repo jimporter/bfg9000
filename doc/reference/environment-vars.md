@@ -10,7 +10,7 @@ environment variables bfg9000 recognizes.
 ### Generic
 ---
 
-#### *CPPFLAGS*
+#### `CPPFLAGS`
 Default: *none*
 {: .subtitle}
 
@@ -20,7 +20,7 @@ compiling any C-family source file (C, C++, Objective C/C++).
 ### C
 ---
 
-#### *CC*
+#### `CC`
 Default: `cc` (POSIX), `cl` (Windows)
 {: .subtitle}
 
@@ -29,7 +29,7 @@ cc-style toolchains when linking object files whose source is in C. If not
 defined, bfg9000 will try to guess the command to use by checking
 [`$OBJC`](#objc), [`$CXX`](#cxx), and [`$OBJCXX`](#objcxx), in that order.
 
-#### *CFLAGS*
+#### `CFLAGS`
 Default: *none*
 {: .subtitle}
 
@@ -38,7 +38,7 @@ Command line arguments to pass to the compiler when compiling any C source file.
 ### C++
 ---
 
-#### *CXX*
+#### `CXX`
 Default: `c++` (POSIX), `cl` (Windows)
 {: .subtitle}
 
@@ -47,7 +47,7 @@ cc-style toolchains when linking object files whose source is in C++. If not
 defined, bfg9000 will try to guess the command to use by checking
 [`$OBJCXX`](#objcxx), [`$CC`](#cc), and [`$OBJC`](#objc), in that order.
 
-#### *CXXFLAGS*
+#### `CXXFLAGS`
 Default: *none*
 {: .subtitle}
 
@@ -57,14 +57,14 @@ file.
 ### Fortran
 ---
 
-#### *FC*
+#### `FC`
 Default: `gfortran`
 {: .subtitle}
 
 The command to use when compiling Fortran source files. Also the command to use
 when linking object files whose source is in Fortran.
 
-#### *FFLAGS*
+#### `FFLAGS`
 Default: *none*
 {: .subtitle}
 
@@ -74,13 +74,13 @@ file.
 ### Java
 ---
 
-#### *JAVAC*
+#### `JAVAC`
 Default: `javac`
 {: .subtitle}
 
 The command to use when compiling Java source files.
 
-#### *JAVAFLAGS*
+#### `JAVAFLAGS`
 Default: *none*
 {: .subtitle}
 
@@ -90,13 +90,13 @@ file.
 ### Lex
 ---
 
-#### *LEX*
+#### `LEX`
 Default: `lex`
 {: .subtitle}
 
 The command to use when building Lex source files.
 
-#### *LFLAGS*
+#### `LFLAGS`
 Default: *none*
 {: .subtitle}
 
@@ -106,7 +106,7 @@ file.
 ### Objective C
 ---
 
-#### *OBJC*
+#### `OBJC`
 Default: `cc`
 {: .subtitle}
 
@@ -115,7 +115,7 @@ use with cc-style toolchains when linking object files whose source is in
 Objective C. If not defined, bfg9000 will try to guess the command to use by
 checking [`$CC`](#cc), [`$OBJCXX`](#objcxx), and [`$CXX`](#cxx), in that order.
 
-#### *OBJCFLAGS*
+#### `OBJCFLAGS`
 Default: *none*
 {: .subtitle}
 
@@ -125,7 +125,7 @@ source file.
 ### Objective C++
 ---
 
-#### *OBJCXX*
+#### `OBJCXX`
 Default: `c++`
 {: .subtitle}
 
@@ -134,7 +134,7 @@ to use with cc-style toolchains when linking object files whose source is in
 Objective C++. If not defined, bfg9000 will try to guess the command to use by
 checking [`$CXX`](#cxx), [`$OBJC`](#objc), and [`$CC`](#cc), in that order.
 
-#### *OBJCXXFLAGS*
+#### `OBJCXXFLAGS`
 Default: *none*
 {: .subtitle}
 
@@ -144,13 +144,13 @@ source file.
 ### Qt MOC
 ---
 
-#### *MOC*
+#### `MOC`
 Default: `moc`
 {: .subtitle}
 
 The command to use when processing Qt meta-object macros.
 
-#### *MOCFLAGS*
+#### `MOCFLAGS`
 Default: *none*
 {: .subtitle}
 
@@ -160,13 +160,13 @@ macros.
 ### Qt QRC
 ---
 
-#### *RCC*
+#### `RCC`
 Default: `rcc`
 {: .subtitle}
 
 The command to use when building Qt `.qrc` files.
 
-#### *RCCFLAGS*
+#### `RCCFLAGS`
 Default: *none*
 {: .subtitle}
 
@@ -175,13 +175,13 @@ Command line arguments to pass to the compiler when building Qt `.qrc` files.
 ### Qt UI
 ---
 
-#### *UIC*
+#### `UIC`
 Default: `uic`
 {: .subtitle}
 
 The command to use when building Qt `.ui` files.
 
-#### *UICFLAGS*
+#### `UICFLAGS`
 Default: *none*
 {: .subtitle}
 
@@ -191,13 +191,13 @@ macros.
 ### Scala
 ---
 
-#### *SCALAC*
+#### `SCALAC`
 Default: `scalac`
 {: .subtitle}
 
 The command to use when compiling Scala source files.
 
-#### *SCALAFLAGS*
+#### `SCALAFLAGS`
 Default: *none*
 {: .subtitle}
 
@@ -207,13 +207,13 @@ file.
 ### Windows resource files
 ---
 
-#### *RC*
+#### `RC`
 Default: `windres` (POSIX), `rc` (Windows)
 {: .subtitle}
 
 The command to use when compiling Windows resource (`.rc`) files.
 
-#### *RCFLAGS*
+#### `RCFLAGS`
 Default: *none*
 {: .subtitle}
 
@@ -223,13 +223,13 @@ resource file.
 ### Yacc
 ---
 
-#### *YACC*
+#### `YACC`
 Default: `yacc`
 {: .subtitle}
 
 The command to use when building Yacc source files.
 
-#### *YFLAGS*
+#### `YFLAGS`
 Default: *none*
 {: .subtitle}
 
@@ -241,27 +241,27 @@ file.
 ### Static linking
 ---
 
-#### *AR*
+#### `AR`
 Default: `ar` (POSIX), `lib` (Windows)
 {: .subtitle}
 
 The command to use when creating (native) static libraries from object files
 (typically `ar` on POSIX and `lib` on Windows).
 
-#### *ARFLAGS*
+#### `ARFLAGS`
 Default: `cru` (POSIX)
 {: .subtitle}
 
 The arguments to pass to the static library builder (specified in [`$AR`](#ar))
 for native libraries.
 
-#### *JAR*
+#### `JAR`
 Default: `jar`
 {: .subtitle}
 
 The command to use when creating `.jar` files for JVM-based binaries.
 
-#### *JARFLAGS*
+#### `JARFLAGS`
 Default: `cfm`
 {: .subtitle}
 
@@ -270,21 +270,21 @@ The arugments to pass to the JAR builders when creating `.jar` files.
 ### Dynamic linking
 ---
 
-#### *LD*
+#### `LD`
 Default: *none* (POSIX), `link` (Windows)
 {: .subtitle}
 
 The command to use when linking shared libraries; when using a cc-like builder,
 this will be processed to infer the appropriate `-fuse-ld` flag for the linker.
 
-#### *LDFLAGS*
+#### `LDFLAGS`
 Default: *none*
 {: .subtitle}
 
 Command line arguments to pass to the linker when linking an executable or
 shared library.
 
-#### *LDLIBS*
+#### `LDLIBS`
 Default: *none*
 {: .subtitle}
 
@@ -295,39 +295,39 @@ implementation) requires another library to be explicitly linked with it.
 ## Execution variables
 ---
 
-#### *JAVACMD*
+#### `JAVACMD`
 Default: `java`
 {: .subtitle}
 
 The command to use when running Java `.class` files or `.jar`s. (Does not apply
 when building with GCJ.)
 
-#### *LUA*
+#### `LUA`
 Default: `lua`
 {: .subtitle}
 
 The command to use when running Lua scripts.
 
-#### *PERL*
+#### `PERL`
 Default: `perl`
 {: .subtitle}
 
 The command to use when running Perl scripts.
 
-#### *PYTHON*
+#### `PYTHON`
 Default: *sys.executable*
 {: .subtitle}
 
 The command to use when running Python scripts. By default, this is the
 interpreter used to run bfg9000.
 
-#### *RUBY*
+#### `RUBY`
 Default: `ruby`
 {: .subtitle}
 
 The command to use when running Ruby scripts.
 
-#### *SCALACMD*
+#### `SCALACMD`
 Default: `scala`
 {: .subtitle}
 
@@ -336,34 +336,34 @@ The command to use when running Scala `.class` files or `.jar`s.
 ## Packaging variables
 ---
 
-#### *CLASSPATH*
+#### `CLASSPATH`
 Default: *none*
 {: .subtitle}
 
 A list of additional directories to search for Java class files. On POSIX
 systems, this is delimited by `:`; on Windows, by `;`.
 
-#### *CPATH*
+#### `CPATH`
 Default: *none*
 {: .subtitle}
 
 A list of additional directories to search for headers. On POSIX systems, this
 is delimited by `:`; on Windows, by `;`.
 
-#### *INCLUDE*
+#### `INCLUDE`
 Default: *none*
 {: .subtitle}
 
 *MSVC-only*. A list of directories to search for headers, delimited by `;`.
 
-#### *LIB*
+#### `LIB`
 Default: *none*
 {: .subtitle}
 
 *MSVC-only*. A list of directories to search for [system
 libraries](builtins.md#package), delimited by `;`.
 
-#### *LIBRARY_PATH*
+#### `LIBRARY_PATH`
 Default: *none*
 {: .subtitle}
 
@@ -371,13 +371,13 @@ A list of additional directories to search for [system
 libraries](builtins.md#package). On POSIX systems, this is delimited by
 `:`; on Windows, by `;`.
 
-#### *MOPACK*
+#### `MOPACK`
 Default: `mopack`
 {: .subtitle}
 
 The command to use when resolving package dependencies via [mopack][mopack].
 
-#### *PATH*
+#### `PATH`
 Default: *none*
 {: .subtitle}
 
@@ -385,14 +385,14 @@ A list of directories to search for [system
 executables](builtins.md#system_executable). On POSIX systems, this is
 delimited by `:`; on Windows, by `;`.
 
-#### *PATHEXT*
+#### `PATHEXT`
 Default: *none*
 {: .subtitle}
 
 *Windows-only*. A list of valid extensions for executable files under Windows,
 separated by `;`.
 
-#### *PKG_CONFIG*
+#### `PKG_CONFIG`
 Default: `pkg-config`
 {: .subtitle}
 
@@ -401,7 +401,7 @@ The command to use when fetching pkg-config package information.
 ## Command variables
 ---
 
-#### *BFG9000*
+#### `BFG9000`
 Default: `/path/to/bfg9000`
 {: .subtitle}
 
@@ -409,46 +409,46 @@ The command to use when executing bfg9000 (e.g. when regenerating the build
 scripts because the list of source files has changed). This should only be
 necessary if you run bfg9000 from a wrapper script.
 
-#### *CP*
+#### `CP`
 Default: `cp -f` (POSIX), `cmd /c copy` (Windows)
 {: .subtitle}
 
 The command to use when creating symlinks.
 
-#### *DEPFIXER*
+#### `DEPFIXER`
 Default: `/path/to/bfg9000-depfixer`
 {: .subtitle}
 
 The command to use when fixing up depfiles generated by your compiler for the
 Make backend. In general, you shouldn't need to touch this.
 
-#### *DOPPEL*
+#### `DOPPEL`
 Default: `doppel`
 {: .subtitle}
 
 The command to use when installing files and building source distributions. For
 more information about doppel, see its [documentation][doppel].
 
-#### *GZIP*
+#### `GZIP`
 Default: `gzip`
 {: .subtitle}
 
 The command to use when gzipping files.
 
-#### *HARDLINK*
+#### `HARDLINK`
 Default: `ln -f` (POSIX), `cmd /c mklink /H` (Windows)
 {: .subtitle}
 
 The command to use when creating hard links.
 
-#### *INSTALL_NAME_TOOL*
+#### `INSTALL_NAME_TOOL`
 Default: `install_name_tool`
 {: .subtitle}
 
 *Darwin-only*. The command to use when modifying the paths of the shared
 libraries linked to during installation.
 
-#### *MKDIR_P*
+#### `MKDIR_P`
 Default: `mkdir -p`
 {: .subtitle}
 
@@ -456,21 +456,21 @@ The command to use when making a directory tree. This is used both for
 installing whole directories of files and for creating build directories under
 the Make backend.
 
-#### *PATCHELF*
+#### `PATCHELF`
 Default: `patchelf`
 {: .subtitle}
 
 *Linux-only*. The command to use when patching an ELF file's rpath for
 installation.
 
-#### *RCCDEP*
+#### `RCCDEP`
 Default: `/path/to/bfg9000-rccdep`
 {: .subtitle}
 
 The command to use when generating depfiles for Qt's `rcc` tool. In general, you
 shouldn't need to touch this.
 
-#### *SETENV*
+#### `SETENV`
 Default: `/path/to/bfg9000-setenv`
 {: .subtitle}
 
@@ -478,7 +478,7 @@ Default: `/path/to/bfg9000-setenv`
 similar to the POSIX `env` command. This is used when setting environment
 variables for tests.
 
-#### *SYMLINK*
+#### `SYMLINK`
 Default: `ln -sf` (POSIX), `cmd /c mklink` (Windows)
 {: .subtitle}
 
@@ -487,7 +487,7 @@ The command to use when creating symlinks.
 ## System variables
 ---
 
-#### *CLICOLOR*
+#### `CLICOLOR`
 Default: *none*
 {: .subtitle}
 
@@ -495,14 +495,14 @@ If set to `0`, disable colors in terminal output, overriding the `--color`
 option and tty detection. If set to non-zero, enable colors if outputting to a
 tty.
 
-#### *CLICOLOR_FORCE*
+#### `CLICOLOR_FORCE`
 Default: *none*
 {: .subtitle}
 
 If set to non-zero, enable colors in the terminal output regardless of whether
 the destination is a tty. This overrides [`$CLICOLOR`](#CLICOLOR).
 
-#### *DESTDIR*
+#### `DESTDIR`
 Default: *none*
 {: .subtitle}
 
@@ -511,13 +511,13 @@ performing staged installs. For more information, see the [GNU coding
 standards][destdir]. On Windows, this can be used so long as the installation
 prefixes are drive-relative (e.g. `\path\to\install`).
 
-#### *PLATFORM*
+#### `PLATFORM`
 Default: `Win32`
 {: .subtitle}
 
 *Windows-only*. The platform type to use when generating MSBuild files.
 
-#### *VISUALSTUDIOVERSION*
+#### `VISUALSTUDIOVERSION`
 Default: `14.0`
 {: .subtitle}
 
