@@ -166,99 +166,99 @@
 
 <h1 id="command-line-reference">Command-Line Reference<a class="headerlink" href="#command-line-reference" title="Permanent link">§</a></h1>
 <h2 id="global-options">Global options<a class="headerlink" href="#global-options" title="Permanent link">§</a></h2>
-<h4 id="help-option">-h, --help<a class="headerlink" href="#help-option" title="Permanent link">§</a></h4>
+<h4 id="help-option"><code>-h</code>, <code>--help</code><a class="headerlink" href="#help-option" title="Permanent link">§</a></h4>
 <p>Print a help message and exit. Equivalent to the <a href="#help"><code>help</code></a> subcommand.</p>
-<h4 id="version">--version<a class="headerlink" href="#version" title="Permanent link">§</a></h4>
+<h4 id="version"><code>--version</code><a class="headerlink" href="#version" title="Permanent link">§</a></h4>
 <p>Print the version number and exit.</p>
-<h4 id="color">-c, --color <em>WHEN</em><a class="headerlink" href="#color" title="Permanent link">§</a></h4>
+<h4 id="color"><code>-c</code>, <code>--color <em>WHEN</em></code><a class="headerlink" href="#color" title="Permanent link">§</a></h4>
 <p>Show colored output; <em>WHEN</em> is one of <code>always</code>, <code>never</code>, or <code>auto</code> and defaults
 to <code>auto</code> (i.e. show colored output when the terminal is a tty). <code>-c</code> is
 equivalent to <code>--color=always</code>.</p>
-<h4 id="warn-once">--warn-once<a class="headerlink" href="#warn-once" title="Permanent link">§</a></h4>
+<h4 id="warn-once"><code>--warn-once</code><a class="headerlink" href="#warn-once" title="Permanent link">§</a></h4>
 <p>Only emit a given warning once.</p>
 <h2 id="sub-commands">Sub-commands<a class="headerlink" href="#sub-commands" title="Permanent link">§</a></h2>
-<h3 id="help">bfg9000 help [<em>SUBCOMMAND</em>]<a class="headerlink" href="#help" title="Permanent link">§</a></h3>
+<h3 id="help"><code>bfg9000 help [<em>SUBCOMMAND</em>]</code><a class="headerlink" href="#help" title="Permanent link">§</a></h3>
 <p>Print a help message and exit. If <em>SUBCOMMAND</em> is specified, print help for that
 subcommand.</p>
-<h3 id="configure">bfg9000 configure <em>DIRECTORY</em><a class="headerlink" href="#configure" title="Permanent link">§</a></h3>
+<h3 id="configure"><code>bfg9000 configure <em>DIRECTORY</em></code><a class="headerlink" href="#configure" title="Permanent link">§</a></h3>
 <p>Generate the necessary build files to perform actual builds. If <em>DIRECTORY</em> is a
 source directory (i.e. it contains a build.bfg file), the build files will be
 created in the current directory. Otherwise, <em>DIRECTORY</em> is treated as the build
 directory, and bfg9000 will look for a build.bfg file in the current directory.</p>
-<h4 id="configure-backend">-B <em>BACKEND</em>, --backend <em>BACKEND</em><a class="headerlink" href="#configure-backend" title="Permanent link">§</a></h4>
+<h4 id="configure-backend"><code>-B <em>BACKEND</em></code>, <code>--backend <em>BACKEND</em></code><a class="headerlink" href="#configure-backend" title="Permanent link">§</a></h4>
 <p>The kind of build files to generate; one of <code>ninja</code>, <code>make</code>, or <code>msbuild</code>. The
 default value depends on what build backends you have installed, but if <code>ninja</code>
 is present on your system, it will be the default.</p>
-<h4 id="configure-toolchain">--toolchain <em>FILE</em><a class="headerlink" href="#configure-toolchain" title="Permanent link">§</a></h4>
+<h4 id="configure-toolchain"><code>--toolchain <em>FILE</em></code><a class="headerlink" href="#configure-toolchain" title="Permanent link">§</a></h4>
 <p>An optional <a href="../../user/building/#using-toolchain-files">toolchain file</a> that
 can be used to easily set all the options required for a certain build.</p>
-<h4 id="configure-enable-shared">--enable-shared, --disable-shared<a class="headerlink" href="#configure-enable-shared" title="Permanent link">§</a></h4>
+<h4 id="configure-enable-shared"><code>--enable-shared</code>, <code>--disable-shared</code><a class="headerlink" href="#configure-enable-shared" title="Permanent link">§</a></h4>
 <p>Enable/disable building shared libraries when using
 <a href="../builtins/#library"><em>library</em>()</a> in your build.bfg files. Defaults to enabled.</p>
-<h4 id="configure-enable-static">--enable-static, --disable-static<a class="headerlink" href="#configure-enable-static" title="Permanent link">§</a></h4>
+<h4 id="configure-enable-static"><code>--enable-static</code>, <code>--disable-static</code><a class="headerlink" href="#configure-enable-static" title="Permanent link">§</a></h4>
 <p>Enable/disable building static libraries when using
 <a href="../builtins/#library"><em>library</em>()</a> in your build.bfg files. Defaults to enabled.</p>
-<h4 id="configure-enable-compdb">--enable-compdb, --disable-compdb<a class="headerlink" href="#configure-enable-compdb" title="Permanent link">§</a></h4>
+<h4 id="configure-enable-compdb"><code>--enable-compdb</code>, <code>--disable-compdb</code><a class="headerlink" href="#configure-enable-compdb" title="Permanent link">§</a></h4>
 <p>Enable/disable generation of <code>compile_commands.json</code> when generating build
 files. Defaults to enabled.</p>
-<h4 id="configure-package-file">-p <em>FILE</em>, --package-file <em>FILE</em><a class="headerlink" href="#configure-package-file" title="Permanent link">§</a></h4>
+<h4 id="configure-package-file"><code>-p <em>FILE</em></code>, <code>--package-file <em>FILE</em></code><a class="headerlink" href="#configure-package-file" title="Permanent link">§</a></h4>
 <p>Additional <a href="https://jimporter.github.io/mopack/">mopack</a> package files to consult when resolving packages.</p>
-<h4 id="configure-package-flag">-P <em>FLAG</em>, --package-flag <em>FLAG</em><a class="headerlink" href="#configure-package-flag" title="Permanent link">§</a></h4>
+<h4 id="configure-package-flag"><code>-P <em>FLAG</em></code>, <code>--package-flag <em>FLAG</em></code><a class="headerlink" href="#configure-package-flag" title="Permanent link">§</a></h4>
 <p>Additional <a href="https://jimporter.github.io/mopack/">mopack</a> flags to use when resolving packages.</p>
-<h4 id="configure-no-resolve-packages">--no-resolve-packages<a class="headerlink" href="#configure-no-resolve-packages" title="Permanent link">§</a></h4>
+<h4 id="configure-no-resolve-packages"><code>--no-resolve-packages</code><a class="headerlink" href="#configure-no-resolve-packages" title="Permanent link">§</a></h4>
 <p>Disable resolution of package dependencies via <a href="https://jimporter.github.io/mopack/">mopack</a>.</p>
-<h4 id="configure-prefix">--prefix <em>PATH</em><a class="headerlink" href="#configure-prefix" title="Permanent link">§</a></h4>
+<h4 id="configure-prefix"><code>--prefix <em>PATH</em></code><a class="headerlink" href="#configure-prefix" title="Permanent link">§</a></h4>
 <p>The installation prefix to use when installing built files. On Linux and macOS,
 this defaults to <code>/usr/local</code>; on Windows, there is no default (thus, to
 install built files on Windows, you must either set <code>--prefix</code> or one of the
 other install path options below).</p>
-<h4 id="configure-exec-prefix">--exec-prefix <em>PATH</em><a class="headerlink" href="#configure-exec-prefix" title="Permanent link">§</a></h4>
+<h4 id="configure-exec-prefix"><code>--exec-prefix <em>PATH</em></code><a class="headerlink" href="#configure-exec-prefix" title="Permanent link">§</a></h4>
 <p>The installation prefix to use when installing architecture-dependent files
 (e.g. executables). This defaults to the value of
 <a href="#configure-prefix"><code>--prefix</code></a>.</p>
-<h4 id="configure-bindir">--bindir <em>PATH</em><a class="headerlink" href="#configure-bindir" title="Permanent link">§</a></h4>
+<h4 id="configure-bindir"><code>--bindir <em>PATH</em></code><a class="headerlink" href="#configure-bindir" title="Permanent link">§</a></h4>
 <p>The installation prefix to use for executables. Defaults to <code>&lt;exec-prefix&gt;/bin</code>
 on Linux and macOS, and <code>&lt;exec-prefix&gt;</code> on Windows.</p>
-<h4 id="configure-libdir">--libdir <em>PATH</em><a class="headerlink" href="#configure-libdir" title="Permanent link">§</a></h4>
+<h4 id="configure-libdir"><code>--libdir <em>PATH</em></code><a class="headerlink" href="#configure-libdir" title="Permanent link">§</a></h4>
 <p>The installation prefix to use for libraries. Defaults to <code>&lt;exec-prefix&gt;/lib</code> on
 Linux and macOS, and <code>&lt;exec-prefix&gt;</code> on Windows.</p>
-<h4 id="configure-includedir">--includedir <em>PATH</em><a class="headerlink" href="#configure-includedir" title="Permanent link">§</a></h4>
+<h4 id="configure-includedir"><code>--includedir <em>PATH</em></code><a class="headerlink" href="#configure-includedir" title="Permanent link">§</a></h4>
 <p>The installation prefix to use for headers. Defaults to <code>&lt;prefix&gt;/include</code> on
 Linux and macOS, and <code>&lt;prefix&gt;</code> on Windows.</p>
-<h4 id="configure-includedir">--datadir <em>PATH</em><a class="headerlink" href="#configure-includedir" title="Permanent link">§</a></h4>
+<h4 id="configure-includedir"><code>--datadir <em>PATH</em></code><a class="headerlink" href="#configure-includedir" title="Permanent link">§</a></h4>
 <p>The installation prefix to use for data files. Defaults to <code>&lt;prefix&gt;/share</code> on
 Linux and macOS, and <code>&lt;prefix&gt;</code> on Windows.</p>
-<h4 id="configure-mandir">--mandir <em>PATH</em><a class="headerlink" href="#configure-mandir" title="Permanent link">§</a></h4>
+<h4 id="configure-mandir"><code>--mandir <em>PATH</em></code><a class="headerlink" href="#configure-mandir" title="Permanent link">§</a></h4>
 <p>The installation prefix to use for man pages. Defaults to <code>&lt;datadir&gt;/man</code>.</p>
-<h3 id="configure-into">bfg9000 configure-into <em>SRCDIR</em> <em>BUILDDIR</em><a class="headerlink" href="#configure-into" title="Permanent link">§</a></h3>
+<h3 id="configure-into"><code>bfg9000 configure-into <em>SRCDIR</em> <em>BUILDDIR</em></code><a class="headerlink" href="#configure-into" title="Permanent link">§</a></h3>
 <p>Generate the necessary build files (as with <a href="#configure"><code>bfg9000 configure</code></a>)
 to perform actual builds from a build.bfg file in <em>SRCDIR</em>, and place them in
 <em>BUILDDIR</em>.</p>
-<h3 id="refresh">bfg9000 refresh [<em>BUILDDIR</em>]<a class="headerlink" href="#refresh" title="Permanent link">§</a></h3>
+<h3 id="refresh"><code>bfg9000 refresh [<em>BUILDDIR</em>]</code><a class="headerlink" href="#refresh" title="Permanent link">§</a></h3>
 <p>Regenerate an existing set of build files in <em>BUILDDIR</em> needed to perform actual
 builds. This is run automatically if bfg9000 determines that the build files are
 out of date.</p>
-<h3 id="env">bfg9000 env [<em>BUILDDIR</em>]<a class="headerlink" href="#env" title="Permanent link">§</a></h3>
+<h3 id="env"><code>bfg9000 env [<em>BUILDDIR</em>]</code><a class="headerlink" href="#env" title="Permanent link">§</a></h3>
 <p>Print the environment variables stored by the build configuration in <em>BUILDDIR</em>.</p>
-<h4 id="env-unique">-u, --unique<a class="headerlink" href="#env-unique" title="Permanent link">§</a></h4>
+<h4 id="env-unique"><code>-u</code>, <code>--unique</code><a class="headerlink" href="#env-unique" title="Permanent link">§</a></h4>
 <p>Only show environment variables that differ from the current environment.</p>
-<h3 id="run">bfg9000 run <em>COMMAND</em><a class="headerlink" href="#run" title="Permanent link">§</a></h3>
+<h3 id="run"><code>bfg9000 run <em>COMMAND</em></code><a class="headerlink" href="#run" title="Permanent link">§</a></h3>
 <p>Run an arbitrary <em>COMMAND</em> with the environment variables set for the current
 build.</p>
-<h4 id="run-initial">-I, --initial<a class="headerlink" href="#run-initial" title="Permanent link">§</a></h4>
+<h4 id="run-initial"><code>-I</code>, <code>--initial</code><a class="headerlink" href="#run-initial" title="Permanent link">§</a></h4>
 <p>Use the <em>initial</em> environment variables, before any modification by toolchain
 files.</p>
-<h4 id="run-builddir">-B <em>BUILDDIR</em>, --builddir <em>BUILDDIR</em><a class="headerlink" href="#run-builddir" title="Permanent link">§</a></h4>
+<h4 id="run-builddir"><code>-B <em>BUILDDIR</em></code>, <code>--builddir <em>BUILDDIR</em></code><a class="headerlink" href="#run-builddir" title="Permanent link">§</a></h4>
 <p>Set the build directory to pull environment variable state from.</p>
-<h3 id="generate-completion">bfg9000 generate-completion<a class="headerlink" href="#generate-completion" title="Permanent link">§</a></h3>
+<h3 id="generate-completion"><code>bfg9000 generate-completion</code><a class="headerlink" href="#generate-completion" title="Permanent link">§</a></h3>
 <p>Generate shell-completion functions for bfg9000 and write them to standard
 output. This requires the Python package <a href="https://github.com/iterative/shtab">shtab</a>.</p>
-<h4 id="generate-completion-program">-p <em>PROGRAM</em>, --program <em>PROGRAM</em><a class="headerlink" href="#generate-completion-program" title="Permanent link">§</a></h4>
+<h4 id="generate-completion-program"><code>-p <em>PROGRAM</em></code>, <code>--program <em>PROGRAM</em></code><a class="headerlink" href="#generate-completion-program" title="Permanent link">§</a></h4>
 <p>Specify the program to generate completion for: <code>bfg9000</code> (the default) or <code>9k</code>.</p>
-<h4 id="generate-completion-shell">-s <em>SHELL</em>, --shell <em>SHELL</em><a class="headerlink" href="#generate-completion-shell" title="Permanent link">§</a></h4>
+<h4 id="generate-completion-shell"><code>-s <em>SHELL</em></code>, <code>--shell <em>SHELL</em></code><a class="headerlink" href="#generate-completion-shell" title="Permanent link">§</a></h4>
 <p>Specify the shell to generate completion for, e.g. <code>bash</code>. Defaults to the
 current shell's name.</p>
-<h2 id="9k-shorthand">9k shorthand<a class="headerlink" href="#9k-shorthand" title="Permanent link">§</a></h2>
+<h2 id="9k-shorthand"><code>9k</code> shorthand<a class="headerlink" href="#9k-shorthand" title="Permanent link">§</a></h2>
 <p><code>9k</code> is a special shorthand to make it easier to configure your build. It's
 equivalent to <a href="#configure"><code>bfg9000 configure</code></a>.</p></div>
         </div>
