@@ -6,7 +6,7 @@ h1 {
   border-bottom: 1px solid #ddd;
 }
 
-/* Adjust dispaly of code in headers. */
+/* Adjust display of code in headers. */
 
 :is(h1, h2, h3, h4, h5) code {
   font-size: 100%;
