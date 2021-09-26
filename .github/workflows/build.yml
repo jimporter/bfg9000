@@ -32,9 +32,10 @@ jobs:
              compiler: clang, backends: [ninja, make], flags: -Wall -Werror}
 
           # Xenial builds (for testing GCJ)
-          - {os: ubuntu-16.04, python-version: 3.9, compiler: default,
-             extra-packages: [gcj-4.9, gcj-4.9-jdk],
-             extra-tests: [mingw-cross, gcj], backends: [ninja, make]}
+          # FIXME: Currently disabled, since Github retired these images.
+          # - {os: ubuntu-16.04, python-version: 3.9, compiler: default,
+          #    extra-packages: [gcj-4.9, gcj-4.9-jdk],
+          #    extra-tests: [mingw-cross, gcj], backends: [ninja, make]}
 
           # VS 2017 builds
           - {os: windows-2016, python-version: 3.9, compiler: default,
