@@ -421,7 +421,8 @@ def main():
              if 'SHELL' in os.environ else None)
     completion_p.add_argument('-p', '--program', metavar='PROG',
                               default='bfg9000', choices=['bfg9000', '9k'],
-                              help='program to emit completion for')
+                              help=('program to emit completion for (one of ' +
+                                    '%(choices)s; default: %(default)s)'))
     completion_p.add_argument('-s', '--shell', metavar='SHELL', default=shell,
                               help='shell type (default: %(default)s)')
 

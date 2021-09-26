@@ -6,49 +6,6 @@ from bfg9000 import path
 from bfg9000.arguments import parser
 
 
-class TestParser(TestCase):
-    def test_short_value(self):
-        p = parser.ArgumentParser()
-        p.add_argument('-f')
-
-        self.assertEqual(p.parse_args([]), parser.Namespace(f=None))
-        self.assertEqual(p.parse_args(['-fbar']), parser.Namespace(f='bar'))
-
-    def test_short_flag(self):
-        p = parser.ArgumentParser()
-        p.add_argument('-f', action='store_true')
-
-        self.assertEqual(p.parse_args([]), parser.Namespace(f=False))
-        self.assertEqual(p.parse_args(['-f']), parser.Namespace(f=True))
-
-    def test_long_value(self):
-        p = parser.ArgumentParser()
-        p.add_argument('--foo')
-
-        self.assertEqual(p.parse_args([]), parser.Namespace(foo=None))
-        self.assertEqual(p.parse_args(['--foo', 'bar']),
-                         parser.Namespace(foo='bar'))
-        self.assertEqual(p.parse_args(['--foo=bar']),
-                         parser.Namespace(foo='bar'))
-        self.assertEqual(p.parse_known_args(['--fo=bar']),
-                         (parser.Namespace(foo=None), ['--fo=bar']))
-
-    def test_long_flag(self):
-        p = parser.ArgumentParser()
-        p.add_argument('--foo', action='store_true')
-
-        self.assertEqual(p.parse_args([]), parser.Namespace(foo=False))
-        self.assertEqual(p.parse_args(['--foo']), parser.Namespace(foo=True))
-        self.assertEqual(p.parse_known_args(['--fo']),
-                         (parser.Namespace(foo=False), ['--fo']))
-
-    def test_positional(self):
-        p = parser.ArgumentParser()
-        p.add_argument('foo')
-
-        self.assertEqual(p.parse_args(['bar']), parser.Namespace(foo='bar'))
-
-
 class TestEnableAction(TestCase):
     action = 'enable'
     not_action = 'disable'
@@ -138,12 +95,88 @@ class TestFile(TestCase):
                 parser.File(True)('foo')
 
 
-class TestAddUserArgument(TestCase):
+class TestParser(TestCase):
+    def test_short_value(self):
+        p = parser.ArgumentParser()
+        p.add_argument('-f')
+
+        self.assertEqual(p.parse_args([]), parser.Namespace(f=None))
+        self.assertEqual(p.parse_args(['-fbar']), parser.Namespace(f='bar'))
+
+    def test_short_flag(self):
+        p = parser.ArgumentParser()
+        p.add_argument('-f', action='store_true')
+
+        self.assertEqual(p.parse_args([]), parser.Namespace(f=False))
+        self.assertEqual(p.parse_args(['-f']), parser.Namespace(f=True))
+
+    def test_long_value(self):
+        p = parser.ArgumentParser()
+        p.add_argument('--foo')
+
+        self.assertEqual(p.parse_args([]), parser.Namespace(foo=None))
+        self.assertEqual(p.parse_args(['--foo', 'bar']),
+                         parser.Namespace(foo='bar'))
+        self.assertEqual(p.parse_args(['--foo=bar']),
+                         parser.Namespace(foo='bar'))
+        self.assertEqual(p.parse_known_args(['--fo=bar']),
+                         (parser.Namespace(foo=None), ['--fo=bar']))
+
+    def test_long_flag(self):
+        p = parser.ArgumentParser()
+        p.add_argument('--foo', action='store_true')
+
+        self.assertEqual(p.parse_args([]), parser.Namespace(foo=False))
+        self.assertEqual(p.parse_args(['--foo']), parser.Namespace(foo=True))
+        self.assertEqual(p.parse_known_args(['--fo']),
+                         (parser.Namespace(foo=False), ['--fo']))
+
+    def test_positional(self):
+        p = parser.ArgumentParser()
+        p.add_argument('foo')
+
+        self.assertEqual(p.parse_args(['bar']), parser.Namespace(foo='bar'))
+
+    def test_group(self):
+        p = parser.ArgumentParser()
+        g = p.add_argument_group()
+
+        g.add_argument('--foo', action='store_true')
+        self.assertEqual(p.parse_args(['--foo']), parser.Namespace(foo=True))
+
+        g.value = True
+        self.assertTrue(g.value)
+        del g.value
+        self.assertFalse(hasattr(g, 'value'))
+
+    def test_complete(self):
+        p = parser.ArgumentParser()
+        arg = p.add_argument('--arg', complete='file')
+        self.assertEqual(arg.complete, 'file')
+
+        file_arg = p.add_argument('--file', type=parser.File())
+        self.assertEqual(file_arg.complete, 'file')
+
+        dir_arg = p.add_argument('--dir', type=parser.Directory())
+        self.assertEqual(dir_arg.complete, 'directory')
+
+
+class TestUserArgument(TestCase):
     def test_parse(self):
         p = parser.ArgumentParser()
         p.usage = 'parse'
 
         parser.add_user_argument(p, '--foo', action='store_true')
+        self.assertEqual(p.parse_args(['--foo']), parser.Namespace(foo=True))
+        self.assertEqual(p.parse_args(['--x-foo']),
+                         parser.Namespace(foo=True))
+
+    def test_group(self):
+        p = parser.ArgumentParser()
+        g = p.add_argument_group()
+        g.usage = 'parse'
+
+        parser.add_user_argument(g, '--foo', action='store_true')
         self.assertEqual(p.parse_args(['--foo']), parser.Namespace(foo=True))
         self.assertEqual(p.parse_args(['--x-foo']),
                          parser.Namespace(foo=True))

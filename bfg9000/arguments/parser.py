@@ -4,11 +4,31 @@ from argparse import *
 from .. import path as _path
 
 _ArgumentParser = ArgumentParser
+_Action = Action
+
+
+# Add some simple wrappers to make it easier to specify shell-completion
+# behaviors.
+
+def _add_complete(argument, complete):
+    if complete is not None:
+        argument.complete = complete
+    elif isinstance(argument.type, File):
+        argument.complete = 'file'
+    elif isinstance(argument.type, Directory):
+        argument.complete = 'directory'
+    return argument
+
+
+class Action(_Action):
+    def __init__(self, *args, complete=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        _add_complete(self, complete)
 
 
 class ToggleAction(Action):
     def __init__(self, option_strings, dest, default=False, required=False,
-                 help=None):
+                 complete=None, help=None):
         if len(option_strings) == 0:
             raise ValueError('option string must begin with "--"')
 
@@ -19,7 +39,7 @@ class ToggleAction(Action):
 
         option_strings = self.true_strings + self.false_strings
         super().__init__(option_strings, dest=dest, nargs=0, default=default,
-                         required=required, help=help)
+                         required=required, complete=complete, help=help)
 
     def __call__(self, parser, namespace, values, option_string=None):
         value = option_string in self.true_strings
@@ -40,22 +60,6 @@ class EnableAction(ToggleAction):
 class WithAction(ToggleAction):
     _true_prefix = 'with-'
     _false_prefix = 'without-'
-
-
-class ArgumentParser(_ArgumentParser):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.register('action', 'enable', EnableAction)
-        self.register('action', 'with', WithAction)
-
-    def _get_option_tuples(self, option_string):
-        # Don't try to check prefixes for long options; this is similar to
-        # Python 3.5's `allow_abbrev=False`, except this doesn't break combined
-        # short options. See <https://bugs.python.org/issue26967>.
-        if option_string[:2] == self.prefix_chars * 2:
-            return []
-
-        return super()._get_option_tuples(option_string)
 
 
 class BaseFile:
@@ -96,6 +100,31 @@ class File(BaseFile):
     @staticmethod
     def _check_type(p):
         return _path.isfile(p)
+
+
+class ArgumentParser(_ArgumentParser):
+    @staticmethod
+    def _wrap_complete(action):
+        def wrapper(*args, complete=None, **kwargs):
+            return _add_complete(action(*args, **kwargs), complete)
+
+        return wrapper
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for k, v in self._registries['action'].items():
+            self._registries['action'][k] = self._wrap_complete(v)
+        self.register('action', 'enable', EnableAction)
+        self.register('action', 'with', WithAction)
+
+    def _get_option_tuples(self, option_string):
+        # Don't try to check prefixes for long options; this is similar to
+        # Python 3.5's `allow_abbrev=False`, except this doesn't break combined
+        # short options. See <https://bugs.python.org/issue26967>.
+        if option_string[:2] == self.prefix_chars * 2:
+            return []
+
+        return super()._get_option_tuples(option_string)
 
 
 # It'd be nice to just have a UserArgumentParser class with this method but it
