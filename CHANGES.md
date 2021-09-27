@@ -12,6 +12,8 @@
 - `pkg-config` executable can now be found by guessing based on other compilers
 - Compiler and tool objects now have a `found` property to indicate if they were
   found on the system
+- Add `system` flag to `package()` and `pkg_config()` to determine whether to
+  treat include directories from packages as system directories
 - Add `bfg9000 generate-completion` to generate shell-completion functions
 - Add support for `CLICOLOR` and `CLICOLOR_FORCE` environment variables to
   control whether to display colors in terminal output

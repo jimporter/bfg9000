@@ -16,7 +16,7 @@ from ..versioning import InvalidSpecifier, SpecifierSet
 @builtin.type(Package)
 def package(context, name, submodules=None, version=default_sentinel, *,
             lang=None, kind=PackageKind.any.name, headers=default_sentinel,
-            libs=default_sentinel):
+            libs=default_sentinel, system=True):
     if version is default_sentinel:
         version = SpecifierSet()
         if submodules and isinstance(submodules, (str, SpecifierSet)):
@@ -41,7 +41,8 @@ def package(context, name, submodules=None, version=default_sentinel, *,
 
     resolver = context.env.builder(lang).packages
     return resolver.resolve(name, listify(submodules), version, kind,
-                            headers=headers or None, libs=libs or None)
+                            headers=headers or None, libs=libs or None,
+                            system=system)
 
 
 @builtin.function()

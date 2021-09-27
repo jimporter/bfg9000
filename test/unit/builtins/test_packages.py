@@ -125,6 +125,7 @@ class TestPackageCc(BuiltinTest):
             self.assertEqual(pkg.version, Version('1.2.3'))
             self.assertEqual(pkg.specifier, SpecifierSet())
             self.assertEqual(pkg.static, False)
+            self.assertEqual(pkg.system, True)
 
     def test_submodules(self):
         with mock.patch('bfg9000.shell.execute', self.mock_execute), \
@@ -135,6 +136,7 @@ class TestPackageCc(BuiltinTest):
             self.assertEqual(pkg.version, Version('1.2.3'))
             self.assertEqual(pkg.specifier, SpecifierSet())
             self.assertEqual(pkg.static, False)
+            self.assertEqual(pkg.system, True)
 
     def test_version(self):
         with mock.patch('bfg9000.shell.execute', self.mock_execute), \
@@ -145,6 +147,7 @@ class TestPackageCc(BuiltinTest):
             self.assertEqual(pkg.version, Version('1.2.3'))
             self.assertEqual(pkg.specifier, SpecifierSet('>1.0'))
             self.assertEqual(pkg.static, False)
+            self.assertEqual(pkg.system, True)
 
     def test_submodules_and_version(self):
         with mock.patch('bfg9000.shell.execute', self.mock_execute), \
@@ -155,6 +158,7 @@ class TestPackageCc(BuiltinTest):
             self.assertEqual(pkg.version, Version('1.2.3'))
             self.assertEqual(pkg.specifier, SpecifierSet('>1.0'))
             self.assertEqual(pkg.static, False)
+            self.assertEqual(pkg.system, True)
 
     def test_lang(self):
         with mock.patch('bfg9000.shell.execute', self.mock_execute), \
@@ -165,6 +169,7 @@ class TestPackageCc(BuiltinTest):
             self.assertEqual(pkg.version, Version('1.2.3'))
             self.assertEqual(pkg.specifier, SpecifierSet())
             self.assertEqual(pkg.static, False)
+            self.assertEqual(pkg.system, True)
 
     def test_kind(self):
         with mock.patch('bfg9000.shell.execute', self.mock_execute), \
@@ -175,6 +180,18 @@ class TestPackageCc(BuiltinTest):
             self.assertEqual(pkg.version, Version('1.2.3'))
             self.assertEqual(pkg.specifier, SpecifierSet())
             self.assertEqual(pkg.static, True)
+            self.assertEqual(pkg.system, True)
+
+    def test_system(self):
+        with mock.patch('bfg9000.shell.execute', self.mock_execute), \
+             mock.patch('bfg9000.shell.which', mock_which), \
+             mock.patch('logging.log'):  # noqa
+            pkg = self.context['package']('name', system=False)
+            self.assertEqual(pkg.name, 'name')
+            self.assertEqual(pkg.version, Version('1.2.3'))
+            self.assertEqual(pkg.specifier, SpecifierSet())
+            self.assertEqual(pkg.static, False)
+            self.assertEqual(pkg.system, False)
 
     def test_guess_lang(self):
         @contextmanager

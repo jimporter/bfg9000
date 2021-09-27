@@ -1,3 +1,4 @@
+import os
 from io import StringIO
 from unittest import mock
 
@@ -21,14 +22,19 @@ def mock_execute(args, **kwargs):
         return '\n'
     elif '--variable=install_names' in args:
         return '/usr/lib/lib{}.dylib'.format(name)
-    elif '--cflags' in args:
+    elif '--cflags-only-I' in args:
         return '-I/usr/include/{}\n'.format(name)
+    elif '--cflags-only-other' in args:
+        return '-D{}\n'.format(name.upper())
     elif '--libs-only-L' in args:
         return '-L/usr/lib/{}\n'.format(name)
+    elif '--libs-only-other' in args:
+        return '-pthread\n'
     elif '--libs-only-l' in args:
         if '--static' in args:
             return '-l{}\n -lstatic'.format(name)
         return '-l{}\n'.format(name)
+    raise OSError('unknown command: {}'.format(args))
 
 
 class TestPkgConfigRequirement(TestCase):
@@ -299,6 +305,10 @@ class TestPkgConfig(BuiltinTest):
         self.assertIn('\nConflicts: creq\n', out.getvalue())
 
     def test_requires_generated_pkg_config_package(self):
+        def pathstr(p):
+            p = os.path.normpath(p)
+            return "'{}'".format(p) if '\\' in p else p
+
         pkg_config = self.get_pkg_config()
         with mock.patch('bfg9000.shell.execute', mock_execute):
             req = GeneratedPkgConfigPackage(pkg_config, 'req', format='elf')
@@ -316,10 +326,15 @@ class TestPkgConfig(BuiltinTest):
             out = StringIO()
             PkgConfigWriter(self.context)._write(out, data, installed=True)
 
-        self.assertIn('\nCflags: -I/usr/include/req -I/usr/include/preq\n',
+        self.assertIn('\nCflags: -DREQ -I{} -DPREQ -I{}\n'
+                      .format(pathstr('/usr/include/req'),
+                              pathstr('/usr/include/preq')),
                       out.getvalue())
-        self.assertIn('\nLibs: -L/usr/lib/req -lreq\n', out.getvalue())
-        self.assertIn('\nLibs.private: -L/usr/lib/preq -lpreq\n',
+        self.assertIn('\nLibs: -pthread -L{} -lreq\n'
+                      .format(pathstr('/usr/lib/req')),
+                      out.getvalue())
+        self.assertIn('\nLibs.private: -pthread -L{} -lpreq\n'
+                      .format(pathstr('/usr/lib/preq')),
                       out.getvalue())
         self.assertNotIn('\nRequires:', out.getvalue())
         self.assertNotIn('\nRequires.private:', out.getvalue())

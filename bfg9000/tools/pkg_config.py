@@ -7,6 +7,7 @@ from . import tool
 from .common import check_which, Command, guess_command, make_command_converter
 from .. import log, options as opts, shell
 from ..exceptions import PackageResolutionError, PackageVersionError
+from ..file_types import Directory, HeaderDirectory
 from ..iterutils import iterate, listify
 from ..objutils import memoize_method
 from ..packages import Package, PackageKind
@@ -42,10 +43,10 @@ class PkgConfig(Command):
         'requires': (['--print-requires'], _requires_split),
         'path': (['--variable=pcfiledir'], None),
         'install_names': (['--variable=install_names'], _shell_split),
-        'cflags': (['--cflags'], _shell_split),
         'include_dirs': (['--cflags-only-I'], _shell_split),
+        'other_cflags': (['--cflags-only-other'], _shell_split),
         'lib_dirs': (['--libs-only-L'], _shell_split),
-        'ldflags': (['--libs-only-L', '--libs-only-other'], _shell_split),
+        'other_ldflags': (['--libs-only-other'], _shell_split),
         'ldlibs': (['--libs-only-l'], _shell_split),
     }
 
@@ -107,8 +108,8 @@ class PkgConfig(Command):
 class PkgConfigPackage(Package):
     def __init__(self, pkg_config, name, submodules=None,
                  specifier=SpecifierSet(), pcfiles=None, *, format,
-                 kind=PackageKind.any, deps=None, search_path=None,
-                 extra_options=[]):
+                 kind=PackageKind.any, system=True, deps=None,
+                 search_path=None, extra_options=[]):
         super().__init__(name, submodules, format=format, deps=deps)
 
         self._pkg_config = pkg_config
@@ -129,6 +130,7 @@ class PkgConfigPackage(Package):
         self.version = version
         self.specifier = specifier
         self.static = kind == PackageKind.static
+        self.system = system
 
     @memoize_method
     def _call(self, *args, extra_env=None, **kwargs):
@@ -137,7 +139,7 @@ class PkgConfigPackage(Package):
                                     options=self._extra_options, **kwargs)
 
     def include_dirs(self, **kwargs):
-        args = self._call(self.pcfiles, 'include_dirs', self.static)
+        args = self._call(self.pcfiles, 'include_dirs', self.static, **kwargs)
         inc_dirs = _include_dirs_parser.parse_known_args(args)[0].include_dirs
         return [Path(i, Root.absolute) for i in inc_dirs or []]
 
@@ -194,12 +196,22 @@ class PkgConfigPackage(Package):
         return result
 
     def compile_options(self, compiler, *, raw=False):
-        return self._call(self.pcfiles, 'cflags', self.static,
-                          not raw and compiler.flavor == 'msvc')
+        flags = self._call(self.pcfiles, 'other_cflags', self.static,
+                           not raw and compiler.flavor == 'msvc')
+        # Get include paths separately so we can selectively use them as
+        # "system" includes; this helps ensure that warnings in external
+        # headers don't break the build when using `-Werror`.
+        incdirs = opts.option_list(
+            opts.include_dir(HeaderDirectory(i, system=self.system))
+            for i in self.include_dirs()
+        )
+        return flags + incdirs
 
     def link_options(self, linker, *, raw=False):
-        flags = self._call(self.pcfiles, 'ldflags', self.static,
+        flags = self._call(self.pcfiles, 'other_ldflags', self.static,
                            not raw and linker.flavor == 'msvc')
+        libdirs = opts.option_list(opts.lib_dir(Directory(i))
+                                   for i in self.lib_dirs())
 
         # XXX: How should we ensure that these libs are linked statically when
         # necessary?
@@ -221,7 +233,7 @@ class PkgConfigPackage(Package):
                 # pkg-config builtin.
                 extra_opts = self._get_install_name_changes()
 
-        return flags + libs + extra_opts
+        return flags + libdirs + libs + extra_opts
 
     def path(self):
         return self._call(self.pcfiles[0], 'path')

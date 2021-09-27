@@ -136,7 +136,7 @@ class MsvcPackageResolver:
 
     # TODO: Remove headers/libs from arguments after 0.7 is released.
     def resolve(self, name, submodules, version, kind, *, headers=None,
-                libs=None):
+                libs=None, system=True):
         format = self.builder.object_format
         usage = mopack.get_usage(self.env, name, submodules, self.include_dirs,
                                  self.lib_dirs, self._lib_names)
@@ -145,7 +145,7 @@ class MsvcPackageResolver:
         # directly?
         return pkg_config.resolve(
             self.env, name, submodules, version, usage['pcfiles'],
-            format=format, kind=kind, search_path=usage['path'],
+            format=format, kind=kind, system=system, search_path=usage['path'],
             extra_options=usage.get('extra_args', []),
             generated=usage.get('generated', False)
         )

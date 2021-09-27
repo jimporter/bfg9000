@@ -1,6 +1,7 @@
 from . import *
 
 from bfg9000 import options as opts
+from bfg9000.file_types import Directory, HeaderDirectory
 from bfg9000.iterutils import first
 from bfg9000.path import Path
 from bfg9000.shell import CalledProcessError
@@ -20,14 +21,19 @@ def mock_execute(args, **kwargs):
         return '\n'
     elif '--variable=install_names' in args:
         return '/usr/lib/lib{}.dylib'.format(name)
-    elif '--cflags' in args:
+    elif '--cflags-only-I' in args:
         return '-I/usr/include\n'
+    elif '--cflags-only-other' in args:
+        return '-DMACRO\n'
     elif '--libs-only-L' in args:
         return '-L/usr/lib\n'
+    elif '--libs-only-other' in args:
+        return '-pthread\n'
     elif '--libs-only-l' in args:
         if '--static' in args:
             return '-l{}\n -lstatic'.format(name)
         return '-l{}\n'.format(name)
+    raise OSError('unknown command: {}'.format(args))
 
 
 def mock_execute_uninst(args, *, env=None, **kwargs):
@@ -174,8 +180,10 @@ class TestPkgConfigPackage(ToolTestCase):
         with mock.patch('bfg9000.shell.execute', mock_execute):
             pkg = PkgConfigPackage(self.tool, 'foo', format='elf')
 
-            self.assertEqual(pkg.compile_options(compiler),
-                             opts.option_list(['-I/usr/include']))
+            header_dir = HeaderDirectory(Path('/usr/include'))
+            self.assertEqual(pkg.compile_options(compiler), opts.option_list(
+                '-DMACRO', opts.include_dir(header_dir)
+            ))
 
     def test_link_options_coff(self):
         linker = AttrDict(flavor='gcc', builder=AttrDict(object_format='coff'))
@@ -183,7 +191,8 @@ class TestPkgConfigPackage(ToolTestCase):
             pkg = PkgConfigPackage(self.tool, 'foo', format='elf')
 
             self.assertEqual(pkg.link_options(linker), opts.option_list(
-                '-L/usr/lib', opts.lib_literal('-lfoo')
+                '-pthread', opts.lib_dir(Directory(Path('/usr/lib'))),
+                opts.lib_literal('-lfoo')
             ))
 
     def test_link_options_elf(self):
@@ -192,8 +201,8 @@ class TestPkgConfigPackage(ToolTestCase):
             pkg = PkgConfigPackage(self.tool, 'foo', format='elf')
 
             self.assertEqual(pkg.link_options(linker), opts.option_list(
-                '-L/usr/lib', opts.lib_literal('-lfoo'),
-                opts.rpath_dir(Path('/usr/lib'))
+                '-pthread', opts.lib_dir(Directory(Path('/usr/lib'))),
+                opts.lib_literal('-lfoo'), opts.rpath_dir(Path('/usr/lib'))
             ))
 
     def test_link_options_elf_uninst(self):
@@ -202,7 +211,9 @@ class TestPkgConfigPackage(ToolTestCase):
             pkg = PkgConfigPackage(self.tool, 'foo', format='elf')
 
             self.assertEqual(pkg.link_options(linker), opts.option_list(
-                '-L/path/to/build/foo', opts.lib_literal('-lfoo'),
+                '-pthread',
+                opts.lib_dir(Directory(Path('/path/to/build/foo'))),
+                opts.lib_literal('-lfoo'),
                 opts.rpath_dir(Path('/path/to/build/foo'), 'uninstalled'),
                 opts.rpath_dir(Path('/usr/lib'), 'installed')
             ))
@@ -214,7 +225,8 @@ class TestPkgConfigPackage(ToolTestCase):
             pkg = PkgConfigPackage(self.tool, 'foo', format='elf')
 
             self.assertEqual(pkg.link_options(linker), opts.option_list(
-                '-L/usr/lib', opts.lib_literal('-lfoo')
+                '-pthread', opts.lib_dir(Directory(Path('/usr/lib'))),
+                opts.lib_literal('-lfoo'),
             ))
 
     def test_link_options_macho_uninst(self):
@@ -224,7 +236,9 @@ class TestPkgConfigPackage(ToolTestCase):
             pkg = PkgConfigPackage(self.tool, 'foo', format='elf')
 
             self.assertEqual(pkg.link_options(linker), opts.option_list(
-                '-L/path/to/build/foo', opts.lib_literal('-lfoo'),
+                '-pthread',
+                opts.lib_dir(Directory(Path('/path/to/build/foo'))),
+                opts.lib_literal('-lfoo'),
                 opts.install_name_change('/path/to/build/foo/libfoo.dylib',
                                          '/usr/lib/libfoo.dylib')
             ))
@@ -236,7 +250,9 @@ class TestPkgConfigPackage(ToolTestCase):
             pkg = PkgConfigPackage(self.tool, 'foo', format='elf')
 
             self.assertEqual(pkg.link_options(linker), opts.option_list(
-                '-L/path/to/build/foo', opts.lib_literal('-lfoo'),
+                '-pthread',
+                opts.lib_dir(Directory(Path('/path/to/build/foo'))),
+                opts.lib_literal('-lfoo'),
                 opts.install_name_change('/path/to/build/foo/libfoo.dylib',
                                          '/usr/lib/libfoo.dylib'),
                 opts.install_name_change('/path/to/build/bar/libbar.dylib',
@@ -252,6 +268,6 @@ class TestPkgConfigPackage(ToolTestCase):
                                    kind=PackageKind.static)
             self.assertEqual(pkg.static, True)
             self.assertEqual(pkg.link_options(linker), opts.option_list(
-                '-L/usr/lib', opts.lib_literal('-lfoo'),
-                opts.lib_literal('-lstatic')
+                '-pthread', opts.lib_dir(Directory(Path('/usr/lib'))),
+                opts.lib_literal('-lfoo'), opts.lib_literal('-lstatic')
             ))

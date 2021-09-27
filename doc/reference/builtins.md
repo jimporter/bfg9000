@@ -802,7 +802,7 @@ Reference a macOS [framework][framework] named *name* with the optional suffix
 *suffix*. Though not a "package" in name, this can be used wherever packages are
 accepted.
 
-### package(*name*, [*submodules*], [*version*], \*, [*lang*], [*kind*]) { #package }
+### package(*name*, [*submodules*], [*version*], \*, [*lang*], [*kind*], [*system*]) { #package }
 Availability: `build.bfg`
 {: .subtitle}
 
@@ -818,6 +818,9 @@ unable to find the package, it will raise a
 You can also specify *kind* to one of `'any'` (the default), `'shared'`, or
 `'static'`. This allows you to restrict the search to find only static versions
 of a library, for example.
+
+If *system* is *True* (the default), any directories will be treated as [system
+directories][system-directory] for compilers that support this.
 
 If *version* is specified, it will (if possible) ensure that the installed
 version of the package meets the version requirement; it must be formatted as a
@@ -885,6 +888,9 @@ correspond directly to the fields in the pkg-config `.pc` file.
   exposed to users (this is used primarily for static linking)
 * *lang*: The language of the builder to use when generating option strings;
   by default, `'c'`
+* *system*: If *True*, any include directories will be treated as [system
+  directories][system-directory] when using the packager internally (for
+  compilers that support this); defaults to *False*.
 
 If *auto_fill* is true, this function will automatically fill in default values
 for the following fields:

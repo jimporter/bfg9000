@@ -48,22 +48,23 @@ class CcBaseCompiler(BuildCommand):
                 flags.append('-fdiagnostics-color')
         return flags
 
-    def _include_dir(self, directory):
+    def _include_dir(self, directory, allow_system):
         is_default = directory.path in self.env.host_platform.include_dirs
 
         # Don't include default directories as system dirs (e.g. /usr/include).
         # Doing so would break GCC 6 when #including stdlib.h:
         # <https://gcc.gnu.org/bugzilla/show_bug.cgi?id=70129>.
-        if directory.system and not is_default:
+        if allow_system and directory.system and not is_default:
             return ['-isystem', directory.path]
         else:
             return ['-I' + directory.path]
 
     def flags(self, options, global_options=None, output=None, mode='normal'):
+        pkgconf_mode = mode == 'pkg-config'
         flags = []
         for i in options:
             if isinstance(i, opts.include_dir):
-                flags.extend(self._include_dir(i.directory))
+                flags.extend(self._include_dir(i.directory, not pkgconf_mode))
             elif isinstance(i, opts.define):
                 if i.value:
                     flags.append('-D' + i.name + '=' + i.value)

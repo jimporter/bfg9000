@@ -5,6 +5,7 @@ from .common import known_langs, mock_execute, mock_which
 
 from bfg9000 import options as opts, platforms
 from bfg9000.exceptions import PackageResolutionError
+from bfg9000.file_types import Directory, HeaderDirectory
 from bfg9000.options import option_list
 from bfg9000.packages import PackageKind
 from bfg9000.path import Path
@@ -17,12 +18,16 @@ def mock_execute_pkgconf(args, **kwargs):
         return '1.2.3\n'
     elif '--variable=pcfiledir' in args:
         return '/path/to/pkg-config\n'
-    elif '--cflags' in args or '--cflags-only-I' in args:
+    elif '--cflags-only-I' in args:
         return '-I/path\n'
+    elif '--cflags-only-other' in args:
+        return '-DMACRO\n'
     elif '--libs-only-L' in args:
         return '-L/path\n'
     elif '--libs-only-l' in args:
         return '-lfoo\n'
+    elif '--libs-only-other' in args:
+        return '-pthread\n'
     elif '--variable=install_names' in args:
         return '\n'
     elif '--print-requires' in args:
@@ -262,10 +267,12 @@ class TestCcPackageResolver(CrossPlatformTestCase):
 
     def check_package(self, pkg):
         self.assertEqual(pkg.name, 'foo')
-        self.assertEqual(pkg.compile_options(self.compiler),
-                         option_list('-I/path'))
+        self.assertEqual(pkg.compile_options(self.compiler), option_list(
+            '-DMACRO', opts.include_dir(HeaderDirectory(Path('/path')))
+        ))
         self.assertEqual(pkg.link_options(self.linker), option_list(
-            '-L/path', opts.lib_literal('-lfoo'),
+            '-pthread', opts.lib_dir(Directory(Path('/path'))),
+            opts.lib_literal('-lfoo'),
             (opts.rpath_dir(Path('/path')) if self.platform_name == 'linux'
              else None)
         ))

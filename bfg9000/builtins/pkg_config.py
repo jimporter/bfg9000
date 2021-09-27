@@ -466,7 +466,7 @@ def _write_pkg_config(context, info):
 
 
 @builtin.function()
-def pkg_config(context, name=None, **kwargs):
+def pkg_config(context, name=None, *, system=False, **kwargs):
     info = PkgConfigInfo(context, name, **kwargs)
     context.build['pkg_config'].append(info)
 
@@ -477,7 +477,7 @@ def pkg_config(context, name=None, **kwargs):
             return PkgConfigPackage(
                 context.env.tool('pkg_config'), info.name,
                 format=context.env.target_platform.object_format,
-                deps=dep_alias, search_path=search_path
+                system=system, deps=dep_alias, search_path=search_path
             )
         except FileNotFoundError:
             warnings.warn('unable to load local pkg-config package {!r}'
