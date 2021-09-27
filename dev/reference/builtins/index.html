@@ -817,7 +817,7 @@ be prepended with <code>'-Wl,'</code>.</p>
 <p>Reference a macOS <a href="https://developer.apple.com/library/content/documentation/MacOSX/Conceptual/OSX_Technology_Overview/SystemFrameworks/SystemFrameworks.html">framework</a> named <em>name</em> with the optional suffix
 <em>suffix</em>. Though not a "package" in name, this can be used wherever packages are
 accepted.</p>
-<h3 id="package">package(<em>name</em>, [<em>submodules</em>], [<em>version</em>], *, [<em>lang</em>], [<em>kind</em>])<a class="headerlink" href="#package" title="Permanent link">§</a></h3>
+<h3 id="package">package(<em>name</em>, [<em>submodules</em>], [<em>version</em>], *, [<em>lang</em>], [<em>kind</em>], [<em>system</em>])<a class="headerlink" href="#package" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Search for a package named <em>name</em> optionally containing one or more
 <em>submodules</em>. <em>lang</em> is the source language of the package (if not specified,
@@ -830,6 +830,8 @@ unable to find the package, it will raise a
 <p>You can also specify <em>kind</em> to one of <code>'any'</code> (the default), <code>'shared'</code>, or
 <code>'static'</code>. This allows you to restrict the search to find only static versions
 of a library, for example.</p>
+<p>If <em>system</em> is <em>True</em> (the default), any directories will be treated as <a href="https://gcc.gnu.org/onlinedocs/cpp/System-Headers.html">system
+directories</a> for compilers that support this.</p>
 <p>If <em>version</em> is specified, it will (if possible) ensure that the installed
 version of the package meets the version requirement; it must be formatted as a
 Python <a href="https://www.python.org/dev/peps/pep-0440/#version-specifiers">version specifier</a>. If this check fails, a
@@ -891,6 +893,9 @@ correspond directly to the fields in the pkg-config <code>.pc</code> file.</p>
   exposed to users (this is used primarily for static linking)</li>
 <li><em>lang</em>: The language of the builder to use when generating option strings;
   by default, <code>'c'</code></li>
+<li><em>system</em>: If <em>True</em>, any include directories will be treated as <a href="https://gcc.gnu.org/onlinedocs/cpp/System-Headers.html">system
+  directories</a> when using the packager internally (for
+  compilers that support this); defaults to <em>False</em>.</li>
 </ul>
 <p>If <em>auto_fill</em> is true, this function will automatically fill in default values
 for the following fields:</p>
