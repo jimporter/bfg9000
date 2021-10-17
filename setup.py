@@ -33,14 +33,15 @@ class Coverage(Command):
             'COVERAGE_PROCESS_START': os.path.join(root_dir, '.coveragerc'),
         })
 
-        subprocess.check_call(['coverage', 'erase'])
-        subprocess.check_call(
+        subprocess.run(['coverage', 'erase'], check=True)
+        subprocess.run(
             ['coverage', 'run', 'setup.py', 'test'] +
             (['-q'] if self.verbose == 0 else []) +
             (['-s', self.test_suite] if self.test_suite else []),
-            env=env
+            env=env, check=True
         )
-        subprocess.check_call(['coverage', 'combine'])
+        subprocess.run(['coverage', 'combine'], check=True,
+                       stdout=subprocess.DEVNULL)
 
 
 custom_cmds = {
@@ -66,9 +67,9 @@ try:
 
         def run(self):
             cmd = 'mkdocs' if self.working else 'mike'
-            subprocess.check_call([
+            subprocess.run([
                 cmd, 'serve', '--dev-addr=' + self.dev_addr
-            ])
+            ], check=True)
 
     class DocDeploy(Command):
         description = 'push the documentation to GitHub'
@@ -87,9 +88,9 @@ try:
             short_version = '{}.{}'.format(*v.release[:2])
 
             try:
-                info = json.loads(subprocess.check_output(
-                    ['mike', 'list', '-j', alias],
-                    universal_newlines=True
+                info = json.loads(subprocess.run(
+                    ['mike', 'list', '-j', alias], universal_newlines=True,
+                    check=True, stdout=subprocess.PIPE
                 ))
             except subprocess.CalledProcessError:
                 info = None
@@ -97,10 +98,11 @@ try:
             if info['version'] != short_version:
                 t = re.sub(r' \({}\)$'.format(re.escape(alias)), '',
                            info['title'])
-                subprocess.check_call(['mike', 'retitle', info['version'], t])
+                subprocess.run(['mike', 'retitle', info['version'], t],
+                               check=True)
 
-            subprocess.check_call(['mike', 'deploy', '-ut', title,
-                                   short_version, alias])
+            subprocess.run(['mike', 'deploy', '-ut', title, short_version,
+                            alias], check=True)
 
     custom_cmds['doc_serve'] = DocServe
     custom_cmds['doc_deploy'] = DocDeploy
