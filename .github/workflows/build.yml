@@ -246,10 +246,11 @@ jobs:
           C:\cygwin\bin\bash -lc
           "cd bfg9000 && python3.8 setup.py coverage -s
           test.integration.test_executable && coverage xml"
+      - name: Copy coverage from Cygwin
+        run: |
+          copy C:\cygwin\home\runneradmin\bfg9000\coverage.xml .
       - name: Upload coverage
         uses: codecov/codecov-action@v2
-        with:
-          files: ${env:CYGROOT}\home\runneradmin\bfg9000\coverage.xml
   bdist-wheel:
     runs-on: ubuntu-latest
 
