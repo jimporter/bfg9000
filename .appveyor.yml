@@ -75,6 +75,16 @@ build_script:
 test_script:
   - python setup.py coverage -q
 on_success:
-  - coverage xml
+  # Fetch and verify codecov uploader.
   - curl -Os https://uploader.codecov.io/latest/windows/codecov.exe
-  - .\codecov.exe
+  - curl -Os https://uploader.codecov.io/latest/windows/codecov.exe.SHA256SUM
+  - curl -Os https://uploader.codecov.io/latest/windows/codecov.exe.SHA256SUM.sig
+  - curl -Os https://keybase.io/codecovsecurity/pgp_keys.asc
+  - gpg --import pgp_keys.asc
+  - gpg --verify codecov.exe.SHA256SUM.sig codecov.exe.SHA256SUM
+  # Fix the shasum file to use universal newlines.
+  - sed -i "s/ codecov.exe/Ucodecov.exe/" codecov.exe.SHA256SUM
+  - shasum -a 256 -c codecov.exe.SHA256SUM
+
+  - coverage xml
+  - .\codecov.exe -f coverage.xml
