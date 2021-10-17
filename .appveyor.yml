@@ -76,5 +76,5 @@ test_script:
   - python setup.py coverage -q
 on_success:
   - coverage xml
-  - set PATH=C:\Program Files\Git\bin;%PATH%
-  - curl -s https://codecov.io/bash | bash -s -- -U "-s" -A "-s"
+  - curl -Os https://uploader.codecov.io/latest/windows/codecov.exe
+  - .\codecov.exe

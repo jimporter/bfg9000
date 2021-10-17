@@ -209,15 +209,9 @@ jobs:
       - name: Run tests
         run: |
           python setup.py coverage -q
-      - name: Upload coverage
-        if: "!startsWith(matrix.os, 'windows-')"
-        run: |
-          codecov
-      - name: Upload coverage (Windows)
-        if: startsWith(matrix.os, 'windows-')
-        run: |
           coverage xml
-          curl -s https://codecov.io/bash | bash -s -- -U "-s" -A "-s"
+      - name: Upload coverage
+        uses: codecov/codecov-action@v2
   build-cygwin:
     runs-on: windows-latest
     env:
@@ -251,10 +245,11 @@ jobs:
         run: >
           C:\cygwin\bin\bash -lc
           "cd bfg9000 && python3.8 setup.py coverage -s
-          test.integration.test_executable"
+          test.integration.test_executable && coverage xml"
       - name: Upload coverage
-        run: >
-          C:\cygwin\bin\bash -lc "cd bfg9000 && codecov"
+        uses: codecov/codecov-action@v2
+        with:
+          files: ${env:CYGROOT}\home\runneradmin\bfg9000\coverage.xml
   bdist-wheel:
     runs-on: ubuntu-latest
 
