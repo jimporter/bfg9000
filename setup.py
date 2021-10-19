@@ -95,7 +95,7 @@ try:
             except subprocess.CalledProcessError:
                 info = None
 
-            if info['version'] != short_version:
+            if info and info['version'] != short_version:
                 t = re.sub(r' \({}\)$'.format(re.escape(alias)), '',
                            info['title'])
                 subprocess.run(['mike', 'retitle', info['version'], t],

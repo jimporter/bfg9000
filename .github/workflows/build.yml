@@ -96,7 +96,7 @@ jobs:
           path: mopack
       - name: Install Python dependencies
         run: |
-          pip install codecov ./mopack '.[test]'
+          pip install ./mopack '.[test]'
       - name: Initialize MSVC ${{ matrix.msvc-version }}
         if: startsWith(matrix.os, 'windows-')
         uses: ilammy/msvc-dev-cmd@v1
@@ -240,7 +240,7 @@ jobs:
       - name: Install Python dependencies
         run: >
           C:\cygwin\bin\bash -lc
-          "cd bfg9000 && pip3.8 install codecov coverage mock ./mopack ."
+          "cd bfg9000 && pip3.8 install coverage mock ./mopack ."
       - name: Run tests
         run: >
           C:\cygwin\bin\bash -lc
