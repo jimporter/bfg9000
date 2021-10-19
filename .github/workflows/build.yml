@@ -212,6 +212,8 @@ jobs:
           coverage xml
       - name: Upload coverage
         uses: codecov/codecov-action@v2
+        with:
+          files: ./coverage.xml
   build-cygwin:
     runs-on: windows-latest
     env:
@@ -251,6 +253,8 @@ jobs:
           copy C:\cygwin\home\runneradmin\bfg9000\coverage.xml .
       - name: Upload coverage
         uses: codecov/codecov-action@v2
+        with:
+          files: ./coverage.xml
   bdist-wheel:
     runs-on: ubuntu-latest
 
