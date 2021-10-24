@@ -1,4 +1,4 @@
-# -*- python -*-
+# -*- mode: python; mode: bfg9000 -*-
 
 # For larger projects, putting all of your build configuration in a single file
 # can be difficult to maintain. To alleviate this, you can split your

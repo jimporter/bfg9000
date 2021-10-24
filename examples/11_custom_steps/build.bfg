@@ -1,4 +1,4 @@
-# -*- python -*-
+# -*- mode: python; mode: bfg9000 -*-
 
 # Sometimes, you want to be able to perform a build step that bfg9000 doesn't
 # provide a built-in rule for. In this case, you can use the build_step()

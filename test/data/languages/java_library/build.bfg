@@ -1,4 +1,4 @@
-# -*- python -*-
+# -*- mode: python; mode: bfg9000 -*-
 
 lib = library('lib', 'lib/sub/library.java')
 prog = executable('program', 'program.java', entry_point='program', libs=lib)

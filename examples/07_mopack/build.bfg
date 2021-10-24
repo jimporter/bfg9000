@@ -1,4 +1,4 @@
-# -*- python -*-
+# -*- mode: python; mode: bfg9000 -*-
 
 # When using external packages, you may want to specify how to get them from a
 # remote source (e.g. a package manager). To do this, you use the package()

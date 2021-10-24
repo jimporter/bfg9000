@@ -1,4 +1,4 @@
-# -*- python -*-
+# -*- mode: python; mode: bfg9000 -*-
 
 global_options([opts.std('c++11')], lang='c++')
 if env.target_platform.family == 'posix':

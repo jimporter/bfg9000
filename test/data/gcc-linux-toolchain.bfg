@@ -1,4 +1,4 @@
-# -*- python -*-
+# -*- mode: python; mode: bfg9000 -*-
 
 target_platform('linux')
 compiler('gcc', 'c')

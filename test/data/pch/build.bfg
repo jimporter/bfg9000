@@ -1,4 +1,4 @@
-# -*- python -*-
+# -*- mode: python; mode: bfg9000 -*-
 
 pch = precompiled_header(file='header.hpp', source='header.cpp')
 executable('program', ['program.cpp'], pch=pch)

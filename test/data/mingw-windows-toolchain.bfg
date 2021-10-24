@@ -1,4 +1,4 @@
-# -*- python -*-
+# -*- mode: python; mode: bfg9000 -*-
 
 target_platform('winnt', 'i686')
 compiler(['i686-w64-mingw32-g++-win32',

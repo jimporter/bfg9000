@@ -1,4 +1,4 @@
-# -*- python -*-
+# -*- mode: python; mode: bfg9000 -*-
 
 # This build.bfg shows how to build a library and use it in an executable.
 # First, create the library and give it a name; like executables, this name

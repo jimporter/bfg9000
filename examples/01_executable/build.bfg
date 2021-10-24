@@ -1,4 +1,4 @@
-# -*- python -*-
+# -*- mode: python; mode: bfg9000 -*-
 
 # This is about the simplest build.bfg you can write: a single executable made
 # from a single source file. The first argument is the name of the executable

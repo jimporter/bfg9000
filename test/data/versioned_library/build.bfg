@@ -1,4 +1,4 @@
-# -*- python -*-
+# -*- mode: python; mode: bfg9000 -*-
 
 lib = shared_library('library', files=['library.cpp'],
                      version='1.2.3', soversion='1')

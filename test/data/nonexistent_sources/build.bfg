@@ -1,4 +1,4 @@
-# -*- python -*-
+# -*- mode: python; mode: bfg9000 -*-
 
 nonexist = directory('nonexist')
 executable('simple', files=['simple.cpp'])

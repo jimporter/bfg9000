@@ -1,4 +1,4 @@
-# -*- python -*-
+# -*- mode: python; mode: bfg9000 -*-
 
 a = executable('a', files=['a.cpp'])
 b = executable('b', files=['b.cpp'])

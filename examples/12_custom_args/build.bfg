@@ -1,4 +1,4 @@
-# -*- python -*-
+# -*- mode: python; mode: bfg9000 -*-
 
 # Many projects benefit from letting the user configure project-specific
 # elements of their builds, e.g. by enabling certain optional features or by

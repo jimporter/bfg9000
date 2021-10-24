@@ -1,4 +1,4 @@
-# -*- python -*-
+# -*- mode: python; mode: bfg9000 -*-
 
 opts = ['-s'] if env.target_platform.genus == 'linux' else []
 ogg = package('ogg')

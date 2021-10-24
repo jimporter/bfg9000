@@ -1,4 +1,4 @@
-# -*- python -*-
+# -*- mode: python; mode: bfg9000 -*-
 
 lib = library('library', files=['library.cpp'], module_defs='library.def')
 executable('program', files=['program.cpp'], libs=[lib])

@@ -1,4 +1,4 @@
-# -*- python -*-
+# -*- mode: python; mode: bfg9000 -*-
 
 touch_1 = command('touch1', cmd=['touch', '1'])
 touch_2 = command('touch2', cmd=['touch', '2'])

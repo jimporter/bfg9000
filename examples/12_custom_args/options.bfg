@@ -1,4 +1,4 @@
-# -*- python -*-
+# -*- mode: python; mode: bfg9000 -*-
 
 # Inside `options.bfg`, you can define arguments with the argument() function.
 # It works much like argparse's add_argument() method, except that argument

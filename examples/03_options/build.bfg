@@ -1,4 +1,4 @@
-# -*- python -*-
+# -*- mode: python; mode: bfg9000 -*-
 
 # Many projects need to set compiler options for their code to build. bfg9000
 # supports setting options at the language level and for each target. To set

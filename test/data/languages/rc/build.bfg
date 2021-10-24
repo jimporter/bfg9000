@@ -1,4 +1,4 @@
-# -*- python -*-
+# -*- mode: python; mode: bfg9000 -*-
 
 if env.target_platform.family != 'windows':
     exit(1)

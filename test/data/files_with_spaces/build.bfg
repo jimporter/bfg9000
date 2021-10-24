@@ -1,4 +1,4 @@
-# -*- python -*-
+# -*- mode: python; mode: bfg9000 -*-
 
 executable('quad damage', files=['quad damage.cpp'])
 executable('another file', files=['sub dir/another file.cpp'])

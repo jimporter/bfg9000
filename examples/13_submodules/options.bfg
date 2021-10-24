@@ -1,4 +1,4 @@
-# -*- python -*-
+# -*- mode: python; mode: bfg9000 -*-
 
 # In addition to `build.bfg` files, submodules can be included in `options.bfg`
 # files; in this case, the `submodule()` function loads the `options.bfg` file

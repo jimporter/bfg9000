@@ -1,4 +1,4 @@
-# -*- python -*-
+# -*- mode: python; mode: bfg9000 -*-
 
 cxx = executable('simple', files=['simple.cpp'])
 command('cxx', cmd=[cxx])

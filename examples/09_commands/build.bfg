@@ -1,4 +1,4 @@
-# -*- python -*-
+# -*- mode: python; mode: bfg9000 -*-
 
 # Many build scripts contain targets that aren't associated with real files and
 # instead run arbitrary commands. bfg9000 supports this with the command()

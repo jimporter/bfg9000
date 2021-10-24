@@ -1,4 +1,4 @@
-# -*- python -*-
+# -*- mode: python; mode: bfg9000 -*-
 
 # Within a submodule, all paths for inputs (source files) and outputs (built
 # files) are relative to the directory containing the submodule's `build.bfg`

@@ -1,4 +1,4 @@
-# -*- python -*-
+# -*- mode: python; mode: bfg9000 -*-
 
 # Many projects have their code split up into multiple directories. For source
 # files, this is easy: just write out the relative path to the file. For header

@@ -1,4 +1,4 @@
-# -*- python -*-
+# -*- mode: python; mode: bfg9000 -*-
 
 inner = shared_library('inner/inner', files=['inner.cpp'])
 middle = shared_library('middle/middle', files=['middle.cpp'], libs=[inner])
