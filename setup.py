@@ -91,7 +91,7 @@ try:
                 info = json.loads(subprocess.run(
                     ['mike', 'list', '-j', alias], universal_newlines=True,
                     check=True, stdout=subprocess.PIPE
-                ))
+                ).stdout)
             except subprocess.CalledProcessError:
                 info = None
 
