@@ -159,6 +159,7 @@
         <li class="main active"><a href="#getting-started">Getting Started</a></li>
             <li><a href="#supported-platformslanguages">Supported platforms/languages</a></li>
             <li><a href="#installation">Installation</a></li>
+            <li><a href="#editor-integration">Editor integration</a></li>
     </ul>
 </div></div>
                 <div class="col-md-9" role="main">
@@ -210,13 +211,29 @@ installing bfg9000:</p>
 </code></pre>
 
 <p>This will automatically download and install patchelf when installing the rest
-of bfg9000. If you're installing into a <a href="https://virtualenv.readthedocs.org/en/latest/)">virtualenv</a>, patchelf will
+of bfg9000. If you're installing into a <a href="https://virtualenv.readthedocs.org/en/latest/">virtualenv</a>, patchelf will
 go into <code>$VIRTUAL_ENV/bin</code>.</p>
 <h3 id="installing-msbuild-support">Installing MSBuild support<a class="headerlink" href="#installing-msbuild-support" title="Permanent link">§</a></h3>
 <p>Since many users don't need it, MSBuild support is an optional feature. To
 install all the dependencies required for MSBuild, you can run the following:</p>
 <pre><code class="sh">$ pip install bfg9000[msbuild]
-</code></pre></div>
+</code></pre>
+
+<h2 id="editor-integration">Editor integration<a class="headerlink" href="#editor-integration" title="Permanent link">§</a></h2>
+<p>Since bfg9000 scripts are just Python scripts with some extra built-in
+functions, it should be easy to get syntax highlighting for bfg9000 scripts in
+your favorite editor. However, the extra builtins can cause spurious errors if
+your editor expects to be able to look them up (e.g. via <a href="https://langserver.org/">LSP</a>). A more
+robust alternative is to treat bfg9000 scripts as a different language. Emacs
+users can do this by installing the <a href="https://github.com/jimporter/bfg9000-mode">bfg9000-mode</a> package.</p>
+<p>If you want to treat bfg9000 scripts as bfg9000 when possible, but fall back to
+Python otherwise, you can insert the following as the first line of your
+scripts:</p>
+<pre><code class="python"># -*- mode: python; mode: bfg9000 -*-
+</code></pre>
+
+<p>Emacs (and other editors that understand Emacs' file-local variables) will use
+the <em>last</em> <code>mode</code> available to the editor.</p></div>
         </div>
 
         <footer class="col-md-12">
