@@ -67,10 +67,32 @@ install all the dependencies required for MSBuild, you can run the following:
 $ pip install bfg9000[msbuild]
 ```
 
+## Editor integration
+
+Since bfg9000 scripts are just Python scripts with some extra built-in
+functions, it should be easy to get syntax highlighting for bfg9000 scripts in
+your favorite editor. However, the extra builtins can cause spurious errors if
+your editor expects to be able to look them up (e.g. via [LSP][lsp]). A more
+robust alternative is to treat bfg9000 scripts as a different language. Emacs
+users can do this by installing the [bfg9000-mode][bfg9000-mode] package.
+
+If you want to treat bfg9000 scripts as bfg9000 when possible, but fall back to
+Python otherwise, you can insert the following as the first line of your
+scripts:
+
+```python
+# -*- mode: python; mode: bfg9000 -*-
+```
+
+Emacs (and other editors that understand Emacs' file-local variables) will use
+the *last* `mode` available to the editor.
+
 [ppa]: https://launchpad.net/~jimporter/+archive/ubuntu/stable
 [shtab]: https://github.com/iterative/shtab
 [shtab-setup]: https://github.com/iterative/shtab#cli-usage
 [patchelf]: https://nixos.org/patchelf.html
 [rpath]: https://en.wikipedia.org/wiki/Rpath
 [patchelf-wrapper]: https://pypi.python.org/pypi/patchelf-wrapper
-[virtualenv]: https://virtualenv.readthedocs.org/en/latest/)
+[virtualenv]: https://virtualenv.readthedocs.org/en/latest/
+[lsp]: https://langserver.org/
+[bfg9000-mode]: https://github.com/jimporter/bfg9000-mode
