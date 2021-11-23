@@ -362,7 +362,7 @@ class TestPkgConfig(BuiltinTest):
         # generates `-lpublic.dll`.
         self.assertIn("\nLibs: -L'${libdir}' -lpublic", out.getvalue())
         self.assertIn("\nLibs.private: -middle -inner -L'${libdir}' " +
-                      "-lprivate -lmiddle -linner\n", out.getvalue())
+                      '-lprivate -lmiddle -linner\n', out.getvalue())
 
     def test_no_name(self):
         pkg = PkgConfigInfo(self.context)

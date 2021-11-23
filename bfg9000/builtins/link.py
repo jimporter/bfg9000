@@ -347,8 +347,9 @@ def library(context, name, files=None, *, kind=None, **kwargs):
             if kind == 'shared':
                 file_type = SharedLibrary
             elif kind == 'dual':
-                raise ValueError("can't create dual-use libraries from an " +
-                                 "existing file")
+                raise ValueError(
+                    "can't create dual-use libraries from an existing file"
+                )
 
         # XXX: Try to detect if a string refers to a shared lib?
         return static_file(context, file_type, name, dist, params, kwargs)

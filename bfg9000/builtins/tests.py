@@ -43,8 +43,9 @@ class Test:
 class TestCase(Test):
     def __init__(self, context, cmd, environment={}, driver=None):
         if driver and environment:
-            raise TypeError("only one of 'driver' and 'environment' may be " +
-                            "specified")
+            raise TypeError(
+                "only one of 'driver' and 'environment' may be specified"
+            )
         super().__init__(context, cmd, environment, driver)
 
 
@@ -52,8 +53,9 @@ class TestDriver(Test):
     def __init__(self, context, cmd, environment={}, parent=None,
                  wrap_children=False):
         if parent and environment:
-            raise TypeError("only one of 'parent' and 'environment' may be " +
-                            "specified")
+            raise TypeError(
+                "only one of 'parent' and 'environment' may be specified"
+            )
 
         super().__init__(context, cmd, environment, parent)
         self.tests = []

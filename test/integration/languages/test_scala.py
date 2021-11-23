@@ -12,7 +12,7 @@ class TestScala(IntegrationTest):
 
     def test_build(self):
         self.build('program.jar')
-        for i in glob.glob("*.class*"):
+        for i in glob.glob('*.class*'):
             os.remove(i)
         self.assertOutput(['scala', 'program.jar'], 'hello from scala!\n')
 

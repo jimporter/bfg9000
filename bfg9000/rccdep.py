@@ -25,8 +25,8 @@ def main():
     parser = argparse.ArgumentParser(
         prog='bfg9000-rccdep',
         usage='%(prog)s SUBCMD -o FILE -d FILE',
-        description="Write a depfile (in Makefile syntax) for Qt's rcc " +
-                    "tool, and then run rcc."
+        description=("Write a depfile (in Makefile syntax) for Qt's rcc " +
+                     'tool, and then run rcc.')
     )
     parser.add_argument('--version', action='version',
                         version='%(prog)s ' + version)

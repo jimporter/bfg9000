@@ -135,19 +135,19 @@ class TestStackfulStreamHandler(TestCase):
         self.assertEqual(record.msg, 'msg')
         self.assertEqual(record.full_stack, [
             (this_file, lineno, 'test_internal_error',
-             "iterutils.first(None)"),
+             'iterutils.first(None)'),
             (iterutils_file, 83, 'first', 'raise LookupError()'),
         ])
         self.assertEqual(record.stack_pre, '')
         self.assertEqual(record.stack, (
             '\n' +
             '  File "{}", line {}, in test_internal_error\n' +
-            "    iterutils.first(None)"
+            '    iterutils.first(None)'
         ).format(os.path.relpath(this_file), lineno))
         self.assertEqual(record.stack_post, (
             '\n' +
             '  File "{}", line 83, in first\n' +
-            "    raise LookupError()"
+            '    raise LookupError()'
         ).format(iterutils_file))
         self.assertEqual(record.user_pathname, os.path.relpath(this_file))
         self.assertEqual(record.user_lineno, lineno)
@@ -255,7 +255,7 @@ class TestStackfulStreamHandler(TestCase):
         self.assertEqual(record.stack_pre, (
             '\n' +
             '  File "{}", line 83, in first\n' +
-            "    raise LookupError()"
+            '    raise LookupError()'
         ).format(iterutils_file))
         self.assertEqual(record.stack, '')
         self.assertEqual(record.stack_post, '')

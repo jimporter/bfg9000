@@ -50,7 +50,7 @@ class Requirement:
             return [SimpleRequirement(self.name)]
         if single and len(specs) > 1:
             raise ValueError(
-                ("multiple specifiers ({}) used in pkg-config requirement " +
+                ('multiple specifiers ({}) used in pkg-config requirement ' +
                  "for '{}'").format(self.version, self.name)
             )
         return [SimpleRequirement(self.name, i) for i in specs]

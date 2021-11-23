@@ -32,7 +32,7 @@ class TestCrossCompile(IntegrationTest):
         )])
         self.build('simple.exe')
         output = self.assertPopen(['file', '-b', 'simple.exe'])
-        self.assertRegex(output, r"PE32")
+        self.assertRegex(output, 'PE32')
 
 
 @skip_if(env.host_platform.genus != 'linux',
@@ -50,4 +50,4 @@ class TestCrossCompileArch(IntegrationTest):
         self.assertOutput([executable('program')], 'hello from c!\n')
 
         output = self.assertPopen(['file', '-b', 'program'])
-        self.assertRegex(output, r"ELF 32-bit")
+        self.assertRegex(output, 'ELF 32-bit')

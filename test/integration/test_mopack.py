@@ -56,4 +56,4 @@ class TestMopack(IntegrationTest):
         self.build()
 
         output = self.assertPopen(['file', '-b', 'prog.exe'])
-        self.assertRegex(output, r"PE32")
+        self.assertRegex(output, 'PE32')
