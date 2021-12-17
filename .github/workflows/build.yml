@@ -175,7 +175,7 @@ jobs:
 
           # Set up environment variables.
           if(${env:Qt5_DIR}) {
-            echo "CPATH=${env:Qt5_DIR}\include;${env:Qt5_DIR}\include\QtWidgets;${env:Qt5_DIR}\include\QtQml;${env:CPATH}" >> ${env:GITHUB_ENV}
+            echo "CPATH=${env:Qt5_DIR}\include;${env:Qt5_DIR}\include\QtCore;${env:Qt5_DIR}\include\QtWidgets;${env:Qt5_DIR}\include\QtQml;${env:CPATH}" >> ${env:GITHUB_ENV}
             ${env:LIBRARY_PATH} = "${env:LIBRARY_PATH};${env:Qt5_DIR}\lib"
             ${env:PATH} = "${env:PATH};${env:Qt5_DIR}\lib"
           }
