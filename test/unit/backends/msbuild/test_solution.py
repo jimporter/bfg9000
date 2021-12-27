@@ -36,7 +36,7 @@ class TestUuidMap(TestCase):
         self.assertEqual(u['quux'], quux)
 
         with mock.patch('builtins.open', mock_open()), \
-             mock.patch('json.dump') as m:  # noqa
+             mock.patch('json.dump') as m:
             u.save()
             self.assertEqual(m.mock_calls[0][1][0], {
                 'version': 1,

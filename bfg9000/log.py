@@ -4,7 +4,8 @@ import os
 import sys
 import traceback
 import warnings
-from logging import getLogger, CRITICAL, ERROR, WARNING, INFO, DEBUG  # noqa
+from logging import (getLogger, CRITICAL, ERROR, WARNING, INFO,  # noqa: F401
+                     DEBUG)
 from traceback import FrameSummary
 
 from .iterutils import tween

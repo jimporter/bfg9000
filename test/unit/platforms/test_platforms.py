@@ -21,13 +21,12 @@ class TestPlatformName(TestCase):
             raise OSError()
 
         with mock.patch('platform.system', return_value='Linux'), \
-             mock.patch('subprocess.check_output', bad_lsb):  # noqa
+             mock.patch('subprocess.check_output', bad_lsb):
             self.assertEqual(platforms.platform_name(), 'linux')
 
     def test_android(self):
         with mock.patch('platform.system', return_value='Linux'), \
-             mock.patch('subprocess.check_output',
-                        return_value='Android'):  # noqa
+             mock.patch('subprocess.check_output', return_value='Android'):
             self.assertEqual(platforms.platform_name(), 'android')
 
     def test_macos(self):
@@ -36,7 +35,7 @@ class TestPlatformName(TestCase):
 
     def test_ios(self):
         with mock.patch('platform.system', return_value='Darwin'), \
-             mock.patch('platform.machine', return_value='iPhone'):  # noqa
+             mock.patch('platform.machine', return_value='iPhone'):
             self.assertEqual(platforms.platform_name(), 'ios')
 
     def test_windows_nt(self):
@@ -45,7 +44,7 @@ class TestPlatformName(TestCase):
 
         with mock.patch('platform.system', return_value='Windows'), \
              mock.patch('platform.version', return_value='3.10.528'), \
-             mock.patch('subprocess.check_output', mock_execute):  # noqa:
+             mock.patch('subprocess.check_output', mock_execute):
             self.assertEqual(platforms.platform_name(), 'winnt')
 
     def test_windows_10(self):
@@ -54,7 +53,7 @@ class TestPlatformName(TestCase):
 
         with mock.patch('platform.system', return_value='Windows'), \
              mock.patch('platform.version', return_value='10'), \
-             mock.patch('subprocess.check_output', mock_execute):  # noqa:
+             mock.patch('subprocess.check_output', mock_execute):
             self.assertEqual(platforms.platform_name(), 'winnt')
 
     def test_windows_9x(self):
@@ -63,7 +62,7 @@ class TestPlatformName(TestCase):
 
         with mock.patch('platform.system', return_value='Windows'), \
              mock.patch('platform.version', return_value='4.10.1998'), \
-             mock.patch('subprocess.check_output', mock_execute):  # noqa:
+             mock.patch('subprocess.check_output', mock_execute):
             self.assertEqual(platforms.platform_name(), 'win9x')
 
     def test_windows_3x(self):
@@ -72,14 +71,13 @@ class TestPlatformName(TestCase):
 
         with mock.patch('platform.system', return_value='Windows'), \
              mock.patch('platform.version', return_value='3.11'), \
-             mock.patch('subprocess.check_output', mock_execute):  # noqa:
+             mock.patch('subprocess.check_output', mock_execute):
             self.assertEqual(platforms.platform_name(), 'msdos')
 
     def test_windows_with_uname(self):
         with mock.patch('platform.system', return_value='Windows'), \
              mock.patch('platform.version', return_value='10'), \
-             mock.patch('subprocess.check_output',
-                        return_value='foobar'):  # noqa:
+             mock.patch('subprocess.check_output', return_value='foobar'):
             self.assertEqual(platforms.platform_name(), 'winnt')
 
     def test_cygwin(self):
@@ -89,7 +87,7 @@ class TestPlatformName(TestCase):
     def test_cygwin_native_python(self):
         with mock.patch('platform.system', return_value='Windows'), \
              mock.patch('subprocess.check_output',
-                        return_value='CYGWIN_NT-6.1-WOW64'):  # noqa
+                        return_value='CYGWIN_NT-6.1-WOW64'):
             self.assertEqual(platforms.platform_name(), 'cygwin')
 
     def test_unknown(self):

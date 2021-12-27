@@ -35,7 +35,7 @@ class TestRcBuilder(TestCase):
         env = make_env(platform='linux', clear_variables=True)
         with mock.patch('bfg9000.tools.rc.choose_builder') as m, \
              mock.patch('bfg9000.shell.which', return_value=['cmd']), \
-             mock.patch('bfg9000.shell.execute', mock_execute_cc):  # noqa
+             mock.patch('bfg9000.shell.execute', mock_execute_cc):
             rc.rc_builder(env)
             m.assert_called_once_with(env, known_langs['rc'], rc._builders,
                                       candidates=['windres'])
@@ -44,7 +44,7 @@ class TestRcBuilder(TestCase):
         env = make_env(platform='winnt', clear_variables=True)
         with mock.patch('bfg9000.tools.rc.choose_builder') as m, \
              mock.patch('bfg9000.shell.which', return_value=['cmd']), \
-             mock.patch('bfg9000.shell.execute', mock_execute_msvc):  # noqa
+             mock.patch('bfg9000.shell.execute', mock_execute_msvc):
             rc.rc_builder(env)
             m.assert_called_once_with(env, known_langs['rc'], rc._builders,
                                       candidates=['rc', 'windres'])
@@ -64,7 +64,7 @@ class TestRcBuilder(TestCase):
              mock.patch('bfg9000.shell.which',
                         return_value=['i686-w64-mingw32-gcc-99']), \
              mock.patch('bfg9000.shell.execute', mock_execute_cc), \
-             mock.patch('bfg9000.log.info'):  # noqa
+             mock.patch('bfg9000.log.info'):
             rc.rc_builder(env)
             m.assert_called_once_with(env, known_langs['rc'], rc._builders,
                                       candidates='i686-w64-mingw32-windres',
@@ -76,7 +76,7 @@ class TestRcBuilder(TestCase):
         with mock.patch('bfg9000.tools.rc.choose_builder') as m, \
              mock.patch('bfg9000.shell.which', side_effect=IOError()), \
              mock.patch('bfg9000.log.info'), \
-             mock.patch('warnings.warn'):  # noqa
+             mock.patch('warnings.warn'):
             rc.rc_builder(env)
             m.assert_called_once_with(env, known_langs['rc'], rc._builders,
                                       candidates='i686-w64-mingw32-windres',
@@ -89,7 +89,7 @@ class TestRcBuilder(TestCase):
              mock.patch('bfg9000.shell.which',
                         return_value=['i686-w64-mingw32-gcc-99']), \
              mock.patch('bfg9000.shell.execute', mock_execute_cc), \
-             mock.patch('bfg9000.log.info'):  # noqa
+             mock.patch('bfg9000.log.info'):
             rc.rc_builder(env)
             m.assert_called_once_with(env, known_langs['rc'], rc._builders,
                                       candidates='i686-w64-mingw32-windres',
@@ -101,7 +101,7 @@ class TestRcBuilder(TestCase):
         with mock.patch('bfg9000.tools.rc.choose_builder') as m, \
              mock.patch('bfg9000.shell.which', return_value=['gcc']), \
              mock.patch('bfg9000.shell.execute', mock_execute_cc), \
-             mock.patch('bfg9000.log.info'):  # noqa
+             mock.patch('bfg9000.log.info'):
             rc.rc_builder(env)
             m.assert_called_once_with(env, known_langs['rc'], rc._builders,
                                       candidates=['windres'])
@@ -117,7 +117,7 @@ class TestRcBuilder(TestCase):
         with mock.patch('bfg9000.tools.rc.choose_builder',
                         side_effect=mock_choose_builder) as m, \
              mock.patch('bfg9000.log.info'), \
-             mock.patch('warnings.warn'):  # noqa
+             mock.patch('warnings.warn'):
             rc.rc_builder(env)
             self.assertEqual(m.mock_calls, [
                 mock.call(env, known_langs['rc'], rc._builders,

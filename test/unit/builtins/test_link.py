@@ -4,7 +4,8 @@ from .common import AlwaysEqual, AttrDict, BuiltinTest
 from bfg9000.backends.make import syntax as make
 from bfg9000.backends.msbuild.solution import Solution
 from bfg9000.backends.ninja import syntax as ninja
-from bfg9000.builtins import compile, default, link, packages, project  # noqa
+from bfg9000.builtins import (compile, default, link, packages,  # noqa: F401
+                              project)
 from bfg9000 import file_types, options as opts
 from bfg9000.environment import LibraryMode
 from bfg9000.iterutils import listify, unlistify

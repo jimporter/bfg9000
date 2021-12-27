@@ -33,7 +33,7 @@ class TestPython(ToolTestCase):
             self.tool.run_arguments(bad_file)
 
         with mock.patch('bfg9000.shell.which', return_value=['command']), \
-             self.assertRaises(TypeError):  # noqa
+             self.assertRaises(TypeError):
             self.env.run_arguments(bad_file)
 
 

@@ -5,7 +5,7 @@ from unittest import mock
 from .. import TestCase
 from .common import BuiltinTest
 
-from bfg9000.builtins import find, project, regenerate, version  # noqa
+from bfg9000.builtins import find, project, regenerate, version  # noqa: F401
 from bfg9000.file_types import Directory, File, HeaderDirectory, SourceFile
 from bfg9000.iterutils import uniques
 from bfg9000.path import Path, Root
@@ -43,7 +43,7 @@ def mock_filesystem():
     with mock.patch('os.listdir', mock_listdir) as a, \
          mock.patch('bfg9000.path.exists', mock_exists) as b, \
          mock.patch('bfg9000.path.isdir', mock_isdir) as c, \
-         mock.patch('bfg9000.path.islink', return_value=False) as d:  # noqa
+         mock.patch('bfg9000.path.islink', return_value=False) as d:
         yield a, b, c, d
 
 

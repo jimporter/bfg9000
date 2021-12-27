@@ -111,7 +111,7 @@ class TestMsvcBuilder(CrossPlatformTestCase):
         version = 'OVERVIEW: clang LLVM compiler'
 
         with mock.patch('bfg9000.shell.which', mock_which), \
-             mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
+             mock.patch('bfg9000.shell.execute', mock_execute):
             cc = MsvcBuilder(self.env, known_langs['c++'], ['cl'], True,
                              version)
 
@@ -155,7 +155,7 @@ class TestMsvcPackageResolver(CrossPlatformTestCase):
 
     def setUp(self):
         with mock.patch('bfg9000.shell.which', mock_which), \
-             mock.patch('bfg9000.shell.execute', mock_execute):  # noqa:
+             mock.patch('bfg9000.shell.execute', mock_execute):
             self.builder = MsvcBuilder(self.env, known_langs['c++'], ['cl'],
                                        True, 'version')
             self.packages = self.builder.packages
@@ -186,7 +186,7 @@ class TestMsvcPackageResolver(CrossPlatformTestCase):
              mock.patch('bfg9000.tools.msvc.exists', return_value=True), \
              mock.patch('bfg9000.tools.mopack.get_usage',
                         return_value=usage), \
-             mock.patch('bfg9000.log.info'):  # noqa
+             mock.patch('bfg9000.log.info'):
             pkg = self.packages.resolve('foo', None, SpecifierSet(),
                                         PackageKind.any)
             self.check_package(pkg)
@@ -198,7 +198,7 @@ class TestMsvcPackageResolver(CrossPlatformTestCase):
              mock.patch('bfg9000.tools.msvc.exists', return_value=True), \
              mock.patch('bfg9000.tools.mopack.get_usage',
                         return_value=usage), \
-             mock.patch('bfg9000.log.info'):  # noqa
+             mock.patch('bfg9000.log.info'):
             pkg = self.packages.resolve('foo', None, SpecifierSet(),
                                         PackageKind.any)
             self.check_package(pkg)
@@ -210,7 +210,7 @@ class TestMsvcPackageResolver(CrossPlatformTestCase):
              mock.patch('bfg9000.tools.msvc.exists', return_value=True), \
              mock.patch('bfg9000.tools.mopack.get_usage',
                         return_value=usage), \
-             mock.patch('bfg9000.log.info'):  # noqa
+             mock.patch('bfg9000.log.info'):
             pkg = self.packages.resolve('foo', None, SpecifierSet(),
                                         PackageKind.any)
             self.check_package(pkg)

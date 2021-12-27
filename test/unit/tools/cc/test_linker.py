@@ -20,7 +20,7 @@ class TestCcLinker(CrossPlatformTestCase):
 
     def _get_linker(self, lang):
         with mock.patch('bfg9000.shell.which', mock_which), \
-             mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
+             mock.patch('bfg9000.shell.execute', mock_execute):
             return CcBuilder(self.env, known_langs[lang], ['c++'],
                              True, 'version').linker('executable')
 
@@ -465,7 +465,7 @@ class TestCcSharedLinker(TestCcLinker):
 
     def _get_linker(self, lang):
         with mock.patch('bfg9000.shell.which', mock_which), \
-             mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
+             mock.patch('bfg9000.shell.execute', mock_execute):
             return CcBuilder(self.env, known_langs[lang], ['c++'],
                              True, 'version').linker('shared_library')
 

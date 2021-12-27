@@ -8,7 +8,7 @@ from .. import *
 
 from bfg9000 import file_types, options as opts
 from bfg9000.build_inputs import BuildInputs
-from bfg9000.builtins import builtin, packages, project  # noqa
+from bfg9000.builtins import builtin, packages, project  # noqa: F401
 from bfg9000.exceptions import PackageResolutionError
 from bfg9000.iterutils import first
 from bfg9000.packages import CommonPackage, Framework
@@ -119,7 +119,7 @@ class TestPackageCc(BuiltinTest):
     def test_name(self):
         with mock.patch('bfg9000.shell.execute', self.mock_execute), \
              mock.patch('bfg9000.shell.which', mock_which), \
-             mock.patch('logging.log'):  # noqa
+             mock.patch('logging.log'):
             pkg = self.context['package']('name')
             self.assertEqual(pkg.name, 'name')
             self.assertEqual(pkg.version, Version('1.2.3'))
@@ -130,7 +130,7 @@ class TestPackageCc(BuiltinTest):
     def test_submodules(self):
         with mock.patch('bfg9000.shell.execute', self.mock_execute), \
              mock.patch('bfg9000.shell.which', mock_which), \
-             mock.patch('logging.log'):  # noqa
+             mock.patch('logging.log'):
             pkg = self.context['package']('name', 'submodule')
             self.assertEqual(pkg.name, 'name[submodule]')
             self.assertEqual(pkg.version, Version('1.2.3'))
@@ -141,7 +141,7 @@ class TestPackageCc(BuiltinTest):
     def test_version(self):
         with mock.patch('bfg9000.shell.execute', self.mock_execute), \
              mock.patch('bfg9000.shell.which', mock_which), \
-             mock.patch('logging.log'):  # noqa
+             mock.patch('logging.log'):
             pkg = self.context['package']('name', '>1.0')
             self.assertEqual(pkg.name, 'name')
             self.assertEqual(pkg.version, Version('1.2.3'))
@@ -152,7 +152,7 @@ class TestPackageCc(BuiltinTest):
     def test_submodules_and_version(self):
         with mock.patch('bfg9000.shell.execute', self.mock_execute), \
              mock.patch('bfg9000.shell.which', mock_which), \
-             mock.patch('logging.log'):  # noqa
+             mock.patch('logging.log'):
             pkg = self.context['package']('name', 'submodule', '>1.0')
             self.assertEqual(pkg.name, 'name[submodule]')
             self.assertEqual(pkg.version, Version('1.2.3'))
@@ -163,7 +163,7 @@ class TestPackageCc(BuiltinTest):
     def test_lang(self):
         with mock.patch('bfg9000.shell.execute', self.mock_execute), \
              mock.patch('bfg9000.shell.which', mock_which), \
-             mock.patch('logging.log'):  # noqa
+             mock.patch('logging.log'):
             pkg = self.context['package']('name', lang='c++')
             self.assertEqual(pkg.name, 'name')
             self.assertEqual(pkg.version, Version('1.2.3'))
@@ -174,7 +174,7 @@ class TestPackageCc(BuiltinTest):
     def test_kind(self):
         with mock.patch('bfg9000.shell.execute', self.mock_execute), \
              mock.patch('bfg9000.shell.which', mock_which), \
-             mock.patch('logging.log'):  # noqa
+             mock.patch('logging.log'):
             pkg = self.context['package']('name', kind='static')
             self.assertEqual(pkg.name, 'name')
             self.assertEqual(pkg.version, Version('1.2.3'))
@@ -185,7 +185,7 @@ class TestPackageCc(BuiltinTest):
     def test_system(self):
         with mock.patch('bfg9000.shell.execute', self.mock_execute), \
              mock.patch('bfg9000.shell.which', mock_which), \
-             mock.patch('logging.log'):  # noqa
+             mock.patch('logging.log'):
             pkg = self.context['package']('name', system=False)
             self.assertEqual(pkg.name, 'name')
             self.assertEqual(pkg.version, Version('1.2.3'))
@@ -200,7 +200,7 @@ class TestPackageCc(BuiltinTest):
             with mock_obj(self.env, 'builder', wraps=self.env.builder) as m, \
                  mock.patch('bfg9000.shell.execute', self.mock_execute), \
                  mock.patch('bfg9000.shell.which', mock_which), \
-                 mock.patch('logging.log'):  # noqa
+                 mock.patch('logging.log'):
                 yield m
 
         package = self.context['package']
@@ -225,7 +225,7 @@ class TestPackageCc(BuiltinTest):
 
         with mock.patch('bfg9000.shell.execute', self.mock_execute), \
              mock.patch('bfg9000.shell.which', mock_which), \
-             mock.patch('logging.log'):  # noqa
+             mock.patch('logging.log'):
             pkg = self.context['package']('boost', 'thread')
             self.assertEqual(pkg.name, 'boost[thread]')
             self.assertEqual(pkg.version, Version('1.2.3'))

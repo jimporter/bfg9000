@@ -1,4 +1,4 @@
-from ... import *  # noqa
+from ... import *  # noqa: F401
 
 from bfg9000.path import Path, Root
 

@@ -1,6 +1,6 @@
 from .common import BuiltinTest
 
-from bfg9000.builtins import project  # noqa
+from bfg9000.builtins import project  # noqa: F401
 
 
 class TestProject(BuiltinTest):

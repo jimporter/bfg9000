@@ -2,7 +2,7 @@ from unittest import mock
 
 from .common import AttrDict, BuiltinTest
 
-from bfg9000.builtins import find, project, regenerate, version  # noqa
+from bfg9000.builtins import find, project, regenerate, version  # noqa: F401
 from bfg9000.builtins.file_types import make_file_list, static_file
 from bfg9000.file_types import *
 from bfg9000.path import Path, Root

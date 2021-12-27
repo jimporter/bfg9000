@@ -34,7 +34,7 @@ def _execute_script(f, context, path, run_post=False):
     filename = path.string(context.env.base_dirs)
 
     with pushd(path.parent().string(context.env.base_dirs)), \
-         context.push_path(path) as p:  # noqa
+         context.push_path(path) as p:
         code = compile(f.read(), filename, 'exec')
         try:
             exec(code, context.builtins)

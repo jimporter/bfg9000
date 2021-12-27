@@ -41,7 +41,7 @@ class TestCcBuilder(CrossPlatformTestCase):
 
     def test_properties(self):
         with mock.patch('bfg9000.shell.which', mock_which), \
-             mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
+             mock.patch('bfg9000.shell.execute', mock_execute):
             cc = CcBuilder(self.env, known_langs['c++'], ['c++'], True,
                            'version')
 
@@ -92,7 +92,7 @@ class TestCcBuilder(CrossPlatformTestCase):
                    'Copyright (C) 2015 Free Software Foundation, Inc.')
 
         with mock.patch('bfg9000.shell.which', mock_which), \
-             mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
+             mock.patch('bfg9000.shell.execute', mock_execute):
             cc = CcBuilder(self.env, known_langs['c++'], ['g++'], True,
                            version)
 
@@ -138,7 +138,7 @@ class TestCcBuilder(CrossPlatformTestCase):
                        'Copyright (C) 2015 Free Software Foundation, Inc.')
 
             with mock.patch('bfg9000.shell.which', mock_which), \
-                 mock.patch('bfg9000.shell.execute', mock_cross_exec):  # noqa
+                 mock.patch('bfg9000.shell.execute', mock_cross_exec):
                 cc = CcBuilder(self.env, known_langs['c++'], ['g++'], True,
                                version)
             self.assertEqual(cc.compiler.global_flags, flags)
@@ -147,7 +147,7 @@ class TestCcBuilder(CrossPlatformTestCase):
         version = 'clang version 3.8.0-2ubuntu4 (tags/RELEASE_380/final)'
 
         with mock.patch('bfg9000.shell.which', mock_which), \
-             mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
+             mock.patch('bfg9000.shell.execute', mock_execute):
             cc = CcBuilder(self.env, known_langs['c++'], ['clang++'], True,
                            version)
 
@@ -170,7 +170,7 @@ class TestCcBuilder(CrossPlatformTestCase):
 
         version = 'clang version 3.8.0-2ubuntu4 (tags/RELEASE_380/final)'
         with mock.patch('bfg9000.shell.which', mock_which), \
-             mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
+             mock.patch('bfg9000.shell.execute', mock_execute):
             cc = CcBuilder(self.env, known_langs['c++'], ['g++'], True,
                            version)
         self.assertEqual(cc.compiler.global_flags,
@@ -181,7 +181,7 @@ class TestCcBuilder(CrossPlatformTestCase):
         version = 'unknown'
 
         with mock.patch('bfg9000.shell.which', mock_which), \
-             mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
+             mock.patch('bfg9000.shell.execute', mock_execute):
             cc = CcBuilder(self.env, known_langs['c++'], ['c++'], True,
                            version)
 
@@ -204,7 +204,7 @@ class TestCcBuilder(CrossPlatformTestCase):
         self.env.variables['LD'] = '/usr/bin/ld.gold'
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', mock_execute), \
-             mock.patch('logging.log'):  # noqa
+             mock.patch('logging.log'):
             cc = CcBuilder(self.env, known_langs['c++'], ['g++'], True,
                            version)
         self.assertEqual(cc.linker('executable').command,
@@ -217,7 +217,7 @@ class TestCcBuilder(CrossPlatformTestCase):
         self.env.variables['LD'] = '/usr/bin/ld.goofy'
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', mock_execute), \
-             mock.patch('logging.log'):  # noqa
+             mock.patch('logging.log'):
             cc = CcBuilder(self.env, known_langs['c++'], ['g++'], True,
                            version)
         self.assertEqual(cc.linker('executable').command, ['g++'])
@@ -236,14 +236,14 @@ class TestCcBuilder(CrossPlatformTestCase):
 
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', bad_execute), \
-             mock.patch('logging.log'):  # noqa
+             mock.patch('logging.log'):
             cc = CcBuilder(self.env, known_langs['c++'], ['g++'], True,
                            version)
         self.assertRaises(KeyError, cc.linker, 'raw')
 
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', weird_execute), \
-             mock.patch('logging.log'):  # noqa
+             mock.patch('logging.log'):
             cc = CcBuilder(self.env, known_langs['c++'], ['g++'], True,
                            version)
         self.assertRaises(KeyError, cc.linker, 'raw')
@@ -255,7 +255,7 @@ class TestCcPackageResolver(CrossPlatformTestCase):
 
     def setUp(self):
         with mock.patch('bfg9000.shell.which', mock_which), \
-             mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
+             mock.patch('bfg9000.shell.execute', mock_execute):
             self.builder = CcBuilder(self.env, known_langs['c++'], ['c++'],
                                      True, 'version')
             self.packages = self.builder.packages
@@ -284,7 +284,7 @@ class TestCcPackageResolver(CrossPlatformTestCase):
              mock.patch('bfg9000.tools.msvc.exists', return_value=True), \
              mock.patch('bfg9000.tools.mopack.get_usage',
                         return_value=usage), \
-             mock.patch('bfg9000.log.info'):  # noqa
+             mock.patch('bfg9000.log.info'):
             pkg = self.packages.resolve('foo', None, SpecifierSet(),
                                         PackageKind.any)
             self.check_package(pkg)
@@ -296,7 +296,7 @@ class TestCcPackageResolver(CrossPlatformTestCase):
              mock.patch('bfg9000.tools.cc.exists', return_value=True), \
              mock.patch('bfg9000.tools.mopack.get_usage',
                         return_value=usage), \
-             mock.patch('bfg9000.log.info'):  # noqa
+             mock.patch('bfg9000.log.info'):
             pkg = self.packages.resolve('foo', None, SpecifierSet(),
                                         PackageKind.any)
             self.check_package(pkg)
@@ -306,5 +306,5 @@ class TestCcPackageResolver(CrossPlatformTestCase):
                  'pcfiles': ['foo'], 'auto_link': True}
         with mock.patch('bfg9000.tools.mopack.get_usage',
                         return_value=usage), \
-             self.assertRaises(PackageResolutionError):  # noqa
+             self.assertRaises(PackageResolutionError):
             self.packages.resolve('foo', None, SpecifierSet(), PackageKind.any)

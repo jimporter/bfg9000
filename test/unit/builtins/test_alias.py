@@ -1,6 +1,6 @@
 from .common import BuiltinTest
 from bfg9000 import file_types
-from bfg9000.builtins import alias as alias_  # noqa
+from bfg9000.builtins import alias as alias_  # noqa: F401
 from bfg9000.path import Path, Root
 
 

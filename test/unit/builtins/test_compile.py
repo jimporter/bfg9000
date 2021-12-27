@@ -7,8 +7,8 @@ from .. import make_env
 from bfg9000 import file_types, options as opts
 from bfg9000.backends.make import syntax as make
 from bfg9000.backends.ninja import syntax as ninja
-from bfg9000.builtins import (compile, link, packages, project,  # noqa
-                              regenerate)  # noqa
+from bfg9000.builtins import (compile, link, packages, project,  # noqa: F401
+                              regenerate)
 from bfg9000.environment import LibraryMode
 from bfg9000.iterutils import listify, unlistify
 from bfg9000.packages import CommonPackage
@@ -47,7 +47,7 @@ class TestObjectFile(CompileTest):
     def setUp(self):
         super().setUp()
         with mock.patch('bfg9000.shell.which', mock_which), \
-             mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
+             mock.patch('bfg9000.shell.execute', mock_execute):
             self.env.builder('qrc')
             self.env.builder('qtmoc')
 
@@ -440,7 +440,7 @@ class TestGeneratedSource(CompileTest):
     def setUp(self):
         super().setUp()
         with mock.patch('bfg9000.shell.which', mock_which), \
-             mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
+             mock.patch('bfg9000.shell.execute', mock_execute):
             self.env.builder('qrc')
 
     def output_file(self, name, step={}, lang='qrc', *args, **kwargs):
@@ -606,7 +606,7 @@ class TestGeneratedSources(TestObjectFiles):
     def setUp(self):
         super().setUp()
         with mock.patch('bfg9000.shell.which', mock_which), \
-             mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
+             mock.patch('bfg9000.shell.execute', mock_execute):
             self.env.builder('qrc')
 
     def make_file_list(self, return_src=False, prefix=''):
@@ -629,7 +629,7 @@ class TestMakeBackend(BuiltinTest):
         result = self.context['object_file'](file=src)
 
         with mock.patch.object(make.Makefile, 'rule') as mrule, \
-             mock.patch('logging.log'):  # noqa
+             mock.patch('logging.log'):
             compile.make_compile(result.creator, self.build, makefile,
                                  self.env)
             mrule.assert_called_once_with(
@@ -642,7 +642,7 @@ class TestMakeBackend(BuiltinTest):
         result = self.context['object_file'](file=src)
 
         with mock.patch.object(make.Makefile, 'rule') as mrule, \
-             mock.patch('logging.log'):  # noqa
+             mock.patch('logging.log'):
             compile.make_compile(result.creator, self.build, makefile,
                                  self.env)
             mrule.assert_called_once_with(
@@ -656,8 +656,8 @@ class TestMakeBackend(BuiltinTest):
         src = self.context['source_file']('main.cpp')
         result = self.context['object_file'](file=src, extra_deps=dep)
 
-        with mock.patch.object(make.Makefile, 'rule') as mrule, \
-             mock.patch('logging.log'):  # noqa
+        with mock.patch.object(make.Makefile, 'rule'), \
+             mock.patch('logging.log'):
             compile.make_compile(result.creator, self.build, makefile,
                                  self.env)
             makefile.rule.assert_called_once_with(
@@ -669,7 +669,7 @@ class TestMakeBackend(BuiltinTest):
                        variables={'CXX': 'nonexist'})
         build, context = self._make_context(env)
         with mock.patch('bfg9000.tools.c_family._builders', (MsvcBuilder,)), \
-             mock.patch('logging.log'):  # noqa
+             mock.patch('logging.log'):
             context['global_options'](opts.debug(), lang='c++')
             src = context['source_file']('main.cpp')
             result = context['object_file'](file=src, options=[opts.static()])
@@ -678,7 +678,7 @@ class TestMakeBackend(BuiltinTest):
         with mock.patch.object(make.Makefile, 'rule') as mrule, \
              mock.patch.object(make.Makefile, 'variable',
                                wraps=makefile.variable) as mvar, \
-             mock.patch('logging.log'):  # noqa
+             mock.patch('logging.log'):
             compile.make_compile(result.creator, build, makefile, env)
             mrule.assert_called_once_with(result, [src], [], AlwaysEqual(), {
                 make.var('CXXFLAGS'): [make.var('GLOBAL_CXXFLAGS'), '/MTd']
@@ -720,7 +720,7 @@ class TestNinjaBackend(BuiltinTest):
                        variables={'CXX': 'nonexist'})
         build, context = self._make_context(env)
         with mock.patch('bfg9000.tools.c_family._builders', (MsvcBuilder,)), \
-             mock.patch('logging.log'):  # noqa
+             mock.patch('logging.log'):
             context['global_options'](opts.debug(), lang='c++')
             src = context['source_file']('main.cpp')
             result = context['object_file'](file=src, options=[opts.static()])
@@ -728,7 +728,7 @@ class TestNinjaBackend(BuiltinTest):
         ninjafile = ninja.NinjaFile(None)
         with mock.patch.object(ninja.NinjaFile, 'build') as mbuild, \
              mock.patch.object(ninja.NinjaFile, 'variable',
-                               wraps=ninjafile.variable) as mvar:  # noqa
+                               wraps=ninjafile.variable) as mvar:
             compile.ninja_compile(result.creator, build, ninjafile, env)
             mbuild.assert_called_once_with(
                 output=[result], rule='cxx', inputs=[src], implicit=[],

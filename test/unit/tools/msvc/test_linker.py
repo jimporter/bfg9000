@@ -18,7 +18,7 @@ class TestMsvcLinker(CrossPlatformTestCase):
     def _get_linker(self, lang):
         version = ('Microsoft (R) C/C++ Optimizing Compiler Version ' +
                    '19.12.25831 for x86')
-        with mock.patch('bfg9000.shell.which', mock_which):  # noqa
+        with mock.patch('bfg9000.shell.which', mock_which):
             return MsvcBuilder(self.env, known_langs[lang], ['cl'], True,
                                version).linker('executable')
 
@@ -226,7 +226,7 @@ class TestMsvcSharedLinker(TestMsvcLinker):
     def _get_linker(self, lang):
         version = ('Microsoft (R) C/C++ Optimizing Compiler Version ' +
                    '19.12.25831 for x86')
-        with mock.patch('bfg9000.shell.which', mock_which):  # noqa
+        with mock.patch('bfg9000.shell.which', mock_which):
             return MsvcBuilder(self.env, known_langs[lang], ['cl'], True,
                                version).linker('shared_library')
 

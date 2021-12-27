@@ -5,8 +5,8 @@ from .common import AlwaysEqual, BuiltinTest, FileTest
 
 from bfg9000.backends.make import syntax as make
 from bfg9000.backends.ninja import syntax as ninja
-from bfg9000.builtins import (compile, default, install, link,  # noqa
-                              packages, project)  # noqa
+from bfg9000.builtins import (compile, default, install, link,  # noqa: F401
+                              packages, project)
 from bfg9000.file_types import *
 from bfg9000.path import Path, Root, InstallRoot
 from bfg9000.platforms import target
@@ -226,7 +226,7 @@ class TestMakeBackend(BuiltinTest):
         makefile = make.Makefile(None)
 
         with mock.patch.object(make.Makefile, 'rule') as mrule, \
-             mock.patch('logging.log'):  # noqa
+             mock.patch('logging.log'):
             install.make_install_rule(self.build, makefile, self.env)
             mrule.assert_not_called()
 
@@ -237,7 +237,7 @@ class TestMakeBackend(BuiltinTest):
         self.context['install'](exe)
 
         with mock.patch.object(make.Makefile, 'rule') as mrule, \
-             mock.patch('logging.log'):  # noqa
+             mock.patch('logging.log'):
             install.make_install_rule(self.build, makefile, self.env)
             self.assertEqual(mrule.mock_calls, [
                 mock.call(target='install', deps='all', phony=True,
@@ -251,7 +251,7 @@ class TestNinjaBackend(BuiltinTest):
         ninjafile = ninja.NinjaFile(None)
 
         with mock.patch.object(ninja.NinjaFile, 'build') as mbuild, \
-             mock.patch('logging.log'):  # noqa
+             mock.patch('logging.log'):
             install.ninja_install_rule(self.build, ninjafile, self.env)
             mbuild.assert_not_called()
 
@@ -264,7 +264,7 @@ class TestNinjaBackend(BuiltinTest):
         with mock.patch.object(ninja.NinjaFile, 'build') as mbuild, \
              mock.patch.object(ninja.NinjaFile, 'has_build',
                                return_value=True), \
-             mock.patch('logging.log'):  # noqa
+             mock.patch('logging.log'):
             install.ninja_install_rule(self.build, ninjafile, self.env)
             self.assertEqual(mbuild.mock_calls, [
                 mock.call(output='install', inputs=['all'], implicit=['PHONY'],

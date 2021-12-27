@@ -65,7 +65,7 @@ class TestPkgConfig(TestCase):
              mock.patch('bfg9000.tools.pkg_config.check_which',
                         lambda names, env: ([first(names)], True)), \
              mock.patch('bfg9000.shell.which', return_value=['cc']), \
-             mock.patch('bfg9000.shell.execute', mock_execute_cc):  # noqa
+             mock.patch('bfg9000.shell.execute', mock_execute_cc):
             self.assertEqual(PkgConfig(env).command, ['pkg-config'])
             mwhich.assert_not_called()
 
@@ -76,7 +76,7 @@ class TestPkgConfig(TestCase):
              mock.patch('bfg9000.tools.pkg_config.check_which',
                         lambda names, env: ([first(names)], True)), \
              mock.patch('bfg9000.shell.which', return_value=['cc']), \
-             mock.patch('bfg9000.shell.execute', mock_execute_cc):  # noqa
+             mock.patch('bfg9000.shell.execute', mock_execute_cc):
             self.assertEqual(PkgConfig(env).command, ['pkgconf'])
             mwhich.assert_not_called()
 
@@ -89,7 +89,7 @@ class TestPkgConfig(TestCase):
              mock.patch('bfg9000.shell.which',
                         return_value=['i686-w64-mingw32-gcc-99']), \
              mock.patch('bfg9000.shell.execute', mock_execute_cc), \
-             mock.patch('bfg9000.log.info'):  # noqa
+             mock.patch('bfg9000.log.info'):
             self.assertEqual(PkgConfig(env).command,
                              ['i686-w64-mingw32-pkg-config'])
             mcwhich.assert_not_called()
@@ -102,7 +102,7 @@ class TestPkgConfig(TestCase):
              mock.patch('bfg9000.tools.pkg_config.check_which') as mcwhich, \
              mock.patch('bfg9000.shell.which', side_effect=IOError()), \
              mock.patch('bfg9000.log.info'), \
-             mock.patch('warnings.warn'):  # noqa
+             mock.patch('warnings.warn'):
             self.assertEqual(PkgConfig(env).command,
                              ['i686-w64-mingw32-pkg-config'])
             mcwhich.assert_not_called()
@@ -116,7 +116,7 @@ class TestPkgConfig(TestCase):
              mock.patch('bfg9000.shell.which',
                         return_value=['i686-w64-mingw32-gcc-99']), \
              mock.patch('bfg9000.shell.execute', mock_execute_cc), \
-             mock.patch('bfg9000.log.info'):  # noqa
+             mock.patch('bfg9000.log.info'):
             self.assertEqual(PkgConfig(env).command,
                              ['i686-w64-mingw32-pkg-config'])
             mcwhich.assert_not_called()
@@ -128,7 +128,7 @@ class TestPkgConfig(TestCase):
              mock.patch('bfg9000.tools.pkg_config.check_which',
                         lambda names, env: ([first(names)], True)), \
              mock.patch('bfg9000.shell.which', return_value=['cc']), \
-             mock.patch('bfg9000.shell.execute', mock_execute_cc):  # noqa
+             mock.patch('bfg9000.shell.execute', mock_execute_cc):
             self.assertEqual(PkgConfig(env).command, ['pkg-config'])
             mwhich.assert_not_called()
 
@@ -143,7 +143,7 @@ class TestPkgConfig(TestCase):
              mock.patch('bfg9000.tools.pkg_config.check_which',
                         return_value=(['pkgconf'], True)), \
              mock.patch('bfg9000.log.info'), \
-             mock.patch('warnings.warn'):  # noqa
+             mock.patch('warnings.warn'):
             self.assertEqual(PkgConfig(env).command, ['pkgconf'])
 
 

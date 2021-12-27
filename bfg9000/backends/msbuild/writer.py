@@ -4,7 +4,7 @@ import re
 from ... import path
 from ... import shell
 from .solution import Solution, UuidMap
-from .syntax import *  # noqa
+from .syntax import *  # noqa: F401
 from ...versioning import Version
 
 

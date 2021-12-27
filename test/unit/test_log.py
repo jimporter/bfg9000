@@ -36,14 +36,14 @@ class TestIsUserSrc(TestCase):
         with mock.patch('bfg9000.log.platform_info',
                         return_value=MockPlatform('windows')), \
              mock.patch('sys.exec_prefix', r'C:\Python'), \
-             mock.patch('os.path', ntpath):  # noqa
+             mock.patch('os.path', ntpath):
             self.assertFalse(log._is_user_src(r'C:\Python\lib\runpy.py'))
 
     def test_setuptools_wrapper(self):
         with mock.patch('bfg9000.log.platform_info',
                         return_value=MockPlatform('windows')), \
              mock.patch('sys.exec_prefix', r'C:\Python'), \
-             mock.patch('os.path', ntpath):  # noqa
+             mock.patch('os.path', ntpath):
             self.assertFalse(log._is_user_src(
                 r'C:\Python\Scripts\9k.exe\__main__.py'
             ))
@@ -243,7 +243,7 @@ class TestStackfulStreamHandler(TestCase):
                 exc[0:2] + (exc[2].tb_next,)
             )
         with mock.patch.object(logging.StreamHandler, 'emit'), \
-             mock.patch('logging.root.handle'):  # noqa
+             mock.patch('logging.root.handle'):
             handler.emit(record)
 
         iterutils_file = iterutils.__file__.rstrip('c')
@@ -282,7 +282,7 @@ class TestStackfulStreamHandler(TestCase):
         # Test with `os.path.relpath` raising a `ValueError` to match what
         # happens when the two paths passed to it are on different drives.
         with mock.patch.object(logging.StreamHandler, 'emit'), \
-             mock.patch('os.path.relpath', mock_relpath):  # noqa
+             mock.patch('os.path.relpath', mock_relpath):
             handler.emit(record)
 
         self.assertEqual(record.full_stack, [
@@ -514,7 +514,7 @@ class TestInit(TestCase):
     def test_colors(self):
         with mock.patch('logging.addLevelName'), \
              mock.patch('logging.root.addHandler'), \
-             mock.patch('logging.root.setLevel'):  # noqa
+             mock.patch('logging.root.setLevel'):
             with mock.patch('colorama.init') as colorama:
                 log.init()
                 colorama.assert_called_once_with()
@@ -531,7 +531,7 @@ class TestInit(TestCase):
         with mock.patch('logging.addLevelName'), \
              mock.patch('logging.root.addHandler'), \
              mock.patch('logging.root.setLevel'), \
-             mock.patch('colorama.init'):  # noqa
+             mock.patch('colorama.init'):
             with mock.patch('warnings.filterwarnings') as filterwarnings:
                 log.init()
                 filterwarnings.assert_called_once_with(
@@ -548,7 +548,7 @@ class TestInit(TestCase):
     def test_debug(self):
         with mock.patch('logging.addLevelName'), \
              mock.patch('logging.root.addHandler'), \
-             mock.patch('colorama.init'):  # noqa
+             mock.patch('colorama.init'):
             with mock.patch('logging.root.setLevel') as setLevel:
                 log.init()
                 setLevel.assert_called_once_with(log.INFO)

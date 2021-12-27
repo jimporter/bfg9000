@@ -3,15 +3,15 @@ import subprocess
 from enum import Enum
 
 from .. import iterutils
-from .list import shell_list  # noqa
+from .list import shell_list  # noqa: F401
 from ..path import BasePath, Path
 from ..platforms.host import platform_info
 from ..safe_str import jbos, safe_str
 
 if platform_info().family == 'windows':
-    from .windows import *  # noqa
+    from .windows import *  # noqa: F401
 else:
-    from .posix import *  # noqa
+    from .posix import *  # noqa: F401
 
 CalledProcessError = subprocess.CalledProcessError
 

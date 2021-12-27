@@ -1,4 +1,4 @@
-from .. import AttrDict, make_env, TestCase  # noqa
+from .. import AttrDict, make_env, TestCase  # noqa: F401
 
 from bfg9000 import file_types
 from bfg9000.builtins import builtin

@@ -2,7 +2,7 @@ from unittest import mock
 
 from .common import AlwaysEqual, BuiltinTest
 from bfg9000 import file_types
-from bfg9000.builtins import copy_file as _copy_file  # noqa
+from bfg9000.builtins import copy_file as _copy_file  # noqa: F401
 from bfg9000.path import Path, Root
 
 

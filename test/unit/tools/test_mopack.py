@@ -63,13 +63,13 @@ class TestGetUsage(ToolTestCase):
     def test_success(self):
         with mock.patch('bfg9000.shell.which', return_value=['command']), \
              mock.patch('bfg9000.shell.execute',
-                        return_value='{"type": "unknown"}'):  # noqa
+                        return_value='{"type": "unknown"}'):
             self.assertEqual(get_usage(self.env, 'foo'), {'type': 'unknown'})
 
     def test_failure(self):
         with mock.patch('bfg9000.shell.which', return_value=['command']), \
              mock.patch('bfg9000.shell.execute', side_effect=OSError()), \
-             self.assertRaises(PackageResolutionError):  # noqa
+             self.assertRaises(PackageResolutionError):
             get_usage(self.env, 'foo')
 
 

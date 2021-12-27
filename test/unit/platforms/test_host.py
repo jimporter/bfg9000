@@ -14,7 +14,7 @@ class TestHostPlatform(TestCase):
 
     def test_default(self):
         with mock.patch('platform.system', return_value='Linux'), \
-             mock.patch('platform.machine', return_value='i686'):  # noqa
+             mock.patch('platform.machine', return_value='i686'):
             platform = host.platform_info()
         self.assertEqual(platform.name, 'linux')
         self.assertEqual(platform.species, 'linux')

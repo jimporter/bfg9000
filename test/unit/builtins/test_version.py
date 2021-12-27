@@ -1,6 +1,6 @@
 from .common import BuiltinTest
 
-from bfg9000.builtins import version  # noqa
+from bfg9000.builtins import version  # noqa: F401
 from bfg9000.versioning import bfg_version, VersionError
 
 

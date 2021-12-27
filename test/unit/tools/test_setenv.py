@@ -37,7 +37,7 @@ class TestSetEnv(TestCase):
         with mock.patch('bfg9000.platforms.host.platform_info',
                         return_value=MockPlatform('windows')), \
              mock.patch('bfg9000.shell.which', return_value=['command']), \
-             mock.patch.object(Environment, 'getvar', mock_getvar):  # noqa
+             mock.patch.object(Environment, 'getvar', mock_getvar):
             self.reload_import()
             self.setenv = setenv.SetEnv(self.env)
             return setenv

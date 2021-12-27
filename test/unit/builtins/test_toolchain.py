@@ -3,7 +3,7 @@ from unittest import mock
 from .. import *
 
 from bfg9000 import tools
-from bfg9000.builtins import builtin, toolchain  # noqa
+from bfg9000.builtins import builtin, toolchain  # noqa: F401
 from bfg9000.path import InstallRoot
 
 tools.init()

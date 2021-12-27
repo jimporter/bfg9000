@@ -2,7 +2,8 @@ import functools
 import os
 from contextlib import contextmanager
 
-from .platforms.basepath import BasePath, Root, InstallRoot, DestDir  # noqa
+from .platforms.basepath import (BasePath, Root, InstallRoot,  # noqa: F401
+                                 DestDir)
 from .platforms.host import platform_info
 
 Path = platform_info().Path

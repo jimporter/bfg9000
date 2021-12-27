@@ -41,7 +41,7 @@ def mock_filesystem(*, listdir=None, exists=None, isdir=None, islink=None):
     with mock.patch('os.listdir', listdir or mock_listdir) as a, \
          mock.patch('bfg9000.path.exists', exists or mock_exists) as b, \
          mock.patch('bfg9000.path.isdir', isdir or mock_isdir) as c, \
-         mock.patch('bfg9000.path.islink', islink or mock_islink) as d:  # noqa
+         mock.patch('bfg9000.path.islink', islink or mock_islink) as d:
         yield a, b, c, d
 
 
@@ -884,7 +884,7 @@ class TestWalk(TestCase):
 class TestPushd(TestCase):
     def test_basic(self):
         with mock.patch('os.getcwd', return_value='cwd'), \
-             mock.patch('os.chdir') as os_chdir:  # noqa
+             mock.patch('os.chdir') as os_chdir:
             with path.pushd('foo'):
                 self.assertEqual(os_chdir.mock_calls, [mock.call('foo')])
             self.assertEqual(os_chdir.mock_calls, [
@@ -894,7 +894,7 @@ class TestPushd(TestCase):
     def test_makedirs(self):
         with mock.patch('os.makedirs') as os_makedirs, \
              mock.patch('os.getcwd', return_value='cwd'), \
-             mock.patch('os.chdir') as os_chdir:  # noqa
+             mock.patch('os.chdir') as os_chdir:
             with path.pushd('foo', makedirs=True):
                 self.assertEqual(os_makedirs.mock_calls, [
                     mock.call('foo', 0o777, False)
@@ -906,7 +906,7 @@ class TestPushd(TestCase):
 
     def test_exception(self):
         with mock.patch('os.getcwd', return_value='cwd'), \
-             mock.patch('os.chdir') as os_chdir:  # noqa
+             mock.patch('os.chdir') as os_chdir:
             with self.assertRaises(ValueError):
                 with path.pushd('foo'):
                     self.assertEqual(os_chdir.mock_calls, [mock.call('foo')])

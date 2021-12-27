@@ -16,7 +16,7 @@ class TestCcCompiler(CrossPlatformTestCase):
 
     def setUp(self):
         with mock.patch('bfg9000.shell.which', mock_which), \
-             mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
+             mock.patch('bfg9000.shell.execute', mock_execute):
             self.compiler = CcBuilder(self.env, known_langs['c++'], ['c++'],
                                       True, 'version').compiler
 
@@ -162,7 +162,7 @@ class TestCcCompiler(CrossPlatformTestCase):
 class TestCcPchCompiler(TestCcCompiler):
     def setUp(self):
         with mock.patch('bfg9000.shell.which', mock_which), \
-             mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
+             mock.patch('bfg9000.shell.execute', mock_execute):
             self.compiler = CcBuilder(self.env, known_langs['c++'], ['c++'],
                                       True, 'version').pch_compiler
 

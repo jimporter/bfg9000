@@ -17,7 +17,7 @@ def mock_bad_execute(*args, **kwargs):
 class TestNinjaVersion(TestCase):
     def test_good(self):
         with mock.patch('bfg9000.shell.which', return_value=['command']), \
-             mock.patch('bfg9000.shell.execute', return_value='1.23'):  # noqa
+             mock.patch('bfg9000.shell.execute', return_value='1.23'):
             self.assertEqual(version({}), Version('1.23'))
 
     def test_not_found(self):
@@ -26,5 +26,5 @@ class TestNinjaVersion(TestCase):
 
     def test_bad_execute(self):
         with mock.patch('bfg9000.shell.which', return_value=['command']), \
-             mock.patch('bfg9000.shell.execute', mock_bad_execute):  # noqa
+             mock.patch('bfg9000.shell.execute', mock_bad_execute):
             self.assertEqual(version({}), None)

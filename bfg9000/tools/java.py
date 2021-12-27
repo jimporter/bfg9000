@@ -11,7 +11,7 @@ with known_langs.make('scala') as x:
     x.exts(source=['.scala'])
 
 with known_formats.make('jvm', src_lang='java') as fmt, \
-     fmt.make('dynamic') as x:  # noqa
+     fmt.make('dynamic') as x:
     x.vars(linker='JAR', flags='JARFLAGS')
 
 _default_cmds = {

@@ -4,7 +4,8 @@ from unittest import mock
 
 from .common import BuiltinTest, TestCase
 
-from bfg9000.builtins import default, link, packages, project, version  # noqa
+from bfg9000.builtins import (default, link, packages, project,  # noqa: F401
+                              version)
 from bfg9000.builtins.pkg_config import *
 from bfg9000.safe_str import safe_str, shell_literal
 from bfg9000.shell import CalledProcessError
@@ -184,7 +185,7 @@ class TestPkgConfig(BuiltinTest):
             raise OSError('unknown command: {}'.format(args))
 
         with mock.patch('bfg9000.shell.which', return_value=['command']), \
-             mock.patch('bfg9000.shell.execute', mock_execute_cc):  # noqa
+             mock.patch('bfg9000.shell.execute', mock_execute_cc):
             self.context.env.builder('c')
         return self.context.env.tool('pkg_config')
 

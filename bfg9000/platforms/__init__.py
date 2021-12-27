@@ -1,2 +1,2 @@
-from . import host, target  # noqa
-from .core import *  # noqa
+from . import host, target  # noqa: F401
+from .core import *  # noqa: F401

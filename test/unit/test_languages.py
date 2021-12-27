@@ -119,7 +119,7 @@ class TestFormats(TestCase):
         with self.known_formats.make('goofy') as fmt, fmt.make('dynamic') as x:
             x.vars(linker='GOOFY')
         with self.known_formats.make('weird', src_lang='c') as fmt, \
-             fmt.make('dynamic') as x:  # noqa
+             fmt.make('dynamic') as x:
             x.vars(linker='WEIRD')
 
         native = self.known_formats['native']

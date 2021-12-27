@@ -64,16 +64,16 @@ class TestWhich(TestCase):
 
         env = {'PATH': '/usr/bin', 'PATHEXT': '.exe'}
         with mock.patch('bfg9000.shell.platform_info', MockInfo), \
-             mock.patch('os.path.exists', side_effect=[False, True]):  # noqa
+             mock.patch('os.path.exists', side_effect=[False, True]):
             self.assertEqual(which('python', env=env), ['python'])
 
         with mock.patch('bfg9000.shell.platform_info', MockInfo), \
-             mock.patch('os.path.exists', side_effect=[False, True]):  # noqa
+             mock.patch('os.path.exists', side_effect=[False, True]):
             self.assertEqual(which('python', env=env, resolve=True),
                              [os.path.normpath('/usr/bin/python.exe')])
 
         with mock.patch('bfg9000.shell.platform_info', MockInfo), \
-             mock.patch('os.path.exists', side_effect=[False, True]):  # noqa
+             mock.patch('os.path.exists', side_effect=[False, True]):
             self.assertEqual(
                 which([['python', '--foo']], env=env, resolve=True),
                 [os.path.normpath('/usr/bin/python.exe'), '--foo']

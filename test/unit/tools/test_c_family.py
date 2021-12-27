@@ -169,7 +169,7 @@ class TestCFamilyBuilder(CrossPlatformTestCase):
     def test_guess_sibling(self):
         self.env.variables['CC'] = 'gcc'
         with mock.patch('bfg9000.tools.c_family.choose_builder') as m, \
-             mock.patch('bfg9000.log.info'):  # noqa
+             mock.patch('bfg9000.log.info'):
             c_family.c_family_builder(self.env, 'c++')
             m.assert_called_once_with(
                 self.env, known_langs['c++'], c_family._builders,
@@ -179,7 +179,7 @@ class TestCFamilyBuilder(CrossPlatformTestCase):
     def test_guess_sibling_matches_default(self):
         self.env.variables['CC'] = self.cmds['c'][0]
         with mock.patch('bfg9000.tools.c_family.choose_builder') as m, \
-             mock.patch('bfg9000.log.info'):  # noqa
+             mock.patch('bfg9000.log.info'):
             c_family.c_family_builder(self.env, 'c++')
             m.assert_called_once_with(
                 self.env, known_langs['c++'], c_family._builders,
@@ -195,7 +195,7 @@ class TestCFamilyBuilder(CrossPlatformTestCase):
         self.env.variables['CC'] = 'gcc'
         with mock.patch('bfg9000.tools.c_family.choose_builder',
                         side_effect=mock_choose_builder) as m, \
-             mock.patch('bfg9000.log.info'):  # noqa
+             mock.patch('bfg9000.log.info'):
             c_family.c_family_builder(self.env, 'c++')
             cmds = [i for i in self.cmds['c++'] if i != 'g++']
             self.assertEqual(m.mock_calls, [

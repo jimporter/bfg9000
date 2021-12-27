@@ -3,7 +3,7 @@ import traceback
 from unittest import mock
 
 from .common import BuiltinTest
-from bfg9000.builtins import core  # noqa
+from bfg9000.builtins import core  # noqa: F401
 from bfg9000 import exceptions
 from bfg9000.path import Path, Root
 from bfg9000.safe_str import safe_str, safe_format
@@ -105,7 +105,7 @@ class TestCore(BuiltinTest):
 
         with self.context.push_path(Path('dir/build.bfg', Root.srcdir)), \
              mock.patch('bfg9000.build.execute_file',
-                        mock.MagicMock(wraps=mock_execute)) as m:  # noqa
+                        mock.MagicMock(wraps=mock_execute)) as m:
             self.assertEqual(self.context['submodule']('sub'), {})
             m.assert_called_once_with(self.context,
                                       Path('dir/sub/build.bfg', Root.srcdir))

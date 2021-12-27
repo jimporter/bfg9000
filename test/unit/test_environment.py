@@ -6,7 +6,7 @@ from bfg9000.environment import Environment, EnvVarDict, LibraryMode
 from bfg9000.exceptions import ToolNotFoundError
 from bfg9000.file_types import SourceFile
 from bfg9000.path import Path, Root, InstallRoot
-from bfg9000.tools import rm, lex, scripts  # noqa
+from bfg9000.tools import rm, lex, scripts  # noqa: F401
 
 this_dir = os.path.abspath(os.path.dirname(__file__))
 test_data_dir = os.path.join(this_dir, '..', 'data')

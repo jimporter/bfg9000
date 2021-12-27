@@ -1,6 +1,7 @@
 from .common import BuiltinTest
 
-from bfg9000.builtins import compile, default, link, packages, project  # noqa
+from bfg9000.builtins import (compile, default, link, packages,  # noqa: F401
+                              project)
 
 
 class TestDefaultOutputs(BuiltinTest):

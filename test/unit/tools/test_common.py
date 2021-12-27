@@ -188,7 +188,7 @@ class TestChooseBuilder(CrossPlatformTestCase):
 
     def test_choose(self):
         with mock.patch('bfg9000.shell.which', mock_which), \
-             mock.patch('bfg9000.shell.execute', mock_execute):  # noqa
+             mock.patch('bfg9000.shell.execute', mock_execute):
             builder = common.choose_builder(self.env, known_langs['c'],
                                             (cc.CcBuilder,), candidates='cc')
         self.assertEqual(builder.brand, 'gcc')
@@ -202,7 +202,7 @@ class TestChooseBuilder(CrossPlatformTestCase):
 
         with mock.patch('bfg9000.shell.which', bad_which), \
              mock.patch('bfg9000.shell.execute', mock_execute), \
-             mock.patch('warnings.warn', lambda s: None):  # noqa
+             mock.patch('warnings.warn', lambda s: None):
             builder = common.choose_builder(self.env, known_langs['c'],
                                             (cc.CcBuilder,), candidates='cc')
         self.assertEqual(builder.brand, 'unknown')
@@ -212,7 +212,7 @@ class TestChooseBuilder(CrossPlatformTestCase):
             raise ValueError()
 
         with mock.patch('bfg9000.shell.which', mock_which), \
-             mock.patch('bfg9000.shell.execute', bad_execute):  # noqa
+             mock.patch('bfg9000.shell.execute', bad_execute):
             msg = "^no working c compiler found; tried 'cc'$"
             with self.assertRaisesRegex(IOError, msg):
                 common.choose_builder(self.env, known_langs['c'],

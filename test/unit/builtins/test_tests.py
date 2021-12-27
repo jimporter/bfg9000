@@ -5,7 +5,7 @@ from .common import BuiltinTest
 
 from bfg9000.backends.make import writer as make
 from bfg9000.backends.ninja import writer as ninja
-from bfg9000.builtins import default, file_types, tests  # noqa
+from bfg9000.builtins import default, file_types, tests  # noqa: F401
 from bfg9000.path import Path, Root
 from bfg9000.platforms.posix import PosixPath
 from bfg9000.platforms.windows import WindowsPath
