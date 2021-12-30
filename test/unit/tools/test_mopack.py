@@ -31,7 +31,7 @@ class TestMopack(ToolTestCase):
         self.assertEqual(self.tool('usage', 'pkg'),
                          [self.tool, 'usage', '--json', 'pkg'])
         self.assertEqual(self.tool('usage', 'pkg', submodules='sub'),
-                         [self.tool, 'usage', '--json', 'pkg', '-ssub'])
+                         [self.tool, 'usage', '--json', 'pkg[sub]'])
         self.assertEqual(self.tool('usage', 'pkg', directory='dir'),
                          [self.tool, 'usage', '--directory', 'dir', '--json',
                           'pkg'])

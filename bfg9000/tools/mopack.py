@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import yaml
 
 from . import tool
@@ -11,6 +12,8 @@ from ..packages import Framework
 from ..path import Path, Root
 from ..safe_str import safe_format
 
+_bad_dependency_ex = re.compile(r'[,[\]]')
+
 
 @tool('mopack')
 class Mopack(SimpleCommand):
@@ -20,8 +23,21 @@ class Mopack(SimpleCommand):
         super().__init__(env, name='mopack', env_var='MOPACK',
                          default='mopack')
 
-    def _dir_arg(self, directory):
+    @staticmethod
+    def _dir_arg(directory):
         return ['--directory', directory] if directory else []
+
+    @staticmethod
+    def _dependency(package, submodules):
+        def check(s):
+            if not s or _bad_dependency_ex.search(s):
+                raise ValueError('invalid dependency')
+            return s
+
+        submodules_str = ','.join(check(i) for i in iterate(submodules))
+        if submodules_str:
+            return '{}[{}]'.format(check(package), submodules_str)
+        return check(package)
 
     def _call_resolve(self, cmd, config, *, flags=None, directory=None):
         result = cmd + ['resolve'] + self._dir_arg(directory)
@@ -35,9 +51,8 @@ class Mopack(SimpleCommand):
         return result
 
     def _call_usage(self, cmd, name, submodules=None, *, directory=None):
-        result = cmd + ['usage'] + self._dir_arg(directory) + ['--json', name]
-        result.extend(safe_format('-s{}', i) for i in iterate(submodules))
-        return result
+        return (cmd + ['usage'] + self._dir_arg(directory) +
+                ['--json', self._dependency(name, iterate(submodules))])
 
     def _call_deploy(self, cmd, *, directory=None):
         return cmd + ['deploy'] + self._dir_arg(directory)
