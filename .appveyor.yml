@@ -65,10 +65,7 @@ install:
 
   # Set up paths and other necessary bits for the compiler.
   - call "%VS%" x86
-  - set PATH=%QT_ROOT%\bin;%PATH%
-  - set CPATH=%QT_ROOT%\include;%QT_ROOT%\include\QtCore;%QT_ROOT%\include\QtWidgets;%QT_ROOT%\include\QtQml;%CPATH%
-  - set LIBRARY_PATH=%QT_ROOT%\lib;%LIBRARY_PATH%
-  - set PATH=%PYTHON_PATH%;%PYTHON_PATH%\Scripts;%LIBRARY_PATH%;%PATH%
+  - set PATH=%PYTHON_PATH%;%PYTHON_PATH%\Scripts;%LIBRARY_PATH%;%QT_ROOT%\bin;%PATH%
 build_script:
   - git clone https://github.com/jimporter/mopack.git
   - pip install ./mopack .[test]

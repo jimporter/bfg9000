@@ -175,14 +175,14 @@ jobs:
 
           # Set up environment variables.
           if(${env:Qt5_DIR}) {
-            echo "CPATH=${env:Qt5_DIR}\include;${env:Qt5_DIR}\include\QtCore;${env:Qt5_DIR}\include\QtWidgets;${env:Qt5_DIR}\include\QtQml;${env:CPATH}" >> ${env:GITHUB_ENV}
+            echo "QT_ROOT=${env:Qt5_DIR}" >> ${env:GITHUB_ENV}
             ${env:LIBRARY_PATH} = "${env:LIBRARY_PATH};${env:Qt5_DIR}\lib"
             ${env:PATH} = "${env:PATH};${env:Qt5_DIR}\lib"
           }
 
           echo "CPPFLAGS=-I${pwd}\include ${env:CPPFLAGS}" >> ${env:GITHUB_ENV}
           echo "LIBRARY_PATH=${env:LIBRARY_PATH};${pwd}\lib" >> ${env:GITHUB_ENV}
-          echo "PATH=${env:PATH};${pwd}\lib;${env:Qt5_DIR}\lib" >> ${env:GITHUB_ENV}
+          echo "PATH=${env:PATH};${pwd}\lib" >> ${env:GITHUB_ENV}
       - name: Install macOS dependencies
         if: startsWith(matrix.os, 'macos-')
         run: |
