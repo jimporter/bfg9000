@@ -144,8 +144,8 @@ class MsvcPackageResolver:
         # XXX: Add headers/libs here somehow? Add them into PkgConfigPackage
         # directly?
         return pkg_config.resolve(
-            self.env, name, submodules, version, usage['pcfiles'],
-            format=format, kind=kind, system=system, search_path=usage['path'],
-            extra_options=usage.get('extra_args', []),
+            self.env, name, submodules, version, usage['pcnames'],
+            format=format, kind=kind, system=system,
+            search_path=usage['pkg_config_path'],
             generated=usage.get('generated', False)
         )

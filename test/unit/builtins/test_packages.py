@@ -27,8 +27,8 @@ def mock_execute_common(args, **kwargs):
             pkg = args[5]
             if len(args) > 6 and args[6] == '-ssubmodule':
                 pkg = pkg + '_submodule'
-            return ('{"type": "pkg_config", "path": null, ' +
-                    '"pcfiles": ["' + pkg + '"], "extra_args": []}\n')
+            return ('{"type": "pkg_config", "pcnames": ["' + pkg + '"], ' +
+                    '"pkg_config_path": []}\n')
     elif prog == 'pkg-config':
         if '--modversion' in args:
             return '1.2.3\n'

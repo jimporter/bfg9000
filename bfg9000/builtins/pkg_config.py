@@ -313,8 +313,8 @@ class PkgConfigInfo:
                     system.append(i)
                     continue
                 elif isinstance(i, PkgConfigPackage):
-                    pkg_config.add(Requirement(i.pcfiles[0], i.specifier))
-                    pkg_config.update(Requirement(i) for i in i.pcfiles[1:])
+                    pkg_config.add(Requirement(i.pcnames[0], i.specifier))
+                    pkg_config.update(Requirement(i) for i in i.pcnames[1:])
                     continue
 
             raise TypeError('unsupported package type: {}'.format(type(i)))

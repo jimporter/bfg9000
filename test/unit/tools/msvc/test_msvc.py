@@ -180,8 +180,8 @@ class TestMsvcPackageResolver(CrossPlatformTestCase):
         self.assertEqual(self.packages.lang, 'c++')
 
     def test_resolve_pkg_config(self):
-        usage = {'type': 'pkg_config', 'pcfiles': ['foo'],
-                 'path': ['/path/to/include'], 'extra_args': []}
+        usage = {'type': 'pkg_config', 'pcnames': ['foo'],
+                 'pkg_config_path': ['/path/to/include']}
         with mock.patch('bfg9000.shell.execute', mock_execute_pkgconf), \
              mock.patch('bfg9000.tools.msvc.exists', return_value=True), \
              mock.patch('bfg9000.tools.mopack.get_usage',
@@ -192,8 +192,8 @@ class TestMsvcPackageResolver(CrossPlatformTestCase):
             self.check_package(pkg)
 
     def test_resolve_path(self):
-        usage = {'type': 'path', 'path': '/path/to/pkgconfig',
-                 'pcfiles': ['foo'], 'auto_link': False}
+        usage = {'type': 'path', 'generated': True, 'auto_link': False,
+                 'pcnames': ['foo'], 'pkg_config_path': '/path/to/pkgconfig'}
         with mock.patch('bfg9000.shell.execute', mock_execute_pkgconf), \
              mock.patch('bfg9000.tools.msvc.exists', return_value=True), \
              mock.patch('bfg9000.tools.mopack.get_usage',
@@ -204,8 +204,8 @@ class TestMsvcPackageResolver(CrossPlatformTestCase):
             self.check_package(pkg)
 
     def test_resolve_path_auto_link(self):
-        usage = {'type': 'path', 'path': '/path/to/pkgconfig',
-                 'pcfiles': ['foo'], 'auto_link': True}
+        usage = {'type': 'path', 'generated': True, 'auto_link': True,
+                 'pcnames': ['foo'], 'pkg_config_path': '/path/to/pkgconfig'}
         with mock.patch('bfg9000.shell.execute', mock_execute_pkgconf), \
              mock.patch('bfg9000.tools.msvc.exists', return_value=True), \
              mock.patch('bfg9000.tools.mopack.get_usage',

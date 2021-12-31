@@ -107,19 +107,18 @@ class PkgConfig(Command):
 
 class PkgConfigPackage(Package):
     def __init__(self, pkg_config, name, submodules=None,
-                 specifier=SpecifierSet(), pcfiles=None, *, format,
+                 specifier=SpecifierSet(), pcnames=None, *, format,
                  kind=PackageKind.any, system=True, deps=None,
-                 search_path=None, extra_options=[]):
+                 search_path=None):
         super().__init__(name, submodules, format=format, deps=deps)
 
         self._pkg_config = pkg_config
         self._env = ({'PKG_CONFIG_PATH': shell.join_paths(search_path)}
                      if search_path else {})
-        self._extra_options = extra_options
-        self.pcfiles = pcfiles if pcfiles is not None else [name]
+        self.pcnames = pcnames if pcnames is not None else [name]
 
         try:
-            version = self._call(self.pcfiles[0], 'version')
+            version = self._call(self.pcnames[0], 'version')
             version = Version(version) if version else None
         except subprocess.CalledProcessError:
             raise PackageResolutionError("unable to find package '{}'"
@@ -135,16 +134,15 @@ class PkgConfigPackage(Package):
     @memoize_method
     def _call(self, *args, extra_env=None, **kwargs):
         final_env = dict(**self._env, **extra_env) if extra_env else self._env
-        return self._pkg_config.run(*args, extra_env=final_env,
-                                    options=self._extra_options, **kwargs)
+        return self._pkg_config.run(*args, extra_env=final_env, **kwargs)
 
     def include_dirs(self, **kwargs):
-        args = self._call(self.pcfiles, 'include_dirs', self.static, **kwargs)
+        args = self._call(self.pcnames, 'include_dirs', self.static, **kwargs)
         inc_dirs = _include_dirs_parser.parse_known_args(args)[0].include_dirs
         return [Path(i, Root.absolute) for i in inc_dirs or []]
 
     def lib_dirs(self, **kwargs):
-        args = self._call(self.pcfiles, 'lib_dirs', self.static, **kwargs)
+        args = self._call(self.pcnames, 'lib_dirs', self.static, **kwargs)
         lib_dirs = _lib_dirs_parser.parse_known_args(args)[0].lib_dirs
         return [Path(i, Root.absolute) for i in lib_dirs or []]
 
@@ -168,13 +166,13 @@ class PkgConfigPackage(Package):
                 (opts.rpath_dir(i, 'installed') for i in installed or []),
             )
 
-    def _get_install_name_changes(self, pcfiles=None):
-        if pcfiles is None:
-            pcfiles = self.pcfiles
+    def _get_install_name_changes(self, pcnames=None):
+        if pcnames is None:
+            pcnames = self.pcnames
 
         def install_names_for(installed):
             try:
-                return self._call(pcfiles, 'install_names', self.static,
+                return self._call(pcnames, 'install_names', self.static,
                                   installed=installed)
             except shell.CalledProcessError:
                 return None
@@ -189,14 +187,14 @@ class PkgConfigPackage(Package):
                                       for i, j in zip(uninstalled, installed))
 
         # Recursively get install_name changes for public requirements.
-        requires = self._call(pcfiles, 'requires')
+        requires = self._call(pcnames, 'requires')
         for i in requires:
             result.extend(self._get_install_name_changes(i))
 
         return result
 
     def compile_options(self, compiler, *, raw=False):
-        flags = self._call(self.pcfiles, 'other_cflags', self.static,
+        flags = self._call(self.pcnames, 'other_cflags', self.static,
                            not raw and compiler.flavor == 'msvc')
         # Get include paths separately so we can selectively use them as
         # "system" includes; this helps ensure that warnings in external
@@ -208,14 +206,14 @@ class PkgConfigPackage(Package):
         return flags + incdirs
 
     def link_options(self, linker, *, raw=False):
-        flags = self._call(self.pcfiles, 'other_ldflags', self.static,
+        flags = self._call(self.pcnames, 'other_ldflags', self.static,
                            not raw and linker.flavor == 'msvc')
         libdirs = opts.option_list(opts.lib_dir(Directory(i))
                                    for i in self.lib_dirs())
 
         # XXX: How should we ensure that these libs are linked statically when
         # necessary?
-        libs = self._call(self.pcfiles, 'ldlibs', self.static,
+        libs = self._call(self.pcnames, 'ldlibs', self.static,
                           not raw and linker.flavor == 'msvc')
         libs = opts.option_list(opts.lib_literal(i) for i in libs)
 
@@ -236,7 +234,7 @@ class PkgConfigPackage(Package):
         return flags + libdirs + libs + extra_opts
 
     def path(self):
-        return self._call(self.pcfiles[0], 'path')
+        return self._call(self.pcnames[0], 'path')
 
     def __repr__(self):
         return '<{}({!r}, {!r})>'.format(
