@@ -199,20 +199,13 @@ for it. If you have <a href="https://github.com/iterative/shtab">shtab</a> insta
 <code>bfg9000 generate-completion</code>, which will print the shell-completion code for
 your shell to standard output. For more details on how to set this up, consult
 shtab's <a href="https://github.com/iterative/shtab#cli-usage">documentation</a>.</p>
-<h3 id="installing-patchelf">Installing patchelf<a class="headerlink" href="#installing-patchelf" title="Permanent link">§</a></h3>
-<p>On Linux, bfg9000 requires <a href="https://nixos.org/patchelf.html">patchelf</a> in order to modify
-<a href="https://en.wikipedia.org/wiki/Rpath">rpath</a>s of executables and shared libraries when installing. If you
-don't already have patchelf installed (e.g. via your distro's package manager)
-and in your <code>PATH</code>, bfg9000 will automatically install it via the
-<a href="https://pypi.python.org/pypi/patchelf-wrapper">patchelf-wrapper</a> package. If you'd prefer not to install
-patchelf at all, you can set the <code>NO_PATCHELF</code> environment variable to 1 before
-installing bfg9000:</p>
-<pre><code class="sh">$ NO_PATCHELF=1 pip install bfg9000
-</code></pre>
-
-<p>This will automatically download and install patchelf when installing the rest
-of bfg9000. If you're installing into a <a href="https://virtualenv.readthedocs.org/en/latest/">virtualenv</a>, patchelf will
-go into <code>$VIRTUAL_ENV/bin</code>.</p>
+<h3 id="external-dependencies">External dependencies<a class="headerlink" href="#external-dependencies" title="Permanent link">§</a></h3>
+<p>In addition to a compiler for your chosen language, bfg9000 expects a few other
+tools to be installed on your system:</p>
+<ul>
+<li><a href="https://www.freedesktop.org/wiki/Software/pkg-config/"><code>pkg-config</code></a> (or an equivalent tool like [<code>pkgconf</code>][pfgconf]</li>
+<li><a href="https://nixos.org/patchelf.html"><code>patchelf</code></a> on ELF-based systems (e.g. Linux)</li>
+</ul>
 <h3 id="installing-msbuild-support">Installing MSBuild support<a class="headerlink" href="#installing-msbuild-support" title="Permanent link">§</a></h3>
 <p>Since many users don't need it, MSBuild support is an optional feature. To
 install all the dependencies required for MSBuild, you can run the following:</p>
@@ -238,7 +231,7 @@ the <em>last</em> <code>mode</code> available to the editor.</p></div>
 
         <footer class="col-md-12">
             <hr>
-                <p>Copyright &copy; 2015-2021 Jim Porter</p>
+                <p>Copyright &copy; 2015-2022 Jim Porter</p>
             <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
         </footer>
         <script>
