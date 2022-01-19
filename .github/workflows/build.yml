@@ -141,6 +141,7 @@ jobs:
           libogg-dev
           mingw-w64
           ninja-build
+          patchelf
           qt5-default
           qtdeclarative5-dev
           scala
@@ -269,7 +270,7 @@ jobs:
           pip install wheel
           python setup.py bdist_wheel
           pip install dist/*.whl
-          ! pip show pysetenv && pip show patchelf-wrapper
+          ! pip show pysetenv
   lint:
     runs-on: ubuntu-latest
 

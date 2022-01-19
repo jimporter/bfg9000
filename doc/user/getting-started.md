@@ -40,23 +40,13 @@ for it. If you have [shtab][shtab] installed, you can do this with
 your shell to standard output. For more details on how to set this up, consult
 shtab's [documentation][shtab-setup].
 
-### Installing patchelf
+### External dependencies
 
-On Linux, bfg9000 requires [patchelf][patchelf] in order to modify
-[rpath][rpath]s of executables and shared libraries when installing. If you
-don't already have patchelf installed (e.g. via your distro's package manager)
-and in your `PATH`, bfg9000 will automatically install it via the
-[patchelf-wrapper][patchelf-wrapper] package. If you'd prefer not to install
-patchelf at all, you can set the `NO_PATCHELF` environment variable to 1 before
-installing bfg9000:
+In addition to a compiler for your chosen language, bfg9000 expects a few other
+tools to be installed on your system:
 
-```sh
-$ NO_PATCHELF=1 pip install bfg9000
-```
-
-This will automatically download and install patchelf when installing the rest
-of bfg9000. If you're installing into a [virtualenv][virtualenv], patchelf will
-go into `$VIRTUAL_ENV/bin`.
+* [`pkg-config`][pkg-config] (or an equivalent tool like [`pkgconf`][pfgconf]
+* [`patchelf`][patchelf] on ELF-based systems (e.g. Linux)
 
 ### Installing MSBuild support
 
@@ -90,9 +80,9 @@ the *last* `mode` available to the editor.
 [ppa]: https://launchpad.net/~jimporter/+archive/ubuntu/stable
 [shtab]: https://github.com/iterative/shtab
 [shtab-setup]: https://github.com/iterative/shtab#cli-usage
+[pkg-config]: https://www.freedesktop.org/wiki/Software/pkg-config/
+[pkgconf]: http://pkgconf.org/
 [patchelf]: https://nixos.org/patchelf.html
-[rpath]: https://en.wikipedia.org/wiki/Rpath
-[patchelf-wrapper]: https://pypi.python.org/pypi/patchelf-wrapper
 [virtualenv]: https://virtualenv.readthedocs.org/en/latest/
 [lsp]: https://langserver.org/
 [bfg9000-mode]: https://github.com/jimporter/bfg9000-mode

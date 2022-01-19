@@ -154,8 +154,6 @@ if os.getenv('STDEB_BUILD') not in ['1', 'true']:
         'mopack',
         'pysetenv;platform_system=="Windows"'
     ])
-    if os.getenv('NO_PATCHELF') not in ['1', 'true']:
-        more_requires.append('patchelf-wrapper;platform_system=="Linux"')
 
 with open(os.path.join(root_dir, 'README.md'), 'r') as f:
     # Read from the file and strip out the badges.

@@ -22,6 +22,7 @@
 - Require Python 3.6+
 - Qt dependencies are now specified via `package('Qt', '<component>')` rather
   than `package('Qt<component>')`
+- bfg9000 no longer automatically installs `patchelf` on Linux systems
 
 ### Bug fixes
 - Error reporting now shows the proper stack frames on Windows
