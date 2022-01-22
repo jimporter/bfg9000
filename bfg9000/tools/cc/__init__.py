@@ -199,9 +199,6 @@ class CcPackageResolver:
 
         # XXX: Include Cygwin here too?
         if self.env.target_platform.family == 'windows':
-            # We don't actually know what kind of library this is. It could be
-            # a static library or an import library (which we classify as a
-            # kind of shared lib).
             names.append('{}.lib')
         return names
 
