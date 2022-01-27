@@ -4,7 +4,7 @@ repo_url: https://github.com/jimporter/bfg9000/
 edit_uri: ""
 copyright: Copyright &copy; 2015-2022 Jim Porter
 
-theme: yeti
+theme: yeti-classic
 extra_css:
   - css/extra.css
   - css/version-select.css
