@@ -517,11 +517,32 @@ Default: `Win32`
 
 *Windows-only*. The platform type to use when generating MSBuild files.
 
+#### `VCTOOLSVERSION`
+Default: [`$VISUALSTUDIOVERSION`](#VISUALSTUDIOVERSION)
+{: .subtitle}
+
+*Windows-only*. The version of the Visual C++ tools to target when generating
+MSBuild files.
+
 #### `VISUALSTUDIOVERSION`
 Default: `14.0`
 {: .subtitle}
 
 *Windows-only*. The version of Visual Studio to target when generating MSBuild
+files.
+
+#### `VSCMD_ARG_VCVARS_VER`
+Default: `v140`
+
+*Windows-only*. The version of the platform toolset to target when generating
+MSBuild files. If not specified, the value will be inferred from
+[`$VCTOOLSVERSION`](#VCTOOLSVERSION).
+
+#### `WINDOWSSDKVERSION`
+Default: *none*
+{: .subtitle}
+
+*Windows-only*. The version of the Windows SDK to target when generating MSBuild
 files.
 
 [mopack]: https://jimporter.github.io/mopack/

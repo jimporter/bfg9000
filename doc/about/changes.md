@@ -30,12 +30,13 @@ in progress
 - Error reporting now shows the proper stack frames on Windows
 - Fix detection of `clang-cl` compiler
 - MinGW can now use libraries of the form `name.lib`
-- Replace `packaging` dependency with `verspec` for future stability
 - Paths with basenames of `.` or `..` are now treated as directories
+- Improve support for detecting tool versions when generating MSBuild files
 - Empty strings as command-line arguments (e.g. in `command`) are now properly
   quoted
 - Fix display of the traceback in a bfg file when building from the build
   directory
+- Replace `packaging` dependency with `verspec` for future stability
 
 [mopack]: https://jimporter.github.io/mopack/
 
