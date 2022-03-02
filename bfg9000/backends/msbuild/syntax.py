@@ -181,7 +181,10 @@ class VcxProject(Project):
         self.compile_options = compile_options or {}
         self.link_options = link_options or {}
 
-        version = env.getvar('VCTOOLSVERSION', self.version)
+        version = env.getvar(
+            'VSCMD_ARG_VCVARS_VER',
+            env.getvar('VCTOOLSVERSION', self.version)
+        )
         self.toolset = 'v' + version.replace('.', '')[0:3]
 
         # As above, VS 2017 remaps x86 to Win32 for C++ projects.
