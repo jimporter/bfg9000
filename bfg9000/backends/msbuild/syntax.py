@@ -187,6 +187,9 @@ class VcxProject(Project):
         )
         self.toolset = 'v' + version.replace('.', '')[0:3]
 
+        self.windows_sdk = (env.getvar('WINDOWSSDKVERSION', '')
+                               .replace('\\', '') or None)
+
         # As above, VS 2017 remaps x86 to Win32 for C++ projects.
         if self.real_platform == 'x86':
             self.real_platform = 'Win32'
@@ -207,10 +210,7 @@ class VcxProject(Project):
 
         self._write(out, [
             E.Import(Project=r'$(VCTargetsPath)\Microsoft.Cpp.Default.props'),
-            E.PropertyGroup({'Label': 'Configuration'},
-                E.ConfigurationType(self.mode),
-                E.PlatformToolset(self.toolset)
-            ),
+            self._configuration(),
             E.Import(Project=r'$(VCTargetsPath)\Microsoft.Cpp.props'),
             override_props,
             E.ItemDefinitionGroup(compile_opts, link_opts),
@@ -219,6 +219,15 @@ class VcxProject(Project):
             self._links(self.objs),
             E.Import(Project=r'$(VCTargetsPath)\Microsoft.Cpp.targets')
         ])
+
+    def _configuration(self):
+        config = E.PropertyGroup({'Label': 'Configuration'},
+            E.ConfigurationType(self.mode),
+            E.PlatformToolset(self.toolset)
+        )
+        if self.windows_sdk:
+            config.append(E.WindowsTargetPlatformVersion(self.windows_sdk))
+        return config
 
     def _compiles(self, files, func):
         def basename(path):
