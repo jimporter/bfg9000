@@ -466,9 +466,22 @@ prefixes are drive-relative (e.g. <code>\path\to\install</code>).</p>
 <h4 id="platform"><code>PLATFORM</code><a class="headerlink" href="#platform" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <code>Win32</code></p>
 <p><em>Windows-only</em>. The platform type to use when generating MSBuild files.</p>
+<h4 id="vctoolsversion"><code>VCTOOLSVERSION</code><a class="headerlink" href="#vctoolsversion" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <a href="#VISUALSTUDIOVERSION"><code>$VISUALSTUDIOVERSION</code></a></p>
+<p><em>Windows-only</em>. The version of the Visual C++ tools to target when generating
+MSBuild files.</p>
 <h4 id="visualstudioversion"><code>VISUALSTUDIOVERSION</code><a class="headerlink" href="#visualstudioversion" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <code>14.0</code></p>
 <p><em>Windows-only</em>. The version of Visual Studio to target when generating MSBuild
+files.</p>
+<h4 id="vscmd_arg_vcvars_ver"><code>VSCMD_ARG_VCVARS_VER</code><a class="headerlink" href="#vscmd_arg_vcvars_ver" title="Permanent link">§</a></h4>
+<p>Default: <code>v140</code></p>
+<p><em>Windows-only</em>. The version of the platform toolset to target when generating
+MSBuild files. If not specified, the value will be inferred from
+<a href="#VCTOOLSVERSION"><code>$VCTOOLSVERSION</code></a>.</p>
+<h4 id="windowssdkversion"><code>WINDOWSSDKVERSION</code><a class="headerlink" href="#windowssdkversion" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <em>none</em></p>
+<p><em>Windows-only</em>. The version of the Windows SDK to target when generating MSBuild
 files.</p></div>
         </div>
 
