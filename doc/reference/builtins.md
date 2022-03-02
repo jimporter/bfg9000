@@ -889,7 +889,7 @@ correspond directly to the fields in the pkg-config `.pc` file.
 * *lang*: The language of the builder to use when generating option strings;
   by default, `'c'`
 * *system*: If *True*, any include directories will be treated as [system
-  directories][system-directory] when using the packager internally (for
+  directories][system-directory] when using the package internally (for
   compilers that support this); defaults to *False*.
 
 If *auto_fill* is true, this function will automatically fill in default values
