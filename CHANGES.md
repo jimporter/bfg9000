@@ -32,6 +32,7 @@
 - Improve support for detecting tool versions when generating MSBuild files
 - Empty strings as command-line arguments (e.g. in `command`) are now properly
   quoted
+- *pkg-config* `.pc` files now always use POSIX-like paths
 - Fix display of the traceback in a bfg file when building from the build
   directory
 - Replace `packaging` dependency with `verspec` for future stability

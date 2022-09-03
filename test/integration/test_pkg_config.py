@@ -34,11 +34,17 @@ class PkgConfigTest(IntegrationTest):
                          result, '(uninstalled = {})'.format(uninstalled))
 
     def _paths(self):
-        pkgconfdir = norm(pjoin(self.builddir, 'pkgconfig')).replace('\\', '/')
-        return { True: {'include': norm(pjoin(self.srcdir, self.src_include)),
-                        'lib': pjoin(pkgconfdir, '..')},
-                 False: {'include': norm(self.includedir),
-                         'lib': norm(self.libdir)} }
+        def posixpath(*args, normalize=True):
+            path = pjoin(*args)
+            if normalize:
+                path = norm(path)
+            return path.replace('\\', '/')
+
+        pkgconfdir = posixpath(self.builddir, 'pkgconfig')
+        return { True: {'include': posixpath(self.srcdir, self.src_include),
+                        'lib': posixpath(pkgconfdir, '..', normalize=False)},
+                 False: {'include': posixpath(self.includedir),
+                         'lib': posixpath(self.libdir)} }
 
     def _check_requires(self, uninstalled):
         self.assertPkgConfig(['hello', '--print-requires'], '',

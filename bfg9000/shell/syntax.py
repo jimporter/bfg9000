@@ -11,8 +11,9 @@ Syntax = Enum('Syntax', ['variable', 'shell'])
 
 
 class Writer:
-    def __init__(self, stream):
+    def __init__(self, stream, localize_paths=True):
         self.stream = stream
+        self.localize_paths = localize_paths
 
     def write_literal(self, string):
         self.stream.write(string)
@@ -34,7 +35,8 @@ class Writer:
                 escaped |= self.write(i, syntax, shell_quote)
         elif isinstance(thing, path.BasePath):
             out = Writer(StringIO())
-            thing = thing.realize(path_vars, shelly)
+            thing = thing.realize(path_vars, shelly,
+                                  localize=self.localize_paths)
             escaped = out.write(thing, syntax, pshell.inner_quote_info)
 
             thing = out.stream.getvalue()

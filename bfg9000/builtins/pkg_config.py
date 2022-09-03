@@ -399,7 +399,8 @@ class PkgConfigWriter:
             linker.lib_flags(link_options_private, mode='pkg-config')
         )
 
-        out = Writer(out)
+        # CMake expects POSIX-like paths in pkg-config files.
+        out = Writer(out, localize_paths=False)
 
         if installed:
             for i in path.InstallRoot:
@@ -410,7 +411,7 @@ class PkgConfigWriter:
             # Set the builddir to be relative to the .pc file's dir so that
             # users can move the build dir around and things still work.
             self._write_variable(out, 'builddir', path.Path('.').relpath(
-                self.directory, prefix='${pcfiledir}'
+                self.directory, prefix='${pcfiledir}', localize=False
             ))
 
         # We set absolute install_names when building mach-o libraries, but to

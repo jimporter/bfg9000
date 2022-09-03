@@ -103,8 +103,8 @@ class BasePath(safe_str.safe_string):
     def __join(cls, path1, path2):
         return cls.__normpath(posixpath.join(path1, path2))
 
-    def __localize(self, thing):
-        if isinstance(thing, str):
+    def __localize(self, thing, localize=True):
+        if localize and isinstance(thing, str):
             return self._localize_path(thing)
         return thing
 
@@ -158,7 +158,7 @@ class BasePath(safe_str.safe_string):
 
     def relpath(self, start, prefix='', localize=True):
         if self.root == Root.absolute:
-            return self.__localize(self.suffix) if localize else self.suffix
+            return self.__localize(self.suffix, localize)
         if self.root != start.root:
             raise ValueError('source mismatch')
 
@@ -167,7 +167,7 @@ class BasePath(safe_str.safe_string):
         if prefix and rel == posixpath.curdir:
             return prefix
         result = posixpath.join(prefix, rel)
-        return self.__localize(result) if localize else result
+        return self.__localize(result, localize)
 
     def reroot(self, root=Root.builddir):
         return type(self)(self.suffix, root, self.destdir, self.directory)
@@ -189,7 +189,8 @@ class BasePath(safe_str.safe_string):
             base = InstallRoot[data[1]]
         return cls(data[0], base, data[2])
 
-    def realize(self, variables, executable=False, variable_sep=True):
+    def realize(self, variables, executable=False, variable_sep=True,
+                localize=True):
         if self.root == Root.absolute:
             variable_sep = False
             root = None
@@ -205,16 +206,17 @@ class BasePath(safe_str.safe_string):
             destdir = variables[DestDir.destdir]
             root = destdir if root is None else destdir + root
         if root is None:
-            return self.__localize(self.suffix or posixpath.curdir)
+            return self.__localize(self.suffix or posixpath.curdir, localize)
         if not self.suffix:
-            return self.__localize(root)
+            return self.__localize(root, localize)
 
         # Join the separator and the suffix first so that we don't end up with
         # unnecessarily-escaped backslashes on Windows. (It doesn't hurt
         # anything; it just looks weird.)
         suffix = (posixpath.sep + self.suffix if variable_sep else
                   self.suffix)
-        return self.__localize(root) + self.__localize(suffix)
+        return (self.__localize(root, localize) +
+                self.__localize(suffix, localize))
 
     def string(self, variables=None):
         path = self

@@ -1,4 +1,3 @@
-import os
 from io import StringIO
 from unittest import mock
 
@@ -306,10 +305,6 @@ class TestPkgConfig(BuiltinTest):
         self.assertIn('\nConflicts: creq\n', out.getvalue())
 
     def test_requires_generated_pkg_config_package(self):
-        def pathstr(p):
-            p = os.path.normpath(p)
-            return "'{}'".format(p) if '\\' in p else p
-
         pkg_config = self.get_pkg_config()
         with mock.patch('bfg9000.shell.execute', mock_execute):
             req = GeneratedPkgConfigPackage(pkg_config, 'req', format='elf')
@@ -328,14 +323,14 @@ class TestPkgConfig(BuiltinTest):
             PkgConfigWriter(self.context)._write(out, data, installed=True)
 
         self.assertIn('\nCflags: -DREQ -I{} -DPREQ -I{}\n'
-                      .format(pathstr('/usr/include/req'),
-                              pathstr('/usr/include/preq')),
+                      .format('/usr/include/req',
+                              '/usr/include/preq'),
                       out.getvalue())
         self.assertIn('\nLibs: -pthread -L{} -lreq\n'
-                      .format(pathstr('/usr/lib/req')),
+                      .format('/usr/lib/req'),
                       out.getvalue())
         self.assertIn('\nLibs.private: -pthread -L{} -lpreq\n'
-                      .format(pathstr('/usr/lib/preq')),
+                      .format('/usr/lib/preq'),
                       out.getvalue())
         self.assertNotIn('\nRequires:', out.getvalue())
         self.assertNotIn('\nRequires.private:', out.getvalue())

@@ -64,6 +64,11 @@ class TestWritePath(PathTestCase):
         self.assertEqual(out.stream.getvalue(),
                          "'" + self.ospath.join('${bindir}', 'foo') + "'")
 
+    def test_posix_paths(self):
+        out = Writer(StringIO(), localize_paths=False)
+        out.write(self.Path('foo', path.InstallRoot.bindir), Syntax.variable)
+        self.assertEqual(out.stream.getvalue(), '${bindir}/foo')
+
 
 class TestWriteInvalid(TestCase):
     def test_invalid(self):
