@@ -14,7 +14,6 @@ __all__ = ['split', 'join', 'listify', 'inner_quote', 'inner_quote_info',
 # XXX: We need a way to escape cmd.exe-specific characters.
 _bad_chars = re.compile(r'(\s|["&<>|]|\\$)')
 _replace = re.compile(r'(\\*)("|$)')
-_ends_unescaped_quote = re.compile(r'(^|[^\\])(\\\\)*"$')
 
 _Token = Enum('Token', ['char', 'quote', 'space'])
 _State = Enum('State', ['between', 'char', 'word', 'quoted'])

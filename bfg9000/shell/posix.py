@@ -12,7 +12,6 @@ __all__ = ['split', 'join', 'listify', 'inner_quote', 'inner_quote_info',
            'join_lines', 'local_env', 'global_env']
 
 _bad_chars = re.compile(r'[^\w@%+=:,./-]')
-_ends_unescaped_quote = re.compile(r"(^|[^\\])(\\\\)*'$")
 
 
 def split(s, type=list, escapes=False):
