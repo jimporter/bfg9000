@@ -94,10 +94,10 @@ jobs:
       CPPFLAGS: ${{ matrix.flags }}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Cache Boost binaries
         if: startsWith(matrix.os, 'windows-') && matrix.boost-version
-        uses: actions/cache@v2.1.4
+        uses: actions/cache@v3
         id: cache-boost
         with:
           path: C:\boost-${{ matrix.boost-version }}
@@ -107,11 +107,11 @@ jobs:
             matrix.compiler }}-python-${{ matrix.python-version }}-${{
             hashFiles('.github/workflows/build.yml') }}
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
       - name: Clone mopack
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: jimporter/mopack
           path: mopack
@@ -127,7 +127,7 @@ jobs:
           sdk: ${{ matrix.win-sdk }}
       - name: Install Qt ${{ matrix.qt-version }}
         if: matrix.qt-version
-        uses: jurplel/install-qt-action@v2
+        uses: jurplel/install-qt-action@v3
         with:
           version: ${{ matrix.qt-version || '5.12.9' }}
           arch: ${{ matrix.qt-arch }}
@@ -234,7 +234,7 @@ jobs:
           python setup.py coverage -q
           coverage xml
       - name: Upload coverage
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@v3
         with:
           files: ./coverage.xml
   build-cygwin:
@@ -244,9 +244,9 @@ jobs:
       CYGCACHE: C:\cygwin\var\cache\setup
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Clone mopack
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: jimporter/mopack
           path: mopack
@@ -275,16 +275,16 @@ jobs:
         run: |
           copy C:\cygwin\home\runneradmin\bfg9000\coverage.xml .
       - name: Upload coverage
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@v3
         with:
           files: ./coverage.xml
   bdist-wheel:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Set up Python 3.10
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v4
         with:
           python-version: '3.10'
       - name: Test bdist_wheel
@@ -297,9 +297,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Set up Python 3.10
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v4
         with:
           python-version: '3.10'
       - name: Install dependencies
