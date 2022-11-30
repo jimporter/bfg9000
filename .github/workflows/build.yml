@@ -17,8 +17,8 @@ jobs:
         include:
           - {os: ubuntu-latest, extra-tests: [mingw-cross],
              backends: [ninja, make], flags: -Wall -Werror}
-          - {os: windows-latest, msvc-version: '14.33', win-sdk: '10.0.20348.0',
-             boost-version: '1.78.0', qt-version: '5.12.9',
+          - {os: windows-latest, msvc-version: '14.34', win-sdk: '10.0.20348.0',
+             boost-version: '1.78.0', qt-version: '5.15.2',
              skipped-tests: [fortran, objc, scala],
              backends: [ninja, make, msbuild], flags: /WX}
           - {os: macos-latest, skipped-tests: [scala], backends: [ninja, make],
@@ -41,42 +41,42 @@ jobs:
           # VS 2015 builds
           - {os: windows-2019, python-version: '3.10', compiler: default,
              msvc-version: '14.0', win-sdk: '10.0.17763.0',
-             boost-version: '1.78.0', qt-version: '5.12.9',
+             boost-version: '1.78.0', qt-version: '5.15.2',
              skipped-tests: [fortran, objc, scala],
              backends: [ninja, make, msbuild], flags: /WX}
 
           # VS 2017 builds
           - {os: windows-2019, python-version: '3.10', compiler: default,
              msvc-version: '14.16', win-sdk: '10.0.17763.0',
-             boost-version: '1.78.0', qt-version: '5.12.9',
+             boost-version: '1.78.0', qt-version: '5.15.2',
              skipped-tests: [fortran, objc, scala],
              backends: [ninja, make, msbuild], flags: /WX}
 
           # VS 2019 builds
           - {os: windows-2019, python-version: '3.10', compiler: default,
              msvc-version: '14.29', win-sdk: '10.0.18362.0',
-             boost-version: '1.78.0', qt-version: '5.12.9',
+             boost-version: '1.78.0', qt-version: '5.15.2',
              skipped-tests: [fortran, objc, scala],
              backends: [ninja, make, msbuild], flags: /WX}
 
           # VS 2022 x86 builds
           - {os: windows-latest, python-version: '3.10', compiler: default-x86,
-             msvc-version: '14.33', msvc-arch: 'x86', win-sdk: '10.0.20348.0',
+             msvc-version: '14.34', msvc-arch: 'x86', win-sdk: '10.0.20348.0',
              boost-version: '1.78.0', skipped-tests: [fortran, objc, qt, scala],
              backends: [ninja, make, msbuild], flags: /WX}
 
           # VS 2022 clang-cl builds
           - {os: windows-latest, python-version: '3.10', compiler: clang-cl,
-             msvc-version: '14.33', win-sdk: '10.0.20348.0',
-             boost-version: '1.78.0', qt-version: '5.12.9',
+             msvc-version: '14.34', win-sdk: '10.0.20348.0',
+             boost-version: '1.78.0', qt-version: '5.15.2',
              skipped-tests: [boost, fortran, objc, scala],
              backends: [ninja, make], flags: /WX -Wno-microsoft-include
                -Wno-unused-command-line-argument -D_CRT_SECURE_NO_WARNINGS}
 
           # MinGW builds
           - {os: windows-latest, python-version: '3.10', compiler: mingw,
-             msvc-version: '14.33', win-sdk: '10.0.20348.0',
-             qt-version: '5.15.1', qt-arch: 'win64_mingw81',
+             msvc-version: '14.34', win-sdk: '10.0.20348.0',
+             qt-version: '5.15.2', qt-arch: 'win64_mingw81',
              skipped-tests: [boost, fortran, objc, pch, scala],
              backends: [ninja, make], flags: -Wall -Werror}
 
@@ -129,7 +129,7 @@ jobs:
         if: matrix.qt-version
         uses: jurplel/install-qt-action@v3
         with:
-          version: ${{ matrix.qt-version || '5.12.9' }}
+          version: ${{ matrix.qt-version }}
           arch: ${{ matrix.qt-arch }}
       - name: Install Boost ${{ matrix.boost-version }} from binaries
         if: startsWith(matrix.os, 'windows-') && matrix.boost-version
