@@ -11,7 +11,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: ['3.6', '3.7', '3.8', '3.9', '3.10', '3.11']
+        python-version: ['3.7', '3.8', '3.9', '3.10', '3.11']
         compiler: [default]
 
         include:
@@ -24,12 +24,16 @@ jobs:
           - {os: macos-latest, skipped-tests: [scala], backends: [ninja, make],
              flags: -Wall -Werror -DGL_SILENCE_DEPRECATION}
 
+          # Python 3.6 builds
+          - {os: ubuntu-20.04, python-version: '3.6', compiler: default,
+             backends: [ninja, make], flags: -Wall -Werror}
+
           # Clang builds
           - {os: ubuntu-latest, python-version: '3.11',
              extra-tests: [mingw-cross],
-             # Install gfortran-10 and gobjc++-10 since clang will try to link
+             # Install gfortran-12 and gobjc++-12 since clang will try to link
              # to GCC 10 libs and will get confused otherwise.
-             extra-packages: [clang, gfortran-10, gobjc++-10],
+             extra-packages: [clang, gfortran-12, gobjc++-12],
              compiler: clang, backends: [ninja, make], flags: -Wall -Werror}
 
           # Xenial builds (for testing GCJ)
@@ -167,8 +171,11 @@ jobs:
           mingw-w64
           ninja-build
           patchelf
-          qt5-default
+          qtbase5-dev
+          qtbase5-dev-tools
+          qtchooser
           qtdeclarative5-dev
+          qt5-qmake
           scala
           ${{ join(matrix.extra-packages, ' ') }}
       - name: Install Windows dependencies
