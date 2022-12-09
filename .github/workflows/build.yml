@@ -85,14 +85,10 @@ jobs:
              backends: [ninja, make], flags: -Wall -Werror}
 
         exclude:
-          - os: windows-latest
-            python-version: '3.6'
           # FIXME: Remove this when PyPI has lxml binaries for Python 3.11 on
           # Windows.
           - os: windows-latest
             python-version: '3.11'
-          - os: macos-latest
-            python-version: '3.6'
       fail-fast: false
     env:
       GCJ: gcj-4.9
