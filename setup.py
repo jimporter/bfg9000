@@ -160,10 +160,11 @@ setup(
         ['colorama', 'pyyaml', 'setuptools', 'verspec'] + more_requires
     ),
     extras_require={
-        'dev': ['coverage', 'flake8 >= 3.7', 'lxml', 'mike >= 0.3.1',
-                'mkdocs-bootswatch-classic', 'mkdocs-macros-plugin', 'shtab',
-                'stdeb'],
-        'test': ['coverage', 'flake8 >= 3.7', 'lxml', 'shtab'],
+        'dev': ['coverage', 'flake8 >= 3.7', 'flake8-quotes', 'lxml',
+                'mike >= 0.3.1', 'mkdocs-bootswatch-classic',
+                'mkdocs-macros-plugin', 'shtab', 'stdeb'],
+        'test': ['coverage', 'flake8 >= 3.7', 'flake8-quotes', 'lxml',
+                 'shtab'],
         'msbuild': ['lxml'],
     },
 
