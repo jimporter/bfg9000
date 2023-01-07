@@ -218,7 +218,7 @@ jobs:
         run: |
           brew install bison boost ninja pkg-config qt5
           brew link qt5 --force
-          echo "FC=gfortran-10" >> ${GITHUB_ENV}
+          echo "FC=gfortran-11" >> ${GITHUB_ENV}
           echo "YACC=/usr/local/opt/bison/bin/bison" >> ${GITHUB_ENV}
       - name: Set up clang
         if: matrix.compiler == 'clang'
