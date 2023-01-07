@@ -134,7 +134,7 @@ setup(
 
     author='Jim Porter',
     author_email='itsjimporter@gmail.com',
-    license='BSD',
+    license='BSD-3-Clause',
 
     classifiers=[
         'Development Status :: 3 - Alpha',
