@@ -470,6 +470,7 @@ class TestLogger(TestCase):
     def setUp(self):
         self.out = StringIO()
         self.logger = log.getLogger(__name__)
+        self.logger.propagate = False
         log._init_logging(self.logger, False, self.out)
 
     def test_info(self):

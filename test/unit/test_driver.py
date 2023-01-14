@@ -1,5 +1,4 @@
 import argparse
-import logging
 import re
 from io import StringIO
 from unittest import mock
@@ -73,11 +72,14 @@ class TestDirectoryPair(TestCase):
 class TestReloadException(TestCase):
     def setUp(self):
         self.stream = StringIO()
-        log._init_logging(logging.root, debug=False, stream=self.stream)
+        self.logger = log.getLogger('bfg9000.test.unit')
+        self.logger.propagate = False
+        log._init_logging(self.logger, debug=False, stream=self.stream)
+        self.patch_logger = mock.patch('bfg9000.driver.logger', self.logger)
+        self.patch_logger.start()
 
     def tearDown(self):
-        for i in logging.root.handlers[:]:
-            logging.root.removeHandler(i)
+        self.patch_logger.stop()
 
     def test_message(self):
         try:
