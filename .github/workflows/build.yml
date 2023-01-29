@@ -22,7 +22,8 @@ jobs:
              skipped-tests: [fortran, objc, scala],
              backends: [ninja, make, msbuild], flags: /WX}
           - {os: macos-latest, skipped-tests: [scala], backends: [ninja, make],
-             flags: -Wall -Werror -DGL_SILENCE_DEPRECATION}
+             flags: -Wall -Werror -Wno-deprecated-declarations
+               -DGL_SILENCE_DEPRECATION}
 
           # Python 3.6 builds
           - {os: ubuntu-20.04, python-version: '3.6', compiler: default,
