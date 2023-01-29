@@ -78,7 +78,7 @@ packages.
 
 [ninja]: https://ninja-build.org/
 [make]: https://www.gnu.org/software/make/
-[msbuild]: https://msdn.microsoft.com/en-us/library/dd393574(v=vs.120).aspx
+[msbuild]: https://learn.microsoft.com/en-us/visualstudio/msbuild/msbuild
 [mopack]: https://jimporter.github.io/mopack/
 [pkg-config]: https://www.freedesktop.org/wiki/Software/pkg-config/
 [patchelf]: https://nixos.org/patchelf.html

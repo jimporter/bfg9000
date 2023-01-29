@@ -171,5 +171,5 @@ following targets: `dist-gzip`, `dist-bzip2`, or `dist-zip`.
 [autotools]: https://www.gnu.org/software/automake/
 [ninja]: https://ninja-build.org/
 [make]: https://www.gnu.org/software/make/
-[msbuild]: https://msdn.microsoft.com/en-us/library/dd393574(v=vs.120).aspx
+[msbuild]: https://learn.microsoft.com/en-us/visualstudio/msbuild/msbuild
 [destdir]: https://www.gnu.org/prep/standards/html_node/DESTDIR.html

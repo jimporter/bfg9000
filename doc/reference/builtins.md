@@ -1607,10 +1607,10 @@ An exception raised when a version fails to match the supplied version
 specifier.
 
 [system-directory]: https://gcc.gnu.org/onlinedocs/cpp/System-Headers.html
-[def-file]: https://docs.microsoft.com/en-us/cpp/build/reference/module-definition-dot-def-files
+[def-file]: https://learn.microsoft.com/en-us/cpp/build/reference/module-definition-dot-def-files
 [gcc-pch]: https://gcc.gnu.org/onlinedocs/gcc/Precompiled-Headers.html
 [clang-pch]: http://clang.llvm.org/docs/UsersManual.html#usersmanual-precompiled-headers
-[msvc-pch]: https://msdn.microsoft.com/en-us/library/szfdksca.aspx
+[msvc-pch]: https://learn.microsoft.com/en-us/cpp/build/creating-precompiled-header-files
 [whole-archive]: http://linux.die.net/man/1/ld
 [boost]: https://www.boost.org/
 [mopack]: https://jimporter.github.io/mopack/
