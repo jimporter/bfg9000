@@ -219,7 +219,7 @@ can run:</p>
 <h2 id="selecting-a-backend">Selecting a backend<a class="headerlink" href="#selecting-a-backend" title="Permanent link">§</a></h2>
 <p>By default, bfg9000 tries to use the most appropriate build backend for your
 system. In descending order, bfg prefers <a href="https://ninja-build.org/"><code>ninja</code></a>, <a href="https://www.gnu.org/software/make/"><code>make</code></a>, and
-<a href="https://msdn.microsoft.com/en-us/library/dd393574(v=vs.120).aspx"><code>msbuild</code></a>. If one of these isn't installed, it will try the next best
+<a href="https://learn.microsoft.com/en-us/visualstudio/msbuild/msbuild"><code>msbuild</code></a>. If one of these isn't installed, it will try the next best
 option. However, you can explicitly select a backend with the <code>--backend</code>
 option. For instance, to build a Makefile even if Ninja is installed:</p>
 <pre><code class="sh">$ bfg9000 configure builddir/ --backend=make

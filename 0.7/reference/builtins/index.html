@@ -284,7 +284,7 @@ if the <a href="../environment-vars/#gzip"><code>gzip</code></a> command is foun
 <h3 id="module_def_file">module_def_file(<em>name</em>, *, [<em>dist</em>])<a class="headerlink" href="#module_def_file" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Create a reference to an existing module-definition file named <em>name</em>.
-<a href="https://docs.microsoft.com/en-us/cpp/build/reference/module-definition-dot-def-files">Module-definition files</a> are sometimes used when building libraries
+<a href="https://learn.microsoft.com/en-us/cpp/build/reference/module-definition-dot-def-files">Module-definition files</a> are sometimes used when building libraries
 on Windows.</p>
 <h3 id="source_file">source_file(<em>name</em>, [<em>lang</em>], *, [<em>dist</em>])<a class="headerlink" href="#source_file" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
@@ -527,7 +527,7 @@ In addition, the following argument may be specified:</p>
 <p>The exact behavior of precompiled headers varies according to the compiler
 you're using. In <a href="https://gcc.gnu.org/onlinedocs/gcc/Precompiled-Headers.html">GCC</a> and <a href="http://clang.llvm.org/docs/UsersManual.html#usersmanual-precompiled-headers">Clang</a>, the header to be
 precompiled must be the <em>first</em> file <code>#include</code>d in each source file. In
-<a href="https://msdn.microsoft.com/en-us/library/szfdksca.aspx">MSVC</a>, the resulting precompiled header is actually compiled
+<a href="https://learn.microsoft.com/en-us/cpp/build/creating-precompiled-header-files">MSVC</a>, the resulting precompiled header is actually compiled
 within the context of a particular source file and will contain all the
 code <em>up to and including</em> the header in question.</p>
 </div>
