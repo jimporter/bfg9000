@@ -43,7 +43,7 @@ class Mopack(SimpleCommand):
         result = cmd + ['resolve'] + self._dir_arg(directory)
         for k, v in self.env.install_dirs.items():
             if v is not None and v.root == Root.absolute:
-                result.append(safe_format('-P{}={}', k.name, v))
+                result.append(safe_format('-d{}={}', k.name, v))
 
         result.extend(iterate(flags))
         result.append('--')

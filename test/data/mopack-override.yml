@@ -1,6 +1,6 @@
 packages:
   hello:
-    source: tarball
+    origin: tarball
     path: ../../examples/07_mopack/hello.tar.gz
     build:
       type: bfg9000

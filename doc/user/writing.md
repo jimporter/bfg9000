@@ -282,7 +282,7 @@ package dependency should be resolved via an `mopack.yml` file:
 ```yaml
 packages:
   foobar:
-    source: tarball
+    origin: tarball
     path: foobar-1.0.tar.gz
     build: bfg9000
 ```

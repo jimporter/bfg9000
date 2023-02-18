@@ -18,14 +18,14 @@ class TestMopack(ToolTestCase):
     def test_call_resolve(self):
         prefix = self.env.install_dirs[InstallRoot.prefix]
         self.assertEqual(self.tool('resolve', 'mopack.yml'),
-                         [self.tool, 'resolve', '-Pprefix=' + prefix, '--',
+                         [self.tool, 'resolve', '-dprefix=' + prefix, '--',
                           'mopack.yml'])
         self.assertEqual(self.tool('resolve', 'mopack.yml', flags=['--foo']),
-                         [self.tool, 'resolve', '-Pprefix=' + prefix, '--foo',
+                         [self.tool, 'resolve', '-dprefix=' + prefix, '--foo',
                           '--', 'mopack.yml'])
         self.assertEqual(self.tool('resolve', 'mopack.yml', directory='dir'),
                          [self.tool, 'resolve', '--directory', 'dir',
-                          '-Pprefix=' + prefix, '--', 'mopack.yml'])
+                          '-dprefix=' + prefix, '--', 'mopack.yml'])
 
     def test_call_usage(self):
         self.assertEqual(self.tool('usage', 'pkg'),
