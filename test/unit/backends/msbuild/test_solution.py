@@ -40,7 +40,7 @@ class TestUuidMap(TestCase):
             u.save()
             self.assertEqual(m.mock_calls[0][1][0], {
                 'version': 1,
-                'map': {u'foo': '00000000000000000000000000000001',
+                'map': {'foo': '00000000000000000000000000000001',
                         'quux': quux.hex},
             })
 

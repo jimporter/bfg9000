@@ -225,7 +225,7 @@ class TestEnvironment(TestCase):
         self.assertEqual(env.library_mode, LibraryMode(True, False))
         self.assertEqual(env.extra_args, [])
 
-        variables = {u'HOME': u'/home/user'}
+        variables = {'HOME': '/home/user'}
         self.assertEqual(env.variables, variables)
 
         self.assertEqual(env.host_platform.name, 'linux')
