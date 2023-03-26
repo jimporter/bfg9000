@@ -19,8 +19,8 @@ For more details on what you can do with bfg9000, see the
 
 ## Installation
 
-bfg9000 uses [setuptools](https://pythonhosted.org/setuptools/), so installation
-is much the same as any other Python package:
+bfg9000 uses [setuptools][setuptools], so installation is much the same as any
+other Python package:
 
 ```sh
 $ pip install bfg9000
@@ -77,6 +77,7 @@ scripts:
 Emacs (and other editors that understand Emacs' file-local variables) will use
 the *last* `mode` available to the editor.
 
+[setuptools]: https://pythonhosted.org/setuptools/
 [ppa]: https://launchpad.net/~jimporter/+archive/ubuntu/stable
 [shtab]: https://github.com/iterative/shtab
 [shtab-setup]: https://github.com/iterative/shtab#cli-usage
