@@ -1,8 +1,8 @@
+import importlib_metadata as metadata
 import platform
 import re
 import subprocess
 from collections import namedtuple
-from pkg_resources import get_entry_info
 
 from ..objutils import memoize
 from ..versioning import SpecifierSet, Version
@@ -135,12 +135,13 @@ class Platform:
 
 @memoize
 def _get_platform_info(kind, genus, species, arch):
-    entry_point = 'bfg9000.platforms.{}'.format(kind)
-    entry = get_entry_info('bfg9000', entry_point, genus)
-    if entry is None:
+    eps = metadata.entry_points(group='bfg9000.platforms.{}'.format(kind))
+    try:
+        entry = eps[genus]
+    except KeyError:
         # Fall back to a generic POSIX system if we don't recognize the
         # platform name.
-        entry = get_entry_info('bfg9000', entry_point, 'posix')
+        entry = eps['posix']
     return entry.load()(genus, species, arch)
 
 
