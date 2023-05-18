@@ -386,7 +386,7 @@ specified in a <code>build.bfg</code> file via
 <a href="../../reference/builtins/#package"><em>package()</em></a> and used when building binaries
 by passing them in the <em>packages</em> argument:</p>
 <pre><code class="python">ogg = package('ogg', kind='static')
-prog_opts = boost_package('program_options', version='&gt;=1.55')
+prog_opts = package('boost', 'program_options', version='&gt;=1.55')
 
 executable('program', files=['main.cpp'], packages=[ogg, prog_opts])
 </code></pre>
