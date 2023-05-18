@@ -268,7 +268,7 @@ by passing them in the *packages* argument:
 
 ```python
 ogg = package('ogg', kind='static')
-prog_opts = boost_package('program_options', version='>=1.55')
+prog_opts = package('boost', 'program_options', version='>=1.55')
 
 executable('program', files=['main.cpp'], packages=[ogg, prog_opts])
 ```
