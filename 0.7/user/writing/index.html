@@ -391,11 +391,14 @@ prog_opts = package('boost', 'program_options', version='&gt;=1.55')
 executable('program', files=['main.cpp'], packages=[ogg, prog_opts])
 </code></pre>
 
-<p>There are many different ways external packages are distributed, but for native
-packages (C, C++, Fortran, etc), this is handled via <a href="https://jimporter.github.io/mopack/">mopack</a>. mopack
-provides a variety of ways to resolve external packages, and bfg9000 will
-automatically invoke mopack during configuration. You can specify how each
-package dependency should be resolved via an <code>mopack.yml</code> file:</p>
+<p>The <em>package()</em> function provides a way of specifying an <em>abstract dependency</em>.
+However, to actually build your project, this needs to be resolved via a
+<em>concrete dependency</em>. There are many different ways to resolve external
+packages, but for native packages (C, C++, Fortran, etc), bfg9000 handles this
+by calling <a href="https://jimporter.github.io/mopack/">mopack</a> when configuring your build. mopack is a
+multiple-origin package manager and allows you to resolve dependencies in a
+variety of ways depending on your needs. You can specify how each package
+dependency should be resolved via an <code>mopack.yml</code> file:</p>
 <pre><code class="yaml">packages:
   foobar:
     origin: tarball
@@ -406,6 +409,8 @@ package dependency should be resolved via an <code>mopack.yml</code> file:</p>
 <p>By keeping the package resolution metadata separate from the <code>build.bfg</code> file,
 it's much easier for people building your project to override how package
 dependencies are resolved.</p>
+<p>For further details about using mopack to resolve dependencies, consult its
+<a href="https://jimporter.github.io/mopack/">documentation</a>.</p>
 <h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">§</a></h2>
 <p>After building, you might want to allow your project to be installed onto the
 user's system somewhere. Most files (headers, executables, libraries) can be
