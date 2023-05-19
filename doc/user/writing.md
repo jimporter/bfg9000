@@ -273,11 +273,14 @@ prog_opts = package('boost', 'program_options', version='>=1.55')
 executable('program', files=['main.cpp'], packages=[ogg, prog_opts])
 ```
 
-There are many different ways external packages are distributed, but for native
-packages (C, C++, Fortran, etc), this is handled via [mopack][mopack]. mopack
-provides a variety of ways to resolve external packages, and bfg9000 will
-automatically invoke mopack during configuration. You can specify how each
-package dependency should be resolved via an `mopack.yml` file:
+The *package()* function provides a way of specifying an *abstract dependency*.
+However, to actually build your project, this needs to be resolved via a
+*concrete dependency*. There are many different ways to resolve external
+packages, but for native packages (C, C++, Fortran, etc), bfg9000 handles this
+by calling [mopack][mopack] when configuring your build. mopack is a
+multiple-origin package manager and allows you to resolve dependencies in a
+variety of ways depending on your needs. You can specify how each package
+dependency should be resolved via an `mopack.yml` file:
 
 ```yaml
 packages:
@@ -290,6 +293,9 @@ packages:
 By keeping the package resolution metadata separate from the `build.bfg` file,
 it's much easier for people building your project to override how package
 dependencies are resolved.
+
+For further details about using mopack to resolve dependencies, consult its
+[documentation][mopack].
 
 ## Installation
 
