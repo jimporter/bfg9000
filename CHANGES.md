@@ -1,6 +1,6 @@
 # Changes
 
-## v0.7.0 (in progress)
+## v0.7.0 (2023-05-20)
 
 ### New features
 - Add support for resolving external package dependencies via [mopack][mopack]
