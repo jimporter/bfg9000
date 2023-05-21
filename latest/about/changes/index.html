@@ -28,7 +28,6 @@
     </head>
 
     <body>
-
         <div class="navbar navbar-default navbar-fixed-top" role="navigation">
             <div class="container">
 
@@ -157,6 +156,7 @@
                 <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
         <li class="main active"><a href="#changes">Changes</a></li>
+            <li><a href="#v070">v0.7.0</a></li>
             <li><a href="#v060">v0.6.0</a></li>
             <li><a href="#v051">v0.5.1</a></li>
             <li><a href="#v050">v0.5.0</a></li>
@@ -172,9 +172,50 @@
                 <div class="col-md-9" role="main">
 
 <h1 id="changes">Changes<a class="headerlink" href="#changes" title="Permanent link">§</a></h1>
+<h2 id="v070">v0.7.0<a class="headerlink" href="#v070" title="Permanent link">§</a></h2>
+<p class="subtitle">2023-05-20</p>
+<h3 id="new-features">New features<a class="headerlink" href="#new-features" title="Permanent link">§</a></h3>
+<ul>
+<li>Add support for resolving external package dependencies via <a href="https://jimporter.github.io/mopack/">mopack</a></li>
+<li>Add <code>bfg9000 run</code> command to allow executing other commands using the
+  environment variables for a given build</li>
+<li>Add support for installing man pages</li>
+<li>Add <code>--datadir</code> and <code>--mandir</code> configuration options</li>
+<li>Create <code>compile_commands.json</code> when generating build scripts</li>
+<li><code>pkg-config</code> executable can now be found by guessing based on other compilers</li>
+<li>Compiler and tool objects now have a <code>found</code> property to indicate if they were
+  found on the system</li>
+<li>Add <code>system</code> flag to <code>package()</code> and <code>pkg_config()</code> to determine whether to
+  treat include directories from packages as system directories</li>
+<li>Add <code>bfg9000 generate-completion</code> to generate shell-completion functions</li>
+<li>Add support for <code>CLICOLOR</code> and <code>CLICOLOR_FORCE</code> environment variables to
+  control whether to display colors in terminal output</li>
+</ul>
+<h3 id="breaking-changes">Breaking changes<a class="headerlink" href="#breaking-changes" title="Permanent link">§</a></h3>
+<ul>
+<li>Require Python 3.6+</li>
+<li>Qt dependencies are now specified via <code>package('Qt', '&lt;component&gt;')</code> rather
+  than <code>package('Qt&lt;component&gt;')</code></li>
+<li>bfg9000 no longer automatically installs <code>patchelf</code> on Linux systems</li>
+</ul>
+<h3 id="bug-fixes">Bug fixes<a class="headerlink" href="#bug-fixes" title="Permanent link">§</a></h3>
+<ul>
+<li>Error reporting now shows the proper stack frames on Windows</li>
+<li>Fix detection of <code>clang-cl</code> compiler</li>
+<li>MinGW can now use libraries of the form <code>name.lib</code></li>
+<li>Paths with basenames of <code>.</code> or <code>..</code> are now treated as directories</li>
+<li>Improve support for detecting tool versions when generating MSBuild files</li>
+<li>Empty strings as command-line arguments (e.g. in <code>command</code>) are now properly
+  quoted</li>
+<li><em>pkg-config</em> <code>.pc</code> files now always use POSIX-like paths</li>
+<li>Fix display of the traceback in a bfg file when building from the build
+  directory</li>
+<li>Replace <code>packaging</code> dependency with <code>verspec</code> for future stability</li>
+</ul>
+<hr />
 <h2 id="v060">v0.6.0<a class="headerlink" href="#v060" title="Permanent link">§</a></h2>
 <p class="subtitle">2020-09-12</p>
-<h3 id="new-features">New features<a class="headerlink" href="#new-features" title="Permanent link">§</a></h3>
+<h3 id="new-features_1">New features<a class="headerlink" href="#new-features_1" title="Permanent link">§</a></h3>
 <ul>
 <li>Add support for including multiple <code>build.bfg</code> (and <code>options.bfg</code>) files from
   subdirectories via <code>submodule()</code></li>
@@ -211,7 +252,7 @@
 <li>Regenerating build files with the Ninja backend now uses the <code>console</code> pool,
   allowing realtime output and colored text</li>
 </ul>
-<h3 id="breaking-changes">Breaking changes<a class="headerlink" href="#breaking-changes" title="Permanent link">§</a></h3>
+<h3 id="breaking-changes_1">Breaking changes<a class="headerlink" href="#breaking-changes_1" title="Permanent link">§</a></h3>
 <ul>
 <li>Drop support for Python 2</li>
 <li><code>find_files()</code> and <code>find_paths()</code> have been redesigned to support recursive
@@ -225,7 +266,7 @@
 <li>Adding to existing environment variables in <code>env.execute()</code> and <code>env.run()</code>
   is now done via <code>extra_env</code>, not <code>env</code>/<code>env_update</code></li>
 </ul>
-<h3 id="bug-fixes">Bug fixes<a class="headerlink" href="#bug-fixes" title="Permanent link">§</a></h3>
+<h3 id="bug-fixes_1">Bug fixes<a class="headerlink" href="#bug-fixes_1" title="Permanent link">§</a></h3>
 <ul>
 <li><code>copy_file()</code> now works correctly when copying into a subdirectory on the
   Make backend</li>
@@ -249,7 +290,7 @@
 <hr />
 <h2 id="v051">v0.5.1<a class="headerlink" href="#v051" title="Permanent link">§</a></h2>
 <p class="subtitle">2019-12-07</p>
-<h3 id="bug-fixes_1">Bug fixes<a class="headerlink" href="#bug-fixes_1" title="Permanent link">§</a></h3>
+<h3 id="bug-fixes_2">Bug fixes<a class="headerlink" href="#bug-fixes_2" title="Permanent link">§</a></h3>
 <ul>
 <li>Depfiles generated by compile steps are now properly included into Makefiles</li>
 <li>Include directories passed to via <code>include</code> and libraries passed via <code>libs</code>
@@ -259,7 +300,7 @@
 <hr />
 <h2 id="v050">v0.5.0<a class="headerlink" href="#v050" title="Permanent link">§</a></h2>
 <p class="subtitle">2019-11-25</p>
-<h3 id="new-features_1">New features<a class="headerlink" href="#new-features_1" title="Permanent link">§</a></h3>
+<h3 id="new-features_2">New features<a class="headerlink" href="#new-features_2" title="Permanent link">§</a></h3>
 <ul>
 <li>Add <code>generated_source()</code> to allow generating source code from domain-specific
   languages</li>
@@ -279,7 +320,7 @@
   project-wide settings</li>
 <li>Add <code>srcdir</code> builtin to toolchain files</li>
 </ul>
-<h3 id="breaking-changes_1">Breaking changes<a class="headerlink" href="#breaking-changes_1" title="Permanent link">§</a></h3>
+<h3 id="breaking-changes_2">Breaking changes<a class="headerlink" href="#breaking-changes_2" title="Permanent link">§</a></h3>
 <ul>
 <li><code>find_files()</code> redesigned and split into <code>find_files()</code> and <code>find_paths()</code>;
   simple cases should still work, but more complex uses will need adjusted</li>
@@ -294,7 +335,7 @@
   placed in an intermediate directory; call <code>project(intermediate_dirs=False)</code>
   to disable this</li>
 </ul>
-<h3 id="bug-fixes_2">Bug fixes<a class="headerlink" href="#bug-fixes_2" title="Permanent link">§</a></h3>
+<h3 id="bug-fixes_3">Bug fixes<a class="headerlink" href="#bug-fixes_3" title="Permanent link">§</a></h3>
 <ul>
 <li>Include <code>options.bfg</code> in dist tarballs</li>
 <li>Fix escaping of <code>~</code> in Makefiles</li>
@@ -309,14 +350,14 @@
 <hr />
 <h2 id="v041">v0.4.1<a class="headerlink" href="#v041" title="Permanent link">§</a></h2>
 <p class="subtitle">2019-07-05</p>
-<h3 id="bug-fixes_3">Bug fixes<a class="headerlink" href="#bug-fixes_3" title="Permanent link">§</a></h3>
+<h3 id="bug-fixes_4">Bug fixes<a class="headerlink" href="#bug-fixes_4" title="Permanent link">§</a></h3>
 <ul>
 <li>Fix using semantic options in <code>global_options</code></li>
 </ul>
 <hr />
 <h2 id="v040">v0.4.0<a class="headerlink" href="#v040" title="Permanent link">§</a></h2>
 <p class="subtitle">2019-07-05</p>
-<h3 id="new-features_2">New features<a class="headerlink" href="#new-features_2" title="Permanent link">§</a></h3>
+<h3 id="new-features_3">New features<a class="headerlink" href="#new-features_3" title="Permanent link">§</a></h3>
 <ul>
 <li>Compilers and linkers now support semantic options, abstracting away the
   differences between compiler flavors</li>
@@ -331,7 +372,7 @@
   Ninja backend</li>
 <li>Makefiles generated by bfg now have a <code>clean</code> target</li>
 </ul>
-<h3 id="breaking-changes_2">Breaking changes<a class="headerlink" href="#breaking-changes_2" title="Permanent link">§</a></h3>
+<h3 id="breaking-changes_3">Breaking changes<a class="headerlink" href="#breaking-changes_3" title="Permanent link">§</a></h3>
 <ul>
 <li>MSVC builds now automatically set <code>/EHsc</code> to improve standards-compliance and
   mimic Visual Studio's default MSBuild configuration</li>
@@ -343,7 +384,7 @@
 <li>Platform names are reworked; <code>'windows'</code> is now <code>'winnt'</code> and <code>'darwin'</code> is
   <code>'macos'</code></li>
 </ul>
-<h3 id="bug-fixes_4">Bug fixes<a class="headerlink" href="#bug-fixes_4" title="Permanent link">§</a></h3>
+<h3 id="bug-fixes_5">Bug fixes<a class="headerlink" href="#bug-fixes_5" title="Permanent link">§</a></h3>
 <ul>
 <li>Fix support for packaging as a Python Wheel</li>
 <li>Default options for <code>ar</code> are now <code>cr</code> instead of <code>cru</code> to support versions of
@@ -356,7 +397,7 @@
 <hr />
 <h2 id="v031">v0.3.1<a class="headerlink" href="#v031" title="Permanent link">§</a></h2>
 <p class="subtitle">2018-06-01</p>
-<h3 id="bug-fixes_5">Bug fixes<a class="headerlink" href="#bug-fixes_5" title="Permanent link">§</a></h3>
+<h3 id="bug-fixes_6">Bug fixes<a class="headerlink" href="#bug-fixes_6" title="Permanent link">§</a></h3>
 <ul>
 <li>Fix an issue with creating the build directory during the configuration
   process</li>
@@ -364,7 +405,7 @@
 <hr />
 <h2 id="v030">v0.3.0<a class="headerlink" href="#v030" title="Permanent link">§</a></h2>
 <p class="subtitle">2018-06-01</p>
-<h3 id="new-features_3">New features<a class="headerlink" href="#new-features_3" title="Permanent link">§</a></h3>
+<h3 id="new-features_4">New features<a class="headerlink" href="#new-features_4" title="Permanent link">§</a></h3>
 <ul>
 <li>Replace <code>system_package()</code> and <code>pkgconfig_package()</code> with a generic package
   resolver: <code>package()</code></li>
@@ -392,7 +433,7 @@
 <li>Automatically request sudo elevation when installing builds to a system
   directory</li>
 </ul>
-<h3 id="breaking-changes_3">Breaking changes<a class="headerlink" href="#breaking-changes_3" title="Permanent link">§</a></h3>
+<h3 id="breaking-changes_4">Breaking changes<a class="headerlink" href="#breaking-changes_4" title="Permanent link">§</a></h3>
 <ul>
 <li><code>directory()</code> and <code>header_directory()</code> no longer automatically include all
   files within them (pass <code>include='*'</code> for the old behavior)</li>
@@ -407,7 +448,7 @@
 <li>Splitting POSIX shell strings (used for compile and link options as well as
   environment vars on POSIX like <code>CPPFLAGS</code>) no longer parses escape characters</li>
 </ul>
-<h3 id="bug-fixes_6">Bug fixes<a class="headerlink" href="#bug-fixes_6" title="Permanent link">§</a></h3>
+<h3 id="bug-fixes_7">Bug fixes<a class="headerlink" href="#bug-fixes_7" title="Permanent link">§</a></h3>
 <ul>
 <li>Improve logging of syntax errors in <code>build.bfg</code> files</li>
 <li>Fix usage of nested shared libraries when linking with GNU ld (via
@@ -424,7 +465,7 @@
 <hr />
 <h2 id="v020">v0.2.0<a class="headerlink" href="#v020" title="Permanent link">§</a></h2>
 <p class="subtitle">2016-06-26</p>
-<h3 id="new-features_4">New features<a class="headerlink" href="#new-features_4" title="Permanent link">§</a></h3>
+<h3 id="new-features_5">New features<a class="headerlink" href="#new-features_5" title="Permanent link">§</a></h3>
 <ul>
 <li>Support Objective C/C++</li>
 <li>Partially support Fortran (simple projects work, but more complex things
@@ -444,7 +485,7 @@
 <li>Add support for building a distribution of the sources (<code>make dist</code>)</li>
 <li>Allow running custom build steps via <code>build_step()</code></li>
 </ul>
-<h3 id="breaking-changes_4">Breaking changes<a class="headerlink" href="#breaking-changes_4" title="Permanent link">§</a></h3>
+<h3 id="breaking-changes_5">Breaking changes<a class="headerlink" href="#breaking-changes_5" title="Permanent link">§</a></h3>
 <ul>
 <li>Configuring a build is now performed by <code>bfg9000 configure DIRECTORY</code></li>
 <li><code>header()</code> renamed to <code>header_file()</code></li>
@@ -452,7 +493,7 @@
 <li><code>env.linker(lang, mode)</code> replaced by <code>env.builder(lang).linker(mode)</code></li>
 <li><code>env.compiler(lang).flavor</code> replaced by <code>env.builder(lang).flavor</code></li>
 </ul>
-<h3 id="bug-fixes_7">Bug fixes<a class="headerlink" href="#bug-fixes_7" title="Permanent link">§</a></h3>
+<h3 id="bug-fixes_8">Bug fixes<a class="headerlink" href="#bug-fixes_8" title="Permanent link">§</a></h3>
 <ul>
 <li>Fix fetching <code>CFLAGS</code> from the environment (it used to try <code>CCFLAGS</code>)</li>
 <li>Fix execution context of <code>build.bfg</code> files; this caused strange issues with
@@ -476,7 +517,7 @@
 
         <footer class="col-md-12">
             <hr>
-                <p>Copyright &copy; 2015-2020 Jim Porter</p>
+                <p>Copyright &copy; 2015-2023 Jim Porter</p>
             <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
         </footer>
         <script>

@@ -28,7 +28,6 @@
     </head>
 
     <body>
-
         <div class="navbar navbar-default navbar-fixed-top" role="navigation">
             <div class="container">
 
@@ -274,10 +273,18 @@ directory</a> for compilers that support this.</p>
 <p>Create a reference to an existing header named <em>name</em>. This is useful if you'd
 like to <a href="#install">install</a> a single header file for your project. If <em>lang</em> is
 not specified, the language of the file is inferred from its extension.</p>
+<h3 id="man_page">man_page(<em>name</em>, *, [<em>level</em>], [<em>compress</em>], [<em>dist</em>], [<em>extra_deps</em>], [<em>description</em>])<a class="headerlink" href="#man_page" title="Permanent link">§</a></h3>
+<p class="subtitle">Availability: <code>build.bfg</code></p>
+<p>Create a reference to an existing man page named <em>name</em> at the specified
+<em>level</em>; if <em>level</em> is unspecified, guess it by the first character of the
+extension of <em>name</em>.</p>
+<p>If <em>compress</em> is true, add a build step to gzip the man page and return the
+compressed file. If <em>compress</em> is <code>'auto'</code> (the default), gzip the man page only
+if the <a href="../environment-vars/#gzip"><code>gzip</code></a> command is found on the system.</p>
 <h3 id="module_def_file">module_def_file(<em>name</em>, *, [<em>dist</em>])<a class="headerlink" href="#module_def_file" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Create a reference to an existing module-definition file named <em>name</em>.
-<a href="https://docs.microsoft.com/en-us/cpp/build/reference/module-definition-dot-def-files">Module-definition files</a> are sometimes used when building libraries
+<a href="https://learn.microsoft.com/en-us/cpp/build/reference/module-definition-dot-def-files">Module-definition files</a> are sometimes used when building libraries
 on Windows.</p>
 <h3 id="source_file">source_file(<em>name</em>, [<em>lang</em>], *, [<em>dist</em>])<a class="headerlink" href="#source_file" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
@@ -433,7 +440,7 @@ version of the library).</p>
 variables</a> or the <a href="../environment-vars/#static-linking">static
 linking environment variables</a>, as well as
 the <a href="../environment-vars/#compilation-variables">compiler environment
-variable</a> (e.g. <code>CC</code>) for the
+variable</a> (e.g. <code>$CC</code>) for the
 relevant language.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
@@ -520,7 +527,7 @@ In addition, the following argument may be specified:</p>
 <p>The exact behavior of precompiled headers varies according to the compiler
 you're using. In <a href="https://gcc.gnu.org/onlinedocs/gcc/Precompiled-Headers.html">GCC</a> and <a href="http://clang.llvm.org/docs/UsersManual.html#usersmanual-precompiled-headers">Clang</a>, the header to be
 precompiled must be the <em>first</em> file <code>#include</code>d in each source file. In
-<a href="https://msdn.microsoft.com/en-us/library/szfdksca.aspx">MSVC</a>, the resulting precompiled header is actually compiled
+<a href="https://learn.microsoft.com/en-us/cpp/build/creating-precompiled-header-files">MSVC</a>, the resulting precompiled header is actually compiled
 within the context of a particular source file and will contain all the
 code <em>up to and including</em> the header in question.</p>
 </div>
@@ -665,11 +672,11 @@ installed. For instance, on Windows, this means that passing in a shared
 library will install the DLL <em>and</em> the import library.</p>
 </div>
 <p>This step recognizes the following environment variables:
-<a href="../environment-vars/#destdir"><code>DESTDIR</code></a>,
-<a href="../environment-vars/#install"><code>INSTALL</code></a>,
-<a href="../environment-vars/#install_name_tool"><code>INSTALL_NAME_TOOL</code></a>,
-<a href="../environment-vars/#mkdir_p"><code>MKDIR_P</code></a>,
-<a href="../environment-vars/#patchelf"><code>PATCHELF</code></a>.</p>
+<a href="../environment-vars/#destdir"><code>$DESTDIR</code></a>,
+<a href="../environment-vars/#install"><code>$INSTALL</code></a>,
+<a href="../environment-vars/#install_name_tool"><code>$INSTALL_NAME_TOOL</code></a>,
+<a href="../environment-vars/#mkdir_p"><code>$MKDIR_P</code></a>,
+<a href="../environment-vars/#patchelf"><code>$PATCHELF</code></a>.</p>
 <h2 id="user-defined-steps">User-defined steps<a class="headerlink" href="#user-defined-steps" title="Permanent link">§</a></h2>
 <p>While the standard build steps cover the most common tasks in a build, many
 projects need to run more-specialized commands. A build script can define custom
@@ -805,62 +812,39 @@ your project, any linker options that need to be forwarded on to <code>ld</code>
 be prepended with <code>'-Wl,'</code>.</p>
 </div>
 <h2 id="package-resolvers">Package resolvers<a class="headerlink" href="#package-resolvers" title="Permanent link">§</a></h2>
-<h3 id="boost_package">boost_package([<em>name</em>], [<em>version</em>])<a class="headerlink" href="#boost_package" title="Permanent link">§</a></h3>
-<p class="subtitle">Availability: <code>build.bfg</code></p>
-<p>Search for a <a href="https://www.boost.org/">Boost</a> library. You can specify <em>name</em> (as a string or a
-list) to specify a specific Boost library (or libraries); for instance,
-<code>'program_options'</code>. For header-only libraries, you can omit <em>name</em>. If
-<em>version</em> is specified, it will ensure that the installed version of Boost meets
-the version requirement; it must be formatted as a Python <a href="https://www.python.org/dev/peps/pep-0440/#version-specifiers">version
-specifier</a>.</p>
-<p>If this function is unable to find the specified Boost library, it will raise a
-<a href="#packageresolutionerror"><em>PackageResolutionError</em></a>. If the library is found but
-doesn't match the required version, a
-<a href="#packageversionerror"><em>PackageVersionError</em></a> will be raised instead.</p>
-<p>This function recognizes the following environment variables:
-<a href="../environment-vars/#boost_root"><code>BOOST_ROOT</code></a>,
-<a href="../environment-vars/#boost_includedir"><code>BOOST_INCLUDEDIR</code></a>,
-<a href="../environment-vars/#boost_librarydir"><code>BOOST_LIBRARYDIR</code></a>,
-<a href="../environment-vars/#cpath"><code>CPATH</code></a>,
-<a href="../environment-vars/#include"><code>INCLUDE</code></a>,
-<a href="../environment-vars/#lib"><code>LIB</code></a>,
-<a href="../environment-vars/#library_path"><code>LIBRARY_PATH</code></a>.</p>
 <h3 id="framework">framework(<em>name</em>, [<em>suffix</em>])<a class="headerlink" href="#framework" title="Permanent link">§</a></h3>
 <p>Reference a macOS <a href="https://developer.apple.com/library/content/documentation/MacOSX/Conceptual/OSX_Technology_Overview/SystemFrameworks/SystemFrameworks.html">framework</a> named <em>name</em> with the optional suffix
 <em>suffix</em>. Though not a "package" in name, this can be used wherever packages are
 accepted.</p>
-<h3 id="package">package(<em>name</em>, [<em>version</em>], *, [<em>lang</em>], [<em>kind</em>], [<em>headers</em>], [<em>libs</em>])<a class="headerlink" href="#package" title="Permanent link">§</a></h3>
+<h3 id="package">package(<em>name</em>, [<em>submodules</em>], [<em>version</em>], *, [<em>lang</em>], [<em>kind</em>], [<em>system</em>])<a class="headerlink" href="#package" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
-<p>Search for a package named <em>name</em>. <em>lang</em> is the source language of the library
-(if not specified, this will guess the language based on the extensions in
-<em>headers</em>, or use <code>'c'</code> as a fallback); this will affect how the package is
-resolved. For native libraries (C, C++, Fortran, etc), this will use
-<a href="https://www.freedesktop.org/wiki/Software/pkg-config/"><code>pkg-config</code></a> to resolve the package if it's installed. Otherwise
-(or if pkg-config can't find the package), this will check the system's default
-library locations. If this function is unable to find the package, it will raise
-a <a href="#packageresolutionerror"><em>PackageResolutionError</em></a>.</p>
+<p>Search for a package named <em>name</em> optionally containing one or more
+<em>submodules</em>. <em>lang</em> is the source language of the package (if not specified,
+this will use the <a href="#project">default language</a> for the project); this will
+affect how the package is resolved. For native packages (C, C++, Fortran, etc),
+this will use <a href="https://jimporter.github.io/mopack/">mopack</a> to resolve the package; otherwise, this will use
+a language-specific check to find packages on the system. If this function is
+unable to find the package, it will raise a
+<a href="#packageresolutionerror"><em>PackageResolutionError</em></a>.</p>
 <p>You can also specify <em>kind</em> to one of <code>'any'</code> (the default), <code>'shared'</code>, or
 <code>'static'</code>. This allows you to restrict the search to find only static versions
 of a library, for example.</p>
+<p>If <em>system</em> is <em>True</em> (the default), any directories will be treated as <a href="https://gcc.gnu.org/onlinedocs/cpp/System-Headers.html">system
+directories</a> for compilers that support this.</p>
 <p>If <em>version</em> is specified, it will (if possible) ensure that the installed
 version of the package meets the version requirement; it must be formatted as a
 Python <a href="https://www.python.org/dev/peps/pep-0440/#version-specifiers">version specifier</a>. If this check fails, a
 <a href="#packageversionerror"><em>PackageVersionError</em></a> will be raised.</p>
-<p>The <em>headers</em> and <em>libs</em> arguments can be used as fallbacks when pkg-config
-fails to resolve the package. <em>headers</em> allows you to specify a header file (or
-list thereof) that you need to use in your source files. This will search for
-the header files and add the appropriate include directories to your build
-configuration. <em>libs</em> lets you list any library names that are part of this
-package; by default, this is set to the package's <em>name</em>. You can also pass
-<em>None</em> to <em>libs</em> in order to explicitly indicate that the library is
-header-only.</p>
+<p>When calling this function, you can exclude the <em>submodules</em> argument and pass
+a <em>version</em> as the second positional argument if it's parseable as a version
+specifier. For example, <code>package('pkg', '&gt;=1.0')</code>.</p>
 <p>This function recognizes the following environment variables:
-<a href="../environment-vars/#classpath"><code>CLASSPATH</code></a>,
-<a href="../environment-vars/#cpath"><code>CPATH</code></a>,
-<a href="../environment-vars/#include"><code>INCLUDE</code></a>,
-<a href="../environment-vars/#lib"><code>LIB</code></a>,
-<a href="../environment-vars/#library_path"><code>LIBRARY_PATH</code></a>,
-<a href="../environment-vars/#pkg_config"><code>PKG_CONFIG</code></a>.</p>
+<a href="../environment-vars/#classpath"><code>$CLASSPATH</code></a>,
+<a href="../environment-vars/#cpath"><code>$CPATH</code></a>,
+<a href="../environment-vars/#include"><code>$INCLUDE</code></a>,
+<a href="../environment-vars/#lib"><code>$LIB</code></a>,
+<a href="../environment-vars/#library_path"><code>$LIBRARY_PATH</code></a>,
+<a href="../environment-vars/#pkg_config"><code>$PKG_CONFIG</code></a>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>This function can also be used to refer to the pthread library. On many
@@ -908,6 +892,9 @@ correspond directly to the fields in the pkg-config <code>.pc</code> file.</p>
   exposed to users (this is used primarily for static linking)</li>
 <li><em>lang</em>: The language of the builder to use when generating option strings;
   by default, <code>'c'</code></li>
+<li><em>system</em>: If <em>True</em>, any include directories will be treated as <a href="https://gcc.gnu.org/onlinedocs/cpp/System-Headers.html">system
+  directories</a> when using the package internally (for
+  compilers that support this); defaults to <em>False</em>.</li>
 </ul>
 <p>If <em>auto_fill</em> is true, this function will automatically fill in default values
 for the following fields:</p>
@@ -922,11 +909,11 @@ for the following fields:</p>
 object that can be used in other build steps as normal.</p>
 <h3 id="system_executable">system_executable(<em>name</em>, [<em>format</em>])<a class="headerlink" href="#system_executable" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
-<p>Search for an executable named <em>name</em> somewhere in the system's <code>PATH</code>. If
+<p>Search for an executable named <em>name</em> somewhere in the system's <code>$PATH</code>. If
 <em>format</em> is unset, the executable's object format will be set to the default
 for the host platform.</p>
 <p>This function recognizes the following environment variables:
-<a href="../environment-vars/#path"><code>PATH</code></a>, <a href="../environment-vars/#pathext"><code>PATHEXT</code></a>.</p>
+<a href="../environment-vars/#path"><code>$PATH</code></a>, <a href="../environment-vars/#pathext"><code>$PATHEXT</code></a>.</p>
 <h2 id="environment">Environment<a class="headerlink" href="#environment" title="Permanent link">§</a></h2>
 <p>Occasionally, build scripts need to directly query aspects of the environment.
 In bfg9000, this is performed with the
@@ -986,6 +973,8 @@ language will be determined by the language of <em>args</em>'s first element.</p
 Equivalent to <code>env.execute(env.run_arguments(arg, lang), ...)</code>.</p>
 <h4 id="env-host_platform">env.target_platform<a class="headerlink" href="#env-host_platform" title="Permanent link">§</a></h4>
 <p>Return the target <a href="#platforms">platform</a> used for the build.</p>
+<h4 id="env-tool">env.tool(<em>name</em>)<a class="headerlink" href="#env-tool" title="Permanent link">§</a></h4>
+<p>Return the <a href="#tools">tool</a> named <em>name</em>.</p>
 <h4 id="env-variables">env.variables<a class="headerlink" href="#env-variables" title="Permanent link">§</a></h4>
 <p>A dict of all the environment variables as they were defined when the build was
 first configured.</p>
@@ -1026,9 +1015,11 @@ representing the actual linker, such as <code>ld</code>.</p>
 <p>The runner used with files built by this builder (e.g. <code>java</code>). This may be
 <em>None</em> for languages which have no runner, such as C and C++.</p>
 <hr />
-<h3 id="compilers">Compilers<a class="headerlink" href="#compilers" title="Permanent link">§</a></h3>
-<p>Builder objects represent the specific used to compile a
-<a href="#source_file">source file</a> (generally into an <a href="#object_file">object file</a>).</p>
+<h3 id="compilers">Compilers/linkers<a class="headerlink" href="#compilers" title="Permanent link">§</a></h3>
+<p>Compiler and linker objects represent the specific tool used to compile a
+<a href="#source_file">source file</a> (generally into an <a href="#object_file">object file</a>) or
+to link a set of object files (generally into an <a href="#executable">executable</a> or
+<a href="#library">library</a>).</p>
 <h4 id="compiler-flavor"><em>compiler</em>.flavor<a class="headerlink" href="#compiler-flavor" title="Permanent link">§</a></h4>
 <p>The "flavor" of the compiler, i.e. the kind of command-line interface it has;
 e.g. <code>'cc'</code>, <code>'msvc'</code>.</p>
@@ -1042,7 +1033,21 @@ e.g. <code>'cc'</code>, <code>'msvc'</code>.</p>
 <p>The language of the compiler; typically the same as
 <a href="#builder-language"><em>builder.language</em></a>.</p>
 <h4 id="compiler-command"><em>compiler</em>.command<a class="headerlink" href="#compiler-command" title="Permanent link">§</a></h4>
-<p>The command to run when invoking this compiler, e.g. <code>g++-4.9</code>.</p>
+<p>The command to run when invoking this compiler, represented as a list, e.g.
+<code>['g++']</code>.</p>
+<h4 id="compiler-found"><em>compiler</em>.found<a class="headerlink" href="#compiler-found" title="Permanent link">§</a></h4>
+<p>Whether the command for this compiler was found on the system.</p>
+<hr />
+<h3 id="tools">Tools<a class="headerlink" href="#tools" title="Permanent link">§</a></h3>
+<p>Tool objects represent a specific command used to perform some task (usually
+during a build), such as <code>'copy'</code> or <code>'rm'</code>. They can be retrieved via
+<a href="#env-tool"><em>env.tool</em></a>. While tool objects are primarily suited to bfg's
+internals, there are still a few useful properties for <code>build.bfg</code> files:</p>
+<h4 id="tool-command"><em>tool</em>.command<a class="headerlink" href="#tool-command" title="Permanent link">§</a></h4>
+<p>The command to run when invoking this tool, represented as a list, e.g.
+<code>['cp', '-f']</code>.</p>
+<h4 id="tool-found"><em>tool</em>.found<a class="headerlink" href="#tool-found" title="Permanent link">§</a></h4>
+<p>Whether this tool was found on the system.</p>
 <hr />
 <h3 id="platforms">Platforms<a class="headerlink" href="#platforms" title="Permanent link">§</a></h3>
 <p>Platform objects represent the platform that the project is being compiled for.</p>
@@ -1192,6 +1197,8 @@ during installation. Possible values are:</p>
 <li><em>bindir</em>: A path relative to where binaries will be installed</li>
 <li><em>libdir</em>: A path relative to where libraries will be installed</li>
 <li><em>includedir</em>: A path relative to where header files will be installed</li>
+<li><em>datadir</em>: A path relative to where data files will be installed</li>
+<li><em>mandir</em>: A path relative to where man pages will be installed</li>
 </ul>
 <h3 id="Path">Path(<em>path</em>, [<em>root</em>], [<em>destdir</em>])<a class="headerlink" href="#Path" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code>, <code>options.bfg</code>, and <code>&lt;toolchain&gt;.bfg</code></p>
@@ -1357,7 +1364,7 @@ used.</p>
 <h3 id="which">which(<em>names</em>, [<em>resolve</em>], [<em>strict</em>])<a class="headerlink" href="#which" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>&lt;toolchain&gt;.bfg</code></p>
 <p>Find the best option for an executable named by <em>names</em>. <em>names</em> can be a
-string resolved as with the <code>PATH</code> environment variable in the shell, or else a
+string resolved as with the <code>$PATH</code> environment variable in the shell, or else a
 list of names (as strings or lists of strings). If <em>names</em> contains a
 list-of-lists, the inner list represents a series of arguments to pass to the
 executable when running it.</p>
@@ -1389,7 +1396,7 @@ specifier.</p></div>
 
         <footer class="col-md-12">
             <hr>
-                <p>Copyright &copy; 2015-2020 Jim Porter</p>
+                <p>Copyright &copy; 2015-2023 Jim Porter</p>
             <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
         </footer>
         <script>

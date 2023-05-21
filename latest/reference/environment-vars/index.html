@@ -28,7 +28,6 @@
     </head>
 
     <body>
-
         <div class="navbar navbar-default navbar-fixed-top" role="navigation">
             <div class="container">
 
@@ -175,303 +174,320 @@ environment variables bfg9000 recognizes.</p>
 <h2 id="compilation-variables">Compilation variables<a class="headerlink" href="#compilation-variables" title="Permanent link">§</a></h2>
 <h3 id="generic">Generic<a class="headerlink" href="#generic" title="Permanent link">§</a></h3>
 <hr />
-<h4 id="cppflags"><em>CPPFLAGS</em><a class="headerlink" href="#cppflags" title="Permanent link">§</a></h4>
+<h4 id="cppflags"><code>CPPFLAGS</code><a class="headerlink" href="#cppflags" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <em>none</em></p>
 <p>"C preprocessor flags"; command line arguments to pass to the compiler when
 compiling any C-family source file (C, C++, Objective C/C++).</p>
 <h3 id="c">C<a class="headerlink" href="#c" title="Permanent link">§</a></h3>
 <hr />
-<h4 id="cc"><em>CC</em><a class="headerlink" href="#cc" title="Permanent link">§</a></h4>
+<h4 id="cc"><code>CC</code><a class="headerlink" href="#cc" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <code>cc</code> (POSIX), <code>cl</code> (Windows)</p>
 <p>The command to use when compiling C source files. Also the command to use with
 cc-style toolchains when linking object files whose source is in C. If not
 defined, bfg9000 will try to guess the command to use by checking
-<a href="#objc"><code>OBJC</code></a>, <a href="#cxx"><code>CXX</code></a>, and <a href="#objcxx"><code>OBJCXX</code></a>, in that order.</p>
-<h4 id="cflags"><em>CFLAGS</em><a class="headerlink" href="#cflags" title="Permanent link">§</a></h4>
+<a href="#objc"><code>$OBJC</code></a>, <a href="#cxx"><code>$CXX</code></a>, and <a href="#objcxx"><code>$OBJCXX</code></a>, in that order.</p>
+<h4 id="cflags"><code>CFLAGS</code><a class="headerlink" href="#cflags" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <em>none</em></p>
 <p>Command line arguments to pass to the compiler when compiling any C source file.</p>
 <h3 id="c_1">C++<a class="headerlink" href="#c_1" title="Permanent link">§</a></h3>
 <hr />
-<h4 id="cxx"><em>CXX</em><a class="headerlink" href="#cxx" title="Permanent link">§</a></h4>
+<h4 id="cxx"><code>CXX</code><a class="headerlink" href="#cxx" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <code>c++</code> (POSIX), <code>cl</code> (Windows)</p>
 <p>The command to use when compiling C++ source files. Also the command to use with
 cc-style toolchains when linking object files whose source is in C++. If not
 defined, bfg9000 will try to guess the command to use by checking
-<a href="#objcxx"><code>OBJCXX</code></a>, <a href="#cc"><code>CC</code></a>, and <a href="#objc"><code>OBJC</code></a>, in that order.</p>
-<h4 id="cxxflags"><em>CXXFLAGS</em><a class="headerlink" href="#cxxflags" title="Permanent link">§</a></h4>
+<a href="#objcxx"><code>$OBJCXX</code></a>, <a href="#cc"><code>$CC</code></a>, and <a href="#objc"><code>$OBJC</code></a>, in that order.</p>
+<h4 id="cxxflags"><code>CXXFLAGS</code><a class="headerlink" href="#cxxflags" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <em>none</em></p>
 <p>Command line arguments to pass to the compiler when compiling any C++ source
 file.</p>
 <h3 id="fortran">Fortran<a class="headerlink" href="#fortran" title="Permanent link">§</a></h3>
 <hr />
-<h4 id="fc"><em>FC</em><a class="headerlink" href="#fc" title="Permanent link">§</a></h4>
+<h4 id="fc"><code>FC</code><a class="headerlink" href="#fc" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <code>gfortran</code></p>
 <p>The command to use when compiling Fortran source files. Also the command to use
 when linking object files whose source is in Fortran.</p>
-<h4 id="fflags"><em>FFLAGS</em><a class="headerlink" href="#fflags" title="Permanent link">§</a></h4>
+<h4 id="fflags"><code>FFLAGS</code><a class="headerlink" href="#fflags" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <em>none</em></p>
 <p>Command line arguments to pass to the compiler when compiling any Fortran source
 file.</p>
 <h3 id="java">Java<a class="headerlink" href="#java" title="Permanent link">§</a></h3>
 <hr />
-<h4 id="javac"><em>JAVAC</em><a class="headerlink" href="#javac" title="Permanent link">§</a></h4>
+<h4 id="javac"><code>JAVAC</code><a class="headerlink" href="#javac" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <code>javac</code></p>
 <p>The command to use when compiling Java source files.</p>
-<h4 id="javaflags"><em>JAVAFLAGS</em><a class="headerlink" href="#javaflags" title="Permanent link">§</a></h4>
+<h4 id="javaflags"><code>JAVAFLAGS</code><a class="headerlink" href="#javaflags" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <em>none</em></p>
 <p>Command line arguments to pass to the compiler when compiling any Java source
 file.</p>
 <h3 id="lex">Lex<a class="headerlink" href="#lex" title="Permanent link">§</a></h3>
 <hr />
-<h4 id="lex_1"><em>LEX</em><a class="headerlink" href="#lex_1" title="Permanent link">§</a></h4>
+<h4 id="lex_1"><code>LEX</code><a class="headerlink" href="#lex_1" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <code>lex</code></p>
 <p>The command to use when building Lex source files.</p>
-<h4 id="lflags"><em>LFLAGS</em><a class="headerlink" href="#lflags" title="Permanent link">§</a></h4>
+<h4 id="lflags"><code>LFLAGS</code><a class="headerlink" href="#lflags" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <em>none</em></p>
 <p>Command line arguments to pass to the compiler when building any Lex source
 file.</p>
 <h3 id="objective-c">Objective C<a class="headerlink" href="#objective-c" title="Permanent link">§</a></h3>
 <hr />
-<h4 id="objc"><em>OBJC</em><a class="headerlink" href="#objc" title="Permanent link">§</a></h4>
+<h4 id="objc"><code>OBJC</code><a class="headerlink" href="#objc" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <code>cc</code></p>
 <p>The command to use when compiling Objective C source files. Also the command to
 use with cc-style toolchains when linking object files whose source is in
 Objective C. If not defined, bfg9000 will try to guess the command to use by
-checking <a href="#cc"><code>CC</code></a>, <a href="#objcxx"><code>OBJCXX</code></a>, and <a href="#cxx"><code>CXX</code></a>, in that order.</p>
-<h4 id="objcflags"><em>OBJCFLAGS</em><a class="headerlink" href="#objcflags" title="Permanent link">§</a></h4>
+checking <a href="#cc"><code>$CC</code></a>, <a href="#objcxx"><code>$OBJCXX</code></a>, and <a href="#cxx"><code>$CXX</code></a>, in that order.</p>
+<h4 id="objcflags"><code>OBJCFLAGS</code><a class="headerlink" href="#objcflags" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <em>none</em></p>
 <p>Command line arguments to pass to the compiler when compiling any Objective C
 source file.</p>
 <h3 id="objective-c_1">Objective C++<a class="headerlink" href="#objective-c_1" title="Permanent link">§</a></h3>
 <hr />
-<h4 id="objcxx"><em>OBJCXX</em><a class="headerlink" href="#objcxx" title="Permanent link">§</a></h4>
+<h4 id="objcxx"><code>OBJCXX</code><a class="headerlink" href="#objcxx" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <code>c++</code></p>
 <p>The command to use when compiling Objective C++ source files. Also the command
 to use with cc-style toolchains when linking object files whose source is in
 Objective C++. If not defined, bfg9000 will try to guess the command to use by
-checking <a href="#cxx"><code>CXX</code></a>, <a href="#objc"><code>OBJC</code></a>, and <a href="#cc"><code>CC</code></a>, in that order.</p>
-<h4 id="objcxxflags"><em>OBJCXXFLAGS</em><a class="headerlink" href="#objcxxflags" title="Permanent link">§</a></h4>
+checking <a href="#cxx"><code>$CXX</code></a>, <a href="#objc"><code>$OBJC</code></a>, and <a href="#cc"><code>$CC</code></a>, in that order.</p>
+<h4 id="objcxxflags"><code>OBJCXXFLAGS</code><a class="headerlink" href="#objcxxflags" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <em>none</em></p>
 <p>Command line arguments to pass to the compiler when compiling any Objective C++
 source file.</p>
 <h3 id="qt-moc">Qt MOC<a class="headerlink" href="#qt-moc" title="Permanent link">§</a></h3>
 <hr />
-<h4 id="moc"><em>MOC</em><a class="headerlink" href="#moc" title="Permanent link">§</a></h4>
+<h4 id="moc"><code>MOC</code><a class="headerlink" href="#moc" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <code>moc</code></p>
 <p>The command to use when processing Qt meta-object macros.</p>
-<h4 id="mocflags"><em>MOCFLAGS</em><a class="headerlink" href="#mocflags" title="Permanent link">§</a></h4>
+<h4 id="mocflags"><code>MOCFLAGS</code><a class="headerlink" href="#mocflags" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <em>none</em></p>
 <p>Command line arguments to pass to the compiler when processing Qt meta-object
 macros.</p>
 <h3 id="qt-qrc">Qt QRC<a class="headerlink" href="#qt-qrc" title="Permanent link">§</a></h3>
 <hr />
-<h4 id="rcc"><em>RCC</em><a class="headerlink" href="#rcc" title="Permanent link">§</a></h4>
+<h4 id="rcc"><code>RCC</code><a class="headerlink" href="#rcc" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <code>rcc</code></p>
 <p>The command to use when building Qt <code>.qrc</code> files.</p>
-<h4 id="rccflags"><em>RCCFLAGS</em><a class="headerlink" href="#rccflags" title="Permanent link">§</a></h4>
+<h4 id="rccflags"><code>RCCFLAGS</code><a class="headerlink" href="#rccflags" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <em>none</em></p>
 <p>Command line arguments to pass to the compiler when building Qt <code>.qrc</code> files.</p>
 <h3 id="qt-ui">Qt UI<a class="headerlink" href="#qt-ui" title="Permanent link">§</a></h3>
 <hr />
-<h4 id="uic"><em>UIC</em><a class="headerlink" href="#uic" title="Permanent link">§</a></h4>
+<h4 id="uic"><code>UIC</code><a class="headerlink" href="#uic" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <code>uic</code></p>
 <p>The command to use when building Qt <code>.ui</code> files.</p>
-<h4 id="uicflags"><em>UICFLAGS</em><a class="headerlink" href="#uicflags" title="Permanent link">§</a></h4>
+<h4 id="uicflags"><code>UICFLAGS</code><a class="headerlink" href="#uicflags" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <em>none</em></p>
 <p>Command line arguments to pass to the compiler when building Qt <code>.ui</code> files.
 macros.</p>
 <h3 id="scala">Scala<a class="headerlink" href="#scala" title="Permanent link">§</a></h3>
 <hr />
-<h4 id="scalac"><em>SCALAC</em><a class="headerlink" href="#scalac" title="Permanent link">§</a></h4>
+<h4 id="scalac"><code>SCALAC</code><a class="headerlink" href="#scalac" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <code>scalac</code></p>
 <p>The command to use when compiling Scala source files.</p>
-<h4 id="scalaflags"><em>SCALAFLAGS</em><a class="headerlink" href="#scalaflags" title="Permanent link">§</a></h4>
+<h4 id="scalaflags"><code>SCALAFLAGS</code><a class="headerlink" href="#scalaflags" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <em>none</em></p>
 <p>Command line arguments to pass to the compiler when compiling any Scala source
 file.</p>
 <h3 id="windows-resource-files">Windows resource files<a class="headerlink" href="#windows-resource-files" title="Permanent link">§</a></h3>
 <hr />
-<h4 id="rc"><em>RC</em><a class="headerlink" href="#rc" title="Permanent link">§</a></h4>
+<h4 id="rc"><code>RC</code><a class="headerlink" href="#rc" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <code>windres</code> (POSIX), <code>rc</code> (Windows)</p>
 <p>The command to use when compiling Windows resource (<code>.rc</code>) files.</p>
-<h4 id="rcflags"><em>RCFLAGS</em><a class="headerlink" href="#rcflags" title="Permanent link">§</a></h4>
+<h4 id="rcflags"><code>RCFLAGS</code><a class="headerlink" href="#rcflags" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <em>none</em></p>
 <p>Command line arguments to pass to the compiler when compiling any Windows
 resource file.</p>
 <h3 id="yacc">Yacc<a class="headerlink" href="#yacc" title="Permanent link">§</a></h3>
 <hr />
-<h4 id="yacc_1"><em>YACC</em><a class="headerlink" href="#yacc_1" title="Permanent link">§</a></h4>
+<h4 id="yacc_1"><code>YACC</code><a class="headerlink" href="#yacc_1" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <code>yacc</code></p>
 <p>The command to use when building Yacc source files.</p>
-<h4 id="yflags"><em>YFLAGS</em><a class="headerlink" href="#yflags" title="Permanent link">§</a></h4>
+<h4 id="yflags"><code>YFLAGS</code><a class="headerlink" href="#yflags" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <em>none</em></p>
 <p>Command line arguments to pass to the compiler when building any Yacc source
 file.</p>
 <h2 id="linking-variables">Linking variables<a class="headerlink" href="#linking-variables" title="Permanent link">§</a></h2>
 <h3 id="static-linking">Static linking<a class="headerlink" href="#static-linking" title="Permanent link">§</a></h3>
 <hr />
-<h4 id="ar"><em>AR</em><a class="headerlink" href="#ar" title="Permanent link">§</a></h4>
+<h4 id="ar"><code>AR</code><a class="headerlink" href="#ar" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <code>ar</code> (POSIX), <code>lib</code> (Windows)</p>
 <p>The command to use when creating (native) static libraries from object files
 (typically <code>ar</code> on POSIX and <code>lib</code> on Windows).</p>
-<h4 id="arflags"><em>ARFLAGS</em><a class="headerlink" href="#arflags" title="Permanent link">§</a></h4>
+<h4 id="arflags"><code>ARFLAGS</code><a class="headerlink" href="#arflags" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <code>cru</code> (POSIX)</p>
-<p>The arguments to pass to the static library builder (specified in <code>AR</code>) for
-native libraries.</p>
-<h4 id="jar"><em>JAR</em><a class="headerlink" href="#jar" title="Permanent link">§</a></h4>
+<p>The arguments to pass to the static library builder (specified in <a href="#ar"><code>$AR</code></a>)
+for native libraries.</p>
+<h4 id="jar"><code>JAR</code><a class="headerlink" href="#jar" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <code>jar</code></p>
 <p>The command to use when creating <code>.jar</code> files for JVM-based binaries.</p>
-<h4 id="jarflags"><em>JARFLAGS</em><a class="headerlink" href="#jarflags" title="Permanent link">§</a></h4>
+<h4 id="jarflags"><code>JARFLAGS</code><a class="headerlink" href="#jarflags" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <code>cfm</code></p>
 <p>The arugments to pass to the JAR builders when creating <code>.jar</code> files.</p>
 <h3 id="dynamic-linking">Dynamic linking<a class="headerlink" href="#dynamic-linking" title="Permanent link">§</a></h3>
 <hr />
-<h4 id="ld"><em>LD</em><a class="headerlink" href="#ld" title="Permanent link">§</a></h4>
+<h4 id="ld"><code>LD</code><a class="headerlink" href="#ld" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <em>none</em> (POSIX), <code>link</code> (Windows)</p>
 <p>The command to use when linking shared libraries; when using a cc-like builder,
 this will be processed to infer the appropriate <code>-fuse-ld</code> flag for the linker.</p>
-<h4 id="ldflags"><em>LDFLAGS</em><a class="headerlink" href="#ldflags" title="Permanent link">§</a></h4>
+<h4 id="ldflags"><code>LDFLAGS</code><a class="headerlink" href="#ldflags" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <em>none</em></p>
 <p>Command line arguments to pass to the linker when linking an executable or
 shared library.</p>
-<h4 id="ldlibs"><em>LDLIBS</em><a class="headerlink" href="#ldlibs" title="Permanent link">§</a></h4>
+<h4 id="ldlibs"><code>LDLIBS</code><a class="headerlink" href="#ldlibs" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <em>none</em></p>
 <p>Additional libraries to link into an executable or shared library. This is
 mainly useful for cases where a system library (e.g. the C++ Standard Library
 implementation) requires another library to be explicitly linked with it.</p>
 <h2 id="execution-variables">Execution variables<a class="headerlink" href="#execution-variables" title="Permanent link">§</a></h2>
 <hr />
-<h4 id="javacmd"><em>JAVACMD</em><a class="headerlink" href="#javacmd" title="Permanent link">§</a></h4>
+<h4 id="javacmd"><code>JAVACMD</code><a class="headerlink" href="#javacmd" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <code>java</code></p>
 <p>The command to use when running Java <code>.class</code> files or <code>.jar</code>s. (Does not apply
 when building with GCJ.)</p>
-<h4 id="lua"><em>LUA</em><a class="headerlink" href="#lua" title="Permanent link">§</a></h4>
+<h4 id="lua"><code>LUA</code><a class="headerlink" href="#lua" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <code>lua</code></p>
 <p>The command to use when running Lua scripts.</p>
-<h4 id="perl"><em>PERL</em><a class="headerlink" href="#perl" title="Permanent link">§</a></h4>
+<h4 id="perl"><code>PERL</code><a class="headerlink" href="#perl" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <code>perl</code></p>
 <p>The command to use when running Perl scripts.</p>
-<h4 id="python"><em>PYTHON</em><a class="headerlink" href="#python" title="Permanent link">§</a></h4>
+<h4 id="python"><code>PYTHON</code><a class="headerlink" href="#python" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <em>sys.executable</em></p>
 <p>The command to use when running Python scripts. By default, this is the
 interpreter used to run bfg9000.</p>
-<h4 id="ruby"><em>RUBY</em><a class="headerlink" href="#ruby" title="Permanent link">§</a></h4>
+<h4 id="ruby"><code>RUBY</code><a class="headerlink" href="#ruby" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <code>ruby</code></p>
 <p>The command to use when running Ruby scripts.</p>
-<h4 id="scalacmd"><em>SCALACMD</em><a class="headerlink" href="#scalacmd" title="Permanent link">§</a></h4>
+<h4 id="scalacmd"><code>SCALACMD</code><a class="headerlink" href="#scalacmd" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <code>scala</code></p>
 <p>The command to use when running Scala <code>.class</code> files or <code>.jar</code>s.</p>
 <h2 id="packaging-variables">Packaging variables<a class="headerlink" href="#packaging-variables" title="Permanent link">§</a></h2>
 <hr />
-<h4 id="boost_root"><em>BOOST_ROOT</em><a class="headerlink" href="#boost_root" title="Permanent link">§</a></h4>
-<p class="subtitle">Default: <em>none</em></p>
-<p>The root directory where Boost headers and libraries are stored (as
-<code>$BOOST_ROOT/include</code> and <code>$BOOST_ROOT/lib</code>, respectively).</p>
-<h4 id="boost_includedir"><em>BOOST_INCLUDEDIR</em><a class="headerlink" href="#boost_includedir" title="Permanent link">§</a></h4>
-<p class="subtitle">Default: <em>none</em></p>
-<p>The root directory where Boost headers are stored. This takes precedence over
-<a href="#boost_root"><em>BOOST_ROOT</em></a>.</p>
-<h4 id="boost_librarydir"><em>BOOST_LIBRARYDIR</em><a class="headerlink" href="#boost_librarydir" title="Permanent link">§</a></h4>
-<p class="subtitle">Default: <em>none</em></p>
-<p>The root directory where Boost libraries are stored. This takes precedence over
-<a href="#boost_root"><em>BOOST_ROOT</em></a>.</p>
-<h4 id="classpath"><em>CLASSPATH</em><a class="headerlink" href="#classpath" title="Permanent link">§</a></h4>
+<h4 id="classpath"><code>CLASSPATH</code><a class="headerlink" href="#classpath" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <em>none</em></p>
 <p>A list of additional directories to search for Java class files. On POSIX
 systems, this is delimited by <code>:</code>; on Windows, by <code>;</code>.</p>
-<h4 id="cpath"><em>CPATH</em><a class="headerlink" href="#cpath" title="Permanent link">§</a></h4>
+<h4 id="cpath"><code>CPATH</code><a class="headerlink" href="#cpath" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <em>none</em></p>
 <p>A list of additional directories to search for headers. On POSIX systems, this
 is delimited by <code>:</code>; on Windows, by <code>;</code>.</p>
-<h4 id="include"><em>INCLUDE</em><a class="headerlink" href="#include" title="Permanent link">§</a></h4>
+<h4 id="include"><code>INCLUDE</code><a class="headerlink" href="#include" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <em>none</em></p>
 <p><em>MSVC-only</em>. A list of directories to search for headers, delimited by <code>;</code>.</p>
-<h4 id="lib"><em>LIB</em><a class="headerlink" href="#lib" title="Permanent link">§</a></h4>
+<h4 id="lib"><code>LIB</code><a class="headerlink" href="#lib" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <em>none</em></p>
 <p><em>MSVC-only</em>. A list of directories to search for <a href="../builtins/#package">system
 libraries</a>, delimited by <code>;</code>.</p>
-<h4 id="library_path"><em>LIBRARY_PATH</em><a class="headerlink" href="#library_path" title="Permanent link">§</a></h4>
+<h4 id="library_path"><code>LIBRARY_PATH</code><a class="headerlink" href="#library_path" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <em>none</em></p>
 <p>A list of additional directories to search for <a href="../builtins/#package">system
 libraries</a>. On POSIX systems, this is delimited by
 <code>:</code>; on Windows, by <code>;</code>.</p>
-<h4 id="path"><em>PATH</em><a class="headerlink" href="#path" title="Permanent link">§</a></h4>
+<h4 id="mopack"><code>MOPACK</code><a class="headerlink" href="#mopack" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <code>mopack</code></p>
+<p>The command to use when resolving package dependencies via <a href="https://jimporter.github.io/mopack/">mopack</a>.</p>
+<h4 id="path"><code>PATH</code><a class="headerlink" href="#path" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <em>none</em></p>
 <p>A list of directories to search for <a href="../builtins/#system_executable">system
 executables</a>. On POSIX systems, this is
 delimited by <code>:</code>; on Windows, by <code>;</code>.</p>
-<h4 id="pathext"><em>PATHEXT</em><a class="headerlink" href="#pathext" title="Permanent link">§</a></h4>
+<h4 id="pathext"><code>PATHEXT</code><a class="headerlink" href="#pathext" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <em>none</em></p>
 <p><em>Windows-only</em>. A list of valid extensions for executable files under Windows,
 separated by <code>;</code>.</p>
-<h4 id="pkg_config"><em>PKG_CONFIG</em><a class="headerlink" href="#pkg_config" title="Permanent link">§</a></h4>
+<h4 id="pkg_config"><code>PKG_CONFIG</code><a class="headerlink" href="#pkg_config" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <code>pkg-config</code></p>
 <p>The command to use when fetching pkg-config package information.</p>
 <h2 id="command-variables">Command variables<a class="headerlink" href="#command-variables" title="Permanent link">§</a></h2>
 <hr />
-<h4 id="bfg9000"><em>BFG9000</em><a class="headerlink" href="#bfg9000" title="Permanent link">§</a></h4>
+<h4 id="bfg9000"><code>BFG9000</code><a class="headerlink" href="#bfg9000" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <code>/path/to/bfg9000</code></p>
 <p>The command to use when executing bfg9000 (e.g. when regenerating the build
 scripts because the list of source files has changed). This should only be
 necessary if you run bfg9000 from a wrapper script.</p>
-<h4 id="cp"><em>CP</em><a class="headerlink" href="#cp" title="Permanent link">§</a></h4>
+<h4 id="cp"><code>CP</code><a class="headerlink" href="#cp" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <code>cp -f</code> (POSIX), <code>cmd /c copy</code> (Windows)</p>
 <p>The command to use when creating symlinks.</p>
-<h4 id="depfixer"><em>DEPFIXER</em><a class="headerlink" href="#depfixer" title="Permanent link">§</a></h4>
+<h4 id="depfixer"><code>DEPFIXER</code><a class="headerlink" href="#depfixer" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <code>/path/to/bfg9000-depfixer</code></p>
 <p>The command to use when fixing up depfiles generated by your compiler for the
 Make backend. In general, you shouldn't need to touch this.</p>
-<h4 id="doppel"><em>DOPPEL</em><a class="headerlink" href="#doppel" title="Permanent link">§</a></h4>
+<h4 id="doppel"><code>DOPPEL</code><a class="headerlink" href="#doppel" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <code>doppel</code></p>
 <p>The command to use when installing files and building source distributions. For
-more information about doppel, see its <a href="https://github.com/jimporter/doppel">documentation</a>.</p>
-<h4 id="hardlink"><em>HARDLINK</em><a class="headerlink" href="#hardlink" title="Permanent link">§</a></h4>
+more information about doppel, see its <a href="https://github.com/jimporter/doppel/">documentation</a>.</p>
+<h4 id="gzip"><code>GZIP</code><a class="headerlink" href="#gzip" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <code>gzip</code></p>
+<p>The command to use when gzipping files.</p>
+<h4 id="hardlink"><code>HARDLINK</code><a class="headerlink" href="#hardlink" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <code>ln -f</code> (POSIX), <code>cmd /c mklink /H</code> (Windows)</p>
 <p>The command to use when creating hard links.</p>
-<h4 id="install_name_tool"><em>INSTALL_NAME_TOOL</em><a class="headerlink" href="#install_name_tool" title="Permanent link">§</a></h4>
+<h4 id="install_name_tool"><code>INSTALL_NAME_TOOL</code><a class="headerlink" href="#install_name_tool" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <code>install_name_tool</code></p>
 <p><em>Darwin-only</em>. The command to use when modifying the paths of the shared
 libraries linked to during installation.</p>
-<h4 id="mkdir_p"><em>MKDIR_P</em><a class="headerlink" href="#mkdir_p" title="Permanent link">§</a></h4>
+<h4 id="mkdir_p"><code>MKDIR_P</code><a class="headerlink" href="#mkdir_p" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <code>mkdir -p</code></p>
 <p>The command to use when making a directory tree. This is used both for
 installing whole directories of files and for creating build directories under
 the Make backend.</p>
-<h4 id="patchelf"><em>PATCHELF</em><a class="headerlink" href="#patchelf" title="Permanent link">§</a></h4>
+<h4 id="patchelf"><code>PATCHELF</code><a class="headerlink" href="#patchelf" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <code>patchelf</code></p>
 <p><em>Linux-only</em>. The command to use when patching an ELF file's rpath for
 installation.</p>
-<h4 id="rccdep"><em>RCCDEP</em><a class="headerlink" href="#rccdep" title="Permanent link">§</a></h4>
+<h4 id="rccdep"><code>RCCDEP</code><a class="headerlink" href="#rccdep" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <code>/path/to/bfg9000-rccdep</code></p>
 <p>The command to use when generating depfiles for Qt's <code>rcc</code> tool. In general, you
 shouldn't need to touch this.</p>
-<h4 id="setenv"><em>SETENV</em><a class="headerlink" href="#setenv" title="Permanent link">§</a></h4>
+<h4 id="setenv"><code>SETENV</code><a class="headerlink" href="#setenv" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <code>/path/to/bfg9000-setenv</code></p>
 <p><em>Windows-only</em>. The command to use when setting temporary environment variables,
 similar to the POSIX <code>env</code> command. This is used when setting environment
 variables for tests.</p>
-<h4 id="symlink"><em>SYMLINK</em><a class="headerlink" href="#symlink" title="Permanent link">§</a></h4>
+<h4 id="symlink"><code>SYMLINK</code><a class="headerlink" href="#symlink" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <code>ln -sf</code> (POSIX), <code>cmd /c mklink</code> (Windows)</p>
 <p>The command to use when creating symlinks.</p>
 <h2 id="system-variables">System variables<a class="headerlink" href="#system-variables" title="Permanent link">§</a></h2>
 <hr />
-<h4 id="destdir"><em>DESTDIR</em><a class="headerlink" href="#destdir" title="Permanent link">§</a></h4>
+<h4 id="clicolor"><code>CLICOLOR</code><a class="headerlink" href="#clicolor" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <em>none</em></p>
-<p><em>POSIX-only</em>. A directory to prepend to the install location for the project,
-used in performing staged installs. For more information, see the <a href="https://www.gnu.org/prep/standards/html_node/DESTDIR.html">GNU coding
-standards</a>.</p>
-<h4 id="platform"><em>PLATFORM</em><a class="headerlink" href="#platform" title="Permanent link">§</a></h4>
+<p>If set to <code>0</code>, disable colors in terminal output, overriding the <code>--color</code>
+option and tty detection. If set to non-zero, enable colors if outputting to a
+tty.</p>
+<h4 id="clicolor_force"><code>CLICOLOR_FORCE</code><a class="headerlink" href="#clicolor_force" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <em>none</em></p>
+<p>If set to non-zero, enable colors in the terminal output regardless of whether
+the destination is a tty. This overrides <a href="#CLICOLOR"><code>$CLICOLOR</code></a>.</p>
+<h4 id="destdir"><code>DESTDIR</code><a class="headerlink" href="#destdir" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <em>none</em></p>
+<p>A directory to prepend to the install location for the project, used in
+performing staged installs. For more information, see the <a href="https://www.gnu.org/prep/standards/html_node/DESTDIR.html">GNU coding
+standards</a>. On Windows, this can be used so long as the installation
+prefixes are drive-relative (e.g. <code>\path\to\install</code>).</p>
+<h4 id="platform"><code>PLATFORM</code><a class="headerlink" href="#platform" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <code>Win32</code></p>
 <p><em>Windows-only</em>. The platform type to use when generating MSBuild files.</p>
-<h4 id="visualstudioversion"><em>VISUALSTUDIOVERSION</em><a class="headerlink" href="#visualstudioversion" title="Permanent link">§</a></h4>
+<h4 id="vctoolsversion"><code>VCTOOLSVERSION</code><a class="headerlink" href="#vctoolsversion" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <a href="#VISUALSTUDIOVERSION"><code>$VISUALSTUDIOVERSION</code></a></p>
+<p><em>Windows-only</em>. The version of the Visual C++ tools to target when generating
+MSBuild files.</p>
+<h4 id="visualstudioversion"><code>VISUALSTUDIOVERSION</code><a class="headerlink" href="#visualstudioversion" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <code>14.0</code></p>
 <p><em>Windows-only</em>. The version of Visual Studio to target when generating MSBuild
+files.</p>
+<h4 id="vscmd_arg_vcvars_ver"><code>VSCMD_ARG_VCVARS_VER</code><a class="headerlink" href="#vscmd_arg_vcvars_ver" title="Permanent link">§</a></h4>
+<p>Default: <code>v140</code></p>
+<p><em>Windows-only</em>. The version of the platform toolset to target when generating
+MSBuild files. If not specified, the value will be inferred from
+<a href="#VCTOOLSVERSION"><code>$VCTOOLSVERSION</code></a>.</p>
+<h4 id="windowssdkversion"><code>WINDOWSSDKVERSION</code><a class="headerlink" href="#windowssdkversion" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <em>none</em></p>
+<p><em>Windows-only</em>. The version of the Windows SDK to target when generating MSBuild
 files.</p></div>
         </div>
 
         <footer class="col-md-12">
             <hr>
-                <p>Copyright &copy; 2015-2020 Jim Porter</p>
+                <p>Copyright &copy; 2015-2023 Jim Porter</p>
             <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
         </footer>
         <script>

@@ -28,7 +28,6 @@
     </head>
 
     <body>
-
         <div class="navbar navbar-default navbar-fixed-top" role="navigation">
             <div class="container">
 
@@ -193,10 +192,10 @@ bfg9000, you can use the following shorthand instead of
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>On Windows, using bfg9000 requires a bit more care. Since the MSVC tools
-aren't in the <code>PATH</code> by default, you can't just open any command prompt.
+aren't in the <code>$PATH</code> by default, you can't just open any command prompt.
 You need to pick the <em>correct</em> prompt. Thankfully, Visual Studio provides
 Start Menu items such as "VS2015 Developer Command Prompt". These add the
-appropiate directories to the <code>PATH</code>, allowing you to use whichever version
+appropiate directories to the <code>$PATH</code>, allowing you to use whichever version
 of the MSVC tools that you'd like.</p>
 </div>
 <h2 id="build-directories">Build directories<a class="headerlink" href="#build-directories" title="Permanent link">§</a></h2>
@@ -220,7 +219,7 @@ can run:</p>
 <h2 id="selecting-a-backend">Selecting a backend<a class="headerlink" href="#selecting-a-backend" title="Permanent link">§</a></h2>
 <p>By default, bfg9000 tries to use the most appropriate build backend for your
 system. In descending order, bfg prefers <a href="https://ninja-build.org/"><code>ninja</code></a>, <a href="https://www.gnu.org/software/make/"><code>make</code></a>, and
-<a href="https://msdn.microsoft.com/en-us/library/dd393574(v=vs.120).aspx"><code>msbuild</code></a>. If one of these isn't installed, it will try the next best
+<a href="https://learn.microsoft.com/en-us/visualstudio/msbuild/msbuild"><code>msbuild</code></a>. If one of these isn't installed, it will try the next best
 option. However, you can explicitly select a backend with the <code>--backend</code>
 option. For instance, to build a Makefile even if Ninja is installed:</p>
 <pre><code class="sh">$ bfg9000 configure builddir/ --backend=make
@@ -231,7 +230,7 @@ see the <a href="../../reference/command-line/">Command-line Reference</a> chapt
 <h2 id="setting-build-options">Setting build options<a class="headerlink" href="#setting-build-options" title="Permanent link">§</a></h2>
 <p>Many options for building can be set via the environment. These generally follow
 the UNIX naming conventions, so you can use, say,
-<a href="../../reference/environment-vars/#cxx"><code>CXX</code></a> to change the C++ compiler that
+<a href="../../reference/environment-vars/#cxx"><code>$CXX</code></a> to change the C++ compiler that
 bfg9000 uses. For a full listing of the recognized environment variables, see
 the <a href="../../reference/environment-vars/">Environment Variables</a> chapter.</p>
 <h2 id="using-toolchain-files">Using toolchain files<a class="headerlink" href="#using-toolchain-files" title="Permanent link">§</a></h2>
@@ -282,12 +281,13 @@ change the installation prefix (<code>/usr/local</code> on POSIX), just specify 
 /path/to/prefix</code> when running bfg9000. You can also specify the binary, library,
 and include directories individually, using <code>--bindir</code>, <code>--libdir</code>, and
 <code>--includedir</code>, respectively.</p>
+<p>You can additionally specify the <code>$DESTDIR</code> environment variable to perform a
+staged installation (useful when creating a binary package, for example). For
+more information about <code>$DESTDIR</code>, see the <a href="https://www.gnu.org/prep/standards/html_node/DESTDIR.html">GNU coding standards</a>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>On POSIX systems, you can additionally specify the $DESTDIR environment
-variable to perform a staged installation (useful when creating a binary
-package, for example). For more information about $DESTDIR, see the <a href="https://www.gnu.org/prep/standards/html_node/DESTDIR.html">GNU
-coding standards</a>.</p>
+<p>On Windows, <code>$DESTDIR</code> can be used provided the installation prefixes are
+drive-relative (e.g. <code>\path\to\install</code>, not <code>C:\path\to\install</code>).</p>
 </div>
 <h2 id="distributing-your-source">Distributing your source<a class="headerlink" href="#distributing-your-source" title="Permanent link">§</a></h2>
 <p>Once you're ready to release your software, you'll want to provide a source
@@ -308,7 +308,7 @@ following targets: <code>dist-gzip</code>, <code>dist-bzip2</code>, or <code>dis
 
         <footer class="col-md-12">
             <hr>
-                <p>Copyright &copy; 2015-2020 Jim Porter</p>
+                <p>Copyright &copy; 2015-2023 Jim Porter</p>
             <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
         </footer>
         <script>
