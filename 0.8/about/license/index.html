@@ -8,7 +8,7 @@
         
         
         <link rel="shortcut icon" href="../../img/favicon.ico">
-        <title>Builtins - bfg9000</title>
+        <title>License - bfg9000</title>
         <link href="../../css/bootstrap-custom.min.css" rel="stylesheet">
         <link href="../../css/font-awesome.min.css" rel="stylesheet">
         <link href="../../css/base.css" rel="stylesheet">
@@ -71,24 +71,24 @@
 </li>
                                 </ul>
                             </li>
-                            <li class="dropdown active">
+                            <li class="dropdown">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">Developer Guide <b class="caret"></b></a>
                                 <ul class="dropdown-menu">
                                     
 <li >
-    <a href="../contributing/">Contributing</a>
+    <a href="../../developer/contributing/">Contributing</a>
 </li>
                                     
 <li >
-    <a href="../backends/">Build Backends</a>
+    <a href="../../developer/backends/">Build Backends</a>
 </li>
                                     
 <li >
-    <a href="../tools/">Build Tools</a>
+    <a href="../../developer/tools/">Build Tools</a>
 </li>
                                     
-<li class="active">
-    <a href="./">Builtins</a>
+<li >
+    <a href="../../developer/builtins/">Builtins</a>
 </li>
                                 </ul>
                             </li>
@@ -113,16 +113,16 @@
 </li>
                                 </ul>
                             </li>
-                            <li class="dropdown">
+                            <li class="dropdown active">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">About <b class="caret"></b></a>
                                 <ul class="dropdown-menu">
                                     
 <li >
-    <a href="../../about/changes/">Changes</a>
+    <a href="../changes/">Changes</a>
 </li>
                                     
-<li >
-    <a href="../../about/license/">License</a>
+<li class="active">
+    <a href="./">License</a>
 </li>
                                 </ul>
                             </li>
@@ -135,12 +135,12 @@
                             </a>
                         </li>
                             <li >
-                                <a rel="next" href="../tools/">
+                                <a rel="next" href="../changes/">
                                     <i class="fa fa-arrow-left"></i> Previous
                                 </a>
                             </li>
-                            <li >
-                                <a rel="prev" href="../../reference/builtins/">
+                            <li class="disabled">
+                                <a rel="prev" >
                                     Next <i class="fa fa-arrow-right"></i>
                                 </a>
                             </li>
@@ -155,64 +155,44 @@
         <div class="container">
                 <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
-        <li class="main active"><a href="#builtins">Builtins</a></li>
-            <li><a href="#decorators">Decorators</a></li>
-            <li><a href="#context-objects">Context objects</a></li>
+        <li class="main active"><a href="#license">License</a></li>
+            <li><a href="#bsd-3-clause-license">BSD 3-clause license</a></li>
     </ul>
 </div></div>
                 <div class="col-md-9" role="main">
 
-<h1 id="builtins">Builtins<a class="headerlink" href="#builtins" title="Permanent link">§</a></h1>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Builtins aren't currently extendable by third parties. However, this is
-<a href="https://github.com/jimporter/bfg9000/issues/48">planned</a>.</p>
-</div>
-<p>bfg9000 provides a set of builtin functions, classes, and variables to build
-scripts so that projects can easily describe their build process. These are
-all defined in <a href="https://github.com/jimporter/bfg9000/tree/master/bfg9000/builtins"><code>bfg9000/builtins/</code></a>; each file is automatically
-imported and its builtins are added to a dict of globals to pass to <code>build.bfg</code>.</p>
-<h2 id="decorators">Decorators<a class="headerlink" href="#decorators" title="Permanent link">§</a></h2>
-<p>Builtins are defined by using decorators defined in <code>bfg9000.builtins.builtin</code>;
-by default, these make the decorated object available to <code>build.bfg</code>, but you
-can also specify the context to change where the object is available: <code>'build'</code>
-for <code>build.bfg</code> files, <code>'options'</code> for <code>options.bfg</code> files, <code>'toolchain'</code> for
-<code>&lt;toolchain&gt;.bfg</code> files, and <code>'*'</code> for all files; in addition, you can specify
-a list of any of these strings to add the object to multiple contexts.</p>
-<h3 id="default">@default([<em>context</em>], [<em>name</em>])<a class="headerlink" href="#default" title="Permanent link">§</a></h3>
-<p>Define a function (or other callable object, including a type) as a builtin for
-the specified <em>context</em>s. If <em>name</em> is passed, it will be used as the builtin's
-name; otherwise, the function's name will be used.</p>
-<h3 id="function">@function([<em>context</em>], [<em>name</em>])<a class="headerlink" href="#function" title="Permanent link">§</a></h3>
-<p>Define a function (or other callable object) as a builtin for the specified
-<em>context</em>s. If <em>name</em> is passed, it will be used as the builtin's name;
-otherwise, the function's name will be used. When called by a bfg script, the
-function will be passed a <a href="#context-objects">context object</a> as the first
-argument.</p>
-<h3 id="getter">@getter([<em>context</em>], [<em>name</em>])<a class="headerlink" href="#getter" title="Permanent link">§</a></h3>
-<p>Define a getter function as a builtin for the specified <em>context</em>s. If <em>name</em> is
-passed, it will be used as the builtin's name; otherwise, the function's name
-will be used. When called by a bfg script, the function will be passed a
-<a href="#context-objects">context object</a> as the first argument.</p>
-<h3 id="post">@post([<em>context</em>], [<em>name</em>])<a class="headerlink" href="#post" title="Permanent link">§</a></h3>
-<p>Define a function to be run after the user's build script is executed for the
-specified <em>context</em>s. When called after a bfg script, the function will be
-passed a <a href="#context-objects">context object</a> its only argument.</p>
-<h3 id="type">@type(<em>out_type</em>, [<em>in_type</em>], [<em>extra_in_type</em>], [<em>short_circuit</em>], [<em>first_optional</em>])<a class="headerlink" href="#type" title="Permanent link">§</a></h3>
-<p>Define the return type of the decorated function as <em>out_type</em> and accepting
-automatic conversion of any object of <em>in_type</em> or <em>extra_in_type</em> (either a
-type or tuple of types, defaulting to <em>string_or_path_types</em>) as the first
-argument. If <em>short_circuit</em> is true (the default), passing in an object of type
-<em>out_type</em> will simply return the input with no changes. If <em>first_optional</em> is
-true, calling the decorated function with a single positional argument will pass
-<em>None</em> as the first argument, and the supplied argument as the second.</p>
-<p>This decorator is primarily useful for autoconversion of strings to the
-corresponding object for one of a build step's arguments (e.g. converting
-<code>'foo.cpp'</code> to a <em>SourceFile</em>).</p>
-<h2 id="context-objects">Context objects<a class="headerlink" href="#context-objects" title="Permanent link">§</a></h2>
-<p>Context objects contain all the necessary data to manage the internal state
-corresponding to a bfg script. These can be used by builtins to work with the
-environment, add build steps to the graph, etc.</p></div>
+<h1 id="license">License<a class="headerlink" href="#license" title="Permanent link">§</a></h1>
+<h2 id="bsd-3-clause-license">BSD 3-clause license<a class="headerlink" href="#bsd-3-clause-license" title="Permanent link">§</a></h2>
+<p>Copyright (c) 2015-2023, Jim Porter
+All rights reserved.</p>
+<p>Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:</p>
+<ol>
+<li>
+<p>Redistributions of source code must retain the above copyright notice, this
+list of conditions and the following disclaimer.</p>
+</li>
+<li>
+<p>Redistributions in binary form must reproduce the above copyright notice,
+this list of conditions and the following disclaimer in the documentation and/or
+other materials provided with the distribution.</p>
+</li>
+<li>
+<p>Neither the name of the copyright holder nor the names of its contributors
+may be used to endorse or promote products derived from this software without
+specific prior written permission.</p>
+</li>
+</ol>
+<p>THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</p></div>
         </div>
 
         <footer class="col-md-12">

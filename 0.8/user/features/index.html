@@ -8,7 +8,7 @@
         
         
         <link rel="shortcut icon" href="../../img/favicon.ico">
-        <title>Builtins - bfg9000</title>
+        <title>Features - bfg9000</title>
         <link href="../../css/bootstrap-custom.min.css" rel="stylesheet">
         <link href="../../css/font-awesome.min.css" rel="stylesheet">
         <link href="../../css/base.css" rel="stylesheet">
@@ -50,45 +50,45 @@
                             <li >
                                 <a href="../..">Home</a>
                             </li>
-                            <li class="dropdown">
+                            <li class="dropdown active">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">User Guide <b class="caret"></b></a>
                                 <ul class="dropdown-menu">
                                     
-<li >
-    <a href="../../user/features/">Features</a>
+<li class="active">
+    <a href="./">Features</a>
 </li>
                                     
 <li >
-    <a href="../../user/getting-started/">Getting Started</a>
+    <a href="../getting-started/">Getting Started</a>
 </li>
                                     
 <li >
-    <a href="../../user/building/">Building with bfg9000</a>
+    <a href="../building/">Building with bfg9000</a>
 </li>
                                     
 <li >
-    <a href="../../user/writing/">Writing a Build File</a>
+    <a href="../writing/">Writing a Build File</a>
 </li>
                                 </ul>
                             </li>
-                            <li class="dropdown active">
+                            <li class="dropdown">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">Developer Guide <b class="caret"></b></a>
                                 <ul class="dropdown-menu">
                                     
 <li >
-    <a href="../contributing/">Contributing</a>
+    <a href="../../developer/contributing/">Contributing</a>
 </li>
                                     
 <li >
-    <a href="../backends/">Build Backends</a>
+    <a href="../../developer/backends/">Build Backends</a>
 </li>
                                     
 <li >
-    <a href="../tools/">Build Tools</a>
+    <a href="../../developer/tools/">Build Tools</a>
 </li>
                                     
-<li class="active">
-    <a href="./">Builtins</a>
+<li >
+    <a href="../../developer/builtins/">Builtins</a>
 </li>
                                 </ul>
                             </li>
@@ -135,12 +135,12 @@
                             </a>
                         </li>
                             <li >
-                                <a rel="next" href="../tools/">
+                                <a rel="next" href="../..">
                                     <i class="fa fa-arrow-left"></i> Previous
                                 </a>
                             </li>
                             <li >
-                                <a rel="prev" href="../../reference/builtins/">
+                                <a rel="prev" href="../getting-started/">
                                     Next <i class="fa fa-arrow-right"></i>
                                 </a>
                             </li>
@@ -155,64 +155,79 @@
         <div class="container">
                 <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
-        <li class="main active"><a href="#builtins">Builtins</a></li>
-            <li><a href="#decorators">Decorators</a></li>
-            <li><a href="#context-objects">Context objects</a></li>
+        <li class="main active"><a href="#features">Features</a></li>
+            <li><a href="#supported-languagesplatforms">Supported languages/platforms</a></li>
+            <li><a href="#rich-scripting">Rich scripting</a></li>
+            <li><a href="#flexible-package-dependencies">Flexible package dependencies</a></li>
+            <li><a href="#project-defined-arguments">Project-defined arguments</a></li>
+            <li><a href="#semantic-options">Semantic options</a></li>
+            <li><a href="#toolchains-for-cross-compilation">Toolchains for cross-compilation</a></li>
+            <li><a href="#intelligent-rpath-support">Intelligent rpath support</a></li>
+            <li><a href="#auto-sudo-during-installation">Auto-sudo during installation</a></li>
+            <li><a href="#pkg-config-lookup-and-generation">pkg-config lookup and generation</a></li>
     </ul>
 </div></div>
                 <div class="col-md-9" role="main">
 
-<h1 id="builtins">Builtins<a class="headerlink" href="#builtins" title="Permanent link">§</a></h1>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Builtins aren't currently extendable by third parties. However, this is
-<a href="https://github.com/jimporter/bfg9000/issues/48">planned</a>.</p>
-</div>
-<p>bfg9000 provides a set of builtin functions, classes, and variables to build
-scripts so that projects can easily describe their build process. These are
-all defined in <a href="https://github.com/jimporter/bfg9000/tree/master/bfg9000/builtins"><code>bfg9000/builtins/</code></a>; each file is automatically
-imported and its builtins are added to a dict of globals to pass to <code>build.bfg</code>.</p>
-<h2 id="decorators">Decorators<a class="headerlink" href="#decorators" title="Permanent link">§</a></h2>
-<p>Builtins are defined by using decorators defined in <code>bfg9000.builtins.builtin</code>;
-by default, these make the decorated object available to <code>build.bfg</code>, but you
-can also specify the context to change where the object is available: <code>'build'</code>
-for <code>build.bfg</code> files, <code>'options'</code> for <code>options.bfg</code> files, <code>'toolchain'</code> for
-<code>&lt;toolchain&gt;.bfg</code> files, and <code>'*'</code> for all files; in addition, you can specify
-a list of any of these strings to add the object to multiple contexts.</p>
-<h3 id="default">@default([<em>context</em>], [<em>name</em>])<a class="headerlink" href="#default" title="Permanent link">§</a></h3>
-<p>Define a function (or other callable object, including a type) as a builtin for
-the specified <em>context</em>s. If <em>name</em> is passed, it will be used as the builtin's
-name; otherwise, the function's name will be used.</p>
-<h3 id="function">@function([<em>context</em>], [<em>name</em>])<a class="headerlink" href="#function" title="Permanent link">§</a></h3>
-<p>Define a function (or other callable object) as a builtin for the specified
-<em>context</em>s. If <em>name</em> is passed, it will be used as the builtin's name;
-otherwise, the function's name will be used. When called by a bfg script, the
-function will be passed a <a href="#context-objects">context object</a> as the first
-argument.</p>
-<h3 id="getter">@getter([<em>context</em>], [<em>name</em>])<a class="headerlink" href="#getter" title="Permanent link">§</a></h3>
-<p>Define a getter function as a builtin for the specified <em>context</em>s. If <em>name</em> is
-passed, it will be used as the builtin's name; otherwise, the function's name
-will be used. When called by a bfg script, the function will be passed a
-<a href="#context-objects">context object</a> as the first argument.</p>
-<h3 id="post">@post([<em>context</em>], [<em>name</em>])<a class="headerlink" href="#post" title="Permanent link">§</a></h3>
-<p>Define a function to be run after the user's build script is executed for the
-specified <em>context</em>s. When called after a bfg script, the function will be
-passed a <a href="#context-objects">context object</a> its only argument.</p>
-<h3 id="type">@type(<em>out_type</em>, [<em>in_type</em>], [<em>extra_in_type</em>], [<em>short_circuit</em>], [<em>first_optional</em>])<a class="headerlink" href="#type" title="Permanent link">§</a></h3>
-<p>Define the return type of the decorated function as <em>out_type</em> and accepting
-automatic conversion of any object of <em>in_type</em> or <em>extra_in_type</em> (either a
-type or tuple of types, defaulting to <em>string_or_path_types</em>) as the first
-argument. If <em>short_circuit</em> is true (the default), passing in an object of type
-<em>out_type</em> will simply return the input with no changes. If <em>first_optional</em> is
-true, calling the decorated function with a single positional argument will pass
-<em>None</em> as the first argument, and the supplied argument as the second.</p>
-<p>This decorator is primarily useful for autoconversion of strings to the
-corresponding object for one of a build step's arguments (e.g. converting
-<code>'foo.cpp'</code> to a <em>SourceFile</em>).</p>
-<h2 id="context-objects">Context objects<a class="headerlink" href="#context-objects" title="Permanent link">§</a></h2>
-<p>Context objects contain all the necessary data to manage the internal state
-corresponding to a bfg script. These can be used by builtins to work with the
-environment, add build steps to the graph, etc.</p></div>
+<h1 id="features">Features<a class="headerlink" href="#features" title="Permanent link">§</a></h1>
+<h2 id="supported-languagesplatforms">Supported languages/platforms<a class="headerlink" href="#supported-languagesplatforms" title="Permanent link">§</a></h2>
+<p>bfg9000 is designed to work on Linux, OS X, and Windows; other POSIX systems
+should work as well, but they aren't explicitly supported (if you'd like to help
+add support for your favorite platform, just file a pull request!). In addition,
+bfg9000 supports building code written in the following languages:</p>
+<ul>
+<li>C</li>
+<li>C++</li>
+<li>Fortran</li>
+<li>Java</li>
+<li>Objective C/C++</li>
+<li>Scala</li>
+<li>... <a href="../../reference/languages/">and more</a></li>
+</ul>
+<p>Finally, bfg supports generating build files for <a href="https://www.gnu.org/software/make/">Make</a>, <a href="https://ninja-build.org/">Ninja</a>,
+and <a href="https://learn.microsoft.com/en-us/visualstudio/msbuild/msbuild">MSBuild</a>, defaulting to Ninja.</p>
+<h2 id="rich-scripting">Rich scripting<a class="headerlink" href="#rich-scripting" title="Permanent link">§</a></h2>
+<p>Since <code>build.bfg</code> (and <code>options.bfg</code>!) files are just Python scripts with some
+extra builtins, it's possible to use the entirety of the Python ecosystem in
+your build scripts. This allows you to perform complex operations in your build
+scripts without having to roll everything yourself or provide a layer of "glue"
+to some external scripts in your build process.</p>
+<h2 id="flexible-package-dependencies">Flexible package dependencies<a class="headerlink" href="#flexible-package-dependencies" title="Permanent link">§</a></h2>
+<p>bfg9000 integrates with <a href="https://jimporter.github.io/mopack/"><code>mopack</code></a> to provide support for getting
+external package dependencies from multiple sources and allowing people building
+your project to easily override how packages are found. It's also easy to
+<a href="../../reference/builtins/#pkg_config">generate</a> <a href="https://www.freedesktop.org/wiki/Software/pkg-config/"><code>pkg-config</code></a> <code>.pc</code>
+files for your own packages to simplify using them elsewhere.</p>
+<h2 id="project-defined-arguments">Project-defined arguments<a class="headerlink" href="#project-defined-arguments" title="Permanent link">§</a></h2>
+<p>Projects can specify their own options, complete with help instructions, in the
+<a href="../writing/#options"><code>options.bfg</code></a>, making it easy to help users get your
+project configured for their system.</p>
+<h2 id="semantic-options">Semantic options<a class="headerlink" href="#semantic-options" title="Permanent link">§</a></h2>
+<p>To simplify building your software with different compilers, many common
+compiler flags can be represented with <a href="../../reference/builtins/#semantic-options">semantic
+options</a>. These will then be
+translated to the appropriate syntax for the selected compiler.</p>
+<h2 id="toolchains-for-cross-compilation">Toolchains for cross-compilation<a class="headerlink" href="#toolchains-for-cross-compilation" title="Permanent link">§</a></h2>
+<p>When configuring a build, you can take advantage of <a href="../building/#using-toolchain-files">toolchain
+files</a>, which specify the necessary settings
+(e.g. environment variables) for properly building your software, especially
+useful for cross-compilation configurations.</p>
+<h2 id="intelligent-rpath-support">Intelligent rpath support<a class="headerlink" href="#intelligent-rpath-support" title="Permanent link">§</a></h2>
+<p>bfg9000 automatically specifies rpaths on platforms that support them
+(currently Linux and macOS), making it easier to produce correct builds. When
+building, bfg always produces relative rpaths to allow moving your build
+directory without breaking things; however, when installing your build, these
+rpaths are modified to absolute paths (using <a href="https://nixos.org/patchelf.html"><code>patchelf</code></a> on Linux and
+<a href="https://www.unix.com/man-page/osx/1/install_name_tool/"><code>install_name_tool</code></a> on macOS).</p>
+<h2 id="auto-sudo-during-installation">Auto-sudo during installation<a class="headerlink" href="#auto-sudo-during-installation" title="Permanent link">§</a></h2>
+<p>When installing your builds, the install tool (<a href="https://github.com/jimporter/doppel/"><code>doppel</code></a>) will
+automatically request sudo priveleges if the installation directory requires it.
+This allows you to run <code>ninja install</code> as a non-root user, preventing
+permissions issues with intermediate files as well as being more secure.</p>
+<h2 id="pkg-config-lookup-and-generation">pkg-config lookup and generation<a class="headerlink" href="#pkg-config-lookup-and-generation" title="Permanent link">§</a></h2>
+<p>bfg9000 supports <a href="https://www.freedesktop.org/wiki/Software/pkg-config/"><code>pkg-config</code></a> both for looking up packages as well
+as <a href="../../reference/builtins/#pkg_config">generating</a> <code>.pc</code> files for your own
+packages.</p></div>
         </div>
 
         <footer class="col-md-12">
