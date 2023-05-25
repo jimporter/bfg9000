@@ -1,8 +1,12 @@
 # Changes
 
-## v0.8.0
+## v0.7.1
 in progress
 {: .subtitle}
+
+### Bug fixes
+- When using the `PKG_CONFIG_PATH` specified by mopack, add it to any existing
+  `PKG_CONFIG_PATH` from the environment
 
 ---
 

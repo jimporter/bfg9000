@@ -104,6 +104,12 @@ class PkgConfig(Command):
             return self._options[type][1](result)
         return result
 
+    def search_path(self, extra=[]):
+        path = self.env.variables.get('PKG_CONFIG_PATH')
+        if path:
+            return shell.join_paths(extra + [path])
+        return shell.join_paths(extra)
+
 
 class PkgConfigPackage(Package):
     def __init__(self, pkg_config, name, submodules=None,
@@ -113,7 +119,7 @@ class PkgConfigPackage(Package):
         super().__init__(name, submodules, format=format, deps=deps)
 
         self._pkg_config = pkg_config
-        self._env = ({'PKG_CONFIG_PATH': shell.join_paths(search_path)}
+        self._env = ({'PKG_CONFIG_PATH': pkg_config.search_path(search_path)}
                      if search_path else {})
         self.pcnames = pcnames if pcnames is not None else [name]
 

@@ -146,6 +146,23 @@ class TestPkgConfig(TestCase):
              mock.patch('warnings.warn'):
             self.assertEqual(PkgConfig(env).command, ['pkgconf'])
 
+    def test_search_path(self):
+        env = make_env(platform='linux', clear_variables=True)
+        with mock.patch('bfg9000.tools.pkg_config.check_which',
+                        return_value=('pkg-confing', True)):
+            self.assertEqual(PkgConfig(env).search_path(), '')
+            self.assertEqual(PkgConfig(env).search_path(['foo', 'bar']),
+                             'foo' + os.pathsep + 'bar')
+
+    def test_search_path_extend(self):
+        env = make_env(platform='linux', clear_variables=True,
+                       variables={'PKG_CONFIG_PATH': 'env'})
+        with mock.patch('bfg9000.tools.pkg_config.check_which',
+                        return_value=('pkg-confing', True)):
+            self.assertEqual(PkgConfig(env).search_path(), 'env')
+            self.assertEqual(PkgConfig(env).search_path(['foo', 'bar']),
+                             'foo' + os.pathsep + 'bar' + os.pathsep + 'env')
+
 
 class TestPkgConfigPackage(ToolTestCase):
     tool_type = PkgConfig
