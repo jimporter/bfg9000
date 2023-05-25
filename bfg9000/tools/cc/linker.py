@@ -9,6 +9,7 @@ from ..common import BuildCommand, library_macro
 from ...builtins.copy_file import CopyFile
 from ...file_types import *
 from ...iterutils import first, iterate, listify, recursive_walk, uniques
+from ...objutils import memoize_method
 from ...path import abspath, Path
 from ...versioning import SpecifierSet
 from ...packages import Framework
@@ -71,6 +72,7 @@ class CcLinker(BuildCommand):
         # and only define the macros if it does.
         return self.env.target_platform.has_import_library
 
+    @memoize_method
     def sysroot(self, strict=False):
         try:
             # XXX: clang doesn't support -print-sysroot.
@@ -83,6 +85,7 @@ class CcLinker(BuildCommand):
                 raise
             return '' if self.env.target_platform.family == 'windows' else '/'
 
+    @memoize_method
     def search_dirs(self, strict=False):
         try:
             output = self.env.execute(

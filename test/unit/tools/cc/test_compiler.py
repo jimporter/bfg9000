@@ -1,3 +1,4 @@
+from textwrap import dedent
 from unittest import mock
 
 from ... import *
@@ -7,7 +8,7 @@ from bfg9000 import options as opts
 from bfg9000.file_types import (HeaderDirectory, HeaderFile, ObjectFile,
                                 PrecompiledHeader, SourceFile)
 from bfg9000.tools.cc import CcBuilder
-from bfg9000.path import Path, Root
+from bfg9000.path import abspath, Path, Root
 
 
 class TestCcCompiler(CrossPlatformTestCase):
@@ -19,6 +20,7 @@ class TestCcCompiler(CrossPlatformTestCase):
              mock.patch('bfg9000.shell.execute', mock_execute):
             self.compiler = CcBuilder(self.env, known_langs['c++'], ['c++'],
                                       True, 'version').compiler
+        self.compiler._search_dirs._reset(self.compiler)
 
     def test_call(self):
         extra = self.compiler._always_flags
@@ -49,24 +51,50 @@ class TestCcCompiler(CrossPlatformTestCase):
         self.assertEqual(self.compiler.output_file('file', None),
                          ObjectFile(Path('file.o'), fmt, 'c++'))
 
+    def test_search_dirs(self):
+        def mock_execute(*args, **kwargs):
+            return dedent("""\
+             /bad/include
+            #include <...> search starts here:
+             /usr/include
+             /path/to/include
+            End of search list.
+            """)
+
+        dirs = [abspath('/usr/include'), abspath('/path/to/include')]
+        with mock.patch('bfg9000.shell.execute', mock_execute):
+            self.assertEqual(self.compiler.search_dirs(), dirs)
+            self.assertEqual(self.compiler.search_dirs(True), dirs)
+
+    def test_search_dirs_broken(self):
+        def mock_execute(*args, **kwargs):
+            raise OSError()
+
+        with mock.patch('bfg9000.shell.execute', mock_execute):
+            self.assertEqual(self.compiler.search_dirs(), [])
+            with self.assertRaises(OSError):
+                self.compiler.search_dirs(True)
+
     def test_flags_empty(self):
         self.assertEqual(self.compiler.flags(opts.option_list()), [])
 
     def test_flags_include_dir(self):
-        p = self.Path('/path/to/include')
-        self.assertEqual(self.compiler.flags(opts.option_list(
-            opts.include_dir(HeaderDirectory(p))
-        )), ['-I' + p])
+        search_dirs = 'bfg9000.tools.cc.compiler.CcBaseCompiler._search_dirs'
+        with mock.patch(search_dirs, lambda *args, **kwargs: []):
+            p = self.Path('/path/to/include')
+            self.assertEqual(self.compiler.flags(opts.option_list(
+                opts.include_dir(HeaderDirectory(p))
+            )), ['-I' + p])
 
-        self.assertEqual(self.compiler.flags(opts.option_list(
-            opts.include_dir(HeaderDirectory(p, system=True))
-        )), ['-isystem', p])
-
-        if self.env.target_platform.genus == 'linux':
-            p = self.Path('/usr/include')
             self.assertEqual(self.compiler.flags(opts.option_list(
                 opts.include_dir(HeaderDirectory(p, system=True))
-            )), ['-I' + p])
+            )), ['-isystem', p])
+
+        p = self.Path('/usr/include')
+        with mock.patch(search_dirs, lambda *args, **kwargs: [p]):
+            self.assertEqual(self.compiler.flags(opts.option_list(
+                opts.include_dir(HeaderDirectory(p, system=True))
+            )), [])
 
     def test_flags_define(self):
         self.assertEqual(self.compiler.flags(opts.option_list(

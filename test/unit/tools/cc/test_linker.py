@@ -1,3 +1,4 @@
+from textwrap import dedent
 from unittest import mock
 
 from ... import *
@@ -9,7 +10,7 @@ from bfg9000.builtins.install import installify
 from bfg9000.file_types import *
 from bfg9000.tools.cc import CcBuilder
 from bfg9000.packages import Framework
-from bfg9000.path import InstallRoot, Path, Root
+from bfg9000.path import abspath, InstallRoot, Path, Root
 
 
 class TestCcLinker(CrossPlatformTestCase):
@@ -29,6 +30,8 @@ class TestCcLinker(CrossPlatformTestCase):
 
     def setUp(self):
         self.linker = self._get_linker('c++')
+        self.linker.sysroot._reset(self.linker)
+        self.linker.search_dirs._reset(self.linker)
 
     def test_call(self):
         extra = self.linker._always_flags
@@ -68,6 +71,18 @@ class TestCcLinker(CrossPlatformTestCase):
             self.linker.sysroot(True)
 
     def test_search_dirs(self):
+        def mock_execute(*args, **kwargs):
+            return dedent("""\
+            install: /usr/lib/gcc
+            libraries: =/usr/lib{}/path/to/lib
+            """.format(os.pathsep))
+
+        dirs = [abspath('/usr/lib'), abspath('/path/to/lib')]
+        with mock.patch('bfg9000.shell.execute', mock_execute):
+            self.assertEqual(self.linker.search_dirs(), dirs)
+            self.assertEqual(self.linker.search_dirs(True), dirs)
+
+    def test_search_dirs_broken(self):
         def mock_execute(*args, **kwargs):
             raise OSError()
 

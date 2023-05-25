@@ -1,11 +1,12 @@
 from itertools import chain
 
-from ... import options as opts, safe_str
+from ... import options as opts, safe_str, shell
 from .flags import optimize_flags
 from ..common import BuildCommand
 from ...file_types import ObjectFile, PrecompiledHeader
-from ...iterutils import iterate
-from ...path import Path
+from ...iterutils import default_sentinel, iterate
+from ...objutils import memoize_method
+from ...path import abspath, Path
 from ...versioning import SpecifierSet
 
 
@@ -22,8 +23,37 @@ class CcBaseCompiler(BuildCommand):
     def needs_package_options(self):
         return True
 
+    @memoize_method
+    def _search_dirs(self, cpath=default_sentinel, strict=False):
+        try:
+            extra_env = ({'CPATH': cpath or ''}
+                         if cpath is not default_sentinel else None)
+            output = self.env.execute(
+                (self.command + self._always_flags + self.global_flags +
+                 ['-E', '-Wp,-v', '/dev/null']),
+                extra_env=extra_env, stdout=shell.Mode.pipe,
+                stderr=shell.Mode.stdout
+            )
+
+            found = False
+            dirs = []
+            for i in output.splitlines():  # pragma: no branch
+                if i == '#include <...> search starts here:':
+                    found = True
+                elif i == 'End of search list.':
+                    break
+                elif i[0] != ' ':
+                    found = False
+                elif found:
+                    dirs.append(abspath(i[1:]))
+            return dirs
+        except (OSError, shell.CalledProcessError):
+            if strict:
+                raise
+            return self.env.variables.getpaths('CPATH')
+
     def search_dirs(self, strict=False):
-        return self.env.variables.getpaths('CPATH')
+        return self._search_dirs(strict=strict)
 
     def _call(self, cmd, input, output, deps=None, flags=None):
         result = list(chain(
@@ -49,12 +79,14 @@ class CcBaseCompiler(BuildCommand):
         return flags
 
     def _include_dir(self, directory, allow_system):
-        is_default = directory.path in self.env.host_platform.include_dirs
-
-        # Don't include default directories as system dirs (e.g. /usr/include).
-        # Doing so would break GCC 6 when #including stdlib.h:
-        # <https://gcc.gnu.org/bugzilla/show_bug.cgi?id=70129>.
-        if allow_system and directory.system and not is_default:
+        default_dirs = self._search_dirs(None)
+        if directory.path in default_dirs:
+            # Don't include default directories (e.g. /usr/include). Including
+            # them as system dirs would break GCC 6 when #including stdlib.h:
+            # <https://gcc.gnu.org/bugzilla/show_bug.cgi?id=70129>. Including
+            # them as regular directories isn't right either.
+            return []
+        elif allow_system and directory.system:
             return ['-isystem', directory.path]
         else:
             return ['-I' + directory.path]

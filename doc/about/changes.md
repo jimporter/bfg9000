@@ -7,6 +7,7 @@ in progress
 ### Bug fixes
 - When using the `PKG_CONFIG_PATH` specified by mopack, add it to any existing
   `PKG_CONFIG_PATH` from the environment
+- Don't explicitly include default `#include` paths on CC-like compilers
 
 ---
 
