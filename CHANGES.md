@@ -1,5 +1,11 @@
 # Changes
 
+## v0.8.0 (in progress)
+
+No changes yet
+
+---
+
 ## v0.7.1 (2023-05-26)
 
 ### Bug fixes
