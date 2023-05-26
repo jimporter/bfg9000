@@ -1,6 +1,6 @@
 # Changes
 
-## v0.7.1 (in progress)
+## v0.7.1 (2023-05-26)
 
 ### Bug fixes
 - When using the `PKG_CONFIG_PATH` specified by mopack, add it to any existing
