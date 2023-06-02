@@ -17,7 +17,7 @@ jobs:
         include:
           - {os: ubuntu-latest, extra-tests: [mingw-cross],
              backends: [ninja, make], flags: -Wall -Werror}
-          - {os: windows-latest, msvc-version: '14.34', win-sdk: '10.0.20348.0',
+          - {os: windows-latest, msvc-version: '14.3', win-sdk: '10.0.20348.0',
              boost-version: '1.80.0', qt-version: '5.15.2',
              skipped-tests: [fortran, objc, scala],
              backends: [ninja, make, msbuild], flags: /WX}
@@ -52,27 +52,27 @@ jobs:
 
           # VS 2017 builds
           - {os: windows-2019, python-version: '3.10', compiler: default,
-             msvc-version: '14.16', win-sdk: '10.0.17763.0',
+             msvc-version: '14.1', win-sdk: '10.0.17763.0',
              boost-version: '1.80.0', qt-version: '5.15.2',
              skipped-tests: [fortran, objc, scala],
              backends: [ninja, make, msbuild], flags: /WX}
 
           # VS 2019 builds
           - {os: windows-2019, python-version: '3.10', compiler: default,
-             msvc-version: '14.29', win-sdk: '10.0.18362.0',
+             msvc-version: '14.2', win-sdk: '10.0.18362.0',
              boost-version: '1.80.0', qt-version: '5.15.2',
              skipped-tests: [fortran, objc, scala],
              backends: [ninja, make, msbuild], flags: /WX}
 
           # VS 2022 x86 builds
           - {os: windows-latest, python-version: '3.10', compiler: default-x86,
-             msvc-version: '14.34', msvc-arch: 'x86', win-sdk: '10.0.20348.0',
+             msvc-version: '14.3', msvc-arch: 'x86', win-sdk: '10.0.20348.0',
              boost-version: '1.80.0', skipped-tests: [fortran, objc, qt, scala],
              backends: [ninja, make, msbuild], flags: /WX}
 
           # VS 2022 clang-cl builds
           - {os: windows-latest, python-version: '3.10', compiler: clang-cl,
-             msvc-version: '14.34', win-sdk: '10.0.20348.0',
+             msvc-version: '14.3', win-sdk: '10.0.20348.0',
              boost-version: '1.80.0', qt-version: '5.15.2',
              skipped-tests: [boost, fortran, objc, scala],
              backends: [ninja, make], flags: /WX -Wno-microsoft-include
@@ -80,7 +80,7 @@ jobs:
 
           # MinGW builds
           - {os: windows-latest, python-version: '3.10', compiler: mingw,
-             msvc-version: '14.34', win-sdk: '10.0.20348.0',
+             msvc-version: '14.3', win-sdk: '10.0.20348.0',
              qt-version: '5.15.2', qt-arch: 'win64_mingw81',
              skipped-tests: [boost, fortran, objc, pch, scala],
              backends: [ninja, make], flags: -Wall -Werror}
