@@ -1,4 +1,4 @@
-# -*- mode: python; mode: bfg9000 -*-
+# -*- mode: python; mode: bfg9000-options -*-
 
 argument('enthusiasm', type=int, metavar='N', default=1,
          help=('set number of exclamation points in greeting ' +
