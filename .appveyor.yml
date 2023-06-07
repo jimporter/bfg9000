@@ -40,7 +40,7 @@ cache:
   - C:\ProgramData\chocolatey\lib -> appveyor.yml
 
 install:
-  - cinst gnuwin32-coreutils.portable make ninja winflexbison3
+  - choco install gnuwin32-coreutils.portable make ninja winflexbison3
 
   # Fetch and install pkg-config.
   - curl -LO %GNOME_BASE%/dependencies/pkg-config_0.26-1_win32.zip
@@ -67,8 +67,7 @@ install:
   - call "%VS%" x86
   - set PATH=%PYTHON_PATH%;%PYTHON_PATH%\Scripts;%LIBRARY_PATH%;%QT_ROOT%\bin;%PATH%
 build_script:
-  - git clone https://github.com/jimporter/mopack.git
-  - pip install ./mopack .[test]
+  - pip install git+https://github.com/jimporter/mopack.git .[test]
 test_script:
   - python setup.py coverage -q
 on_success:

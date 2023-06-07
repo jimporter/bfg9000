@@ -115,14 +115,9 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Clone mopack
-        uses: actions/checkout@v3
-        with:
-          repository: jimporter/mopack
-          path: mopack
       - name: Install Python dependencies
         run: |
-          pip install ./mopack '.[test]'
+          pip install git+https://github.com/jimporter/mopack.git '.[test]'
       - name: Initialize MSVC ${{ matrix.msvc-version }}
         if: startsWith(matrix.os, 'windows-')
         uses: ilammy/msvc-dev-cmd@v1
@@ -178,7 +173,7 @@ jobs:
       - name: Install Windows dependencies
         if: startsWith(matrix.os, 'windows-')
         run: |
-          cinst ninja winflexbison3
+          choco install ninja winflexbison3
 
           # Fetch and install pkg-config.
           ${gnomebase} = "https://ftp.gnome.org/pub/gnome/binaries/win32"
@@ -253,11 +248,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - name: Clone mopack
-        uses: actions/checkout@v3
-        with:
-          repository: jimporter/mopack
-          path: mopack
       - name: Install Cygwin
         shell: cmd
         run: >
@@ -265,7 +255,7 @@ jobs:
 
           .\setup-x86_64.exe -qgnNdO -R %CYGROOT% -l %CYGCACHE%
           -s http://mirrors.kernel.org/sourceware/cygwin/
-          -P gcc-g++,make,ninja,python38,python38-pip,python38-setuptools
+          -P gcc-g++,git,make,ninja,python38,python38-pip,python38-setuptools
       - name: Copy bfg9000 to Cygwin
         run: |
           robocopy . ${env:CYGROOT}\home\runneradmin\bfg9000 /E
@@ -273,7 +263,8 @@ jobs:
       - name: Install Python dependencies
         run: >
           C:\cygwin\bin\bash -lc
-          "cd bfg9000 && pip3.8 install coverage mock ./mopack ."
+          "cd bfg9000 && pip3.8 install
+          coverage git+https://github.com/jimporter/mopack.git ."
       - name: Run tests
         run: >
           C:\cygwin\bin\bash -lc
