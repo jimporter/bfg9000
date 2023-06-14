@@ -266,8 +266,9 @@ containing that file). This can then be used in the <em>include</em> argument wh
 <a href="#object_file">compiling</a> a source file. The arguments <em>include</em>, <em>extra</em>,
 <em>exclude</em>, <em>filter</em>, <em>dist</em>, and <em>cache</em> are forwarded to
 <a href="#find_files"><em>find_files</em></a>, as with <a href="#directory"><em>directory</em></a>.</p>
-<p>If <em>system</em> is <em>True</em>, this directory will be treated as a <a href="https://gcc.gnu.org/onlinedocs/cpp/System-Headers.html">system
-directory</a> for compilers that support this.</p>
+<p>If <em>system</em> is <em>True</em>, this directory will be treated as a
+<a href="https://gcc.gnu.org/onlinedocs/cpp/System-Headers.html">system</a>/<a href="https://learn.microsoft.com/en-us/cpp/build/reference/external-external-headers-diagnostics">external</a>
+directory for compilers that support this.</p>
 <h3 id="header_file">header_file(<em>name</em>, [<em>lang</em>], *, [<em>dist</em>])<a class="headerlink" href="#header_file" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Create a reference to an existing header named <em>name</em>. This is useful if you'd
@@ -829,8 +830,9 @@ unable to find the package, it will raise a
 <p>You can also specify <em>kind</em> to one of <code>'any'</code> (the default), <code>'shared'</code>, or
 <code>'static'</code>. This allows you to restrict the search to find only static versions
 of a library, for example.</p>
-<p>If <em>system</em> is <em>True</em> (the default), any directories will be treated as <a href="https://gcc.gnu.org/onlinedocs/cpp/System-Headers.html">system
-directories</a> for compilers that support this.</p>
+<p>If <em>system</em> is <em>True</em> (the default), any directories will be treated as
+<a href="https://gcc.gnu.org/onlinedocs/cpp/System-Headers.html">system</a>/<a href="https://learn.microsoft.com/en-us/cpp/build/reference/external-external-headers-diagnostics">external</a> directories
+for compilers that support this.</p>
 <p>If <em>version</em> is specified, it will (if possible) ensure that the installed
 version of the package meets the version requirement; it must be formatted as a
 Python <a href="https://www.python.org/dev/peps/pep-0440/#version-specifiers">version specifier</a>. If this check fails, a
@@ -892,9 +894,10 @@ correspond directly to the fields in the pkg-config <code>.pc</code> file.</p>
   exposed to users (this is used primarily for static linking)</li>
 <li><em>lang</em>: The language of the builder to use when generating option strings;
   by default, <code>'c'</code></li>
-<li><em>system</em>: If <em>True</em>, any include directories will be treated as <a href="https://gcc.gnu.org/onlinedocs/cpp/System-Headers.html">system
-  directories</a> when using the package internally (for
-  compilers that support this); defaults to <em>False</em>.</li>
+<li><em>system</em>: If <em>True</em>, any include directories will be treated as
+  <a href="https://gcc.gnu.org/onlinedocs/cpp/System-Headers.html">system</a>/<a href="https://learn.microsoft.com/en-us/cpp/build/reference/external-external-headers-diagnostics">external</a> directories
+  when using the package internally (for compilers that support this); defaults
+  to <em>False</em>.</li>
 </ul>
 <p>If <em>auto_fill</em> is true, this function will automatically fill in default values
 for the following fields:</p>
