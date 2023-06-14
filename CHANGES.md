@@ -2,7 +2,8 @@
 
 ## v0.8.0 (in progress)
 
-No changes yet
+### New features
+- Add support for system headers when compiling with MSVC
 
 ---
 

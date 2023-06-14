@@ -10,6 +10,7 @@ from ...iterutils import iterate, listify
 from ...languages import known_langs
 from ...objutils import memoize
 from ...path import Path
+from ...versioning import SpecifierSet
 
 _warning_flags = {
     opts.WarningValue.disable: '/w',
@@ -53,18 +54,31 @@ class MsvcBaseCompiler(BuildCommand):
 
     @property
     def _always_flags(self):
-        return ['/nologo', '/EHsc']
+        extra = []
+        if ( self.brand == 'msvc' and self.version and
+             self.version in SpecifierSet('>=19.29') ):
+            extra = ['/external:W0']
+        return ['/nologo', '/EHsc'] + extra
+
+    def _include_dir(self, directory, pkgconf_mode):
+        if pkgconf_mode:
+            return ['-I' + directory.path]
+        elif (directory.system and
+              self.brand == 'msvc' and self.version and
+              self.version in SpecifierSet('>=19.29')):
+            return ['/external:I' + directory.path]
+        else:
+            return ['/I' + directory.path]
 
     def flags(self, options, global_options=None, output=None, mode='normal'):
-        syntax = 'cc' if mode == 'pkg-config' else 'msvc'
+        pkgconf_mode = mode == 'pkg-config'
         debug = static = False
         flags = []
         for i in options:
             if isinstance(i, opts.include_dir):
-                prefix = '-I' if syntax == 'cc' else '/I'
-                flags.append(prefix + i.directory.path)
+                flags.extend(self._include_dir(i.directory, pkgconf_mode))
             elif isinstance(i, opts.define):
-                prefix = '-D' if syntax == 'cc' else '/D'
+                prefix = '-D' if pkgconf_mode else '/D'
                 if i.value:
                     flags.append(prefix + i.name + '=' + i.value)
                 else:

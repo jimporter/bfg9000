@@ -114,8 +114,9 @@ containing that file). This can then be used in the *include* argument when
 *exclude*, *filter*, *dist*, and *cache* are forwarded to
 [*find_files*](#find_files), as with [*directory*](#directory).
 
-If *system* is *True*, this directory will be treated as a [system
-directory][system-directory] for compilers that support this.
+If *system* is *True*, this directory will be treated as a
+[system][gcc-system-directory]/[external][msvc-external-directory]
+directory for compilers that support this.
 
 ### header_file(*name*, [*lang*], \*, [*dist*]) { #header_file }
 Availability: `build.bfg`
@@ -819,8 +820,9 @@ You can also specify *kind* to one of `'any'` (the default), `'shared'`, or
 `'static'`. This allows you to restrict the search to find only static versions
 of a library, for example.
 
-If *system* is *True* (the default), any directories will be treated as [system
-directories][system-directory] for compilers that support this.
+If *system* is *True* (the default), any directories will be treated as
+[system][gcc-system-directory]/[external][msvc-external-directory] directories
+for compilers that support this.
 
 If *version* is specified, it will (if possible) ensure that the installed
 version of the package meets the version requirement; it must be formatted as a
@@ -888,9 +890,10 @@ correspond directly to the fields in the pkg-config `.pc` file.
   exposed to users (this is used primarily for static linking)
 * *lang*: The language of the builder to use when generating option strings;
   by default, `'c'`
-* *system*: If *True*, any include directories will be treated as [system
-  directories][system-directory] when using the package internally (for
-  compilers that support this); defaults to *False*.
+* *system*: If *True*, any include directories will be treated as
+  [system][gcc-system-directory]/[external][msvc-external-directory] directories
+  when using the package internally (for compilers that support this); defaults
+  to *False*.
 
 If *auto_fill* is true, this function will automatically fill in default values
 for the following fields:
@@ -1606,7 +1609,8 @@ Availability: `build.bfg` and `options.bfg`
 An exception raised when a version fails to match the supplied version
 specifier.
 
-[system-directory]: https://gcc.gnu.org/onlinedocs/cpp/System-Headers.html
+[gcc-system-directory]: https://gcc.gnu.org/onlinedocs/cpp/System-Headers.html
+[msvc-external-directory]: https://learn.microsoft.com/en-us/cpp/build/reference/external-external-headers-diagnostics
 [def-file]: https://learn.microsoft.com/en-us/cpp/build/reference/module-definition-dot-def-files
 [gcc-pch]: https://gcc.gnu.org/onlinedocs/gcc/Precompiled-Headers.html
 [clang-pch]: http://clang.llvm.org/docs/UsersManual.html#usersmanual-precompiled-headers
