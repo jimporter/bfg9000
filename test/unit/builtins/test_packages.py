@@ -230,11 +230,6 @@ class TestPackageCc(BuiltinTest):
             self.assertEqual(pkg.name, 'boost[thread]')
             self.assertEqual(pkg.version, Version('1.2.3'))
 
-            with mock.patch('warnings.warn'):
-                pkg = self.context['boost_package']('thread')
-                self.assertEqual(pkg.name, 'boost[thread]')
-                self.assertEqual(pkg.version, Version('1.2.3'))
-
     def test_invalid_kind(self):
         with self.assertRaises(ValueError):
             self.context['package']('name', kind='bad')
