@@ -31,7 +31,7 @@ class TestShellList(TestCase):
         self.assertEqual(x[0:2], shell_list([1, 2]))
         self.assertEqual(x[0:3:2], shell_list([1, 3]))
 
-    def test_equals(self):
+    def test_equality(self):
         x = shell_list([1, 2, 3])
 
         self.assertTrue(x == shell_list([1, 2, 3]))

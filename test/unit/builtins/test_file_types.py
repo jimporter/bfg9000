@@ -116,7 +116,7 @@ class TestFileList(BuiltinTest):
             self.assertSameFile(f['foo.cpp'], obj)
         self.assertSameFile(f['dir/foo.cpp'], obj)
 
-    def test_eq(self):
+    def test_equality(self):
         f1 = self.make_file_list('foo.cpp', 'bar.cpp')
         f2 = self.make_file_list('foo.cpp', 'bar.cpp')
         f3 = self.make_file_list('baz.cpp', 'quux.cpp')

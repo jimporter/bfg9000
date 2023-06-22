@@ -96,7 +96,7 @@ class TestOptionList(TestCase):
         opts[0:] = [options.define('name')]
         self.assertEqual(opts, options.option_list(options.define('name')))
 
-    def test_eq(self):
+    def test_equality(self):
         opts1 = options.option_list(options.pthread())
         opts2 = options.option_list(options.pthread())
         opts3 = options.option_list(options.pic())
@@ -204,7 +204,7 @@ class TestOption(TestCase):
         self.assertTrue(o1.matches(o2))
         self.assertFalse(o1.matches(o3))
 
-    def test_eq(self):
+    def test_equality(self):
         my_option = options.option('my_option', ['value'])
         o1 = my_option('foo')
         o2 = my_option('foo')
