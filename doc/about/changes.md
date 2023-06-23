@@ -5,6 +5,8 @@ in progress
 {: .subtitle}
 
 ### New features
+- `find_files` now caches results by default so searches don't need to be re-run
+  if you call it again with the same arguments
 - Add support for system headers when compiling with MSVC
 
 ### Bug fixes

@@ -141,6 +141,21 @@ class TestPathGlob(TestCase):
         self.assertRaises(ValueError, PathGlob, '*', type='goofy')
         self.assertRaises(ValueError, PathGlob, '*/', type='f')
 
+    def test_equality(self):
+        g1 = PathGlob('*')
+        g2 = PathGlob(Path('*', Root.srcdir))
+        g3 = PathGlob('*', type='f')
+        g4 = PathGlob('*.hpp')
+
+        self.assertTrue(g1 == g2)
+        self.assertFalse(g1 != g2)
+
+        self.assertTrue(g1 == g3)
+        self.assertFalse(g1 != g3)
+
+        self.assertFalse(g1 == g4)
+        self.assertTrue(g1 != g4)
+
     def test_skip_base(self):
         def srcpath(p):
             return Path(p, Root.srcdir)
@@ -192,3 +207,14 @@ class TestNameGlob(TestCase):
         self.assertEqual(g.match(src_dir), True)
         self.assertEqual(g.match(src_dir_file_txt), True)
         self.assertEqual(g.match(build_file_txt), True)
+
+    def test_equality(self):
+        g1 = NameGlob('*')
+        g2 = NameGlob('*', type='f')
+        g3 = NameGlob('*.hpp')
+
+        self.assertTrue(g1 == g2)
+        self.assertFalse(g1 != g2)
+
+        self.assertFalse(g1 == g3)
+        self.assertTrue(g1 != g3)

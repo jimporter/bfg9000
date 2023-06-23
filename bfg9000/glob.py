@@ -26,14 +26,28 @@ class Glob:
                 return cls.any
             raise ValueError('unknown type {!r}'.format(s))
 
-    def __init__(self, type, isdir):
+    def __init__(self, pattern, type, isdir):
         if type is None:
             type = self.Type.dir if isdir else self.Type.file
         else:
             type = objectify(type, self.Type, self.Type.from_char)
             if type == self.Type.file and isdir:
                 raise ValueError("type is 'f' but pattern is a directory")
+        self.pattern = pattern
         self.type = type
+
+    def __repr__(self):
+        return repr(self.pattern)
+
+    def __eq__(self, rhs):
+        return (type(self) == type(rhs) and self.pattern == rhs.pattern and
+                self.type == rhs.type)
+
+    def __ne__(self, rhs):
+        return not (self == rhs)
+
+    def __hash__(self):
+        return hash((self.pattern, self.type))
 
 
 class PathGlob(Glob):
@@ -56,7 +70,7 @@ class PathGlob(Glob):
 
     def __init__(self, pattern, type=None, root=Root.srcdir):
         path = Path.ensure(pattern, root)
-        super().__init__(type, path.directory)
+        super().__init__(path, type, path.directory)
         bits = list_view(path.split())
 
         first_glob = find_index(self._is_glob, bits)
@@ -187,12 +201,12 @@ class NameGlob(Glob):
     _slash_ex = re.compile(r'[\\/]+$')
 
     def __init__(self, pattern, type=None):
-        pattern, n = re.subn(self._slash_ex, '', pattern)
-        super().__init__(type, n > 0)
-        self.pattern = re.compile(fnmatch.translate(pattern))
+        name_pattern, n = re.subn(self._slash_ex, '', pattern)
+        super().__init__(pattern, type, n > 0)
+        self.regex = re.compile(fnmatch.translate(name_pattern))
 
     def match(self, path):
-        if self.pattern.match(path.basename()):
+        if self.regex.match(path.basename()):
             found_type = self.Type.dir if path.directory else self.Type.file
             return bool(self.type & found_type)
         return False

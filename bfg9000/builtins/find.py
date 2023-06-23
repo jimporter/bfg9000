@@ -1,4 +1,6 @@
 import re
+from collections import namedtuple
+from collections.abc import Mapping
 from enum import Enum
 from functools import reduce
 
@@ -14,6 +16,28 @@ from ..platforms import known_platforms
 
 build_input('find_dirs')(set)
 depfile_name = '.bfg_find_deps'
+
+
+@build_input('find_cache')
+class FindCache(Mapping):
+    FindCacheEntry = namedtuple('FindCacheEntry', ['found', 'extra'])
+
+    def __init__(self):
+        self._cache = {}
+
+    def add(self, file_filter, found, extra):
+        assert file_filter not in self._cache
+
+        self._cache[file_filter] = self.FindCacheEntry(found, extra)
+
+    def __getitem__(self, file_filter):
+        return self._cache[file_filter]
+
+    def __iter__(self):
+        return iter(self._cache)
+
+    def __len__(self):
+        return len(self._cache)
 
 
 @builtin.default()
@@ -36,11 +60,11 @@ class FindResult(Enum):
 class FileFilter:
     def __init__(self, include, type=None, extra=None, exclude=None,
                  filter_fn=None):
-        self.include = [PathGlob(i, type) for i in iterate(include)]
+        self.include = tuple(PathGlob(i, type) for i in iterate(include))
         if not self.include:
             raise ValueError('at least one pattern required')
-        self.extra = [NameGlob(i, type) for i in iterate(extra)]
-        self.exclude = [NameGlob(i, type) for i in iterate(exclude)]
+        self.extra = tuple(NameGlob(i, type) for i in iterate(extra))
+        self.exclude = tuple(NameGlob(i, type) for i in iterate(exclude))
         self.filter_fn = filter_fn
 
     def bases(self):
@@ -68,6 +92,23 @@ class FileFilter:
         if self.filter_fn:
             return result & self.filter_fn(path)
         return result
+
+    def __eq__(self, rhs):
+        return (self.include == rhs.include and self.extra == rhs.extra and
+                self.exclude == rhs.exclude and
+                self.filter_fn == rhs.filter_fn)
+
+    def __ne__(self, rhs):
+        return not (self == rhs)
+
+    def __hash__(self):
+        return hash((self.include, self.extra, self.exclude, self.filter_fn))
+
+    def __repr__(self):
+        return (
+            'FileFilter(include={}, extra={}, exclude={}, filter_fn={})'
+            .format(self.include, self.extra, self.exclude, self.filter_fn)
+        )
 
 
 def write_depfile(env, path, output, seen_dirs, makeify=False):
@@ -147,21 +188,33 @@ def find_files(context, pattern, *, type=None, extra=None, exclude=None,
              'd': dir_type or context['directory']}
     extra_types = {'f': context['generic_file'], 'd': context['directory']}
 
-    pattern = [context['relpath'](i) for i in iterate(pattern)]
+    pattern = tuple(context['relpath'](i) for i in iterate(pattern))
     exclude = context.build['project']['find_exclude'] + listify(exclude)
     file_filter = FileFilter(pattern, type, extra, exclude, filter)
 
-    found, seen_dirs = [], []
+    if cache:
+        try:
+            return [types[_path_type(i)](i, dist=dist) for i in
+                    context.build['find_cache'][file_filter].found]
+        except KeyError:
+            pass
+
+    results, found, extra, seen_dirs = [], [], [], []
     for path, matched in _find_files(context.env, file_filter, seen_dirs):
         if matched == FindResult.include:
-            found.append(types[_path_type(path)](path, dist=dist))
-        elif matched == FindResult.not_now and dist:
+            if cache:
+                found.append(path)
+            results.append(types[_path_type(path)](path, dist=dist))
+        elif matched == FindResult.not_now:
+            if cache:
+                extra.append(path)
             extra_types[_path_type(path)](path, dist=dist)
 
     if cache:
+        context.build['find_cache'].add(file_filter, found, extra)
         context.build['find_dirs'].update(seen_dirs)
         context.build['regenerate'].depfile = depfile_name
-    return found
+    return results
 
 
 @builtin.function()

@@ -1286,7 +1286,9 @@ The following arguments may also be specified:
   *file_type*; the default type is a [*directory*](#directory)
 * *dist*: If true (the default), all files found by this function will
   automatically be added to the source distribution
-* *cache*: If true (the default), cache the results so that any changes to will
+* *cache*: If true (the default), cache the results of this search; this will
+  return the cached results if this function is called with the same arguments
+  again, and will also ensure that any future changes to the results will
   regenerate the build scripts for the project
 
 The *cache* argument is particularly important. It allows you to add or remove

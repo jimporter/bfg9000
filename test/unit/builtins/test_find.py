@@ -21,6 +21,10 @@ def srcpath(p):
     return Path(p, Root.srcdir)
 
 
+def paths(files):
+    return [i.path for i in files]
+
+
 @contextmanager
 def mock_filesystem():
     def mock_listdir(path):
@@ -45,6 +49,44 @@ def mock_filesystem():
          mock.patch('bfg9000.path.isdir', mock_isdir) as c, \
          mock.patch('bfg9000.path.islink', return_value=False) as d:
         yield a, b, c, d
+
+
+class TestFindCache(TestCase):
+    def setUp(self):
+        self.cache = find.FindCache()
+
+    def test_add_getitem(self):
+        file_filter = find.FileFilter('*')
+        self.cache.add(file_filter, ['found'], ['extra'])
+        self.assertEqual(self.cache[file_filter], (['found'], ['extra']))
+        with self.assertRaises(KeyError):
+            self.cache[find.FileFilter('*.txt')]
+
+    def test_in(self):
+        file_filter = find.FileFilter('*')
+        self.cache.add(file_filter, ['found'], ['extra'])
+        self.assertTrue(file_filter in self.cache)
+        self.assertFalse(find.FileFilter('*.txt') in self.cache)
+
+    def test_iter(self):
+        filter1 = find.FileFilter('*')
+        filter2 = find.FileFilter('*.txt')
+        self.cache.add(filter1, ['found1'], ['extra1'])
+        self.cache.add(filter2, ['found2'], ['extra2'])
+
+        self.assertEqual(list(self.cache), [filter1, filter2])
+        self.assertEqual(list(self.cache.keys()), [filter1, filter2])
+        self.assertEqual(list(self.cache.values()),
+                         [(['found1'], ['extra1']),
+                          (['found2'], ['extra2'])])
+        self.assertEqual(list(self.cache.items()),
+                         [(filter1, (['found1'], ['extra1'])),
+                          (filter2, (['found2'], ['extra2']))])
+
+    def test_len(self):
+        self.assertEqual(len(self.cache), 0)
+        self.cache.add(find.FileFilter('*'), ['found'], ['extra'])
+        self.assertEqual(len(self.cache), 1)
 
 
 class TestFindResult(TestCase):
@@ -182,9 +224,48 @@ class TestFileFilter(TestCase):
         self.assertEqual(f.match(srcpath('foo.hpp')),
                          find.FindResult.exclude_recursive)
 
+    def test_filter_fn(self):
+        def filter_fn(path):
+            if path.basename().startswith('f'):
+                return find.FindResult.include
+            return find.FindResult.exclude
+
+        f = find.FileFilter('*.cpp', filter_fn=filter_fn)
+        self.assertEqual(f.match(srcpath('foo.cpp')), find.FindResult.include)
+        self.assertEqual(f.match(srcpath('bar.cpp')), find.FindResult.exclude)
+        self.assertEqual(f.match(srcpath('foo.hpp')),
+                         find.FindResult.exclude_recursive)
+
     def test_no_pattern(self):
         self.assertRaises(ValueError, find.FileFilter, [])
         self.assertRaises(ValueError, find.FileFilter, None)
+
+    def test_equality(self):
+        f1 = find.FileFilter('*.hpp')
+        f2 = find.FileFilter('*.hpp')
+        f3 = find.FileFilter('*.cpp')
+        f4 = find.FileFilter('*.hpp', 'f')
+        f5 = find.FileFilter('*.hpp', extra='*.cpp')
+        f6 = find.FileFilter('*.hpp', exclude='*foo.hpp')
+        f7 = find.FileFilter('*.hpp', filter_fn=lambda path: True)
+
+        self.assertTrue(f1 == f2)
+        self.assertFalse(f1 != f2)
+
+        self.assertFalse(f1 == f3)
+        self.assertTrue(f1 != f3)
+
+        self.assertTrue(f1 == f4)
+        self.assertFalse(f1 != f4)
+
+        self.assertFalse(f1 == f5)
+        self.assertTrue(f1 != f5)
+
+        self.assertFalse(f1 == f6)
+        self.assertTrue(f1 != f6)
+
+        self.assertFalse(f1 == f7)
+        self.assertTrue(f1 != f7)
 
 
 class TestFilterByPlatform(BuiltinTest):
@@ -273,6 +354,7 @@ class TestFindFiles(FindTestCase):
         super().setUp()
         self.find = self.context['find_files']
         self.dist = []
+        self.find_exclude = self.context.build['project']['find_exclude']
 
     def assertFoundResult(self, result, expected):
         self.assertEqual(result, expected)
@@ -283,83 +365,144 @@ class TestFindFiles(FindTestCase):
         self.assertEqual(list(self.build.sources()),
                          [self.bfgfile] + self.dist)
 
-    def assertFindDirs(self, expected):
+    def assertCached(self, expected):
+        self.assertEqual(self.build['find_cache'], expected)
+
+    def assertSeenDirs(self, expected):
         self.assertPathSetEqual(self.build['find_dirs'], expected)
 
     def test_str_pattern(self):
-        expected = [File(srcpath('dir/file2.txt'))]
-        self.assertFound(self.find('dir/**'), expected)
-        self.assertFindDirs({srcpath('dir/'), srcpath('dir/sub/')})
+        expected_files = [File(srcpath('dir/file2.txt'))]
+        self.assertFound(self.find('dir/**'), expected_files)
+        self.assertCached({
+            find.FileFilter('dir/**', exclude=self.find_exclude):
+            (paths(expected_files), []),
+        })
+        self.assertSeenDirs({srcpath('dir/'), srcpath('dir/sub/')})
 
-        expected = [Directory(srcpath('dir/')),
-                    Directory(srcpath('dir/sub'))]
-        self.assertFound(self.find('dir/**/'), expected)
-        self.assertFindDirs({srcpath('dir/'), srcpath('dir/sub/')})
+        expected_dirs = [Directory(srcpath('dir/')),
+                         Directory(srcpath('dir/sub'))]
+        self.assertFound(self.find('dir/**/'), expected_dirs)
+        self.assertCached({
+            find.FileFilter('dir/**', exclude=self.find_exclude):
+            (paths(expected_files), []),
+            find.FileFilter('dir/**/', exclude=self.find_exclude):
+            (paths(expected_dirs), []),
+        })
+        self.assertSeenDirs({srcpath('dir/'), srcpath('dir/sub/')})
 
     def test_path_pattern(self):
-        expected = [File(srcpath('dir/file2.txt'))]
-        self.assertFound(self.find(srcpath('dir/**')), expected)
-        self.assertFindDirs({srcpath('dir/'), srcpath('dir/sub/')})
+        expected_files = [File(srcpath('dir/file2.txt'))]
+        self.assertFound(self.find(srcpath('dir/**')), expected_files)
+        self.assertCached({
+            find.FileFilter('dir/**', exclude=self.find_exclude):
+            (paths(expected_files), []),
+        })
+        self.assertSeenDirs({srcpath('dir/'), srcpath('dir/sub/')})
 
-        expected = [Directory(srcpath('dir/')),
-                    Directory(srcpath('dir/sub'))]
-        self.assertFound(self.find(srcpath('dir/**/')), expected)
-        self.assertFindDirs({srcpath('dir/'), srcpath('dir/sub/')})
+        expected_dirs = [Directory(srcpath('dir/')),
+                         Directory(srcpath('dir/sub'))]
+        self.assertFound(self.find(srcpath('dir/**/')), expected_dirs)
+        self.assertCached({
+            find.FileFilter('dir/**', exclude=self.find_exclude):
+            (paths(expected_files), []),
+            find.FileFilter('dir/**/', exclude=self.find_exclude):
+            (paths(expected_dirs), []),
+        })
+        self.assertSeenDirs({srcpath('dir/'), srcpath('dir/sub/')})
 
     def test_multiple_patterns(self):
         expected = [SourceFile(srcpath('file.cpp'), 'c++'),
                     File(srcpath('dir/file2.txt'))]
         self.assertFound(self.find(['*.cpp', 'dir/*.txt']), expected)
-        self.assertFindDirs({srcpath('./'), srcpath('dir/')})
+        self.assertCached({
+            find.FileFilter(['*.cpp', 'dir/*.txt'], exclude=self.find_exclude):
+            (paths(expected), []),
+        })
+        self.assertSeenDirs({srcpath('./'), srcpath('dir/')})
 
     def test_submodule(self):
         with self.context.push_path(Path('dir/build.bfg', Root.srcdir)):
-            expected = [File(srcpath('dir/file2.txt'))]
-            self.assertFound(self.find('**'), expected)
-            self.assertFindDirs({srcpath('dir/'), srcpath('dir/sub/')})
+            expected_files = [File(srcpath('dir/file2.txt'))]
+            self.assertFound(self.find('**'), expected_files)
+            self.assertCached({
+                find.FileFilter(['dir/**'], exclude=self.find_exclude):
+                (paths(expected_files), []),
+            })
+            self.assertSeenDirs({srcpath('dir/'), srcpath('dir/sub/')})
 
-            expected = [Directory(srcpath('dir/')),
-                        Directory(srcpath('dir/sub'))]
-            self.assertFound(self.find('**/'), expected)
-            self.assertFindDirs({srcpath('dir/'), srcpath('dir/sub/')})
+            expected_dirs = [Directory(srcpath('dir/')),
+                             Directory(srcpath('dir/sub'))]
+            self.assertFound(self.find('**/'), expected_dirs)
+            self.assertCached({
+                find.FileFilter(['dir/**'], exclude=self.find_exclude):
+                (paths(expected_files), []),
+                find.FileFilter(['dir/**/'], exclude=self.find_exclude):
+                (paths(expected_dirs), []),
+            })
+            self.assertSeenDirs({srcpath('dir/'), srcpath('dir/sub/')})
 
     def test_submodule_parent(self):
         with self.context.push_path(Path('dir/build.bfg', Root.srcdir)):
-            expected = [SourceFile(srcpath('file.cpp'), 'c++'),
-                        File(srcpath('dir/file2.txt'))]
-            self.assertFound(self.find('../**'), expected)
-            self.assertFindDirs({srcpath('./'), srcpath('dir/'),
+            expected_files = [SourceFile(srcpath('file.cpp'), 'c++'),
+                              File(srcpath('dir/file2.txt'))]
+            self.assertFound(self.find('../**'), expected_files)
+            self.assertCached({
+                find.FileFilter(['**'], exclude=self.find_exclude):
+                (paths(expected_files), []),
+            })
+            self.assertSeenDirs({srcpath('./'), srcpath('dir/'),
                                  srcpath('dir2/'), srcpath('dir/sub/')})
 
-            expected = [Directory(srcpath('./')),
-                        Directory(srcpath('dir/')),
-                        Directory(srcpath('dir2')),
-                        Directory(srcpath('dir/sub'))]
-            self.assertFound(self.find('../**/'), expected)
-            self.assertFindDirs({srcpath('./'), srcpath('dir/'),
+            expected_dirs = [Directory(srcpath('./')),
+                             Directory(srcpath('dir/')),
+                             Directory(srcpath('dir2')),
+                             Directory(srcpath('dir/sub'))]
+            self.assertFound(self.find('../**/'), expected_dirs)
+            self.assertCached({
+                find.FileFilter(['**'], exclude=self.find_exclude):
+                (paths(expected_files), []),
+                find.FileFilter(['**/'], exclude=self.find_exclude):
+                (paths(expected_dirs), []),
+            })
+            self.assertSeenDirs({srcpath('./'), srcpath('dir/'),
                                  srcpath('dir2/'), srcpath('dir/sub/')})
 
     def test_submodule_path_object(self):
         with self.context.push_path(Path('dir/build.bfg', Root.srcdir)):
-            expected = [SourceFile(srcpath('file.cpp'), 'c++'),
-                        File(srcpath('dir/file2.txt'))]
-            self.assertFound(self.find(srcpath('**')), expected)
-            self.assertFindDirs({srcpath('./'), srcpath('dir/'),
+            expected_files = [SourceFile(srcpath('file.cpp'), 'c++'),
+                              File(srcpath('dir/file2.txt'))]
+            self.assertFound(self.find(srcpath('**')), expected_files)
+            self.assertCached({
+                find.FileFilter(['**'], exclude=self.find_exclude):
+                (paths(expected_files), []),
+            })
+            self.assertSeenDirs({srcpath('./'), srcpath('dir/'),
                                  srcpath('dir2/'), srcpath('dir/sub/')})
 
-            expected = [Directory(srcpath('.')),
-                        Directory(srcpath('dir')),
-                        Directory(srcpath('dir2')),
-                        Directory(srcpath('dir/sub'))]
-            self.assertFound(self.find(srcpath('**/')), expected)
-            self.assertFindDirs({srcpath('./'), srcpath('dir/'),
+            expected_dirs = [Directory(srcpath('.')),
+                             Directory(srcpath('dir')),
+                             Directory(srcpath('dir2')),
+                             Directory(srcpath('dir/sub'))]
+            self.assertFound(self.find(srcpath('**/')), expected_dirs)
+            self.assertCached({
+                find.FileFilter(['**'], exclude=self.find_exclude):
+                (paths(expected_files), []),
+                find.FileFilter(['**/'], exclude=self.find_exclude):
+                (paths(expected_dirs), []),
+            })
+            self.assertSeenDirs({srcpath('./'), srcpath('dir/'),
                                  srcpath('dir2/'), srcpath('dir/sub/')})
 
     def test_type_file(self):
         expected = [SourceFile(srcpath('file.cpp'), 'c++'),
                     File(srcpath('dir/file2.txt'))]
         self.assertFound(self.find('**', type='f'), expected)
-        self.assertFindDirs({srcpath('./'), srcpath('dir/'), srcpath('dir2/'),
+        self.assertCached({
+            find.FileFilter(['**'], exclude=self.find_exclude):
+            (paths(expected), []),
+        })
+        self.assertSeenDirs({srcpath('./'), srcpath('dir/'), srcpath('dir2/'),
                              srcpath('dir/sub/')})
 
     def test_type_dir(self):
@@ -368,7 +511,11 @@ class TestFindFiles(FindTestCase):
                     Directory(srcpath('dir2')),
                     Directory(srcpath('dir/sub'))]
         self.assertFound(self.find('**', type='d'), expected)
-        self.assertFindDirs({srcpath('./'), srcpath('dir/'), srcpath('dir2/'),
+        self.assertCached({
+            find.FileFilter(['**'], type='d', exclude=self.find_exclude):
+            (paths(expected), []),
+        })
+        self.assertSeenDirs({srcpath('./'), srcpath('dir/'), srcpath('dir2/'),
                              srcpath('dir/sub/')})
 
     def test_type_all(self):
@@ -379,7 +526,11 @@ class TestFindFiles(FindTestCase):
                     Directory(srcpath('dir/sub')),
                     File(srcpath('dir/file2.txt'))]
         self.assertFound(self.find('**', type='*'), expected)
-        self.assertFindDirs({srcpath('./'), srcpath('dir/'), srcpath('dir2/'),
+        self.assertCached({
+            find.FileFilter(['**'], type='*', exclude=self.find_exclude):
+            (paths(expected), []),
+        })
+        self.assertSeenDirs({srcpath('./'), srcpath('dir/'), srcpath('dir2/'),
                              srcpath('dir/sub/')})
 
     def test_extra(self):
@@ -387,7 +538,12 @@ class TestFindFiles(FindTestCase):
         extra = [File(srcpath('dir/file2.txt'))]
         self.assertFound(self.find('**/*.cpp', extra='*.txt'), expected,
                          post=extra)
-        self.assertFindDirs({srcpath('./'), srcpath('dir/'), srcpath('dir2/'),
+        self.assertCached({
+            find.FileFilter(['**/*.cpp'], extra=['*.txt'],
+                            exclude=self.find_exclude):
+            (paths(expected), paths(extra)),
+        })
+        self.assertSeenDirs({srcpath('./'), srcpath('dir/'), srcpath('dir2/'),
                              srcpath('dir/sub/')})
 
     def test_multiple_extra(self):
@@ -396,23 +552,42 @@ class TestFindFiles(FindTestCase):
                  File(srcpath('dir/file2.txt'))]
         self.assertFound(self.find('**/*.cpp', extra=['*.txt', 'su?/']),
                          expected, post=extra)
-        self.assertFindDirs({srcpath('./'), srcpath('dir/'), srcpath('dir2/'),
+        self.assertCached({
+            find.FileFilter(['**/*.cpp'], extra=['*.txt', 'su?/'],
+                            exclude=self.find_exclude):
+            (paths(expected), paths(extra)),
+        })
+        self.assertSeenDirs({srcpath('./'), srcpath('dir/'), srcpath('dir2/'),
                              srcpath('dir/sub/')})
 
     def test_exclude(self):
         expected = [SourceFile(srcpath('file.cpp'), 'c++')]
         self.assertFound(self.find('**/file*', exclude='dir/'), expected)
-        self.assertFindDirs({srcpath('./'), srcpath('dir2/')})
+        self.assertCached({
+            find.FileFilter(['**/file*'],
+                            exclude=self.find_exclude + ['dir/']):
+            (paths(expected), []),
+        })
+        self.assertSeenDirs({srcpath('./'), srcpath('dir2/')})
 
     def test_multiple_exclude(self):
         expected = [SourceFile(srcpath('file.cpp'), 'c++')]
         self.assertFound(self.find('**/file*', exclude=['*.txt', 'sub/']),
                          expected)
-        self.assertFindDirs({srcpath('./'), srcpath('dir/'), srcpath('dir2/')})
+        self.assertCached({
+            find.FileFilter(['**/file*'],
+                            exclude=self.find_exclude + ['*.txt', 'sub/']):
+            (paths(expected), []),
+        })
+        self.assertSeenDirs({srcpath('./'), srcpath('dir/'), srcpath('dir2/')})
 
     def test_exclude_all_files(self):
         self.assertFound(self.find('**', exclude=['*']), [])
-        self.assertFindDirs({srcpath('./'), srcpath('dir/'), srcpath('dir2/'),
+        self.assertCached({
+            find.FileFilter(['**'], exclude=self.find_exclude + ['*']):
+            ([], []),
+        })
+        self.assertSeenDirs({srcpath('./'), srcpath('dir/'), srcpath('dir2/'),
                              srcpath('dir/sub/')})
 
     def test_no_default_exclude(self):
@@ -421,7 +596,11 @@ class TestFindFiles(FindTestCase):
                     File(srcpath('file.cpp~')),
                     File(srcpath('dir/file2.txt'))]
         self.assertFound(self.find('**/file*'), expected)
-        self.assertFindDirs({srcpath('./'), srcpath('dir/'), srcpath('dir2/'),
+        self.assertCached({
+            find.FileFilter(['**/file*'], exclude=[]):
+            (paths(expected), []),
+        })
+        self.assertSeenDirs({srcpath('./'), srcpath('dir/'), srcpath('dir2/'),
                              srcpath('dir/sub/')})
 
     def test_custom_default_exclude(self):
@@ -429,7 +608,11 @@ class TestFindFiles(FindTestCase):
         expected = [SourceFile(srcpath('file.cpp'), 'c++'),
                     File(srcpath('file.cpp~'))]
         self.assertFound(self.find('**/file*'), expected)
-        self.assertFindDirs({srcpath('./'), srcpath('dir/'), srcpath('dir2/'),
+        self.assertCached({
+            find.FileFilter(['**/file*'], exclude=['*.txt']):
+            (paths(expected), []),
+        })
+        self.assertSeenDirs({srcpath('./'), srcpath('dir/'), srcpath('dir2/'),
                              srcpath('dir/sub/')})
 
     def test_filter(self):
@@ -448,7 +631,12 @@ class TestFindFiles(FindTestCase):
         post = [Directory(srcpath('dir/sub/'))]
         self.assertFound(self.find('**', type='*', filter=my_filter), expected,
                          pre=pre, post=post)
-        self.assertFindDirs({srcpath('./'), srcpath('dir/'), srcpath('dir2/'),
+        self.assertCached({
+            find.FileFilter(['**'], type='*', exclude=self.find_exclude,
+                            filter_fn=my_filter):
+            (paths(expected), paths(pre + post)),
+        })
+        self.assertSeenDirs({srcpath('./'), srcpath('dir/'), srcpath('dir2/'),
                              srcpath('dir/sub/')})
 
     def test_glob_with_filters(self):
@@ -458,34 +646,57 @@ class TestFindFiles(FindTestCase):
 
         expected = [SourceFile(srcpath('file.cpp'), 'c++')]
         self.assertFound(self.find('**/file*', filter=my_filter), expected)
-        self.assertFindDirs({srcpath('./')})
+        self.assertCached({
+            find.FileFilter(['**/file*'], exclude=self.find_exclude,
+                            filter_fn=my_filter):
+            (paths(expected), []),
+        })
+        self.assertSeenDirs({srcpath('./')})
 
     def test_file_types(self):
         f = self.context['generic_file']
         d = self.context['header_directory']
-        expected = [File(srcpath('file.cpp')),
-                    File(srcpath('dir/file2.txt'))]
-        self.assertFound(self.find('**', file_type=f), expected)
-        self.assertFindDirs({srcpath('./'), srcpath('dir/'), srcpath('dir2/'),
+        expected_files = [File(srcpath('file.cpp')),
+                          File(srcpath('dir/file2.txt'))]
+        self.assertFound(self.find('**', file_type=f), expected_files)
+        self.assertCached({
+            find.FileFilter(['**'], exclude=self.find_exclude):
+            (paths(expected_files), []),
+        })
+        self.assertSeenDirs({srcpath('./'), srcpath('dir/'), srcpath('dir2/'),
                              srcpath('dir/sub/')})
 
-        expected = [HeaderDirectory(srcpath('.')),
-                    HeaderDirectory(srcpath('dir')),
-                    HeaderDirectory(srcpath('dir2')),
-                    HeaderDirectory(srcpath('dir/sub'))]
-        self.assertFound(self.find('**/', dir_type=d), expected)
-        self.assertFindDirs({srcpath('./'), srcpath('dir/'), srcpath('dir2/'),
+        expected_dirs = [HeaderDirectory(srcpath('.')),
+                         HeaderDirectory(srcpath('dir')),
+                         HeaderDirectory(srcpath('dir2')),
+                         HeaderDirectory(srcpath('dir/sub'))]
+        self.assertFound(self.find('**/', dir_type=d), expected_dirs)
+        self.assertCached({
+            find.FileFilter(['**'], exclude=self.find_exclude):
+            (paths(expected_files), []),
+            find.FileFilter(['**/'], exclude=self.find_exclude):
+            (paths(expected_dirs), []),
+        })
+        self.assertSeenDirs({srcpath('./'), srcpath('dir/'), srcpath('dir2/'),
                              srcpath('dir/sub/')})
 
-        expected = [HeaderDirectory(srcpath('.')),
-                    HeaderDirectory(srcpath('dir')),
-                    HeaderDirectory(srcpath('dir2')),
-                    File(srcpath('file.cpp')),
-                    HeaderDirectory(srcpath('dir/sub')),
-                    File(srcpath('dir/file2.txt'))]
+        expected_all = [HeaderDirectory(srcpath('.')),
+                        HeaderDirectory(srcpath('dir')),
+                        HeaderDirectory(srcpath('dir2')),
+                        File(srcpath('file.cpp')),
+                        HeaderDirectory(srcpath('dir/sub')),
+                        File(srcpath('dir/file2.txt'))]
         self.assertFound(self.find('**', type='*', file_type=f,
-                                   dir_type=d), expected)
-        self.assertFindDirs({srcpath('./'), srcpath('dir/'), srcpath('dir2/'),
+                                   dir_type=d), expected_all)
+        self.assertCached({
+            find.FileFilter(['**'], exclude=self.find_exclude):
+            (paths(expected_files), []),
+            find.FileFilter(['**/'], exclude=self.find_exclude):
+            (paths(expected_dirs), []),
+            find.FileFilter(['**'], type='*', exclude=self.find_exclude):
+            (paths(expected_all), []),
+        })
+        self.assertSeenDirs({srcpath('./'), srcpath('dir/'), srcpath('dir2/'),
                              srcpath('dir/sub/')})
 
     def test_no_dist(self):
@@ -493,14 +704,19 @@ class TestFindFiles(FindTestCase):
                     File(srcpath('dir/file2.txt'))]
         self.assertFoundResult(self.find('**', dist=False), expected)
         self.assertEqual(list(self.build.sources()), [self.bfgfile])
-        self.assertFindDirs({srcpath('./'), srcpath('dir/'), srcpath('dir2/'),
+        self.assertCached({
+            find.FileFilter(['**'], exclude=self.find_exclude):
+            (paths(expected), []),
+        })
+        self.assertSeenDirs({srcpath('./'), srcpath('dir/'), srcpath('dir2/'),
                              srcpath('dir/sub/')})
 
     def test_no_cache(self):
         expected = [SourceFile(srcpath('file.cpp'), 'c++'),
                     File(srcpath('dir/file2.txt'))]
         self.assertFound(self.find('**', cache=False), expected)
-        self.assertFindDirs(set())
+        self.assertCached(dict())
+        self.assertSeenDirs(set())
 
 
 class TestFindPaths(TestFindFiles):
@@ -509,4 +725,4 @@ class TestFindPaths(TestFindFiles):
         self.find = self.context['find_paths']
 
     def assertFoundResult(self, result, expected):
-        self.assertPathListEqual(result, [i.path for i in expected])
+        self.assertPathListEqual(result, paths(expected))
