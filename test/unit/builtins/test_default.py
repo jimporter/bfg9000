@@ -7,7 +7,7 @@ from bfg9000.builtins import (compile, default, link, packages,  # noqa: F401
 class TestDefaultOutputs(BuiltinTest):
     def setUp(self):
         super().setUp()
-        self.default = default.DefaultOutputs(self.build, self.env)
+        self.default = default.DefaultOutputs()
 
     def test_add_remove(self):
         obj = self.context['object_file'](file='src.cpp')

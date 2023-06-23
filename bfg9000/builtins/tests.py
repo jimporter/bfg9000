@@ -13,7 +13,7 @@ from ..shell import posix as pshell
 
 @build_input('tests')
 class TestInputs:
-    def __init__(self, build_inputs, env):
+    def __init__(self):
         self.tests = []
         self.extra_deps = []
 

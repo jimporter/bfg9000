@@ -12,7 +12,7 @@ from ..build_inputs import build_input
 from ..path import Path, Root, walk, uniquetrees
 from ..platforms import known_platforms
 
-build_input('find_dirs')(lambda build_inputs, env: set())
+build_input('find_dirs')(set)
 depfile_name = '.bfg_find_deps'
 
 

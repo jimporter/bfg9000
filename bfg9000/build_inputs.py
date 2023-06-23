@@ -9,11 +9,11 @@ from .objutils import objectify
 _build_inputs = {}
 
 
-def build_input(name):
+def build_input(name, args=()):
     def wrapper(fn):
         if name in _build_inputs:  # pragma: no cover
             raise ValueError("'{}' already registered".format(name))
-        _build_inputs[name] = fn
+        _build_inputs[name] = (fn, listify(args, type=tuple))
         return fn
     return wrapper
 
@@ -54,8 +54,10 @@ class BuildInputs:
         self.bfgpath = bfgpath
         self.add_bootstrap(bfgpath)
 
-        for name, fn in _build_inputs.items():
-            self._extra_inputs[name] = fn(self, env)
+        args = {'build_inputs': self, 'env': env}
+        for name, (fn, arg_names) in _build_inputs.items():
+            curr_args = [args[i] for i in arg_names]
+            self._extra_inputs[name] = fn(*curr_args)
 
     def add_bootstrap(self, path):
         self.bootstrap_paths.append(path)

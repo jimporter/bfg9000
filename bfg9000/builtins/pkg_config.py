@@ -18,7 +18,7 @@ from ..tools.install_name_tool import darwin_install_name
 from ..tools.pkg_config import GeneratedPkgConfigPackage, PkgConfigPackage
 from ..versioning import simplify_specifiers, Specifier, SpecifierSet
 
-build_input('pkg_config')(lambda build_inputs, env: [])
+build_input('pkg_config')(list)
 
 
 class Requirement:

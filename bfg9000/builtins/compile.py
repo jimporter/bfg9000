@@ -14,7 +14,7 @@ from ..objutils import convert_each, convert_one
 from ..path import Path
 from ..shell import posix as pshell
 
-build_input('compile_options')(lambda build_inputs, env: defaultdict(list))
+build_input('compile_options')(lambda: defaultdict(list))
 
 
 class BaseCompile(Edge):

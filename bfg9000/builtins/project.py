@@ -3,9 +3,9 @@ from ..build_inputs import build_input
 from ..iterutils import default_sentinel
 
 
-@build_input('project')
+@build_input('project', args=('env',))
 class ProjectInfo:
-    def __init__(self, build_inputs, env):
+    def __init__(self, env):
         self.name = env.srcdir.basename()
         self.version = None
         self._options = {

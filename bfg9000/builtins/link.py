@@ -20,7 +20,7 @@ from ..objutils import convert_each, convert_one
 from ..platforms import known_native_object_formats
 from ..shell import posix as pshell
 
-build_input('link_options')(lambda build_inputs, env: {
+build_input('link_options')(lambda: {
     'dynamic': defaultdict(list), 'static': defaultdict(list)
 })
 

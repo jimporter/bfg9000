@@ -3,9 +3,7 @@ from .. import versioning as v
 from ..build_inputs import build_input
 from ..objutils import objectify
 
-build_input('required_version')(
-    lambda build_inputs, env: v.PythonSpecifierSet('')
-)
+build_input('required_version')(lambda: v.PythonSpecifierSet(''))
 
 
 @builtin.function(context='*')

@@ -7,7 +7,7 @@ from ..iterutils import iterate_each, unlistify
 
 @build_input('defaults')
 class DefaultOutputs:
-    def __init__(self, build_inputs, env):
+    def __init__(self):
         self.default_outputs = []
         self.fallback_defaults = []
 

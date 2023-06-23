@@ -11,9 +11,9 @@ from ..file_types import BaseFile, Directory
 from ..iterutils import flatten, iterate, map_iterable, unlistify
 
 
-@build_input('install')
+@build_input('install', args=('env',))
 class InstallOutputs:
-    def __init__(self, build_inputs, env):
+    def __init__(self, env):
         self.explicit = []
         self.host = OrderedDict()
         self.target = OrderedDict()
