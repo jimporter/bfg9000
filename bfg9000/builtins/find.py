@@ -166,6 +166,10 @@ def find_files(context, pattern, *, type=None, extra=None, exclude=None,
 
 @builtin.function()
 def find_paths(context, *args, **kwargs):
+    # We call `find_files` here instead of the other way around because we want
+    # to be sure that if we add files to the dist, they're proper file objects
+    # (instead of just path objects). This probably isn't strictly necessary,
+    # but it's more conceptually correct.
     return [i.path for i in context['find_files'](*args, **kwargs)]
 
 
