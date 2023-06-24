@@ -1,6 +1,7 @@
 import os
 import re
 
+from .. import BuildHook, BuildRuleHandler
 from ... import path
 from ... import shell
 from .solution import Solution, UuidMap
@@ -27,31 +28,18 @@ def version(env=os.environ):
 
 priority = 1
 
-_rule_handlers = {}
-_post_rules = []
-
-
-def rule_handler(*args):
-    def decorator(fn):
-        for i in args:
-            _rule_handlers[i] = fn
-        return fn
-    return decorator
-
-
-def post_rule(fn):
-    _post_rules.append(fn)
-    return fn
+rule_handler = BuildRuleHandler()
+pre_rules_hook = BuildHook()
+post_rules_hook = BuildHook()
 
 
 def write(env, build_inputs):
     uuids = UuidMap(env.builddir.append('.bfg_uuid').string())
     solution = Solution(uuids)
 
-    for e in build_inputs.edges():
-        _rule_handlers[type(e)](e, build_inputs, solution, env)
-    for i in _post_rules:
-        i(build_inputs, solution, env)
+    pre_rules_hook.run(build_inputs, solution, env)
+    rule_handler.run(build_inputs.edges(), build_inputs, solution, env)
+    post_rules_hook.run(build_inputs, solution, env)
 
     sln_file = path.Path(build_inputs['project'].name + '.sln')
     with open(sln_file.string(env.base_dirs), 'w') as out:

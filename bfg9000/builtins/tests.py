@@ -104,7 +104,7 @@ def _build_commands(tests, writer, local_env, collapse=False):
     return cmd, deps
 
 
-@make.post_rule
+@make.post_rules_hook
 def make_test_rule(build_inputs, buildfile, env):
     tests = build_inputs['tests']
     if not tests:
@@ -126,7 +126,7 @@ def make_test_rule(build_inputs, buildfile, env):
     )
 
 
-@ninja.post_rule
+@ninja.post_rules_hook
 def ninja_test_rule(build_inputs, buildfile, env):
     tests = build_inputs['tests']
     if not tests:

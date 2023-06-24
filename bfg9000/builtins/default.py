@@ -35,7 +35,7 @@ def default(context, *args):
     return unlistify(args)
 
 
-@make.pre_rule
+@make.pre_rules_hook
 def make_all_rule(build_inputs, buildfile, env):
     buildfile.rule(
         target='all',
@@ -44,7 +44,7 @@ def make_all_rule(build_inputs, buildfile, env):
     )
 
 
-@ninja.pre_rule
+@ninja.pre_rules_hook
 def ninja_all_rule(build_inputs, buildfile, env):
     buildfile.default(['all'])
     buildfile.build(
@@ -57,7 +57,7 @@ def ninja_all_rule(build_inputs, buildfile, env):
 try:
     from ..backends.msbuild import writer as msbuild
 
-    @msbuild.post_rule
+    @msbuild.post_rules_hook
     def msbuild_default(build_inputs, solution, env):
         # Default builds go first in the solution. As a partial implementation,
         # we treat the first explicit default or the last implicit default as

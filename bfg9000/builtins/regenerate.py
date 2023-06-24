@@ -12,7 +12,7 @@ class Regenerate:
         self.depfile = None
 
 
-@make.post_rule
+@make.post_rules_hook
 def make_regenerate_rule(build_inputs, buildfile, env):
     bfg9000 = env.tool('bfg9000')
 
@@ -38,7 +38,7 @@ def make_regenerate_rule(build_inputs, buildfile, env):
     )
 
 
-@ninja.post_rule
+@ninja.post_rules_hook
 def ninja_regenerate_rule(build_inputs, buildfile, env):
     bfg9000 = env.tool('bfg9000')
     rule_kwargs = {}

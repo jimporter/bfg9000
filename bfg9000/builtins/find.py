@@ -173,7 +173,7 @@ def find_paths(context, *args, **kwargs):
     return [i.path for i in context['find_files'](*args, **kwargs)]
 
 
-@make.post_rule
+@make.post_rules_hook
 def make_find_dirs(build_inputs, buildfile, env):
     if build_inputs['find_dirs']:
         write_depfile(env, Path(depfile_name), make.filepath,
@@ -181,7 +181,7 @@ def make_find_dirs(build_inputs, buildfile, env):
         buildfile.include(depfile_name)
 
 
-@ninja.post_rule
+@ninja.post_rules_hook
 def ninja_find_dirs(build_inputs, buildfile, env):
     if build_inputs['find_dirs']:
         write_depfile(env, Path(depfile_name), ninja.filepath,

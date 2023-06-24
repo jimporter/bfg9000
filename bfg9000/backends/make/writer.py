@@ -1,6 +1,7 @@
 import os
 import re
 
+from .. import BuildHook, BuildRuleHandler
 from ... import file_types, path, shell
 from .syntax import *
 from ...iterutils import listify, uniques
@@ -26,30 +27,11 @@ def version(env=os.environ):
 
 priority = 2
 filepath = path.Path('Makefile')
-
-_rule_handlers = {}
-_pre_rules = []
-_post_rules = []
-
 dir_sentinel = '.dir'
 
-
-def rule_handler(*args):
-    def decorator(fn):
-        for i in args:
-            _rule_handlers[i] = fn
-        return fn
-    return decorator
-
-
-def pre_rule(fn):
-    _pre_rules.append(fn)
-    return fn
-
-
-def post_rule(fn):
-    _post_rules.append(fn)
-    return fn
+rule_handler = BuildRuleHandler()
+pre_rules_hook = BuildHook()
+post_rules_hook = BuildHook()
 
 
 def write(env, build_inputs):
@@ -59,12 +41,9 @@ def write(env, build_inputs):
     buildfile.variable(buildfile.path_vars[path.Root.srcdir], env.srcdir,
                        Section.path)
 
-    for i in _pre_rules:
-        i(build_inputs, buildfile, env)
-    for e in build_inputs.edges():
-        _rule_handlers[type(e)](e, build_inputs, buildfile, env)
-    for i in _post_rules:
-        i(build_inputs, buildfile, env)
+    pre_rules_hook.run(build_inputs, buildfile, env)
+    rule_handler.run(build_inputs.edges(), build_inputs, buildfile, env)
+    post_rules_hook.run(build_inputs, buildfile, env)
 
     with open(filepath.string(env.base_dirs), 'w') as out:
         buildfile.write(out)
@@ -104,7 +83,7 @@ def directory_deps(targets):
     return [i.append(dir_sentinel) for i in dirs if i != builddir]
 
 
-@post_rule
+@post_rules_hook
 def directory_rule(build_inputs, buildfile, env):
     mkdir_p = env.tool('mkdir_p')
     pattern = Pattern(os.path.join('%', dir_sentinel))

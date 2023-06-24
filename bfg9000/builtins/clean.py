@@ -10,7 +10,7 @@ def _clean_mopack(env):
     return []
 
 
-@make.post_rule
+@make.post_rules_hook
 def make_clean_rule(build_inputs, buildfile, env):
     rm = env.tool('rm')
     buildfile.rule(target='clean', recipe=(
@@ -19,7 +19,7 @@ def make_clean_rule(build_inputs, buildfile, env):
     ), phony=True)
 
 
-@ninja.post_rule
+@ninja.post_rules_hook
 def ninja_clean_rule(build_inputs, buildfile, env):
     ninja_cmd = buildfile.variable('ninja', ninja.executable(env.variables),
                                    buildfile.Section.command, True)

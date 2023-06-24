@@ -37,7 +37,7 @@ def _dist_command(format, build_inputs, buildfile, env):
     )
 
 
-@make.post_rule
+@make.post_rules_hook
 def make_dist_rule(build_inputs, buildfile, env):
     for fmt in _exts:
         buildfile.rule(
@@ -53,7 +53,7 @@ def make_dist_rule(build_inputs, buildfile, env):
     )
 
 
-@ninja.post_rule
+@ninja.post_rules_hook
 def ninja_dist_rule(build_inputs, buildfile, env):
     for fmt in _exts:
         ninja.command_build(

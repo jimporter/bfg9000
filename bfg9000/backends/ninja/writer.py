@@ -1,5 +1,6 @@
 import os
 
+from .. import BuildHook, BuildRuleHandler
 from ... import iterutils
 from ... import path
 from ... import shell
@@ -25,27 +26,9 @@ def version(env=os.environ):
 priority = 3
 filepath = path.Path('build.ninja')
 
-_rule_handlers = {}
-_pre_rules = []
-_post_rules = []
-
-
-def rule_handler(*args):
-    def decorator(fn):
-        for i in args:
-            _rule_handlers[i] = fn
-        return fn
-    return decorator
-
-
-def pre_rule(fn):
-    _pre_rules.append(fn)
-    return fn
-
-
-def post_rule(fn):
-    _post_rules.append(fn)
-    return fn
+rule_handler = BuildRuleHandler()
+pre_rules_hook = BuildHook()
+post_rules_hook = BuildHook()
 
 
 def write(env, build_inputs):
@@ -54,12 +37,9 @@ def write(env, build_inputs):
     buildfile.variable(buildfile.path_vars[path.Root.srcdir], env.srcdir,
                        Section.path)
 
-    for i in _pre_rules:
-        i(build_inputs, buildfile, env)
-    for e in build_inputs.edges():
-        _rule_handlers[type(e)](e, build_inputs, buildfile, env)
-    for i in _post_rules:
-        i(build_inputs, buildfile, env)
+    pre_rules_hook.run(build_inputs, buildfile, env)
+    rule_handler.run(build_inputs.edges(), build_inputs, buildfile, env)
+    post_rules_hook.run(build_inputs, buildfile, env)
 
     with open(filepath.string(env.base_dirs), 'w') as out:
         buildfile.write(out)

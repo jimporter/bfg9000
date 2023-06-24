@@ -169,7 +169,7 @@ def _add_install_paths(buildfile, env):
                            buildfile.Section.path)
 
 
-@make.post_rule
+@make.post_rules_hook
 def make_install_rule(build_inputs, buildfile, env):
     if not can_install(env):
         return
@@ -198,7 +198,7 @@ def make_install_rule(build_inputs, buildfile, env):
         )
 
 
-@ninja.post_rule
+@ninja.post_rules_hook
 def ninja_install_rule(build_inputs, buildfile, env):
     if not can_install(env):
         return
