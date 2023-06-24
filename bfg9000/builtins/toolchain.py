@@ -96,7 +96,7 @@ def lib_options(context, options, format='native', mode='dynamic'):
 
 @builtin.function(context='toolchain')
 def install_dirs(context, **kwargs):
-    if context.reload:
+    if context.regenerating:
         return
     env = context.env
     for k, v in kwargs.items():

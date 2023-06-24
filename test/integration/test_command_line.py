@@ -126,19 +126,19 @@ class TestHelp(BasicIntegrationTest):
         self.assertRegex(output, r'(?m)^build arguments:$')
 
 
-class TestRefresh(BasicIntegrationTest):
+class TestRegenerate(BasicIntegrationTest):
     def __init__(self, *args, **kwargs):
         super().__init__(os.path.join(examples_dir, '01_executable'),
                          configure=False, *args, **kwargs)
 
-    def test_refresh_extra_args(self):
-        output = self.assertPopen(['bfg9000', 'refresh', '--foo'],
+    def test_regenerate_extra_args(self):
+        output = self.assertPopen(['bfg9000', 'regenerate', '--foo'],
                                   returncode=2)
         self.assertRegex(output, 'unrecognized arguments: --foo')
 
-    def test_refresh_in_srcdir(self):
+    def test_regenerate_in_srcdir(self):
         os.chdir(self.srcdir)
-        output = self.assertPopen(['bfg9000', 'refresh'], returncode=2)
+        output = self.assertPopen(['bfg9000', 'regenerate'], returncode=2)
         self.assertRegex(output,
                          'build directory must not contain a build.bfg file')
 
@@ -147,7 +147,7 @@ class TestRefresh(BasicIntegrationTest):
         self.configure(extra_args=['--disable-compdb'], backend=backends[0])
         self.assertNotExists('compile_commands.json')
         os.chdir(self.builddir)
-        self.assertPopen(['bfg9000', 'refresh'])
+        self.assertPopen(['bfg9000', 'regenerate'])
         self.assertNotExists('compile_commands.json')
 
 

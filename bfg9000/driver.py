@@ -31,7 +31,7 @@ Generate the necessary build files to perform actual builds from a build.bfg
 file in SRCDIR, and place them in BUILDDIR.
 """
 
-refresh_desc = """
+regenerate_desc = """
 Regenerate an existing set of build files needed to perform actual builds. This
 is run automatically if bfg9000 determines that the build files are out of
 date.
@@ -246,7 +246,7 @@ def configure(parser, subparser, args, extra):
         return e.code if isinstance(e, build.ScriptExitError) else 1
 
 
-def refresh(parser, subparser, args, extra):
+def regenerate(parser, subparser, args, extra):
     if extra:
         subparser.error('unrecognized arguments: {}'.format(' '.join(extra)))
 
@@ -365,14 +365,16 @@ def main():
     confinto_p.set_defaults(func=configure, parser=confinto_p)
     add_configure_args(confinto_p)
 
-    refresh_p = subparsers.add_parser(
-        'refresh', description=refresh_desc, help='regenerate build files'
+    # TODO: Remove `refresh` alias after v0.8 is released.
+    regenerate_p = subparsers.add_parser(
+        'regenerate', aliases=['refresh'], description=regenerate_desc,
+        help='regenerate build files'
     )
-    refresh_p.set_defaults(func=refresh, parser=refresh_p)
-    refresh_p.add_argument('builddir',
-                           type=argparse.Directory(must_exist=True),
-                           metavar='BUILDDIR', nargs='?', default='.',
-                           help='build directory')
+    regenerate_p.set_defaults(func=regenerate, parser=regenerate_p)
+    regenerate_p.add_argument('builddir',
+                              type=argparse.Directory(must_exist=True),
+                              metavar='BUILDDIR', nargs='?', default='.',
+                              help='build directory')
 
     env_p = subparsers.add_parser(
         'env', description=env_desc, help='print environment'

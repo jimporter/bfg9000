@@ -17,7 +17,7 @@ class TestCrossCompile(IntegrationTest):
         self.build('simple')
         self.assertOutput([executable('simple')], 'hello, world!\n')
 
-    def test_gcc_linux_refresh(self):
+    def test_gcc_linux_regenerate(self):
         toolchain = os.path.join(test_data_dir, 'gcc-linux-toolchain.bfg')
         self.configure(extra_args=['--toolchain', toolchain])
         time.sleep(1)

@@ -20,7 +20,7 @@ def mock_bad_which(*args, **kwargs):
 class TestToolchain(TestCase):
     def setUp(self):
         self.env = make_env(clear_variables=True)
-        self.context = builtin.ToolchainContext(self.env, reload=False)
+        self.context = builtin.ToolchainContext(self.env, regenerating=False)
 
     def test_builtins(self):
         builtins = self.context['__builtins__']
@@ -209,7 +209,7 @@ class TestToolchain(TestCase):
                          Path('/bin/dir'))
 
     def test_install_dirs_reload(self):
-        self.context = builtin.ToolchainContext(self.env, reload=True)
+        self.context = builtin.ToolchainContext(self.env, regenerating=True)
 
         prefix = self.env.install_dirs[InstallRoot.prefix]
         bindir = self.env.install_dirs[InstallRoot.bindir]

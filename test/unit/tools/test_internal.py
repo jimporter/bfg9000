@@ -12,9 +12,9 @@ class TestBfg9000(ToolTestCase):
         with mock.patch('bfg9000.shell.which', return_value=['command']):
             self.assertIsInstance(self.env.tool('bfg9000'), Bfg9000)
 
-    def test_refresh(self):
-        self.assertEqual(self.tool('refresh', 'builddir'),
-                         [self.tool, 'refresh', 'builddir'])
+    def test_regenerate(self):
+        self.assertEqual(self.tool('regenerate', 'builddir'),
+                         [self.tool, 'regenerate', 'builddir'])
 
     def test_run(self):
         self.assertEqual(self.tool('run', args=['echo', 'hi']),

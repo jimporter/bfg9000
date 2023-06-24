@@ -115,7 +115,7 @@ Generate the necessary build files (as with [`bfg9000 configure`](#configure))
 to perform actual builds from a build.bfg file in *SRCDIR*, and place them in
 *BUILDDIR*.
 
-### <code>bfg9000 refresh [*BUILDDIR*]</code> { #refresh }
+### <code>bfg9000 regenerate [*BUILDDIR*]</code> { #regenerate }
 
 Regenerate an existing set of build files in *BUILDDIR* needed to perform actual
 builds. This is run automatically if bfg9000 determines that the build files are

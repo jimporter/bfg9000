@@ -33,7 +33,7 @@ def make_regenerate_rule(build_inputs, buildfile, env):
         targets=[Path('Makefile')] + build_inputs['regenerate'].outputs,
         deps=(build_inputs.bootstrap_paths + listify(env.toolchain.path) +
               extra_deps),
-        recipe=[bfg9000('refresh', Path('.'))],
+        recipe=[bfg9000('regenerate', Path('.'))],
         clean_stamp=False
     )
 
@@ -65,7 +65,7 @@ def ninja_regenerate_rule(build_inputs, buildfile, env):
 
     buildfile.rule(
         name='regenerate',
-        command=bfg9000('refresh', Path('.')),
+        command=bfg9000('regenerate', Path('.')),
         generator=True,
         depfile=build_inputs['regenerate'].depfile,
         **rule_kwargs

@@ -114,8 +114,8 @@ class OptionsContext(StackContext):
 class ToolchainContext(BaseContext):
     kind = 'toolchain'
 
-    def __init__(self, env, reload):
-        self.reload = reload
+    def __init__(self, env, regenerating):
+        self.regenerating = regenerating
         self._pushed_path = False
         super().__init__(env)
 
