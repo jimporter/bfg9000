@@ -257,7 +257,7 @@ def regenerate(parser, subparser, args, extra):
     try:
         env = Environment.load(args.builddir.string())
         if env.toolchain.path:
-            build.load_toolchain(env, env.toolchain.path, reload=True)
+            build.load_toolchain(env, env.toolchain.path, regenerating=True)
 
         env.save(args.builddir.string())
 

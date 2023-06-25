@@ -52,15 +52,15 @@ def execute_file(context, path, run_post=False):
         return _execute_script(f, context, path, run_post)
 
 
-def load_toolchain(env, path, reload=False):
+def load_toolchain(env, path, *, regenerating=False):
     builtin_init()
     tools_init()
-    if reload:
+    if regenerating:
         env.reload()
     else:
         env.toolchain.path = path
 
-    context = builtin.ToolchainContext(env, reload)
+    context = builtin.ToolchainContext(env, regenerating)
     execute_file(context, path, run_post=True)
 
 
