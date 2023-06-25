@@ -55,6 +55,7 @@ def ninja_regenerate_rule(build_inputs, buildfile, env):
                 'resolve', ninja.var('in'), directory=Path('.')
             )),
             generator=True,
+            description='regenerate dependencies',
             **rule_kwargs
         )
         buildfile.build(
@@ -68,6 +69,7 @@ def ninja_regenerate_rule(build_inputs, buildfile, env):
         command=bfg9000('regenerate', Path('.')),
         generator=True,
         depfile=build_inputs['regenerate'].depfile,
+        description='regenerate',
         **rule_kwargs
     )
     buildfile.build(
