@@ -5,6 +5,10 @@
 ### New features
 - Add support for system headers when compiling with MSVC
 
+### Bug fixes
+- Automatically update dependencies via `mopack` if the toolchain file has
+  changed
+
 ---
 
 ## v0.7.1 (2023-05-26)

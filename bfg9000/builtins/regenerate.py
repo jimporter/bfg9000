@@ -22,7 +22,7 @@ def make_regenerate_rule(build_inputs, buildfile, env):
         extra_deps = [mopack.metadata_file]
         buildfile.rule(
             target=mopack.metadata_file,
-            deps=env.mopack,
+            deps=env.mopack + listify(env.toolchain.path),
             recipe=[bfg9000('run', initial=True, args=mopack(
                 'resolve', env.mopack, directory=Path('.')
             ))]
@@ -61,7 +61,8 @@ def ninja_regenerate_rule(build_inputs, buildfile, env):
         buildfile.build(
             output=mopack.metadata_file,
             rule='regenerate_deps',
-            inputs=env.mopack
+            inputs=env.mopack,
+            implicit=listify(env.toolchain.path)
         )
 
     buildfile.rule(
