@@ -11,24 +11,29 @@ string_or_path_types = (str, BasePath)
 
 class Builtins:
     def __init__(self):
-        self._default = {}
-        self._post = {}
+        self._builtins = {}
+        self._hooks = {}
 
-    def add(self, kind, name, value):
-        assert kind in ('default', 'post')
-        getattr(self, '_' + kind)[name] = value
+    def add_builtin(self, name, value):
+        self._builtins[name] = value
 
     def bind(self, context):
         builtins = {}
-        for k, v in self._default.items():
+        for k, v in self._builtins.items():
             builtins[k] = v.bind(context=context)
 
         builtins['__bfg9000__'] = builtins
         return builtins
 
-    def run_post(self, context):
-        for v in self._post.values():
-            v(context=context)
+    def register_hook(self, name):
+        self._hooks[name] = []
+
+    def add_hook(self, name, value):
+        self._hooks[name].append(value)
+
+    def run_hook(self, name, context):
+        for i in self._hooks[name]:
+            i(context=context)
 
 
 build = Builtins()
@@ -41,11 +46,10 @@ _allbuiltins = {
 }
 
 
-def _add_builtin(context, kind, name, value):
+def _get_builtin_contexts(context):
     if context == '*':
-        context = _allbuiltins.keys()
-    for i in iterate(context):
-        _allbuiltins[i].add(kind, name, value)
+        return _allbuiltins.values()
+    return [_allbuiltins[i] for i in iterate(context)]
 
 
 class BaseContext:
@@ -56,8 +60,8 @@ class BaseContext:
     def __getitem__(self, key):
         return self.builtins[key]
 
-    def run_post(self):
-        _allbuiltins[self.kind].run_post(context=self)
+    def run_hook(self, name):
+        _allbuiltins[self.kind].run_hook(name, context=self)
 
 
 class StackContext(BaseContext):
@@ -164,10 +168,28 @@ class _Decorator:
         self.__binder = binder
 
     def __call__(self, context='build', name=None):
+        builtin_contexts = _get_builtin_contexts(context)
+
         def decorator(fn):
-            _add_builtin(context, 'default', name or fn.__name__,
-                         self.__binder(fn))
+            for i in builtin_contexts:
+                i.add_builtin(name or fn.__name__, self.__binder(fn))
             fn._builtin_bound = self.__binder.builtin_bound
+            return fn
+        return decorator
+
+
+class _HookDecorator:
+    def __init__(self, hook):
+        self.__hook_name = hook
+        for i in _get_builtin_contexts('*'):
+            i.register_hook(hook)
+
+    def __call__(self, context='build'):
+        builtin_contexts = _get_builtin_contexts(context)
+
+        def decorator(fn):
+            for i in builtin_contexts:
+                i.add_hook(self.__hook_name, fn)
             return fn
         return decorator
 
@@ -175,13 +197,7 @@ class _Decorator:
 default = _Decorator(_Binder)
 function = _Decorator(_PartialFunctionBinder)
 getter = _Decorator(_GetterBinder)
-
-
-def post(context='build', name=None):
-    def decorator(fn):
-        _add_builtin(context, 'post', name or fn.__name__, fn)
-        return fn
-    return decorator
+post_execute_hook = _HookDecorator('post_execute_hook')
 
 
 def _get_argspec(fn):

@@ -36,7 +36,7 @@ for i in (safe_str.safe_str, safe_str.safe_format):
 @builtin.function(context=('build', 'options'))
 def submodule(context, path):
     path = context['relpath'](path).append(context.filename)
-    return build.execute_file(context, path).exports
+    return build.execute_file(context, path, run_hooks=False).exports
 
 
 @builtin.function(context=('build', 'options'))

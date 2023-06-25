@@ -94,21 +94,23 @@ class TestCore(BuiltinTest):
         self.assertIs(self.context['safe_format'], safe_format)
 
     def test_submodule(self):
-        def mock_execute(context, path):
+        def mock_execute(context, path, *, run_hooks=True):
             return context.PathEntry(path)
 
         with mock.patch('bfg9000.build.execute_file',
                         mock.MagicMock(wraps=mock_execute)) as m:
             self.assertEqual(self.context['submodule']('dir'), {})
             m.assert_called_once_with(self.context,
-                                      Path('dir/build.bfg', Root.srcdir))
+                                      Path('dir/build.bfg', Root.srcdir),
+                                      run_hooks=False)
 
         with self.context.push_path(Path('dir/build.bfg', Root.srcdir)), \
              mock.patch('bfg9000.build.execute_file',
                         mock.MagicMock(wraps=mock_execute)) as m:
             self.assertEqual(self.context['submodule']('sub'), {})
             m.assert_called_once_with(self.context,
-                                      Path('dir/sub/build.bfg', Root.srcdir))
+                                      Path('dir/sub/build.bfg', Root.srcdir),
+                                      run_hooks=False)
 
     def test_export(self):
         with self.context.push_path(Path('foo/build.bfg', Root.srcdir)) as p:

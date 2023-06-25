@@ -486,7 +486,7 @@ def pkg_config(context, name=None, *, system=False, **kwargs):
             return None
 
 
-@builtin.post()
+@builtin.post_execute_hook()
 def finalize_pkg_config(context):
     build = context.build
     install = build['install']

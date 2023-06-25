@@ -30,7 +30,7 @@ def is_srcdir(path):
     return exists(path.append(bfgfile))
 
 
-def _execute_script(f, context, path, run_post=False):
+def _execute_script(f, context, path, *, run_hooks=True):
     filename = path.string(context.env.base_dirs)
 
     with pushd(path.parent().string(context.env.base_dirs)), \
@@ -42,14 +42,14 @@ def _execute_script(f, context, path, run_post=False):
             if e.code:
                 raise ScriptExitError(filename, e.code)
 
-        if run_post:
-            context.run_post()
+        if run_hooks:
+            context.run_hook('post_execute_hook')
         return p
 
 
-def execute_file(context, path, run_post=False):
+def execute_file(context, path, *, run_hooks=True):
     with open(path.string(context.env.base_dirs), 'r') as f:
-        return _execute_script(f, context, path, run_post)
+        return _execute_script(f, context, path, run_hooks=run_hooks)
 
 
 def load_toolchain(env, path, *, regenerating=False):
@@ -61,7 +61,7 @@ def load_toolchain(env, path, *, regenerating=False):
         env.toolchain.path = path
 
     context = builtin.ToolchainContext(env, regenerating)
-    execute_file(context, path, run_post=True)
+    execute_file(context, path)
 
 
 def _execute_options(env, parent=None, usage='parse'):
@@ -76,7 +76,7 @@ def _execute_options(env, parent=None, usage='parse'):
             group.usage = usage
 
             context = builtin.OptionsContext(env, group)
-            _execute_script(f, context, optspath, run_post=True)
+            _execute_script(f, context, optspath)
             return parser, context.seen_paths
     except IOError as e:
         if e.errno != errno.ENOENT:
@@ -115,7 +115,7 @@ def configure_build(env):
     bfgpath = Path(builtin.BuildContext.filename, Root.srcdir)
     build = BuildInputs(env, bfgpath)
     context = builtin.BuildContext(env, build, argv)
-    execute_file(context, bfgpath, run_post=True)
+    execute_file(context, bfgpath)
 
     # Add all the bfg files as bootstrap entries (except for the main
     # build.bfg, which is already included).
