@@ -144,7 +144,8 @@ class TestCFamilyBuilder(CrossPlatformTestCase):
             self.fallback = c_family._fallback_posix_builder
 
     def test_fallback_builder(self):
-        with mock.patch('bfg9000.shell.which', side_effect=IOError()), \
+        with mock.patch('bfg9000.shell.which',
+                        side_effect=FileNotFoundError()), \
              mock.patch('warnings.warn'):
             self.assertIsInstance(c_family.c_family_builder(self.env, 'c++'),
                                   self.fallback)
@@ -189,7 +190,7 @@ class TestCFamilyBuilder(CrossPlatformTestCase):
     def test_guess_sibling_error(self):
         def mock_choose_builder(*args, strict=False, **kwargs):
             if strict:
-                raise IOError('bad')
+                raise FileNotFoundError()
             return mock.MagicMock()
 
         self.env.variables['CC'] = 'gcc'

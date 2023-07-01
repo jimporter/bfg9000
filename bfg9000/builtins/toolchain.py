@@ -36,7 +36,7 @@ def target_platform(context, platform=None, arch=None):
 def which(context, names, resolve=False, strict=True, kind='executable'):
     try:
         return ' '.join(shell.which(names, resolve=resolve, kind=kind))
-    except IOError:
+    except FileNotFoundError:
         if strict:
             raise
         result = first(names)

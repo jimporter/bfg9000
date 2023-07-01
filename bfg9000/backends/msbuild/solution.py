@@ -170,7 +170,7 @@ class UuidMap:
         self._seen = set()
         try:
             self._map = self._load(path)
-        except IOError:
+        except OSError:
             self._map = {}
 
     def __getitem__(self, key):

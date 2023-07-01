@@ -81,7 +81,7 @@ class TestWhich(TestCase):
 
     def test_not_found(self):
         with mock.patch('os.path.exists', return_value=False):
-            self.assertRaises(IOError, which, 'python')
+            self.assertRaises(FileNotFoundError, which, 'python')
 
     def test_empty(self):
         self.assertRaises(TypeError, which, [])

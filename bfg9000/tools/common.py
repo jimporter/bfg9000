@@ -174,7 +174,7 @@ def check_which(names, *args, **kwargs):
     names = listify(names)
     try:
         return shell.which(names, *args, **kwargs), True
-    except IOError as e:
+    except FileNotFoundError as e:
         warnings.warn(str(e))
         # Assume the first name is the best choice.
         return shell.listify(names[0]), False
@@ -191,7 +191,7 @@ def choose_builder(env, langinfo, builders, *, candidates=None,
         cmd = shell.which(candidates, env.variables,
                           kind='{} compiler'.format(langinfo.name))
         found = True
-    except IOError as e:
+    except FileNotFoundError as e:
         if strict:
             raise
         warnings.warn(str(e))
@@ -208,7 +208,7 @@ def choose_builder(env, langinfo, builders, *, candidates=None,
                 pass
         else:
             tried = ', '.join(repr(i) for i in iterate(candidates))
-            raise IOError('no working {} compiler found; tried {}'
-                          .format(langinfo.name, tried))
+            raise FileNotFoundError('no working {} compiler found; tried {}'
+                                    .format(langinfo.name, tried))
 
     return builder_type(env, langinfo, cmd, found, output)

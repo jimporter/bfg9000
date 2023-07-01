@@ -72,7 +72,7 @@ class PkgConfig(Command):
                 log.info('guessed pkg-config {!r} from c compiler {!r}'
                          .format(guessed_cmd, shell.join(sibling.command)))
                 return cmd, True
-            except IOError:
+            except FileNotFoundError:
                 pass
 
         # Try the default command candidate.

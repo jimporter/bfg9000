@@ -6,10 +6,6 @@ from bfg9000.backends.make.writer import version
 from bfg9000.versioning import Version
 
 
-def mock_bad_which(*args, **kwargs):
-    raise IOError()
-
-
 def mock_bad_execute(*args, **kwargs):
     raise OSError()
 
@@ -27,7 +23,8 @@ class TestMakeVersion(TestCase):
             self.assertEqual(version({}), None)
 
     def test_not_found(self):
-        with mock.patch('bfg9000.shell.which', mock_bad_which):
+        with mock.patch('bfg9000.shell.which',
+                        side_effect=FileNotFoundError()):
             self.assertEqual(version({}), None)
 
     def test_bad_execute(self):

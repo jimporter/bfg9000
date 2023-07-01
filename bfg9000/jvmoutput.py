@@ -1,4 +1,3 @@
-import errno
 import os
 import re
 import subprocess
@@ -42,10 +41,8 @@ def main():
     try:
         p = subprocess.Popen(cmd, universal_newlines=True,
                              stderr=subprocess.PIPE)
-    except OSError as e:
-        if e.errno == errno.ENOENT:
-            parser.exit(66, 'command not found: {}\n'.format(cmd[0]))
-        raise  # pragma: no cover
+    except FileNotFoundError:
+        parser.exit(66, 'command not found: {}\n'.format(cmd[0]))
 
     for line in p.stderr:
         if line[0] != '[':

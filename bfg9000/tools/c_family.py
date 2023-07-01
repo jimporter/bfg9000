@@ -122,7 +122,7 @@ def c_family_builder(env, lang):
                 lang, guessed_cmd, sibling_lang, sibling_cmd
             ))
             return builder
-        except IOError:
+        except FileNotFoundError:
             pass
 
     # Try all the default command candidates we haven't already tried above.

@@ -196,7 +196,7 @@ class TestChooseBuilder(CrossPlatformTestCase):
     def test_not_found(self):
         def bad_which(*args, **kwargs):
             if args[0] == ['cc']:
-                raise IOError('badness')
+                raise FileNotFoundError()
             else:
                 return mock_which(*args, **kwargs)
 
@@ -214,6 +214,6 @@ class TestChooseBuilder(CrossPlatformTestCase):
         with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', bad_execute):
             msg = "^no working c compiler found; tried 'cc'$"
-            with self.assertRaisesRegex(IOError, msg):
+            with self.assertRaisesRegex(FileNotFoundError, msg):
                 common.choose_builder(self.env, known_langs['c'],
                                       (cc.CcBuilder,), candidates='cc')

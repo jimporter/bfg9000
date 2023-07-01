@@ -42,7 +42,7 @@ def rc_builder(env):
             log.info('guessed windows rc compiler {!r} from c compiler {!r}'
                      .format(guessed_cmd, shell.join(sibling.command)))
             return builder
-        except IOError:
+        except FileNotFoundError:
             pass
 
     # Try the default command candidates.

@@ -74,7 +74,8 @@ class TestRcBuilder(TestCase):
         env = make_env(platform='linux', clear_variables=True,
                        variables={'CC': 'i686-w64-mingw32-gcc-99'})
         with mock.patch('bfg9000.tools.rc.choose_builder') as m, \
-             mock.patch('bfg9000.shell.which', side_effect=IOError()), \
+             mock.patch('bfg9000.shell.which',
+                        side_effect=FileNotFoundError()), \
              mock.patch('bfg9000.log.info'), \
              mock.patch('warnings.warn'):
             rc.rc_builder(env)
@@ -109,7 +110,7 @@ class TestRcBuilder(TestCase):
     def test_guess_sibling_error(self):
         def mock_choose_builder(*args, strict=False, **kwargs):
             if strict:
-                raise IOError('bad')
+                raise FileNotFoundError()
             return mock.MagicMock()
 
         env = make_env(platform='linux', clear_variables=True,

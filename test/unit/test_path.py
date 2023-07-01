@@ -844,10 +844,7 @@ class TestListdir(TestCase):
             self.assertPathListEqual(nondirs, [path.Path('file.cpp')])
 
     def test_not_found(self):
-        def mock_listdir(path):
-            raise OSError()
-
-        with mock.patch('os.listdir', mock_listdir):
+        with mock.patch('os.listdir', side_effect=OSError()):
             dirs, nondirs = path.listdir(path.Path('.'), self.path_vars)
             self.assertEqual(dirs, [])
             self.assertEqual(nondirs, [])

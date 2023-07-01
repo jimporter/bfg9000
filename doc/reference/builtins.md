@@ -1471,8 +1471,8 @@ Availability: `<toolchain>.bfg`
 Set the compiler to use for the language *lang*. *names* is a string
 representing the path to the compiler (resolved as with [*which*](#which)) or a
 list of possible paths (as strings or lists or strings). If *strict* is true,
-*compiler* will raise an `IOError` if an executable cannot be found; if false,
-it will use the first candidate.
+*compiler* will raise a `FileNotFoundError` if an executable cannot be found; if
+false, it will use the first candidate.
 
 ### compile_options(*options*, *lang*) { #compile_options }
 Availability: `<toolchain>.bfg`
@@ -1521,8 +1521,8 @@ Set the link to use for the format *format* (defaults to `'native'`) and mode
 *mode* (defaults to `'dynamic'`). *names* is a string representing the path to
 the linker (resolved as with [*which*](#which)) or a list of possible paths (as
 strings or lists or strings). If *strict* is true, *linker* will raise an
-`IOError` if an executable cannot be found; if false, it will use the first
-candidate.
+`FileNotFoundError` if an executable cannot be found; if false, it will use the
+first candidate.
 
 ### link_options(*options*, [*format*], [*mode*]) { #link_options }
 Availability: `<toolchain>.bfg`
@@ -1539,9 +1539,9 @@ Availability: `<toolchain>.bfg`
 Set the runner to use for the language *lang*, if that language supports runners
 (e.g. Java, Scala, or a scripting language). *names* is a string representing
 the path to the compiler (resolved as with [*which*](#which)) or a list of
-possible paths (as strings or lists or strings). If *strict* is true,
-*compiler* will raise an `IOError` if an executable cannot be found; if false,
-it will use the first candidate.
+possible paths (as strings or lists or strings). If *strict* is true, *compiler*
+will raise an `FileNotFoundError` if an executable cannot be found; if false, it
+will use the first candidate.
 
 ### srcdir { #srcdir }
 Availability: `<toolchain>.bfg`
@@ -1571,8 +1571,8 @@ list of names (as strings or lists of strings). If *names* contains a
 list-of-lists, the inner list represents a series of arguments to pass to the
 executable when running it.
 
-If *strict* is true (the default), *which* will raise an `IOError` if an
-executable cannot be found; if false, it will return the first candidate as a
+If *strict* is true (the default), *which* will raise an `FileNotFoundError` if
+an executable cannot be found; if false, it will return the first candidate as a
 string.
 
 ## Exceptions

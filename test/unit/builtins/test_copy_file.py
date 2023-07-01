@@ -200,7 +200,8 @@ class TestManPage(BuiltinTest):
         self.assertSameFile(result, expected)
 
     def test_auto_compress_disabled(self):
-        with mock.patch('bfg9000.shell.which', side_effect=OSError('bad')), \
+        with mock.patch('bfg9000.shell.which',
+                        side_effect=FileNotFoundError()), \
              mock.patch('warnings.warn'):
             self.env.tool('gzip')
 

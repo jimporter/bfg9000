@@ -19,7 +19,7 @@ except ImportError:  # pragma: no cover
             for freq, ms in track:
                 args.extend(['-n', '-f', freq, '-l', ms])
             args[0] = 'beep'
-        except IOError:
+        except FileNotFoundError:
             args = ['play', '-q']
             note = '|sox -n -p synth {} sawtooth {}'
             for freq, ms in track:
@@ -30,7 +30,7 @@ except ImportError:  # pragma: no cover
         try:
             shell.execute(args, stdout=shell.Mode.devnull,
                           stderr=shell.Mode.devnull)
-        except OSError:
+        except FileNotFoundError:
             raise ValueError("'sound player not found; install 'beep' or " +
                              "'sox' package?")
 

@@ -1,4 +1,3 @@
-import errno
 from itertools import chain
 
 from . import log
@@ -78,9 +77,7 @@ def _execute_options(env, parent=None, usage='parse'):
             context = builtin.OptionsContext(env, group)
             _execute_script(f, context, optspath)
             return parser, context.seen_paths
-    except IOError as e:
-        if e.errno != errno.ENOENT:
-            raise
+    except FileNotFoundError:
         return parser, []
 
 

@@ -18,7 +18,7 @@ def version(env=os.environ):
         output = shell.execute(ninja + ['--version'], stdout=shell.Mode.pipe,
                                stderr=shell.Mode.devnull, env=env)
         return Version(output.strip())
-    except (IOError, OSError, shell.CalledProcessError):
+    except (OSError, shell.CalledProcessError):
         pass
     return None
 

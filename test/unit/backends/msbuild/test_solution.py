@@ -8,15 +8,11 @@ from bfg9000.backends.msbuild.syntax import Project
 from bfg9000.file_types import File, Phony
 
 
-def bad_open(s):
-    raise IOError()
-
-
 class TestUuidMap(TestCase):
     _uuid_ex = r'[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}'
 
     def test_new(self):
-        with mock.patch('builtins.open', bad_open):
+        with mock.patch('builtins.open', side_effect=FileNotFoundError()):
             u = UuidMap('.bfg_uuid')
         foo = u['foo']
         self.assertRegex(str(foo), self._uuid_ex)
@@ -89,7 +85,7 @@ class TestSlnBuilder(TestCase):
 
 class TestSolution(TestCase):
     def setUp(self):
-        with mock.patch('builtins.open', bad_open):
+        with mock.patch('builtins.open', side_effect=FileNotFoundError()):
             u = UuidMap('.bfg_uuid')
         self.sln = Solution(u)
 

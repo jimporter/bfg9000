@@ -100,7 +100,8 @@ class TestPkgConfig(TestCase):
         with mock.patch('bfg9000.tools.pkg_config.which',
                         lambda names, env: [first(names)]), \
              mock.patch('bfg9000.tools.pkg_config.check_which') as mcwhich, \
-             mock.patch('bfg9000.shell.which', side_effect=IOError()), \
+             mock.patch('bfg9000.shell.which',
+                        side_effect=FileNotFoundError()), \
              mock.patch('bfg9000.log.info'), \
              mock.patch('warnings.warn'):
             self.assertEqual(PkgConfig(env).command,
@@ -133,13 +134,10 @@ class TestPkgConfig(TestCase):
             mwhich.assert_not_called()
 
     def test_guess_sibling_error(self):
-        def mock_check_which(*args, **kwargs):
-            raise IOError('bad')
-
         env = make_env(platform='linux', clear_variables=True,
                        variables={'CC': 'i686-w64-mingw32-gcc-99'})
         with mock.patch('bfg9000.tools.pkg_config.which',
-                        mock_check_which), \
+                        side_effect=FileNotFoundError()), \
              mock.patch('bfg9000.tools.pkg_config.check_which',
                         return_value=(['pkgconf'], True)), \
              mock.patch('bfg9000.log.info'), \

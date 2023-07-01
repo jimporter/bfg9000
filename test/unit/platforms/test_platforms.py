@@ -17,11 +17,8 @@ class TestPlatformName(TestCase):
             self.assertEqual(platforms.platform_name(), 'linux')
 
     def test_linux_no_lsb(self):
-        def bad_lsb(*args, **kwargs):
-            raise OSError()
-
         with mock.patch('platform.system', return_value='Linux'), \
-             mock.patch('subprocess.check_output', bad_lsb):
+             mock.patch('subprocess.check_output', side_effect=OSError()):
             self.assertEqual(platforms.platform_name(), 'linux')
 
     def test_android(self):
@@ -39,39 +36,27 @@ class TestPlatformName(TestCase):
             self.assertEqual(platforms.platform_name(), 'ios')
 
     def test_windows_nt(self):
-        def mock_execute(*args, **kwargs):
-            raise OSError()
-
         with mock.patch('platform.system', return_value='Windows'), \
              mock.patch('platform.version', return_value='3.10.528'), \
-             mock.patch('subprocess.check_output', mock_execute):
+             mock.patch('subprocess.check_output', side_effect=OSError()):
             self.assertEqual(platforms.platform_name(), 'winnt')
 
     def test_windows_10(self):
-        def mock_execute(*args, **kwargs):
-            raise OSError()
-
         with mock.patch('platform.system', return_value='Windows'), \
              mock.patch('platform.version', return_value='10'), \
-             mock.patch('subprocess.check_output', mock_execute):
+             mock.patch('subprocess.check_output', side_effect=OSError()):
             self.assertEqual(platforms.platform_name(), 'winnt')
 
     def test_windows_9x(self):
-        def mock_execute(*args, **kwargs):
-            raise OSError()
-
         with mock.patch('platform.system', return_value='Windows'), \
              mock.patch('platform.version', return_value='4.10.1998'), \
-             mock.patch('subprocess.check_output', mock_execute):
+             mock.patch('subprocess.check_output', side_effect=OSError()):
             self.assertEqual(platforms.platform_name(), 'win9x')
 
     def test_windows_3x(self):
-        def mock_execute(*args, **kwargs):
-            raise OSError()
-
         with mock.patch('platform.system', return_value='Windows'), \
              mock.patch('platform.version', return_value='3.11'), \
-             mock.patch('subprocess.check_output', mock_execute):
+             mock.patch('subprocess.check_output', side_effect=OSError()):
             self.assertEqual(platforms.platform_name(), 'msdos')
 
     def test_windows_with_uname(self):

@@ -14,7 +14,7 @@ def mock_which(*args, **kwargs):
 
 
 def mock_bad_which(*args, **kwargs):
-    raise IOError()
+    raise FileNotFoundError()
 
 
 class TestToolchain(TestCase):
@@ -52,8 +52,8 @@ class TestToolchain(TestCase):
             self.assertEqual(which(['foo', 'bar']), 'command')
 
         with mock.patch('bfg9000.shell.which', mock_bad_which):
-            self.assertRaises(IOError, which, 'foo')
-            self.assertRaises(IOError, which, ['foo', 'bar'])
+            self.assertRaises(FileNotFoundError, which, 'foo')
+            self.assertRaises(FileNotFoundError, which, ['foo', 'bar'])
 
             self.assertEqual(which('foo', strict=False), 'foo')
             self.assertEqual(which(['foo', 'bar'], strict=False), 'foo')
@@ -78,9 +78,10 @@ class TestToolchain(TestCase):
             compiler(['foo', 'bar'], 'c++')
             self.assertEqual(self.env.variables, {'CXX': 'foo'})
 
-            self.assertRaises(IOError, compiler, 'foo', 'c++', strict=True)
-            self.assertRaises(IOError, compiler, ['foo', 'bar'], 'c++',
-                              strict=True)
+            with self.assertRaises(FileNotFoundError):
+                compiler('foo', 'c++', strict=True)
+            with self.assertRaises(FileNotFoundError):
+                compiler(['foo', 'bar'], 'c++', strict=True)
 
     def test_compile_options(self):
         compile_options = self.context['compile_options']
@@ -109,9 +110,10 @@ class TestToolchain(TestCase):
             runner(['foo', 'bar'], 'java')
             self.assertEqual(self.env.variables, {'JAVACMD': 'foo'})
 
-            self.assertRaises(IOError, runner, 'foo', 'java', strict=True)
-            self.assertRaises(IOError, runner, ['foo', 'bar'], 'java',
-                              strict=True)
+            with self.assertRaises(FileNotFoundError):
+                runner('foo', 'java', strict=True)
+            with self.assertRaises(FileNotFoundError):
+                runner(['foo', 'bar'], 'java', strict=True)
 
     def test_dynamic_linker(self):
         linker = self.context['linker']
@@ -137,9 +139,10 @@ class TestToolchain(TestCase):
             linker(['foo', 'bar'], 'native')
             self.assertEqual(self.env.variables, {'LD': 'foo'})
 
-            self.assertRaises(IOError, linker, 'foo', 'native', strict=True)
-            self.assertRaises(IOError, linker, ['foo', 'bar'], 'native',
-                              strict=True)
+            with self.assertRaises(FileNotFoundError):
+                linker('foo', 'native', strict=True)
+            with self.assertRaises(FileNotFoundError):
+                linker(['foo', 'bar'], 'native', strict=True)
 
     def test_static_linker(self):
         linker = self.context['linker']
@@ -165,10 +168,10 @@ class TestToolchain(TestCase):
             linker(['foo', 'bar'], 'native', 'static')
             self.assertEqual(self.env.variables, {'AR': 'foo'})
 
-            self.assertRaises(IOError, linker, 'foo', 'native', 'static',
-                              strict=True)
-            self.assertRaises(IOError, linker, ['foo', 'bar'], 'native',
-                              'static', strict=True)
+            with self.assertRaises(FileNotFoundError):
+                linker('foo', 'native', 'static', strict=True)
+            with self.assertRaises(FileNotFoundError):
+                linker(['foo', 'bar'], 'native', 'static', strict=True)
 
     def test_link_options(self):
         link_options = self.context['link_options']
