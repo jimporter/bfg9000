@@ -1,8 +1,11 @@
 import os.path
+import re
 import shutil
 
 from . import *
 pjoin = os.path.join
+
+regen_ex = re.compile('^info: regenerating build files$', re.MULTILINE)
 
 
 @skip_if_backend('msbuild')
@@ -11,7 +14,7 @@ class TestRegenerate(IntegrationTest):
         super().__init__('regenerate', stage_src=True, *args, **kwargs)
 
     def test_build(self):
-        self.build('foo')
+        self.assertNotRegex(self.build('foo'), regen_ex)
         self.assertExists(pjoin(self.builddir, 'foo'))
 
     def test_regenerate(self):
@@ -19,7 +22,7 @@ class TestRegenerate(IntegrationTest):
         with open(pjoin(self.srcdir, 'build.bfg'), 'a') as out:
             out.write("command('bar', cmd=['touch', 'bar'])\n")
 
-        self.build('bar')
+        self.assertRegex(self.build('bar'), regen_ex)
         self.assertExists(pjoin(self.builddir, 'bar'))
 
 
@@ -38,6 +41,14 @@ class TestRegenerateGlob(IntegrationTest):
         shutil.copy(pjoin(self.extradir, src),
                     pjoin(self.srcdir, dest))
 
+    def test_modify_build_bfg(self):
+        self.wait()
+        with open(pjoin(self.srcdir, 'build.bfg'), 'a') as out:
+            out.write('# hello\n')
+
+        self.assertRegex(self.build(executable('hello')), regen_ex)
+        self.assertOutput([executable('hello')], 'Hello, world!\n')
+
     def test_add_file(self):
         self.wait()
         self.copyfile(pjoin('src', 'hello', 'bonjour.hpp'))
@@ -45,9 +56,17 @@ class TestRegenerateGlob(IntegrationTest):
         self.copyfile(pjoin('src', 'hello', 'main_added.cpp'),
                       pjoin('src', 'hello', 'main.cpp'))
 
-        self.build(executable('hello'))
+        self.assertRegex(self.build(executable('hello')), regen_ex)
         self.assertOutput([executable('hello')],
                           'Hello, world!\nBonjour le monde!\n')
+
+    def test_add_irrelevant_file(self):
+        self.wait()
+        with open(pjoin(self.srcdir, 'src', 'hello', 'misc.txt'), 'w') as out:
+            out.write('hello\n')
+
+        self.assertNotRegex(self.build(executable('hello')), regen_ex)
+        self.assertOutput([executable('hello')], 'Hello, world!\n')
 
     def test_add_dir(self):
         self.wait()
@@ -56,7 +75,7 @@ class TestRegenerateGlob(IntegrationTest):
         self.copyfile(pjoin('src', 'goodbye', 'main_added.cpp'),
                       pjoin('src', 'goodbye', 'main.cpp'))
 
-        self.build(executable('goodbye'))
+        self.assertRegex(self.build(executable('goodbye')), regen_ex)
         self.assertOutput([executable('goodbye')],
                           'Goodbye!\nAuf Wiedersehen!\nAu revoir!\n')
 
@@ -65,7 +84,8 @@ class TestRegenerateGlob(IntegrationTest):
         os.unlink(pjoin(self.srcdir, 'src', 'hello', 'hello.cpp'))
         self.copyfile(pjoin('src', 'hello', 'main_removed.cpp'),
                       pjoin('src', 'hello', 'main.cpp'))
-        self.build(executable('hello'))
+
+        self.assertRegex(self.build(executable('hello')), regen_ex)
         self.assertOutput([executable('hello')], '')
 
     def test_remove_dir(self):
@@ -75,5 +95,5 @@ class TestRegenerateGlob(IntegrationTest):
         self.copyfile(pjoin('src', 'goodbye', 'main_removed.cpp'),
                       pjoin('src', 'goodbye', 'main.cpp'))
 
-        self.build(executable('goodbye'))
+        self.assertRegex(self.build(executable('goodbye')), regen_ex)
         self.assertOutput([executable('goodbye')], 'Goodbye!\n')

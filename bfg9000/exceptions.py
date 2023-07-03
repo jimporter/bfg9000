@@ -1,6 +1,10 @@
 from subprocess import CalledProcessError  # noqa: F401
 
 
+class AbortConfigure(Exception):
+    pass
+
+
 class PackageResolutionError(Exception):
     pass
 
@@ -18,4 +22,8 @@ class ToolNotFoundError(LookupError):
 
 
 class NonGlobError(ValueError):
+    pass
+
+
+class SerializationError(ValueError):
     pass

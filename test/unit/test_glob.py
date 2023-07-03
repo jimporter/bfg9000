@@ -156,6 +156,34 @@ class TestPathGlob(TestCase):
         self.assertFalse(g1 == g4)
         self.assertTrue(g1 != g4)
 
+    def test_hash(self):
+        self.assertEqual(hash(PathGlob('*')), hash(PathGlob('*')))
+        self.assertEqual(hash(PathGlob('*')), hash(PathGlob('*', type='f')))
+
+    def test_to_json(self):
+        self.assertEqual(PathGlob('*.txt').to_json(),
+                         {'pattern': ['*.txt', 'srcdir', False], 'type': 'f'})
+        self.assertEqual(PathGlob('*/').to_json(),
+                         {'pattern': ['*/', 'srcdir', False], 'type': 'd'})
+        self.assertEqual(PathGlob('*', type='*').to_json(),
+                         {'pattern': ['*', 'srcdir', False], 'type': '*'})
+        self.assertEqual(PathGlob(Path('*', Root.builddir)).to_json(),
+                         {'pattern': ['*', 'builddir', False], 'type': 'f'})
+
+    def test_from_json(self):
+        self.assertEqual(PathGlob.from_json({
+            'pattern': ['*.txt', 'srcdir', False], 'type': 'f'
+        }), PathGlob('*.txt'))
+        self.assertEqual(PathGlob.from_json({
+            'pattern': ['*/', 'srcdir', False], 'type': 'd'
+        }), PathGlob('*/'))
+        self.assertEqual(PathGlob.from_json({
+            'pattern': ['*', 'srcdir', False], 'type': '*'
+        }), PathGlob('*', type='*'))
+        self.assertEqual(PathGlob.from_json({
+            'pattern': ['*', 'builddir', False], 'type': 'f'
+        }), PathGlob(Path('*', Root.builddir)))
+
     def test_skip_base(self):
         def srcpath(p):
             return Path(p, Root.srcdir)
@@ -218,3 +246,23 @@ class TestNameGlob(TestCase):
 
         self.assertFalse(g1 == g3)
         self.assertTrue(g1 != g3)
+
+    def test_to_json(self):
+        self.assertEqual(NameGlob('*.txt').to_json(),
+                         {'pattern': '*.txt', 'type': 'f'})
+        self.assertEqual(NameGlob('*/').to_json(),
+                         {'pattern': '*/', 'type': 'd'})
+        self.assertEqual(NameGlob('*', type='*').to_json(),
+                         {'pattern': '*', 'type': '*'})
+
+    def test_from_json(self):
+        self.assertEqual(NameGlob.from_json({'pattern': '*.txt', 'type': 'f'}),
+                         NameGlob('*.txt'))
+        self.assertEqual(NameGlob.from_json({'pattern': '*/', 'type': 'd'}),
+                         NameGlob('*/'))
+        self.assertEqual(NameGlob.from_json({'pattern': '*', 'type': '*'}),
+                         NameGlob('*', type='*'))
+
+    def test_hash(self):
+        self.assertEqual(hash(NameGlob('*')), hash(NameGlob('*')))
+        self.assertEqual(hash(NameGlob('*')), hash(NameGlob('*', type='f')))

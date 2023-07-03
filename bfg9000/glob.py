@@ -26,6 +26,14 @@ class Glob:
                 return cls.any
             raise ValueError('unknown type {!r}'.format(s))
 
+        def to_char(self):
+            if self == self.file:
+                return 'f'
+            elif self == self.dir:
+                return 'd'
+            else:  # self == self.any
+                return '*'
+
     def __init__(self, pattern, type, isdir):
         if type is None:
             type = self.Type.dir if isdir else self.Type.file
@@ -80,6 +88,13 @@ class PathGlob(Glob):
 
         self.base = Path(Path.sep.join(base), path.root, directory=True)
         self.glob = self._compile_glob(glob)
+
+    def to_json(self):
+        return {'pattern': self.pattern.to_json(), 'type': self.type.to_char()}
+
+    @classmethod
+    def from_json(cls, data):
+        return cls(Path.from_json(data['pattern']), data['type'])
 
     @classmethod
     def _is_glob(cls, s):
@@ -204,6 +219,13 @@ class NameGlob(Glob):
         name_pattern, n = re.subn(self._slash_ex, '', pattern)
         super().__init__(pattern, type, n > 0)
         self.regex = re.compile(fnmatch.translate(name_pattern))
+
+    def to_json(self):
+        return {'pattern': self.pattern, 'type': self.type.to_char()}
+
+    @classmethod
+    def from_json(cls, data):
+        return cls(data['pattern'], data['type'])
 
     def match(self, path):
         if self.regex.match(path.basename()):

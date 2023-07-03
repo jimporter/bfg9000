@@ -69,6 +69,19 @@ def samefile(path1, path2, variables=None):
                             path2.string(variables))
 
 
+def getmtime_ns(path, variables=None, strict=True):
+    try:
+        return os.stat(path.string(variables)).st_mtime_ns
+    except Exception:
+        if strict:
+            raise
+        return 0
+
+
+def touch(path, variables=None):
+    os.utime(path.string(variables), None)
+
+
 def listdir(path, variables=None):
     dirs, nondirs = [], []
     try:

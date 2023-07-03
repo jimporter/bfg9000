@@ -100,9 +100,10 @@ class BuildContext(StackContext):
     kind = 'build'
     filename = 'build.bfg'
 
-    def __init__(self, env, build, argv):
+    def __init__(self, env, build, argv, *, regenerating=False):
         self.build = build
         self.argv = argv
+        self.regenerating = regenerating
         super().__init__(env)
 
 
@@ -174,6 +175,7 @@ class _Decorator:
             for i in builtin_contexts:
                 i.add_builtin(name or fn.__name__, self.__binder(fn))
             fn._builtin_bound = self.__binder.builtin_bound
+            fn._builtin_name = name or fn.__name__
             return fn
         return decorator
 
@@ -197,6 +199,11 @@ class _HookDecorator:
 default = _Decorator(_Binder)
 function = _Decorator(_PartialFunctionBinder)
 getter = _Decorator(_GetterBinder)
+pre_execute_hook = _HookDecorator('pre_execute_hook')
+# XXX: This is only separate from `pre_execute_hook` so that we can write a log
+# message when we're sure we're going to regenerate build files. It'd probably
+# be better to support this by having some way of explicitly ordering hooks.
+execute_hook = _HookDecorator('execute_hook')
 post_execute_hook = _HookDecorator('post_execute_hook')
 
 

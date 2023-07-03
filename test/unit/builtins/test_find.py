@@ -3,9 +3,10 @@ from contextlib import contextmanager, ExitStack
 from unittest import mock
 
 from .. import TestCase
-from .common import BuiltinTest
+from .common import AlwaysEqual, BuiltinTest
 
 from bfg9000.builtins import find, project, regenerate, version  # noqa: F401
+from bfg9000.exceptions import SerializationError
 from bfg9000.file_types import Directory, File, HeaderDirectory, SourceFile
 from bfg9000.iterutils import uniques
 from bfg9000.path import Path, Root
@@ -51,42 +52,67 @@ def mock_filesystem():
         yield a, b, c, d
 
 
-class TestFindCache(TestCase):
+class TestFindCache(BuiltinTest):
     def setUp(self):
+        super().setUp()
         self.cache = find.FindCache()
 
     def test_add_getitem(self):
         file_filter = find.FileFilter('*')
-        self.cache.add(file_filter, ['found'], ['extra'])
-        self.assertEqual(self.cache[file_filter], (['found'], ['extra']))
+        self.cache.add(file_filter, [Path('found')], [Path('extra')])
+        self.assertEqual(self.cache[file_filter],
+                         ([Path('found')], [Path('extra')]))
         with self.assertRaises(KeyError):
             self.cache[find.FileFilter('*.txt')]
 
     def test_in(self):
         file_filter = find.FileFilter('*')
-        self.cache.add(file_filter, ['found'], ['extra'])
+        self.cache.add(file_filter, [Path('found')], [Path('extra')])
         self.assertTrue(file_filter in self.cache)
         self.assertFalse(find.FileFilter('*.txt') in self.cache)
 
     def test_iter(self):
         filter1 = find.FileFilter('*')
         filter2 = find.FileFilter('*.txt')
-        self.cache.add(filter1, ['found1'], ['extra1'])
-        self.cache.add(filter2, ['found2'], ['extra2'])
+        self.cache.add(filter1, [Path('found1')], [Path('extra1')])
+        self.cache.add(filter2, [Path('found2')], [Path('extra2')])
 
         self.assertEqual(list(self.cache), [filter1, filter2])
         self.assertEqual(list(self.cache.keys()), [filter1, filter2])
         self.assertEqual(list(self.cache.values()),
-                         [(['found1'], ['extra1']),
-                          (['found2'], ['extra2'])])
+                         [([Path('found1')], [Path('extra1')]),
+                          ([Path('found2')], [Path('extra2')])])
         self.assertEqual(list(self.cache.items()),
-                         [(filter1, (['found1'], ['extra1'])),
-                          (filter2, (['found2'], ['extra2']))])
+                         [(filter1, ([Path('found1')], [Path('extra1')])),
+                          (filter2, ([Path('found2')], [Path('extra2')]))])
 
     def test_len(self):
         self.assertEqual(len(self.cache), 0)
-        self.cache.add(find.FileFilter('*'), ['found'], ['extra'])
+        self.cache.add(find.FileFilter('*'), [Path('found')], [Path('extra')])
         self.assertEqual(len(self.cache), 1)
+
+    def test_to_json(self):
+        self.assertEqual(self.cache.to_json(), [])
+        self.cache.add(find.FileFilter('*'), [Path('found')], [Path('extra')])
+        self.assertEqual(self.cache.to_json(), [
+            [{'include': [{'pattern': ['*', 'srcdir', False], 'type': 'f'}],
+              'extra': [], 'exclude': [], 'filter_fn': None},
+             [['found', 'builddir', False]],
+             [['extra', 'builddir', False]]],
+        ])
+
+    def test_from_json(self):
+        self.assertEqual(find.FindCache.from_json([], self.context),
+                         find.FindCache())
+
+        cache = find.FindCache()
+        cache.add(find.FileFilter('*'), [Path('found')], [Path('extra')])
+        self.assertEqual(find.FindCache.from_json([
+            [{'include': [{'pattern': ['*', 'srcdir', False], 'type': 'f'}],
+              'extra': [], 'exclude': [], 'filter_fn': None},
+             [['found', 'builddir', False]],
+             [['extra', 'builddir', False]]]
+        ], self.context), cache)
 
 
 class TestFindResult(TestCase):
@@ -144,7 +170,7 @@ class TestFindResult(TestCase):
                          R.exclude_recursive)
 
 
-class TestFileFilter(TestCase):
+class TestFileFilter(BuiltinTest):
     def test_file(self):
         f = find.FileFilter('*')
         self.assertEqual(f.match(srcpath('foo')), find.FindResult.include)
@@ -236,9 +262,13 @@ class TestFileFilter(TestCase):
         self.assertEqual(f.match(srcpath('foo.hpp')),
                          find.FindResult.exclude_recursive)
 
-    def test_no_pattern(self):
-        self.assertRaises(ValueError, find.FileFilter, [])
-        self.assertRaises(ValueError, find.FileFilter, None)
+    def test_bases(self):
+        self.assertEqual(find.FileFilter('*').bases(), [Path('', Root.srcdir)])
+        self.assertEqual(
+            set(find.FileFilter(['foo/*', 'bar/*', 'bar/baz/*']).bases()),
+            set([Path('foo/', Root.srcdir), Path('bar/', Root.srcdir)])
+        )
+        self.assertEqual(find.FileFilter(Path('*')).bases(), [Path('')])
 
     def test_equality(self):
         f1 = find.FileFilter('*.hpp')
@@ -266,6 +296,129 @@ class TestFileFilter(TestCase):
 
         self.assertFalse(f1 == f7)
         self.assertTrue(f1 != f7)
+
+    def test_hash(self):
+        self.assertEqual(hash(find.FileFilter('*')),
+                         hash(find.FileFilter('*')))
+        self.assertEqual(hash(find.FileFilter('*')),
+                         hash(find.FileFilter('*', type='f')))
+
+    def test_to_json(self):
+        self.assertEqual(find.FileFilter('*.txt').to_json(), {
+            'include': [{'pattern': ['*.txt', 'srcdir', False], 'type': 'f'}],
+            'extra': [], 'exclude': [], 'filter_fn': None,
+        })
+        self.assertEqual(
+            (find.FileFilter('*.hpp', extra='*.cpp', exclude='*_test.cpp')
+             .to_json()),
+            {'include': [{'pattern': ['*.hpp', 'srcdir', False], 'type': 'f'}],
+             'extra':   [{'pattern': '*.cpp', 'type': 'f'}],
+             'exclude': [{'pattern': '*_test.cpp', 'type': 'f'}],
+             'filter_fn': None}
+        )
+        self.assertEqual(
+            (find.FileFilter('*.hpp', filter_fn=find.filter_by_platform)
+             .to_json()),
+            {'include': [{'pattern': ['*.hpp', 'srcdir', False], 'type': 'f'}],
+             'extra': [], 'exclude': [], 'filter_fn': 'filter_by_platform'}
+        )
+        with self.assertRaises(SerializationError):
+            find.FileFilter('*.hpp', filter_fn=lambda path: None).to_json()
+
+    def test_from_json(self):
+        self.assertEqual(find.FileFilter.from_json({
+            'include': [{'pattern': ['*.txt', 'srcdir', False], 'type': 'f'}],
+            'extra': [], 'exclude': [], 'filter_fn': None,
+        }, self.context), find.FileFilter('*.txt'))
+
+        self.assertEqual(find.FileFilter.from_json({
+            'include': [{'pattern': ['*.hpp', 'srcdir', False], 'type': 'f'}],
+            'extra':   [{'pattern': '*.cpp', 'type': 'f'}],
+            'exclude': [{'pattern': '*_test.cpp', 'type': 'f'}],
+            'filter_fn': None,
+        }, self.context), find.FileFilter('*.hpp', extra='*.cpp',
+                                          exclude='*_test.cpp'))
+
+        self.assertEqual(find.FileFilter.from_json({
+            'include': [{'pattern': ['*.hpp', 'srcdir', False], 'type': 'f'}],
+            'extra': [], 'exclude': [], 'filter_fn': 'filter_by_platform',
+        }, self.context), find.FileFilter(
+            '*.hpp', filter_fn=self.context['filter_by_platform']
+        ))
+
+        with self.assertRaises(SerializationError):
+            find.FileFilter.from_json({
+                'include': [{'pattern': ['*.hpp', 'srcdir', False],
+                             'type': 'f'}],
+                'extra': [], 'exclude': [], 'filter_fn': 'bad',
+            }, self.context)
+
+    def test_no_pattern(self):
+        self.assertRaises(ValueError, find.FileFilter, [])
+        self.assertRaises(ValueError, find.FileFilter, None)
+
+
+class TestFindCacheFile(BuiltinTest):
+    def test_save(self):
+        with mock.patch('builtins.open'), \
+             mock.patch('json.dump') as mock_dump, \
+             mock.patch('os.remove') as mock_remove:
+            cache = find.FindCache()
+            cache.add(find.FileFilter('*'), [], [])
+            find.FindCacheFile(regenerate.RegenerateFiles([], []),
+                               cache).save('path')
+            mock_dump.assert_called_once_with({
+                'version': 1,
+                'data': {
+                    'regen_files': {'inputs': [], 'outputs': []},
+                    'cache': [
+                        [{'include': [{'pattern': ['*', 'srcdir', False],
+                                       'type': 'f'}],
+                          'extra': [], 'exclude': [], 'filter_fn': None},
+                         [], []]
+                    ]
+                }
+            }, AlwaysEqual())
+            mock_remove.assert_not_called()
+
+    def test_save_empty(self):
+        with mock.patch('builtins.open'), \
+             mock.patch('json.dump') as mock_dump, \
+             mock.patch('os.remove') as mock_remove:
+            find.FindCacheFile(regenerate.RegenerateFiles([], []),
+                               find.FindCache()).save('path')
+            mock_dump.assert_not_called()
+            mock_remove.assert_called_once()
+
+    def test_save_unserializable(self):
+        with mock.patch('builtins.open'), \
+             mock.patch('json.dump') as mock_dump, \
+             mock.patch('os.remove') as mock_remove:
+            cache = find.FindCache()
+            cache.add(find.FileFilter('*', filter_fn=lambda p: True), [], [])
+            find.FindCacheFile(regenerate.RegenerateFiles([], []),
+                               cache).save('path')
+            mock_dump.assert_not_called()
+            mock_remove.assert_called_once()
+
+    def test_load(self):
+        with mock.patch('builtins.open', mock.mock_open(read_data="""\
+            {"version": 1, "data": {
+                "regen_files": {"inputs": [], "outputs": []},
+                "cache": []
+            }}
+        """)):
+            self.assertEqual(
+                find.FindCacheFile.load('path', self.context),
+                find.FindCacheFile(regenerate.RegenerateFiles([], []),
+                                   find.FindCache())
+            )
+
+    def test_load_bad_version(self):
+        with mock.patch('builtins.open', mock.mock_open(read_data="""\
+            {"version": 999, "data": {}}
+        """)), self.assertRaises(find.CacheVersionError):
+            find.FindCacheFile.load('path', self.context)
 
 
 class TestFilterByPlatform(BuiltinTest):

@@ -8,6 +8,7 @@ from .arguments import parser as argparse
 from .backends import list_backends
 from .backends.compdb import writer as compdb
 from .environment import Environment, EnvVersionError
+from .exceptions import AbortConfigure
 from .platforms.target import platform_info
 
 logger = log.getLogger(__name__)
@@ -241,6 +242,8 @@ def configure(parser, subparser, args, extra):
         backend.write(env, build_inputs)
         if env.compdb:
             compdb.write(env, build_inputs)
+    except AbortConfigure:
+        pass
     except Exception as e:
         logger.exception(e)
         return e.code if isinstance(e, build.ScriptExitError) else 1
@@ -262,10 +265,12 @@ def regenerate(parser, subparser, args, extra):
         env.save(args.builddir.string())
 
         backend = list_backends()[env.backend]
-        build_inputs = build.configure_build(env)
+        build_inputs = build.configure_build(env, regenerating=True)
         backend.write(env, build_inputs)
         if env.compdb:
             compdb.write(env, build_inputs)
+    except AbortConfigure:
+        pass
     except Exception as e:
         return handle_reload_exception(e, suggest_rerun=True)
 

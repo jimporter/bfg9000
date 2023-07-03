@@ -17,6 +17,11 @@ def path_exists(context, path):
 
 @builtin.function(context=('build', 'options'))
 def relpath(context, path, strict=False):
+    # This ensures that if we have a `Path` object, we can return it even if
+    # the `context` object isn't fully set up yet.
+    # if not strict and isinstance(path, _path.Path):
+    #     return path
+
     return _path.Path.ensure(path, context.path.parent(), strict=strict)
 
 

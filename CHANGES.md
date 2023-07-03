@@ -5,6 +5,8 @@
 ### New features
 - `find_files` now caches results by default so searches don't need to be re-run
   if you call it again with the same arguments
+- When using `find_files`, avoid regenerating build files in most cases if the
+  result of `find_files` hasn't actually changed
 - Add support for system headers when compiling with MSVC
 
 ### Bug fixes

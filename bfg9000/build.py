@@ -34,6 +34,10 @@ def _execute_script(f, context, path, *, run_hooks=True):
 
     with pushd(path.parent().string(context.env.base_dirs)), \
          context.push_path(path) as p:
+        if run_hooks:
+            context.run_hook('pre_execute_hook')
+            context.run_hook('execute_hook')
+
         code = compile(f.read(), filename, 'exec')
         try:
             exec(code, context.builtins)
@@ -104,14 +108,14 @@ def fill_user_help(env, parent):
     return _execute_options(env, parent, usage='help')[0]
 
 
-def configure_build(env):
+def configure_build(env, *, regenerating=False):
     builtin_init()
     parser, opts_paths = _execute_options(env)
     argv = parser.parse_args(env.extra_args)
 
     bfgpath = Path(builtin.BuildContext.filename, Root.srcdir)
     build = BuildInputs(env, bfgpath)
-    context = builtin.BuildContext(env, build, argv)
+    context = builtin.BuildContext(env, build, argv, regenerating=regenerating)
     execute_file(context, bfgpath)
 
     # Add all the bfg files as bootstrap entries (except for the main
