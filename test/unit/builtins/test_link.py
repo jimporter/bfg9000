@@ -1,6 +1,6 @@
 from unittest import mock
 
-from .common import AlwaysEqual, AttrDict, BuiltinTest
+from .common import AttrDict, BuiltinTest
 from bfg9000.backends.make import syntax as make
 from bfg9000.backends.msbuild.solution import Solution
 from bfg9000.backends.ninja import syntax as ninja
@@ -876,7 +876,7 @@ class TestMakeBackend(BuiltinTest):
         makefile = make.Makefile(None)
         with mock.patch.object(make.Makefile, 'rule') as mrule:
             link.make_link(result.creator, self.build, makefile, self.env)
-        mrule.assert_called_once_with(result, [obj], [], AlwaysEqual(),
+        mrule.assert_called_once_with(result, [obj], [], mock.ANY,
                                       self._variables(), None)
 
     def test_dir_sentinel(self):
@@ -887,7 +887,7 @@ class TestMakeBackend(BuiltinTest):
         with mock.patch.object(make.Makefile, 'rule') as mrule:
             link.make_link(result.creator, self.build, makefile, self.env)
         mrule.assert_called_once_with(result, [obj], [Path('dir/.dir')],
-                                      AlwaysEqual(), self._variables(), None)
+                                      mock.ANY, self._variables(), None)
 
     def test_extra_deps(self):
         dep = self.context['generic_file']('dep.txt')
@@ -897,7 +897,7 @@ class TestMakeBackend(BuiltinTest):
         makefile = make.Makefile(None)
         with mock.patch.object(make.Makefile, 'rule') as mrule:
             link.make_link(result.creator, self.build, makefile, self.env)
-        mrule.assert_called_once_with(result, [obj, dep], [], AlwaysEqual(),
+        mrule.assert_called_once_with(result, [obj, dep], [], mock.ANY,
                                       self._variables(), None)
 
 

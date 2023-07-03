@@ -1,7 +1,7 @@
 from collections import namedtuple
 from unittest import mock
 
-from .common import AlwaysEqual, BuiltinTest, FileTest
+from .common import BuiltinTest, FileTest
 
 from bfg9000.backends.make import syntax as make
 from bfg9000.backends.ninja import syntax as ninja
@@ -241,8 +241,8 @@ class TestMakeBackend(BuiltinTest):
             install.make_install_rule(self.build, makefile, self.env)
             self.assertEqual(mrule.mock_calls, [
                 mock.call(target='install', deps='all', phony=True,
-                          recipe=AlwaysEqual()),
-                mock.call(target='uninstall', phony=True, recipe=AlwaysEqual())
+                          recipe=mock.ANY),
+                mock.call(target='uninstall', phony=True, recipe=mock.ANY)
             ])
 
 
@@ -268,9 +268,7 @@ class TestNinjaBackend(BuiltinTest):
             install.ninja_install_rule(self.build, ninjafile, self.env)
             self.assertEqual(mbuild.mock_calls, [
                 mock.call(output='install', inputs=['all'], implicit=['PHONY'],
-                          order_only=None, rule='command',
-                          variables=AlwaysEqual()),
+                          order_only=None, rule='command', variables=mock.ANY),
                 mock.call(output='uninstall', inputs=None, implicit=['PHONY'],
-                          order_only=None, rule='command',
-                          variables=AlwaysEqual()),
+                          order_only=None, rule='command', variables=mock.ANY),
             ])

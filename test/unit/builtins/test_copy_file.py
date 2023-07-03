@@ -1,6 +1,6 @@
 from unittest import mock
 
-from .common import AlwaysEqual, BuiltinTest
+from .common import BuiltinTest
 from bfg9000 import file_types
 from bfg9000.builtins import copy_file as _copy_file  # noqa: F401
 from bfg9000.path import Path, Root
@@ -227,7 +227,7 @@ class TestMakeBackend(BuiltinTest):
         _copy_file.make_copy_file(result.creator, self.build, makefile,
                                   self.env)
         makefile.rule.assert_called_once_with(
-            target=[result], deps=[src], order_only=[], recipe=AlwaysEqual()
+            target=[result], deps=[src], order_only=[], recipe=mock.ANY
         )
 
     def test_dir_sentinel(self):
@@ -239,7 +239,7 @@ class TestMakeBackend(BuiltinTest):
                                   self.env)
         makefile.rule.assert_called_once_with(
             target=[result], deps=[src], order_only=[Path('dir/.dir')],
-            recipe=AlwaysEqual()
+            recipe=mock.ANY
         )
 
     def test_extra_deps(self):
@@ -252,7 +252,7 @@ class TestMakeBackend(BuiltinTest):
                                   self.env)
         makefile.rule.assert_called_once_with(
             target=[result], deps=[src, dep], order_only=[],
-            recipe=AlwaysEqual()
+            recipe=mock.ANY
         )
 
 

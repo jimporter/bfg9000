@@ -1,7 +1,7 @@
 from collections import namedtuple
 from unittest import mock
 
-from .common import AlwaysEqual, AttrDict, BuiltinTest
+from .common import AttrDict, BuiltinTest
 from .. import make_env
 
 from bfg9000 import file_types, options as opts
@@ -632,9 +632,8 @@ class TestMakeBackend(BuiltinTest):
              mock.patch('logging.log'):
             compile.make_compile(result.creator, self.build, makefile,
                                  self.env)
-            mrule.assert_called_once_with(
-                result, [src], [], AlwaysEqual(), AlwaysEqual(), None
-            )
+            mrule.assert_called_once_with(result, [src], [], mock.ANY,
+                                          mock.ANY, None)
 
     def test_dir_sentinel(self):
         makefile = make.Makefile(None)
@@ -645,10 +644,8 @@ class TestMakeBackend(BuiltinTest):
              mock.patch('logging.log'):
             compile.make_compile(result.creator, self.build, makefile,
                                  self.env)
-            mrule.assert_called_once_with(
-                result, [src], [Path('dir/.dir')], AlwaysEqual(),
-                AlwaysEqual(), None,
-            )
+            mrule.assert_called_once_with(result, [src], [Path('dir/.dir')],
+                                          mock.ANY, mock.ANY, None)
 
     def test_extra_deps(self):
         makefile = make.Makefile(None)
@@ -660,9 +657,8 @@ class TestMakeBackend(BuiltinTest):
              mock.patch('logging.log'):
             compile.make_compile(result.creator, self.build, makefile,
                                  self.env)
-            makefile.rule.assert_called_once_with(
-                result, [src, dep], [], AlwaysEqual(), AlwaysEqual(), None,
-            )
+            makefile.rule.assert_called_once_with(result, [src, dep], [],
+                                                  mock.ANY, mock.ANY, None)
 
     def test_local_options(self):
         env = make_env('winnt', clear_variables=True,
@@ -680,7 +676,7 @@ class TestMakeBackend(BuiltinTest):
                                wraps=makefile.variable) as mvar, \
              mock.patch('logging.log'):
             compile.make_compile(result.creator, build, makefile, env)
-            mrule.assert_called_once_with(result, [src], [], AlwaysEqual(), {
+            mrule.assert_called_once_with(result, [src], [], mock.ANY, {
                 make.var('CXXFLAGS'): [make.var('GLOBAL_CXXFLAGS'), '/MTd']
             }, None)
             mvar.assert_any_call('GLOBAL_CXXFLAGS', ['/Zi'],
@@ -698,7 +694,7 @@ class TestNinjaBackend(BuiltinTest):
                                   self.env)
             mbuild.assert_called_once_with(
                 output=[result], rule='cxx', inputs=[src], implicit=[],
-                variables=AlwaysEqual(),
+                variables=mock.ANY
             )
 
     def test_extra_deps(self):
@@ -712,7 +708,7 @@ class TestNinjaBackend(BuiltinTest):
                                   self.env)
             mbuild.assert_called_once_with(
                 output=[result], rule='cxx', inputs=[src], implicit=[dep],
-                variables=AlwaysEqual(),
+                variables=mock.ANY
             )
 
     def test_local_options(self):

@@ -6,11 +6,6 @@ from bfg9000.build_inputs import BuildInputs
 from bfg9000.path import Path, Root
 
 
-class AlwaysEqual:
-    def __eq__(self, rhs):
-        return True
-
-
 class FileTest(TestCase):
     def assertSameFile(self, a, b, exclude=set(), seen=None):
         if seen is None:

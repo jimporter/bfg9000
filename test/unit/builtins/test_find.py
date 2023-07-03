@@ -3,7 +3,7 @@ from contextlib import contextmanager, ExitStack
 from unittest import mock
 
 from .. import TestCase
-from .common import AlwaysEqual, BuiltinTest
+from .common import BuiltinTest
 
 from bfg9000.builtins import find, project, regenerate, version  # noqa: F401
 from bfg9000.exceptions import SerializationError
@@ -378,7 +378,7 @@ class TestFindCacheFile(BuiltinTest):
                          [], []]
                     ]
                 }
-            }, AlwaysEqual())
+            }, mock.ANY)
             mock_remove.assert_not_called()
 
     def test_save_empty(self):
