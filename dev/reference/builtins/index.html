@@ -1174,7 +1174,9 @@ customized via the <code>find_exclude</code> argument to <a href="#project"><em>
   <em>file_type</em>; the default type is a <a href="#directory"><em>directory</em></a></li>
 <li><em>dist</em>: If true (the default), all files found by this function will
   automatically be added to the source distribution</li>
-<li><em>cache</em>: If true (the default), cache the results so that any changes to will
+<li><em>cache</em>: If true (the default), cache the results of this search; this will
+  return the cached results if this function is called with the same arguments
+  again, and will also ensure that any future changes to the results will
   regenerate the build scripts for the project</li>
 </ul>
 <p>The <em>cache</em> argument is particularly important. It allows you to add or remove
@@ -1301,8 +1303,8 @@ the submodule's bfg file.</p>
 <p>Set the compiler to use for the language <em>lang</em>. <em>names</em> is a string
 representing the path to the compiler (resolved as with <a href="#which"><em>which</em></a>) or a
 list of possible paths (as strings or lists or strings). If <em>strict</em> is true,
-<em>compiler</em> will raise an <code>IOError</code> if an executable cannot be found; if false,
-it will use the first candidate.</p>
+<em>compiler</em> will raise a <code>FileNotFoundError</code> if an executable cannot be found; if
+false, it will use the first candidate.</p>
 <h3 id="compile_options">compile_options(<em>options</em>, <em>lang</em>)<a class="headerlink" href="#compile_options" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>&lt;toolchain&gt;.bfg</code></p>
 <p>Set compilation options to use for the language <em>lang</em>. <em>options</em> is either a
@@ -1338,8 +1340,8 @@ the <em>end</em> of a linker command (like <code>$LDLIBS</code>).</p>
 <em>mode</em> (defaults to <code>'dynamic'</code>). <em>names</em> is a string representing the path to
 the linker (resolved as with <a href="#which"><em>which</em></a>) or a list of possible paths (as
 strings or lists or strings). If <em>strict</em> is true, <em>linker</em> will raise an
-<code>IOError</code> if an executable cannot be found; if false, it will use the first
-candidate.</p>
+<code>FileNotFoundError</code> if an executable cannot be found; if false, it will use the
+first candidate.</p>
 <h3 id="link_options">link_options(<em>options</em>, [<em>format</em>], [<em>mode</em>])<a class="headerlink" href="#link_options" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>&lt;toolchain&gt;.bfg</code></p>
 <p>Set link options to use for the format <em>format</em> (defaults to <code>'native'</code>) and
@@ -1350,9 +1352,9 @@ options or a list of strings, one element per option.</p>
 <p>Set the runner to use for the language <em>lang</em>, if that language supports runners
 (e.g. Java, Scala, or a scripting language). <em>names</em> is a string representing
 the path to the compiler (resolved as with <a href="#which"><em>which</em></a>) or a list of
-possible paths (as strings or lists or strings). If <em>strict</em> is true,
-<em>compiler</em> will raise an <code>IOError</code> if an executable cannot be found; if false,
-it will use the first candidate.</p>
+possible paths (as strings or lists or strings). If <em>strict</em> is true, <em>compiler</em>
+will raise an <code>FileNotFoundError</code> if an executable cannot be found; if false, it
+will use the first candidate.</p>
 <h3 id="srcdir">srcdir<a class="headerlink" href="#srcdir" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>&lt;toolchain&gt;.bfg</code></p>
 <p>Return the source directory of this project as a <a href="#Path"><em>Path</em></a> object.</p>
@@ -1371,8 +1373,8 @@ string resolved as with the <code>$PATH</code> environment variable in the shell
 list of names (as strings or lists of strings). If <em>names</em> contains a
 list-of-lists, the inner list represents a series of arguments to pass to the
 executable when running it.</p>
-<p>If <em>strict</em> is true (the default), <em>which</em> will raise an <code>IOError</code> if an
-executable cannot be found; if false, it will return the first candidate as a
+<p>If <em>strict</em> is true (the default), <em>which</em> will raise an <code>FileNotFoundError</code> if
+an executable cannot be found; if false, it will return the first candidate as a
 string.</p>
 <h2 id="exceptions">Exceptions<a class="headerlink" href="#exceptions" title="Permanent link">§</a></h2>
 <h3 id="calledprocesserror">CalledProcessError<a class="headerlink" href="#calledprocesserror" title="Permanent link">§</a></h3>

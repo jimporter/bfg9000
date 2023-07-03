@@ -178,6 +178,10 @@
 <p class="subtitle">in progress</p>
 <h3 id="new-features">New features<a class="headerlink" href="#new-features" title="Permanent link">§</a></h3>
 <ul>
+<li><code>find_files</code> now caches results by default so searches don't need to be re-run
+  if you call it again with the same arguments</li>
+<li>When using <code>find_files</code>, avoid regenerating build files in most cases if the
+  result of <code>find_files</code> hasn't actually changed</li>
 <li>Add support for system headers when compiling with MSVC</li>
 </ul>
 <h3 id="bug-fixes">Bug fixes<a class="headerlink" href="#bug-fixes" title="Permanent link">§</a></h3>
