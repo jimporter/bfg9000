@@ -834,6 +834,33 @@ class TestSamefile(TestCase):
                                            path.Path('/foo/bar')), True)
 
 
+class TestGetmtimeNs(TestCase):
+    stat_result = namedtuple('stat_result', ['st_mtime_ns'])
+
+    def test_exists(self):
+        with mock.patch('os.stat', return_value=self.stat_result(1234)):
+            self.assertEqual(path.getmtime_ns(path.Path('/foo/bar')), 1234)
+
+    def test_nonexist(self):
+        with mock.patch('os.stat', side_effect=FileNotFoundError()), \
+             self.assertRaises(FileNotFoundError):
+            path.getmtime_ns(path.Path('/foo/bar'))
+
+    def test_nonexist_loose(self):
+        with mock.patch('os.stat', side_effect=FileNotFoundError()):
+            self.assertEqual(path.getmtime_ns(path.Path('/foo/bar'),
+                                              strict=False), 0)
+
+
+class TestTouch(TestCase):
+    def test_touch(self):
+        with mock.patch('os.utime') as mock_utime:
+            path.touch(path.Path('/foo/bar'))
+            mock_utime.assert_called_once_with(
+                path.Path('/foo/bar').string(), None
+            )
+
+
 class TestListdir(TestCase):
     path_vars = {path.Root.builddir: None}
 
