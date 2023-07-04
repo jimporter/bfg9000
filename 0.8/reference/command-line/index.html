@@ -237,6 +237,10 @@ to perform actual builds from a build.bfg file in <em>SRCDIR</em>, and place the
 <p>Regenerate an existing set of build files in <em>BUILDDIR</em> needed to perform actual
 builds. This is run automatically if bfg9000 determines that the build files are
 out of date.</p>
+<h4 id="regenerate-lazy"><code>--lazy</code><a class="headerlink" href="#regenerate-lazy" title="Permanent link">§</a></h4>
+<p>Only regenerate build files if something actually changed (either an explicit
+input file like <code>build.bfg</code> or a <a href="../builtins/#find_files"><em>find_files</em></a> call
+with different results).</p>
 <h3 id="env"><code>bfg9000 env [<em>BUILDDIR</em>]</code><a class="headerlink" href="#env" title="Permanent link">§</a></h3>
 <p>Print the environment variables stored by the build configuration in <em>BUILDDIR</em>.</p>
 <h4 id="env-unique"><code>-u</code>, <code>--unique</code><a class="headerlink" href="#env-unique" title="Permanent link">§</a></h4>
