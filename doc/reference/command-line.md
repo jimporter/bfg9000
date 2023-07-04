@@ -121,6 +121,12 @@ Regenerate an existing set of build files in *BUILDDIR* needed to perform actual
 builds. This is run automatically if bfg9000 determines that the build files are
 out of date.
 
+#### `--lazy` { #regenerate-lazy }
+
+Only regenerate build files if something actually changed (either an explicit
+input file like `build.bfg` or a [*find_files*](builtins.md#find_files) call
+with different results).
+
 ### <code>bfg9000 env [*BUILDDIR*]</code> { #env }
 
 Print the environment variables stored by the build configuration in *BUILDDIR*.

@@ -3,6 +3,7 @@ from unittest import mock
 from .. import *
 
 from bfg9000 import tools
+from bfg9000.build_inputs import Regenerating
 from bfg9000.builtins import builtin, toolchain  # noqa: F401
 from bfg9000.path import InstallRoot
 
@@ -20,7 +21,7 @@ def mock_bad_which(*args, **kwargs):
 class TestToolchain(TestCase):
     def setUp(self):
         self.env = make_env(clear_variables=True)
-        self.context = builtin.ToolchainContext(self.env, regenerating=False)
+        self.context = builtin.ToolchainContext(self.env)
 
     def test_builtins(self):
         builtins = self.context['__builtins__']
@@ -212,7 +213,7 @@ class TestToolchain(TestCase):
                          Path('/bin/dir'))
 
     def test_install_dirs_reload(self):
-        self.context = builtin.ToolchainContext(self.env, regenerating=True)
+        self.context = builtin.ToolchainContext(self.env, Regenerating.true)
 
         prefix = self.env.install_dirs[InstallRoot.prefix]
         bindir = self.env.install_dirs[InstallRoot.bindir]

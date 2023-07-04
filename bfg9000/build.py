@@ -3,7 +3,7 @@ from itertools import chain
 from . import log
 from .arguments.parser import ArgumentParser
 from .builtins import builtin, init as builtin_init
-from .build_inputs import BuildInputs
+from .build_inputs import BuildInputs, Regenerating
 from .iterutils import listify
 from .path import exists, Path, pushd, Root
 from .shell import Mode
@@ -55,7 +55,7 @@ def execute_file(context, path, *, run_hooks=True):
         return _execute_script(f, context, path, run_hooks=run_hooks)
 
 
-def load_toolchain(env, path, *, regenerating=False):
+def load_toolchain(env, path, regenerating=Regenerating.false):
     builtin_init()
     tools_init()
     if regenerating:
@@ -108,14 +108,14 @@ def fill_user_help(env, parent):
     return _execute_options(env, parent, usage='help')[0]
 
 
-def configure_build(env, *, regenerating=False):
+def configure_build(env, regenerating=Regenerating.false):
     builtin_init()
     parser, opts_paths = _execute_options(env)
     argv = parser.parse_args(env.extra_args)
 
     bfgpath = Path(builtin.BuildContext.filename, Root.srcdir)
     build = BuildInputs(env, bfgpath)
-    context = builtin.BuildContext(env, build, argv, regenerating=regenerating)
+    context = builtin.BuildContext(env, build, argv, regenerating)
     execute_file(context, bfgpath)
 
     # Add all the bfg files as bootstrap entries (except for the main

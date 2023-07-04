@@ -10,8 +10,13 @@ class Bfg9000(SimpleCommand):
         super().__init__(env, name='bfg9000', env_var='BFG9000',
                          default=env.bfgdir.append('bfg9000'))
 
-    def _call_regenerate(self, cmd, builddir):
-        return cmd + ['regenerate', builddir]
+    def _call_regenerate(self, cmd, builddir=None, *, lazy=False):
+        result = cmd + ['regenerate']
+        if lazy:
+            result.append('--lazy')
+        if builddir:
+            result.extend(['--', builddir])
+        return result
 
     def _call_run(self, cmd, *, args, initial=False):
         result = cmd + ['run']

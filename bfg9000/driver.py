@@ -7,6 +7,7 @@ from .app_version import version
 from .arguments import parser as argparse
 from .backends import list_backends
 from .backends.compdb import writer as compdb
+from .build_inputs import Regenerating
 from .environment import Environment, EnvVersionError
 from .exceptions import AbortConfigure
 from .platforms.target import platform_info
@@ -260,12 +261,12 @@ def regenerate(parser, subparser, args, extra):
     try:
         env = Environment.load(args.builddir.string())
         if env.toolchain.path:
-            build.load_toolchain(env, env.toolchain.path, regenerating=True)
+            build.load_toolchain(env, env.toolchain.path, args.regenerating)
 
         env.save(args.builddir.string())
 
         backend = list_backends()[env.backend]
-        build_inputs = build.configure_build(env, regenerating=True)
+        build_inputs = build.configure_build(env, args.regenerating)
         backend.write(env, build_inputs)
         if env.compdb:
             compdb.write(env, build_inputs)
@@ -376,6 +377,10 @@ def main():
         help='regenerate build files'
     )
     regenerate_p.set_defaults(func=regenerate, parser=regenerate_p)
+    regenerate_p.add_argument('--lazy', action='store_const',
+                              const=Regenerating.lazy,
+                              default=Regenerating.true, dest='regenerating',
+                              help='only regenerate if something changed')
     regenerate_p.add_argument('builddir',
                               type=argparse.Directory(must_exist=True),
                               metavar='BUILDDIR', nargs='?', default='.',

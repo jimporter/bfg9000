@@ -13,8 +13,14 @@ class TestBfg9000(ToolTestCase):
             self.assertIsInstance(self.env.tool('bfg9000'), Bfg9000)
 
     def test_regenerate(self):
+        self.assertEqual(self.tool('regenerate'),
+                         [self.tool, 'regenerate'])
         self.assertEqual(self.tool('regenerate', 'builddir'),
-                         [self.tool, 'regenerate', 'builddir'])
+                         [self.tool, 'regenerate', '--', 'builddir'])
+        self.assertEqual(self.tool('regenerate', lazy=True),
+                         [self.tool, 'regenerate', '--lazy'])
+        self.assertEqual(self.tool('regenerate', 'builddir', lazy=True),
+                         [self.tool, 'regenerate', '--lazy', '--', 'builddir'])
 
     def test_run(self):
         self.assertEqual(self.tool('run', args=['echo', 'hi']),

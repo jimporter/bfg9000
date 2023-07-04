@@ -14,7 +14,7 @@ from ..iterutils import iterate, listify
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..backends.make.syntax import Writer, Syntax
-from ..build_inputs import build_input
+from ..build_inputs import build_input, Regenerating
 from ..exceptions import AbortConfigure
 from ..path import Path, Root
 from ..platforms import known_platforms
@@ -331,7 +331,7 @@ def find_paths(context, *args, **kwargs):
 
 @builtin.pre_execute_hook()
 def find_check_cache(context):
-    if not context.regenerating:
+    if context.regenerating is not Regenerating.lazy:
         return
 
     try:

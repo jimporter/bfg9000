@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from enum import Enum
 from itertools import chain
 
 from .path import Path, Root
@@ -7,6 +8,15 @@ from .iterutils import iterate, listify, unlistify
 from .objutils import objectify
 
 _build_inputs = {}
+
+
+class Regenerating(Enum):
+    false = False
+    lazy = 'Lazy'
+    true = True
+
+    def __bool__(self):
+        return bool(self.value)
 
 
 def build_input(name, args=()):

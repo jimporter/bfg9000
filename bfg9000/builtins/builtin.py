@@ -3,6 +3,7 @@ import inspect
 from contextlib import contextmanager
 from itertools import chain
 
+from ..build_inputs import Regenerating
 from ..iterutils import iterate, listify
 from ..platforms.basepath import BasePath
 
@@ -100,7 +101,7 @@ class BuildContext(StackContext):
     kind = 'build'
     filename = 'build.bfg'
 
-    def __init__(self, env, build, argv, *, regenerating=False):
+    def __init__(self, env, build, argv, regenerating=Regenerating.false):
         self.build = build
         self.argv = argv
         self.regenerating = regenerating
@@ -119,7 +120,7 @@ class OptionsContext(StackContext):
 class ToolchainContext(BaseContext):
     kind = 'toolchain'
 
-    def __init__(self, env, regenerating):
+    def __init__(self, env, regenerating=Regenerating.false):
         self.regenerating = regenerating
         self._pushed_path = False
         super().__init__(env)
