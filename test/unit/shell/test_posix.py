@@ -1,4 +1,3 @@
-from collections import OrderedDict
 from unittest import mock
 
 from .. import *
@@ -226,7 +225,7 @@ class TestLocalEnv(TestCase):
         ]))
 
     def test_multiple(self):
-        env = OrderedDict((('FOO', 'oof'), ('BAR', 'rab')))
+        env = {'FOO': 'oof', 'BAR': 'rab'}
         self.assertEqual(posix.local_env(env, 'cmd'), shell_list([
             jbos('FOO', shell_literal('='), 'oof'),
             jbos('BAR', shell_literal('='), 'rab'),
@@ -267,7 +266,7 @@ class TestGlobalEnv(TestCase):
         ]))
 
     def test_multiple(self):
-        env = OrderedDict((('FOO', 'oof'), ('BAR', 'rab')))
+        env = {'FOO': 'oof', 'BAR': 'rab'}
         self.assertEqual(posix.global_env(env), shell_list([
             'export', jbos('FOO', shell_literal('='), 'oof'),
             shell_literal('&&'),

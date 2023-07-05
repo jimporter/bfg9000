@@ -1,4 +1,3 @@
-from collections import OrderedDict
 from enum import Enum
 from itertools import chain
 
@@ -55,7 +54,7 @@ class Edge:
 
 class BuildInputs:
     def __init__(self, env, bfgpath):
-        self._sources = OrderedDict()
+        self._sources = {}
         self.bootstrap_paths = []
         self._edges = []
         self._extra_targets = []

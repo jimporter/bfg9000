@@ -1,5 +1,3 @@
-from collections import OrderedDict
-
 from .. import *
 
 from bfg9000.path import Path
@@ -227,7 +225,7 @@ class TestGlobalEnv(TestCase):
         ]))
 
     def test_multiple(self):
-        env = OrderedDict((('FOO', 'oof'), ('BAR', 'rab')))
+        env = {'FOO': 'oof', 'BAR': 'rab'}
         self.assertEqual(windows.global_env(env), shell_list([
             'set', 'FOO=oof',
             shell_literal('&&'),

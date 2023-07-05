@@ -1,6 +1,5 @@
 import json
 import uuid
-from collections import OrderedDict
 
 from ... import path
 from ...iterutils import first
@@ -67,7 +66,7 @@ class Solution:
     def __init__(self, uuids):
         self.uuid = uuids['']
         self._uuids = uuids
-        self._projects = OrderedDict()
+        self._projects = {}
 
     def __setitem__(self, key, value):
         value.set_uuid(self._uuids)
@@ -79,7 +78,7 @@ class Solution:
     def set_default(self, key):
         if key not in self._projects:
             return
-        new_projects = OrderedDict([ ('key', self._projects.pop(key)) ])
+        new_projects = {'key': self._projects.pop(key)}
         new_projects.update(self._projects)
         self._projects = new_projects
 

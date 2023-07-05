@@ -1,5 +1,5 @@
 import re
-from collections import namedtuple, OrderedDict
+from collections import namedtuple
 from enum import Enum
 from io import StringIO
 
@@ -170,7 +170,7 @@ class NinjaFile:
         self._var_table = set()
         self._variables = {i: [] for i in Section}
 
-        self._rules = OrderedDict()
+        self._rules = {}
 
         self._builds = []
         self._build_outputs = set()

@@ -1,5 +1,4 @@
 import warnings
-from collections import OrderedDict
 
 from . import builtin
 from .. import path
@@ -15,8 +14,8 @@ from ..iterutils import flatten, iterate, map_iterable, unlistify
 class InstallOutputs:
     def __init__(self, env):
         self.explicit = []
-        self.host = OrderedDict()
-        self.target = OrderedDict()
+        self.host = {}
+        self.target = {}
         self.env = env
 
     def add(self, item, directory=None):

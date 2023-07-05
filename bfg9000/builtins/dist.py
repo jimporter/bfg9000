@@ -1,16 +1,14 @@
-from collections import OrderedDict
-
 from . import builtin
 from ..iterutils import iterate
 from ..backends.make import writer as make
 from ..backends.ninja import writer as ninja
 from ..path import Path, Root
 
-_exts = OrderedDict(
-    gzip='.tar.gz',
-    bzip2='.tar.bz2',
-    zip='.zip',
-)
+_exts = {
+    'gzip': '.tar.gz',
+    'bzip2': '.tar.bz2',
+    'zip': '.zip',
+}
 
 
 @builtin.function()
