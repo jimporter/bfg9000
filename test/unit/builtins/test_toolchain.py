@@ -24,15 +24,14 @@ class TestToolchain(TestCase):
         self.context = builtin.ToolchainContext(self.env)
 
     def test_builtins(self):
-        builtins = self.context['__builtins__']
         safe = ['abs', 'int', 'str']
         unsafe = ['file', '__import__', 'input', 'open', 'raw_input',
                   'reload']
 
         for i in safe:
-            self.assertTrue(i in builtins)
+            self.assertTrue(i in self.context)
         for i in unsafe:
-            self.assertFalse(i in builtins)
+            self.assertFalse(i in self.context)
 
     def test_environ(self):
         self.context['environ']['NAME'] = 'value'

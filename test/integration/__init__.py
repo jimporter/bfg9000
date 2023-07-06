@@ -245,12 +245,13 @@ class BasicIntegrationTest(SubprocessTestCase):
         else:
             install_args = []
 
-        self.assertPopen(
+        result = self.assertPopen(
             ['bfg9000', '--debug', 'configure', builddir,
              '--backend', backend] + install_args + extra_args,
             env=env, extra_env=extra_env, returncode=returncode
         )
         os.chdir(builddir)
+        return result
 
     def build(self, target=None, extra_args=[]):
         args = [os.getenv(self.backend.upper(), self.backend)] + extra_args

@@ -1,0 +1,4 @@
+# -*- mode: python; mode: bfg9000 -*-
+
+info('[child] value =', globals().get('value', '<unset>'))
+value = 'child'

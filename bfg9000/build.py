@@ -1,3 +1,4 @@
+import os
 from itertools import chain
 
 from . import log
@@ -40,7 +41,10 @@ def _execute_script(f, context, path, *, run_hooks=True):
 
         code = compile(f.read(), filename, 'exec')
         try:
-            exec(code, context.builtins)
+            exec(code, {
+                '__file__': os.path.relpath(filename),
+                '__builtins__': context.builtins,
+            })
         except SystemExit as e:
             if e.code:
                 raise ScriptExitError(filename, e.code)

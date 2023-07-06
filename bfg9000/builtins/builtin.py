@@ -1,3 +1,4 @@
+import builtins
 import functools
 import inspect
 from contextlib import contextmanager
@@ -18,13 +19,16 @@ class Builtins:
     def add_builtin(self, name, value):
         self._builtins[name] = value
 
-    def bind(self, context):
-        builtins = {}
+    def bind(self, context, python_builtins=None):
+        bfg_builtins = {}
         for k, v in self._builtins.items():
-            builtins[k] = v.bind(context=context)
+            bfg_builtins[k] = v.bind(context=context)
 
-        builtins['__bfg9000__'] = builtins
-        return builtins
+        return {
+            **(python_builtins or vars(builtins)),
+            **bfg_builtins,
+            '__bfg9000__': bfg_builtins
+        }
 
     def register_hook(self, name):
         self._hooks[name] = []
@@ -54,15 +58,18 @@ def _get_builtin_contexts(context):
 
 
 class BaseContext:
-    def __init__(self, env):
+    def __init__(self, env, python_builtins=None):
         self.env = env
-        self.builtins = _allbuiltins[self.kind].bind(context=self)
+        self.builtins = _allbuiltins[self.kind].bind(self, python_builtins)
 
     def __getitem__(self, key):
         return self.builtins[key]
 
+    def __contains__(self, key):
+        return key in self.builtins
+
     def run_hook(self, name):
-        _allbuiltins[self.kind].run_hook(name, context=self)
+        _allbuiltins[self.kind].run_hook(name, self)
 
 
 class StackContext(BaseContext):
@@ -119,11 +126,15 @@ class OptionsContext(StackContext):
 
 class ToolchainContext(BaseContext):
     kind = 'toolchain'
+    # XXX: Make this configurable?
+    _unsafe_builtins = ['file', '__import__', 'input', 'open', 'raw_input',
+                        'reload']
 
     def __init__(self, env, regenerating=Regenerating.false):
         self.regenerating = regenerating
         self._pushed_path = False
-        super().__init__(env)
+        super().__init__(env, {k: v for k, v in vars(builtins).items()
+                               if k not in self._unsafe_builtins})
 
     @contextmanager
     def push_path(self, path):

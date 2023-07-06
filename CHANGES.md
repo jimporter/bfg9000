@@ -12,6 +12,8 @@
 ### Bug fixes
 - Automatically update dependencies via `mopack` if the toolchain file has
   changed
+- Multiple `.bfg` files (when using submodules) no longer inadvertently share
+  scope with each other
 
 ---
 

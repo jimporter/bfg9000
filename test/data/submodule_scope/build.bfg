@@ -1,0 +1,5 @@
+# -*- mode: python; mode: bfg9000 -*-
+
+value = 'parent'
+submodule('child')
+info('[parent] value =', value)
