@@ -292,6 +292,8 @@ class Environment:
             raise EnvVersionError('saved version exceeds expected version')
 
         # Upgrade from older versions of the Environment if necessary.
+        # Note: "bfg" version tags below mark the latest released version at
+        # that level of the `Environment` versioning.
 
         # v5 converts srcdir and builddir to Path objects internally.
         if version < 5:
@@ -305,11 +307,15 @@ class Environment:
             data['backend_version'] = str(backend.version())
             data['bfgpath'] = Path(data['bfgpath']).to_json()
 
+        # ----- bfg v0.1.1 -----
+
         # v7 replaces bfgpath with bfgdir.
         if version < 7:
             bfgdir = Path.from_json(data['bfgpath'] + [False]).parent()
             data['bfgdir'] = bfgdir.to_json()
             del data['bfgpath']
+
+        # ----- bfg v0.2.0 -----
 
         # v8 adds support for user-defined command-line arguments.
         if version < 8:
@@ -333,6 +339,8 @@ class Environment:
             for i in data['install_dirs']:
                 data['install_dirs'][i] += [False]
 
+        # ----- bfg v0.3.1 -----
+
         # v12 splits platform into host_platform and target_platform.
         if version < 12:
             platform_name = data.pop('platform')
@@ -349,6 +357,8 @@ class Environment:
                 genus, species = platforms.platform_tuple(data[i])
                 data[i] = {'genus': genus, 'species': species,
                            'arch': platform.machine()}
+
+        # ----- bfg v0.6.0 -----
 
         # v15 adds mopack file list and changes how variables are stored.
         if version < 15:
@@ -368,6 +378,8 @@ class Environment:
             for i in ('datadir', 'mandir'):
                 p = target_plat.install_dirs[InstallRoot[i]].to_json()
                 data['install_dirs'][i] = p
+
+        # ----- bfg v0.7.0 -----
 
         # Now that we've upgraded, initialize the Environment object.
         env = cls.__new__(cls)
