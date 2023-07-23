@@ -59,7 +59,7 @@ class PkgConfig(Command):
         # We don't have an explicitly-set command from the environment, so try
         # to guess what the right command would be based on the C compiler
         # command.
-        default = 'pkg-config'
+        default = ['pkg-config', 'pkgconf']
         sibling = env.builder('c').compiler
         guessed_cmd = guess_command(sibling, _c_to_pkgconf)
 
