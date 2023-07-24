@@ -278,33 +278,33 @@ class TestCcPackageResolver(CrossPlatformTestCase):
         ))
 
     def test_resolve_pkg_config(self):
-        usage = {'type': 'pkg_config', 'pcnames': ['foo'],
-                 'pkg_config_path': ['/path/to/include']}
+        linkage = {'type': 'pkg_config', 'pcnames': ['foo'],
+                   'pkg_config_path': ['/path/to/include']}
         with mock.patch('bfg9000.shell.execute', mock_execute_pkgconf), \
              mock.patch('bfg9000.tools.msvc.exists', return_value=True), \
-             mock.patch('bfg9000.tools.mopack.get_usage',
-                        return_value=usage), \
+             mock.patch('bfg9000.tools.mopack.get_linkage',
+                        return_value=linkage), \
              mock.patch('bfg9000.log.info'):
             pkg = self.packages.resolve('foo', None, SpecifierSet(),
                                         PackageKind.any)
             self.check_package(pkg)
 
     def test_resolve_path(self):
-        usage = {'type': 'path', 'generated': True, 'auto_link': False,
-                 'pcnames': ['foo'], 'pkg_config_path': '/path/to/pkgconfig'}
+        linkage = {'type': 'path', 'generated': True, 'auto_link': False,
+                   'pcnames': ['foo'], 'pkg_config_path': '/path/to/pkgconfig'}
         with mock.patch('bfg9000.shell.execute', mock_execute_pkgconf), \
              mock.patch('bfg9000.tools.cc.exists', return_value=True), \
-             mock.patch('bfg9000.tools.mopack.get_usage',
-                        return_value=usage), \
+             mock.patch('bfg9000.tools.mopack.get_linkage',
+                        return_value=linkage), \
              mock.patch('bfg9000.log.info'):
             pkg = self.packages.resolve('foo', None, SpecifierSet(),
                                         PackageKind.any)
             self.check_package(pkg)
 
     def test_resolve_path_auto_link(self):
-        usage = {'type': 'path', 'generated': True, 'auto_link': True,
-                 'pcnames': ['foo'], 'pkg_config_path': '/path/to/pkgconfig'}
-        with mock.patch('bfg9000.tools.mopack.get_usage',
-                        return_value=usage), \
+        linkage = {'type': 'path', 'generated': True, 'auto_link': True,
+                   'pcnames': ['foo'], 'pkg_config_path': '/path/to/pkgconfig'}
+        with mock.patch('bfg9000.tools.mopack.get_linkage',
+                        return_value=linkage), \
              self.assertRaises(PackageResolutionError):
             self.packages.resolve('foo', None, SpecifierSet(), PackageKind.any)

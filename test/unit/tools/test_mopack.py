@@ -5,7 +5,7 @@ from . import *
 from bfg9000.exceptions import PackageResolutionError
 from bfg9000.packages import Framework
 from bfg9000.path import InstallRoot
-from bfg9000.tools.mopack import Mopack, get_usage, to_frameworks
+from bfg9000.tools.mopack import Mopack, get_linkage, to_frameworks
 
 
 class TestMopack(ToolTestCase):
@@ -27,13 +27,13 @@ class TestMopack(ToolTestCase):
                          [self.tool, 'resolve', '--directory', 'dir',
                           '-dprefix=' + prefix, '--', 'mopack.yml'])
 
-    def test_call_usage(self):
-        self.assertEqual(self.tool('usage', 'pkg'),
-                         [self.tool, 'usage', '--json', 'pkg'])
-        self.assertEqual(self.tool('usage', 'pkg', submodules='sub'),
-                         [self.tool, 'usage', '--json', 'pkg[sub]'])
-        self.assertEqual(self.tool('usage', 'pkg', directory='dir'),
-                         [self.tool, 'usage', '--directory', 'dir', '--json',
+    def test_call_linkage(self):
+        self.assertEqual(self.tool('linkage', 'pkg'),
+                         [self.tool, 'linkage', '--json', 'pkg'])
+        self.assertEqual(self.tool('linkage', 'pkg', submodules='sub'),
+                         [self.tool, 'linkage', '--json', 'pkg[sub]'])
+        self.assertEqual(self.tool('linkage', 'pkg', directory='dir'),
+                         [self.tool, 'linkage', '--directory', 'dir', '--json',
                           'pkg'])
 
     def test_call_deploy(self):
@@ -57,20 +57,20 @@ class TestMopack(ToolTestCase):
         self.assertRaises(TypeError, self.tool, 'unknown')
 
 
-class TestGetUsage(ToolTestCase):
+class TestGetLinkage(ToolTestCase):
     tool_type = Mopack
 
     def test_success(self):
         with mock.patch('bfg9000.shell.which', return_value=['command']), \
              mock.patch('bfg9000.shell.execute',
                         return_value='{"type": "unknown"}'):
-            self.assertEqual(get_usage(self.env, 'foo'), {'type': 'unknown'})
+            self.assertEqual(get_linkage(self.env, 'foo'), {'type': 'unknown'})
 
     def test_failure(self):
         with mock.patch('bfg9000.shell.which', return_value=['command']), \
              mock.patch('bfg9000.shell.execute', side_effect=OSError()), \
              self.assertRaises(PackageResolutionError):
-            get_usage(self.env, 'foo')
+            get_linkage(self.env, 'foo')
 
 
 class TestToFrameworks(TestCase):

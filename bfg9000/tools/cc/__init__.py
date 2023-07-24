@@ -204,15 +204,17 @@ class CcPackageResolver:
 
     def resolve(self, name, submodules, version, kind, *, system=True):
         format = self.builder.object_format
-        usage = mopack.get_usage(self.env, name, submodules, self.include_dirs,
-                                 self.lib_dirs, self._lib_names(kind))
-        if usage.get('auto_link', False):
+        linkage = mopack.get_linkage(
+            self.env, name, submodules, self.include_dirs, self.lib_dirs,
+            self._lib_names(kind)
+        )
+        if linkage.get('auto_link', False):
             raise PackageResolutionError('package {!r} requires auto-link'
                                          .format(name))
 
         return pkg_config.resolve(
-            self.env, name, submodules, version, usage['pcnames'],
+            self.env, name, submodules, version, linkage['pcnames'],
             format=format, kind=kind, system=system,
-            search_path=usage['pkg_config_path'],
-            generated=usage.get('generated', False)
+            search_path=linkage['pkg_config_path'],
+            generated=linkage.get('generated', False)
         )

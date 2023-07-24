@@ -50,8 +50,8 @@ class Mopack(SimpleCommand):
         result.extend(iterate(config))
         return result
 
-    def _call_usage(self, cmd, name, submodules=None, *, directory=None):
-        return (cmd + ['usage'] + self._dir_arg(directory) +
+    def _call_linkage(self, cmd, name, submodules=None, *, directory=None):
+        return (cmd + ['linkage'] + self._dir_arg(directory) +
                 ['--json', self._dependency(name, iterate(submodules))])
 
     def _call_deploy(self, cmd, *, directory=None):
@@ -71,13 +71,13 @@ class Mopack(SimpleCommand):
 
     def run(self, subcmd, *args, **kwargs):
         result = super().run(subcmd, *args, **kwargs)
-        if subcmd in ['usage', 'list_files']:
+        if subcmd in ['linkage', 'list_files']:
             return json.loads(result.strip())
         return result
 
 
-def get_usage(env, name, submodules=None, include_path=None, lib_path=None,
-              lib_names=None):
+def get_linkage(env, name, submodules=None, include_path=None, lib_path=None,
+                lib_names=None):
     extra_env = {}
     if include_path:
         extra_env['MOPACK_INCLUDE_PATH'] = shell.join_paths(
@@ -91,7 +91,7 @@ def get_usage(env, name, submodules=None, include_path=None, lib_path=None,
         extra_env['MOPACK_LIB_NAMES'] = shell.join_paths(lib_names)
 
     try:
-        return env.tool('mopack').run('usage', name, submodules,
+        return env.tool('mopack').run('linkage', name, submodules,
                                       directory=env.builddir,
                                       extra_env=extra_env)
     except (OSError, shell.CalledProcessError) as e:

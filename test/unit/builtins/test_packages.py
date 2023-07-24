@@ -23,7 +23,7 @@ def mock_which(names, *args, **kwargs):
 def mock_execute_common(args, **kwargs):
     prog = os.path.basename(args[0])
     if prog == 'mopack':
-        if args[1] == 'usage':
+        if args[1] == 'linkage':
             pkg = args[5]
             if len(args) > 6 and args[6] == '-ssubmodule':
                 pkg = pkg + '_submodule'
