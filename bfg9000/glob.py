@@ -48,7 +48,7 @@ class Glob:
         return repr(self.pattern)
 
     def __eq__(self, rhs):
-        return (type(self) == type(rhs) and self.pattern == rhs.pattern and
+        return (type(self) is type(rhs) and self.pattern == rhs.pattern and
                 self.type == rhs.type)
 
     def __ne__(self, rhs):

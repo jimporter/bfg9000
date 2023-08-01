@@ -97,7 +97,7 @@ class jbos(safe_string):  # Just a Bunch of Strings
             return
 
         for i in bits:
-            same_type = type(i) == type(last)
+            same_type = type(i) is type(last)
             if same_type and isinstance(i, str):
                 last += i
             elif same_type and isinstance(i, literal_types):

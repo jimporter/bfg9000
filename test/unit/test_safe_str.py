@@ -22,7 +22,7 @@ class MySafeStr(safe_str.safe_string):
         self.i = i
 
     def __eq__(self, rhs):
-        return type(self) == type(rhs) and self.i == rhs.i
+        return type(self) is type(rhs) and self.i == rhs.i
 
 
 class TestSafeStr(TestCase):

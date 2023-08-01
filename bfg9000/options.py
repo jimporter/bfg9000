@@ -50,7 +50,7 @@ class option_list:
         self._options[key] = value
 
     def __eq__(self, rhs):
-        return type(self) == type(rhs) and self._options == rhs._options
+        return type(self) is type(rhs) and self._options == rhs._options
 
     def __ne__(self, rhs):
         return not (self == rhs)
@@ -138,7 +138,7 @@ class OptionMeta(type):
         return type.__new__(cls, name, bases, attrs)
 
     def __init__(cls, name, bases, attrs):
-        is_root = not any(type(i) == OptionMeta for i in bases)
+        is_root = not any(type(i) is OptionMeta for i in bases)
         if is_root:
             cls.registry = {}
         else:
@@ -177,7 +177,7 @@ class Option(metaclass=OptionMeta):
         return self == rhs
 
     def __eq__(self, rhs):
-        return type(self) == type(rhs) and all(
+        return type(self) is type(rhs) and all(
             getattr(self, i) == getattr(rhs, i) for i in self.__slots__
         )
 

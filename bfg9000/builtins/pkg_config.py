@@ -38,7 +38,7 @@ class Requirement:
         return self
 
     def __eq__(self, rhs):
-        return (type(self) == type(rhs) and self.name == rhs.name and
+        return (type(self) is type(rhs) and self.name == rhs.name and
                 self.version == rhs.version)
 
     def __ne__(self, rhs):
@@ -72,7 +72,7 @@ class SimpleRequirement:
                         objectify(version, Specifier))
 
     def __eq__(self, rhs):
-        return (type(self) == type(rhs) and self.name == rhs.name and
+        return (type(self) is type(rhs) and self.name == rhs.name and
                 self.version == rhs.version)
 
     def __ne__(self, rhs):

@@ -36,7 +36,7 @@ class syntax_string(safe_str.safe_string):
         self.quoted = quoted
 
     def __eq__(self, rhs):
-        return (type(self) == type(rhs) and self.data == rhs.data and
+        return (type(self) is type(rhs) and self.data == rhs.data and
                 self.syntax == rhs.syntax and self.quoted == rhs.quoted)
 
     def __repr__(self):
@@ -163,7 +163,7 @@ class NamedEntity(Entity):
         return hash(self.name)
 
     def __eq__(self, rhs):
-        return type(self) == type(rhs) and self.name == rhs.name
+        return type(self) is type(rhs) and self.name == rhs.name
 
     def __ne__(self, rhs):
         return not (self == rhs)
@@ -183,7 +183,7 @@ class Pattern(Entity):
         return hash(self.path)
 
     def __eq__(self, rhs):
-        return type(self) == type(rhs) and self.path == rhs.path
+        return type(self) is type(rhs) and self.path == rhs.path
 
     def __ne__(self, rhs):
         return not (self == rhs)

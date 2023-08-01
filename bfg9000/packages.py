@@ -36,7 +36,7 @@ class Package:
         return hash(self.name)
 
     def __eq__(self, rhs):
-        return (type(self) == type(rhs) and self.name == rhs.name and
+        return (type(self) is type(rhs) and self.name == rhs.name and
                 self.format == rhs.format)
 
     def __ne__(self, rhs):
@@ -79,7 +79,7 @@ class Framework:
         return self.name + ',' + self.suffix if self.suffix else self.name
 
     def __eq__(self, rhs):
-        return (type(self) == type(rhs) and self.name == rhs.name and
+        return (type(self) is type(rhs) and self.name == rhs.name and
                 self.suffix == rhs.suffix)
 
     def __ne__(self, rhs):

@@ -36,7 +36,7 @@ class Node(_safe_str.safe_string_ops):
         return hash(self.path)
 
     def __eq__(self, rhs):
-        return type(self) == type(rhs) and self.path == rhs.path
+        return type(self) is type(rhs) and self.path == rhs.path
 
     def __ne__(self, rhs):
         return not (self == rhs)
@@ -330,7 +330,7 @@ class DualUseLibrary(BaseFile):
         return hash(self.shared.path)
 
     def __eq__(self, rhs):
-        return (type(self) == type(rhs) and self.shared == rhs.shared and
+        return (type(self) is type(rhs) and self.shared == rhs.shared and
                 self.static == rhs.static)
 
     def __ne__(self, rhs):
