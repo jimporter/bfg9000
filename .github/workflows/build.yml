@@ -32,9 +32,9 @@ jobs:
           # Clang builds
           - {os: ubuntu-latest, python-version: '3.11',
              extra-tests: [mingw-cross],
-             # Install gfortran-12 and gobjc++-12 since clang will try to link
+             # Install gfortran-13 and gobjc++-13 since clang will try to link
              # to GCC 10 libs and will get confused otherwise.
-             extra-packages: [clang, gfortran-12, gobjc++-12],
+             extra-packages: [clang, gfortran-13, gobjc++-13],
              compiler: clang, backends: [ninja, make], flags: -Wall -Werror}
 
           # Xenial builds (for testing GCJ)
