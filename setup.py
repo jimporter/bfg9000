@@ -162,7 +162,7 @@ setup(
     ),
     extras_require={
         'dev': ['coverage', 'flake8 >= 3.7', 'flake8-quotes', 'lxml',
-                'mike >= 0.3.1', 'mkdocs-bootswatch-classic',
+                'mike >= 2.0.0', 'mkdocs-bootswatch-classic >= 1.0',
                 'mkdocs-macros-plugin', 'shtab', 'stdeb'],
         'test': ['coverage', 'flake8 >= 3.7', 'flake8-quotes', 'lxml',
                  'shtab'],
