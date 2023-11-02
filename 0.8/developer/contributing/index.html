@@ -174,30 +174,26 @@ go about things and don't go down the wrong path to start.</p>
 environment for bfg9000 is to use <code>pip</code> to install an editable version of the
 package. You'll probably also want all the testing dependencies, which you can
 install with the <code>test</code> extra:</p>
-<pre><code class="sh">$ pip install -e '.[test]'
+<pre><code class="language-sh">$ pip install -e '.[test]'
 </code></pre>
-
 <h3 id="running-tests">Running tests<a class="headerlink" href="#running-tests" title="Permanent link">§</a></h3>
 <p>bfg9000 has a suite of tests to ensure that everything works properly. (Well,
 everything that has tests!) As you may expect, you can run these via:</p>
-<pre><code class="sh">$ python setup.py test
+<pre><code class="language-sh">$ python setup.py test
 </code></pre>
-
 <p>If you'd like to run a subset of tests, such as when trying to fix a bug in a
 specific area of the code, you can limit the tests that get run. For instance,
 to run only the tests in <code>test/integration/test_simple.py</code>, you can type:</p>
-<pre><code class="sh">$ python setup.py test -s test.integration.test_simple
+<pre><code class="language-sh">$ python setup.py test -s test.integration.test_simple
 </code></pre>
-
 <p>To generate a coverage report, simply replace <code>test</code> with <code>coverage</code>, and build
 the report in the format you want, e.g.:</p>
-<pre><code class="sh">$ python setup.py coverage &amp;&amp; coverage html
+<pre><code class="language-sh">$ python setup.py coverage &amp;&amp; coverage html
 </code></pre>
-
 <h3 id="linting-code">Linting code<a class="headerlink" href="#linting-code" title="Permanent link">§</a></h3>
 <p>bfg9000 uses <a href="https://flake8.readthedocs.org/en/latest/">flake8</a> for linting. You can check this with the <code>lint</code>
 command like so:</p>
-<pre><code class="sh">$ python setup.py lint
+<pre><code class="language-sh">$ python setup.py lint
 </code></pre></div>
         </div>
 
@@ -211,8 +207,8 @@ command like so:</p>
                 shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
         </script>
         <script src="../../js/base.js" defer></script>
-        <script src="../../js/version-select.js" defer></script>
         <script src="../../search/main.js" defer></script>
+        <script src="../../js/version-select.js" defer></script>
 
         <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
     <div class="modal-dialog">

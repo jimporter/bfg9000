@@ -182,9 +182,8 @@ bfg9000 supports building code written in the following languages:</p>
 <h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">§</a></h2>
 <p>bfg9000 uses <a href="https://pythonhosted.org/setuptools/">setuptools</a>, so installation is much the same as any
 other Python package:</p>
-<pre><code class="sh">$ pip install bfg9000
+<pre><code class="language-sh">$ pip install bfg9000
 </code></pre>
-
 <p>If you've downloaded bfg already, just run <code>pip install .</code> from the source
 directory. (Equivalently, you can run <code>python setup.py install</code>.) From there,
 you can start using bfg to build your software!</p>
@@ -208,9 +207,8 @@ tools to be installed on your system:</p>
 <h3 id="installing-msbuild-support">Installing MSBuild support<a class="headerlink" href="#installing-msbuild-support" title="Permanent link">§</a></h3>
 <p>Since many users don't need it, MSBuild support is an optional feature. To
 install all the dependencies required for MSBuild, you can run the following:</p>
-<pre><code class="sh">$ pip install bfg9000[msbuild]
+<pre><code class="language-sh">$ pip install bfg9000[msbuild]
 </code></pre>
-
 <h2 id="editor-integration">Editor integration<a class="headerlink" href="#editor-integration" title="Permanent link">§</a></h2>
 <p>Since bfg9000 scripts are just Python scripts with some extra built-in
 functions, it should be easy to get syntax highlighting for bfg9000 scripts in
@@ -221,9 +219,8 @@ users can do this by installing the <a href="https://github.com/jimporter/bfg900
 <p>If you want to treat bfg9000 scripts as bfg9000 when possible, but fall back to
 Python otherwise, you can insert the following as the first line of your
 scripts:</p>
-<pre><code class="python"># -*- mode: python; mode: bfg9000 -*-
+<pre><code class="language-python"># -*- mode: python; mode: bfg9000 -*-
 </code></pre>
-
 <p>Emacs (and other editors that understand Emacs' file-local variables) will use
 the <em>last</em> <code>mode</code> available to the editor.</p></div>
         </div>
@@ -238,8 +235,8 @@ the <em>last</em> <code>mode</code> available to the editor.</p></div>
                 shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
         </script>
         <script src="../../js/base.js" defer></script>
-        <script src="../../js/version-select.js" defer></script>
         <script src="../../search/main.js" defer></script>
+        <script src="../../js/version-select.js" defer></script>
 
         <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
     <div class="modal-dialog">

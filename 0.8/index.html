@@ -184,17 +184,15 @@ many helpful <a href="user/features/">features</a>.</p>
 <hr />
 <h2 id="a-brief-example">A brief example<a class="headerlink" href="#a-brief-example" title="Permanent link">§</a></h2>
 <p>You can't get much simpler than the simplest <code>build.bfg</code> file:</p>
-<pre><code class="python">executable('simple', files=['simple.cpp'])
+<pre><code class="language-python">executable('simple', files=['simple.cpp'])
 </code></pre>
-
 <p>To build this executable, we need to create the actual build files and then
 run them:</p>
-<pre><code class="sh">$ cd /path/to/src/
+<pre><code class="language-sh">$ cd /path/to/src/
 $ 9k build/
 $ cd build/
 $ ninja
 </code></pre>
-
 <p>From there, you can run your newly-created executable: <code>./simple</code>. Hooray!</p>
 <p>For further examples, please see the <a href="https://github.com/jimporter/bfg9000/tree/master/examples"><code>examples/</code></a> subdirectory.</p></div>
         </div>
@@ -209,8 +207,8 @@ $ ninja
                 shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
         </script>
         <script src="js/base.js" defer></script>
-        <script src="js/version-select.js" defer></script>
         <script src="search/main.js" defer></script>
+        <script src="js/version-select.js" defer></script>
 
         <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
     <div class="modal-dialog">
@@ -280,6 +278,6 @@ $ ninja
 </html>
 
 <!--
-MkDocs version : 1.4.3
-Build Date UTC : 2023-07-06 18:02:29.507368+00:00
+MkDocs version : 1.5.3
+Build Date UTC : 2023-11-02 22:54:45.270590+00:00
 -->

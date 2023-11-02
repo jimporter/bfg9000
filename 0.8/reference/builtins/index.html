@@ -210,9 +210,8 @@ object; the string will automatically be converted to a file object of the
 appropriate type. However, in some cases, you may wish to explicitly create a
 file object. This can be useful, for instance, when running commands that take a
 source file as an argument, e.g. in the following snippet:</p>
-<pre><code class="python">command('script', cmd=[source_file('script.py')])
+<pre><code class="language-python">command('script', cmd=[source_file('script.py')])
 </code></pre>
-
 <p>Using <a href="#source_file"><em>source_file</em></a> here allows you to specify that the file is
 a source code file found in the <em>source directory</em>, rather than the build
 directory. Further, since the file is a Python script, it can be executed as
@@ -492,13 +491,12 @@ equivalent to calling <a href="#object_file"><em>object_file</em></a> for each e
 it using the filename of one of the source files listed in <em>files</em>. This makes
 it easy to extract a single object file to use in other places, e.g. test code.
 For example:</p>
-<pre><code class="python">objs = object_files(['foo.cpp', 'bar.cpp'])
+<pre><code class="language-python">objs = object_files(['foo.cpp', 'bar.cpp'])
 release_exe = executable('release', objs)
 
 foo_obj = objs['foo.cpp']
 test_exe = executable('test', ['test.cpp', foo_obj])
 </code></pre>
-
 <h3 id="precompiled_header">precompiled_header([<em>name</em>], [<em>file</em>, *, ..., [<em>extra_deps</em>], [<em>description</em>]])<a class="headerlink" href="#precompiled_header" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Create a build step that generates a precompiled header, which can be used to
@@ -724,14 +722,13 @@ refer to the input files (defined by <em>files</em>).</p>
 <a href="#command"><em>command</em></a>, this will create a reference to the inputs or outputs of
 the step. Placeholders can be indexed or sliced just like ordinary Python lists,
 and can also be combined with strings to add prefixes and suffixes:</p>
-<pre><code class="python">script = source_file('script.py')
+<pre><code class="language-python">script = source_file('script.py')
 
 # Roughly equivalent to `python script.py -ifoo.txt -sbar.txt -squux.txt`
 command('foo', cmd=[
     script, '-i' + command.input[0], '-s' + command.input[1:]
 ], files=['foo.txt', 'bar.txt', 'quux.txt'])
 </code></pre>
-
 <h2 id="semantic-options">Semantic options<a class="headerlink" href="#semantic-options" title="Permanent link">§</a></h2>
 <p>Semantic options are a collection of objects that allow a build to define
 options in a tool-agnostic way. These options will automatically be converted to
@@ -744,9 +741,8 @@ release variants of the runtime.</p>
 <p>Create a preprocessor macro named <em>name</em> and with an optional value <em>value</em>.
 Note that if you'd like the value to be a string literal, you need to escape the
 string like so:</p>
-<pre><code class="python">opts.define('MY_MACRO', '&quot;This is a string, isn\'t it?&quot;')
+<pre><code class="language-python">opts.define('MY_MACRO', '&quot;This is a string, isn\'t it?&quot;')
 </code></pre>
-
 <h3 id="opts-entry_point">opts.entry_point(<em>value</em>)<a class="headerlink" href="#opts-entry_point" title="Permanent link">§</a></h3>
 <p>Set the symbol to use for beginning program execution. This is equivalent to
 passing <code>entry_point=value</code> to <a href="#executable"><em>executable</em></a> or
@@ -1409,8 +1405,8 @@ specifier.</p></div>
                 shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
         </script>
         <script src="../../js/base.js" defer></script>
-        <script src="../../js/version-select.js" defer></script>
         <script src="../../search/main.js" defer></script>
+        <script src="../../js/version-select.js" defer></script>
 
         <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
     <div class="modal-dialog">
