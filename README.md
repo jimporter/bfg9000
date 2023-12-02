@@ -75,7 +75,7 @@ This project is licensed under the [BSD 3-clause license](LICENSE).
 [pypi-link]: https://pypi.python.org/pypi/bfg9000
 [documentation-image]: https://img.shields.io/badge/docs-bfg9000-blue.svg
 [documentation-link]: https://jimporter.github.io/bfg9000/
-[gh-actions-image]: https://github.com/jimporter/bfg9000/workflows/build/badge.svg
+[gh-actions-image]: https://github.com/jimporter/bfg9000/actions/workflows/build.yml/badge.svg
 [gh-actions-link]: https://github.com/jimporter/bfg9000/actions?query=branch%3Amaster+workflow%3Abuild
 [appveyor-image]: https://ci.appveyor.com/api/projects/status/hxvbggf6exq8i2k6/branch/master?svg=true
 [appveyor-link]: https://ci.appveyor.com/project/jimporter/bfg9000/branch/master
