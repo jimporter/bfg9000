@@ -75,11 +75,10 @@ class TestReloadException(TestCase):
         self.logger = log.getLogger('bfg9000.test.unit')
         self.logger.propagate = False
         log._init_logging(self.logger, debug=False, stream=self.stream)
-        self.patch_logger = mock.patch('bfg9000.driver.logger', self.logger)
-        self.patch_logger.start()
 
-    def tearDown(self):
-        self.patch_logger.stop()
+        patch_logger = mock.patch('bfg9000.driver.logger', self.logger)
+        patch_logger.start()
+        self.addCleanup(patch_logger.stop)
 
     def test_message(self):
         try:

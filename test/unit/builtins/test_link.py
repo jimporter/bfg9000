@@ -1,16 +1,19 @@
 from unittest import mock
 
+from .. import make_env
 from .common import AttrDict, BuiltinTest
+
+from bfg9000 import file_types, options as opts
 from bfg9000.backends.make import syntax as make
 from bfg9000.backends.msbuild.solution import Solution
 from bfg9000.backends.ninja import syntax as ninja
 from bfg9000.builtins import (compile, default, link, packages,  # noqa: F401
                               project)
-from bfg9000 import file_types, options as opts
 from bfg9000.environment import LibraryMode
 from bfg9000.iterutils import listify, unlistify
 from bfg9000.packages import CommonPackage
 from bfg9000.path import Path, Root
+from bfg9000.tools.msvc import MsvcBuilder
 
 
 class LinkTest(BuiltinTest):
@@ -938,18 +941,14 @@ class TestNinjaBackend(BuiltinTest):
 
 class TestMsbuildBackend(BuiltinTest):
     def setUp(self):
-        from .. import make_env
         self.env = make_env('winnt', clear_variables=True,
                             variables={'CXX': 'nonexist'})
         self.build, self.context = self._make_context(self.env)
 
-        from bfg9000.tools.msvc import MsvcBuilder
-        self.patch_builder = mock.patch('bfg9000.tools.c_family._builders',
-                                        (MsvcBuilder,))
-        self.patch_builder.start()
-
-    def tearDown(self):
-        self.patch_builder.stop()
+        patch_builder = mock.patch('bfg9000.tools.c_family._builders',
+                                   (MsvcBuilder,))
+        patch_builder.start()
+        self.addCleanup(patch_builder.stop)
 
     def assertSubdict(self, actual, expected):
         subdict = {k: v for k, v in actual.items() if k in expected}
