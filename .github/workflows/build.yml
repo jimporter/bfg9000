@@ -99,7 +99,7 @@ jobs:
       CPPFLAGS: ${{ matrix.flags }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Cache Boost binaries
         if: startsWith(matrix.os, 'windows-') && matrix.boost-version
         uses: actions/cache@v3
@@ -112,7 +112,7 @@ jobs:
             matrix.compiler }}-python-${{ matrix.python-version }}-${{
             hashFiles('.github/workflows/build.yml') }}
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install Python dependencies
@@ -237,7 +237,7 @@ jobs:
           python setup.py coverage -q
           coverage xml
       - name: Upload coverage
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           files: ./coverage.xml
   build-cygwin:
@@ -247,7 +247,7 @@ jobs:
       CYGCACHE: C:\cygwin\var\cache\setup
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install Cygwin
         shell: cmd
         run: >
@@ -274,16 +274,16 @@ jobs:
         run: |
           copy C:\cygwin\home\runneradmin\bfg9000\coverage.xml .
       - name: Upload coverage
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           files: ./coverage.xml
   bdist-wheel:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up Python 3.11
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
       - name: Test bdist_wheel
@@ -296,9 +296,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up Python 3.11
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
       - name: Install dependencies
