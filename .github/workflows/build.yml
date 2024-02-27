@@ -237,7 +237,7 @@ jobs:
           python setup.py coverage -q
           coverage xml
       - name: Upload coverage
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v3
         with:
           files: ./coverage.xml
   build-cygwin:
@@ -274,7 +274,7 @@ jobs:
         run: |
           copy C:\cygwin\home\runneradmin\bfg9000\coverage.xml .
       - name: Upload coverage
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v3
         with:
           files: ./coverage.xml
   bdist-wheel:
