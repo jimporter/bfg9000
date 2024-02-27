@@ -23,7 +23,7 @@ jobs:
              backends: [ninja, make, msbuild], flags: /WX}
           - {os: macos-latest, skipped-tests: [scala], backends: [ninja, make],
              flags: -Wall -Werror -Wno-deprecated-declarations
-               -DGL_SILENCE_DEPRECATION}
+               -DGL_SILENCE_DEPRECATION, cxxflags: -std=c++11}
 
           # Python 3.6 builds
           - {os: ubuntu-20.04, python-version: '3.6', compiler: default,
@@ -91,6 +91,7 @@ jobs:
       BFG_EXTRA_TESTS: ${{ join(matrix.extra-tests, ' ') }}
       BFG_SKIPPED_TESTS: ${{ join(matrix.skipped-tests, ' ') }}
       CPPFLAGS: ${{ matrix.flags }}
+      CXXFLAGS: ${{ matrix.cxxflags }}
 
     steps:
       - uses: actions/checkout@v4
