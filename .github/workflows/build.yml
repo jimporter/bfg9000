@@ -84,6 +84,9 @@ jobs:
              qt-version: '5.15.2', qt-arch: 'win64_mingw81',
              skipped-tests: [boost, fortran, objc, pch, scala],
              backends: [ninja, make], flags: -Wall -Werror}
+        exclude:
+          - os: macos-latest
+            python-version: '3.7'
       fail-fast: false
     env:
       GCJ: gcj-4.9
@@ -207,10 +210,12 @@ jobs:
       - name: Install macOS dependencies
         if: startsWith(matrix.os, 'macos-')
         run: |
-          brew install bison boost ninja pkg-config qt5
+          brew install bison boost libogg ninja pkg-config qt5
           brew link qt5 --force
           echo "FC=gfortran-11" >> ${GITHUB_ENV}
-          echo "YACC=/usr/local/opt/bison/bin/bison" >> ${GITHUB_ENV}
+          echo "YACC=/opt/homebrew/opt/bison/bin/bison" >> ${GITHUB_ENV}
+          echo "CPATH=/opt/homebrew/include" >> ${GITHUB_ENV}
+          echo "LIBRARY_PATH=/opt/homebrew/lib" >> ${GITHUB_ENV}
       - name: Set up clang
         if: matrix.compiler == 'clang'
         run: |
