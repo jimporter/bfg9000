@@ -17,7 +17,7 @@ jobs:
         include:
           - {os: ubuntu-latest, extra-tests: [mingw-cross],
              backends: [ninja, make], flags: -Wall -Werror}
-          - {os: windows-latest, msvc-version: '14.3', win-sdk: '10.0.20348.0',
+          - {os: windows-latest, msvc-version: '14.4', win-sdk: '10.0.20348.0',
              boost-version: '1.80.0', qt-version: '5.15.2',
              skipped-tests: [fortran, objc, scala],
              backends: [ninja, make, msbuild], flags: /WX}
@@ -66,13 +66,13 @@ jobs:
 
           # VS 2022 x86 builds
           - {os: windows-latest, python-version: '3.11', compiler: default-x86,
-             msvc-version: '14.3', msvc-arch: 'x86', win-sdk: '10.0.20348.0',
+             msvc-version: '14.4', msvc-arch: 'x86', win-sdk: '10.0.20348.0',
              boost-version: '1.80.0', skipped-tests: [fortran, objc, qt, scala],
              backends: [ninja, make, msbuild], flags: /WX}
 
           # VS 2022 clang-cl builds
           - {os: windows-latest, python-version: '3.11', compiler: clang-cl,
-             msvc-version: '14.3', win-sdk: '10.0.20348.0',
+             msvc-version: '14.4', win-sdk: '10.0.20348.0',
              boost-version: '1.80.0', qt-version: '5.15.2',
              skipped-tests: [boost, fortran, objc, scala],
              backends: [ninja, make], flags: /WX -Wno-microsoft-include
@@ -80,7 +80,7 @@ jobs:
 
           # MinGW builds
           - {os: windows-latest, python-version: '3.11', compiler: mingw,
-             msvc-version: '14.3', win-sdk: '10.0.20348.0',
+             msvc-version: '14.4', win-sdk: '10.0.20348.0',
              qt-version: '5.15.2', qt-arch: 'win64_mingw81',
              skipped-tests: [boost, fortran, objc, pch, scala],
              backends: [ninja, make], flags: -Wall -Werror}
@@ -133,7 +133,7 @@ jobs:
         if: startsWith(matrix.os, 'windows-') && matrix.boost-version
         run: |
           ${boostroot} = "C:\boost-${{ matrix.boost-version }}"
-          ${msvcver} = "${{ matrix.msvc-version }}" -replace '(\d+\.\d).*','$1'
+          ${msvcver} = "${{ matrix.msvc-version }}" -replace '14.4','14.3'
           ${arch} = if ("${{ matrix.msvc-arch }}" -eq "x86") {"32"} else {"64"}
           if ("${{ steps.cache-boost.outputs.cache-hit }}" -ne "true" ) {
             ${boost_ver} = "${{ matrix.boost-version }}" -replace '\.','_'
@@ -190,7 +190,7 @@ jobs:
           7z x -y libogg-1.3.5.zip
           ${arch} = "${{ matrix.msvc-arch || 'x64' }}"
           if(${arch} -eq 'x86') { ${arch} = "Win32" }
-          ${toolset} = "${{ matrix.msvc-version }}" -replace '(\d+)\.(\d).*','$1$2'
+          ${toolset} = "${{ matrix.msvc-version }}" -replace '14.4','14.3' -replace '(\d+)\.(\d+).*','$1$2'
           msbuild libogg-1.3.5\win32\VS2015\libogg.sln /p:Configuration=ReleaseDLL /p:Platform=${arch} /p:PlatformToolset=v${toolset} /p:WindowsTargetPlatformVersion=${{ matrix.win-sdk }}
           mkdir lib
           ${liboggbase} = "libogg-1.3.5\win32\VS2015\${arch}\ReleaseDLL"

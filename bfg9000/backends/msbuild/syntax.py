@@ -1,5 +1,6 @@
 import ntpath
 import os
+import re
 from collections import defaultdict
 from enum import Enum
 from itertools import chain
@@ -170,6 +171,12 @@ class VcxProject(Project):
         'dynamic-debug': 'MultiThreadedDebugDLL',
     }
 
+    # By default, toolsets map the compiler version from MM.N to vMMN, but 14.4
+    # breaks that convention.
+    _toolsets = {
+        '14.4': 'v143',
+    }
+
     def __init__(self, env, name, mode='Application', configuration=None,
                  output_file=None, files=None, objs=None, compile_options=None,
                  link_options=None, dependencies=None):
@@ -181,11 +188,17 @@ class VcxProject(Project):
         self.compile_options = compile_options or {}
         self.link_options = link_options or {}
 
-        version = env.getvar(
-            'VSCMD_ARG_VCVARS_VER',
-            env.getvar('VCTOOLSVERSION', self.version)
+        version = env.getvar('VSCMD_ARG_VCVARS_VER')
+        if version is None:
+            m = re.match(r'(\d+\.\d)', env.getvar('VCTOOLSVERSION',
+                                                  self.version))
+            if not m:
+                raise ValueError('unable to guess toolset version; ' +
+                                 'run from a Visual Studio prompt?')
+            version = m.group(1)
+        self.toolset = self._toolsets.get(
+            version, 'v' + version.replace('.', '')
         )
-        self.toolset = 'v' + version.replace('.', '')[0:3]
 
         self.windows_sdk = (env.getvar('WINDOWSSDKVERSION', '')
                                .replace('\\', '') or None)
