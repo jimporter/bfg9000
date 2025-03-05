@@ -11,7 +11,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: ['3.7', '3.8', '3.9', '3.10', '3.11']
+        python-version: ['3.9', '3.10', '3.11']
         compiler: [default]
 
         include:
@@ -25,8 +25,10 @@ jobs:
              flags: -Wall -Werror -Wno-deprecated-declarations
                -DGL_SILENCE_DEPRECATION, cxxflags: -std=c++11}
 
-          # Python 3.6 builds
-          - {os: ubuntu-20.04, python-version: '3.6', compiler: default,
+          # Old Python builds
+          - {os: ubuntu-22.04, python-version: '3.7', compiler: default,
+             backends: [ninja, make], flags: -Wall -Werror}
+          - {os: ubuntu-24.04, python-version: '3.8', compiler: default,
              backends: [ninja, make], flags: -Wall -Werror}
 
           # Clang builds
