@@ -4,7 +4,7 @@ from enum import Enum
 
 from .. import iterutils
 from .list import shell_list  # noqa: F401
-from ..path import BasePath, Path
+from ..path import BasePath, Path, issemiabs
 from ..platforms.host import platform_info
 from ..safe_str import jbos, safe_str
 
@@ -48,7 +48,7 @@ def which(names, env=os.environ, base_dirs=None, resolve=False,
         name = listify(name)
         check = (name[0].string(base_dirs) if isinstance(name[0], Path)
                  else name[0])
-        if os.path.isabs(check):
+        if issemiabs(check):
             fullpaths = [check]
         else:
             search = ['.'] if os.path.dirname(check) else paths

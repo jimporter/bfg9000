@@ -1,4 +1,5 @@
 import functools
+import ntpath
 import os
 from contextlib import contextmanager
 
@@ -53,15 +54,27 @@ def uniquetrees(paths):
 def _wrap_ospath(fn):
     @functools.wraps(fn)
     def wrapper(path, variables=None):
-        return fn(path.string(variables))
+        if isinstance(path, BasePath):
+            path = path.string(variables)
+        return fn(path)
 
     return wrapper
+
+
+def _issemiabs(path):
+    # Like `isabs`, but returns True for drive-relative absolute paths on
+    # Windows. (This is how `isabs` worked prior to Python 3.13.)
+    if ( os.path is ntpath and len(path) and
+         path[0] in (ntpath.sep, ntpath.altsep) ):
+        return True
+    return os.path.isabs(path)
 
 
 exists = _wrap_ospath(os.path.exists)
 isdir = _wrap_ospath(os.path.isdir)
 isfile = _wrap_ospath(os.path.isfile)
 islink = _wrap_ospath(os.path.islink)
+issemiabs = _wrap_ospath(_issemiabs)
 
 
 def samefile(path1, path2, variables=None):

@@ -91,13 +91,13 @@ class BasePath(safe_str.safe_string):
     def __normalize(cls, path, expand_user=False):
         if expand_user:
             path = os.path.expanduser(path)
-        drive, path = ntpath.splitdrive(path)
+        drive, localpath = ntpath.splitdrive(path)
         if drive and not ntpath.isabs(path):
             raise ValueError('relative paths with drives not supported')
 
         drive = drive.replace('\\', '/')
-        path, isdir = cls.__normpath(path)
-        return drive, path, isdir
+        localpath, isdir = cls.__normpath(localpath)
+        return drive, localpath, isdir
 
     @classmethod
     def __join(cls, path1, path2):
