@@ -135,14 +135,13 @@ setup(
     author='Jim Porter',
     author_email='itsjimporter@gmail.com',
     license='BSD-3-Clause',
+    license_files=['LICENSE'],
 
     classifiers=[
         'Development Status :: 3 - Alpha',
 
         'Intended Audience :: Developers',
-
         'Topic :: Software Development :: Build Tools',
-        'License :: OSI Approved :: BSD License',
 
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.7',
