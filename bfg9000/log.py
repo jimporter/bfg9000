@@ -251,9 +251,7 @@ def debug(*args, show_stack=True):
 
 
 def _showwarning(message, category, filename, lineno, file=None, line=None):
-    # Python 3.6 changes how stacklevel is counted.
-    stacklevel = 2 if sys.version_info >= (3, 6) else 1
-    log_stack(WARNING, message, stacklevel=stacklevel)
+    log_stack(WARNING, message, stacklevel=2)
 
 
 warnings.showwarning = _showwarning

@@ -1,9 +1,18 @@
 import os
-import sys
+import tempfile
 from os.path import join as pjoin
 
 from . import *
+from bfg9000.backends import list_backends
 from bfg9000.versioning import SpecifierSet
+
+try:
+    with tempfile.NamedTemporaryFile() as f:
+        os.symlink(f.name, 'symlink')
+        os.remove('symlink')
+    os_supports_symlink = True
+except Exception:
+    os_supports_symlink = False
 
 
 class TestCopyFile(IntegrationTest):
@@ -30,6 +39,7 @@ class TestCopyFile(IntegrationTest):
                 pjoin('dir', 'data.txt'), pjoin(self.srcdir, 'dir', 'data.txt')
             ))
 
+    @skip_if(not os_supports_symlink, 'no OS support for symlinks')
     def test_symlink(self):
         self.configure(extra_args=['--mode=symlink'])
         self.build(executable('simple'))
@@ -38,11 +48,9 @@ class TestCopyFile(IntegrationTest):
         os.chdir(path)
 
         self.assertOutput([exe], 'Hello from a file!\n')
-        supports_symlink = (env.backend != 'msbuild' or (
-            env.backend_version and env.backend_version in SpecifierSet('>=15')
-        ))
-        if ( env.host_platform.family == 'windows' and sys.version[0] == 2 and
-             supports_symlink ):
+
+        if ( self.backend != 'msbuild' or
+             list_backends()[self.backend].version() in SpecifierSet('>=15') ):
             self.assertTrue(os.path.islink(pjoin('dir', 'data.txt')))
 
     def test_hardlink(self):
