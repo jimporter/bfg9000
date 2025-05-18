@@ -6,6 +6,7 @@ import unittest
 from collections import namedtuple
 
 from .. import *
+from ..parameterize import ParameterizedTestCase
 
 from bfg9000.backends import list_backends
 from bfg9000.iterutils import listify
@@ -57,14 +58,14 @@ def cleandir(path, recreate=True):
         os.makedirs(path)
 
 
-def skip_if_backend(backend, hide=False):
+def skip_if_backend(backend):
     return skip_pred(lambda x: x.backend == backend,
-                     'not supported for backend "{}"'.format(backend), hide)
+                     'not supported for backend "{}"'.format(backend))
 
 
-def only_if_backend(backend, hide=False):
+def only_if_backend(backend):
     return skip_pred(lambda x: x.backend != backend,
-                     'only supported for backend "{}"'.format(backend), hide)
+                     'only supported for backend "{}"'.format(backend))
 
 
 class SubprocessError(unittest.TestCase.failureException):
@@ -154,17 +155,13 @@ class SubprocessTestCase(TestCase):
 
 class BasicIntegrationTest(SubprocessTestCase):
     def __init__(self, srcdir, *args, install=False, configure=True,
-                 stage_src=False, backend=None, env=None, extra_env=None,
+                 stage_src=False, env=None, extra_env=None,
                  extra_args=None, **kwargs):
+        super().__init__(*args, **kwargs)
         self._configure = configure
-        self.backend = backend
         self.env = env
         self.extra_env = extra_env
         self.extra_args = extra_args or []
-
-        super().__init__(*args, **kwargs)
-        if self.backend is None:
-            return
 
         srcname = os.path.basename(srcdir)
         self.srcdir = os.path.join(test_data_dir, srcdir)
@@ -196,13 +193,6 @@ class BasicIntegrationTest(SubprocessTestCase):
     @property
     def builddir(self):
         return self._make_builddir(self.srcdir)
-
-    def parameterize(self):
-        return ([] if self._hideTest() else
-                [self.__class__(backend='', *self._args, **self._kwargs)])
-
-    def shortDescription(self):
-        return self.backend
 
     def setUp(self):
         if self._configure:
@@ -271,9 +261,9 @@ class BasicIntegrationTest(SubprocessTestCase):
         time.sleep(t)
 
 
-class IntegrationTest(BasicIntegrationTest):
-    def parameterize(self):
-        return parameterize_tests(self, backend=backends)
+class IntegrationTest(BasicIntegrationTest, ParameterizedTestCase,
+                      params=backends, dest='backend'):
+    pass
 
 
 def output_file(name):

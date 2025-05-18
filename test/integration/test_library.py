@@ -27,7 +27,7 @@ class TestLibrary(IntegrationTest):
         self.assertNotExists(shared_library('library'))
 
     # Dual-use libraries collide on MSVC.
-    @skip_if(is_msvc, hide=True)
+    @skip_if(is_msvc)
     def test_dual(self):
         self.configure(extra_args=['--enable-shared', '--enable-static'])
         self.build()
@@ -131,7 +131,7 @@ class TestDualUseLibrary(IntegrationTest):
             self.assertExists(static_library(i))
 
     # Dual-use libraries collide on MSVC.
-    @skip_if(is_msvc, hide=True)
+    @skip_if(is_msvc)
     def test_dual(self):
         self.configure(extra_args=['--enable-shared', '--enable-static'])
         self.build()
@@ -143,7 +143,7 @@ class TestDualUseLibrary(IntegrationTest):
             self.assertNotExists(static_library(i))
 
     # Dual-use libraries collide on MSVC.
-    @skip_if(is_msvc, hide=True)
+    @skip_if(is_msvc)
     def test_dual_shared(self):
         self.configure(extra_args=['--enable-shared', '--enable-static'])
         self.build(shared_library('outer'))
@@ -154,7 +154,7 @@ class TestDualUseLibrary(IntegrationTest):
             self.assertNotExists(static_library(i))
 
     # Dual-use libraries collide on MSVC.
-    @skip_if(is_msvc, hide=True)
+    @skip_if(is_msvc)
     def test_dual_static(self):
         self.configure(extra_args=['--enable-shared', '--enable-static'])
         self.build(static_library('outer'))
@@ -165,7 +165,7 @@ class TestDualUseLibrary(IntegrationTest):
             self.assertExists(static_library(i))
 
     # Dual-use libraries collide on MSVC.
-    @skip_if(is_msvc, hide=True)
+    @skip_if(is_msvc)
     @skip_if_backend('msbuild')
     def test_dual_install(self):
         self.configure(extra_args=['--enable-shared', '--enable-static'] +
@@ -179,7 +179,7 @@ class TestDualUseLibrary(IntegrationTest):
         ))
 
     # Dual-use libraries collide on MSVC.
-    @skip_if(is_msvc, hide=True)
+    @skip_if(is_msvc)
     @skip_if_backend('msbuild')
     def test_dual_install_libs(self):
         self.configure(extra_args=['--enable-shared', '--enable-static',
@@ -208,7 +208,7 @@ class TestLibraryDefs(IntegrationTest):
 
 
 # No versioned libraries on Windows.
-@skip_if(env.target_platform.family == 'windows', hide=True)
+@skip_if(env.target_platform.family == 'windows')
 class TestVersionedLibrary(IntegrationTest):
     def __init__(self, *args, **kwargs):
         super().__init__('versioned_library', install=True, *args, **kwargs)
@@ -236,7 +236,7 @@ class TestVersionedLibrary(IntegrationTest):
 
 
 # No versioned libraries on Windows.
-@skip_if(env.target_platform.family == 'windows', hide=True)
+@skip_if(env.target_platform.family == 'windows')
 class TestInstallVersionedLibrary(IntegrationTest):
     def __init__(self, *args, **kwargs):
         super().__init__('install_versioned_library', install=True, *args,

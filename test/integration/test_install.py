@@ -130,7 +130,7 @@ class TestDestDir(IntegrationTest):
         self.build('uninstall')
         self.assertDirectory(self.destdir + self.installdir, [])
 
-    @only_if_backend('make', hide=True)
+    @only_if_backend('make')
     def test_install_override_destdir(self):
         self.configure()
         self.build('install', extra_args=['DESTDIR={}'.format(self.destdir)])

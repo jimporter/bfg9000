@@ -15,7 +15,7 @@ class TestFilesWithSpaces(IntegrationTest):
         self.build(executable('another file'))
         self.assertOutput([executable('another file')], 'hello from sub dir\n')
 
-    @only_if_backend('make', hide=True)
+    @only_if_backend('make')
     def test_dir_sentinels(self):
         self.build(executable('another file'))
         self.assertTrue(os.path.isfile('another file.int/sub dir/.dir'))

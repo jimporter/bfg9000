@@ -4,6 +4,7 @@ import posixpath
 import unittest.mock
 
 from .. import *
+from ..parameterize import ParameterizedTestCase
 
 from bfg9000.path import Path
 from bfg9000.platforms.posix import PosixPath
@@ -19,14 +20,14 @@ def mock_open(*args, **kwargs):
     return mo
 
 
-def skip_if_platform(platform, hide=False):
+def skip_if_platform(platform):
     return skip_pred(lambda x: x.platform_name == platform,
-                     'not supported for platform "{}"'.format(platform), hide)
+                     'not supported for platform "{}"'.format(platform))
 
 
-def only_if_platform(platform, hide=False):
+def only_if_platform(platform):
     return skip_pred(lambda x: x.platform_name != platform,
-                     'only supported for platform "{}"'.format(platform), hide)
+                     'only supported for platform "{}"'.format(platform))
 
 
 class AttrDict:
@@ -35,17 +36,11 @@ class AttrDict:
             setattr(self, k, v)
 
 
-class CrossPlatformTestCase(TestCase):
-    _platforms = ['linux', 'winnt', 'macos']
-
-    def __init__(self, *args, clear_variables=False, variables={},
-                 platform_name=None, **kwargs):
-        self.platform_name = platform_name
-
+class CrossPlatformTestCase(ParameterizedTestCase,
+                            params=['linux', 'winnt', 'macos'],
+                            dest='platform_name'):
+    def __init__(self, *args, clear_variables=False, variables={}, **kwargs):
         super().__init__(*args, **kwargs)
-        if self.platform_name is None:
-            return
-
         self.env = make_env(platform=self.platform_name,
                             clear_variables=clear_variables,
                             variables=variables)
@@ -54,28 +49,11 @@ class CrossPlatformTestCase(TestCase):
     def Path(self):
         return self.env.host_platform.Path
 
-    def shortDescription(self):
-        return self.platform_name
 
-    def parameterize(self):
-        return parameterize_tests(self, platform_name=self._platforms)
-
-
-class PathTestCase(TestCase):
-    _path_infos = [
-        (Path, os.path, 'native'),
-        (PosixPath, posixpath, 'posix'),
-        (WindowsPath, ntpath, 'windows'),
-    ]
-
-    def __init__(self, *args, path_info=None, **kwargs):
-        super().__init__(*args, **kwargs)
-        if path_info is None:
-            return
-        self.Path, self.ospath, self._desc = path_info
-
-    def shortDescription(self):
-        return self._desc
-
-    def parameterize(self):
-        return parameterize_tests(self, path_info=self._path_infos)
+class PathTestCase(ParameterizedTestCase,
+                   params={
+                       'native': (Path, os.path),
+                       'posix': (PosixPath, posixpath),
+                       'windows': (WindowsPath, ntpath),
+                   }, dest=('Path', 'ospath')):
+    pass

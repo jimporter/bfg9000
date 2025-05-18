@@ -1,7 +1,7 @@
 from . import *
 
 
-@skip_if(env.target_platform.family == 'windows', hide=True)
+@skip_if(env.target_platform.family == 'windows')
 class TestPthread(IntegrationTest):
     def __init__(self, *args, **kwargs):
         super().__init__('pthread', *args, **kwargs)

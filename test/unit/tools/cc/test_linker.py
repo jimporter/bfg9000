@@ -390,7 +390,7 @@ class TestCcLinker(CrossPlatformTestCase):
     def test_lib_flags_ignored(self):
         self.assertEqual(self.linker.lib_flags(opts.option_list('-Lfoo')), [])
 
-    @only_if_platform('linux', hide=True)
+    @only_if_platform('linux')
     def test_post_installed_linux(self):
         output = self._get_output_file()
         shared = SharedLibrary(self.Path('libfoo.so'), 'native')
@@ -437,7 +437,7 @@ class TestCcLinker(CrossPlatformTestCase):
                 installify(output).path
             ])
 
-    @only_if_platform('macos', hide=True)
+    @only_if_platform('macos')
     def test_post_installed_macos(self):
         output = self._get_output_file()
         installed = installify(output).path

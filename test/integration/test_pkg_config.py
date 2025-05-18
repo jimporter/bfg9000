@@ -91,7 +91,7 @@ class TestPkgConfig(PkgConfigTest):
             self.assertNotExists(static_library('hello'))
 
     # Dual-use libraries collide on MSVC.
-    @skip_if(is_msvc, hide=True)
+    @skip_if(is_msvc)
     def test_configure_dual(self):
         self.configure(extra_args=['--enable-shared', '--enable-static'])
 
@@ -218,7 +218,7 @@ class TestPkgConfigAuto(PkgConfigTest):
             assertPkgConfig(['hello', '--libs-only-other'], '')
 
     # Dual-use libraries collide on MSVC.
-    @skip_if(is_msvc, hide=True)
+    @skip_if(is_msvc)
     def test_configure_dual(self):
         self.configure(extra_args=['--enable-shared', '--enable-static'])
 
