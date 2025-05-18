@@ -58,8 +58,17 @@ def _format_stack(stack, user=False):
         return ''
 
     if user:
-        stack = [FrameSummary(os.path.relpath(i.filename), i.lineno, i.name,
-                              locals=i.locals, line=i.line) for i in stack]
+        if sys.version_info >= (3, 12):
+            stack = [FrameSummary(
+                os.path.relpath(i.filename), i.lineno, i.name, locals=i.locals,
+                line=i.line, end_lineno=i.end_lineno, colno=i.colno,
+                end_colno=i.end_colno
+            ) for i in stack]
+        else:
+            stack = [FrameSummary(
+                os.path.relpath(i.filename), i.lineno, i.name, locals=i.locals,
+                line=i.line
+            ) for i in stack]
 
     # Put the newline at the beginning, since this helps our formatting later.
     return '\n' + ''.join(traceback.format_list(stack)).rstrip()
@@ -106,12 +115,23 @@ class StackfulStreamHandler(ColoredStreamHandler):
                 # Figure out where to put the caret.
                 text = e.text.expandtabs().rstrip()
                 dedent = len(text) - len(text.lstrip())
-                offset = 4 - dedent - 1 + e.offset
+                colno = e.offset - dedent - 1
 
-                record.full_stack = [
-                    FrameSummary(e.filename, e.lineno, '<module>',
-                                 line=e.text + '\n' + ' ' * offset + '^')
-                ]
+                if sys.version_info >= (3, 12):
+                    if e.end_offset == 0:
+                        end_colno = colno + 1
+                    else:
+                        end_colno = e.end_offset - dedent - 1
+                    record.full_stack = [FrameSummary(
+                        e.filename, e.lineno, '<module>', line=e.text,
+                        end_lineno=e.end_lineno, colno=colno,
+                        end_colno=end_colno
+                    )]
+                else:
+                    record.full_stack = [FrameSummary(
+                        e.filename, e.lineno, '<module>',
+                        line=e.text + '\n' + ' ' * (colno + 4) + '^'
+                    )]
             else:
                 if not record.msg:
                     record.msg = record.exc_info[0].__name__

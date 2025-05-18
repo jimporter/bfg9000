@@ -24,6 +24,15 @@ def current_lineno():
     return inspect.stack()[1][2]
 
 
+def make_caret(spaces, tildes, carets, *, force=False):
+    if sys.version_info < (3, 13) and sys.version_info >= (3, 12):
+        return '\n' + (' ' * (spaces + 1)) + ('^' * (tildes + carets))
+    elif sys.version_info >= (3, 13) or force:
+        return '\n' + (' ' * spaces) + ('~' * tildes) + ('^' * carets)
+    else:
+        return ''
+
+
 class TestIsUserSrc(TestCase):
     def test_user(self):
         self.assertTrue(log._is_user_src(this_file))
@@ -113,7 +122,8 @@ class TestStackfulStreamHandler(TestCase):
         self.assertEqual(record.stack, (
             '\n' +
             '  File "{}", line {}, in test_runtime_error\n' +
-            "    raise RuntimeError('runtime error')"
+            "    raise RuntimeError('runtime error')" +
+            make_caret(16, 6, 17)
         ).format(os.path.relpath(this_file), lineno))
         self.assertEqual(record.stack_post, '')
         self.assertEqual(record.user_pathname, os.path.relpath(this_file))
@@ -142,7 +152,8 @@ class TestStackfulStreamHandler(TestCase):
         self.assertEqual(record.stack, (
             '\n' +
             '  File "{}", line {}, in test_internal_error\n' +
-            '    iterutils.first(None)'
+            '    iterutils.first(None)' +
+            make_caret(16, 3, 6)
         ).format(os.path.relpath(this_file), lineno))
         self.assertEqual(record.stack_post, (
             '\n' +
@@ -155,7 +166,10 @@ class TestStackfulStreamHandler(TestCase):
     def test_syntax_error(self):
         handler = log.StackfulStreamHandler()
         try:
-            raise SyntaxError('syntax error', ('file.py', 1, 4, 'line'))
+            args = ('file.py', 1, 4, 'line')
+            if sys.version_info >= (3, 12):
+                args += (1, 5)
+            raise SyntaxError('syntax error', args)
         except SyntaxError:
             record = logging.LogRecord(
                 'name', 'level', 'pathname', 1, 'msg', [], sys.exc_info()
@@ -172,8 +186,8 @@ class TestStackfulStreamHandler(TestCase):
         self.assertEqual(record.stack,
                          '\n' +
                          '  File "file.py", line 1, in <module>\n' +
-                         '    line\n' +
-                         '       ^')
+                         '    line' +
+                         make_caret(7, 0, 1, force=True))
         self.assertEqual(record.stack_post, '')
         self.assertEqual(record.user_pathname, 'file.py')
         self.assertEqual(record.user_lineno, 1)
@@ -199,7 +213,8 @@ class TestStackfulStreamHandler(TestCase):
         self.assertEqual(record.stack, (
             '\n' +
             '  File "{}", line {}, in test_empty_msg\n' +
-            "    raise RuntimeError('runtime error')"
+            "    raise RuntimeError('runtime error')" +
+            make_caret(16, 6, 17)
         ).format(os.path.relpath(this_file), lineno))
         self.assertEqual(record.stack_post, '')
         self.assertEqual(record.user_pathname, os.path.relpath(this_file))
@@ -226,7 +241,8 @@ class TestStackfulStreamHandler(TestCase):
         self.assertEqual(record.stack, (
             '\n' +
             '  File "{}", line {}, in test_debug\n' +
-            "    raise RuntimeError('runtime error')"
+            "    raise RuntimeError('runtime error')" +
+            make_caret(16, 6, 17)
         ).format(os.path.relpath(this_file), lineno))
         self.assertEqual(record.stack_post, '')
         self.assertEqual(record.user_pathname, os.path.relpath(this_file))
@@ -293,7 +309,8 @@ class TestStackfulStreamHandler(TestCase):
         self.assertEqual(record.stack, (
             '\n' +
             '  File "{}", line {}, in test_different_drives\n' +
-            "    raise RuntimeError('runtime error')"
+            "    raise RuntimeError('runtime error')" +
+            make_caret(16, 6, 17)
         ).format(os.path.relpath(this_file), lineno))
         self.assertEqual(record.stack_post, '')
         self.assertEqual(record.user_pathname, os.path.relpath(this_file))
@@ -488,7 +505,8 @@ class TestLogger(TestCase):
         self.assertEqual(self.out.getvalue(), (
             '{level}: {file}:{line}: runtime error\n' +
             '  File "{file}", line {line}, in test_exception\n' +
-            "    raise RuntimeError('runtime error')\n"
+            "    raise RuntimeError('runtime error')" +
+            make_caret(16, 6, 17) + '\n'
         ).format(level=self._level(log.ERROR), file=os.path.relpath(this_file),
                  line=lineno))
 
