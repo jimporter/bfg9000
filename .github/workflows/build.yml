@@ -259,7 +259,7 @@ jobs:
 
           .\setup-x86_64.exe -qgnNdO -R %CYGROOT% -l %CYGCACHE%
           -s http://mirrors.kernel.org/sourceware/cygwin/
-          -P gcc-g++,git,make,ninja,python38,python38-pip,python38-setuptools
+          -P gcc-g++,git,make,ninja,python38,python38-lxml,python38-pip,python38-setuptools
       - name: Copy bfg9000 to Cygwin
         run: |
           robocopy . ${env:CYGROOT}\home\runneradmin\bfg9000 /E
@@ -268,12 +268,12 @@ jobs:
         run: >
           C:\cygwin\bin\bash -lc
           "cd bfg9000 && pip3.8 install
-          coverage git+https://github.com/jimporter/mopack.git ."
+          git+https://github.com/jimporter/mopack.git '.[test]'"
       - name: Run tests
         run: >
           C:\cygwin\bin\bash -lc
-          "cd bfg9000 && python3.8 setup.py coverage -s
-          test.integration.test_executable && coverage xml"
+          "cd bfg9000 && python3.8 setup.py coverage -q -s
+          test.unit,test.integration.test_executable && coverage xml"
       - name: Copy coverage from Cygwin
         run: |
           copy C:\cygwin\home\runneradmin\bfg9000\coverage.xml .
@@ -292,7 +292,7 @@ jobs:
           python-version: '3.13'
       - name: Test bdist_wheel
         run: |
-          pip install wheel
+          pip install setuptools wheel
           python setup.py bdist_wheel
           pip install dist/*.whl
           ! pip show pysetenv
