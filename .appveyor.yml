@@ -1,36 +1,25 @@
 build: false
 version: "{branch}-{build}"
 
-image:
-  - Visual Studio 2013
-  - Visual Studio 2015
+image: Visual Studio 2015
 
 environment:
   BFG_SKIPPED_TESTS: fortran objc scala
   BACKENDS: ninja make msbuild
+  BOOST_INCLUDEDIR: C:\Libraries\boost_1_63_0
+  BOOST_LIBRARYDIR: C:\Libraries\boost_1_63_0\lib32-msvc-14.0
   GNOME_BASE: https://ftp.gnome.org/pub/gnome/binaries/win32
-  PYTHON_PATH: C:\Python37
+  PYTHON_PATH: C:\Python38
   CPPFLAGS: /WX /IC:\projects\bfg9000\include
   LIBRARY_PATH: C:\projects\bfg9000\lib
 
-for:
-  - matrix:
-      only:
-        - image: Visual Studio 2013
-    environment:
-      VS: C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall.bat
-      BOOST_INCLUDEDIR: C:\Libraries\boost_1_58_0
-      BOOST_LIBRARYDIR: C:\Libraries\boost_1_58_0\lib32-msvc-12.0
-      QT_ROOT: C:\Qt\5.8\msvc2013
+  matrix:
+    - VS: C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall.bat
+      BFG_SKIPPED_TESTS: boost fortran objc scala
+      QT_ROOT: C:\Qt\5.6.3\msvc2013
       LIBOGG: libogg-1.3.2
       LIBOGG_VS: VS2010
-  - matrix:
-      only:
-        - image: Visual Studio 2015
-    environment:
-      VS: C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat
-      BOOST_INCLUDEDIR: C:\Libraries\boost_1_63_0
-      BOOST_LIBRARYDIR: C:\Libraries\boost_1_63_0\lib32-msvc-14.0
+    - VS: C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat
       QT_ROOT: C:\Qt\5.11.3\msvc2015
       LIBOGG: libogg-1.3.3
       LIBOGG_VS: VS2015
