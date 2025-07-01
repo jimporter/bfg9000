@@ -158,7 +158,17 @@ class StackfulStreamHandler(ColoredStreamHandler):
             return super().emit(record)
 
         record.show_stack = False
-        logging.root.handle(record)
+
+        # Work around <https://github.com/python/cpython/issues/91555>.
+        if (3, 13, 4) <= sys.version_info < (3, 13, 6):
+            was_in_progress = logging.root._tls.in_progress
+            logging.root._tls.in_progress = False
+            try:
+                logging.root.handle(record)
+            finally:
+                logging.root._tls.in_progress = was_in_progress
+        else:
+            logging.root.handle(record)
 
 
 def _clicolor(environ):
