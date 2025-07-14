@@ -83,7 +83,7 @@ try:
             pass
 
         def run(self):
-            v = Version(version)
+            v = Version(self.distribution.get_version())
             alias = 'dev' if v.is_devrelease else 'latest'
             title = '{} ({})'.format(v.base_version, alias)
             short_version = '{}.{}'.format(*v.release[:2])
@@ -116,10 +116,19 @@ try:
                     )
                     title = v.base_version
                     alias = None
+                else:
+                    self.announce(
+                        'alias {!r} for {} is already current'.format(
+                            alias, alias_info['version']
+                        ), log.INFO
+                    )
             except subprocess.CalledProcessError:
                 self.announce('alias {!r} not found; adding'.format(alias),
                               log.INFO)
 
+            self.announce('deploying documentation to {}'.format(
+                short_version
+            ), log.INFO)
             subprocess.run(['mike', 'deploy', '-ut', title, short_version] +
                            ([alias] if alias else []), check=True)
 
