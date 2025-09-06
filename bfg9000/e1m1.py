@@ -31,7 +31,7 @@ except ImportError:  # pragma: no cover
             shell.execute(args, stdout=shell.Mode.devnull,
                           stderr=shell.Mode.devnull)
         except FileNotFoundError:
-            raise ValueError("'sound player not found; install 'beep' or " +
+            raise ValueError("sound player not found; install 'beep' or " +
                              "'sox' package?")
 
 

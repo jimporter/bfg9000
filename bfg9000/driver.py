@@ -317,7 +317,7 @@ def run(parser, subparser, args, extra):
 
 
 def e1m1(parser, subparser, args, extra):  # pragma: no cover
-    import e1m1
+    from . import e1m1
     try:
         e1m1.play(args.tempo, args.long)
     except Exception as e:
