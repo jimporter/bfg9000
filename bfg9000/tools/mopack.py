@@ -39,8 +39,14 @@ class Mopack(SimpleCommand):
             return '{}[{}]'.format(check(package), submodules_str)
         return check(package)
 
-    def _call_resolve(self, cmd, config, *, flags=None, directory=None):
-        result = cmd + ['resolve'] + self._dir_arg(directory)
+    def _call_resolve(self, cmd, config, *, flags=None, directory=None,
+                      verbose=False):
+        result = cmd
+        if verbose:
+            result.append('--verbose')
+        result.append('resolve')
+        result.extend(self._dir_arg(directory))
+
         for k, v in self.env.install_dirs.items():
             if v is not None and v.root == Root.absolute:
                 result.append(safe_format('-d{}={}', k.name, v))

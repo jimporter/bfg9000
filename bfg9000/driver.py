@@ -132,6 +132,8 @@ class ConfigureHelp(argparse.Action):
 def add_generic_args(parser):
     parser.add_argument('--version', action='version',
                         version='%(prog)s ' + version)
+    parser.add_argument('--verbose', action='store_true',
+                        help='show verbose output')
     parser.add_argument('--debug', action='store_true',
                         help='report extra information for debugging bfg9000')
     parser.add_argument('--color', metavar='WHEN',
@@ -234,8 +236,10 @@ def configure(parser, subparser, args, extra):
         finalize_environment(env, args, extra)
 
         if not args.no_resolve_packages:
-            env.mopack = build.resolve_packages(env, args.package_files,
-                                                args.package_flags)
+            env.mopack = build.resolve_packages(
+                env, args.package_files, args.package_flags,
+                verbose=args.verbose
+            )
 
         env.save(args.builddir.string())
 

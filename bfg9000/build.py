@@ -89,7 +89,7 @@ def _execute_options(env, parent=None, usage='parse'):
         return parser, []
 
 
-def resolve_packages(env, files, flags):
+def resolve_packages(env, files, flags, *, verbose=False):
     if env.variables.initial.get('MOPACK_NESTED_INVOCATION'):
         return []
 
@@ -99,7 +99,7 @@ def resolve_packages(env, files, flags):
                      (files or []) )
     env.tool('mopack').run(
         'resolve', mopack_files, directory=env.builddir, flags=flags,
-        env=env.variables.initial, stdout=Mode.normal
+        verbose=verbose, env=env.variables.initial, stdout=Mode.normal
     )
     # TODO: Would it make sense to convert these paths into ones relative to
     # the source/build directories if possible?

@@ -8,6 +8,7 @@
 - When using `find_files`, avoid regenerating build files in most cases if the
   result of `find_files` hasn't actually changed
 - Add support for system headers when compiling with MSVC
+- New `--verbose` option for configuration
 
 ### Bug fixes
 - Automatically update dependencies via `mopack` if the toolchain file has

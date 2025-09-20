@@ -10,6 +10,10 @@ Print a help message and exit. Equivalent to the [`help`](#help) subcommand.
 
 Print the version number and exit.
 
+#### `--verbose` { #verbose }
+
+Print verbose output.
+
 #### `-c`, <code>--color *WHEN*</code> { #color }
 
 Show colored output; *WHEN* is one of `always`, `never`, or `auto` and defaults
