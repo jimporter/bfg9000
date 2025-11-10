@@ -262,7 +262,7 @@ class PkgConfigInfo:
         # that were passed in.
         auto_requires, auto_extra, auto_build_deps = self._filter_packages(
             chain.from_iterable(recursive_walk(
-                i, 'package_deps', 'install_deps'
+                i, 'install_deps', 'package_deps'
             ) for i in chain(libs, libs_private))
         )
 

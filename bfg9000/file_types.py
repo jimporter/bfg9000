@@ -260,7 +260,9 @@ class LinkLibrary(SharedLibrary):
 
     @property
     def runtime_file(self):
-        return self.library
+        # The linkname points to the soname, which points to the realname.
+        # Resolve to the realname.
+        return self.library.runtime_file
 
     def clone(self, path, recursive=False, inner=None):
         if recursive:
@@ -274,6 +276,8 @@ class VersionedSharedLibrary(SharedLibrary):
         super().__init__(path, format, lang)
         self.soname = LinkLibrary(soname_path, self)
         self.link = LinkLibrary(linkname_path, self.soname)
+        # At runtime, the loader will look for the soname for this library.
+        self.runtime_deps = [self.soname]
 
 
 class StaticLibrary(Library):
@@ -310,6 +314,10 @@ class DllBinary(LinkedBinary):
         super().__init__(path, format, lang)
         self.import_lib = LinkLibrary(import_path, self)
         self.export_file = ExportFile(export_path) if export_path else None
+
+    @property
+    def runtime_file(self):
+        return self
 
 
 class DualUseLibrary(BaseFile):
