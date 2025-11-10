@@ -1,5 +1,3 @@
-from collections import namedtuple
-
 from . import *
 
 from bfg9000 import iterutils
@@ -221,21 +219,64 @@ class TestUniques(TestCase):
 
 
 class TestRecursiveWalk(TestCase):
-    def test_unified(self):
-        T = namedtuple('T', ['children'])
-        x = T([ T([T([])]), T([]) ])
-        self.assertEqual(list(iterutils.recursive_walk(x, 'children')),
-                         [ T([T([])]), T([]), T([]) ])
+    class Node:
+        def __init__(self, name, children, friends=None):
+            self.name = name
+            self.children = children
+            self.friends = friends
 
-    def test_split(self):
-        T = namedtuple('T', ['friends', 'children'])
-        x = T(['alice', 'bob'], [
-            T(['carrie'], [T(['dan'], [])]),
-            T(['ellen'], [])
+        def __hash__(self):
+            return hash(self.name)
+
+        def __eq__(self, rhs):
+            return self.name == rhs.name
+
+    def test_unified(self):
+        items = self.Node('-', [
+            self.Node('1', [
+                self.Node('1.1', []),
+            ]),
+            self.Node('2', []),
         ])
         self.assertEqual(
-            list(iterutils.recursive_walk(x, 'friends', 'children')),
+            [i.name for i in iterutils.recursive_walk(items, 'children')],
+            ['1', '2', '1.1']
+        )
+
+    def test_unified_cycles(self):
+        z = self.Node('z', [])
+        z2 = self.Node('z2', [])
+        y = self.Node('y', [z, z2])
+        x = self.Node('x', [y])
+        z.children.append(x)
+
+        self.assertEqual(
+            [i.name for i in iterutils.recursive_walk(x, 'children')],
+            ['y', 'z', 'z2', 'x']
+        )
+
+    def test_split(self):
+        items = self.Node('-', [
+            self.Node('1', [
+                self.Node('1.1', [], friends=['dan']),
+            ], friends=['carrie']),
+            self.Node('2', [], friends=['ellen'])
+        ], friends=['alice', 'bob'])
+        self.assertEqual(
+            list(iterutils.recursive_walk(items, 'children', 'friends')),
             ['alice', 'bob', 'carrie', 'dan', 'ellen']
+        )
+
+    def test_split_cycles(self):
+        z = self.Node('z', [], friends=['alice', 'bob'])
+        z2 = self.Node('z2', [], friends=['carrie'])
+        y = self.Node('y', [z, z2], friends=['dan'])
+        x = self.Node('x', [y], friends=['ellen'])
+        z.children.append(x)
+
+        self.assertEqual(
+            list(iterutils.recursive_walk(x, 'children', 'friends')),
+            ['ellen', 'dan', 'alice', 'bob', 'carrie']
         )
 
 

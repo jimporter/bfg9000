@@ -127,12 +127,18 @@ def uniques(iterable):
     return list(generate_uniques(iterable))
 
 
-def recursive_walk(thing, attr, children_attr=None):
-    for i in getattr(thing, attr):
-        yield i
-    for i in getattr(thing, children_attr or attr):
-        for j in recursive_walk(i, attr, children_attr):
-            yield j
+def recursive_walk(node, children_attr, result_attr=None):
+    seen_nodes = set()
+
+    def walk(current):
+        seen_nodes.add(current)
+        for i in getattr(current, result_attr or children_attr):
+            yield i
+        for i in getattr(current, children_attr):
+            if i not in seen_nodes:
+                yield from walk(i)
+
+    return walk(node)
 
 
 def find_index(fn, seq):
