@@ -119,32 +119,43 @@ class CcLinker(BuildCommand):
         return []
 
     def _local_rpath(self, library, output):
-        if ( not isinstance(library, Library) or
-             self.builder.object_format != 'elf' ):
+        if not isinstance(library, Library):
             return None, []
+        elif self.builder.object_format == 'elf':
+            rpath = patchelf.local_rpath(self.env, library, output)
+            if rpath is None:
+                return None, []
 
-        rpath = patchelf.local_rpath(self.env, library, output)
-        if rpath is None:
+            # Prior to binutils 2.28, GNU's BFD-based ld doesn't correctly
+            # respect $ORIGIN in a shared library's DT_RPATH/DT_RUNPATH field.
+            # This results in ld being unable to find other shared libraries
+            # needed by the directly-linked library. For more information, see:
+            # <https://sourceware.org/bugzilla/show_bug.cgi?id=20535>.
+            try:
+                ld = self.builder.linker('raw')
+                fix_rpath = (ld.brand == 'bfd' and ld.version in
+                             SpecifierSet('<2.28'))
+            except KeyError:
+                fix_rpath = False
+
+            rpath_link = []
+            if output and fix_rpath:
+                rpath_link = [
+                    i.path.parent() for i in
+                    recursive_walk(library.runtime_file, 'runtime_deps')
+                ]
+
+            return rpath, rpath_link
+        elif self.builder.object_format == 'mach-o':
+            if not library.runtime_file:
+                return None, []
+            rpath = Path('.', library.runtime_file.path.root).cross(self.env)
+            if rpath.root == output.path.root:
+                rpath = rpath.relpath(output.path.parent(),
+                                      prefix='@loader_path')
+            return rpath, []
+        else:
             return None, []
-
-        # Prior to binutils 2.28, GNU's BFD-based ld doesn't correctly respect
-        # $ORIGIN in a shared library's DT_RPATH/DT_RUNPATH field. This results
-        # in ld being unable to find other shared libraries needed by the
-        # directly-linked library. For more information, see:
-        # <https://sourceware.org/bugzilla/show_bug.cgi?id=20535>.
-        try:
-            ld = self.builder.linker('raw')
-            fix_rpath = (ld.brand == 'bfd' and ld.version in
-                         SpecifierSet('<2.28'))
-        except KeyError:
-            fix_rpath = False
-
-        rpath_link = []
-        if output and fix_rpath:
-            rpath_link = [i.path.parent() for i in
-                          recursive_walk(library.runtime_file, 'runtime_deps')]
-
-        return rpath, rpath_link
 
     def always_libs(self, primary):
         # XXX: Don't just asssume that these are the right libraries to use.

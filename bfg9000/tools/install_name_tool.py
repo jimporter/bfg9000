@@ -1,3 +1,5 @@
+import os
+
 from . import tool
 from .. import file_types, options as opts
 from .common import SimpleCommand
@@ -25,17 +27,12 @@ class InstallNameTool(SimpleCommand):
 
 
 def darwin_install_name(library, env, strict=True):
-    while isinstance(library, file_types.LinkLibrary):
-        library = library.library
-
-    if isinstance(library, file_types.VersionedSharedLibrary):
-        return library.soname.path.string(env.base_dirs)
-    elif isinstance(library, file_types.SharedLibrary):
-        return library.path.string(env.base_dirs)
-    elif strict:  # pragma: no cover
-        raise TypeError('unable to create darwin install_name')
-    else:
+    if isinstance(library, file_types.SharedLibrary):
+        return os.path.join('@rpath', library.runtime_file.path.suffix)
+    elif not strict:
         return None
+
+    raise TypeError('unable to create darwin install_name')  # pragma: no cover
 
 
 def post_install(env, options, output, install_db, *, is_library=False):
