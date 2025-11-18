@@ -9,7 +9,7 @@ def pathfn(file):
 
 
 class FileTest(TestCase):
-    def assertSameFile(self, a, b, extra=set(), seen=None):
+    def assertSameFile(self, a, b, *, extra=set(), seen=None, attr_path=()):
         if seen is None:
             seen = set()
         seen.add(id(a))
@@ -19,17 +19,17 @@ class FileTest(TestCase):
                 getattr(a, '_clone_exclude', set())) | {'path'} | extra
 
         for i in keys:
+            curr_path = attr_path + (i,)
             ai, bi = getattr(a, i, None), getattr(b, i, None)
             if isinstance(ai, Node) and isinstance(bi, Node):
                 if not id(ai) in seen:
-                    self.assertSameFile(ai, bi, extra, seen)
+                    self.assertSameFile(ai, bi, extra=extra, seen=seen,
+                                        attr_path=curr_path)
             else:
-                self.assertEqual(
-                    ai, bi, '{!r}: {!r} != {!r}'.format(i, ai, bi)
-                )
+                self.assertEqual(ai, bi, '.'.join(curr_path))
 
-    def assertClone(self, a, b, recursive=False, extra=set()):
-        self.assertSameFile(a.clone(pathfn, recursive), b, extra)
+    def assertClone(self, a, b, *, recursive=False, extra=set()):
+        self.assertSameFile(a.clone(pathfn, recursive), b, extra=extra)
 
 
 class TestNode(TestCase):
