@@ -49,11 +49,11 @@ class InstallOutputs:
 
 
 def installify(file, *, directory=None, cross=None):
-    def pathfn(f):
-        if f is not file and f.private:
+    def pathfn(p, obj):
+        if obj is not file and obj.private:
             # Private subfiles won't (and in some cases can't) be installed.
-            return f.path
-        if f.path.root not in (path.Root.srcdir, path.Root.builddir):
+            return p
+        if p.root not in (path.Root.srcdir, path.Root.builddir):
             raise ValueError('external files are not installable')
 
         # Get the install root.
@@ -61,16 +61,16 @@ def installify(file, *, directory=None, cross=None):
             install_root = directory
             if not isinstance(install_root.root, path.InstallRoot):
                 raise ValueError('not an install directory')
-        elif f.install_root is None:
+        elif obj.install_root is None:
             raise TypeError(('{!r} is not installable; specify an absolute ' +
-                             'install directory?').format(type(f).__name__))
+                             'install directory?').format(type(obj).__name__))
         elif directory:
-            install_root = path.Path(directory, f.install_root)
+            install_root = path.Path(directory, obj.install_root)
         else:
-            install_root = f.install_root
+            install_root = obj.install_root
 
-        cls = cross.target_platform.Path if cross else type(f.path)
-        return cls(f.install_suffix, install_root, destdir=not cross)
+        cls = cross.target_platform.Path if cross else type(p)
+        return cls(obj.install_suffix, install_root, destdir=not cross)
 
     if not isinstance(file, BaseFile):
         raise TypeError('expected a file or directory')

@@ -1,24 +1,86 @@
-from . import path as _path, safe_str as _safe_str
-from .iterutils import listify as _listify
+from . import iterutils as _iterutils
+from . import path as _path
+from . import safe_str as _safe_str
 
 
-def _clone_traits(exclude=set(), subfiles={}):
-    def inner(cls):
-        cls._clone_exclude = cls._clone_exclude | exclude
-        if subfiles:
-            cls._clone_subfiles = cls._clone_subfiles.copy()
-            cls._clone_subfiles.update(subfiles)
-        return cls
+class DefaultHandler(RuntimeError):
+    pass
 
-    return inner
+
+class Cloneable:
+    _clone_handlers = {}
+
+    class handler:
+        def __init__(self, fn):
+            self.fn = fn
+
+        def __set_name__(self, owner, name):
+            # Ensure each class setting a handler has its own set of handlers.
+            if '_clone_handlers' not in owner.__dict__:
+                owner._clone_handlers = owner._clone_handlers.copy()
+            owner._clone_handlers[name] = self.fn
+
+    def __init__(self, *, parent=None):
+        self.parent = parent
+
+    @handler
+    def parent(old, new, pathfn, recursive, *args):
+        if not recursive:
+            return None
+        raise DefaultHandler()
+
+    def clone(self, pathfn, recursive=False):
+        if recursive and self.parent:
+            # Clone the parent...
+            pclone = self.parent.clone(pathfn, recursive)
+            # ... and then find ourself in the parent.
+            for k, v in self.parent.__dict__.items():
+                if self is v:
+                    return pclone.__dict__[k]
+            raise TypeError('unable to find self in parent')
+        else:
+            return self.do_clone(pathfn, recursive)
+
+    def do_clone(self, pathfn, recursive, seen=None):
+        def clone_attr(thing, attr_name=None):
+            if attr_name and attr_name in self._clone_handlers:
+                try:
+                    return self._clone_handlers[attr_name](
+                        self, clone, pathfn, recursive, seen
+                    )
+                except DefaultHandler:
+                    pass
+
+            if _iterutils.ismapping(thing):
+                return type(thing)((clone_attr(k), clone_attr(v))
+                                   for k, v in thing.items())
+            elif _iterutils.isiterable(thing):
+                return type(thing)(clone_attr(i) for i in thing)
+            elif isinstance(thing, _path.BasePath):
+                return pathfn(thing, self)
+            elif recursive and isinstance(thing, Cloneable):
+                return thing.do_clone(pathfn, recursive, seen)
+            else:
+                return thing
+
+        if seen is None:
+            seen = {}
+        if id(self) in seen:
+            return seen[id(self)]
+
+        clone = type(self).__new__(type(self))
+        seen[id(self)] = clone
+        for k, v in self.__dict__.items():
+            setattr(clone, k, clone_attr(v, attr_name=k))
+        return clone
 
 
 class Node(_safe_str.safe_string_ops):
-    private = False
-
-    def __init__(self, path):
+    def __init__(self, path, *, private=False, **kwargs):
+        super().__init__(**kwargs)
         self.creator = None
         self.path = path
+        self.private = private
 
     def _safe_str(self):
         return _safe_str.safe_str(self.path)
@@ -46,58 +108,32 @@ class Phony(Node):
     pass
 
 
-class BaseFile:
+class BaseFile(Cloneable):
     pass
 
 
 class FileOrDirectory(Node, BaseFile):
-    _clone_exclude = {'path', 'creator', 'post_install'}
-    _clone_subfiles = {}
-
     install_kind = 'data'
     install_root = None
 
-    def __init__(self, path):
-        super().__init__(path)
+    def __init__(self, path, **kwargs):
+        super().__init__(path, **kwargs)
         self.post_install = None
 
     @property
     def install_deps(self):
         return []
 
-    def _clone_args(self, pathfn, recursive):
-        args = {'path': pathfn(self)}
-        for k, v in self.__dict__.items():
-            if k in self._clone_exclude:
-                continue
-            try:
-                dest = self._clone_subfiles[k]
-                orig = getattr(self, k)
-                if orig is None:
-                    args[dest] = None
-                elif recursive:
-                    args[dest] = pathfn(orig)
-                else:
-                    args[dest] = orig.path
-            except KeyError:
-                args[k] = v
-        return args
-
-    def clone(self, pathfn, recursive=False, inner=None):
-        clone = type(self)(**self._clone_args(pathfn, recursive))
-        if inner and inner is not self:
-            for i in self._clone_subfiles:
-                if getattr(self, i) is inner:
-                    return getattr(clone, i)
-            raise RuntimeError('unable to find inner clone object')
-        return clone
+    @Cloneable.handler
+    def creator(old, new, pathfn, *args):
+        return None
 
 
 class File(FileOrDirectory):
-    def __init__(self, path):
+    def __init__(self, path, **kwargs):
         if path.directory:
             raise ValueError('expected a non-directory')
-        super().__init__(path)
+        super().__init__(path, **kwargs)
 
     @property
     def install_suffix(self):
@@ -106,30 +142,19 @@ class File(FileOrDirectory):
         return self.path.suffix
 
 
-@_clone_traits(exclude={'files'})
 class Directory(FileOrDirectory):
-    def __init__(self, path, files=None):
-        super().__init__(path.as_directory())
+    def __init__(self, path, files=None, **kwargs):
+        super().__init__(path.as_directory(), **kwargs)
         self.files = files
 
     @property
     def install_suffix(self):
         return ''
 
-    def _clone_args(self, pathfn, recursive):
-        args = super()._clone_args(pathfn, recursive)
-        if self.files is None:
-            args['files'] = None
-        elif recursive:
-            args['files'] = [i.clone(pathfn, recursive) for i in self.files]
-        else:
-            args['files'] = [i for i in self.files]
-        return args
-
 
 class CodeFile(File):
-    def __init__(self, path, lang):
-        super().__init__(path)
+    def __init__(self, path, lang, **kwargs):
+        super().__init__(path, **kwargs)
         self.lang = lang
 
 
@@ -145,27 +170,21 @@ class PrecompiledHeader(HeaderFile):
     install_root = None
 
 
-@_clone_traits(subfiles={'object_file': 'object_path'})
 class MsvcPrecompiledHeader(PrecompiledHeader):
-    def __init__(self, path, object_path, header_name, format, lang):
-        super().__init__(path, lang)
-        self.object_file = ObjectFile(object_path, format, self.lang)
-        self.object_file.private = True
+    def __init__(self, path, object_path, header_name, format, lang, **kwargs):
+        super().__init__(path, lang, **kwargs)
+        self.object_file = ObjectFile(object_path, format, self.lang,
+                                      parent=self, private=True)
         self.header_name = header_name
-
-    def _clone_args(self, pathfn, recursive):
-        args = super()._clone_args(pathfn, recursive)
-        args['format'] = self.object_file.format
-        return args
 
 
 class HeaderDirectory(Directory):
     install_root = _path.InstallRoot.includedir
 
-    def __init__(self, path, files=None, system=False, langs=None):
-        super().__init__(path, files)
+    def __init__(self, path, files=None, system=False, langs=None, **kwargs):
+        super().__init__(path, files, **kwargs)
         self.system = system
-        self.langs = _listify(langs)
+        self.langs = _iterutils.listify(langs)
 
 
 class ModuleDefFile(File):
@@ -175,8 +194,8 @@ class ModuleDefFile(File):
 class ManPage(File):
     install_root = _path.InstallRoot.mandir
 
-    def __init__(self, path, level):
-        super().__init__(path)
+    def __init__(self, path, level, **kwargs):
+        super().__init__(path, **kwargs)
         self.level = level
 
     @property
@@ -187,8 +206,8 @@ class ManPage(File):
 class Binary(File):
     install_root = _path.InstallRoot.libdir
 
-    def __init__(self, path, format, lang=None):
-        super().__init__(path)
+    def __init__(self, path, format, lang=None, **kwargs):
+        super().__init__(path, **kwargs)
         self.format = format
         self.lang = lang
 
@@ -202,15 +221,14 @@ class ObjectFile(Binary):
 class ObjectFileList(ObjectFile):
     install_root = None
 
-    def __init__(self, path, object_name, format, lang=None):
-        super().__init__(path, format, lang)
-        self.object_file = ObjectFile(object_name, format, lang)
+    def __init__(self, path, object_name, format, lang=None, **kwargs):
+        super().__init__(path, format, lang, **kwargs)
+        self.object_file = ObjectFile(object_name, format, lang, parent=self)
 
 
 # This represents any kind of binary data that's been "linked" (or had some
 # similar process applied to it) so that it can be used by a linker/loader,
 # installed to the system, etc.
-@_clone_traits(exclude={'runtime_deps', 'linktime_deps', 'package_deps'})
 class LinkedBinary(Binary):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -228,7 +246,6 @@ class Executable(LinkedBinary):
     install_root = _path.InstallRoot.bindir
 
 
-@_clone_traits(exclude={'parent'})
 class Library(LinkedBinary):
     @property
     def runtime_file(self):
@@ -251,10 +268,9 @@ class SharedLibrary(Library):
         return self
 
 
-@_clone_traits(exclude={'format', 'lang'})
 class LinkLibrary(SharedLibrary):
-    def __init__(self, path, library):
-        super().__init__(path, library.format, library.lang)
+    def __init__(self, path, library, **kwargs):
+        super().__init__(path, library.format, library.lang, **kwargs)
         self.library = library
         self.linktime_deps = [library]
 
@@ -262,23 +278,18 @@ class LinkLibrary(SharedLibrary):
     def runtime_file(self):
         return self.library
 
-    def clone(self, path, recursive=False, inner=None):
-        if recursive:
-            return self.library.clone(path, True, inner or self)
-        return super().clone(path, False, inner)
 
-
-@_clone_traits(subfiles={'soname': 'soname_path', 'link': 'linkname_path'})
 class VersionedSharedLibrary(SharedLibrary):
-    def __init__(self, path, format, lang, soname_path, linkname_path):
-        super().__init__(path, format, lang)
-        self.soname = LinkLibrary(soname_path, self)
-        self.link = LinkLibrary(linkname_path, self.soname)
+    def __init__(self, path, format, lang, soname_path, linkname_path,
+                 **kwargs):
+        super().__init__(path, format, lang, **kwargs)
+        self.soname = LinkLibrary(soname_path, self, parent=self)
+        self.link = LinkLibrary(linkname_path, self.soname, parent=self)
 
 
 class StaticLibrary(Library):
-    def __init__(self, path, format, lang=None, forward_opts=None):
-        super().__init__(path, format, lang)
+    def __init__(self, path, format, lang=None, forward_opts=None, **kwargs):
+        super().__init__(path, format, lang, **kwargs)
         self.forward_opts = forward_opts
 
 
@@ -293,35 +304,49 @@ class WholeArchive(StaticLibrary):
 
 
 class ExportFile(File):
-    private = True
+    def __init__(self, path, *, private=True, **kwargs):
+        super().__init__(path, private=private, **kwargs)
 
 
 # This refers specifically to DLL files that have an import library, not just
 # anything with a .dll extension (for instance, .NET DLLs are just regular
 # shared libraries). While this is a "library" in some senses, since you can't
 # link to it during building, we just consider it a LinkedBinary.
-@_clone_traits(subfiles={'import_lib': 'import_path',
-                         'export_file': 'export_path'})
 class DllBinary(LinkedBinary):
     install_root = _path.InstallRoot.bindir
-    private = True
 
-    def __init__(self, path, format, lang, import_path, export_path=None):
-        super().__init__(path, format, lang)
-        self.import_lib = LinkLibrary(import_path, self)
-        self.export_file = ExportFile(export_path) if export_path else None
+    def __init__(self, path, format, lang, import_path, export_path=None, *,
+                 private=True, **kwargs):
+        super().__init__(path, format, lang, private=private, **kwargs)
+        self.import_lib = LinkLibrary(import_path, self, parent=self)
+        self.export_file = (ExportFile(export_path, parent=self)
+                            if export_path else None)
 
 
 class DualUseLibrary(BaseFile):
     def __init__(self, shared, static):
+        super().__init__()
         self.shared = shared
         self.static = static
-        self.shared.parent = self
-        self.static.parent = self
+        self.shared.parent = self.static.parent = self
 
     @property
     def all(self):
         return [self.shared, self.static]
+
+    @Cloneable.handler
+    def shared(old, new, pathfn, *args):
+        # Always clone the shared library, even when cloning non-recursively.
+        shared = old.shared.do_clone(pathfn, *args)
+        shared.parent = new
+        return shared
+
+    @Cloneable.handler
+    def static(old, new, pathfn, *args):
+        # Ditto for cloning the static library.
+        static = old.static.do_clone(pathfn, *args)
+        static.parent = new
+        return static
 
     def __repr__(self):
         return '<DualUseLibrary {!r}>'.format(self.shared.path)
@@ -347,10 +372,6 @@ class DualUseLibrary(BaseFile):
     @property
     def forward_opts(self):
         return self.static.forward_opts
-
-    def clone(self, *args, **kwargs):
-        return DualUseLibrary(self.shared.clone(*args, **kwargs),
-                              self.static.clone(*args, **kwargs))
 
 
 class PkgConfigPcFile(File):

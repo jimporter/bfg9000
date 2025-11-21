@@ -34,9 +34,9 @@ class CopyFile(Edge):
             directory = buildpath(context, directory, strict=True)
         file = context['auto_file'](file)
 
-        def pathfn(file):
+        def pathfn(p, obj):
             if name is None:
-                path = file.path.reroot()
+                path = p.reroot()
                 if directory:
                     return within_directory(path, directory)
                 return path
@@ -62,8 +62,8 @@ class CompressFile(Edge):
     def convert_args(context, file, kwargs):
         file = context['auto_file'](file)
 
-        def pathfn(file):
-            return file.path.reroot().addext('.gz')
+        def pathfn(p, obj):
+            return p.reroot().addext('.gz')
 
         output = file.clone(pathfn)
         return output, file, kwargs
