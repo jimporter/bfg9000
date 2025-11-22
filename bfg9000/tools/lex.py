@@ -1,4 +1,5 @@
 from itertools import chain
+import re
 
 from . import builder
 from .. import options as opts, safe_str, shell
@@ -40,7 +41,7 @@ class LexBuilder(Builder):
 
     @staticmethod
     def _parse_brand(version_output):
-        if 'flex' in version_output:
+        if re.search('^flex', version_output, re.M):
             return 'flex', detect_version(version_output)
         return 'unknown', None
 

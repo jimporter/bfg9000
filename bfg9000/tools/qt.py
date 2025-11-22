@@ -1,4 +1,5 @@
 from itertools import chain
+import re
 
 from . import builder
 from .. import options as opts, safe_str, shell
@@ -45,7 +46,7 @@ class MocBuilder(Builder):
 
     @staticmethod
     def _parse_brand(version_output):
-        if 'moc' in version_output:
+        if re.search('^moc', version_output, re.M):
             return 'qt', detect_version(version_output)
         return 'unknown', None
 
@@ -121,7 +122,7 @@ class RccBuilder(Builder):
 
     @staticmethod
     def _parse_brand(version_output):
-        if 'rcc' in version_output:
+        if re.search('^rcc', version_output, re.M):
             return 'qt', detect_version(version_output)
         return 'unknown', None
 
@@ -181,7 +182,7 @@ class UicBuilder(Builder):
 
     @staticmethod
     def _parse_brand(version_output):
-        if 'uic' in version_output:
+        if re.search('^uic', version_output, re.M):
             return 'qt', detect_version(version_output)
         return 'unknown', None
 

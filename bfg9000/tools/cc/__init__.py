@@ -115,7 +115,7 @@ class CcBuilder(Builder):
                 target_flags = cls._gcc_arch_flags(
                     env.target_platform.arch, triplet.arch
                 )
-        elif 'clang' in version_output:
+        elif re.search('^clang', version_output, re.M):
             brand = 'clang'
             version = detect_version(version_output)
             if env.is_cross:

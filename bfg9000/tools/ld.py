@@ -14,13 +14,18 @@ class LdLinker:
         # been found.
         self.found = True
 
-        if 'GNU ld' in version_output:
+        if re.search('^GNU ld', version_output, re.M):
             self.brand = 'bfd'
             self.version = detect_version(version_output)
-        elif 'GNU gold' in version_output:
+        elif re.search('^GNU gold', version_output, re.M):
             self.brand = 'gold'
-            self.version = detect_version(version_output, post='$',
-                                          flags=re.MULTILINE)
+            self.version = detect_version(version_output, post='$', flags=re.M)
+        elif re.search('^LLD', version_output, re.M):
+            self.brand = 'lld'
+            self.version = detect_version(version_output)
+        elif re.search(r'^@\(#\)PROGRAM:ld', version_output, re.M):
+            self.brand = 'apple'
+            self.version = detect_version(version_output)
         else:
             self.brand = 'unknown'
             self.version = None

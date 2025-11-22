@@ -40,7 +40,7 @@ class YaccBuilder(Builder):
 
     @staticmethod
     def _parse_brand(version_output):
-        if 'bison' in version_output:
+        if 'GNU Bison' in version_output:
             return 'bison', detect_version(version_output)
         return 'unknown', None
 
