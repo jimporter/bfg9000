@@ -226,6 +226,19 @@ class TestLinkLibrary(FileTest):
                          LinkLibrary(Path('a'), dstlib), recursive=True)
 
 
+class TestLoadLibrary(FileTest):
+    def test_clone(self):
+        lib = SharedLibrary(Path('a.so', Root.srcdir), 'elf', 'c')
+        self.assertClone(LoadLibrary(Path('a', Root.srcdir), lib),
+                         LoadLibrary(Path('a'), lib))
+
+    def test_clone_recursive(self):
+        srclib = SharedLibrary(Path('a.so', Root.srcdir), 'elf', 'c')
+        dstlib = SharedLibrary(Path('a.so'), 'elf', 'c')
+        self.assertClone(LoadLibrary(Path('a', Root.srcdir), srclib),
+                         LoadLibrary(Path('a'), dstlib), recursive=True)
+
+
 class TestVersionedSharedLibrary(FileTest):
     def test_clone(self):
         src = VersionedSharedLibrary(
@@ -236,12 +249,14 @@ class TestVersionedSharedLibrary(FileTest):
             Path('a.1.2.3'), 'elf', 'c',
             Path('a.1', Root.srcdir), Path('a', Root.srcdir)
         )
-        dst.soname.library = dst.soname.linktime_deps[0] = src
+        dst.soname.library = src
+        dst.soname.runtime_deps[0] = dst.soname.linktime_deps[0] = src
         dst.link.library = dst.link.linktime_deps[0] = src.soname
         dst.soname.parent = dst.link.parent = src
+        dst.runtime_deps[0] = src.soname
         self.assertClone(src, dst)
 
-        dst_soname = LinkLibrary(Path('a.1'), src)
+        dst_soname = LoadLibrary(Path('a.1'), src)
         self.assertClone(src.soname, dst_soname)
 
         dst_link = LinkLibrary(Path('a'), src.soname)

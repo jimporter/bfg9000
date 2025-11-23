@@ -36,8 +36,8 @@ class InstallOutputs:
                 self.host[src] = h
                 self.target[src] = t
 
-            for dep in src.install_deps:
-                self._add_implicit(dep, directory)
+                for dep in src.install_deps:
+                    self._add_implicit(dep, directory)
 
         return target
 

@@ -276,15 +276,31 @@ class LinkLibrary(SharedLibrary):
 
     @property
     def runtime_file(self):
-        return self.library
+        return self.library.runtime_file
+
+
+class LoadLibrary(LinkLibrary):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.runtime_deps = [self.library]
+
+    @property
+    def runtime_file(self):
+        return self
 
 
 class VersionedSharedLibrary(SharedLibrary):
     def __init__(self, path, format, lang, soname_path, linkname_path,
                  **kwargs):
         super().__init__(path, format, lang, **kwargs)
-        self.soname = LinkLibrary(soname_path, self, parent=self)
+        self.soname = LoadLibrary(soname_path, self, parent=self)
         self.link = LinkLibrary(linkname_path, self.soname, parent=self)
+        # At runtime, the loader will look for the soname for this library.
+        self.runtime_deps = [self.soname]
+
+    @property
+    def runtime_file(self):
+        return self.soname
 
 
 class StaticLibrary(Library):
@@ -321,6 +337,10 @@ class DllBinary(LinkedBinary):
         self.import_lib = LinkLibrary(import_path, self, parent=self)
         self.export_file = (ExportFile(export_path, parent=self)
                             if export_path else None)
+
+    @property
+    def runtime_file(self):
+        return self
 
 
 class DualUseLibrary(BaseFile):

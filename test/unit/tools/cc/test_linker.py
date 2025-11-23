@@ -11,6 +11,7 @@ from bfg9000.file_types import *
 from bfg9000.tools.cc import CcBuilder
 from bfg9000.packages import Framework
 from bfg9000.path import abspath, InstallRoot, Path, Root
+from bfg9000.versioning import Version
 
 
 class TestCcLinker(CrossPlatformTestCase):
@@ -100,6 +101,8 @@ class TestCcLinker(CrossPlatformTestCase):
         lib = self.Path('/path/to/lib/libfoo.a')
         srclibdir = self.Path('.', Root.srcdir)
         srclib = self.Path('libfoo.a', Root.srcdir)
+        srcverlib = self.Path('libfoo.so.1.2.3', Root.srcdir)
+        srcsoname = self.Path('libfoo.so.1', Root.srcdir)
 
         if self.shared:
             output = SharedLibrary(self.Path('out'), 'native')
@@ -134,6 +137,12 @@ class TestCcLinker(CrossPlatformTestCase):
             opts.lib(SharedLibrary(srclib, 'native'))
         ), output=output), ['-L' + srclibdir] + srcdir_rpath + soname)
 
+        # Versioned library
+        self.assertEqual(self.linker.flags(opts.option_list(
+            opts.lib(VersionedSharedLibrary(srcverlib, 'native', 'c',
+                                            srcsoname, srclib))
+        ), output=output), ['-L' + srclibdir] + srcdir_rpath + soname)
+
         if self.env.target_platform.genus == 'linux':
             libdir2 = self.Path('foo')
             lib2 = self.Path('foo/libbar.a')
@@ -148,6 +157,20 @@ class TestCcLinker(CrossPlatformTestCase):
                 ), output=output),
                 ['-L' + libdir2, '-Wl,-rpath,$ORIGIN/foo'] + soname
             )
+
+            # Make sure we handle rpath-link for broken BFD-based ld. See
+            # `bfg9000/tools/cc/linker.py`
+            broken_bfd_linker = AttrDict(brand='bfd', version=Version('2.27'))
+            with mock.patch('bfg9000.tools.cc.CcBuilder.linker',
+                            return_value=broken_bfd_linker):
+                s = SharedLibrary(srclib, 'native')
+                s.runtime_deps = [SharedLibrary(lib2, 'native')]
+                self.assertEqual(
+                    self.linker.flags(opts.option_list(opts.lib(s)),
+                                      output=output),
+                    (['-L' + srclibdir] + srcdir_rpath +
+                     ['-Wl,-rpath-link,' + libdir2] + soname)
+                )
 
         # Static library
         self.assertEqual(self.linker.flags(opts.option_list(

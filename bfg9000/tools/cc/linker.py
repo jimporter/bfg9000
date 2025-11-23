@@ -384,11 +384,7 @@ class CcSharedLibraryLinker(CcLinker):
                 library, self.env
             )]
         else:
-            if isinstance(library, VersionedSharedLibrary):
-                soname = library.soname
-            else:
-                soname = library
-            return ['-Wl,-soname,' + soname.path.basename()]
+            return ['-Wl,-soname,' + library.runtime_file.path.basename()]
 
     def compile_options(self, step):
         options = opts.option_list()
