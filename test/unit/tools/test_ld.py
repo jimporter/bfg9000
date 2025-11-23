@@ -47,6 +47,20 @@ class TestLdLinker(CrossPlatformTestCase):
         self.assertEqual(ld.brand, 'gold')
         self.assertEqual(ld.version, Version('1.11'))
 
+    def test_lld(self):
+        version = 'LLD 10.0.0 (compatible with GNU linkers)'
+        ld = LdLinker(None, self.env, ['ld'], version)
+
+        self.assertEqual(ld.brand, 'lld')
+        self.assertEqual(ld.version, Version('10.0.0'))
+
+    def test_apple(self):
+        version = '@(#)PROGRAM:ld PROJECT:ld-1167.5'
+        ld = LdLinker(None, self.env, ['ld'], version)
+
+        self.assertEqual(ld.brand, 'apple')
+        self.assertEqual(ld.version, Version('1167.5'))
+
     def test_unknown_brand(self):
         version = 'unknown'
         ld = LdLinker(None, self.env, ['ld'], version)

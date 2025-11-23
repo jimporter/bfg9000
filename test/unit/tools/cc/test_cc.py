@@ -227,8 +227,8 @@ class TestCcBuilder(CrossPlatformTestCase):
             raise OSError()
 
         def weird_execute(args, **kwargs):
-            if args[-1] == '-Wl,--version':
-                return '', 'stderr\n'
+            if args[-1] == '-Wl,--not-a-real-flag':
+                return 'stderr\n'
             return mock_execute(args, **kwargs)
 
         version = ('g++ (Ubuntu 5.4.0-6ubuntu1~16.04.6) 5.4.0 20160609\n' +

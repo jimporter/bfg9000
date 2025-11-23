@@ -14,16 +14,32 @@ class LdLinker:
         # been found.
         self.found = True
 
+        version_output = version_output or ''
         if 'GNU ld' in version_output:
             self.brand = 'bfd'
             self.version = detect_version(version_output)
         elif 'GNU gold' in version_output:
             self.brand = 'gold'
-            self.version = detect_version(version_output, post='$',
-                                          flags=re.MULTILINE)
+            self.version = detect_version(version_output, post='$', flags=re.M)
+        elif 'LLD' in version_output:
+            self.brand = 'lld'
+            self.version = detect_version(version_output)
+        elif '@(#)PROGRAM:ld' in version_output:
+            self.brand = 'apple'
+            self.version = detect_version(version_output)
         else:
             self.brand = 'unknown'
             self.version = None
+
+    @staticmethod
+    def call_command(env, command):
+        for args in (['--version'], ['-v']):
+            try:
+                return env.execute(command + args, stdout=shell.Mode.pipe,
+                                   stderr=shell.Mode.stdout)
+            except shell.CalledProcessError:
+                pass
+        return None
 
     @property
     def lang(self):

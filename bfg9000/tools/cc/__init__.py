@@ -58,21 +58,26 @@ class CcBuilder(Builder):
         arflags_name = arinfo.var('flags').lower()
         arflags = shell.split(env.getvar(arinfo.var('flags'), 'cr'))
 
-        # macOS's ld doesn't support --version, but we can still try it out and
-        # grab the command line.
         ld_command = None
         try:
-            stdout, stderr = env.execute(
-                command + ldflags + ['-v', '-Wl,--version'],
-                stdout=shell.Mode.pipe, stderr=shell.Mode.pipe,
+            # Pass a sentinel flag to the linker so we can examine the verbose
+            # compiler output and try to determine which linker we're using.
+            output = env.execute(
+                command + ldflags + ['-v', '-Wl,-v', '-Wl,--not-a-real-flag'],
+                stdout=shell.Mode.pipe, stderr=shell.Mode.stdout,
                 returncode='any'
             )
 
-            for line in stderr.split('\n'):
-                if '--version' in line:
-                    ld_command = shell.split(line)[0:1]
-                    if os.path.basename(ld_command[0]) != 'collect2':
-                        break
+            for line in output.split('\n'):
+                if '--not-a-real-flag' in line:
+                    args = shell.split(line)
+                    if os.path.basename(args[0]) != 'collect2':
+                        try:
+                            shell.which(args[0])
+                            ld_command = args[0:1]
+                            break
+                        except FileNotFoundError:
+                            pass
         except (OSError, shell.CalledProcessError):
             pass
 
@@ -96,7 +101,8 @@ class CcBuilder(Builder):
             ),
         }
         if ld_command:
-            self._linkers['raw'] = LdLinker(self, env, ld_command, stdout)
+            ld_output = LdLinker.call_command(env, ld_command)
+            self._linkers['raw'] = LdLinker(self, env, ld_command, ld_output)
 
         self.packages = CcPackageResolver(self, env, command, ldflags)
         self.runner = None

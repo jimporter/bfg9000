@@ -1,4 +1,5 @@
 import importlib_metadata as metadata
+import os
 import platform
 import re
 import subprocess
@@ -49,6 +50,8 @@ def parse_triplet(s, default_vendor='unknown'):
 
 @memoize
 def platform_name():
+    if 'BFG_FORCE_PLATFORM' in os.environ:
+        return os.environ['BFG_FORCE_PLATFORM']
     system = platform.system().lower()
     if system.startswith('cygwin'):
         return 'cygwin'
