@@ -273,8 +273,8 @@ class TestCcPackageResolver(CrossPlatformTestCase):
         self.assertEqual(pkg.link_options(self.linker), option_list(
             '-pthread', opts.lib_dir(Directory(Path('/path'))),
             opts.lib_literal('-lfoo'),
-            (opts.rpath_dir(Path('/path')) if self.platform_name == 'linux'
-             else None)
+            (opts.rpath_dir(Path('/path'))
+             if self.platform_name in ['linux', 'macos'] else None)
         ))
 
     def test_resolve_pkg_config(self):

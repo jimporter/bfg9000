@@ -3,7 +3,7 @@ from . import *
 from bfg9000 import file_types, options as opts
 from bfg9000.path import InstallRoot, Path
 from bfg9000.tools.install_name_tool import (
-    darwin_install_name, InstallNameTool, post_install
+    install_name, InstallNameTool, post_install
 )
 
 
@@ -24,15 +24,22 @@ class TestInstallNameTool(ToolTestCase):
         ])
 
     def test_changes(self):
-        self.assertEqual(self.tool('path', changes=['foo', 'bar']), [
-            self.tool, '-change', 'foo', '-change', 'bar', 'path'
-        ])
+        self.assertEqual(self.tool('path', changes=[('old', 'new')]),
+                         [self.tool, '-change', 'old', 'new', 'path'])
+
+    def test_rpaths(self):
+        self.assertEqual(self.tool('path', rpaths=[
+            ('old', 'new'), ('old2', None), (None, 'new2')
+        ]), [self.tool, '-rpath', 'old', 'new', '-delete_rpath', 'old2',
+             '-add_rpath', 'new2', 'path'])
 
     def test_all(self):
-        self.assertEqual(self.tool('path', id='id', changes=['changes']), [
-            self.tool, '-id', 'id', '-change',
-            'changes', 'path'
-        ])
+        self.assertEqual(
+            self.tool('path', id='id', changes=[('old', 'new')],
+                      rpaths=[('old', 'new'), ('old2', None), (None, 'new2')]),
+            [self.tool, '-id', 'id', '-change', 'old', 'new', '-rpath', 'old',
+             'new', '-delete_rpath', 'old2', '-add_rpath', 'new2', 'path']
+        )
 
 
 class TestDarwinInstallName(TestCase):
@@ -41,25 +48,41 @@ class TestDarwinInstallName(TestCase):
 
     def test_shared_library(self):
         lib = file_types.SharedLibrary(Path('libfoo.dylib'), 'native')
-        self.assertEqual(darwin_install_name(lib, self.env),
-                         self.env.builddir.append('libfoo.dylib').string())
+        self.assertEqual(install_name(self.env, lib),
+                         os.path.join('@rpath', 'libfoo.dylib'))
+
+    def test_installed_shared_library(self):
+        lib = file_types.SharedLibrary(
+            Path('libfoo.dylib', InstallRoot.libdir), 'native'
+        )
+        self.assertEqual(install_name(self.env, lib), lib.path)
 
     def test_versioned_shared_library(self):
         lib = file_types.VersionedSharedLibrary(
             Path('libfoo.1.2.3.dylib'), 'native', 'c', Path('libfoo.1.dylib'),
             Path('libfoo.dylib')
         )
-        self.assertEqual(darwin_install_name(lib, self.env),
-                         self.env.builddir.append('libfoo.1.dylib').string())
-        self.assertEqual(darwin_install_name(lib.soname, self.env),
-                         self.env.builddir.append('libfoo.1.dylib').string())
-        self.assertEqual(darwin_install_name(lib.link, self.env),
-                         self.env.builddir.append('libfoo.1.dylib').string())
+
+        expected = os.path.join('@rpath', 'libfoo.1.dylib')
+        self.assertEqual(install_name(self.env, lib), expected)
+        self.assertEqual(install_name(self.env, lib.soname), expected)
+        self.assertEqual(install_name(self.env, lib.link), expected)
+
+    def test_installed_versioned_shared_library(self):
+        lib = file_types.VersionedSharedLibrary(
+            Path('libfoo.1.2.3.dylib', InstallRoot.libdir), 'native', 'c',
+            Path('libfoo.1.dylib', InstallRoot.libdir),
+            Path('libfoo.dylib', InstallRoot.libdir)
+        )
+
+        self.assertEqual(install_name(self.env, lib), lib.soname.path)
+        self.assertEqual(install_name(self.env, lib.soname), lib.soname.path)
+        self.assertEqual(install_name(self.env, lib.link), lib.soname.path)
 
     def test_static_library(self):
         lib = file_types.StaticLibrary(Path('libfoo.a'), 'native')
-        self.assertRaises(TypeError, darwin_install_name, lib, self.env)
-        self.assertEqual(darwin_install_name(lib, self.env, False), None)
+        self.assertRaises(TypeError, install_name, self.env, lib)
+        self.assertEqual(install_name(self.env, lib, strict=False), None)
 
 
 class TestPostInstall(TestCase):
@@ -69,6 +92,7 @@ class TestPostInstall(TestCase):
             self.tool = self.env.tool('install_name_tool')
         self.install_db = MockInstallOutputs(self.env)
         self.exe = file_types.Executable(Path('exe'), None)
+        self.lib = file_types.SharedLibrary(Path('lib'), None)
 
     def test_executable(self):
         self.assertEqual(post_install(
@@ -82,10 +106,10 @@ class TestPostInstall(TestCase):
         self.assertEqual(post_install(
             self.env, opts.option_list(opts.install_name_change(
                 '/lib/libfoo.dylib', '/lib/libbar.dylib'
-            )), self.exe, self.install_db, is_library=True
-        ), [self.tool, '-id', Path('exe', InstallRoot.bindir), '-change',
+            )), self.lib, self.install_db, is_library=True
+        ), [self.tool, '-id', Path('lib', InstallRoot.libdir), '-change',
             '/lib/libfoo.dylib', '/lib/libbar.dylib',
-            Path('exe', InstallRoot.bindir, True)])
+            Path('lib', InstallRoot.libdir, True)])
 
     def test_empty(self):
         self.assertEqual(post_install(

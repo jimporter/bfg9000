@@ -242,6 +242,7 @@ class TestPkgConfigPackage(ToolTestCase):
             self.assertEqual(pkg.link_options(linker), opts.option_list(
                 '-pthread', opts.lib_dir(Directory(Path('/usr/lib'))),
                 opts.lib_literal('-lfoo'),
+                opts.rpath_dir(Path('/usr/lib'), 'always')
             ))
 
     def test_link_options_macho_uninst(self):
@@ -254,6 +255,8 @@ class TestPkgConfigPackage(ToolTestCase):
                 '-pthread',
                 opts.lib_dir(Directory(Path('/path/to/build/foo'))),
                 opts.lib_literal('-lfoo'),
+                opts.rpath_dir(Path('/path/to/build/foo'), 'uninstalled'),
+                opts.rpath_dir(Path('/usr/lib'), 'installed'),
                 opts.install_name_change('/path/to/build/foo/libfoo.dylib',
                                          '/usr/lib/libfoo.dylib')
             ))
@@ -268,12 +271,14 @@ class TestPkgConfigPackage(ToolTestCase):
                 '-pthread',
                 opts.lib_dir(Directory(Path('/path/to/build/foo'))),
                 opts.lib_literal('-lfoo'),
+                opts.rpath_dir(Path('/path/to/build/foo'), 'uninstalled'),
+                opts.rpath_dir(Path('/usr/lib'), 'installed'),
                 opts.install_name_change('/path/to/build/foo/libfoo.dylib',
                                          '/usr/lib/libfoo.dylib'),
                 opts.install_name_change('/path/to/build/bar/libbar.dylib',
                                          '/usr/lib/libbar.dylib'),
                 opts.install_name_change('/path/to/build/baz/libbaz.dylib',
-                                         '/usr/lib/libbaz.dylib'),
+                                         '/usr/lib/libbaz.dylib')
             ))
 
     def test_link_options_static(self):

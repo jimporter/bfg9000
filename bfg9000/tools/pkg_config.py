@@ -235,7 +235,8 @@ class PkgConfigPackage(Package):
                 # should check if there are any install_names set that we need
                 # to update when installing. For more information, see the
                 # pkg-config builtin.
-                extra_opts = self._get_install_name_changes()
+                extra_opts = (self._get_rpaths() +
+                              self._get_install_name_changes())
 
         return flags + libdirs + libs + extra_opts
 

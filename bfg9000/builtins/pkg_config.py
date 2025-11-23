@@ -14,7 +14,7 @@ from ..packages import CommonPackage, Package
 from ..safe_str import literal, shell_literal
 from ..shell import posix as pshell
 from ..shell.syntax import Syntax, Writer
-from ..tools.install_name_tool import darwin_install_name
+from ..tools.install_name_tool import install_name as darwin_install_name
 from ..tools.pkg_config import GeneratedPkgConfigPackage, PkgConfigPackage
 from ..versioning import simplify_specifiers, Specifier, SpecifierSet
 
@@ -423,7 +423,7 @@ class PkgConfigWriter:
         if builder.object_format == 'mach-o':
             all_libs = flatten(i.all for i in data['libs'])
             install_names = filter(None, (darwin_install_name(
-                installify_fn(i), env, strict=False
+                env, installify_fn(i), strict=False
             ) for i in all_libs))
             self._write_variable(out, 'install_names', install_names,
                                  Syntax.shell)

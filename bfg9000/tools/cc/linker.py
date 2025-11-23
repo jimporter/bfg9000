@@ -119,32 +119,37 @@ class CcLinker(BuildCommand):
         return []
 
     def _local_rpath(self, library, output):
-        if ( not isinstance(library, Library) or
-             self.builder.object_format != 'elf' ):
+        if not isinstance(library, Library):
             return None, []
+        elif self.builder.object_format == 'elf':
+            rpath = patchelf.local_rpath(self.env, library, output)
+            if rpath is None:
+                return None, []
 
-        rpath = patchelf.local_rpath(self.env, library, output)
-        if rpath is None:
+            # Prior to binutils 2.28, GNU's BFD-based ld doesn't correctly
+            # respect $ORIGIN in a shared library's DT_RPATH/DT_RUNPATH field.
+            # This results in ld being unable to find other shared libraries
+            # needed by the directly-linked library. For more information, see:
+            # <https://sourceware.org/bugzilla/show_bug.cgi?id=20535>.
+            try:
+                ld = self.builder.linker('raw')
+                fix_rpath = (ld.brand == 'bfd' and ld.version in
+                             SpecifierSet('<2.28'))
+            except KeyError:
+                fix_rpath = False
+
+            rpath_link = []
+            if output and fix_rpath:
+                rpath_link = [
+                    i.path.parent() for i in
+                    recursive_walk(library.runtime_file, 'runtime_deps')
+                ]
+
+            return rpath, rpath_link
+        elif self.builder.object_format == 'mach-o':
+            return install_name_tool.local_rpath(self.env, library, output), []
+        else:
             return None, []
-
-        # Prior to binutils 2.28, GNU's BFD-based ld doesn't correctly respect
-        # $ORIGIN in a shared library's DT_RPATH/DT_RUNPATH field. This results
-        # in ld being unable to find other shared libraries needed by the
-        # directly-linked library. For more information, see:
-        # <https://sourceware.org/bugzilla/show_bug.cgi?id=20535>.
-        try:
-            ld = self.builder.linker('raw')
-            fix_rpath = (ld.brand == 'bfd' and ld.version in
-                         SpecifierSet('<2.28'))
-        except KeyError:
-            fix_rpath = False
-
-        rpath_link = []
-        if output and fix_rpath:
-            rpath_link = [i.path.parent() for i in
-                          recursive_walk(library.runtime_file, 'runtime_deps')]
-
-        return rpath, rpath_link
 
     def always_libs(self, primary):
         # XXX: Don't just asssume that these are the right libraries to use.
@@ -280,8 +285,13 @@ class CcLinker(BuildCommand):
 
         flags.extend('-L' + i for i in uniques(lib_dirs))
         if rpaths:
-            flags.append('-Wl,-rpath,' + safe_str.join(rpaths, ':'))
+            rpaths = uniques(rpaths)
+            if self.builder.linker('raw').brand == 'apple':
+                flags.extend('-Wl,-rpath,' + i for i in rpaths)
+            else:
+                flags.append('-Wl,-rpath,' + safe_str.join(rpaths, ':'))
         if rpath_links:
+            rpath_links = uniques(rpath_links)
             flags.append('-Wl,-rpath-link,' + safe_str.join(rpath_links, ':'))
         return flags
 
@@ -380,9 +390,8 @@ class CcSharedLibraryLinker(CcLinker):
 
     def _soname(self, library):
         if self.env.target_platform.genus == 'darwin':
-            return ['-install_name', install_name_tool.darwin_install_name(
-                library, self.env
-            )]
+            install_name = install_name_tool.install_name(self.env, library)
+            return ['-install_name', install_name]
         else:
             return ['-Wl,-soname,' + library.runtime_file.path.basename()]
 

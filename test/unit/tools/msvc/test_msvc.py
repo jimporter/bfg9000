@@ -172,8 +172,8 @@ class TestMsvcPackageResolver(CrossPlatformTestCase):
         self.assertEqual(pkg.link_options(self.linker), option_list(
             '/DEBUG', opts.lib_dir(Directory(Path('/path'))),
             opts.lib_literal('foo.lib'),
-            (opts.rpath_dir(Path('/path')) if self.platform_name == 'linux'
-             else None)
+            (opts.rpath_dir(Path('/path'))
+             if self.platform_name in ['linux', 'macos'] else None)
         ))
 
     def test_lang(self):

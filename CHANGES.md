@@ -9,6 +9,8 @@
   result of `find_files` hasn't actually changed
 - Add support for system headers when compiling with MSVC
 - New `--verbose` option for configuration
+- The `install_name` for libraries on macOS now (again) uses `@rpath`-based
+  paths prior to installation
 
 ### Bug fixes
 - Automatically update dependencies via `mopack` if the toolchain file has

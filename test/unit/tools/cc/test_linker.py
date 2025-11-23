@@ -97,7 +97,7 @@ class TestCcLinker(CrossPlatformTestCase):
         self.assertEqual(self.linker.flags(opts.option_list()), [])
 
     def test_flags_lib_dir(self):
-        libdir = self.Path('/path/to/lib')
+        libdir = self.Path('/path/to/lib/')
         lib = self.Path('/path/to/lib/libfoo.a')
         srclibdir = self.Path('.', Root.srcdir)
         srclib = self.Path('libfoo.a', Root.srcdir)
@@ -107,15 +107,14 @@ class TestCcLinker(CrossPlatformTestCase):
         if self.shared:
             output = SharedLibrary(self.Path('out'), 'native')
             if self.env.target_platform.genus == 'darwin':
-                soname = ['-install_name',
-                          self.Path('out').string(self.env.base_dirs)]
+                soname = ['-install_name', os.path.join('@rpath', 'out')]
             else:
                 soname = ['-Wl,-soname,out']
         else:
             output = Executable(self.Path('exe'), 'native')
             soname = []
 
-        if self.env.target_platform.genus == 'linux':
+        if self.env.target_platform.genus in ['linux', 'darwin']:
             rpath = ['-Wl,-rpath,' + libdir]
             srcdir_rpath = ['-Wl,-rpath,' + srclibdir]
         else:
@@ -493,8 +492,10 @@ class TestCcLinker(CrossPlatformTestCase):
             self.assertEqual(fn(install_outputs), (
                 [install_name_tool] +
                 (['-id', installed.cross(self.env)] if self.shared else []) +
-                ['-change', deplib.path.string(self.env.base_dirs),
-                 installify(deplib, cross=self.env).path, installed]
+                ['-change', os.path.join('@rpath', deplib.path.suffix),
+                 installify(deplib, cross=self.env).path,
+                 '-rpath', '@loader_path', self.Path('.', InstallRoot.libdir),
+                 installed]
             ))
 
 
