@@ -1,11 +1,11 @@
 from unittest import mock
 
-from .common import BuiltinTest
+from .common import BuiltinTestCase
 from bfg9000.builtins import path
 from bfg9000.path import Path, Root, InstallRoot
 
 
-class TestPath(BuiltinTest):
+class TestPath(BuiltinTestCase):
     def test_path_objects(self):
         self.assertIs(self.context['Path'], Path)
         self.assertIs(self.context['Root'], Root)

@@ -1,4 +1,4 @@
-from .common import BuiltinTest
+from .common import BuiltinTestCase
 
 from bfg9000.builtins import (dist, file_types, regenerate,  # noqa: F401
                               version)
@@ -6,7 +6,7 @@ from bfg9000.path import Path, Root
 from bfg9000.file_types import File, Directory
 
 
-class TestExtraDist(BuiltinTest):
+class TestExtraDist(BuiltinTestCase):
     def setUp(self):
         super().setUp()
 

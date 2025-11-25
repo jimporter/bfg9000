@@ -1,12 +1,12 @@
 from unittest import mock
 
-from .common import BuiltinTest
+from .common import BuiltinTestCase
 from bfg9000 import file_types
 from bfg9000.builtins import copy_file as _copy_file  # noqa: F401
 from bfg9000.path import Path, Root
 
 
-class TestCopyFile(BuiltinTest):
+class TestCopyFile(BuiltinTestCase):
     def test_make_simple(self):
         expected = file_types.File(Path('file.txt'))
         result = self.context['copy_file'](file='file.txt')
@@ -108,7 +108,7 @@ class TestCopyFile(BuiltinTest):
         self.assertEqual(result.creator.description, 'my description')
 
 
-class TestCopyFiles(BuiltinTest):
+class TestCopyFiles(BuiltinTestCase):
     def make_file_list(self, prefix=''):
         files = [file_types.File(Path(i, Root.builddir))
                  for i in [prefix + 'file1', prefix + 'file2']]
@@ -153,7 +153,7 @@ class TestCopyFiles(BuiltinTest):
         )])
 
 
-class TestManPage(BuiltinTest):
+class TestManPage(BuiltinTestCase):
     def test_identity(self):
         expected = file_types.ManPage(Path('myprogram.1', Root.srcdir), '1')
         self.assertIs(self.context['man_page'](expected, compress=False),
@@ -218,7 +218,7 @@ class TestManPage(BuiltinTest):
             self.context['man_page'](man_page, level='2')
 
 
-class TestMakeBackend(BuiltinTest):
+class TestMakeBackend(BuiltinTestCase):
     def test_simple(self):
         makefile = mock.Mock()
         src = self.context['generic_file']('file.txt')
@@ -256,7 +256,7 @@ class TestMakeBackend(BuiltinTest):
         )
 
 
-class TestNinjaBackend(BuiltinTest):
+class TestNinjaBackend(BuiltinTestCase):
     def test_simple(self):
         ninjafile = mock.Mock()
         src = self.context['generic_file']('file.txt')

@@ -3,7 +3,7 @@ import re
 from contextlib import contextmanager
 from unittest import mock
 
-from .common import BuiltinTest
+from .common import BuiltinTestCase
 from .. import *
 
 from bfg9000 import file_types, options as opts
@@ -107,7 +107,7 @@ class TestFramework(TestCase):
             context['framework']('name', 'suffix')
 
 
-class TestPackageCc(BuiltinTest):
+class TestPackageCc(BuiltinTestCase):
     mock_execute = staticmethod(mock_execute_cc)
     mock_platform = 'linux'
 
@@ -240,7 +240,7 @@ class TestPackageMsvc(TestPackageCc):
     mock_platform = 'winnt'
 
 
-class TestSystemExecutable(BuiltinTest):
+class TestSystemExecutable(BuiltinTestCase):
     def test_name(self):
         with mock.patch('bfg9000.builtins.packages.which', mock_which):
             self.assertEqual(

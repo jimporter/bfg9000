@@ -3,7 +3,7 @@ from contextlib import contextmanager, ExitStack
 from unittest import mock
 
 from .. import TestCase
-from .common import BuiltinTest
+from .common import BuiltinTestCase
 
 from bfg9000.builtins import find, project, regenerate, version  # noqa: F401
 from bfg9000.exceptions import SerializationError
@@ -52,7 +52,7 @@ def mock_filesystem():
         yield a, b, c, d
 
 
-class TestFindCache(BuiltinTest):
+class TestFindCache(BuiltinTestCase):
     def setUp(self):
         super().setUp()
         self.cache = find.FindCache()
@@ -170,7 +170,7 @@ class TestFindResult(TestCase):
                          R.exclude_recursive)
 
 
-class TestFileFilter(BuiltinTest):
+class TestFileFilter(BuiltinTestCase):
     def test_file(self):
         f = find.FileFilter('*')
         self.assertEqual(f.match(srcpath('foo')), find.FindResult.include)
@@ -358,7 +358,7 @@ class TestFileFilter(BuiltinTest):
         self.assertRaises(ValueError, find.FileFilter, None)
 
 
-class TestFindCacheFile(BuiltinTest):
+class TestFindCacheFile(BuiltinTestCase):
     def test_save(self):
         with mock.patch('builtins.open'), \
              mock.patch('json.dump') as mock_dump, \
@@ -421,7 +421,7 @@ class TestFindCacheFile(BuiltinTest):
             find.FindCacheFile.load('path', self.context)
 
 
-class TestFilterByPlatform(BuiltinTest):
+class TestFilterByPlatform(BuiltinTestCase):
     def setUp(self):
         super().setUp()
         self.filter = self.context['filter_by_platform']
@@ -452,7 +452,7 @@ class TestFilterByPlatform(BuiltinTest):
                 self.do_test_platform(i, find.FindResult.not_now)
 
 
-class FindTestCase(BuiltinTest):
+class FindTestCase(BuiltinTestCase):
     def setUp(self):
         super().setUp()
         with ExitStack() as stack:

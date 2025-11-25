@@ -1,10 +1,10 @@
-from .common import BuiltinTest
+from .common import BuiltinTestCase
 
 from bfg9000.builtins import (compile, default, link, packages,  # noqa: F401
                               project)
 
 
-class TestDefaultOutputs(BuiltinTest):
+class TestDefaultOutputs(BuiltinTestCase):
     def setUp(self):
         super().setUp()
         self.default = default.DefaultOutputs()
@@ -38,7 +38,7 @@ class TestDefaultOutputs(BuiltinTest):
         self.assertEqual(self.default.outputs, [])
 
 
-class TestDefault(BuiltinTest):
+class TestDefault(BuiltinTestCase):
     def test_single_result(self):
         obj = self.context['object_file'](file='src.cpp')
         self.assertEqual(self.context['default'](obj), obj)

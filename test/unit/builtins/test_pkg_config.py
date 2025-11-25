@@ -1,7 +1,7 @@
 from io import StringIO
 from unittest import mock
 
-from .common import BuiltinTest, TestCase
+from .common import BuiltinTestCase, TestCase
 
 from bfg9000.builtins import (default, link, packages, project,  # noqa: F401
                               version)
@@ -173,7 +173,7 @@ class TestSimpleProperty(TestCase):
         self.assertEqual(f.my_prop, None)
 
 
-class TestPkgConfig(BuiltinTest):
+class TestPkgConfig(BuiltinTestCase):
     def setUp(self):
         super().setUp()
 

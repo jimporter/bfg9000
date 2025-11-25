@@ -1,6 +1,6 @@
 from unittest import mock
 
-from .common import AttrDict, BuiltinTest, TestCase
+from .common import AttrDict, BuiltinTestCase, TestCase
 from bfg9000 import file_types
 from bfg9000.builtins import command as _command
 from bfg9000.builtins.command import Placeholder
@@ -8,7 +8,7 @@ from bfg9000.path import Path, Root
 from bfg9000.safe_str import literal, jbos
 
 
-class TestBaseCommand(BuiltinTest):
+class TestBaseCommand(BuiltinTestCase):
     def assertCommand(self, step, cmds, files=[], extra_deps=[], env={},
                       phony=True):
         self.assertEqual(step.cmds, cmds)
@@ -445,7 +445,7 @@ class TestPlaceholder(TestCase):
         self.assertRaises(TypeError, lambda: p[0:1][0:1])
 
 
-class TestMakeBackend(BuiltinTest):
+class TestMakeBackend(BuiltinTestCase):
     def test_simple(self):
         makefile = mock.Mock()
         result = self.context['command']('foo', cmd=['echo', 'foo'])
@@ -455,7 +455,7 @@ class TestMakeBackend(BuiltinTest):
         )
 
 
-class TestNinjaBackend(BuiltinTest):
+class TestNinjaBackend(BuiltinTestCase):
     def test_simple(self):
         ninjafile = mock.Mock()
         result = self.context['command']('foo', cmd=['echo', 'foo'])

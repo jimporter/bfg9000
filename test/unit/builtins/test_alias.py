@@ -1,10 +1,10 @@
-from .common import BuiltinTest
+from .common import BuiltinTestCase
 from bfg9000 import file_types
 from bfg9000.builtins import alias as alias_  # noqa: F401
 from bfg9000.path import Path, Root
 
 
-class TestAlias(BuiltinTest):
+class TestAlias(BuiltinTestCase):
     def test_alias(self):
         expected = file_types.Phony('foo')
         alias = self.context['alias']('foo')

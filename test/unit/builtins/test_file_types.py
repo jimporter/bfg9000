@@ -1,6 +1,6 @@
 from unittest import mock
 
-from .common import AttrDict, BuiltinTest
+from .common import AttrDict, BuiltinTestCase
 
 from bfg9000.builtins import find, project, regenerate, version  # noqa: F401
 from bfg9000.builtins.file_types import make_file_list, static_file
@@ -12,7 +12,7 @@ def srcpath(p):
     return Path(p, Root.srcdir)
 
 
-class TestStaticFile(BuiltinTest):
+class TestStaticFile(BuiltinTestCase):
     def test_basic(self):
         expected = File(srcpath('file.txt'))
         self.assertSameFile(static_file(self.context, File, 'file.txt'),
@@ -68,7 +68,7 @@ class TestStaticFile(BuiltinTest):
         self.assertEqual(list(self.build.sources()), [self.bfgfile])
 
 
-class TestFileList(BuiltinTest):
+class TestFileList(BuiltinTestCase):
     def make_file_list(self, *args):
         def make_file(src, format=None):
             obj = ObjectFile(src.path.stripext('.o').reroot(), format,
@@ -153,7 +153,7 @@ class TestFileList(BuiltinTest):
         ])
 
 
-class TestAutoFile(BuiltinTest):
+class TestAutoFile(BuiltinTestCase):
     def test_identity(self):
         expected = File(srcpath('file.txt'))
         self.assertIs(self.context['auto_file'](expected), expected)
@@ -232,7 +232,7 @@ class TestAutoFile(BuiltinTest):
                              [self.bfgfile, expected])
 
 
-class TestGenericFile(BuiltinTest):
+class TestGenericFile(BuiltinTestCase):
     type = File
     args = ()
     fn = 'generic_file'

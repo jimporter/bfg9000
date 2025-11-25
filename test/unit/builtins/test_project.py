@@ -1,9 +1,9 @@
-from .common import BuiltinTest
+from .common import BuiltinTestCase
 
 from bfg9000.builtins import project  # noqa: F401
 
 
-class TestProject(BuiltinTest):
+class TestProject(BuiltinTestCase):
     def test_default(self):
         self.assertEqual(self.build['project'].name, 'srcdir')
         self.assertEqual(self.build['project'].version, None)

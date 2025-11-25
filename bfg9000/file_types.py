@@ -16,7 +16,7 @@ class Cloneable:
 
         def __set_name__(self, owner, name):
             # Ensure each class setting a handler has its own set of handlers.
-            if '_clone_handlers' not in owner.__dict__:
+            if '_clone_handlers' not in vars(owner):
                 owner._clone_handlers = owner._clone_handlers.copy()
             owner._clone_handlers[name] = self.fn
 
@@ -34,9 +34,9 @@ class Cloneable:
             # Clone the parent...
             pclone = self.parent.clone(pathfn, recursive)
             # ... and then find ourself in the parent.
-            for k, v in self.parent.__dict__.items():
+            for k, v in vars(self.parent).items():
                 if self is v:
-                    return pclone.__dict__[k]
+                    return vars(pclone)[k]
             raise TypeError('unable to find self in parent')
         else:
             return self.do_clone(pathfn, recursive)
@@ -70,7 +70,7 @@ class Cloneable:
 
         clone = type(self).__new__(type(self))
         seen[id(self)] = clone
-        for k, v in self.__dict__.items():
+        for k, v in vars(self).items():
             setattr(clone, k, clone_attr(v, attr_name=k))
         return clone
 

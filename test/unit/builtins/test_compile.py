@@ -1,7 +1,7 @@
 from collections import namedtuple
 from unittest import mock
 
-from .common import AttrDict, BuiltinTest
+from .common import AttrDict, BuiltinTestCase
 from .. import make_env
 
 from bfg9000 import file_types, options as opts
@@ -26,7 +26,7 @@ def mock_execute(*args, **kwargs):
     return 'version'
 
 
-class CompileTest(BuiltinTest):
+class CompileTest(BuiltinTestCase):
     def output_file(self, name, step={}, lang='c++', mode=None, extra={}):
         compiler = getattr(self.env.builder(lang), mode or self.mode)
         step = AttrDict(**step)
@@ -551,7 +551,7 @@ class TestGeneratedSource(CompileTest):
         self.assertEqual(result.creator.extra_deps, [dep])
 
 
-class TestObjectFiles(BuiltinTest):
+class TestObjectFiles(BuiltinTestCase):
     def make_file_list(self, make_src=False, prefix=''):
         files = [file_types.ObjectFile(Path(i, Root.srcdir), None)
                  for i in [prefix + 'obj1', prefix + 'obj2']]
@@ -622,7 +622,7 @@ class TestGeneratedSources(TestObjectFiles):
         return file_list, files
 
 
-class TestMakeBackend(BuiltinTest):
+class TestMakeBackend(BuiltinTestCase):
     def test_simple(self):
         makefile = make.Makefile(None)
         src = self.context['source_file']('main.cpp')
@@ -683,7 +683,7 @@ class TestMakeBackend(BuiltinTest):
                                  make.Section.flags, True)
 
 
-class TestNinjaBackend(BuiltinTest):
+class TestNinjaBackend(BuiltinTestCase):
     def test_simple(self):
         ninjafile = ninja.NinjaFile(None)
         src = self.context['source_file']('main.cpp')

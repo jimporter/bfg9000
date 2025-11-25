@@ -1,9 +1,9 @@
-from .common import BuiltinTest
+from .common import BuiltinTestCase
 from bfg9000 import builtins
 from bfg9000.builtins.builtin import BuildContext
 
 
-class TestBuiltin(BuiltinTest):
+class TestBuiltin(BuiltinTestCase):
     def test_init(self):
         builtins.init()
         context = BuildContext(self.env, self.build, None)

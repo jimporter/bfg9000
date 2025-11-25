@@ -1,8 +1,5 @@
-from itertools import zip_longest
-
 from . import *
 
-from bfg9000 import iterutils
 from bfg9000.file_types import *
 from bfg9000.path import Path, Root
 
@@ -11,46 +8,7 @@ def pathfn(path, obj):
     return path.reroot()
 
 
-class FileTest(TestCase):
-    def assertSameFile(self, a, b):
-        def diff_node(a, b, attr_path=()):
-            diffs = []
-            if type(a) is not type(b):
-                diffs.append((attr_path, type(a), type(b)))
-            elif iterutils.ismapping(a) and iterutils.ismapping(b):
-                for i in sorted(set(a.keys()) | set(b.keys())):
-                    curr_path = attr_path + (i,)
-                    diffs.extend(diff_node(a.get(i), b.get(i), curr_path))
-            elif iterutils.isiterable(a) and iterutils.isiterable(b):
-                for i, (ai, bi) in enumerate(zip_longest(a, b)):
-                    curr_path = attr_path + (i,)
-                    diffs.extend(diff_node(ai, bi, curr_path))
-            elif isinstance(a, Node) and isinstance(b, Node):
-                seen_key = (id(a), id(b))
-                if seen_key in seen:
-                    return []
-                seen.add(seen_key)
-
-                for i in sorted(set(a.__dict__.keys()) |
-                                set(b.__dict__.keys())):
-                    curr_path = attr_path + (i,)
-                    diffs.extend(diff_node(
-                        getattr(a, i, None), getattr(b, i, None), curr_path
-                    ))
-            elif a != b:
-                diffs.append((attr_path, a, b))
-
-            return diffs
-
-        seen = set()
-        diffs = diff_node(a, b)
-        if diffs:
-            raise AssertionError('mismatched files:\n' + '\n'.join(
-                '  {}: {!r} != {!r}'.format(
-                    '.'.join(str(j) for j in i[0]), *i[1:]
-                ) for i in diffs
-            ))
-
+class FileTypeTestCase(FileTestCase):
     def assertClone(self, a, b, *, recursive=False):
         self.assertSameFile(a.clone(pathfn, recursive), b)
 
@@ -64,7 +22,7 @@ class TestNode(TestCase):
         self.assertTrue(Node('foo') != Node('bar'))
 
 
-class TestFile(FileTest):
+class TestFile(FileTypeTestCase):
     def test_directory_path(self):
         self.assertRaises(ValueError, File, Path('foo/', Root.srcdir))
 
@@ -73,7 +31,7 @@ class TestFile(FileTest):
                          File(Path('a')))
 
 
-class TestDirectory(FileTest):
+class TestDirectory(FileTypeTestCase):
     def test_directory_path(self):
         d = Directory(Path('foo', Root.srcdir))
         self.assertTrue(d.path.directory)
@@ -101,7 +59,7 @@ class TestDirectory(FileTest):
         self.assertClone(src, dst, recursive=True)
 
 
-class TestSourceFile(FileTest):
+class TestSourceFile(FileTypeTestCase):
     def test_clone(self):
         self.assertClone(SourceFile(Path('a', Root.srcdir), 'c'),
                          SourceFile(Path('a'), 'c'))
@@ -111,7 +69,7 @@ class TestSourceFile(FileTest):
                          SourceFile(Path('a'), 'c'), recursive=True)
 
 
-class TestHeaderFile(FileTest):
+class TestHeaderFile(FileTypeTestCase):
     def test_clone(self):
         self.assertClone(HeaderFile(Path('a', Root.srcdir), 'c'),
                          HeaderFile(Path('a'), 'c'))
@@ -121,7 +79,7 @@ class TestHeaderFile(FileTest):
                          HeaderFile(Path('a'), 'c'), recursive=True)
 
 
-class TestPrecompiledHeader(FileTest):
+class TestPrecompiledHeader(FileTypeTestCase):
     def test_clone(self):
         self.assertClone(PrecompiledHeader(Path('a', Root.srcdir), 'c'),
                          PrecompiledHeader(Path('a'), 'c'))
@@ -131,7 +89,7 @@ class TestPrecompiledHeader(FileTest):
                          PrecompiledHeader(Path('a'), 'c'), recursive=True)
 
 
-class TestMsvcPrecompiledHeader(FileTest):
+class TestMsvcPrecompiledHeader(FileTypeTestCase):
     def test_clone(self):
         src = MsvcPrecompiledHeader(
             Path('a.h', Root.srcdir), Path('a.o', Root.srcdir),
@@ -156,7 +114,7 @@ class TestMsvcPrecompiledHeader(FileTest):
         self.assertClone(src.object_file, dst.object_file, recursive=True)
 
 
-class TestHeaderDirectory(FileTest):
+class TestHeaderDirectory(FileTypeTestCase):
     def test_clone(self):
         self.assertClone(HeaderDirectory(Path('a', Root.srcdir)),
                          HeaderDirectory(Path('a')))
@@ -183,7 +141,7 @@ class TestHeaderDirectory(FileTest):
         self.assertClone(src, dst, recursive=True)
 
 
-class TestObjectFile(FileTest):
+class TestObjectFile(FileTypeTestCase):
     def test_clone(self):
         self.assertClone(ObjectFile(Path('a', Root.srcdir), 'elf', 'c'),
                          ObjectFile(Path('a'), 'elf', 'c'))
@@ -193,7 +151,7 @@ class TestObjectFile(FileTest):
                          ObjectFile(Path('a'), 'elf', 'c'), recursive=True)
 
 
-class TestExecutable(FileTest):
+class TestExecutable(FileTypeTestCase):
     def test_clone(self):
         self.assertClone(Executable(Path('a', Root.srcdir), 'elf', 'c'),
                          Executable(Path('a'), 'elf', 'c'))
@@ -203,7 +161,7 @@ class TestExecutable(FileTest):
                          Executable(Path('a'), 'elf', 'c'), recursive=True)
 
 
-class TestSharedLibrary(FileTest):
+class TestSharedLibrary(FileTypeTestCase):
     def test_clone(self):
         self.assertClone(SharedLibrary(Path('a', Root.srcdir), 'elf', 'c'),
                          SharedLibrary(Path('a'), 'elf', 'c'))
@@ -213,7 +171,7 @@ class TestSharedLibrary(FileTest):
                          SharedLibrary(Path('a'), 'elf', 'c'), recursive=True)
 
 
-class TestLinkLibrary(FileTest):
+class TestLinkLibrary(FileTypeTestCase):
     def test_clone(self):
         lib = SharedLibrary(Path('a.so', Root.srcdir), 'elf', 'c')
         self.assertClone(LinkLibrary(Path('a', Root.srcdir), lib),
@@ -226,7 +184,7 @@ class TestLinkLibrary(FileTest):
                          LinkLibrary(Path('a'), dstlib), recursive=True)
 
 
-class TestLoadLibrary(FileTest):
+class TestLoadLibrary(FileTypeTestCase):
     def test_clone(self):
         lib = SharedLibrary(Path('a.so', Root.srcdir), 'elf', 'c')
         self.assertClone(LoadLibrary(Path('a', Root.srcdir), lib),
@@ -239,7 +197,7 @@ class TestLoadLibrary(FileTest):
                          LoadLibrary(Path('a'), dstlib), recursive=True)
 
 
-class TestVersionedSharedLibrary(FileTest):
+class TestVersionedSharedLibrary(FileTypeTestCase):
     def test_clone(self):
         src = VersionedSharedLibrary(
             Path('a.1.2.3', Root.srcdir), 'elf', 'c',
@@ -275,7 +233,7 @@ class TestVersionedSharedLibrary(FileTest):
         self.assertClone(src.link, dst.link, recursive=True)
 
 
-class TestStaticLibrary(FileTest):
+class TestStaticLibrary(FileTypeTestCase):
     def test_clone(self):
         self.assertClone(StaticLibrary(Path('a', Root.srcdir), 'elf', 'c'),
                          StaticLibrary(Path('a'), 'elf', 'c'))
@@ -293,7 +251,7 @@ class TestStaticLibrary(FileTest):
         self.assertClone(src, dst, recursive=True)
 
 
-class TestExportFile(FileTest):
+class TestExportFile(FileTypeTestCase):
     def test_clone(self):
         self.assertClone(ExportFile(Path('a', Root.srcdir)),
                          ExportFile(Path('a')))
@@ -303,7 +261,7 @@ class TestExportFile(FileTest):
                          ExportFile(Path('a')), recursive=True)
 
 
-class TestDllBinary(FileTest):
+class TestDllBinary(FileTypeTestCase):
     def test_clone(self):
         src = DllBinary(Path('a.dll', Root.srcdir), 'elf', 'c',
                         Path('a.lib', Root.srcdir))
@@ -345,7 +303,7 @@ class TestDllBinary(FileTest):
         self.assertClone(src.export_file, dst.export_file, recursive=True)
 
 
-class TestDualUseLibrary(FileTest):
+class TestDualUseLibrary(FileTypeTestCase):
     def test_equality(self):
         shared_a = SharedLibrary(Path('shared_a'), 'elf')
         shared_b = SharedLibrary(Path('shared_b'), 'elf')
@@ -391,7 +349,7 @@ class TestDualUseLibrary(FileTest):
         self.assertClone(shared_src.soname, shared_dst.soname, recursive=True)
 
 
-class TestPkgConfigPcFile(FileTest):
+class TestPkgConfigPcFile(FileTypeTestCase):
     def test_clone(self):
         self.assertClone(PkgConfigPcFile(Path('a', Root.srcdir)),
                          PkgConfigPcFile(Path('a')))

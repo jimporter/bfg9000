@@ -2,14 +2,14 @@ import logging
 import traceback
 from unittest import mock
 
-from .common import BuiltinTest
+from .common import BuiltinTestCase
 from bfg9000.builtins import core  # noqa: F401
 from bfg9000 import exceptions
 from bfg9000.path import Path, Root
 from bfg9000.safe_str import safe_str, safe_format
 
 
-class TestCore(BuiltinTest):
+class TestCore(BuiltinTestCase):
     def test_warning(self):
         with mock.patch('warnings.warn') as warn:
             self.context['warning']('message')

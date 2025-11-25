@@ -1,7 +1,7 @@
 from unittest import mock
 
 from .. import make_env
-from .common import AttrDict, BuiltinTest
+from .common import AttrDict, BuiltinTestCase
 
 from bfg9000 import file_types, options as opts
 from bfg9000.backends.make import syntax as make
@@ -16,7 +16,7 @@ from bfg9000.path import Path, Root
 from bfg9000.tools.msvc import MsvcBuilder
 
 
-class LinkTest(BuiltinTest):
+class LinkTest(BuiltinTestCase):
     def linker(self, lang='c++', mode=None):
         return self.env.builder(lang).linker(mode or self.mode)
 
@@ -734,13 +734,13 @@ class TestLibrary(LinkTest):
         expected = self.output_file('library', mode='static_library')
         result = self.context['library']('library', ['main.cpp'],
                                          kind='static')
-        self.assertSameFile(result, expected, exclude={'forward_opts'})
+        self.assertSameFile(result, expected)
         self.assertSameFile(result.creator.files[0],
                             self.object_file('liblibrary.int/main'))
 
         src = self.context['source_file']('main.cpp')
         result = self.context['library']('library', [src], kind='static')
-        self.assertSameFile(result, expected, exclude={'forward_opts'})
+        self.assertSameFile(result, expected)
 
     def test_make_simple_dual(self):
         linker = self.env.builder('c++').linker('static_library')
@@ -819,7 +819,7 @@ class TestLibrary(LinkTest):
         expected = self.output_file('library', mode='static_library')
         result = self.context['library']('library', ['main.cpp'],
                                          kind='static', extra_deps=[dep])
-        self.assertSameFile(result, expected, exclude={'forward_opts'})
+        self.assertSameFile(result, expected)
         self.assertSameFile(result.creator.files[0],
                             self.object_file('liblibrary.int/main'))
         self.assertEqual(result.creator.extra_deps, [dep])
@@ -836,7 +836,7 @@ class TestLibrary(LinkTest):
             self.assertEqual(result.creator.extra_deps, [dep])
 
 
-class TestWholeArchive(BuiltinTest):
+class TestWholeArchive(BuiltinTestCase):
     def test_identity(self):
         expected = file_types.WholeArchive(
             file_types.StaticLibrary(Path('static', Root.srcdir), None)
@@ -864,7 +864,7 @@ class TestWholeArchive(BuiltinTest):
                           files=['foo.cpp'])
 
 
-class TestMakeBackend(BuiltinTest):
+class TestMakeBackend(BuiltinTestCase):
     def _variables(self, lang='c++'):
         linker = self.env.builder(lang).linker('executable')
         libs = linker.lib_flags(linker.always_libs(True))
@@ -904,7 +904,7 @@ class TestMakeBackend(BuiltinTest):
                                       self._variables(), None)
 
 
-class TestNinjaBackend(BuiltinTest):
+class TestNinjaBackend(BuiltinTestCase):
     def _variables(self, lang='c++'):
         linker = self.env.builder(lang).linker('executable')
         libs = linker.lib_flags(linker.always_libs(True))
@@ -939,7 +939,7 @@ class TestNinjaBackend(BuiltinTest):
         )
 
 
-class TestMsbuildBackend(BuiltinTest):
+class TestMsbuildBackend(BuiltinTestCase):
     def setUp(self):
         self.env = make_env('winnt', clear_variables=True,
                             variables={'CXX': 'nonexist'})

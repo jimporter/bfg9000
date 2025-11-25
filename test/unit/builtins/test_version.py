@@ -1,10 +1,10 @@
-from .common import BuiltinTest
+from .common import BuiltinTestCase
 
 from bfg9000.builtins import version  # noqa: F401
 from bfg9000.versioning import bfg_version, VersionError
 
 
-class TestRequiredVersion(BuiltinTest):
+class TestRequiredVersion(BuiltinTestCase):
     def test_bfg_version(self):
         self.context['bfg9000_required_version']('>=0.1.0')
         with self.assertRaises(VersionError):
@@ -21,6 +21,6 @@ class TestRequiredVersion(BuiltinTest):
             self.context['bfg9000_required_version']('<=0.1.0', '<=2.0.0')
 
 
-class TestVersion(BuiltinTest):
+class TestVersion(BuiltinTestCase):
     def test_version(self):
         self.assertEqual(self.context['bfg9000_version'], bfg_version)

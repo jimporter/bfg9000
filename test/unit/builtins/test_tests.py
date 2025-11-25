@@ -1,7 +1,7 @@
 import ntpath
 import posixpath
 
-from .common import BuiltinTest
+from .common import BuiltinTestCase
 
 from bfg9000.backends.make import writer as make
 from bfg9000.backends.ninja import writer as ninja
@@ -13,7 +13,7 @@ from bfg9000.safe_str import jbos, literal, safe_str, shell_literal
 from bfg9000.shell import posix as pshell, windows as wshell, shell_list
 
 
-class TestTestInputs(BuiltinTest):
+class TestTestInputs(BuiltinTestCase):
     def test_empty(self):
         self.assertEqual(bool(self.build['tests']), False)
 
@@ -23,7 +23,7 @@ class TestTestInputs(BuiltinTest):
         self.assertEqual(bool(self.build['tests']), True)
 
 
-class TestTestCase(BuiltinTest):
+class TestTestCase(BuiltinTestCase):
     def test_basic(self):
         prog = file_types.Executable(Path('prog'), None)
         case = self.context['test'](prog)
@@ -80,7 +80,7 @@ class TestTestCase(BuiltinTest):
                                  environment={'VAR': 'foo'})
 
 
-class TestTestDriver(BuiltinTest):
+class TestTestDriver(BuiltinTestCase):
     def test_basic(self):
         prog = file_types.Executable(Path('prog'), None)
         driver = self.context['test_driver'](prog)
@@ -177,7 +177,7 @@ class TestTestDriver(BuiltinTest):
                                         environment={'VAR': 'foo'})
 
 
-class TestTestDeps(BuiltinTest):
+class TestTestDeps(BuiltinTestCase):
     def test_empty(self):
         self.assertEqual(self.build['tests'].extra_deps, [])
 
@@ -197,7 +197,7 @@ class TestTestDeps(BuiltinTest):
             self.context['test_deps']()
 
 
-class TestBuildCommandsBase(BuiltinTest):
+class TestBuildCommandsBase(BuiltinTestCase):
     path_vars = {
         Root.builddir: None,
     }

@@ -1,7 +1,7 @@
 from collections import namedtuple
 from unittest import mock
 
-from .common import BuiltinTest, FileTest
+from .common import BuiltinTestCase, FileTestCase
 
 from bfg9000.backends.make import syntax as make
 from bfg9000.backends.ninja import syntax as ninja
@@ -14,7 +14,7 @@ from bfg9000.platforms import target
 MockEnv = namedtuple('MockEnv', ['target_platform'])
 
 
-class TestInstall(BuiltinTest):
+class TestInstall(BuiltinTestCase):
     def test_install_none(self):
         self.assertEqual(self.context['install'](), None)
         self.assertEqual(self.build['install'].explicit, [])
@@ -124,7 +124,7 @@ class TestInstall(BuiltinTest):
                 self.assertEqual(m.call_count, 1)
 
 
-class TestInstallify(FileTest):
+class TestInstallify(FileTestCase):
     def _check(self, kind, src, dst, src_kwargs={}, dst_kwargs={},
                directory=None, **kwargs):
         f = kind(src, **src_kwargs, **kwargs)
@@ -221,7 +221,7 @@ class TestInstallify(FileTest):
         self.assertRaises(ValueError, install.installify, exe)
 
 
-class TestMakeBackend(BuiltinTest):
+class TestMakeBackend(BuiltinTestCase):
     def test_no_install(self):
         makefile = make.Makefile(None)
 
@@ -246,7 +246,7 @@ class TestMakeBackend(BuiltinTest):
             ])
 
 
-class TestNinjaBackend(BuiltinTest):
+class TestNinjaBackend(BuiltinTestCase):
     def test_no_install(self):
         ninjafile = ninja.NinjaFile(None)
 
