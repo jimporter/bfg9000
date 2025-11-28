@@ -1,7 +1,7 @@
 from unittest import mock
 
 from .. import make_env
-from .common import AttrDict, BuiltinTestCase
+from .common import AttrDict, BuiltinTestCase, MockPackage
 
 from bfg9000 import file_types, options as opts
 from bfg9000.backends.make import syntax as make
@@ -11,7 +11,6 @@ from bfg9000.builtins import (compile, default, link, packages,  # noqa: F401
                               project)
 from bfg9000.environment import LibraryMode
 from bfg9000.iterutils import listify, unlistify
-from bfg9000.packages import CommonPackage
 from bfg9000.path import Path, Root
 from bfg9000.tools.msvc import MsvcBuilder
 
@@ -170,8 +169,8 @@ class TestExecutable(LinkTest):
         pkg_libdir = opts.lib_dir(file_types.Directory(
             Path('/usr/lib', Root.absolute)
         ))
-        pkg = CommonPackage('pkg', format=fmt,
-                            link_options=opts.option_list(pkg_libdir))
+        pkg = MockPackage('pkg', format=fmt,
+                          link_options=opts.option_list(pkg_libdir))
 
         result = self.context['executable']('exe', ['main.cpp'], libs='libfoo',
                                             packages=pkg)
@@ -381,8 +380,8 @@ class TestSharedLibrary(LinkTest):
         pkg_libdir = opts.lib_dir(file_types.Directory(
             Path('/usr/lib', Root.absolute)
         ))
-        pkg = CommonPackage('pkg', format=fmt,
-                            link_options=opts.option_list(pkg_libdir))
+        pkg = MockPackage('pkg', format=fmt,
+                          link_options=opts.option_list(pkg_libdir))
 
         result = self.context['shared_library']('shared', ['main.cpp'],
                                                 libs='libfoo', packages=pkg)

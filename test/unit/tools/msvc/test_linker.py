@@ -6,7 +6,6 @@ from .common import known_langs, mock_which
 from bfg9000 import options as opts
 from bfg9000.file_types import *
 from bfg9000.iterutils import merge_dicts
-from bfg9000.packages import Framework
 from bfg9000.path import Path
 from bfg9000.tools.msvc import MsvcBuilder
 
@@ -186,7 +185,7 @@ class TestMsvcLinker(CrossPlatformTestCase):
 
         with self.assertRaises(TypeError):
             self.linker.lib_flags(opts.option_list(
-                opts.lib(Framework('cocoa'))
+                opts.framework('cocoa')
             ))
 
     def test_lib_flags_lib_literal(self):

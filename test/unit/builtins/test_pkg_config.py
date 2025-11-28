@@ -253,34 +253,6 @@ class TestPkgConfig(BuiltinTestCase):
                 Package('foo', format='elf'),
             ])
 
-    def test_requires_common_package(self):
-        req = CommonPackage(pkg_config, 'req', format='elf',
-                            compile_options=['-Ireq'],
-                            link_options=['-lreq'])
-        preq = CommonPackage(pkg_config, 'preq', format='elf',
-                             compile_options=['-Ipreq'],
-                             link_options=['-lpreq'])
-        creq = CommonPackage(pkg_config, 'creq', format='elf',
-                             compile_options=['-Icreq'],
-                             link_options=['-lcreq'])
-
-        pkg = PkgConfigInfo(
-            self.context, name='package', version='1.0',
-            requires=[req],
-            requires_private=[preq],
-            conflicts=[creq]
-        )
-        data = pkg.finalize()
-
-        out = StringIO()
-        PkgConfigWriter(self.context)._write(out, data, installed=True)
-        self.assertIn('\nCflags: -Ireq -Ipreq\n', out.getvalue())
-        self.assertIn('\nLibs: -lreq\n', out.getvalue())
-        self.assertIn('\nLibs.private: -lpreq\n', out.getvalue())
-        self.assertNotIn('\nRequires:', out.getvalue())
-        self.assertNotIn('\nRequires.private:', out.getvalue())
-        self.assertNotIn('\nConflicts:', out.getvalue())
-
     def test_requires_pkg_config_package(self):
         pkg_config = self.get_pkg_config()
         with mock.patch('bfg9000.shell.execute', mock_execute):

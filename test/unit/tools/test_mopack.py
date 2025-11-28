@@ -3,9 +3,8 @@ from unittest import mock
 from . import *
 
 from bfg9000.exceptions import PackageResolutionError
-from bfg9000.packages import Framework
 from bfg9000.path import InstallRoot
-from bfg9000.tools.mopack import Mopack, get_linkage, to_frameworks
+from bfg9000.tools.mopack import Mopack, get_linkage
 
 
 class TestMopack(ToolTestCase):
@@ -71,21 +70,3 @@ class TestGetLinkage(ToolTestCase):
              mock.patch('bfg9000.shell.execute', side_effect=OSError()), \
              self.assertRaises(PackageResolutionError):
             get_linkage(self.env, 'foo')
-
-
-class TestToFrameworks(TestCase):
-    def test_lib(self):
-        self.assertEqual(to_frameworks(['lib']), ['lib'])
-
-    def test_framework(self):
-        self.assertEqual(to_frameworks([{'type': 'framework', 'name': 'fw'}]),
-                         [Framework('fw')])
-
-    def test_mixed(self):
-        self.assertEqual(to_frameworks(
-            ['lib', {'type': 'framework', 'name': 'fw'}]
-        ), ['lib', Framework('fw')])
-
-    def test_unknown(self):
-        with self.assertRaises(ValueError):
-            to_frameworks([{'type': 'unknown'}])

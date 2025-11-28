@@ -8,7 +8,6 @@ from .common import SimpleCommand
 from .. import shell
 from ..exceptions import PackageResolutionError
 from ..iterutils import iterate
-from ..packages import Framework
 from ..path import Path, Root
 from ..safe_str import safe_format
 
@@ -105,17 +104,6 @@ def get_linkage(env, name, submodules=None, include_path=None, lib_path=None,
         msg = ((stdout and json.loads(stdout.strip()).get('error')) or
                'unable to resolve package {!r}'.format(name))
         raise PackageResolutionError(msg)
-
-
-def to_frameworks(libs):
-    def convert(lib):
-        if isinstance(lib, dict):
-            if lib['type'] == 'framework':
-                return Framework(lib['name'])
-            raise ValueError('unknown type {!r}'.format(lib['type']))
-        return lib
-
-    return [convert(i) for i in libs]
 
 
 def _dump_yaml(data):

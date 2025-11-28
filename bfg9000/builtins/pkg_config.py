@@ -10,7 +10,7 @@ from ..build_inputs import build_input
 from ..file_types import *
 from ..iterutils import flatten, iterate, uniques, recursive_walk
 from ..objutils import objectify, identity
-from ..packages import CommonPackage, Package
+from ..packages import FrameworkPackage, Package
 from ..safe_str import literal, shell_literal
 from ..shell import posix as pshell
 from ..shell.syntax import Syntax, Writer
@@ -309,7 +309,8 @@ class PkgConfigInfo:
                 if i.deps:
                     deps.append(i)
 
-                if isinstance(i, (CommonPackage, GeneratedPkgConfigPackage)):
+                if isinstance(i, (FrameworkPackage,
+                                  GeneratedPkgConfigPackage)):
                     system.append(i)
                     continue
                 elif isinstance(i, PkgConfigPackage):

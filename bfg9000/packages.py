@@ -48,24 +48,6 @@ class Package:
         )
 
 
-class CommonPackage(Package):
-    def __init__(self, name, submodules=None, version=None, *, format,
-                 compile_options=None, link_options=None):
-        super().__init__(name, submodules, format=format)
-        self.version = version
-
-        # Import this here to avoid circular import.
-        from .options import option_list
-        self._compile_options = compile_options or option_list()
-        self._link_options = link_options or option_list()
-
-    def compile_options(self, compiler, *, raw=False):
-        return self._compile_options
-
-    def link_options(self, linker, *, raw=False):
-        return self._link_options
-
-
 class Framework:
     # A reference to a macOS framework. Can be used in place of Library objects
     # within a Package.
@@ -84,3 +66,20 @@ class Framework:
 
     def __ne__(self, rhs):
         return not (self == rhs)
+
+
+# TODO: Remove this after 0.8 is released.
+class FrameworkPackage(Package):
+    def __init__(self, framework, *, format):
+        super().__init__(framework.full_name, None, format=format)
+
+        # Import this here to avoid circular import.
+        from . import options as opts
+        self._compile_options = opts.option_list()
+        self._link_options = opts.option_list(opts.framework(framework))
+
+    def compile_options(self, compiler, *, raw=False):
+        return self._compile_options
+
+    def link_options(self, linker, *, raw=False):
+        return self._link_options

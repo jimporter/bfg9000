@@ -6,13 +6,10 @@ from unittest import mock
 from .common import BuiltinTestCase
 from .. import *
 
-from bfg9000 import file_types, options as opts
-from bfg9000.build_inputs import BuildInputs
+from bfg9000 import file_types
 from bfg9000.builtins import builtin, packages, project  # noqa: F401
-from bfg9000.exceptions import PackageResolutionError
 from bfg9000.iterutils import first
-from bfg9000.packages import CommonPackage, Framework
-from bfg9000.path import abspath, Path, Root
+from bfg9000.path import abspath
 from bfg9000.versioning import SpecifierSet, Version
 
 
@@ -64,47 +61,6 @@ def mock_execute_msvc(args, **kwargs):
             return ('Microsoft (R) C/C++ Optimizing Compiler Version ' +
                     '19.12.25831 for x86')
     return mock_execute_common(args, **kwargs)
-
-
-class TestFramework(TestCase):
-    def _make_context(self, env):
-        build = BuildInputs(env, Path('build.bfg', Root.srcdir))
-        return builtin.BuildContext(env, build, None)
-
-    def test_framework(self):
-        env = make_env('macos')
-        context = self._make_context(env)
-
-        self.assertEqual(
-            context['framework']('name'),
-            CommonPackage('name', format=env.target_platform.object_format,
-                          link_options=opts.option_list(opts.lib(
-                              Framework('name')
-                          )))
-        )
-
-    def test_framework_suffix(self):
-        env = make_env('macos')
-        context = self._make_context(env)
-
-        self.assertEqual(
-            context['framework']('name', 'suffix'),
-            CommonPackage('name,suffix',
-                          format=env.target_platform.object_format,
-                          link_options=opts.option_list(opts.lib(
-                              Framework('name', 'suffix')
-                          )))
-        )
-
-    def test_frameworks_unsupported(self):
-        env = make_env('linux')
-        context = self._make_context(env)
-
-        with self.assertRaises(PackageResolutionError):
-            context['framework']('name')
-
-        with self.assertRaises(PackageResolutionError):
-            context['framework']('name', 'suffix')
 
 
 class TestPackageCc(BuiltinTestCase):

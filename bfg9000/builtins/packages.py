@@ -1,10 +1,11 @@
+import warnings
+
 from . import builtin
-from .. import options as opts
 from ..exceptions import PackageResolutionError
 from ..file_types import Executable
 from ..iterutils import default_sentinel, listify
 from ..objutils import objectify
-from ..packages import CommonPackage, Framework, Package, PackageKind
+from ..packages import Framework, FrameworkPackage, Package, PackageKind
 from ..path import Path, Root
 from ..shell import which
 from ..versioning import InvalidSpecifier, SpecifierSet
@@ -47,12 +48,13 @@ def system_executable(context, name, format=None):
 
 @builtin.function()
 def framework(context, name, suffix=None):
+    # TODO: Remove this after 0.8 is released.
+    warnings.warn("'framework' is deprecated; use mopack.yml instead")
+
     env = context.env
     if not env.target_platform.has_frameworks:
         raise PackageResolutionError("{} platform doesn't support frameworks"
                                      .format(env.target_platform.name))
 
-    framework = Framework(name, suffix)
-    return CommonPackage(framework.full_name,
-                         format=env.target_platform.object_format,
-                         link_options=opts.option_list(opts.lib(framework)))
+    return FrameworkPackage(Framework(name, suffix),
+                            format=env.target_platform.object_format)

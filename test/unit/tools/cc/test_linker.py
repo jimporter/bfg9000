@@ -9,7 +9,6 @@ from bfg9000 import options as opts
 from bfg9000.builtins.install import installify
 from bfg9000.file_types import *
 from bfg9000.tools.cc import CcBuilder
-from bfg9000.packages import Framework
 from bfg9000.path import abspath, InstallRoot, Path, Root
 from bfg9000.versioning import Version
 
@@ -202,7 +201,7 @@ class TestCcLinker(CrossPlatformTestCase):
 
         # Framework
         self.assertEqual(self.linker.flags(opts.option_list(
-            opts.lib(Framework('cocoa'))
+            opts.framework('cocoa')
         )), [])
 
         # Mixed
@@ -391,7 +390,7 @@ class TestCcLinker(CrossPlatformTestCase):
             ), mode='pkg-config')
 
         # Framework
-        fw = opts.lib(Framework('cocoa'))
+        fw = opts.framework('cocoa')
         if self.env.target_platform.genus == 'darwin':
             self.assertEqual(self.linker.lib_flags(opts.option_list(fw)),
                              ['-framework', 'cocoa'])

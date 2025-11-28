@@ -797,12 +797,6 @@ to modify [static libraries](#static_library).
 
 ## Package resolvers
 
-### framework(*name*, [*suffix*]) { #framework }
-
-Reference a macOS [framework][framework] named *name* with the optional suffix
-*suffix*. Though not a "package" in name, this can be used wherever packages are
-accepted.
-
 ### package(*name*, [*submodules*], [*version*], \*, [*lang*], [*kind*], [*system*]) { #package }
 Availability: `build.bfg`
 {: .subtitle}

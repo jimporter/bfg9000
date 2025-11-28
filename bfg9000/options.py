@@ -178,6 +178,11 @@ class Option(metaclass=OptionMeta):
                 value = self.__check_type(typ, value)
             setattr(self, name, value)
 
+    @classmethod
+    def alias(cls, fn):
+        cls.registry[fn.__name__] = fn
+        return fn
+
     def matches(self, rhs):
         return self == rhs
 
@@ -237,6 +242,11 @@ lib_dir = option('lib_dir', directory=Directory)
 lib_literal = option('lib_literal', value=safe_str.stringy_types)
 module_def = option('module_def', value=ModuleDefFile)
 rpath_link_dir = option('rpath_link_dir', path=path.BasePath)
+
+
+@Option.alias
+def framework(name, suffix=None):
+    return lib(Framework(name, suffix))
 
 
 class gui(Option):

@@ -14,6 +14,9 @@ in progress
 - The `install_name` for libraries on macOS now (again) uses `@rpath`-based
   paths prior to installation
 
+### Breaking changes
+- `framework` is now deprecated; use `mopack.yml` instead
+
 ### Bug fixes
 - Automatically update dependencies via `mopack` if the toolchain file has
   changed
