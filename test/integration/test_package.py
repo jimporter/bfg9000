@@ -31,3 +31,14 @@ class TestOpenGLPackage(IntegrationTest):
     def test_build(self):
         self.build()
         self.assertOutput([executable('program')], '')
+
+
+@skip_if(env.host_platform.genus != 'darwin', 'frameworks only exist on macOS')
+class TestFramework(IntegrationTest):
+    def __init__(self, *args, **kwargs):
+        super().__init__('framework', *args, **kwargs)
+
+    def test_build(self):
+        self.build()
+        output = self.assertPopen([executable('hello')])
+        self.assertRegex(output, 'Hello, world!\n')

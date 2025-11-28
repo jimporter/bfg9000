@@ -1,0 +1,4 @@
+packages:
+  Foundation:
+    origin: system
+    libraries: [{type: framework, name: Foundation}]

@@ -1,0 +1,5 @@
+# -*- mode: python; mode: bfg9000 -*-
+
+foundation = package('Foundation')
+
+executable('hello', files=['main.m'], packages=[foundation])
