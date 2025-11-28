@@ -137,17 +137,14 @@ class OptionMeta(type):
 
         return type.__new__(cls, name, bases, attrs)
 
-    def __init__(cls, name, bases, attrs):
-        is_root = not any(type(i) is OptionMeta for i in bases)
-        if is_root:
-            cls.registry = {}
-        else:
-            cls.registry[name] = cls
-
-        type.__init__(cls, name, bases, attrs)
-
 
 class Option(metaclass=OptionMeta):
+    registry = {}
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        cls.registry[cls.__name__] = cls
+
     def _init(self, *args):
         def check_type(v, t):
             if not t or isinstance(v, t):
