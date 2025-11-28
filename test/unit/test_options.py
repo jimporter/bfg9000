@@ -129,7 +129,7 @@ class TestOptionList(TestCase):
 
 class TestOption(TestCase):
     def test_create(self):
-        my_option = options.option('my_option', ['value'])
+        my_option = options.option('my_option', value=object)
 
         o = my_option('foo')
         self.assertEqual(type(o), my_option)
@@ -140,7 +140,7 @@ class TestOption(TestCase):
         self.assertEqual(o.value, 'foo')
 
     def test_multiple_values(self):
-        my_option = options.option('my_option', ['name', 'value'])
+        my_option = options.option('my_option', name=object, value=object)
 
         o = my_option('foo', 'bar')
         self.assertEqual(type(o), my_option)
@@ -153,18 +153,18 @@ class TestOption(TestCase):
         self.assertEqual(o.value, 'bar')
 
     def test_typed(self):
-        my_option = options.option('my_option', [('value', str)])
+        my_option = options.option('my_option', value=str)
         self.assertEqual(my_option('foo').value, 'foo')
         self.assertRaises(TypeError, my_option, 1)
 
-        my_option = options.option('my_option', [('value', (str, int))])
+        my_option = options.option('my_option', value=(str, int))
         self.assertEqual(my_option('foo').value, 'foo')
         self.assertEqual(my_option(1).value, 1)
         self.assertRaises(TypeError, my_option, 1.2)
 
     def test_enum(self):
         Value = options.OptionEnum('Value', ['foo', 'bar'])
-        my_option = options.option('my_option', [('value', Value)])
+        my_option = options.option('my_option', value=Value)
 
         self.assertEqual(my_option(Value.foo).value, Value.foo)
         self.assertEqual(my_option('foo').value, Value.foo)
@@ -196,7 +196,7 @@ class TestOption(TestCase):
         self.assertRaises(TypeError, my_option, 'foo')
 
     def test_matches(self):
-        my_option = options.option('my_option', ['value'])
+        my_option = options.option('my_option', value=object)
         o1 = my_option('foo')
         o2 = my_option('foo')
         o3 = my_option('bar')
@@ -205,7 +205,7 @@ class TestOption(TestCase):
         self.assertFalse(o1.matches(o3))
 
     def test_equality(self):
-        my_option = options.option('my_option', ['value'])
+        my_option = options.option('my_option', value=object)
         o1 = my_option('foo')
         o2 = my_option('foo')
         o3 = my_option('bar')

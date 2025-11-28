@@ -1,5 +1,6 @@
 import enum
 from collections import namedtuple
+from inspect import Signature, Parameter
 
 from . import path, safe_str
 from .iterutils import isiterable
@@ -112,63 +113,70 @@ variadic = namedtuple('variadic', ['type'])
 
 
 class OptionMeta(type):
-    @staticmethod
-    def _make_args(slots, types):
-        has_variadic = False
-        for s, t in zip(slots, types):
-            assert not has_variadic
-            if isinstance(t, variadic):
-                has_variadic = True
-                yield '*' + s
-            else:
-                yield s
-
     def __new__(cls, name, bases, attrs):
-        fields = attrs.pop('_fields', [])
-        slots = tuple(i[0] if isiterable(i) else i for i in fields)
-        types = tuple(i[1] if isiterable(i) else None for i in fields)
-        attrs.update({'__slots__': [i.replace('*', '') for i in slots],
-                      '_types': types})
+        attrs.setdefault('__annotations__', {})
+        slots = tuple(attrs['__annotations__'].keys())
+        defaults = {}
+        for i in slots:
+            if i in attrs:
+                defaults[i] = attrs.pop(i)
 
-        if '__init__' not in attrs:
-            exec('def __init__(self, {0}):\n    self._init({0})'.format(
-                ', '.join(cls._make_args(slots, types))
-            ), globals(), attrs)
-
+        attrs.update({'__slots__': slots, '_field_defaults': defaults})
         return type.__new__(cls, name, bases, attrs)
 
 
+# This is like `typing.NamedTuple`, except with runtime type checking,
+# promoting strings to enums, and allowing variadic values.
 class Option(metaclass=OptionMeta):
     registry = {}
+
+    @staticmethod
+    def __make_parameters(fields, defaults):
+        has_variadic = False
+        for k, v in fields.items():
+            assert not has_variadic
+            if isinstance(v, variadic):
+                has_variadic = True
+                kind = Parameter.VAR_POSITIONAL
+            else:
+                kind = Parameter.POSITIONAL_OR_KEYWORD
+
+            default = defaults.get(k, Parameter.empty)
+            yield Parameter(k, kind, default=default)
+
+    @staticmethod
+    def __check_type(typ, value):
+        if not typ or isinstance(value, typ):
+            return value
+        elif isinstance(value, str) and issubclass(typ, enum.Enum):
+            try:
+                return typ[value]
+            except Exception:
+                raise ValueError('invalid {} {!r}'.format(typ.__name__, value))
+        else:
+            typ = [typ] if isinstance(typ, type) else typ
+            raise TypeError('expected {}; but got {}'.format(
+                ', '.join(i.__name__ for i in typ), type(value).__name__
+            ))
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
         cls.registry[cls.__name__] = cls
 
-    def _init(self, *args):
-        def check_type(v, t):
-            if not t or isinstance(v, t):
-                return v
-            elif isinstance(v, str) and issubclass(t, enum.Enum):
-                try:
-                    return t[v]
-                except Exception:
-                    raise ValueError('invalid {} {!r}'.format(t.__name__, v))
-            else:
-                t = [t] if isinstance(t, type) else t
-                raise TypeError('expected {}; but got {}'.format(
-                    ', '.join(i.__name__ for i in t), type(v).__name__
-                ))
+    def __init__(self, *args, **kwargs):
+        sig = Signature(list(self.__make_parameters(
+            self.__annotations__, self._field_defaults
+        )))
+        bound = sig.bind(*args, **kwargs)
+        bound.apply_defaults()
 
-        i = 0
-        for k, t in zip(self.__slots__, self._types):
-            if isinstance(t, variadic):
-                v = [check_type(x, t.type) for x in args[i:]]
-                i = len(args)
+        for name, value in bound.arguments.items():
+            typ = self.__annotations__[name]
+            if isinstance(typ, variadic):
+                value = [self.__check_type(typ.type, i) for i in value]
             else:
-                v = check_type(args[i], t)
-                i += 1
-            setattr(self, k, v)
+                value = self.__check_type(typ, value)
+            setattr(self, name, value)
 
     def matches(self, rhs):
         return self == rhs
@@ -197,49 +205,42 @@ class OptionFlag(enum.Flag):
         return self.name
 
 
-def option(name, fields=[]):
-    return type(name, (Option,), {'_fields': fields})
+def option(name, /, **fields):
+    return type(name, (Option,), {'__annotations__': fields})
 
 
-def variadic_option(name, type=None):
-    return option(name, [('value', variadic(type))])
+def variadic_option(name, type=object):
+    return option(name, value=variadic(type))
 
 
 # Compilation options
-include_dir = option('include_dir', [('directory', HeaderDirectory)])
-pch = option('pch', [('header', PrecompiledHeader)])
+include_dir = option('include_dir', directory=HeaderDirectory)
+pch = option('pch', header=PrecompiledHeader)
 pic = option('pic')
 sanitize = option('sanitize')
-std = option('std', [('value', str)])
+std = option('std', value=str)
 
 WarningValue = OptionEnum('WarningValue', ['disable', 'all', 'extra', 'error'])
 warning = variadic_option('warning', WarningValue)
 
 
 class define(Option):
-    _fields = [ ('name', str),
-                ('value', (str, type(None))) ]
-
-    def __init__(self, name, value=None):
-        super()._init(name, value)
+    name: str
+    value: (str, type(None)) = None
 
 
 # Link options
-entry_point = option('entry_point', [('value', str)])
-install_name_change = option('install_name_change',
-                             [('old', str), ('new', str)])
-lib = option('lib', [('library', (Library, Framework, str))])
-lib_dir = option('lib_dir', [('directory', Directory)])
-lib_literal = option('lib_literal', [('value', safe_str.stringy_types)])
-module_def = option('module_def', [('value', ModuleDefFile)])
-rpath_link_dir = option('rpath_link_dir', [('path', path.BasePath)])
+entry_point = option('entry_point', value=str)
+install_name_change = option('install_name_change', old=str, new=str)
+lib = option('lib', library=(Library, Framework, str))
+lib_dir = option('lib_dir', directory=Directory)
+lib_literal = option('lib_literal', value=safe_str.stringy_types)
+module_def = option('module_def', value=ModuleDefFile)
+rpath_link_dir = option('rpath_link_dir', path=path.BasePath)
 
 
 class gui(Option):
-    _fields = [('main', bool)]
-
-    def __init__(self, main=False):
-        super()._init(main)
+    main: bool = False
 
 
 class RpathWhen(OptionFlag):
@@ -249,16 +250,13 @@ class RpathWhen(OptionFlag):
 
 
 class rpath_dir(Option):
-    _fields = [ ('path', path.BasePath),
-                ('when', RpathWhen) ]
-
-    def __init__(self, path, when=RpathWhen.always):
-        super()._init(path, when)
+    path: path.BasePath
+    when: RpathWhen = RpathWhen.always
 
 
 # General options
 debug = option('debug')
-lang = option('lang', [('value', str)])
+lang = option('lang', value=str)
 pthread = option('pthread')
 static = option('static')
 
