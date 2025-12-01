@@ -1,4 +1,5 @@
 import enum
+import sys
 from collections import namedtuple
 from inspect import Signature, Parameter
 
@@ -112,24 +113,29 @@ class ForwardOptions:
 variadic = namedtuple('variadic', ['type'])
 
 
+def _get_ns_annotations(attrs):
+    if '__annotations__' in attrs:
+        return attrs['__annotations__']
+
+    if sys.version_info >= (3, 14):
+        import annotationlib
+        annotate = annotationlib.get_annotate_from_class_namespace(attrs)
+        if annotate:
+            return annotationlib.call_annotate_function(
+                annotate, format=annotationlib.Format.FORWARDREF
+            )
+    return {}
+
+
+def _get_annotations(thing):
+    typ = thing if isinstance(thing, type) else type(thing)
+    if sys.version_info >= (3, 14):
+        import annotationlib
+        return annotationlib.get_annotations(typ)
+    return typ.__dict__.get('__annotations__', {})
+
+
 class OptionMeta(type):
-    def __new__(cls, name, bases, attrs):
-        attrs.setdefault('__annotations__', {})
-        slots = tuple(attrs['__annotations__'].keys())
-        defaults = {}
-        for i in slots:
-            if i in attrs:
-                defaults[i] = attrs.pop(i)
-
-        attrs.update({'__slots__': slots, '_field_defaults': defaults})
-        return type.__new__(cls, name, bases, attrs)
-
-
-# This is like `typing.NamedTuple`, except with runtime type checking,
-# promoting strings to enums, and allowing variadic values.
-class Option(metaclass=OptionMeta):
-    registry = {}
-
     @staticmethod
     def __make_parameters(fields, defaults):
         has_variadic = False
@@ -143,6 +149,28 @@ class Option(metaclass=OptionMeta):
 
             default = defaults.get(k, Parameter.empty)
             yield Parameter(k, kind, default=default)
+
+    def __new__(cls, name, bases, attrs):
+        annotations = _get_ns_annotations(attrs)
+        slots = tuple(annotations.keys())
+        defaults = {}
+        for i in slots:
+            if i in attrs:
+                defaults[i] = attrs.pop(i)
+
+        attrs.update({
+            '__slots__': slots,
+            '_signature': Signature(list(cls.__make_parameters(
+                annotations, defaults
+            )))
+        })
+        return type.__new__(cls, name, bases, attrs)
+
+
+# This is like `typing.NamedTuple`, except with runtime type checking,
+# promoting strings to enums, and allowing variadic values.
+class Option(metaclass=OptionMeta):
+    registry = {}
 
     @staticmethod
     def __check_type(typ, value):
@@ -164,14 +192,12 @@ class Option(metaclass=OptionMeta):
         cls.registry[cls.__name__] = cls
 
     def __init__(self, *args, **kwargs):
-        sig = Signature(list(self.__make_parameters(
-            self.__annotations__, self._field_defaults
-        )))
-        bound = sig.bind(*args, **kwargs)
+        bound = self._signature.bind(*args, **kwargs)
         bound.apply_defaults()
 
+        annotations = _get_annotations(self)
         for name, value in bound.arguments.items():
-            typ = self.__annotations__[name]
+            typ = annotations[name]
             if isinstance(typ, variadic):
                 value = [self.__check_type(typ.type, i) for i in value]
             else:
