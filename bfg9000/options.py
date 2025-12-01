@@ -1,12 +1,14 @@
 import enum
 import sys
+import typing
 from collections import namedtuple
 from inspect import Signature, Parameter
 
-from . import path, safe_str
+from . import safe_str
 from .iterutils import isiterable
 from .file_types import *
 from .packages import Framework
+from .path import BasePath
 
 
 class option_list:
@@ -127,14 +129,6 @@ def _get_ns_annotations(attrs):
     return {}
 
 
-def _get_annotations(thing):
-    typ = thing if isinstance(thing, type) else type(thing)
-    if sys.version_info >= (3, 14):
-        import annotationlib
-        return annotationlib.get_annotations(typ)
-    return typ.__dict__.get('__annotations__', {})
-
-
 class OptionMeta(type):
     @staticmethod
     def __make_parameters(fields, defaults):
@@ -144,11 +138,13 @@ class OptionMeta(type):
             if isinstance(v, variadic):
                 has_variadic = True
                 kind = Parameter.VAR_POSITIONAL
+                annotation = typing.Tuple[v.type]
             else:
                 kind = Parameter.POSITIONAL_OR_KEYWORD
+                annotation = v
 
             default = defaults.get(k, Parameter.empty)
-            yield Parameter(k, kind, default=default)
+            yield Parameter(k, kind, default=default, annotation=annotation)
 
     def __new__(cls, name, bases, attrs):
         annotations = _get_ns_annotations(attrs)
@@ -195,13 +191,13 @@ class Option(metaclass=OptionMeta):
         bound = self._signature.bind(*args, **kwargs)
         bound.apply_defaults()
 
-        annotations = _get_annotations(self)
         for name, value in bound.arguments.items():
-            typ = annotations[name]
-            if isinstance(typ, variadic):
-                value = [self.__check_type(typ.type, i) for i in value]
+            param = self._signature.parameters[name]
+            if param.kind == Parameter.VAR_POSITIONAL:
+                annotation = typing.get_args(param.annotation)[0]
+                value = [self.__check_type(annotation, i) for i in value]
             else:
-                value = self.__check_type(typ, value)
+                value = self.__check_type(param.annotation, value)
             setattr(self, name, value)
 
     @classmethod
@@ -267,7 +263,7 @@ lib = option('lib', library=(Library, Framework, str))
 lib_dir = option('lib_dir', directory=Directory)
 lib_literal = option('lib_literal', value=safe_str.stringy_types)
 module_def = option('module_def', value=ModuleDefFile)
-rpath_link_dir = option('rpath_link_dir', path=path.BasePath)
+rpath_link_dir = option('rpath_link_dir', path=BasePath)
 
 
 @Option.alias
@@ -286,7 +282,7 @@ class RpathWhen(OptionFlag):
 
 
 class rpath_dir(Option):
-    path: path.BasePath
+    path: BasePath
     when: RpathWhen = RpathWhen.always
 
 
