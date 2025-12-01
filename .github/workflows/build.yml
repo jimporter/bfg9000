@@ -11,7 +11,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13']
+        python-version: ['3.10', '3.11', '3.12', '3.13', '3.14']
         compiler: [default]
 
         include:
@@ -28,9 +28,11 @@ jobs:
           # Old Python builds
           - {os: ubuntu-24.04, python-version: '3.8', compiler: default,
              backends: [ninja, make], flags: -Wall -Werror}
+          - {os: ubuntu-latest, python-version: '3.9', compiler: default,
+             backends: [ninja, make], flags: -Wall -Werror}
 
           # Clang builds
-          - {os: ubuntu-latest, python-version: '3.13',
+          - {os: ubuntu-latest, python-version: '3.14',
              extra-tests: [mingw-cross],
              # Install gfortran-13 and gobjc++-13 since clang will try to link
              # to GCC 10 libs and will get confused otherwise.
@@ -39,40 +41,40 @@ jobs:
 
           # Xenial builds (for testing GCJ)
           # FIXME: Currently disabled, since Github retired these images.
-          # - {os: ubuntu-16.04, python-version: '3.13', compiler: default,
+          # - {os: ubuntu-16.04, python-version: '3.14', compiler: default,
           #    extra-packages: [gcj-4.9, gcj-4.9-jdk],
           #    extra-tests: [mingw-cross, gcj], backends: [ninja, make]}
 
           # VS 2015 builds
           # FIXME: Currently disabled, since Github retired these images.
-          # - {os: windows-2019, python-version: '3.13', compiler: default,
+          # - {os: windows-2019, python-version: '3.14', compiler: default,
           #    msvc-version: '14.0', win-sdk: '10.0.17763.0',
           #    boost-version: '1.80.0', qt-version: '5.15.2',
           #    skipped-tests: [fortran, objc, scala],
           #    backends: [ninja, make, msbuild], flags: /WX}
 
           # # VS 2017 builds
-          # - {os: windows-2019, python-version: '3.13', compiler: default,
+          # - {os: windows-2019, python-version: '3.14', compiler: default,
           #    msvc-version: '14.1', win-sdk: '10.0.17763.0',
           #    boost-version: '1.80.0', qt-version: '5.15.2',
           #    skipped-tests: [fortran, objc, scala],
           #    backends: [ninja, make, msbuild], flags: /WX}
 
           # VS 2019 builds
-          - {os: windows-latest, python-version: '3.13', compiler: vs2019,
+          - {os: windows-latest, python-version: '3.14', compiler: vs2019,
              msvc-version: '14.2', win-sdk: '10.0.26100.0',
              boost-version: '1.80.0', qt-version: '5.15.2',
              skipped-tests: [fortran, objc, scala],
              backends: [ninja, make, msbuild], flags: /WX}
 
           # VS 2022 x86 builds
-          - {os: windows-latest, python-version: '3.13', compiler: default-x86,
+          - {os: windows-latest, python-version: '3.14', compiler: default-x86,
              msvc-version: '14.4', msvc-arch: 'x86', win-sdk: '10.0.26100.0',
              boost-version: '1.80.0', skipped-tests: [fortran, objc, qt, scala],
              backends: [ninja, make, msbuild], flags: /WX}
 
           # VS 2022 clang-cl builds
-          - {os: windows-latest, python-version: '3.13', compiler: clang-cl,
+          - {os: windows-latest, python-version: '3.14', compiler: clang-cl,
              msvc-version: '14.4', win-sdk: '10.0.26100.0',
              boost-version: '1.80.0', qt-version: '5.15.2',
              skipped-tests: [boost, fortran, objc, scala],
@@ -80,7 +82,7 @@ jobs:
                -Wno-unused-command-line-argument -D_CRT_SECURE_NO_WARNINGS}
 
           # MinGW builds
-          - {os: windows-2022, python-version: '3.13', compiler: mingw,
+          - {os: windows-2022, python-version: '3.14', compiler: mingw,
              msvc-version: '14.4', win-sdk: '10.0.19041.0',
              qt-version: '5.15.2', qt-arch: 'win64_mingw81',
              skipped-tests: [boost, fortran, objc, pch, scala],
@@ -272,10 +274,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python 3.13
+      - name: Set up Python 3.14
         uses: actions/setup-python@v5
         with:
-          python-version: '3.13'
+          python-version: '3.14'
       - name: Test bdist_wheel
         run: |
           pip install setuptools wheel
@@ -287,10 +289,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python 3.13
+      - name: Set up Python 3.14
         uses: actions/setup-python@v5
         with:
-          python-version: '3.13'
+          python-version: '3.14'
       - name: Install dependencies
         run: |
           pip install '.[test]'
