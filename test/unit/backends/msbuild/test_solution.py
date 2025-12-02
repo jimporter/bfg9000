@@ -23,7 +23,7 @@ class TestUuidMap(TestCase):
                 '"foo": "00000000000000000000000000000001", ' +
                 '"bar": "00000000000000000000000000000002"' +
                 '}}')
-        with mock.patch('builtins.open', mock_open(read_data=data)):
+        with mock.patch('builtins.open', mock.mock_open(read_data=data)):
             u = UuidMap('.bfg_uuid')
 
         self.assertEqual(str(u['foo']), '00000000-0000-0000-0000-000000000001')
@@ -31,7 +31,7 @@ class TestUuidMap(TestCase):
         self.assertRegex(str(quux), self._uuid_ex)
         self.assertEqual(u['quux'], quux)
 
-        with mock.patch('builtins.open', mock_open()), \
+        with mock.patch('builtins.open', mock.mock_open()), \
              mock.patch('json.dump') as m:
             u.save()
             self.assertEqual(m.mock_calls[0][1][0], {
@@ -42,7 +42,7 @@ class TestUuidMap(TestCase):
 
         # Bad version
         data = '{"version": 2, "map": {}}'
-        with mock.patch('builtins.open', mock_open(read_data=data)):
+        with mock.patch('builtins.open', mock.mock_open(read_data=data)):
             self.assertRaises(ValueError, UuidMap, '.bfg_uuid')
 
 

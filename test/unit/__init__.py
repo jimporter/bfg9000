@@ -1,7 +1,6 @@
 import ntpath
 import os.path
 import posixpath
-import unittest.mock
 from itertools import zip_longest
 
 from .. import *
@@ -12,15 +11,6 @@ from bfg9000.file_types import Node
 from bfg9000.path import Path
 from bfg9000.platforms.posix import PosixPath
 from bfg9000.platforms.windows import WindowsPath
-
-
-# Fix the mock lib's mock_open function to work with iter(); note: this is
-# already fixed in Python 3.7.1.
-def mock_open(*args, **kwargs):
-    mo = unittest.mock.mock_open(*args, **kwargs)
-    handle = mo.return_value
-    handle.__iter__.side_effect = lambda: iter(handle.readlines.side_effect())
-    return mo
 
 
 def skip_if_platform(platform):
