@@ -54,7 +54,7 @@ class PkgConfig(Command):
     def _get_command(env):
         cmd = env.getvar('PKG_CONFIG')
         if cmd:
-            return check_which(cmd, env.variables)
+            return check_which(cmd, env=env.variables)
 
         # We don't have an explicitly-set command from the environment, so try
         # to guess what the right command would be based on the C compiler
@@ -68,7 +68,7 @@ class PkgConfig(Command):
         # we guessed the default value for the command.
         if guessed_cmd is not None and guessed_cmd != default:
             try:
-                cmd = which(guessed_cmd, env.variables)
+                cmd = which(guessed_cmd, env=env.variables)
                 log.info('guessed pkg-config {!r} from c compiler {!r}'
                          .format(guessed_cmd, shell.join(sibling.command)))
                 return cmd, True
@@ -76,7 +76,7 @@ class PkgConfig(Command):
                 pass
 
         # Try the default command candidate.
-        return check_which(default, env.variables)
+        return check_which(default, env=env.variables)
 
     def __init__(self, env):
         super().__init__(env, command=('pkg_config',) + self._get_command(env))

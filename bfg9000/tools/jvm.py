@@ -35,7 +35,7 @@ class JvmBuilder(Builder):
         run_name = langinfo.var('runner').lower()
         run_command, run_found = check_which(
             env.getvar(langinfo.var('runner'), langinfo.name),
-            kind='{} runner'.format(langinfo.name)
+            env=env.variables, kind='{} runner'.format(langinfo.name)
         )
 
         super().__init__(langinfo.name, *self._parse_brand(
@@ -51,7 +51,7 @@ class JvmBuilder(Builder):
 
         jar_name = ldinfo.var('linker').lower()
         jar_which = check_which(env.getvar(ldinfo.var('linker'), 'jar'),
-                                kind='jar builder')
+                                env=env.variables, kind='jar builder')
 
         jarflags_name = ldinfo.var('flags').lower()
         jarflags = shell.split(env.getvar(ldinfo.var('flags'), 'cfm'))

@@ -108,7 +108,7 @@ class Command:
 class SimpleCommand(Command):
     def __init__(self, env, name, env_var, default, kind='executable'):
         cmd, found = check_which(env.getvar(env_var, default),
-                                 env.variables, kind=kind)
+                                 env=env.variables, kind=kind)
         super().__init__(env, command=(name, cmd, found))
 
 
@@ -188,7 +188,7 @@ def choose_builder(env, langinfo, builders, *, candidates=None,
     candidates = listify(candidates)
 
     try:
-        cmd = shell.which(candidates, env.variables,
+        cmd = shell.which(candidates, env=env.variables,
                           kind='{} compiler'.format(langinfo.name))
         found = True
     except FileNotFoundError as e:

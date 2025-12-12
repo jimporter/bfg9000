@@ -10,7 +10,7 @@ from ...versioning import Version
 
 
 def executable(env=os.environ):
-    return shell.which(env.get('MSBUILD', ['msbuild', 'xbuild']), env)
+    return shell.which(env.get('MSBUILD', ['msbuild', 'xbuild']), env=env)
 
 
 def version(env=os.environ):

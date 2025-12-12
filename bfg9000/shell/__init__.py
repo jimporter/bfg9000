@@ -33,7 +33,7 @@ def join_paths(paths, sep=os.pathsep):
     return sep.join(paths)
 
 
-def which(names, env=os.environ, base_dirs=None, resolve=False,
+def which(names, *, env=os.environ, base_dirs=None, resolve=False,
           kind='executable'):
     names = iterutils.listify(names)
     if len(names) == 0:
@@ -42,7 +42,9 @@ def which(names, env=os.environ, base_dirs=None, resolve=False,
     paths = split_paths(env.get('PATH', os.defpath))
     exts = ['']
     if platform_info().has_path_ext:
-        exts.extend(split_paths(env.get('PATHEXT', '')))
+        extstr = env.get('PATHEXT')
+        if extstr:
+            exts.extend(split_paths(extstr))
 
     for name in names:
         name = listify(name)

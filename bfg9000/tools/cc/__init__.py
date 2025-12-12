@@ -54,7 +54,7 @@ class CcBuilder(Builder):
 
         ar_name = arinfo.var('linker').lower()
         ar_which = check_which(env.getvar(arinfo.var('linker'), 'ar'),
-                               env.variables, kind='static linker')
+                               env=env.variables, kind='static linker')
         arflags_name = arinfo.var('flags').lower()
         arflags = shell.split(env.getvar(arinfo.var('flags'), 'cr'))
 
@@ -73,7 +73,7 @@ class CcBuilder(Builder):
                     args = shell.split(line)
                     if os.path.basename(args[0]) != 'collect2':
                         try:
-                            shell.which(args[0])
+                            shell.which(args[0], env=env.variables)
                             ld_command = args[0:1]
                             break
                         except FileNotFoundError:

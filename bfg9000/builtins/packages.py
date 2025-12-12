@@ -41,7 +41,8 @@ def package(context, name, submodules=None, version=default_sentinel, *,
 def system_executable(context, name, format=None):
     env = context.env
     return Executable(
-        Path(which([[name]], env.variables, resolve=True)[0], Root.absolute),
+        Path(which([[name]], env=env.variables, resolve=True)[0],
+             Root.absolute),
         format or env.host_platform.object_format
     )
 

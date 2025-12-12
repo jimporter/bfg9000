@@ -9,7 +9,7 @@ from ...versioning import Version
 
 
 def executable(env=os.environ):
-    return shell.which(env.get('NINJA', ['ninja', 'ninja-build']), env)
+    return shell.which(env.get('NINJA', ['ninja', 'ninja-build']), env=env)
 
 
 def version(env=os.environ):
