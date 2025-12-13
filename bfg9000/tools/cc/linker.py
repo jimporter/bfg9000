@@ -93,7 +93,7 @@ class CcLinker(BuildCommand):
                 stdout=shell.Mode.pipe, stderr=shell.Mode.devnull
             )
             m = re.search(r'^libraries: =(.*)', output, re.MULTILINE)
-            search_dirs = [abspath(i) for i in shell.split_paths(m.group(1))]
+            search_dirs = shell.split_paths(m.group(1), fn=abspath)
 
             # clang doesn't respect LIBRARY_PATH with -print-search-dirs;
             # see <https://bugs.llvm.org//show_bug.cgi?id=23877>.

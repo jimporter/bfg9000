@@ -405,8 +405,7 @@ class PkgConfigWriter:
 
         if installed:
             for i in path.InstallRoot:
-                if i != path.InstallRoot.bindir:
-                    self._write_variable(out, i.name, env.install_dirs[i])
+                self._write_variable(out, i.name, env.install_dirs[i])
         else:
             self._write_variable(out, 'srcdir', env.srcdir)
             # Set the builddir to be relative to the .pc file's dir so that
@@ -414,6 +413,7 @@ class PkgConfigWriter:
             self._write_variable(out, 'builddir', path.Path('.').relpath(
                 self.directory, prefix='${pcfiledir}', localize=False
             ))
+            self._write_variable(out, 'bindir', '${pcfiledir}')
 
         # We set absolute install_names when building mach-o libraries, but to
         # allow users to use the `-uninstalled` variant of the pkg-config file,

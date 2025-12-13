@@ -901,13 +901,17 @@ for the following fields:
 If *auto_fill* is false, this function will return a [*package*](#package)
 object that can be used in other build steps as normal.
 
-### system_executable(*name*, [*format*]) { #system_executable }
+### system_executable(*name*, [*format*], [*package*]) { #system_executable }
 Availability: `build.bfg`
 {: .subtitle}
 
 Search for an executable named *name* somewhere in the system's `$PATH`. If
 *format* is unset, the executable's object format will be set to the default
 for the host platform.
+
+If *package* is set, search for the executable in the binary directory
+associated with the package. For `pkg-config` packages, this checks the `bindir`
+variable in the `.pc` file.
 
 This function recognizes the following environment variables:
 [`$PATH`](environment-vars.md#path), [`$PATHEXT`](environment-vars.md#pathext).

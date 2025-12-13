@@ -4,6 +4,7 @@ from enum import Enum
 
 from .. import iterutils
 from .list import shell_list  # noqa: F401
+from ..iterutils import default_sentinel
 from ..path import BasePath, Path, issemiabs
 from ..platforms.host import platform_info
 from ..safe_str import jbos, safe_str
@@ -23,28 +24,34 @@ class Mode(Enum):
     devnull = subprocess.DEVNULL
 
 
-def split_paths(s, sep=os.pathsep):
+def split_paths(s, sep=os.pathsep, fn=lambda x: x):
     if s is None:
         return []
-    return [i for i in s.split(sep) if i]
+    return [fn(i) for i in s.split(sep) if i]
 
 
 def join_paths(paths, sep=os.pathsep):
     return sep.join(paths)
 
 
-def which(names, *, env=os.environ, base_dirs=None, resolve=False,
-          kind='executable'):
+def which(names, path=default_sentinel, pathext=default_sentinel, *,
+          env=os.environ, base_dirs=None, resolve=False, kind='executable'):
     names = iterutils.listify(names)
     if len(names) == 0:
         raise TypeError('must supply at least one name')
 
-    paths = split_paths(env.get('PATH', os.defpath))
-    exts = ['']
-    if platform_info().has_path_ext:
-        extstr = env.get('PATHEXT')
-        if extstr:
-            exts.extend(split_paths(extstr))
+    if path is default_sentinel:
+        path = split_paths(env.get('PATH', os.defpath))
+    else:
+        path = [p.string(base_dirs) if isinstance(p, Path) else p
+                for p in path]
+
+    if pathext is default_sentinel:
+        pathext = ['']
+        if platform_info().has_path_ext:
+            extstr = env.get('PATHEXT')
+            if extstr:
+                pathext.extend(split_paths(extstr))
 
     for name in names:
         name = listify(name)
@@ -53,12 +60,12 @@ def which(names, *, env=os.environ, base_dirs=None, resolve=False,
         if issemiabs(check):
             fullpaths = [check]
         else:
-            search = ['.'] if os.path.dirname(check) else paths
-            fullpaths = [os.path.normpath(os.path.join(path, check))
-                         for path in search]
+            search = ['.'] if os.path.dirname(check) else path
+            fullpaths = [os.path.normpath(os.path.join(p, check))
+                         for p in search]
 
         for fullpath in fullpaths:
-            for ext in exts:
+            for ext in pathext:
                 withext = fullpath + ext
                 if os.path.exists(withext):
                     return [withext] + name[1:] if resolve else name

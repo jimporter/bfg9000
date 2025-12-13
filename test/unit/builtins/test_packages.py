@@ -31,6 +31,8 @@ def mock_execute_common(args, **kwargs):
             return '1.2.3\n'
         elif '--variable=pcfiledir' in args:
             return '/path/to/pkg-config'
+        elif '--variable=bindir' in args:
+            return '/path/to/bin'
         elif '--cflags-only-I' in args:
             return '/path/to/include'
     raise OSError('unknown command: {}'.format(args))
@@ -204,6 +206,19 @@ class TestSystemExecutable(BuiltinTestCase):
                 file_types.Executable(abspath('/name'),
                                       self.env.target_platform.object_format)
             )
+
+    def test_package(self):
+        env = make_env('linux', clear_variables=True)
+        build, context = self._make_context(env)
+
+        with mock.patch('bfg9000.shell.execute', mock_execute_cc), \
+             mock.patch('bfg9000.shell.which', mock_which), \
+             mock.patch('os.path.exists', return_value=True), \
+             mock.patch('logging.log'):
+            pkg = context['package']('name')
+            prog = context['system_executable']('program', package=pkg)
+            self.assertEqual(prog.path, abspath('/path/to/bin/program',
+                                                absdrive=False))
 
     def test_format(self):
         with mock.patch('bfg9000.builtins.packages.which', mock_which):

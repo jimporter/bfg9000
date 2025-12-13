@@ -104,8 +104,7 @@ class EnvVarDict(dict):
             self[k] = v
 
     def getpaths(self, key, default=None, **kwargs):
-        return [abspath(i) for i in
-                shell.split_paths(self.get(key, default), **kwargs)]
+        return shell.split_paths(self.get(key, default), fn=abspath, **kwargs)
 
 
 class Toolchain:

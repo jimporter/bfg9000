@@ -1,5 +1,4 @@
 import argparse
-import os
 import re
 import subprocess
 
@@ -48,6 +47,7 @@ class PkgConfig(Command):
         'lib_dirs': (['--libs-only-L'], _shell_split),
         'other_ldflags': (['--libs-only-other'], _shell_split),
         'ldlibs': (['--libs-only-l'], _shell_split),
+        'bin_dir': (['--variable=bindir'], None),
     }
 
     @staticmethod
@@ -152,6 +152,10 @@ class PkgConfigPackage(Package):
         lib_dirs = _lib_dirs_parser.parse_known_args(args)[0].lib_dirs
         return [Path(i, Root.absolute) for i in lib_dirs or []]
 
+    def bin_dir(self, **kwargs):
+        bindir = self._call(self.pcnames, 'bin_dir', self.static, **kwargs)
+        return Path(bindir, Root.absolute) if bindir else None
+
     def _get_rpaths(self):
         extra_env = {'PKG_CONFIG_ALLOW_SYSTEM_LIBS': '1'}
 
@@ -241,7 +245,7 @@ class PkgConfigPackage(Package):
         return flags + libdirs + libs + extra_opts
 
     def path(self):
-        return self._call(self.pcnames[0], 'path')
+        return Path(self._call(self.pcnames[0], 'path'), Root.absolute)
 
     def __repr__(self):
         return '<{}({!r}, {!r})>'.format(
@@ -260,5 +264,5 @@ def resolve(env, name, *args, generated=False, **kwargs):
     type = GeneratedPkgConfigPackage if generated else PkgConfigPackage
     pkg = type(env.tool('pkg_config'), name, *args, **kwargs)
     log.info('found package {!r} version {} via pkg-config in {}'
-             .format(pkg.name, pkg.version, os.path.normpath(pkg.path())))
+             .format(pkg.name, pkg.version, pkg.path().string()))
     return pkg

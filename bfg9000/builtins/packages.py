@@ -38,13 +38,14 @@ def package(context, name, submodules=None, version=default_sentinel, *,
 
 @builtin.function()
 @builtin.type(Executable)
-def system_executable(context, name, format=None):
+def system_executable(context, name, format=None, *, package=None):
     env = context.env
-    return Executable(
-        Path(which([[name]], env=env.variables, resolve=True)[0],
-             Root.absolute),
-        format or env.host_platform.object_format
-    )
+    if package:
+        exe = which([[name]], [package.bin_dir()], resolve=True)[0]
+    else:
+        exe = which([[name]], env=env.variables, resolve=True)[0]
+    return Executable(Path(exe, Root.absolute),
+                      format or env.host_platform.object_format)
 
 
 @builtin.function()

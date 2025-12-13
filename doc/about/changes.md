@@ -13,6 +13,11 @@ in progress
 - New `--verbose` option for configuration
 - The `install_name` for libraries on macOS now (again) uses `@rpath`-based
   paths prior to installation
+- Generated `pkg-config` files now include a `bindir` variable to simplify
+  locating executables for that package, especially when the package isn't
+  installed
+- `system_executable` now accepts a `package` argument to search for the
+  executable in the binary directory for that package
 
 ### Breaking changes
 - `framework` is now deprecated; use `mopack.yml` instead
