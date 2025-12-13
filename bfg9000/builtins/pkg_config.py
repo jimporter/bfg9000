@@ -413,7 +413,7 @@ class PkgConfigWriter:
             self._write_variable(out, 'builddir', path.Path('.').relpath(
                 self.directory, prefix='${pcfiledir}', localize=False
             ))
-            self._write_variable(out, 'bindir', '${pcfiledir}')
+            self._write_variable(out, 'bindir', '${builddir}')
 
         # We set absolute install_names when building mach-o libraries, but to
         # allow users to use the `-uninstalled` variant of the pkg-config file,
