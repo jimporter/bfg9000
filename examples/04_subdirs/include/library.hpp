@@ -3,6 +3,6 @@
 
 #include "detail/export.hpp"
 
-void LIB_PUBLIC hello();
+LIB_PUBLIC void hello();
 
 #endif

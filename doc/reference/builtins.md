@@ -500,11 +500,10 @@ This build step recognizes the [static linking environment
 variables](environment-vars.md#static-linking).
 
 !!! note
-    On Windows, this step will add a preprocessor macro on Windows named
-    `LIB<NAME>_STATIC` that can be used for declaring public symbols. See
-    [Building libraries on
-    Windows](../user/writing.md#building-libraries-on-windows) for an example of
-    how to use this macro in your code.
+    This step will add a preprocessor macro named `LIB<NAME>_STATIC` that can
+    be used for declaring public symbols. See [Symbol visibility in
+    libraries](../user/writing.md#symbol-visibility-in-libraries) for an example
+    of how to use this macro in your code.
 
 ### whole_archive(*name*, [*files*, \*, ..., [*extra_deps*]]) { #whole_archive }
 Availability: `build.bfg`

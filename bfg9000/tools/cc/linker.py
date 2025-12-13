@@ -66,10 +66,10 @@ class CcLinker(BuildCommand):
 
     @property
     def _has_link_macros(self):
-        # We only need to define LIBFOO_EXPORTS/LIBFOO_STATIC macros on
-        # platforms that have different import/export rules for libraries. We
-        # approximate this by checking if the platform uses import libraries,
-        # and only define the macros if it does.
+        # We only need to define LIBFOO_EXPORTS macros on platforms that have
+        # different import/export rules for libraries. We approximate this by
+        # checking if the platform uses import libraries, and only define the
+        # macro if it does.
         return self.env.target_platform.has_import_library
 
     @memoize_method

@@ -158,24 +158,28 @@ shared = shared_library('shared', files=['shared.cpp'])
 static = static_library('static', files=['static.cpp'])
 ```
 
-### Building libraries on Windows
+### Symbol visibility in libraries
 
 On Windows, native shared libraries need to annotate public symbols so that the
-dynamic linker knows what to do. To facilitate this, bfg9000 automatically
-defines a preprocessor macro named for native-runtime languages (e.g. C or C++)
-when building on Windows. For shared libraries, it defines `LIB<NAME>_EXPORTS`;
-for static, `LIB<NAME>_STATIC`. The following snippet shows how you can use
-these macros to set the appropriate attributes for your public symbols:
+dynamic linker knows what to do. In addition, on Linux, you may want to adjust
+the [default visibility for symbols][gcc-visibility]. To facilitate this,
+bfg9000 automatically defines preprocessor macros for native-runtime languages
+(e.g. C or C++) when building. For shared libraries, it defines
+`LIB<NAME>_EXPORTS`; for static, `LIB<NAME>_STATIC`. The following snippet shows
+how you can use these macros to set the appropriate attributes for your public
+symbols:
 
 ```c
-#if defined(_WIN32) && !defined(LIBLIBRARY_STATIC)
+#ifdef LIBLIBRARY_STATIC
+#  define LIB_PUBLIC
+#elif defined(_WIN32)
 #  ifdef LIBLIBRARY_EXPORTS
 #    define LIB_PUBLIC __declspec(dllexport)
 #  else
 #    define LIB_PUBLIC __declspec(dllimport)
 #  endif
 #else
-#  define LIB_PUBLIC
+#  define LIB_PUBLIC [[gnu::visibility("default")]]
 #endif
 ```
 
@@ -551,6 +555,7 @@ automatically be included in the `pkg-config` info.
 There are several other options available to tweak the output of this function,
 detailed in the [reference guide](../reference/builtins.md#pkg_config).
 
+[gcc-visibility]: https://gcc.gnu.org/wiki/Visibility
 [mopack]: https://jimporter.github.io/mopack/
 [pkg-config]: https://www.freedesktop.org/wiki/Software/pkg-config/
 [argparse]: https://docs.python.org/library/argparse.html

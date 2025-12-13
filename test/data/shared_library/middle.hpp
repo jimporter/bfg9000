@@ -1,18 +1,20 @@
 #ifndef INC_MIDDLE_HPP
 #define INC_MIDDLE_HPP
 
-#if defined(_WIN32) && !defined(MIDDLE_LIBMIDDLE_STATIC)
+#ifdef MIDDLE_LIBMIDDLE_STATIC
+#  define LIBMIDDLE_PUBLIC
+#elif defined(_WIN32)
 #  ifdef MIDDLE_LIBMIDDLE_EXPORTS
 #    define LIBMIDDLE_PUBLIC __declspec(dllexport)
 #  else
 #    define LIBMIDDLE_PUBLIC __declspec(dllimport)
 #  endif
 #else
-#  define LIBMIDDLE_PUBLIC
+#  define LIBMIDDLE_PUBLIC [[gnu::visibility("default")]]
 #endif
 
 namespace middle {
-  void LIBMIDDLE_PUBLIC hello();
+  LIBMIDDLE_PUBLIC void hello();
 }
 
 #endif

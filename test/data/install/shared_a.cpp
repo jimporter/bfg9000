@@ -2,6 +2,6 @@
 
 #include <iostream>
 
-void SHARED_A_PUBLIC shared_a::hello() {
+SHARED_A_PUBLIC void shared_a::hello() {
   std::cout << "hello from shared a!" << std::endl;
 }

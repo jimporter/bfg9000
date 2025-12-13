@@ -3,7 +3,7 @@
 #include <ogg/ogg.h>
 
 namespace inner {
-  void LIBINNER_PUBLIC use_ogg() {
+  LIBINNER_PUBLIC void use_ogg() {
     ogg_sync_state state;
 
     ogg_sync_init(&state);

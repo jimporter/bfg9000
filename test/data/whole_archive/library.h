@@ -2,13 +2,13 @@
 #define INC_LIBRARY_H
 
 #if defined(_WIN32)
-#  ifdef LIBSTATIC_STATIC
+#  if defined(LIBSTATIC_EXPORTS) || defined(LIBSTATIC_STATIC)
 #    define LIB_PUBLIC __declspec(dllexport)
 #  else
 #    define LIB_PUBLIC __declspec(dllimport)
 #  endif
 #else
-#  define LIB_PUBLIC
+#  define LIB_PUBLIC __attribute__((visibility("default")))
 #endif
 
 #ifdef __cplusplus

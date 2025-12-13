@@ -1,18 +1,20 @@
 #ifndef INC_SHARED_A_HPP
 #define INC_SHARED_A_HPP
 
-#if defined(_WIN32) && !defined(LIBSHARED_A_STATIC)
+#ifdef LIBSHARED_A_STATIC
+#  define SHARED_A_PUBLIC
+#elif defined(_WIN32)
 #  ifdef LIBSHARED_A_EXPORTS
 #    define SHARED_A_PUBLIC __declspec(dllexport)
 #  else
 #    define SHARED_A_PUBLIC __declspec(dllimport)
 #  endif
 #else
-#  define SHARED_A_PUBLIC
+#  define SHARED_A_PUBLIC [[gnu::visibility("default")]]
 #endif
 
 namespace shared_a {
-  void SHARED_A_PUBLIC hello();
+  SHARED_A_PUBLIC void hello();
 }
 
 #endif

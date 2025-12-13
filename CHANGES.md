@@ -16,6 +16,8 @@
   installed
 - `system_executable` now accepts a `package` argument to search for the
   executable in the binary directory for that package
+- When building a static library, `LIB<LIBRARY>_STATIC` is now defined on all
+  platforms, not just Windows
 
 ### Breaking changes
 - `framework` is now deprecated; use `mopack.yml` instead

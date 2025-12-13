@@ -1,16 +1,18 @@
 #ifndef INC_LIBRARY_HPP
 #define INC_LIBRARY_HPP
 
-#if defined(_WIN32) && !defined(LIB_LIBLIBRARY_STATIC)
+#ifdef LIB_LIBLIBRARY_STATIC
+#  define LIB_PUBLIC
+#elif defined(_WIN32)
 #  ifdef LIB_LIBLIBRARY_EXPORTS
 #    define LIB_PUBLIC __declspec(dllexport)
 #  else
 #    define LIB_PUBLIC __declspec(dllimport)
 #  endif
 #else
-#  define LIB_PUBLIC
+#  define LIB_PUBLIC [[gnu::visibility("default")]]
 #endif
 
-void LIB_PUBLIC hello(const char *name);
+LIB_PUBLIC void hello(const char *name);
 
 #endif

@@ -2,6 +2,6 @@
 
 #include <iostream>
 
-void STATIC_B_PUBLIC static_b::hello() {
+STATIC_B_PUBLIC void static_b::hello() {
   std::cout << "hello from static b!" << std::endl;
 }
