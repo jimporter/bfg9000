@@ -4,7 +4,7 @@
 #include "inner.hpp"
 
 namespace hello {
-  LIBHELLO_PUBLIC void say_hello() {
+  void say_hello() {
     inner::use_ogg();
     std::cout << "hello, library!" << std::endl;
   }

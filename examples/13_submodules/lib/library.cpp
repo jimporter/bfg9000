@@ -3,6 +3,6 @@
 #include <iostream>
 #include <string>
 
-LIB_PUBLIC void hello(const char *name) {
+void hello(const char *name) {
   std::cout << "Hello, " << name << std::string(ENTHUSIASM, '!') << std::endl;
 }

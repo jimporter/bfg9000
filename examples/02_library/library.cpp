@@ -2,6 +2,6 @@
 
 #include <iostream>
 
-LIB_PUBLIC void hello() {
+void hello() {
   std::cout << "hello, library!" << std::endl;
 }
