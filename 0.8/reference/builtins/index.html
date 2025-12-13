@@ -588,11 +588,10 @@ version of the library.</p>
 variables</a>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>On Windows, this step will add a preprocessor macro on Windows named
-<code>LIB&lt;NAME&gt;_STATIC</code> that can be used for declaring public symbols. See
-<a href="../../user/writing/#building-libraries-on-windows">Building libraries on
-Windows</a> for an example of
-how to use this macro in your code.</p>
+<p>This step will add a preprocessor macro named <code>LIB&lt;NAME&gt;_STATIC</code> that can
+be used for declaring public symbols. See <a href="../../user/writing/#symbol-visibility-in-libraries">Symbol visibility in
+libraries</a> for an example
+of how to use this macro in your code.</p>
 </div>
 <h3 id="whole_archive">whole_archive(<em>name</em>, [<em>files</em>, *, ..., [<em>extra_deps</em>]])<a class="headerlink" href="#whole_archive" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
@@ -902,11 +901,14 @@ for the following fields:</p>
 </ul>
 <p>If <em>auto_fill</em> is false, this function will return a <a href="#package"><em>package</em></a>
 object that can be used in other build steps as normal.</p>
-<h3 id="system_executable">system_executable(<em>name</em>, [<em>format</em>])<a class="headerlink" href="#system_executable" title="Permanent link">§</a></h3>
+<h3 id="system_executable">system_executable(<em>name</em>, [<em>format</em>], [<em>package</em>])<a class="headerlink" href="#system_executable" title="Permanent link">§</a></h3>
 <p class="subtitle">Availability: <code>build.bfg</code></p>
 <p>Search for an executable named <em>name</em> somewhere in the system's <code>$PATH</code>. If
 <em>format</em> is unset, the executable's object format will be set to the default
 for the host platform.</p>
+<p>If <em>package</em> is set, search for the executable in the binary directory
+associated with the package. For <code>pkg-config</code> packages, this checks the <code>bindir</code>
+variable in the <code>.pc</code> file.</p>
 <p>This function recognizes the following environment variables:
 <a href="../environment-vars/#path"><code>$PATH</code></a>, <a href="../environment-vars/#pathext"><code>$PATHEXT</code></a>.</p>
 <h2 id="environment">Environment<a class="headerlink" href="#environment" title="Permanent link">§</a></h2>

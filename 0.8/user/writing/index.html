@@ -289,21 +289,25 @@ accomplish:</p>
 <pre><code class="language-python">shared = shared_library('shared', files=['shared.cpp'])
 static = static_library('static', files=['static.cpp'])
 </code></pre>
-<h3 id="building-libraries-on-windows">Building libraries on Windows<a class="headerlink" href="#building-libraries-on-windows" title="Permanent link">§</a></h3>
+<h3 id="symbol-visibility-in-libraries">Symbol visibility in libraries<a class="headerlink" href="#symbol-visibility-in-libraries" title="Permanent link">§</a></h3>
 <p>On Windows, native shared libraries need to annotate public symbols so that the
-dynamic linker knows what to do. To facilitate this, bfg9000 automatically
-defines a preprocessor macro named for native-runtime languages (e.g. C or C++)
-when building on Windows. For shared libraries, it defines <code>LIB&lt;NAME&gt;_EXPORTS</code>;
-for static, <code>LIB&lt;NAME&gt;_STATIC</code>. The following snippet shows how you can use
-these macros to set the appropriate attributes for your public symbols:</p>
-<pre><code class="language-c">#if defined(_WIN32) &amp;&amp; !defined(LIBLIBRARY_STATIC)
+dynamic linker knows what to do. In addition, on Linux, you may want to adjust
+the <a href="https://gcc.gnu.org/wiki/Visibility">default visibility for symbols</a>. To facilitate this,
+bfg9000 automatically defines preprocessor macros for native-runtime languages
+(e.g. C or C++) when building. For shared libraries, it defines
+<code>LIB&lt;NAME&gt;_EXPORTS</code>; for static, <code>LIB&lt;NAME&gt;_STATIC</code>. The following snippet shows
+how you can use these macros to set the appropriate attributes for your public
+symbols:</p>
+<pre><code class="language-c">#ifdef LIBLIBRARY_STATIC
+#  define LIB_PUBLIC
+#elif defined(_WIN32)
 #  ifdef LIBLIBRARY_EXPORTS
 #    define LIB_PUBLIC __declspec(dllexport)
 #  else
 #    define LIB_PUBLIC __declspec(dllimport)
 #  endif
 #else
-#  define LIB_PUBLIC
+#  define LIB_PUBLIC [[gnu::visibility(&quot;default&quot;)]]
 #endif
 </code></pre>
 <h2 id="generated-sources">Generated sources<a class="headerlink" href="#generated-sources" title="Permanent link">§</a></h2>

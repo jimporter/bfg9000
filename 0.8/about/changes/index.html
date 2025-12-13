@@ -186,6 +186,13 @@
 <li>New <code>--verbose</code> option for configuration</li>
 <li>The <code>install_name</code> for libraries on macOS now (again) uses <code>@rpath</code>-based
   paths prior to installation</li>
+<li>Generated <code>pkg-config</code> files now include a <code>bindir</code> variable to simplify
+  locating executables for that package, especially when the package isn't
+  installed</li>
+<li><code>system_executable</code> now accepts a <code>package</code> argument to search for the
+  executable in the binary directory for that package</li>
+<li>When building a static library, <code>LIB&lt;LIBRARY&gt;_STATIC</code> is now defined on all
+  platforms, not just Windows</li>
 </ul>
 <h3 id="breaking-changes">Breaking changes<a class="headerlink" href="#breaking-changes" title="Permanent link">§</a></h3>
 <ul>
