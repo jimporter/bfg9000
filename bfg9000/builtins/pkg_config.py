@@ -15,7 +15,7 @@ from ..safe_str import literal, shell_literal
 from ..shell import posix as pshell
 from ..shell.syntax import Syntax, Writer
 from ..tools.install_name_tool import install_name as darwin_install_name
-from ..tools.pkg_config import GeneratedPkgConfigPackage, PkgConfigPackage
+from ..tools.pkg_config import PkgConfigPackage
 from ..versioning import simplify_specifiers, Specifier, SpecifierSet
 
 build_input('pkg_config')(list)
@@ -309,11 +309,16 @@ class PkgConfigInfo:
                 if i.deps:
                     deps.append(i)
 
-                if isinstance(i, (FrameworkPackage,
-                                  GeneratedPkgConfigPackage)):
+                if isinstance(i, FrameworkPackage):
                     system.append(i)
                     continue
                 elif isinstance(i, PkgConfigPackage):
+                    if i.generated:
+                        # This package was automatically generated for us by
+                        # mopack. Don't add it as a pkg-config requirement
+                        # (it's only temporary, after all).
+                        system.append(i)
+                        continue
                     pkg_config.add(Requirement(i.pcnames[0], i.specifier))
                     pkg_config.update(Requirement(i) for i in i.pcnames[1:])
                     continue

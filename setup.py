@@ -142,7 +142,7 @@ more_requires = []
 if os.getenv('STDEB_BUILD') not in ['1', 'true']:
     more_requires.extend([
         'doppel >= 0.4.0',
-        'mopack >= 0.1.0',
+        'mopack >= 0.2.0.dev0',
         'pysetenv;platform_system=="Windows"'
     ])
 

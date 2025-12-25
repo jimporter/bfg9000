@@ -17,6 +17,8 @@ def mock_execute(args, **kwargs):
 
     if '--modversion' in args:
         return '1.0\n'
+    elif '--variable=mopack_generated' in args:
+        return ''
     elif '--print-requires' in args:
         return '\n'
     elif '--variable=install_names' in args:

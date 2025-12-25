@@ -15,6 +15,8 @@ from bfg9000.versioning import SpecifierSet, Version
 def mock_execute_pkgconf(args, **kwargs):
     if '--modversion' in args:
         return '1.2.3\n'
+    elif '--variable=mopack_generated' in args:
+        return ''
     elif '--variable=pcfiledir' in args:
         return '/path/to/pkg-config\n'
     elif '--cflags-only-I' in args:
@@ -192,8 +194,8 @@ class TestMsvcPackageResolver(CrossPlatformTestCase):
             self.check_package(pkg)
 
     def test_resolve_path(self):
-        linkage = {'type': 'path', 'generated': True, 'auto_link': False,
-                   'pcnames': ['foo'], 'pkg_config_path': '/path/to/pkgconfig'}
+        linkage = {'type': 'path', 'auto_link': False, 'pcnames': ['foo'],
+                   'pkg_config_path': '/path/to/pkgconfig'}
         with mock.patch('bfg9000.shell.execute', mock_execute_pkgconf), \
              mock.patch('bfg9000.tools.msvc.exists', return_value=True), \
              mock.patch('bfg9000.tools.mopack.get_linkage',
@@ -204,8 +206,8 @@ class TestMsvcPackageResolver(CrossPlatformTestCase):
             self.check_package(pkg)
 
     def test_resolve_path_auto_link(self):
-        linkage = {'type': 'path', 'generated': True, 'auto_link': True,
-                   'pcnames': ['foo'], 'pkg_config_path': '/path/to/pkgconfig'}
+        linkage = {'type': 'path', 'auto_link': True, 'pcnames': ['foo'],
+                   'pkg_config_path': '/path/to/pkgconfig'}
         with mock.patch('bfg9000.shell.execute', mock_execute_pkgconf), \
              mock.patch('bfg9000.tools.msvc.exists', return_value=True), \
              mock.patch('bfg9000.tools.mopack.get_linkage',

@@ -29,6 +29,8 @@ def mock_execute_common(args, **kwargs):
     elif prog == 'pkg-config':
         if '--modversion' in args:
             return '1.2.3\n'
+        elif '--variable=mopack_generated' in args:
+            return ''
         elif '--variable=pcfiledir' in args:
             return '/path/to/pkg-config'
         elif '--variable=bindir' in args:

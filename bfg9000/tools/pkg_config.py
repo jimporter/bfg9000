@@ -39,6 +39,7 @@ class PkgConfig(Command):
     # as shell arguments.
     _options = {
         'version': (['--modversion'], None),
+        'generated': (['--variable=mopack_generated'], None),
         'requires': (['--print-requires'], _requires_split),
         'path': (['--variable=pcfiledir'], None),
         'install_names': (['--variable=install_names'], _shell_split),
@@ -136,6 +137,7 @@ class PkgConfigPackage(Package):
         self.specifier = specifier
         self.static = kind == PackageKind.static
         self.system = system
+        self.generated = bool(self._call(self.pcnames[0], 'generated'))
 
     @memoize_method
     def _call(self, *args, extra_env=None, **kwargs):
@@ -253,16 +255,8 @@ class PkgConfigPackage(Package):
         )
 
 
-# A package automatically generated for us by mopack. This is useful when
-# generating our own pkg-config file, so that we don't add this one as a
-# requirement (it's only temporary, after all).
-class GeneratedPkgConfigPackage(PkgConfigPackage):
-    pass
-
-
-def resolve(env, name, *args, generated=False, **kwargs):
-    type = GeneratedPkgConfigPackage if generated else PkgConfigPackage
-    pkg = type(env.tool('pkg_config'), name, *args, **kwargs)
+def resolve(env, name, *args, **kwargs):
+    pkg = PkgConfigPackage(env.tool('pkg_config'), name, *args, **kwargs)
     log.info('found package {!r} version {} via pkg-config in {}'
              .format(pkg.name, pkg.version, pkg.path().string()))
     return pkg

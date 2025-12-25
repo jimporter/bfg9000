@@ -221,6 +221,5 @@ class CcPackageResolver:
         return pkg_config.resolve(
             self.env, name, submodules, version, linkage['pcnames'],
             format=format, kind=kind, system=system,
-            search_path=linkage['pkg_config_path'],
-            generated=linkage.get('generated', False)
+            search_path=linkage['pkg_config_path']
         )

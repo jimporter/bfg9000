@@ -18,6 +18,8 @@ def mock_execute(args, **kwargs):
 
     if '--modversion' in args:
         return '1.0\n'
+    elif '--variable=mopack_generated' in args:
+        return ''
     elif '--print-requires' in args:
         return '\n'
     elif '--variable=install_names' in args:
@@ -35,6 +37,12 @@ def mock_execute(args, **kwargs):
             return '-l{}\n -lstatic'.format(name)
         return '-l{}\n'.format(name)
     raise OSError('unknown command: {}'.format(args))
+
+
+def mock_execute_generated(args, **kwargs):
+    if '--variable=mopack_generated' in args:
+        return '1'
+    return mock_execute(args, **kwargs)
 
 
 class TestPkgConfigRequirement(TestCase):
@@ -278,10 +286,10 @@ class TestPkgConfig(BuiltinTestCase):
 
     def test_requires_generated_pkg_config_package(self):
         pkg_config = self.get_pkg_config()
-        with mock.patch('bfg9000.shell.execute', mock_execute):
-            req = GeneratedPkgConfigPackage(pkg_config, 'req', format='elf')
-            preq = GeneratedPkgConfigPackage(pkg_config, 'preq', format='elf')
-            creq = GeneratedPkgConfigPackage(pkg_config, 'creq', format='elf')
+        with mock.patch('bfg9000.shell.execute', mock_execute_generated):
+            req = PkgConfigPackage(pkg_config, 'req', format='elf')
+            preq = PkgConfigPackage(pkg_config, 'preq', format='elf')
+            creq = PkgConfigPackage(pkg_config, 'creq', format='elf')
 
             pkg = PkgConfigInfo(
                 self.context, name='package', version='1.0',

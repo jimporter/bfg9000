@@ -280,7 +280,7 @@ jobs:
           python-version: '3.14'
       - name: Test bdist_wheel
         run: |
-          pip install setuptools wheel
+          pip install setuptools wheel git+https://github.com/jimporter/mopack.git
           python setup.py bdist_wheel
           pip install dist/*.whl
           ! pip show pysetenv
@@ -295,7 +295,7 @@ jobs:
           python-version: '3.14'
       - name: Install dependencies
         run: |
-          pip install '.[test]'
+          pip install git+https://github.com/jimporter/mopack.git '.[test]'
       - name: Run lint
         run: |
           flake8
