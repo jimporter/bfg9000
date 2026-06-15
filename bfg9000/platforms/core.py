@@ -58,9 +58,7 @@ def platform_name():
 
     if system == 'windows':
         try:
-            uname = subprocess.check_output(
-                ['uname'], universal_newlines=True
-            ).lower()
+            uname = subprocess.check_output(['uname'], text=).lower()
             if uname.startswith('cygwin'):
                 return 'cygwin'
         except OSError:
@@ -75,9 +73,8 @@ def platform_name():
         return 'msdos'
     elif system == 'linux':
         try:
-            distro = subprocess.check_output(
-                ['lsb_release', '-is'], universal_newlines=True
-            ).lower()
+            distro = subprocess.check_output(['lsb_release', '-is'],
+                                             text=True).lower()
             if distro == 'android':
                 return 'android'
         except OSError:

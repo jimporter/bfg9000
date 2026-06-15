@@ -90,8 +90,8 @@ try:
 
             try:
                 alias_info = json.loads(subprocess.run(
-                    ['mike', 'list', '-j', alias], universal_newlines=True,
-                    check=True, stdout=subprocess.PIPE
+                    ['mike', 'list', '-j', alias], text=True, check=True,
+                    stdout=subprocess.PIPE
                 ).stdout)
 
                 # We have an existing version with this alias...

@@ -39,8 +39,7 @@ def main():
         parser.error('command required')
 
     try:
-        p = subprocess.Popen(cmd, universal_newlines=True,
-                             stderr=subprocess.PIPE)
+        p = subprocess.Popen(cmd, text=True, stderr=subprocess.PIPE)
     except FileNotFoundError:
         parser.exit(66, 'command not found: {}\n'.format(cmd[0]))
 

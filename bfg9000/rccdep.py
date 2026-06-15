@@ -6,9 +6,8 @@ from .iterutils import tween
 
 
 def make_depfile(subcmd, output, depfile):
-    deps = subprocess.check_output(subcmd + ['--list'],
-                                   universal_newlines=True)
-    deps = deps.strip().split('\n')
+    deps = subprocess.run(subcmd + ['--list'], text=True, check=True,
+                          stdout=subprocess.PIPE).stdout.strip().split('\n')
 
     with open(depfile, 'w') as f:
         f.write(output + ': ')

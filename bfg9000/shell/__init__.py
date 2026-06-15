@@ -97,10 +97,8 @@ def execute(args, *, shell=False, env=None, base_dirs=None, stdout=Mode.normal,
     def conv_mode(mode):
         return mode.value if isinstance(mode, Mode) else mode
 
-    proc = subprocess.run(
-        args, universal_newlines=True, shell=shell, env=env,
-        stdout=conv_mode(stdout), stderr=conv_mode(stderr)
-    )
+    proc = subprocess.run(args, text=True, shell=shell, env=env,
+                          stdout=conv_mode(stdout), stderr=conv_mode(stderr))
     if not (returncode == 'any' or
             (returncode == 'fail' and proc.returncode != 0) or
             proc.returncode in iterutils.listify(returncode)):

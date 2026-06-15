@@ -17,7 +17,7 @@ class TestShellPlatform(TestCase):
                 from bfg9000 import shell
             print(shell.quote('foo bar'), end='')
             """.format(platform_name)),
-        ], stdout=subprocess.PIPE, universal_newlines=True).stdout
+        ], stdout=subprocess.PIPE, text=True).stdout
 
     def test_windows(self):
         self.assertEqual(self._do_quote('winnt'), '"foo bar"')

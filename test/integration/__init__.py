@@ -110,7 +110,7 @@ class SubprocessTestCase(TestCase):
         command = [self.target_path(i) for i in command]
         proc = subprocess.run(
             command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-            input=input, env=final_env, universal_newlines=True
+            input=input, env=final_env, text=True
         )
         if not (returncode == 'any' or
                 (returncode == 'fail' and proc.returncode != 0) or
