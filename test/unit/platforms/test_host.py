@@ -1,5 +1,6 @@
 from unittest import mock
 
+from . import mock_uname
 from .. import *
 
 from bfg9000.platforms import host, platform_name, posix
@@ -13,7 +14,7 @@ class TestHostPlatform(TestCase):
         platform_name._reset()
 
     def test_default(self):
-        with mock.patch('platform.system', return_value='Linux'), \
+        with mock_uname(os='GNU/Linux', lsb='Ubuntu'), \
              mock.patch('platform.machine', return_value='i686'):
             platform = host.platform_info()
         self.assertEqual(platform.name, 'linux')

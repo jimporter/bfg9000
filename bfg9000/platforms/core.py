@@ -28,6 +28,9 @@ _platform_genus = {
 
 _triplet_abi = {'android', 'eabi', 'elf', 'gnu', 'macho'}
 
+_non_winnt_versions = SpecifierSet('!=3.10.528,!=3.50.807,!=3.51.1057,' +
+                                   '!=4.00.1381,<5')
+
 
 def parse_triplet(s, default_vendor='unknown'):
     def _result(arch, vendor_sys, abi=None):
@@ -50,44 +53,52 @@ def parse_triplet(s, default_vendor='unknown'):
 
 @memoize
 def platform_name():
+    def run(args):
+        return subprocess.run(args, text=True, check=True,
+                              stdout=subprocess.PIPE).stdout.strip()
+
     if 'BFG_FORCE_PLATFORM' in os.environ:
         return os.environ['BFG_FORCE_PLATFORM']
-    system = platform.system().lower()
-    if system.startswith('cygwin'):
-        return 'cygwin'
 
-    if system == 'windows':
-        try:
-            uname = subprocess.check_output(['uname'], text=).lower()
-            if uname.startswith('cygwin'):
-                return 'cygwin'
-        except OSError:
-            pass
+    try:
+        uname = run(['uname', '-o']).lower()
+        # If this is the Msys `uname`, ignore its output and get the platform
+        # another way. (Git for Windows can install `uname` into PATH).
+        if uname == 'msys':
+            raise OSError()
 
-        version = Version(platform.version())
-        if version not in SpecifierSet('!=3.10.528,!=3.50.807,!=3.51.1057,' +
-                                       '!=4.00.1381,<5'):
-            return 'winnt'
-        elif version in SpecifierSet('>=4'):
-            return 'win9x'
-        return 'msdos'
-    elif system == 'linux':
-        try:
-            distro = subprocess.check_output(['lsb_release', '-is'],
-                                             text=True).lower()
-            if distro == 'android':
-                return 'android'
-        except OSError:
-            pass
+        # Strip GNU prefix if any since it's not important in this context (or
+        # is it? TODO: revisit this decision.)
+        uname = re.sub('^gnu/', '', uname)
+
+        if uname == 'linux':
+            try:
+                distro = run(['lsb_release', '-is']).lower()
+                if distro == 'android':
+                    return 'android'
+            except OSError:
+                pass
+        elif uname == 'darwin':
+            machine = run(['uname', '-m'])
+            if re.match(r'(iPhone|iPad|iPod)', machine):
+                return 'ios'
+            return 'macos'
+
+        # Not sure what this is. Probably a POSIX system though.
+        return uname
+    except (OSError, subprocess.CalledProcessError):
+        system = platform.system().lower()
+
+        if system == 'windows':
+            version = Version(platform.version())
+            if version not in _non_winnt_versions:
+                return 'winnt'
+            elif version in SpecifierSet('>=4'):
+                return 'win9x'
+            return 'msdos'
+
+        # Not sure what this is...
         return system
-    elif system == 'darwin':
-        machine = platform.machine()
-        if re.match(r'(iPhone|iPad|iPod)', machine):
-            return 'ios'
-        return 'macos'
-
-    # Not sure what this is...
-    return system
 
 
 def platform_tuple(name=None):
