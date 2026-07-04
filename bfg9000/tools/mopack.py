@@ -82,7 +82,7 @@ class Mopack(SimpleCommand):
 
 
 def get_linkage(env, name, submodules=None, include_path=None, lib_path=None,
-                lib_names=None):
+                lib_names=None, auto_link=False):
     extra_env = {}
     if include_path:
         extra_env['MOPACK_INCLUDE_PATH'] = shell.join_paths(
@@ -94,6 +94,8 @@ def get_linkage(env, name, submodules=None, include_path=None, lib_path=None,
         )
     if lib_names:
         extra_env['MOPACK_LIB_NAMES'] = shell.join_paths(lib_names)
+    if auto_link:
+        extra_env['MOPACK_AUTO_LINK'] = 'true'
 
     try:
         return env.tool('mopack').run('linkage', name, submodules,

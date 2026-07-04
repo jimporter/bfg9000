@@ -4,7 +4,6 @@ from ... import *
 from .common import known_langs, mock_execute, mock_which
 
 from bfg9000 import options as opts, platforms
-from bfg9000.exceptions import PackageResolutionError
 from bfg9000.file_types import Directory, HeaderDirectory
 from bfg9000.options import option_list
 from bfg9000.packages import PackageKind
@@ -292,7 +291,7 @@ class TestCcPackageResolver(CrossPlatformTestCase):
             self.check_package(pkg)
 
     def test_resolve_path(self):
-        linkage = {'type': 'path', 'auto_link': False, 'pcnames': ['foo'],
+        linkage = {'type': 'path', 'pcnames': ['foo'],
                    'pkg_config_path': '/path/to/pkgconfig'}
         with mock.patch('bfg9000.shell.execute', mock_execute_pkgconf), \
              mock.patch('bfg9000.tools.cc.exists', return_value=True), \
@@ -302,11 +301,3 @@ class TestCcPackageResolver(CrossPlatformTestCase):
             pkg = self.packages.resolve('foo', None, SpecifierSet(),
                                         PackageKind.any)
             self.check_package(pkg)
-
-    def test_resolve_path_auto_link(self):
-        linkage = {'type': 'path', 'auto_link': True, 'pcnames': ['foo'],
-                   'pkg_config_path': '/path/to/pkgconfig'}
-        with mock.patch('bfg9000.tools.mopack.get_linkage',
-                        return_value=linkage), \
-             self.assertRaises(PackageResolutionError):
-            self.packages.resolve('foo', None, SpecifierSet(), PackageKind.any)

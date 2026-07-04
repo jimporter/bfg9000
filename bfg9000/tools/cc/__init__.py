@@ -10,7 +10,6 @@ from .rc import CcRcBuilder  # noqa: F401
 from ..ar import ArLinker
 from ..common import Builder, check_which
 from ..ld import LdLinker
-from ...exceptions import PackageResolutionError
 from ...iterutils import uniques
 from ...languages import known_formats
 from ...packages import PackageKind
@@ -212,11 +211,8 @@ class CcPackageResolver:
         format = self.builder.object_format
         linkage = mopack.get_linkage(
             self.env, name, submodules, self.include_dirs, self.lib_dirs,
-            self._lib_names(kind)
+            self._lib_names(kind), self.builder.auto_link
         )
-        if linkage.get('auto_link', False):
-            raise PackageResolutionError('package {!r} requires auto-link'
-                                         .format(name))
 
         return pkg_config.resolve(
             self.env, name, submodules, version, linkage['pcnames'],

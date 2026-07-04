@@ -138,7 +138,7 @@ class MsvcPackageResolver:
         format = self.builder.object_format
         linkage = mopack.get_linkage(
             self.env, name, submodules, self.include_dirs, self.lib_dirs,
-            self._lib_names
+            self._lib_names, self.builder.auto_link
         )
 
         return pkg_config.resolve(

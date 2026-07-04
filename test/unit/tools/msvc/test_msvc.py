@@ -194,19 +194,7 @@ class TestMsvcPackageResolver(CrossPlatformTestCase):
             self.check_package(pkg)
 
     def test_resolve_path(self):
-        linkage = {'type': 'path', 'auto_link': False, 'pcnames': ['foo'],
-                   'pkg_config_path': '/path/to/pkgconfig'}
-        with mock.patch('bfg9000.shell.execute', mock_execute_pkgconf), \
-             mock.patch('bfg9000.tools.msvc.exists', return_value=True), \
-             mock.patch('bfg9000.tools.mopack.get_linkage',
-                        return_value=linkage), \
-             mock.patch('bfg9000.log.info'):
-            pkg = self.packages.resolve('foo', None, SpecifierSet(),
-                                        PackageKind.any)
-            self.check_package(pkg)
-
-    def test_resolve_path_auto_link(self):
-        linkage = {'type': 'path', 'auto_link': True, 'pcnames': ['foo'],
+        linkage = {'type': 'path', 'pcnames': ['foo'],
                    'pkg_config_path': '/path/to/pkgconfig'}
         with mock.patch('bfg9000.shell.execute', mock_execute_pkgconf), \
              mock.patch('bfg9000.tools.msvc.exists', return_value=True), \
