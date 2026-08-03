@@ -8,8 +8,10 @@ from .common import SimpleCommand
 from .. import shell
 from ..exceptions import PackageResolutionError
 from ..iterutils import iterate
+from ..objutils import memoize_method
 from ..path import Path, Root
 from ..safe_str import safe_format
+from ..shell import join_paths as jp
 
 _bad_dependency_ex = re.compile(r'[,[\]]')
 
@@ -37,6 +39,20 @@ class Mopack(SimpleCommand):
         if submodules_str:
             return '{}[{}]'.format(check(package), submodules_str)
         return check(package)
+
+    @memoize_method
+    def _toolchain_env(self):
+        # TODO: We really shouldn't assume that mopack just wants the C
+        # builder's configuration. Better would be to examine the default
+        # language from the `projet` call, but that requires some thought about
+        # how to defer `mopack resolve` until after we call that function...
+        pkg = self.env.builder('c').packages
+        return {
+            'MOPACK_INCLUDE_PATH': jp(i.string() for i in pkg.include_dirs),
+            'MOPACK_LIB_PATH': jp(i.string() for i in pkg.lib_dirs),
+            'MOPACK_LIB_NAMES': jp(pkg.lib_names),
+            'MOPACK_AUTO_LINK': str(pkg.builder.auto_link).lower(),
+        }
 
     def _call_resolve(self, cmd, config, *, flags=None, directory=None,
                       verbose=False):
@@ -69,38 +85,28 @@ class Mopack(SimpleCommand):
         return cmd + ['list-files'] + self._dir_arg(directory) + ['--json']
 
     def _call(self, cmd, subcmd, *args, **kwargs):
+        self._toolchain_env()
         try:
             return getattr(self, '_call_' + subcmd)(cmd, *args, **kwargs)
         except AttributeError:
             raise TypeError('unknown subcommand {!r}'.format(subcmd))
 
-    def run(self, subcmd, *args, **kwargs):
-        result = super().run(subcmd, *args, **kwargs)
+    def run(self, subcmd, *args, extra_env=None, **kwargs):
+        if extra_env is None:
+            extra_env = self._toolchain_env()
+        else:
+            extra_env = {**extra_env, **self._toolchain_env()}
+
+        result = super().run(subcmd, *args, extra_env=extra_env, **kwargs)
         if subcmd in ['linkage', 'list_files']:
             return json.loads(result.strip())
         return result
 
 
-def get_linkage(env, name, submodules=None, include_path=None, lib_path=None,
-                lib_names=None, auto_link=False):
-    extra_env = {}
-    if include_path:
-        extra_env['MOPACK_INCLUDE_PATH'] = shell.join_paths(
-            i.string() for i in include_path
-        )
-    if lib_path:
-        extra_env['MOPACK_LIB_PATH'] = shell.join_paths(
-            i.string() for i in lib_path
-        )
-    if lib_names:
-        extra_env['MOPACK_LIB_NAMES'] = shell.join_paths(lib_names)
-    if auto_link:
-        extra_env['MOPACK_AUTO_LINK'] = 'true'
-
+def get_linkage(env, name, submodules=None):
     try:
         return env.tool('mopack').run('linkage', name, submodules,
-                                      directory=env.builddir,
-                                      extra_env=extra_env)
+                                      directory=env.builddir)
     except (OSError, shell.CalledProcessError) as e:
         stdout = getattr(e, 'stdout', None)
         msg = ((stdout and json.loads(stdout.strip()).get('error')) or

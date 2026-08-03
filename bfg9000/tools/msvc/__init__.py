@@ -114,8 +114,6 @@ class MsvcBuilder(Builder):
 
 
 class MsvcPackageResolver:
-    _lib_names = ['{}.lib']
-
     def __init__(self, builder, env):
         self.builder = builder
         self.env = env
@@ -134,12 +132,13 @@ class MsvcPackageResolver:
     def lang(self):
         return self.builder.lang
 
+    @property
+    def lib_names(self):
+        return ['{}.lib']
+
     def resolve(self, name, submodules, version, kind, *, system=True):
         format = self.builder.object_format
-        linkage = mopack.get_linkage(
-            self.env, name, submodules, self.include_dirs, self.lib_dirs,
-            self._lib_names, self.builder.auto_link
-        )
+        linkage = mopack.get_linkage(self.env, name, submodules)
 
         return pkg_config.resolve(
             self.env, name, submodules, version, linkage['pcnames'],

@@ -241,8 +241,7 @@ class Environment:
         if env is None:
             env = self.variables
         if extra_env:
-            env = env.copy()
-            env.update(extra_env)
+            env = {**env, **extra_env}
 
         if not kwargs.get('shell', False):
             args = Command.convert_args(args, lambda x: x.command)

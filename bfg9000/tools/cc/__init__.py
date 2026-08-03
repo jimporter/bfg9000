@@ -12,7 +12,7 @@ from ..common import Builder, check_which
 from ..ld import LdLinker
 from ...iterutils import uniques
 from ...languages import known_formats
-from ...packages import PackageKind
+from ...objutils import memoize_method
 from ...path import exists
 from ...platforms import parse_triplet
 from ...versioning import detect_version
@@ -191,28 +191,28 @@ class CcPackageResolver:
     def lang(self):
         return self.builder.lang
 
-    def _lib_names(self, kind):
+    @property
+    @memoize_method
+    def lib_names(self):
         names = []
-        if kind & PackageKind.shared:
-            base = 'lib{}' + self.env.target_platform.shared_library_ext
-            if self.env.target_platform.has_import_library:
-                names.append(base + '.a')
-            else:
-                names.append(base)
-        if kind & PackageKind.static:
-            names.append('lib{}.a')
+        # Shared libraries
+        base = 'lib{}' + self.env.target_platform.shared_library_ext
+        if self.env.target_platform.has_import_library:
+            names.append(base + '.a')
+        else:
+            names.append(base)
 
-        # XXX: Include Cygwin here too?
+        # Static libraries
+        names.append('lib{}.a')
+
+        # Windows libraries (XXX: Include Cygwin here too?)
         if self.env.target_platform.family == 'windows':
             names.append('{}.lib')
         return names
 
     def resolve(self, name, submodules, version, kind, *, system=True):
         format = self.builder.object_format
-        linkage = mopack.get_linkage(
-            self.env, name, submodules, self.include_dirs, self.lib_dirs,
-            self._lib_names(kind), self.builder.auto_link
-        )
+        linkage = mopack.get_linkage(self.env, name, submodules)
 
         return pkg_config.resolve(
             self.env, name, submodules, version, linkage['pcnames'],
