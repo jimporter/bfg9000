@@ -118,6 +118,28 @@ class TestMemoizeMethod(TestCase):
         self.assertEqual(h.fn(1), 5)
         self.assertEqual(h.fn(0), 3)
 
+    def test_memoize_property(self):
+        class Foo:
+            def __init__(self, i):
+                self.i = i
+
+            @property
+            @memoize_method
+            def prop(self):
+                self.i += 1
+                return self.i
+
+        f = Foo(0)
+        self.assertEqual(f.prop, 1)
+        self.assertEqual(f.prop, 1)
+        g = Foo(1)
+        self.assertEqual(g.prop, 2)
+        self.assertEqual(g.prop, 2)
+        del g
+        h = Foo(2)
+        self.assertEqual(h.prop, 3)
+        self.assertEqual(h.prop, 3)
+
     def test_memoize_reset(self):
         class Foo:
             def __init__(self, i):
