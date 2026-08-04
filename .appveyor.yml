@@ -31,6 +31,10 @@ cache:
 install:
   - choco install gnuwin32-coreutils.portable make ninja winflexbison3
 
+  # Ensure we have up-to-date certs.
+  - curl -L https://curl.se/ca/cacert.pem -o %USERPROFILE%\cacert.pem
+  - echo cacert = %USERPROFILE%\cacert.pem > %APPDATA%\_curlrc
+
   # Fetch and install pkg-config.
   - curl -LO %GNOME_BASE%/dependencies/pkg-config_0.26-1_win32.zip
   - curl -LO %GNOME_BASE%/glib/2.28/glib_2.28.8-1_win32.zip
@@ -41,7 +45,7 @@ install:
   - set PKG_CONFIG=C:\pkg-config\bin\pkg-config.exe
 
   # Build and install libogg.
-  - curl -LO http://downloads.xiph.org/releases/ogg/%LIBOGG%.zip
+  - curl -LO https://downloads.xiph.org/releases/ogg/%LIBOGG%.zip
   - 7z x -y %LIBOGG%.zip > nul
   - >
     msbuild %LIBOGG%\win32\%LIBOGG_VS%\libogg_dynamic.sln /p:Platform=Win32
@@ -61,12 +65,11 @@ test_script:
   - python setup.py coverage -q
 on_success:
   # Fetch and verify codecov uploader.
+  - curl https://keybase.io/codecovsecops/pgp_keys.asc | gpg --no-default-keyring --keyring trustedkeys.gpg --import
   - curl -Os https://uploader.codecov.io/latest/windows/codecov.exe
   - curl -Os https://uploader.codecov.io/latest/windows/codecov.exe.SHA256SUM
   - curl -Os https://uploader.codecov.io/latest/windows/codecov.exe.SHA256SUM.sig
-  - curl -Os https://keybase.io/codecovsecurity/pgp_keys.asc
-  - gpg --import pgp_keys.asc
-  - gpg --verify codecov.exe.SHA256SUM.sig codecov.exe.SHA256SUM
+  - gpgv codecov.exe.SHA256SUM.sig codecov.exe.SHA256SUM
   # Fix the shasum file to use universal newlines.
   - sed -i "s/ codecov.exe/Ucodecov.exe/" codecov.exe.SHA256SUM
   - shasum -a 256 -c codecov.exe.SHA256SUM
