@@ -27,5 +27,5 @@ class ToolTestCase(CrossPlatformTestCase):
         super().__init__(clear_variables=True, *args, **kwargs)
 
     def setUp(self):
-        with mock.patch('bfg9000.shell.which', return_value=['command']):
+        with mock.patch('bfg9000.shell.which', mock_which):
             self.tool = self.tool_type(self.env)

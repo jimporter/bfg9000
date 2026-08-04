@@ -7,7 +7,7 @@ class TestDoppel(ToolTestCase):
     tool_type = Doppel
 
     def test_env(self):
-        with mock.patch('bfg9000.shell.which', return_value=['command']):
+        with mock.patch('bfg9000.shell.which', mock_which):
             self.assertIsInstance(self.env.tool('doppel'), Doppel)
 
     def test_kind_args(self):

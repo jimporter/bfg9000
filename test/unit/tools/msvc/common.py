@@ -7,10 +7,6 @@ with known_langs.make('c++') as x:
     x.vars(compiler='CXX', flags='CXXFLAGS')
 
 
-def mock_which(*args, **kwargs):
-    return ['command']
-
-
 def mock_execute(args, **kwargs):
     if '-?' in args:
         return ('Microsoft (R) C/C++ Optimizing Compiler Version ' +

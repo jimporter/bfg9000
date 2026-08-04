@@ -2,7 +2,7 @@ from collections import namedtuple
 from unittest import mock
 
 from .common import AttrDict, BuiltinTestCase, MockPackage
-from .. import make_env
+from .. import make_env, mock_which
 
 from bfg9000 import file_types, options as opts
 from bfg9000.backends.make import syntax as make
@@ -15,10 +15,6 @@ from bfg9000.path import Path, Root
 from bfg9000.tools.msvc import MsvcBuilder
 
 MockCompile = namedtuple('MockCompile', ['file'])
-
-
-def mock_which(*args, **kwargs):
-    return ['command']
 
 
 def mock_execute(*args, **kwargs):

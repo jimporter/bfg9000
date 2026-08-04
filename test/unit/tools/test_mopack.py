@@ -11,7 +11,7 @@ class TestMopack(ToolTestCase):
     tool_type = Mopack
 
     def test_env(self):
-        with mock.patch('bfg9000.shell.which', return_value=['command']):
+        with mock.patch('bfg9000.shell.which', mock_which):
             self.assertIsInstance(self.env.tool('mopack'), Mopack)
 
     def test_call_resolve(self):
@@ -60,13 +60,13 @@ class TestGetLinkage(ToolTestCase):
     tool_type = Mopack
 
     def test_success(self):
-        with mock.patch('bfg9000.shell.which', return_value=['command']), \
+        with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute',
                         return_value='{"type": "unknown"}'):
             self.assertEqual(get_linkage(self.env, 'foo'), {'type': 'unknown'})
 
     def test_failure(self):
-        with mock.patch('bfg9000.shell.which', return_value=['command']), \
+        with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', side_effect=OSError()), \
              self.assertRaises(PackageResolutionError):
             get_linkage(self.env, 'foo')

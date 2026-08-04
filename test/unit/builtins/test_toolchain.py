@@ -10,14 +10,6 @@ from bfg9000.path import InstallRoot
 tools.init()
 
 
-def mock_which(*args, **kwargs):
-    return ['command']
-
-
-def mock_bad_which(*args, **kwargs):
-    raise FileNotFoundError()
-
-
 class TestToolchain(TestCase):
     def setUp(self):
         self.env = make_env(clear_variables=True)
@@ -48,8 +40,8 @@ class TestToolchain(TestCase):
     def test_which(self):
         which = self.context['which']
         with mock.patch('bfg9000.shell.which', mock_which):
-            self.assertEqual(which('foo'), 'command')
-            self.assertEqual(which(['foo', 'bar']), 'command')
+            self.assertEqual(which('foo'), abs_command('foo'))
+            self.assertEqual(which(['foo', 'bar']), abs_command('foo'))
 
         with mock.patch('bfg9000.shell.which', mock_bad_which):
             self.assertRaises(FileNotFoundError, which, 'foo')
@@ -63,14 +55,14 @@ class TestToolchain(TestCase):
         compiler = self.context['compiler']
         with mock.patch('bfg9000.shell.which', mock_which):
             compiler('foo', 'c++')
-            self.assertEqual(self.env.variables, {'CXX': 'command'})
+            self.assertEqual(self.env.variables, {'CXX': abs_command('foo')})
             compiler(['foo', 'bar'], 'c++')
-            self.assertEqual(self.env.variables, {'CXX': 'command'})
+            self.assertEqual(self.env.variables, {'CXX': abs_command('foo')})
 
             compiler('foo', 'c++', strict=True)
-            self.assertEqual(self.env.variables, {'CXX': 'command'})
+            self.assertEqual(self.env.variables, {'CXX': abs_command('foo')})
             compiler(['foo', 'bar'], 'c++', strict=True)
-            self.assertEqual(self.env.variables, {'CXX': 'command'})
+            self.assertEqual(self.env.variables, {'CXX': abs_command('foo')})
 
         with mock.patch('bfg9000.shell.which', mock_bad_which):
             compiler('foo', 'c++')
@@ -95,14 +87,18 @@ class TestToolchain(TestCase):
         runner = self.context['runner']
         with mock.patch('bfg9000.shell.which', mock_which):
             runner('foo', 'java')
-            self.assertEqual(self.env.variables, {'JAVACMD': 'command'})
+            self.assertEqual(self.env.variables,
+                             {'JAVACMD': abs_command('foo')})
             runner(['foo', 'bar'], 'java')
-            self.assertEqual(self.env.variables, {'JAVACMD': 'command'})
+            self.assertEqual(self.env.variables,
+                             {'JAVACMD': abs_command('foo')})
 
             runner('foo', 'java', strict=True)
-            self.assertEqual(self.env.variables, {'JAVACMD': 'command'})
+            self.assertEqual(self.env.variables,
+                             {'JAVACMD': abs_command('foo')})
             runner(['foo', 'bar'], 'java', strict=True)
-            self.assertEqual(self.env.variables, {'JAVACMD': 'command'})
+            self.assertEqual(self.env.variables,
+                             {'JAVACMD': abs_command('foo')})
 
         with mock.patch('bfg9000.shell.which', mock_bad_which):
             runner('foo', 'java')
@@ -119,19 +115,19 @@ class TestToolchain(TestCase):
         linker = self.context['linker']
         with mock.patch('bfg9000.shell.which', mock_which):
             linker('foo')
-            self.assertEqual(self.env.variables, {'LD': 'command'})
+            self.assertEqual(self.env.variables, {'LD': abs_command('foo')})
             linker(['foo', 'bar'])
-            self.assertEqual(self.env.variables, {'LD': 'command'})
+            self.assertEqual(self.env.variables, {'LD': abs_command('foo')})
 
             linker('foo', 'native')
-            self.assertEqual(self.env.variables, {'LD': 'command'})
+            self.assertEqual(self.env.variables, {'LD': abs_command('foo')})
             linker(['foo', 'bar'], 'native')
-            self.assertEqual(self.env.variables, {'LD': 'command'})
+            self.assertEqual(self.env.variables, {'LD': abs_command('foo')})
 
             linker('foo', 'native', strict=True)
-            self.assertEqual(self.env.variables, {'LD': 'command'})
+            self.assertEqual(self.env.variables, {'LD': abs_command('foo')})
             linker(['foo', 'bar'], 'native', strict=True)
-            self.assertEqual(self.env.variables, {'LD': 'command'})
+            self.assertEqual(self.env.variables, {'LD': abs_command('foo')})
 
         with mock.patch('bfg9000.shell.which', mock_bad_which):
             linker('foo', 'native')
@@ -148,19 +144,19 @@ class TestToolchain(TestCase):
         linker = self.context['linker']
         with mock.patch('bfg9000.shell.which', mock_which):
             linker('foo', mode='static')
-            self.assertEqual(self.env.variables, {'AR': 'command'})
+            self.assertEqual(self.env.variables, {'AR': abs_command('foo')})
             linker(['foo', 'bar'], mode='static')
-            self.assertEqual(self.env.variables, {'AR': 'command'})
+            self.assertEqual(self.env.variables, {'AR': abs_command('foo')})
 
             linker('foo', 'native', 'static')
-            self.assertEqual(self.env.variables, {'AR': 'command'})
+            self.assertEqual(self.env.variables, {'AR': abs_command('foo')})
             linker(['foo', 'bar'], 'native', 'static')
-            self.assertEqual(self.env.variables, {'AR': 'command'})
+            self.assertEqual(self.env.variables, {'AR': abs_command('foo')})
 
             linker('foo', 'native', 'static', strict=True)
-            self.assertEqual(self.env.variables, {'AR': 'command'})
+            self.assertEqual(self.env.variables, {'AR': abs_command('foo')})
             linker(['foo', 'bar'], 'native', 'static', strict=True)
-            self.assertEqual(self.env.variables, {'AR': 'command'})
+            self.assertEqual(self.env.variables, {'AR': abs_command('foo')})
 
         with mock.patch('bfg9000.shell.which', mock_bad_which):
             linker('foo', 'native', 'static')

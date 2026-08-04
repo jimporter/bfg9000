@@ -7,10 +7,6 @@ from bfg9000.tools.ar import ArLinker
 from bfg9000.versioning import Version
 
 
-def mock_which(*args, **kwargs):
-    return ['command']
-
-
 class TestArLinker(CrossPlatformTestCase):
     def __init__(self, *args, **kwargs):
         super().__init__(clear_variables=True, *args, **kwargs)

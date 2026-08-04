@@ -3,7 +3,7 @@ from unittest import mock
 
 from ... import *
 from .. import MockInstallOutputs
-from .common import known_langs, mock_execute, mock_which
+from .common import known_langs, mock_execute
 
 from bfg9000 import options as opts
 from bfg9000.builtins.install import installify
@@ -419,7 +419,7 @@ class TestCcLinker(CrossPlatformTestCase):
         static = StaticLibrary(self.Path('libfoo.a'), 'native')
 
         install_outputs = MockInstallOutputs(self.env)
-        with mock.patch('bfg9000.shell.which', return_value=['command']):
+        with mock.patch('bfg9000.shell.which', mock_which):
             # Local shared lib
             fn = self.linker.post_install(opts.option_list(opts.lib(shared)),
                                           output, None)
@@ -465,7 +465,7 @@ class TestCcLinker(CrossPlatformTestCase):
         deplib = SharedLibrary(self.Path('libfoo.so'), 'native')
 
         install_outputs = MockInstallOutputs(self.env)
-        with mock.patch('bfg9000.shell.which', return_value=['command']):
+        with mock.patch('bfg9000.shell.which', mock_which):
             install_name_tool = self.env.tool('install_name_tool')
 
             # No runtime deps

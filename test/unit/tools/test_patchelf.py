@@ -11,7 +11,7 @@ class TestPatchElf(ToolTestCase):
     tool_type = PatchElf
 
     def test_env(self):
-        with mock.patch('bfg9000.shell.which', return_value=['command']):
+        with mock.patch('bfg9000.shell.which', mock_which):
             self.assertIsInstance(self.env.tool('patchelf'), PatchElf)
 
     def test_rpath(self):
@@ -90,7 +90,7 @@ class TestInstalledRpath(TestCase):
 class TestPostInstall(TestCase):
     def setUp(self):
         self.env = make_env()
-        with mock.patch('bfg9000.shell.which', return_value=['command']):
+        with mock.patch('bfg9000.shell.which', mock_which):
             self.tool = self.env.tool('patchelf')
         self.install_db = MockInstallOutputs(self.env)
         self.exe = Executable(Path('exe'), None)

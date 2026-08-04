@@ -10,7 +10,7 @@ class TestPython(ToolTestCase):
     lang = 'python'
 
     def test_env(self):
-        with mock.patch('bfg9000.shell.which', return_value=['command']):
+        with mock.patch('bfg9000.shell.which', mock_which):
             self.assertIsInstance(self.env.tool(self.lang), self.tool_type)
 
     def test_call(self):
@@ -21,7 +21,7 @@ class TestPython(ToolTestCase):
         self.assertEqual(self.tool.run_arguments(src_file),
                          [self.tool, src_file])
 
-        with mock.patch('bfg9000.shell.which', return_value=['command']):
+        with mock.patch('bfg9000.shell.which', mock_which):
             args = self.env.run_arguments(src_file)
         self.assertEqual(len(args), 2)
         self.assertEqual(type(args[0]), self.tool_type)
@@ -32,7 +32,7 @@ class TestPython(ToolTestCase):
         with self.assertRaises(TypeError):
             self.tool.run_arguments(bad_file)
 
-        with mock.patch('bfg9000.shell.which', return_value=['command']), \
+        with mock.patch('bfg9000.shell.which', mock_which), \
              self.assertRaises(TypeError):
             self.env.run_arguments(bad_file)
 

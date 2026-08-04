@@ -17,10 +17,6 @@ with known_langs.make('qtui') as x:
     x.vars(compiler='UIC', flags='UICFLAGS')
 
 
-def mock_which(*args, **kwargs):
-    return ['command']
-
-
 class TestMocBuilder(CrossPlatformTestCase):
     def __init__(self, *args, **kwargs):
         super().__init__(clear_variables=True, *args, **kwargs)

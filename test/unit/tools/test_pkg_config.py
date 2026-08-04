@@ -85,43 +85,39 @@ class TestPkgConfig(TestCase):
     def test_guess_sibling(self):
         env = make_env(platform='linux', clear_variables=True,
                        variables={'CC': 'i686-w64-mingw32-gcc-99'})
-        with mock.patch('bfg9000.tools.pkg_config.which',
-                        lambda names, env: [first(names)]), \
+        with mock.patch('bfg9000.tools.pkg_config.which', mock_which), \
              mock.patch('bfg9000.tools.pkg_config.check_which') as mcwhich, \
              mock.patch('bfg9000.shell.which',
                         return_value=['i686-w64-mingw32-gcc-99']), \
              mock.patch('bfg9000.shell.execute', mock_execute_cc), \
              mock.patch('bfg9000.log.info'):
             self.assertEqual(PkgConfig(env).command,
-                             ['i686-w64-mingw32-pkg-config'])
+                             [abs_command('i686-w64-mingw32-pkg-config')])
             mcwhich.assert_not_called()
 
     def test_guess_sibling_nonexist(self):
         env = make_env(platform='linux', clear_variables=True,
                        variables={'CC': 'i686-w64-mingw32-gcc-99'})
-        with mock.patch('bfg9000.tools.pkg_config.which',
-                        lambda names, env: [first(names)]), \
+        with mock.patch('bfg9000.tools.pkg_config.which', mock_which), \
              mock.patch('bfg9000.tools.pkg_config.check_which') as mcwhich, \
-             mock.patch('bfg9000.shell.which',
-                        side_effect=FileNotFoundError()), \
+             mock.patch('bfg9000.shell.which', mock_bad_which), \
              mock.patch('bfg9000.log.info'), \
              mock.patch('warnings.warn'):
             self.assertEqual(PkgConfig(env).command,
-                             ['i686-w64-mingw32-pkg-config'])
+                             [abs_command('i686-w64-mingw32-pkg-config')])
             mcwhich.assert_not_called()
 
     def test_guess_sibling_indirect(self):
         env = make_env(platform='linux', clear_variables=True,
                        variables={'CXX': 'i686-w64-mingw32-g++-99'})
-        with mock.patch('bfg9000.tools.pkg_config.which',
-                        lambda names, env: [first(names)]), \
+        with mock.patch('bfg9000.tools.pkg_config.which', mock_which), \
              mock.patch('bfg9000.tools.pkg_config.check_which') as mcwhich, \
              mock.patch('bfg9000.shell.which',
                         return_value=['i686-w64-mingw32-gcc-99']), \
              mock.patch('bfg9000.shell.execute', mock_execute_cc), \
              mock.patch('bfg9000.log.info'):
             self.assertEqual(PkgConfig(env).command,
-                             ['i686-w64-mingw32-pkg-config'])
+                             [abs_command('i686-w64-mingw32-pkg-config')])
             mcwhich.assert_not_called()
 
     def test_guess_sibling_matches_default(self):

@@ -144,8 +144,7 @@ class TestCFamilyBuilder(CrossPlatformTestCase):
             self.fallback = c_family._fallback_posix_builder
 
     def test_fallback_builder(self):
-        with mock.patch('bfg9000.shell.which',
-                        side_effect=FileNotFoundError()), \
+        with mock.patch('bfg9000.shell.which', mock_bad_which), \
              mock.patch('warnings.warn'):
             self.assertIsInstance(c_family.c_family_builder(self.env, 'c++'),
                                   self.fallback)

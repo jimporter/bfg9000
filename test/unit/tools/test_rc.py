@@ -34,7 +34,7 @@ class TestRcBuilder(TestCase):
     def test_implicit_linux(self):
         env = make_env(platform='linux', clear_variables=True)
         with mock.patch('bfg9000.tools.rc.choose_builder') as m, \
-             mock.patch('bfg9000.shell.which', return_value=['cmd']), \
+             mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', mock_execute_cc):
             rc.rc_builder(env)
             m.assert_called_once_with(env, known_langs['rc'], rc._builders,
@@ -43,7 +43,7 @@ class TestRcBuilder(TestCase):
     def test_implicit_windows(self):
         env = make_env(platform='winnt', clear_variables=True)
         with mock.patch('bfg9000.tools.rc.choose_builder') as m, \
-             mock.patch('bfg9000.shell.which', return_value=['cmd']), \
+             mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', mock_execute_msvc):
             rc.rc_builder(env)
             m.assert_called_once_with(env, known_langs['rc'], rc._builders,
@@ -74,8 +74,7 @@ class TestRcBuilder(TestCase):
         env = make_env(platform='linux', clear_variables=True,
                        variables={'CC': 'i686-w64-mingw32-gcc-99'})
         with mock.patch('bfg9000.tools.rc.choose_builder') as m, \
-             mock.patch('bfg9000.shell.which',
-                        side_effect=FileNotFoundError()), \
+             mock.patch('bfg9000.shell.which', mock_bad_which), \
              mock.patch('bfg9000.log.info'), \
              mock.patch('warnings.warn'):
             rc.rc_builder(env)

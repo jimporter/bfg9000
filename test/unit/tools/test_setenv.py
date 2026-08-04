@@ -36,7 +36,7 @@ class TestSetEnv(TestCase):
     def _init_setenv(self):
         with mock.patch('bfg9000.platforms.host.platform_info',
                         return_value=MockPlatform('windows')), \
-             mock.patch('bfg9000.shell.which', return_value=['command']), \
+             mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch.object(Environment, 'getvar', mock_getvar):
             self.reload_import()
             self.setenv = setenv.SetEnv(self.env)
@@ -44,7 +44,7 @@ class TestSetEnv(TestCase):
 
     def test_env(self):
         setenv = self._init_setenv()
-        with mock.patch('bfg9000.shell.which', return_value=['command']):
+        with mock.patch('bfg9000.shell.which', mock_which):
             self.assertIsInstance(self.env.tool('setenv'), setenv.SetEnv)
 
     def test_env_nonexist(self):

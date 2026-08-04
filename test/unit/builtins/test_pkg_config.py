@@ -2,6 +2,7 @@ from io import StringIO
 from unittest import mock
 
 from .common import BuiltinTestCase, TestCase
+from .. import mock_which
 
 from bfg9000.builtins import (default, link, packages, project,  # noqa: F401
                               version)
@@ -191,7 +192,7 @@ class TestPkgConfig(BuiltinTestCase):
                 return 'version\n'
             raise OSError('unknown command: {}'.format(args))
 
-        with mock.patch('bfg9000.shell.which', return_value=['command']), \
+        with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', mock_execute_cc):
             self.context.env.builder('c')
         return self.context.env.tool('pkg_config')

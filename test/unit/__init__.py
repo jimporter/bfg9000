@@ -23,6 +23,22 @@ def only_if_platform(platform):
                      'only supported for platform "{}"'.format(platform))
 
 
+def abs_command(name):
+    if isinstance(name, Path):
+        name = name.string()
+    if '/' not in name:
+        name = '/' + name
+    return os.path.abspath(name)
+
+
+def mock_which(names, *args, **kwargs):
+    return [abs_command(iterutils.first(iterutils.first(names)))]
+
+
+def mock_bad_which(*args, **kwargs):
+    raise FileNotFoundError()
+
+
 class AttrDict:
     def __init__(self, **kwargs):
         for k, v in kwargs.items():

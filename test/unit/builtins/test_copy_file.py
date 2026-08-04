@@ -1,6 +1,8 @@
 from unittest import mock
 
 from .common import BuiltinTestCase
+from .. import mock_which, mock_bad_which
+
 from bfg9000 import file_types
 from bfg9000.builtins import copy_file as _copy_file  # noqa: F401
 from bfg9000.path import Path, Root
@@ -192,7 +194,7 @@ class TestManPage(BuiltinTestCase):
         self.assertSameFile(result, expected)
 
     def test_auto_compress_enabled(self):
-        with mock.patch('bfg9000.shell.which', return_value=['command']):
+        with mock.patch('bfg9000.shell.which', mock_which):
             self.env.tool('gzip')
 
         expected = file_types.ManPage(Path('myprogram.1.gz'), '1')
@@ -200,8 +202,7 @@ class TestManPage(BuiltinTestCase):
         self.assertSameFile(result, expected)
 
     def test_auto_compress_disabled(self):
-        with mock.patch('bfg9000.shell.which',
-                        side_effect=FileNotFoundError()), \
+        with mock.patch('bfg9000.shell.which', mock_bad_which), \
              mock.patch('warnings.warn'):
             self.env.tool('gzip')
 

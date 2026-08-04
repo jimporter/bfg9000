@@ -18,10 +18,6 @@ with known_langs.make('scala') as x:
     x.vars(compiler='SCALAC', runner='SCALACMD', flags='SCALAFLAGS')
 
 
-def mock_which(*args, **kwargs):
-    return ['command']
-
-
 def default_mock_execute(*args, **kwargs):
     return 'version'
 
@@ -374,7 +370,7 @@ class TestJvmRunnerJava(CrossPlatformTestCase):
         self.assertEqual(self.runner.run_arguments(exe),
                          [self.runner] + self.jar_args + [exe])
 
-        with mock.patch('bfg9000.shell.which', return_value=['command']), \
+        with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', default_mock_execute):
             args = self.env.run_arguments(exe)
         self.assertEqual(len(args), len(self.jar_args) + 2)
@@ -387,7 +383,7 @@ class TestJvmRunnerJava(CrossPlatformTestCase):
             self.runner, '-cp', obj.path.parent(), obj.path.basename()
         ])
 
-        with mock.patch('bfg9000.shell.which', return_value=['command']), \
+        with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', default_mock_execute):
             args = self.env.run_arguments(obj)
         self.assertEqual(len(args), 4)
@@ -402,7 +398,7 @@ class TestJvmRunnerJava(CrossPlatformTestCase):
             self.runner, objlist.object_file.path.basename()
         ])
 
-        with mock.patch('bfg9000.shell.which', return_value=['command']), \
+        with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', default_mock_execute):
             args = self.env.run_arguments(objlist)
         self.assertEqual(len(args), 2)
@@ -414,7 +410,7 @@ class TestJvmRunnerJava(CrossPlatformTestCase):
         with self.assertRaises(TypeError):
             self.runner.run_arguments(bad_file)
 
-        with mock.patch('bfg9000.shell.which', return_value=['command']), \
+        with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', default_mock_execute), \
              self.assertRaises(TypeError):
             self.env.run_arguments(bad_file)

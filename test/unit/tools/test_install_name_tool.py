@@ -11,7 +11,7 @@ class TestInstallNameTool(ToolTestCase):
     tool_type = InstallNameTool
 
     def test_env(self):
-        with mock.patch('bfg9000.shell.which', return_value=['command']):
+        with mock.patch('bfg9000.shell.which', mock_which):
             self.assertIsInstance(self.env.tool('install_name_tool'),
                                   InstallNameTool)
 
@@ -88,7 +88,7 @@ class TestDarwinInstallName(TestCase):
 class TestPostInstall(TestCase):
     def setUp(self):
         self.env = make_env()
-        with mock.patch('bfg9000.shell.which', return_value=['command']):
+        with mock.patch('bfg9000.shell.which', mock_which):
             self.tool = self.env.tool('install_name_tool')
         self.install_db = MockInstallOutputs(self.env)
         self.exe = file_types.Executable(Path('exe'), None)

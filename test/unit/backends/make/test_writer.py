@@ -12,22 +12,21 @@ def mock_bad_execute(*args, **kwargs):
 
 class TestMakeVersion(TestCase):
     def test_good(self):
-        with mock.patch('bfg9000.shell.which', return_value=['command']), \
+        with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', return_value='GNU Make 1.23'):
             self.assertEqual(version({}), Version('1.23'))
 
     def test_unrecognized_version(self):
-        with mock.patch('bfg9000.shell.which', return_value=['command']), \
+        with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute',
                         return_value='Funky Make 1.23'):
             self.assertEqual(version({}), None)
 
     def test_not_found(self):
-        with mock.patch('bfg9000.shell.which',
-                        side_effect=FileNotFoundError()):
+        with mock.patch('bfg9000.shell.which', mock_bad_which):
             self.assertEqual(version({}), None)
 
     def test_bad_execute(self):
-        with mock.patch('bfg9000.shell.which', return_value=['command']), \
+        with mock.patch('bfg9000.shell.which', mock_which), \
              mock.patch('bfg9000.shell.execute', mock_bad_execute):
             self.assertEqual(version({}), None)

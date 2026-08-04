@@ -7,7 +7,7 @@ class TestRm(ToolTestCase):
     tool_type = Rm
 
     def test_env(self):
-        with mock.patch('bfg9000.shell.which', return_value=['command']):
+        with mock.patch('bfg9000.shell.which', mock_which):
             self.assertIsInstance(self.env.tool('rm'), Rm)
 
     def test_rm(self):

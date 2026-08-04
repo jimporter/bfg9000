@@ -7,10 +7,6 @@ with known_langs.make('java') as x:
     x.vars(compiler='JAVAC', flags='JAVAFLAGS')
 
 
-def mock_which(*args, **kwargs):
-    return ['command']
-
-
 def mock_execute(args, **kwargs):
     if '--version' in args:
         if args[0] == '/usr/bin/ld':

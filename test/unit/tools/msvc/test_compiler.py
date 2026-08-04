@@ -1,7 +1,7 @@
 from unittest import mock
 
 from ... import *
-from .common import known_langs, mock_which
+from .common import known_langs
 
 from bfg9000 import options as opts
 from bfg9000.file_types import (HeaderDirectory, HeaderFile,

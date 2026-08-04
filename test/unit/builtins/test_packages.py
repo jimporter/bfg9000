@@ -8,13 +8,8 @@ from .. import *
 
 from bfg9000 import file_types
 from bfg9000.builtins import builtin, packages, project  # noqa: F401
-from bfg9000.iterutils import first
 from bfg9000.path import abspath
 from bfg9000.versioning import SpecifierSet, Version
-
-
-def mock_which(names, *args, **kwargs):
-    return [os.path.abspath('/' + first(first(names)))]
 
 
 def mock_execute_common(args, **kwargs):

@@ -9,7 +9,7 @@ class TestBfg9000(ToolTestCase):
     tool_type = Bfg9000
 
     def test_env(self):
-        with mock.patch('bfg9000.shell.which', return_value=['command']):
+        with mock.patch('bfg9000.shell.which', mock_which):
             self.assertIsInstance(self.env.tool('bfg9000'), Bfg9000)
 
     def test_regenerate(self):
@@ -36,7 +36,7 @@ class TestDepfixer(ToolTestCase):
     tool_type = Depfixer
 
     def test_env(self):
-        with mock.patch('bfg9000.shell.which', return_value=['command']):
+        with mock.patch('bfg9000.shell.which', mock_which):
             self.assertIsInstance(self.env.tool('depfixer'), Depfixer)
 
     def test_depfixer(self):
@@ -50,7 +50,7 @@ class TestJvmOutput(ToolTestCase):
     tool_type = JvmOutput
 
     def test_env(self):
-        with mock.patch('bfg9000.shell.which', return_value=['command']):
+        with mock.patch('bfg9000.shell.which', mock_which):
             self.assertIsInstance(self.env.tool('jvmoutput'), JvmOutput)
 
     def test_jvmoutput(self):
@@ -62,7 +62,7 @@ class TestRccDep(ToolTestCase):
     tool_type = RccDep
 
     def test_env(self):
-        with mock.patch('bfg9000.shell.which', return_value=['command']):
+        with mock.patch('bfg9000.shell.which', mock_which):
             self.assertIsInstance(self.env.tool('rccdep'), RccDep)
 
     def test_rccdep(self):

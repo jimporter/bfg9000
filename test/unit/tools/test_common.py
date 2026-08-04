@@ -13,10 +13,6 @@ with known_langs.make('c') as x:
     x.vars(compiler='CC', flags='CFLAGS')
 
 
-def mock_which(*args, **kwargs):
-    return ['command']
-
-
 def mock_execute(args, **kwargs):
     if '--version' in args:
         return ('g++ (Ubuntu 5.4.0-6ubuntu1~16.04.6) 5.4.0 20160609\n' +
