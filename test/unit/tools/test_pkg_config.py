@@ -134,8 +134,7 @@ class TestPkgConfig(TestCase):
     def test_guess_sibling_error(self):
         env = make_env(platform='linux', clear_variables=True,
                        variables={'CC': 'i686-w64-mingw32-gcc-99'})
-        with mock.patch('bfg9000.tools.pkg_config.which',
-                        side_effect=FileNotFoundError()), \
+        with mock.patch('bfg9000.tools.pkg_config.which', mock_bad_which), \
              mock.patch('bfg9000.tools.pkg_config.check_which',
                         return_value=(['pkgconf'], True)), \
              mock.patch('bfg9000.log.info'), \
@@ -145,7 +144,9 @@ class TestPkgConfig(TestCase):
     def test_search_path(self):
         env = make_env(platform='linux', clear_variables=True)
         with mock.patch('bfg9000.tools.pkg_config.check_which',
-                        return_value=('pkg-confing', True)):
+                        return_value=('pkg-confing', True)), \
+             mock.patch('bfg9000.shell.which', return_value=['cc']), \
+             mock.patch('bfg9000.shell.execute', mock_execute_cc):
             self.assertEqual(PkgConfig(env).search_path(), '')
             self.assertEqual(PkgConfig(env).search_path(['foo', 'bar']),
                              'foo' + os.pathsep + 'bar')
@@ -154,7 +155,9 @@ class TestPkgConfig(TestCase):
         env = make_env(platform='linux', clear_variables=True,
                        variables={'PKG_CONFIG_PATH': 'env'})
         with mock.patch('bfg9000.tools.pkg_config.check_which',
-                        return_value=('pkg-confing', True)):
+                        return_value=('pkg-confing', True)), \
+             mock.patch('bfg9000.shell.which', return_value=['cc']), \
+             mock.patch('bfg9000.shell.execute', mock_execute_cc):
             self.assertEqual(PkgConfig(env).search_path(), 'env')
             self.assertEqual(PkgConfig(env).search_path(['foo', 'bar']),
                              'foo' + os.pathsep + 'bar' + os.pathsep + 'env')

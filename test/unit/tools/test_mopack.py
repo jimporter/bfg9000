@@ -10,9 +10,20 @@ from bfg9000.tools.mopack import Mopack, get_linkage
 class TestMopack(ToolTestCase):
     tool_type = Mopack
 
+    def setUp(self):
+        super().setUp()
+        self.mock_which = mock.patch('bfg9000.shell.which', mock_which)
+        self.mock_builder = mock.patch('bfg9000.tools.c_family.choose_builder')
+        self.mock_which.start()
+        self.mock_builder.start()
+
+    def tearDown(self):
+        self.mock_builder.stop()
+        self.mock_which.stop()
+        super().tearDown()
+
     def test_env(self):
-        with mock.patch('bfg9000.shell.which', mock_which):
-            self.assertIsInstance(self.env.tool('mopack'), Mopack)
+        self.assertIsInstance(self.env.tool('mopack'), Mopack)
 
     def test_call_resolve(self):
         prefix = self.env.install_dirs[InstallRoot.prefix]
