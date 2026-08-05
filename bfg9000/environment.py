@@ -124,7 +124,7 @@ class Toolchain:
 
 
 class Environment:
-    version = 17
+    version = 18
     envfile = '.bfg_environ'
 
     Mode = shell.Mode
@@ -136,10 +136,12 @@ class Environment:
         env.__tools = {}
         return env
 
-    def __init__(self, bfgdir, backend, backend_version, srcdir, builddir):
+    def __init__(self, bfgdir, backend, backend_version, srcdir, builddir,
+                 verbose=False):
         self.bfgdir = bfgdir.as_directory()
         self.backend = backend
         self.backend_version = backend_version
+        self.verbose = verbose
 
         self.host_platform = platforms.host.platform_info()
         self.target_platform = platforms.target.platform_info()
@@ -260,6 +262,7 @@ class Environment:
                     'bfgdir': self.bfgdir.to_json(),
                     'backend': self.backend,
                     'backend_version': str(self.backend_version),
+                    'verbose': self.verbose,
 
                     'host_platform': self.host_platform.to_json(),
                     'target_platform': self.target_platform.to_json(),
@@ -379,6 +382,12 @@ class Environment:
 
         # ----- bfg v0.7.0 -----
 
+        # v18 adds verbose field.
+        if version < 18:
+            data['verbose'] = False
+
+        # ----- bfg v0.8.0 -----
+
         # Now that we've upgraded, initialize the Environment object.
         env = cls.__new__(cls)
 
@@ -387,7 +396,7 @@ class Environment:
             data['target_platform']
         )
 
-        for i in ('backend', 'extra_args'):
+        for i in ('backend', 'extra_args', 'compdb', 'verbose'):
             setattr(env, i, data[i])
 
         for i in ('bfgdir', 'srcdir', 'builddir'):
@@ -402,6 +411,5 @@ class Environment:
         env.mopack = [Path.from_json(i) for i in data['mopack']]
         env.variables = EnvVarDict.from_json(data['variables'])
         env.library_mode = LibraryMode(*data['library_mode'])
-        env.compdb = data['compdb']
 
         return env

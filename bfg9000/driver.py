@@ -79,6 +79,7 @@ def environment_from_args(args):
         backend_version=backend.version(),
         srcdir=args.srcdir,
         builddir=args.builddir,
+        verbose=args.verbose,
     )
 
     return env, backend
@@ -122,6 +123,7 @@ class ConfigureHelp(argparse.Action):
             namespace.builddir = None
 
         if getattr(namespace, 'srcdir', None):
+            namespace.verbose = False
             env, backend = environment_from_args(namespace)
             parser = build.fill_user_help(env, parser)
 

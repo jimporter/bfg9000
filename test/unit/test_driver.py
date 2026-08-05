@@ -13,6 +13,7 @@ class TestEnvironmentFromArgs(TestCase):
     def setUp(self):
         self.args = argparse.Namespace(
             backend='make',
+            verbose=False,
 
             srcdir=path.abspath('.'),
             builddir=path.abspath('build'),
