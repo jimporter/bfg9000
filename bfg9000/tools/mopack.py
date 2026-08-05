@@ -105,8 +105,9 @@ class Mopack(SimpleCommand):
 
 def get_linkage(env, name, submodules=None):
     try:
+        kwargs = {'stderr': shell.Mode.normal} if env.verbose else {}
         return env.tool('mopack').run('linkage', name, submodules,
-                                      directory=env.builddir)
+                                      directory=env.builddir, **kwargs)
     except (OSError, shell.CalledProcessError) as e:
         stdout = getattr(e, 'stdout', None)
         msg = ((stdout and json.loads(stdout.strip()).get('error')) or

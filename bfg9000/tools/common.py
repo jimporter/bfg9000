@@ -94,8 +94,10 @@ class Command:
         run_kwargs = slice_dict(kwargs, ('env', 'extra_env', 'stdout',
                                          'stderr'))
         run_kwargs.setdefault('stdout', shell.Mode.pipe)
-        if run_kwargs['stdout'] != shell.Mode.normal:
-            run_kwargs.setdefault('stderr', shell.Mode.devnull)
+        if run_kwargs['stdout'] == shell.Mode.normal:
+            run_kwargs.setdefault('stderr', shell.Mode.normal)
+        else:
+            run_kwargs.setdefault('stderr', shell.Mode.quiet)
 
         return self.env.execute(self(*args, **kwargs), **run_kwargs)
 

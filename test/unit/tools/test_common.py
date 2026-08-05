@@ -159,20 +159,23 @@ class TestCommand(TestCase):
 
         with mock.patch('bfg9000.shell.execute') as e:
             self.cmd.run()
-            assert_called(e, ['command'], stdout=M.pipe, stderr=M.devnull)
+            assert_called(e, ['command'], stdout=M.pipe, stderr=M.quiet)
         with mock.patch('bfg9000.shell.execute') as e:
             self.cmd.run('--foo')
             assert_called(e, ['command', '--foo'], stdout=M.pipe,
-                          stderr=M.devnull)
+                          stderr=M.quiet)
         with mock.patch('bfg9000.shell.execute') as e:
             self.cmd.run(stdout=M.normal)
-            assert_called(e, ['command'], stdout=M.normal)
+            assert_called(e, ['command'], stdout=M.normal, stderr=M.normal)
+        with mock.patch('bfg9000.shell.execute') as e:
+            self.cmd.run(stderr=M.devnull)
+            assert_called(e, ['command'], stdout=M.pipe, stderr=M.devnull)
         with mock.patch('bfg9000.shell.execute') as e:
             self.cmd.run(stdout=M.normal, stderr='err')
             assert_called(e, ['command'], stdout=M.normal, stderr='err')
         with mock.patch('bfg9000.shell.execute') as e:
             self.cmd.run(stdout='out')
-            assert_called(e, ['command'], stdout='out', stderr=M.devnull)
+            assert_called(e, ['command'], stdout='out', stderr=M.quiet)
         with mock.patch('bfg9000.shell.execute') as e:
             self.cmd.run(stdout='out', stderr='err')
             assert_called(e, ['command'], stdout='out', stderr='err')

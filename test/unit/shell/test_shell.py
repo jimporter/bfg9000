@@ -112,8 +112,9 @@ class TestExecute(TestCase):
         self.assertEqual(execute([sys.executable, '-c', 'exit()']), None)
 
     def test_stdout(self):
-        self.assertEqual(execute([sys.executable, '-c', 'print("hello")'],
-                                 stdout=Mode.pipe), 'hello\n')
+        self.assertEqual(execute(
+            [sys.executable, '-c', 'print("hello")'], stdout=Mode.pipe
+        ), 'hello\n')
 
     def test_stderr(self):
         self.assertEqual(execute(
@@ -130,20 +131,24 @@ class TestExecute(TestCase):
         ), ('stdout\n', 'stderr\n'))
 
     def test_returncode(self):
-        self.assertEqual(execute([sys.executable, '-c', 'exit(1)'],
-                                 returncode=1), None)
-        self.assertEqual(execute([sys.executable, '-c', 'exit(1)'],
-                                 returncode=[1, 2]), None)
-        self.assertEqual(execute([sys.executable, '-c', 'exit(1)'],
-                                 returncode='any'), None)
-        self.assertEqual(execute([sys.executable, '-c', 'exit(1)'],
-                                 returncode='fail'), None)
+        for code in (1, [1, 2], 'any', 'fail'):
+            self.assertEqual(execute([sys.executable, '-c', 'exit(1)'],
+                                     returncode=code), None)
 
         with self.assertRaises(CalledProcessError):
-            self.assertEqual(execute([sys.executable, '-c', 'exit(1)']), None)
+            execute([sys.executable, '-c', 'exit(1)'])
         with self.assertRaises(CalledProcessError):
-            self.assertEqual(execute([sys.executable, '-c', 'exit(0)'],
-                                     returncode='fail'), None)
+            execute([sys.executable, '-c', 'exit(0)'], returncode='fail')
+
+    def test_quiet(self):
+        self.assertEqual(execute(
+            [sys.executable, '-c', 'print("hello")'], stdout=Mode.quiet
+        ), None)
+
+        with self.assertRaises(CalledProcessError) as e:
+            execute([sys.executable, '-c', 'print("hello"); exit(1)'],
+                    stdout=Mode.quiet)
+        self.assertEqual(e.exception.stdout, 'hello\n')
 
     def test_shell(self):
         self.assertEqual(execute('echo hello', shell=True, stdout=Mode.pipe),

@@ -1,10 +1,12 @@
 import os
 import subprocess
+import textwrap
 from enum import Enum
+from signal import Signals
 
 from .. import iterutils
 from .list import shell_list  # noqa: F401
-from ..iterutils import default_sentinel
+from ..iterutils import default_sentinel, isiterable
 from ..path import BasePath, Path, issemiabs
 from ..platforms.host import platform_info
 from ..safe_str import jbos, safe_str
@@ -17,11 +19,36 @@ else:
 CalledProcessError = subprocess.CalledProcessError
 
 
+class ExecutionError(CalledProcessError):
+    def __str__(self):
+        cmd = join(self.cmd) if isiterable(self.cmd) else self.cmd
+        if self.returncode and self.returncode < 0:
+            try:
+                sig = repr(Signals(-self.returncode))
+            except ValueError:
+                sig = 'unknown signal {}'.format(-self.returncode)
+            msg = 'Command `{}` died with {}'.format(join(cmd), sig)
+        else:
+            msg = ('Command `{}` returned non-zero exit status {}'
+                   .format(cmd, self.returncode))
+
+        if self.stderr:
+            stderr = self.stderr.strip()
+            if stderr:
+                msg += ':\n' + textwrap.indent(stderr, ' ' * 2)
+        return msg
+
+
 class Mode(Enum):
-    normal = None
-    pipe = subprocess.PIPE
-    stdout = subprocess.STDOUT
-    devnull = subprocess.DEVNULL
+    normal = ('normal', None)
+    stdout = ('stdout', subprocess.STDOUT)
+    pipe = ('pipe', subprocess.PIPE)
+    quiet = ('quiet', subprocess.PIPE)
+    devnull = ('devnull', subprocess.DEVNULL)
+
+    @staticmethod
+    def conv(mode):
+        return mode.value[1] if isinstance(mode, Mode) else mode
 
 
 def split_paths(s, sep=os.pathsep, fn=lambda x: x):
@@ -94,19 +121,18 @@ def execute(args, *, shell=False, env=None, base_dirs=None, stdout=Mode.normal,
     if not shell:
         args = convert_args(args, base_dirs)
 
-    def conv_mode(mode):
-        return mode.value if isinstance(mode, Mode) else mode
-
     proc = subprocess.run(args, text=True, shell=shell, env=env,
-                          stdout=conv_mode(stdout), stderr=conv_mode(stderr))
+                          stdout=Mode.conv(stdout), stderr=Mode.conv(stderr))
     if not (returncode == 'any' or
             (returncode == 'fail' and proc.returncode != 0) or
             proc.returncode in iterutils.listify(returncode)):
-        raise CalledProcessError(proc.returncode, proc.args, proc.stdout,
-                                 proc.stderr)
+        raise ExecutionError(proc.returncode, proc.args, proc.stdout,
+                             proc.stderr)
 
     if stdout == Mode.pipe:
         if stderr == Mode.pipe:
             return proc.stdout, proc.stderr
         return proc.stdout
-    return proc.stderr
+    elif stderr == Mode.pipe:
+        return proc.stderr
+    return None
