@@ -98,8 +98,7 @@ def c_family_builder(env, lang):
         fallback = _fallback_posix_builder
 
     langinfo = known_langs[lang]
-    cmd = env.getvar(langinfo.var('compiler'))
-    if cmd:
+    if cmd := env.getvar(langinfo.var('compiler')):
         return choose_builder(env, langinfo, _builders, candidates=cmd,
                               fallback_builder=fallback)
 

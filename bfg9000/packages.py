@@ -24,8 +24,7 @@ class Package:
     is_package = True
 
     def __init__(self, name, submodules=None, *, format, deps=None):
-        submodules = _listify(submodules)
-        if submodules:
+        if submodules := _listify(submodules):
             name = '{}[{}]'.format(name, ','.join(submodules))
 
         self.name = name

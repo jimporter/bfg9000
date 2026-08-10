@@ -61,8 +61,7 @@ class LexCompiler(SimpleBuildCommand):
         ))
 
     def _output_lang(self, options):
-        filtered = options.filter(opts.lang) if options else None
-        if filtered:
+        if filtered := options.filter(opts.lang) if options else None:
             lang = filtered[-1].value
             if lang not in ('c', 'c++'):
                 raise ValueError('only c and c++ supported')

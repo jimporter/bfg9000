@@ -33,8 +33,7 @@ class ExecutionError(CalledProcessError):
                    .format(cmd, self.returncode))
 
         if self.stderr:
-            stderr = self.stderr.strip()
-            if stderr:
+            if stderr := self.stderr.strip():
                 msg += ':\n' + textwrap.indent(stderr, ' ' * 2)
         return msg
 
@@ -76,8 +75,7 @@ def which(names, path=default_sentinel, pathext=default_sentinel, *,
     if pathext is default_sentinel:
         pathext = ['']
         if platform_info().has_path_ext:
-            extstr = env.get('PATHEXT')
-            if extstr:
+            if extstr := env.get('PATHEXT'):
                 pathext.extend(split_paths(extstr))
 
     for name in names:

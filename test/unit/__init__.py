@@ -103,8 +103,7 @@ class FileTestCase(TestCase):
             return diffs
 
         seen = set()
-        diffs = diff_node(a, b)
-        if diffs:
+        if diffs := diff_node(a, b):
             raise AssertionError('mismatched files:\n' + '\n'.join(
                 '  {}: {!r} != {!r}'.format(
                     '.'.join(str(j) for j in i[0]), *i[1:]

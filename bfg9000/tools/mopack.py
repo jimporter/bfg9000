@@ -35,8 +35,7 @@ class Mopack(SimpleCommand):
                 raise ValueError('invalid dependency')
             return s
 
-        submodules_str = ','.join(check(i) for i in iterate(submodules))
-        if submodules_str:
+        if submodules_str := ','.join(check(i) for i in iterate(submodules)):
             return '{}[{}]'.format(check(package), submodules_str)
         return check(package)
 

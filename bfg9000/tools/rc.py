@@ -21,8 +21,7 @@ _builders = (cc.CcRcBuilder, msvc.MsvcRcBuilder)
 @builder('rc')
 def rc_builder(env):
     langinfo = known_langs['rc']
-    cmd = env.getvar(langinfo.var('compiler'))
-    if cmd:
+    if cmd := env.getvar(langinfo.var('compiler')):
         return choose_builder(env, langinfo, _builders, candidates=cmd)
 
     # We don't have an explicitly-set command from the environment, so try to

@@ -29,8 +29,7 @@ class CopyFile(Edge):
 
     @staticmethod
     def convert_args(context, name, file, kwargs):
-        directory = kwargs.pop('directory', None)
-        if directory:
+        if directory := kwargs.pop('directory', None):
             directory = buildpath(context, directory, strict=True)
         file = context['auto_file'](file)
 

@@ -102,8 +102,7 @@ class ForwardOptions:
     def recurse(cls, libs):
         def do_recurse(result, libs):
             for i in libs:
-                forward_opts = getattr(i, 'forward_opts', None)
-                if forward_opts:
+                if forward_opts := getattr(i, 'forward_opts', None):
                     result.update(forward_opts)
                     do_recurse(result, forward_opts.libs)
 
@@ -121,8 +120,7 @@ def _get_ns_annotations(attrs):
 
     if sys.version_info >= (3, 14):
         import annotationlib
-        annotate = annotationlib.get_annotate_from_class_namespace(attrs)
-        if annotate:
+        if annotate := annotationlib.get_annotate_from_class_namespace(attrs):
             return annotationlib.call_annotate_function(
                 annotate, format=annotationlib.Format.FORWARDREF
             )

@@ -226,8 +226,7 @@ class JarMaker(SimpleBuildCommand):
             if classpath:
                 out.write('Class-Path: {}\n'.format(classpath))
 
-            entry_point = self._entry_point(options)
-            if entry_point:
+            if entry_point := self._entry_point(options):
                 out.write('Main-Class: {}\n'.format(entry_point))
 
         return None
@@ -238,8 +237,7 @@ class JarMaker(SimpleBuildCommand):
         ))
 
     def _entry_point(self, options):
-        filtered = options.filter(opts.entry_point) if options else None
-        if filtered:
+        if filtered := options.filter(opts.entry_point) if options else None:
             return filtered[-1].value
         return None
 

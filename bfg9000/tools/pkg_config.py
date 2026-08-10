@@ -53,8 +53,7 @@ class PkgConfig(Command):
 
     @staticmethod
     def _get_command(env):
-        cmd = env.getvar('PKG_CONFIG')
-        if cmd:
+        if cmd := env.getvar('PKG_CONFIG'):
             return check_which(cmd, env=env.variables)
 
         # We don't have an explicitly-set command from the environment, so try
@@ -106,8 +105,7 @@ class PkgConfig(Command):
         return result
 
     def search_path(self, extra=[]):
-        path = self.env.variables.get('PKG_CONFIG_PATH')
-        if path:
+        if path := self.env.variables.get('PKG_CONFIG_PATH'):
             return shell.join_paths(extra + [path])
         return shell.join_paths(extra)
 

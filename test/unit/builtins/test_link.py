@@ -866,8 +866,7 @@ class TestWholeArchive(BuiltinTestCase):
 class TestMakeBackend(BuiltinTestCase):
     def _variables(self, lang='c++'):
         linker = self.env.builder(lang).linker('executable')
-        libs = linker.lib_flags(linker.always_libs(True))
-        if libs:
+        if libs := linker.lib_flags(linker.always_libs(True)):
             return {make.var('LDLIBS'): [make.var('GLOBAL_LDLIBS')] + libs}
         return {}
 
@@ -906,8 +905,7 @@ class TestMakeBackend(BuiltinTestCase):
 class TestNinjaBackend(BuiltinTestCase):
     def _variables(self, lang='c++'):
         linker = self.env.builder(lang).linker('executable')
-        libs = linker.lib_flags(linker.always_libs(True))
-        if libs:
+        if libs := linker.lib_flags(linker.always_libs(True)):
             return {ninja.var('ldlibs'): [ninja.var('global_ldlibs')] + libs}
         return {}
 

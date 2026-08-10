@@ -125,8 +125,7 @@ class Link(Edge):
         yielded = False
         for i in langs:
             try:
-                linker = env.builder(i).linker(self.mode)
-                if linker:
+                if linker := env.builder(i).linker(self.mode):
                     yielded = True
                     yield linker
             except ToolNotFoundError:
@@ -420,8 +419,7 @@ def _get_flags(backend, rule, build_inputs, buildfile):
             buildfile
         )
         cmd_kwargs['flags'] = ldflags
-        flags = rule.flags(gopts)
-        if flags:
+        if flags := rule.flags(gopts):
             variables[ldflags] = [global_ldflags] + flags
 
     if hasattr(linker, 'libs_var'):
@@ -431,8 +429,7 @@ def _get_flags(backend, rule, build_inputs, buildfile):
             buildfile
         )
         cmd_kwargs['libs'] = ldlibs
-        lib_flags = rule.lib_flags(gopts)
-        if lib_flags:
+        if lib_flags := rule.lib_flags(gopts):
             variables[ldlibs] = [global_ldlibs] + lib_flags
 
     if hasattr(rule, 'manifest'):

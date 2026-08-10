@@ -70,8 +70,7 @@ class YaccCompiler(SimpleBuildCommand):
                                 if len(name) > 1 else [])
 
     def _output_lang(self, options):
-        filtered = options.filter(opts.lang) if options else None
-        if filtered:
+        if filtered := options.filter(opts.lang) if options else None:
             return filtered[-1].value
         return 'c'
 

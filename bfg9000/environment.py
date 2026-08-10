@@ -230,8 +230,7 @@ class Environment:
 
         if lang is None:
             lang = first(getattr(args[0], 'lang', None), default=None)
-        runner = self._runner(lang)
-        if runner:
+        if runner := self._runner(lang):
             return runner.run_arguments(args[0]) + args[1:]
 
         if not isinstance(args[0], Executable):

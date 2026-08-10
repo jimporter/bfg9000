@@ -263,8 +263,7 @@ class VcxProject(Project):
             name = i['name']
             c = func(name, i['options'])
 
-            prefix = prefixes[basename(name.path)]
-            if prefix:
+            if prefix := prefixes[basename(name.path)]:
                 # If this prefix is shared with another file, strip it out to
                 # create a unique directory to store this object file.
                 suffix = path.Path(name.path.relpath(prefix)).stripext('.obj')

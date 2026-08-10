@@ -32,8 +32,7 @@ class CcBuilder(Builder):
         # Try to infer the appropriate -fuse-ld option from the LD environment
         # variable.
         link_command = command[:]
-        ld_command = env.getvar(ldinfo.var('linker'))
-        if ld_command:
+        if ld_command := env.getvar(ldinfo.var('linker')):
             tail = os.path.splitext(ld_command)[1][1:]
             if tail in ['bfd', 'gold']:
                 log.info('setting `-fuse-ld={}` for `{}`'

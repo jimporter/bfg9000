@@ -289,8 +289,7 @@ def _get_flags(backend, rule, build_inputs, buildfile):
             buildfile
         )
         cmd_kwargs['flags'] = cflags
-        flags = rule.flags(gopts)
-        if flags:
+        if flags := rule.flags(gopts):
             variables[cflags] = [global_cflags] + flags
 
     return variables, cmd_kwargs
