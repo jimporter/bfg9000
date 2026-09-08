@@ -24,8 +24,7 @@ class TestSplit(TestCase):
                          ('foo', 'bar', 'baz'))
 
     def test_escapes(self):
-        self.assertEqual(posix.split('foo\\ bar'), ['foo\\', 'bar'])
-        self.assertEqual(posix.split('foo\\ bar', escapes=True), ['foo bar'])
+        self.assertEqual(posix.split('foo\\ bar'), ['foo bar'])
 
     def test_invalid(self):
         self.assertRaises(TypeError, posix.split, 1)

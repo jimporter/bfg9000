@@ -26,7 +26,7 @@ _c_to_pkgconf = make_command_converter([
 
 
 def _shell_split(output):
-    return pshell.split(output, type=opts.option_list, escapes=True)
+    return pshell.split(output, type=opts.option_list)
 
 
 def _requires_split(output):

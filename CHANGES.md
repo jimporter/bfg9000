@@ -27,6 +27,8 @@
   changed
 - Multiple `.bfg` files (when using submodules) no longer inadvertently share
   scope with each other
+- On POSIX systems, backslashes in environment variables for commands are now
+  properly treated as escapes
 
 ---
 

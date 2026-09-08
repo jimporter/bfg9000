@@ -316,20 +316,20 @@ class TestBuildCommandsPosixNinja(TestBuildCommandsBase):
             )],
         ])
 
-        arg = pshell.split(cmd[1][1].string, escapes=True)
+        arg = pshell.split(cmd[1][1].string)
         self.assertEqual(arg, [
             p('mid_driver') + ' ' + p('mid_test') + " '" + p('inner_driver') +
             r" '\''" + p('inner_test') + ' --foo' + r"'\'"
         ])
 
-        arg = pshell.split(arg[0], escapes=True)
+        arg = pshell.split(arg[0])
         self.assertEqual(arg, [
             p('mid_driver'),
             p('mid_test'),
             p('inner_driver') + " '" + p('inner_test') + ' --foo' + "'"
         ])
 
-        arg = pshell.split(arg[2], escapes=True)
+        arg = pshell.split(arg[2])
         self.assertEqual(arg, [
             p('inner_driver'),
             p('inner_test') + ' --foo'

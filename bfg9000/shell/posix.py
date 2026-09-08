@@ -14,13 +14,11 @@ __all__ = ['split', 'join', 'listify', 'inner_quote', 'inner_quote_info',
 _bad_chars = re.compile(r'[^\w@%+=:,./-]')
 
 
-def split(s, type=list, escapes=False):
+def split(s, type=list):
     if not isinstance(s, str):
         raise TypeError('expected a string')
     lexer = shlex(s, posix=True)
     lexer.commenters = ''
-    if not escapes:
-        lexer.escape = ''
     lexer.whitespace_split = True
     return type(lexer)
 
