@@ -43,8 +43,9 @@ class Mopack(SimpleCommand):
     def _toolchain_env(self):
         # TODO: We really shouldn't assume that mopack just wants the C
         # builder's configuration. Better would be to examine the default
-        # language from the `projet` call, but that requires some thought about
-        # how to defer `mopack resolve` until after we call that function...
+        # language from the `project` call, but that requires some thought
+        # about how to defer `mopack resolve` until after we call that
+        # function...
         pkg = self.env.builder('c').packages
         return {
             'MOPACK_INCLUDE_PATH': jp(i.string() for i in pkg.include_dirs),
