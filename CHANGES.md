@@ -76,7 +76,7 @@
 - *pkg-config* `.pc` files now always use POSIX-like paths
 - Fix display of the traceback in a bfg file when building from the build
   directory
-- Replace `packaging` dependency with `verspec` for future stability
+- Replace `packaging` dependency with `inversion` for future stability
 
 [mopack]: https://jimporter.github.io/mopack/
 

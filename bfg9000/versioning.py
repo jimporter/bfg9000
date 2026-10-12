@@ -1,8 +1,8 @@
 import platform
 import re
 from itertools import chain
-from verspec.loose import Version, Specifier, SpecifierSet, InvalidSpecifier
-from verspec.python import PythonVersion, PythonSpecifier, PythonSpecifierSet
+from inversion.loose import Version, Specifier, SpecifierSet, InvalidSpecifier
+from inversion.python import PythonVersion, PythonSpecifier, PythonSpecifierSet
 
 from .app_version import version as bfg_version
 from .exceptions import VersionError
